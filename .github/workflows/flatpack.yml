@@ -9,9 +9,9 @@ on:
 jobs:
   flatpak-builder:
     runs-on: ubuntu-latest
-    # Usiamo un container che ha già Flatpak e le librerie GNOME installate
+    
     container:
-      image: bilelmoussaoui/flatpak-github-actions:gnome-48
+      image: bilelmoussaoui/flatpak-github-actions:gnome-47
       options: --privileged
     
     steps:
@@ -24,5 +24,5 @@ jobs:
           bundle: com.github.d3msudo.anura.flatpak
           manifest-path: flatpak/com.github.d3msudo.anura.json
           cache: true
-          # Disabilitiamo i test grafici che causano l'errore xvfb
+          
           run-tests: false
