@@ -1,12 +1,13 @@
 using Gtk 4.0;
 using Adw 1;
 
-template $FrogWindow : Adw.ApplicationWindow {
+template AnuraWindow : Adw.ApplicationWindow {
   default-width: 480;
   default-height: 480;
   width-request: 360;
   height-request: 360;
-
+  
+  icon-name: "com.github.d3msudo.anura";
 
   [content]
   Adw.ToastOverlay toast_overlay {
@@ -15,12 +16,15 @@ template $FrogWindow : Adw.ApplicationWindow {
       collapsed: true;
 
       [sidebar]
-      $WelcomePage welcome_page {
-        name: "welcome";
+      Adw.NavigationPage {
+        title: _("Welcome");
+        child: $WelcomePage welcome_page {};
       }
 
-      $ExtractedPage extracted_page {
-        name: "extracted";
+      [content]
+      Adw.NavigationPage {
+        title: _("Extracted Text");
+        child: $ExtractedPage extracted_page {};
       }
     }
   }

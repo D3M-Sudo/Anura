@@ -1,44 +1,31 @@
 {
-    "name": "python3-gTTS",
-    "buildsystem": "simple",
-    "build-commands": [
-        "pip3 install --verbose --exists-action=i --no-index --find-links=\"file://${PWD}\" --prefix=${FLATPAK_DEST} \"gTTS\" --no-build-isolation"
+    "name" : "python3-gTTS",
+    "buildsystem" : "simple",
+    "build-commands" : [
+        "pip3 install --verbose --no-index --find-links=\"file://${PWD}\" --prefix=${FLATPAK_DEST} . --no-build-isolation"
     ],
-    "sources": [
+    "modules" : [
         {
-            "type": "file",
-            "url": "https://files.pythonhosted.org/packages/4c/dd/2234eab22353ffc7d94e8d13177aaa050113286e93e7b40eae01fbf7c3d9/certifi-2023.7.22-py3-none-any.whl",
-            "sha256": "92d6037539857d8206b8f6ae472e8b77db8058fec5937a1ef3f54304089edbb9"
+            "name" : "python3-requests",
+            "buildsystem" : "pip",
+            "sources" : [
+                {
+                    "type" : "git",
+                    "url" : "https://github.com/psf/requests.git",
+                    "tag" : "v2.32.3"
+                }
+            ]
         },
         {
-            "type": "file",
-            "url": "https://files.pythonhosted.org/packages/cf/ac/e89b2f2f75f51e9859979b56d2ec162f7f893221975d244d8d5277aa9489/charset-normalizer-3.3.0.tar.gz",
-            "sha256": "63563193aec44bce707e0c5ca64ff69fa72ed7cf34ce6e11d5127555756fd2f6"
-        },
-        {
-            "type": "file",
-            "url": "https://files.pythonhosted.org/packages/00/2e/d53fa4befbf2cfa713304affc7ca780ce4fc1fd8710527771b58311a3229/click-8.1.7-py3-none-any.whl",
-            "sha256": "ae74fb96c20a0277a1d615f1e4d73c8414f5a98db8b799a7931d1582f3390c28"
-        },
-        {
-            "type": "file",
-            "url": "https://files.pythonhosted.org/packages/a7/ef/190f64a4edeb13165e3c598a08f06a2ae80cdae0aa208c96c20efdb7ad4b/gTTS-2.4.0-py3-none-any.whl",
-            "sha256": "08719f4f75c9d09921fa4fd994a372fd4020e2798234a153523da01a4fa53244"
-        },
-        {
-            "type": "file",
-            "url": "https://files.pythonhosted.org/packages/fc/34/3030de6f1370931b9dbb4dad48f6ab1015ab1d32447850b9fc94e60097be/idna-3.4-py3-none-any.whl",
-            "sha256": "90b77e79eaa3eba6de819a0c442c0b4ceefc341a7a2ab77d7562bf49f425c5c2"
-        },
-        {
-            "type": "file",
-            "url": "https://files.pythonhosted.org/packages/70/8e/0e2d847013cb52cd35b38c009bb167a1a26b2ce6cd6965bf26b47bc0bf44/requests-2.31.0-py3-none-any.whl",
-            "sha256": "58cd2187c01e70e6e26505bca751777aa9f2ee0b7f4300988b709f44e013003f"
-        },
-        {
-            "type": "file",
-            "url": "https://files.pythonhosted.org/packages/26/40/9957270221b6d3e9a3b92fdfba80dd5c9661ff45a664b47edd5d00f707f5/urllib3-2.0.6-py3-none-any.whl",
-            "sha256": "7a7c7003b000adf9e7ca2a377c9688bbc54ed41b985789ed576570342a375cd2"
+            "name" : "python3-gTTS",
+            "buildsystem" : "pip",
+            "sources" : [
+                {
+                    "type" : "git",
+                    "url" : "https://github.com/pndurette/gTTS.git",
+                    "tag" : "v2.5.1"
+                }
+            ]
         }
     ]
 }

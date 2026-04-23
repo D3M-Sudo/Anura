@@ -2,7 +2,7 @@ using Gtk 4.0;
 using Gio 2.0;
 using Adw 1;
 
-template $PreferencesLanguagesPage : Adw.PreferencesPage {
+template PreferencesLanguagesPage : Adw.PreferencesPage {
   title: _("_Languages");
   use-underline: true;
   icon-name: "preferences-desktop-locale-symbolic";
@@ -21,7 +21,7 @@ template $PreferencesLanguagesPage : Adw.PreferencesPage {
     }
 
     Adw.Banner banner {
-      title: _("Models location unreachable. Check your internet connection");
+      title: _("OCR models unreachable. Check your internet connection.");
       button-clicked => $_on_banner_clicked();
       button-label: _("Retry");
       revealed: false;
@@ -30,7 +30,7 @@ template $PreferencesLanguagesPage : Adw.PreferencesPage {
     Revealer revealer {
       reveal-child: bind search_bar.search-mode-enabled bidirectional inverted;
 
-      Adw.ClampScrollable {
+      Adw.Clamp {
         maximum-size: 600;
 
         Box {
@@ -39,7 +39,7 @@ template $PreferencesLanguagesPage : Adw.PreferencesPage {
           margin-end: 12;
 
           Label caption_label {
-            label: _("Installed languages");
+            label: _("Installed Languages");
             hexpand: true;
             halign: start;
 
@@ -48,7 +48,7 @@ template $PreferencesLanguagesPage : Adw.PreferencesPage {
 
           Button {
             icon-name: "list-add-symbolic";
-            tooltip-text: "Add language";
+            tooltip-text: _("Add language");
             clicked => $_on_add_language();
 
             styles ["flat"]
@@ -67,7 +67,7 @@ template $PreferencesLanguagesPage : Adw.PreferencesPage {
         margin-end: 12;
         margin-bottom: 12;
 
-        Adw.ClampScrollable {
+        Adw.Clamp {
           maximum-size: 600;
 
           Stack views {
@@ -86,6 +86,7 @@ template $PreferencesLanguagesPage : Adw.PreferencesPage {
                     };
                   };
                 };
+                
                 factory: SignalListItemFactory factory {
                   setup => $_on_item_setup();
                   bind => $_on_item_bind();

@@ -1,1 +1,1 @@
-i18n.gettext('frog', preset: 'glib')
+i18n.gettext('anura', preset: 'glib')

@@ -1,8 +1,20 @@
-name: Ruff
-on: [ push, pull_request ]
+name: CI Quality Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
 jobs:
   ruff:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: chartboost/ruff-action@v1
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Ruff Linter
+        uses: chartboost/ruff-action@v1
+        with:
+          
+          args: --select E,F,W,I --target-version py312

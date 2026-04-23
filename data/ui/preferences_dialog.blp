@@ -1,14 +1,17 @@
 using Gtk 4.0;
 using Adw 1;
 
-template $PreferencesDialog : Adw.PreferencesDialog {
+template AnuraPreferencesDialog : Adw.PreferencesDialog {
+  title: _("Preferences");
   content-height: 480;
   content-width: 640;
   width-request: 360;
   height-request: 300;
   search-enabled: false;
 
+  // Link to the General settings page
   $PreferencesGeneralPage general_page {}
 
+  // Link to the Language selection page
   $PreferencesLanguagesPage languages_page {}
 }
