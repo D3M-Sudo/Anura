@@ -19,6 +19,6 @@ jobs:
           bundle: com.github.d3msudo.anura.flatpak
           manifest-path: flatpak/com.github.d3msudo.anura.json
           cache: true
-          # L'azione gestisce autonomamente il telecomando flathub internamente
+          
           repository-name: flathub
           repository-url: https://dl.flathub.org/repo/flathub.flatpakrepo
