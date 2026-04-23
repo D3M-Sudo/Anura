@@ -1,1 +1,3 @@
-i18n.gettext('anura', preset: 'glib')
+i18n.gettext('anura',
+    preset: 'glib'
+)
