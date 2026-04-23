@@ -1,6 +1,9 @@
 {
     "name" : "python3-dateutil",
-    "buildsystem" : "pip",
+    "buildsystem" : "simple",
+    "build-commands" : [
+        "pip3 install --verbose --no-deps --no-build-isolation --prefix=/app ."
+    ],
     "sources" : [
         {
             "type" : "git",
