@@ -2,9 +2,9 @@ name: CI Quality Check
 
 on:
   push:
-    branches: [ master ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ master ]
+    branches: [ "master" ]
 
 jobs:
   ruff:
@@ -16,4 +16,5 @@ jobs:
       - name: Run Ruff Linter
         uses: chartboost/ruff-action@v1
         with:
-          args: --select E,F,W,I --target-version py312
+          # Aggiunto 'check' prima degli argomenti
+          args: check --select E,F,W,I --target-version py312
