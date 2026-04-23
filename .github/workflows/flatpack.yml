@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     # Usiamo un container che ha già Flatpak e le librerie GNOME installate
     container:
-      image: bilelmoussaoui/flatpak-github-actions:gnome-47
+      image: bilelmoussaoui/flatpak-github-actions:gnome-48
       options: --privileged
     
     steps:
