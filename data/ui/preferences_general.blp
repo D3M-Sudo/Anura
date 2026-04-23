@@ -1,16 +1,16 @@
 using Gtk 4.0;
 using Adw 1;
 
-template $PreferencesGeneralPage : Adw.PreferencesPage {
+template PreferencesGeneralPage : Adw.PreferencesPage {
   title: _("_General");
   use-underline: true;
   icon-name: "emblem-system-symbolic";
 
   Adw.PreferencesGroup {
-    title: _("Text Extracting");
+    title: _("Text Extraction");
 
     Adw.ComboRow extra_language_combo {
-      title: _("_Second language");
+      title: _("_Secondary Language");
       use-underline: true;
       subtitle: _("Additional language used in text recognition");
     }
@@ -20,25 +20,15 @@ template $PreferencesGeneralPage : Adw.PreferencesPage {
     title: _("Behavior");
 
     Adw.SwitchRow autocopy_switch {
-      title: _("_Copy to clipboard");
+      title: _("_Copy to Clipboard");
       use-underline: true;
-      subtitle: _("Automatically copy the extracted text to clipboard");
+      subtitle: _("Automatically copy the extracted text after detection");
     }
 
     Adw.SwitchRow autolinks_switch {
-      title: _("_Open QR-code links");
+      title: _("_Open QR-code Links");
       use-underline: true;
-      subtitle: _("Automatically open links from QR-codes");
-    }
-  }
-
-  Adw.PreferencesGroup {
-    title: _("Telemetry");
-
-    Adw.SwitchRow telemetry_switch {
-      title: _("Collect analytics");
-      use-underline: true;
-      subtitle: _("Allow anonymous analytics.");
+      subtitle: _("Automatically open links extracted from QR codes");
     }
   }
 }

@@ -2,18 +2,16 @@ using Gtk 4.0;
 using Adw 1;
 
 template $WelcomePage : Adw.NavigationPage {
-  title: "Welcome";
+  title: _("Welcome");
 
   Adw.ToolbarView {
-
       [top]
       Adw.HeaderBar {
         visible: true;
-        tooltip-text: _("Extract text from anywhere");
-
+        
         [title]
         Adw.WindowTitle {
-          title: "Frog";
+          title: "Anura";
         }
 
         [start]
@@ -22,14 +20,6 @@ template $WelcomePage : Adw.NavigationPage {
           tooltip-text: _("Select language to extract");
           popover: $LanguagePopover language_popover {};
         }
-
-        // [start]
-        // Adw.SplitButton grab_btn {
-        //   action-name: "app.get_screenshot";
-        //   tooltip-text: _("Take a screenshot");
-        //   icon-name: "camera-photo-symbolic";
-        //   menu-model: grab_menu;
-        // }
 
         [start]
         Adw.Spinner spinner {
@@ -45,28 +35,25 @@ template $WelcomePage : Adw.NavigationPage {
       }
 
       Adw.StatusPage welcome {
-        title: "Frog";
+        title: "Anura";
         description: _("Extract text from anywhere");
+        icon-name: "com.github.d3msudo.anura";
 
         Adw.Clamp {
           maximum-size: 240;
           child: Box {
             orientation: vertical;
+            spacing: 12;
 
             Button {
               action-name: "app.get_screenshot";
               tooltip-text: C_("Welcome screen", "Take a Screenshot");
-
               styles ["pill", "suggested-action"]
+              
               child: Box {
                 halign: center;
                 spacing: 6;
-                // orientation: vertical;
-
-                Image {
-                  icon-name: "camera-photo-symbolic";
-                }
-
+                Image { icon-name: "camera-photo-symbolic"; }
                 Label {
                   label: _("_Take a Screenshot");
                   use-underline: true;
@@ -82,12 +69,7 @@ template $WelcomePage : Adw.NavigationPage {
               child: Box {
                 halign: center;
                 spacing: 6;
-                // orientation: vertical;
-
-                Image {
-                  icon-name: "folder-open-symbolic";
-                }
-
+                Image { icon-name: "folder-open-symbolic"; }
                 Label {
                   label: _("_Open Image");
                   use-underline: true;
@@ -103,12 +85,7 @@ template $WelcomePage : Adw.NavigationPage {
               child: Box {
                 halign: center;
                 spacing: 6;
-                // orientation: vertical;
-
-                Image {
-                  icon-name: "edit-paste-symbolic";
-                }
-
+                Image { icon-name: "edit-paste-symbolic"; }
                 Label {
                   label: _("Paste Image");
                   use-underline: true;
@@ -116,11 +93,11 @@ template $WelcomePage : Adw.NavigationPage {
               };
             }
 
-            // Label {
-            //    margin-top: 8;
-            //       label: _("...or drop image here");
-            //       styles ["dim-label"]
-            //     }
+            Label {
+              margin-top: 8;
+              label: _("...or drop image here");
+              styles ["dim-label"]
+            }
           };
         }
       }
@@ -142,7 +119,7 @@ menu primary_menu {
     }
 
     item {
-      label: _("About Frog");
+      label: _("About Anura");
       action: "app.about";
     }
   }
@@ -151,12 +128,6 @@ menu primary_menu {
     item {
       label: _("⭐ Star on GitHub");
       action: "app.github_star";
-      icon: "starred-symbolic";
     }
   }
-}
-
-menu grab_menu {
-    item (_("Open image"), "app.open_image", "folder-open-symbolic")
-    item (_("Paste from clipboard"), "app.paste_from_clipboard", "folder-open-symbolic")
 }

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="anura">
+  <schema id="com.github.d3msudo.anura" path="/com/github/d3msudo/anura/">
+    
+    <key name="window-width" type="i">
+      <default>-1</default>
+      <summary>Default window width</summary>
+    </key>
+    <key name="window-height" type="i">
+      <default>-1</default>
+      <summary>Default window height</summary>
+    </key>
+
+    <key name="extra-language" type="s">
+      <default>"eng"</default>
+      <summary>Secondary language</summary>
+      <description>Language to detect alongside the active one.</description>
+    </key>
+    <key name="active-language" type="s">
+      <default>"eng"</default>
+      <summary>Primary language</summary>
+      <description>Primary language for text extraction.</description>
+    </key>
+
+    <key name="autocopy" type="b">
+      <default>true</default>
+      <summary>Autocopy text to clipboard</summary>
+      <description>Automatically copy the extracted text to the clipboard.</description>
+    </key>
+    <key name="autolinks" type="b">
+      <default>false</default>
+      <summary>Auto-open QR links</summary>
+      <description>Automatically open links extracted from QR codes.</description>
+    </key>
+  </schema>
+</schemalist>

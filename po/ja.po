@@ -1,14 +1,14 @@
-# This is a Translation File of Frog.
+# This is a Translation File of anura.
 # 小山田 純 <oyamadajun@outlook.jp>, 2022.
 # Ryo Nakano <ryonakaknock3@gmail.com>, 2024.
 msgid ""
 msgstr ""
-"Project-Id-Version: Frog\n"
+"Project-Id-Version: anura\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-12-25 11:43+0300\n"
 "PO-Revision-Date: 2024-04-18 13:03+0000\n"
 "Last-Translator: Ryo Nakano <ryonakaknock3@gmail.com>\n"
-"Language-Team: Japanese <https://hosted.weblate.org/projects/frog/default/ja/"
+"Language-Team: Japanese <https://hosted.weblate.org/projects/anura/default/ja/"
 ">\n"
 "Language: ja\n"
 "MIME-Version: 1.0\n"
@@ -19,34 +19,34 @@ msgstr ""
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: ../data/com.github.tenderowl.frog.appdata.xml.in:6
-#: ../data/com.github.tenderowl.frog.desktop.in:3
-msgid "Frog"
-msgstr "Frog"
+#: ../data/com.github.d3msudo.anura.appdata.xml.in:6
+#: ../data/com.github.d3msudo.anura.desktop.in:3
+msgid "anura"
+msgstr "anura"
 
-#: ../data/com.github.tenderowl.frog.appdata.xml.in:7
+#: ../data/com.github.d3msudo.anura.appdata.xml.in:7
 msgid "Extract text from images"
 msgstr "画像からテキストを抽出します"
 
-#: ../data/com.github.tenderowl.frog.appdata.xml.in:9
+#: ../data/com.github.d3msudo.anura.appdata.xml.in:9
 msgid ""
 "Extract text from images, websites, videos, and QR codes by taking a picture "
 "of the source."
 msgstr "画像、Web サイト、動画、QR コードの画像を撮り、そこからテキストを抽出します。"
 
-#: ../data/com.github.tenderowl.frog.desktop.in:4
+#: ../data/com.github.d3msudo.anura.desktop.in:4
 msgid "Text extraction tool"
 msgstr "テキスト抽出ツール"
 
-#: ../data/com.github.tenderowl.frog.desktop.in:5
+#: ../data/com.github.d3msudo.anura.desktop.in:5
 msgid "Extract text from any image, video or web page"
 msgstr "画像、動画、Web ページからテキストを抽出します"
 
-#: ../data/com.github.tenderowl.frog.desktop.in:12
+#: ../data/com.github.d3msudo.anura.desktop.in:12
 msgid "OCR;Text;Extraction;"
 msgstr "OCR;Text;Extraction;テキスト;抽出;"
 
-#: ../data/com.github.tenderowl.frog.desktop.in:18
+#: ../data/com.github.d3msudo.anura.desktop.in:18
 msgid "Extract Text to the Clipboard"
 msgstr "抽出したテキストをクリップボードにコピー"
 
@@ -88,8 +88,8 @@ msgid "Keyboard Shortcuts"
 msgstr "キーボードショートカット"
 
 #: ../data/ui/extracted_page.blp:116 ../data/ui/welcome_page.blp:139
-msgid "About Frog"
-msgstr "Frog について"
+msgid "About anura"
+msgstr "anura について"
 
 #: ../data/ui/extracted_page.blp:124 ../data/ui/welcome_page.blp:154
 msgid "Open image"
@@ -292,559 +292,559 @@ msgstr "画像を貼り付け"
 msgid "⭐ Star on GitHub"
 msgstr "⭐ GitHub で Star を付ける"
 
-#: ../frog/language_manager.py:54 ../frog/language_manager.py:90
+#: ../anura/language_manager.py:54 ../anura/language_manager.py:90
 msgid "English"
 msgstr "英語"
 
-#: ../frog/language_manager.py:66
+#: ../anura/language_manager.py:66
 msgid "Afrikaans"
 msgstr "アフリカーンス語"
 
-#: ../frog/language_manager.py:67
+#: ../anura/language_manager.py:67
 msgid "Amharic"
 msgstr "アムハラ語"
 
-#: ../frog/language_manager.py:68
+#: ../anura/language_manager.py:68
 msgid "Arabic"
 msgstr "アラビア語"
 
-#: ../frog/language_manager.py:69
+#: ../anura/language_manager.py:69
 msgid "Assamese"
 msgstr "アッサム語"
 
-#: ../frog/language_manager.py:70
+#: ../anura/language_manager.py:70
 msgid "Azerbaijani"
 msgstr "アゼルバイジャン語"
 
-#: ../frog/language_manager.py:71
+#: ../anura/language_manager.py:71
 msgid "Azerbaijani - Cyrilic"
 msgstr "アゼルバイジャン語 - キリル文字"
 
-#: ../frog/language_manager.py:72
+#: ../anura/language_manager.py:72
 msgid "Belarusian"
 msgstr "ベラルーシ語"
 
-#: ../frog/language_manager.py:73
+#: ../anura/language_manager.py:73
 msgid "Bengali"
 msgstr "ベンガル語"
 
-#: ../frog/language_manager.py:74
+#: ../anura/language_manager.py:74
 msgid "Tibetan"
 msgstr "チベット語"
 
-#: ../frog/language_manager.py:75
+#: ../anura/language_manager.py:75
 msgid "Bosnian"
 msgstr "ボスニア語"
 
-#: ../frog/language_manager.py:76
+#: ../anura/language_manager.py:76
 msgid "Breton"
 msgstr "ブルトン語"
 
-#: ../frog/language_manager.py:77
+#: ../anura/language_manager.py:77
 msgid "Bulgarian"
 msgstr "ブルガリア語"
 
-#: ../frog/language_manager.py:78
+#: ../anura/language_manager.py:78
 msgid "Catalan; Valencian"
 msgstr "カタルーニャ語; バレンシア語"
 
-#: ../frog/language_manager.py:79
+#: ../anura/language_manager.py:79
 msgid "Cebuano"
 msgstr "セブアノ語"
 
-#: ../frog/language_manager.py:80
+#: ../anura/language_manager.py:80
 msgid "Czech"
 msgstr "チェコ語"
 
-#: ../frog/language_manager.py:81
+#: ../anura/language_manager.py:81
 msgid "Chinese - Simplified"
 msgstr "中国語 - 簡体字"
 
-#: ../frog/language_manager.py:82
+#: ../anura/language_manager.py:82
 msgid "Chinese - Traditional"
 msgstr "中国語 - 繁体字"
 
-#: ../frog/language_manager.py:83
+#: ../anura/language_manager.py:83
 msgid "Cherokee"
 msgstr "チェロキー語"
 
-#: ../frog/language_manager.py:84
+#: ../anura/language_manager.py:84
 msgid "Corsican"
 msgstr "コルシカ語"
 
-#: ../frog/language_manager.py:85
+#: ../anura/language_manager.py:85
 msgid "Welsh"
 msgstr "ウェールズ語"
 
-#: ../frog/language_manager.py:86
+#: ../anura/language_manager.py:86
 msgid "Danish"
 msgstr "デンマーク語"
 
-#: ../frog/language_manager.py:87
+#: ../anura/language_manager.py:87
 msgid "German"
 msgstr "ドイツ語"
 
-#: ../frog/language_manager.py:88
+#: ../anura/language_manager.py:88
 msgid "Dzongkha"
 msgstr "ゾンカ語"
 
-#: ../frog/language_manager.py:89
+#: ../anura/language_manager.py:89
 msgid "Greek, Modern (1453-)"
 msgstr "現代ギリシア語 (1453-)"
 
-#: ../frog/language_manager.py:91
+#: ../anura/language_manager.py:91
 msgid "English, Middle (1100-1500)"
 msgstr "中英語 (1100-1500)"
 
-#: ../frog/language_manager.py:92
+#: ../anura/language_manager.py:92
 msgid "Esperanto"
 msgstr "エスペラント"
 
-#: ../frog/language_manager.py:93
+#: ../anura/language_manager.py:93
 msgid "Math / equation detection module"
 msgstr "算術 / 方程式検出モジュール"
 
-#: ../frog/language_manager.py:94
+#: ../anura/language_manager.py:94
 msgid "Estonian"
 msgstr "エストニア語"
 
-#: ../frog/language_manager.py:95
+#: ../anura/language_manager.py:95
 msgid "Basque"
 msgstr "バスク語"
 
-#: ../frog/language_manager.py:96
+#: ../anura/language_manager.py:96
 msgid "Faroese"
 msgstr "フェロー語"
 
-#: ../frog/language_manager.py:97
+#: ../anura/language_manager.py:97
 msgid "Persian"
 msgstr "ペルシア語"
 
-#: ../frog/language_manager.py:98
+#: ../anura/language_manager.py:98
 msgid "Filipino (old - Tagalog)"
 msgstr "フィリピン語 (旧・タガログ語)"
 
-#: ../frog/language_manager.py:99
+#: ../anura/language_manager.py:99
 msgid "Finnish"
 msgstr "フィンランド語"
 
-#: ../frog/language_manager.py:100
+#: ../anura/language_manager.py:100
 msgid "French"
 msgstr "フランス語"
 
-#: ../frog/language_manager.py:101
+#: ../anura/language_manager.py:101
 msgid "German - Fraktur"
 msgstr "ドイツ語 - フラクトゥール"
 
-#: ../frog/language_manager.py:102
+#: ../anura/language_manager.py:102
 msgid "French, Middle (ca.1400-1600)"
 msgstr "中世フランス語 (1400-1600 頃)"
 
-#: ../frog/language_manager.py:103
+#: ../anura/language_manager.py:103
 msgid "Western Frisian"
 msgstr "西フリジア語"
 
-#: ../frog/language_manager.py:104
+#: ../anura/language_manager.py:104
 msgid "Scottish Gaelic"
 msgstr "スコットランド・ゲール語"
 
-#: ../frog/language_manager.py:105
+#: ../anura/language_manager.py:105
 msgid "Irish"
 msgstr "アイルランド語"
 
-#: ../frog/language_manager.py:106
+#: ../anura/language_manager.py:106
 msgid "Galician"
 msgstr "ガリシア語"
 
-#: ../frog/language_manager.py:107
+#: ../anura/language_manager.py:107
 msgid "Greek, Ancient (to 1453) (contrib)"
 msgstr "古代・中世ギリシア語 (-1453) (contrib)"
 
-#: ../frog/language_manager.py:108
+#: ../anura/language_manager.py:108
 msgid "Gujarati"
 msgstr "グジャラート語"
 
-#: ../frog/language_manager.py:109
+#: ../anura/language_manager.py:109
 msgid "Haitian; Haitian Creole"
 msgstr "ハイチ語; ハイチクレオール"
 
-#: ../frog/language_manager.py:110
+#: ../anura/language_manager.py:110
 msgid "Hebrew"
 msgstr "ヘブライ語"
 
-#: ../frog/language_manager.py:111
+#: ../anura/language_manager.py:111
 msgid "Hindi"
 msgstr "ヒンディー語"
 
-#: ../frog/language_manager.py:112
+#: ../anura/language_manager.py:112
 msgid "Croatian"
 msgstr "クロアチア語"
 
-#: ../frog/language_manager.py:113
+#: ../anura/language_manager.py:113
 msgid "Hungarian"
 msgstr "ハンガリー語"
 
-#: ../frog/language_manager.py:114
+#: ../anura/language_manager.py:114
 msgid "Armenian"
 msgstr "アルメニア語"
 
-#: ../frog/language_manager.py:115
+#: ../anura/language_manager.py:115
 msgid "Inuktitut"
 msgstr "イヌクティトゥット語"
 
-#: ../frog/language_manager.py:116
+#: ../anura/language_manager.py:116
 msgid "Indonesian"
 msgstr "インドネシア語"
 
-#: ../frog/language_manager.py:117
+#: ../anura/language_manager.py:117
 msgid "Icelandic"
 msgstr "アイスランド語"
 
-#: ../frog/language_manager.py:118
+#: ../anura/language_manager.py:118
 msgid "Italian"
 msgstr "イタリア語"
 
-#: ../frog/language_manager.py:119
+#: ../anura/language_manager.py:119
 msgid "Italian - Old"
 msgstr "古イタリア語"
 
-#: ../frog/language_manager.py:120
+#: ../anura/language_manager.py:120
 msgid "Javanese"
 msgstr "ジャワ語"
 
-#: ../frog/language_manager.py:121
+#: ../anura/language_manager.py:121
 msgid "Japanese"
 msgstr "日本語"
 
-#: ../frog/language_manager.py:122
+#: ../anura/language_manager.py:122
 msgid "Japanese (vertical)"
 msgstr "日本語 (縦書き)"
 
-#: ../frog/language_manager.py:123
+#: ../anura/language_manager.py:123
 msgid "Kannada"
 msgstr "カンナダ語"
 
-#: ../frog/language_manager.py:124
+#: ../anura/language_manager.py:124
 msgid "Georgian"
 msgstr "グルジア語"
 
-#: ../frog/language_manager.py:125
+#: ../anura/language_manager.py:125
 msgid "Georgian - Old"
 msgstr "古グルジア語"
 
-#: ../frog/language_manager.py:126
+#: ../anura/language_manager.py:126
 msgid "Kazakh"
 msgstr "カザフ語"
 
-#: ../frog/language_manager.py:127
+#: ../anura/language_manager.py:127
 msgid "Central Khmer"
 msgstr "クメール語 (中部方言)"
 
-#: ../frog/language_manager.py:128
+#: ../anura/language_manager.py:128
 msgid "Kirghiz; Kyrgyz"
 msgstr "キルギス語"
 
-#: ../frog/language_manager.py:129
+#: ../anura/language_manager.py:129
 msgid "Kurmanji (Kurdish - Latin Script)"
 msgstr "クルマンジー (クルド語 - ラテン文字)"
 
-#: ../frog/language_manager.py:130
+#: ../anura/language_manager.py:130
 msgid "Korean"
 msgstr "韓国語"
 
-#: ../frog/language_manager.py:131
+#: ../anura/language_manager.py:131
 msgid "Korean (vertical)"
 msgstr "韓国語 (縦書き)"
 
-#: ../frog/language_manager.py:132
+#: ../anura/language_manager.py:132
 msgid "Lao"
 msgstr "ラーオ語"
 
-#: ../frog/language_manager.py:133
+#: ../anura/language_manager.py:133
 msgid "Latin"
 msgstr "ラテン語"
 
-#: ../frog/language_manager.py:134
+#: ../anura/language_manager.py:134
 msgid "Latvian"
 msgstr "ラトビア語"
 
-#: ../frog/language_manager.py:135
+#: ../anura/language_manager.py:135
 msgid "Lithuanian"
 msgstr "リトアニア語"
 
-#: ../frog/language_manager.py:136
+#: ../anura/language_manager.py:136
 msgid "Luxembourgish"
 msgstr "ルクセンブルク語"
 
-#: ../frog/language_manager.py:137
+#: ../anura/language_manager.py:137
 msgid "Malayalam"
 msgstr "マラヤーラム語"
 
-#: ../frog/language_manager.py:138
+#: ../anura/language_manager.py:138
 msgid "Marathi"
 msgstr "マラーティー語"
 
-#: ../frog/language_manager.py:139
+#: ../anura/language_manager.py:139
 msgid "Macedonian"
 msgstr "マケドニア語"
 
-#: ../frog/language_manager.py:140
+#: ../anura/language_manager.py:140
 msgid "Maltese"
 msgstr "マルタ語"
 
-#: ../frog/language_manager.py:141
+#: ../anura/language_manager.py:141
 msgid "Mongolian"
 msgstr "モンゴル語"
 
-#: ../frog/language_manager.py:142
+#: ../anura/language_manager.py:142
 msgid "Maori"
 msgstr "マオリ語"
 
-#: ../frog/language_manager.py:143
+#: ../anura/language_manager.py:143
 msgid "Malay"
 msgstr "マレー語"
 
-#: ../frog/language_manager.py:144
+#: ../anura/language_manager.py:144
 msgid "Burmese"
 msgstr "ビルマ語"
 
-#: ../frog/language_manager.py:145
+#: ../anura/language_manager.py:145
 msgid "Nepali"
 msgstr "ネパール語"
 
-#: ../frog/language_manager.py:146
+#: ../anura/language_manager.py:146
 msgid "Dutch; Flemish"
 msgstr "オランダ語; フラマン語"
 
-#: ../frog/language_manager.py:147
+#: ../anura/language_manager.py:147
 msgid "Norwegian"
 msgstr "ノルウェー語"
 
-#: ../frog/language_manager.py:148
+#: ../anura/language_manager.py:148
 msgid "Occitan (post 1500)"
 msgstr "オック語 (1500 年以降)"
 
-#: ../frog/language_manager.py:149
+#: ../anura/language_manager.py:149
 msgid "Oriya"
 msgstr "オリヤー語"
 
-#: ../frog/language_manager.py:150
+#: ../anura/language_manager.py:150
 msgid "Orientation and script detection module"
 msgstr "傾斜角度と文字種別検出モジュール"
 
-#: ../frog/language_manager.py:151
+#: ../anura/language_manager.py:151
 msgid "Panjabi; Punjabi"
 msgstr "パンジャーブ語"
 
-#: ../frog/language_manager.py:152
+#: ../anura/language_manager.py:152
 msgid "Polish"
 msgstr "ポーランド語"
 
-#: ../frog/language_manager.py:153
+#: ../anura/language_manager.py:153
 msgid "Portuguese"
 msgstr "ポルトガル語"
 
-#: ../frog/language_manager.py:154
+#: ../anura/language_manager.py:154
 msgid "Pushto; Pashto"
 msgstr "パシュトー語"
 
-#: ../frog/language_manager.py:155
+#: ../anura/language_manager.py:155
 msgid "Quechua"
 msgstr "ケチュア語"
 
-#: ../frog/language_manager.py:156
+#: ../anura/language_manager.py:156
 msgid "Romanian; Moldavian; Moldovan"
 msgstr "ルーマニア語; モルドバ語"
 
-#: ../frog/language_manager.py:157
+#: ../anura/language_manager.py:157
 msgid "Russian"
 msgstr "ロシア語"
 
-#: ../frog/language_manager.py:158
+#: ../anura/language_manager.py:158
 msgid "Sanskrit"
 msgstr "サンスクリット"
 
-#: ../frog/language_manager.py:159
+#: ../anura/language_manager.py:159
 msgid "Sinhala; Sinhalese"
 msgstr "シンハラ語"
 
-#: ../frog/language_manager.py:160
+#: ../anura/language_manager.py:160
 msgid "Slovak"
 msgstr "スロバキア語"
 
-#: ../frog/language_manager.py:161
+#: ../anura/language_manager.py:161
 msgid "Slovenian"
 msgstr "スロベニア語"
 
-#: ../frog/language_manager.py:162
+#: ../anura/language_manager.py:162
 msgid "Sindhi"
 msgstr "シンド語"
 
-#: ../frog/language_manager.py:163
+#: ../anura/language_manager.py:163
 msgid "Spanish; Castilian"
 msgstr "スペイン語; カスティーリャ語"
 
-#: ../frog/language_manager.py:164
+#: ../anura/language_manager.py:164
 msgid "Spanish; Castilian - Old"
 msgstr "古スペイン語; カスティーリャ語"
 
-#: ../frog/language_manager.py:165
+#: ../anura/language_manager.py:165
 msgid "Albanian"
 msgstr "アルバニア語"
 
-#: ../frog/language_manager.py:166
+#: ../anura/language_manager.py:166
 msgid "Serbian"
 msgstr "セルビア語"
 
-#: ../frog/language_manager.py:167
+#: ../anura/language_manager.py:167
 msgid "Serbian - Latin"
 msgstr "セルビア語 - ラテン文字"
 
-#: ../frog/language_manager.py:168
+#: ../anura/language_manager.py:168
 msgid "Sundanese"
 msgstr "スンダ語"
 
-#: ../frog/language_manager.py:169
+#: ../anura/language_manager.py:169
 msgid "Swahili"
 msgstr "スワヒリ語"
 
-#: ../frog/language_manager.py:170
+#: ../anura/language_manager.py:170
 msgid "Swedish"
 msgstr "スウェーデン語"
 
-#: ../frog/language_manager.py:171
+#: ../anura/language_manager.py:171
 msgid "Syriac"
 msgstr "シリア語"
 
-#: ../frog/language_manager.py:172
+#: ../anura/language_manager.py:172
 msgid "Tamil"
 msgstr "タミル語"
 
-#: ../frog/language_manager.py:173
+#: ../anura/language_manager.py:173
 msgid "Tatar"
 msgstr "タタール語"
 
-#: ../frog/language_manager.py:174
+#: ../anura/language_manager.py:174
 msgid "Telugu"
 msgstr "テルグ語"
 
-#: ../frog/language_manager.py:175
+#: ../anura/language_manager.py:175
 msgid "Tajik"
 msgstr "タジク語"
 
-#: ../frog/language_manager.py:176
+#: ../anura/language_manager.py:176
 msgid "Thai"
 msgstr "タイ語"
 
-#: ../frog/language_manager.py:177
+#: ../anura/language_manager.py:177
 msgid "Tigrinya"
 msgstr "ティグリニャ語"
 
-#: ../frog/language_manager.py:178
+#: ../anura/language_manager.py:178
 msgid "Tonga"
 msgstr "トンガ語"
 
-#: ../frog/language_manager.py:179
+#: ../anura/language_manager.py:179
 msgid "Turkish"
 msgstr "トルコ語"
 
-#: ../frog/language_manager.py:180
+#: ../anura/language_manager.py:180
 msgid "Uighur; Uyghur"
 msgstr "ウイグル語"
 
-#: ../frog/language_manager.py:181
+#: ../anura/language_manager.py:181
 msgid "Ukrainian"
 msgstr "ウクライナ語"
 
-#: ../frog/language_manager.py:182
+#: ../anura/language_manager.py:182
 msgid "Urdu"
 msgstr "ウルドゥー語"
 
-#: ../frog/language_manager.py:183
+#: ../anura/language_manager.py:183
 msgid "Uzbek"
 msgstr "ウズベク語"
 
-#: ../frog/language_manager.py:184
+#: ../anura/language_manager.py:184
 msgid "Uzbek - Cyrilic"
 msgstr "ウズベク語 - キリル文字"
 
-#: ../frog/language_manager.py:185
+#: ../anura/language_manager.py:185
 msgid "Vietnamese"
 msgstr "ベトナム語"
 
-#: ../frog/language_manager.py:186
+#: ../anura/language_manager.py:186
 msgid "Yiddish"
 msgstr "イディッシュ語"
 
-#: ../frog/language_manager.py:187
+#: ../anura/language_manager.py:187
 msgid "Yoruba"
 msgstr "ヨルバ語"
 
-#: ../frog/main.py:63 ../frog/main.py:83
+#: ../anura/main.py:63 ../anura/main.py:83
 msgid "Extract directly into the clipboard"
 msgstr "抽出したテキストを直接クリップボードにコピーする"
 
-#: ../frog/main.py:194
+#: ../anura/main.py:194
 msgid "No text found. Try to grab another region."
 msgstr "テキストが見つかりません。別の領域を選択してみてください。"
 
-#: ../frog/main.py:204
+#: ../anura/main.py:204
 msgid "Text extracted. You can paste it with Ctrl+V"
 msgstr "テキストを抽出しました。Ctrl+V で貼り付けできます"
 
-#: ../frog/window.py:151
+#: ../anura/window.py:151
 msgid "Text copied to clipboard"
 msgstr "テキストをクリップボードにコピーしました"
 
-#: ../frog/window.py:162
+#: ../anura/window.py:162
 msgid "QR-code URL opened"
 msgstr "QR コードの URL を開きました"
 
-#: ../frog/window.py:166
+#: ../anura/window.py:166
 msgid "QR-code contains URL."
 msgstr "QR コードは URL を含んでいます。"
 
-#: ../frog/window.py:167
+#: ../anura/window.py:167
 msgid "Open"
 msgstr "開く"
 
-#: ../frog/window.py:194
+#: ../anura/window.py:194
 msgid "Supported image files"
 msgstr "対応する画像ファイル"
 
-#: ../frog/window.py:200
+#: ../anura/window.py:200
 msgid "Open image to extract text"
 msgstr "画像を開いてテキストを抽出"
 
-#: ../frog/window.py:260
+#: ../anura/window.py:260
 msgid "Only images can be processed that way."
 msgstr "この方法では画像のみ処理できます。"
 
-#: ../frog/window.py:293
+#: ../anura/window.py:293
 msgid "Text copied"
 msgstr "テキストをコピーしました"
 
-#: ../frog/services/clipboard_service.py:54
+#: ../anura/services/clipboard_service.py:54
 msgid "No image in clipboard"
 msgstr "クリップボードに画像なし"
 
-#: ../frog/services/screenshot_service.py:94
+#: ../anura/services/screenshot_service.py:94
 msgid "Can't take a screenshot."
 msgstr "スクリーンショットを撮影できません。"
 
-#: ../frog/widgets/preferences_languages_page.py:80
+#: ../anura/widgets/preferences_languages_page.py:80
 msgid "Models location unreachable. Check your internet connection."
 msgstr "モデルの場所に到達できません。インターネット接続を確認してください。"
 
-#: ../frog/widgets/preferences_languages_page.py:86
+#: ../anura/widgets/preferences_languages_page.py:86
 msgid "You are on a metered connection. Be careful to download languages."
 msgstr "従量制課金で接続しています。言語のダウンロードの通信量にご注意ください。"
 
-#: ../frog/widgets/preferences_languages_page.py:123
+#: ../anura/widgets/preferences_languages_page.py:123
 msgid "View all available languages"
 msgstr "すべての利用可能な言語を見る"
 
-#: ../frog/widgets/share_row.py:48
+#: ../anura/widgets/share_row.py:48
 #, python-brace-format
 msgid "Share via {0}"
 msgstr "{0} で共有"
@@ -878,8 +878,8 @@ msgstr "{0} で共有"
 #~ "                                "
 #~ msgstr "クリップボードに検出結果をコピー"
 
-#~ msgid "Learn more about Frog"
-#~ msgstr "Frogのウェブサイト"
+#~ msgid "Learn more about anura"
+#~ msgstr "anuraのウェブサイト"
 
 #~ msgid "Window size in px"
 #~ msgstr "ウィンドウサイズ(px)"

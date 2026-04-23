@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop">
+    <id>com.github.d3msudo.anura</id>
+    <metadata_license>CC0-1.0</metadata_license>
+    <project_license>MIT</project_license>
+    <name>Anura</name>
+    <summary>Extract text from anywhere</summary>
+
+    <description>
+        <p>Anura is an intuitive text extraction tool (OCR) designed for the Linux desktop. 
+        It allows you to quickly grab text from any source on your screen, including 
+        videos, PDFs, images, or protected webpages.</p>
+        <p>Key features include:</p>
+        <ul>
+            <li>High-accuracy OCR powered by Tesseract.</li>
+            <li>Built-in QR Code decoding and link following.</li>
+            <li>Support for multiple languages.</li>
+            <li>Privacy-focused: No telemetry and no anonymous data collection.</li>
+            <li>Modern Gtk4/Libadwaita interface.</li>
+        </ul>
+    </description>
+
+    <screenshots>
+        <screenshot type="default">
+            <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/main/data/screenshots/anura-window.png</image>
+            <caption>Main interface for text extraction.</caption>
+        </screenshot>
+    </screenshots>
+
+    <releases>
+        <release version="0.1.0" type="stable" date="2026-04-23">
+            <description>
+                <p>Initial release of Anura (Fork of Frog).</p>
+                <ul>
+                    <li>Complete rebranding to Anura.</li>
+                    <li>Removed all telemetry and PostHog tracking for total privacy.</li>
+                    <li>Optimized sharing service: Added X (formerly Twitter) and Instagram; removed dead links like Pocket.</li>
+                    <li>Technical cleanup: English localization of source code and improved logging.</li>
+                    <li>Updated dependencies for modern Linux distributions.</li>
+                </ul>
+            </description>
+        </release>
+    </releases>
+
+    <developer_name>D3M-Sudo</developer_name>
+    <developer id="com.github.d3msudo">
+        <name>D3M-Sudo</name>
+    </developer>
+
+    <launchable type="desktop-id">com.github.d3msudo.anura.desktop</launchable>
+    <translation type="gettext">anura</translation>
+
+    <url type="homepage">https://github.com/D3M-Sudo/Anura</url>
+    <url type="bugtracker">https://github.com/D3M-Sudo/Anura/issues</url>
+    <url type="vcs-browser">https://github.com/D3M-Sudo/Anura</url>
+    <url type="help">https://github.com/D3M-Sudo/Anura/issues</url>
+
+    <content_rating type="oars-1.1" />
+</component>

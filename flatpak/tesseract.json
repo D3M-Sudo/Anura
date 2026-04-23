@@ -1,18 +1,42 @@
 {
-  "name": "tesseract",
-  "config-opts": [
-    "--disable-static",
-    "--disable-graphics",
-    "--enable-legacy"
-  ],
-  "sources": [
-    {
-      "type": "git",
-      "url": "https://github.com/tesseract-ocr/tesseract.git",
-      "tag": "5.5.0"
-    }
-  ],
-  "post-install": [
-    "chmod +x /app/bin/tesseract"
-  ]
+    "name" : "tesseract",
+    "config-opts" : [
+        "--disable-static",
+        "--disable-graphics",
+        "--enable-legacy"
+    ],
+    "cleanup" : [
+        "/include",
+        "/lib/pkgconfig",
+        "*.la"
+    ],
+    "sources" : [
+        {
+            "type" : "git",
+            "url" : "https://github.com/tesseract-ocr/tesseract.git",
+            "tag" : "5.5.0"
+        }
+    ],
+    "modules" : [
+        {
+            "name" : "tessdata-fast",
+            "buildsystem" : "simple",
+            "build-commands" : [
+                "mkdir -p /app/share/tessdata",
+                "cp eng.traineddata ita.traineddata /app/share/tessdata/"
+            ],
+            "sources" : [
+                {
+                    "type" : "file",
+                    "url" : "https://github.com/tesseract-ocr/tessdata_fast/raw/main/eng.traineddata",
+                    "sha256" : "708e1e793910c66063462c1995879796e62ee88523b1850117498c3971e44f5f"
+                },
+                {
+                    "type" : "file",
+                    "url" : "https://github.com/tesseract-ocr/tessdata_fast/raw/main/ita.traineddata",
+                    "sha256" : "21043f88f28c5ba07a780775d506d1e43e26712399677334a1796d842b102835"
+                }
+            ]
+        }
+    ]
 }

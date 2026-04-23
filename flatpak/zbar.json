@@ -1,32 +1,33 @@
 {
-  "name": "zbar",
-  "config-opts": [
-    "--without-qt",
-    "--without-qt5",
-    "--without-gtk",
-    "--without-xv",
-    "--without-imagemagick",
-    "--without-dbus",
-    "--disable-video",
-    "--without-java",
-    "--without-python",
-    "--with-doc=no",
-    "--disable-doc",
-    "--with-introspection=no",
-    "--enable-codes=qrcode"
-  ],
-  "sources": [
-    {
-      "type": "archive",
-      "url": "https://linuxtv.org/downloads/zbar/zbar-0.23.93.tar.gz",
-      "sha256": "78ae427a529f0399561bc198de5c2c7ca3f11d05fa9e903e65e501168433d218"
-    },
-    {
-      "type": "script",
-      "dest-filename": "autogen.sh",
-      "commands": [
-        "autoreconf -vfi -W none"
-      ]
-    }
-  ]
+    "name" : "zbar",
+    "config-opts" : [
+        "--disable-static",
+        "--without-gtk",
+        "--without-qt",
+        "--without-qt5",
+        "--without-xv",
+        "--without-dbus",
+        "--without-java",
+        "--without-python",
+        "--without-imagemagick",
+        "--disable-video",
+        "--disable-doc",
+        "--with-introspection=no",
+        "--enable-codes=qrcode,code128,code39"
+    ],
+    "cleanup" : [
+        "/bin",
+        "/include",
+        "/lib/pkgconfig",
+        "/share/doc",
+        "/share/man",
+        "*.la"
+    ],
+    "sources" : [
+        {
+            "type" : "git",
+            "url" : "https://github.com/mchehab/zbar.git",
+            "tag" : "0.23.93"
+        }
+    ]
 }

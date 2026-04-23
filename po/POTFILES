@@ -1,5 +1,5 @@
-data/com.github.tenderowl.frog.appdata.xml.in
-data/com.github.tenderowl.frog.desktop.in
+data/com.github.d3msudo.anura.appdata.xml.in
+data/com.github.d3msudo.anura.desktop.in
 data/ui/extracted_page.blp
 data/ui/language_dialog.blp
 data/ui/language_popover.blp
@@ -9,10 +9,10 @@ data/ui/preferences_languages.blp
 data/ui/share_row.blp
 data/ui/shortcuts.blp
 data/ui/welcome_page.blp
-frog/language_manager.py
-frog/main.py
-frog/services/clipboard_service.py
-frog/services/screenshot_service.py
-frog/widgets/preferences_languages_page.py
-frog/widgets/share_row.py
-frog/window.py
+anura/language_manager.py
+anura/main.py
+anura/services/clipboard_service.py
+anura/services/screenshot_service.py
+anura/widgets/preferences_languages_page.py
+anura/widgets/share_row.py
+anura/window.py
