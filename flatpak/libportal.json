@@ -7,9 +7,9 @@
         "-Dtests=false",
         "-Dvapi=false",
         "-Dintrospection=true",
-        "-Dgtk4=true",
-        "-Dgtk3=false",
-        "-Dqt5=false"
+        "-Dgtk3=disabled",
+        "-Dgtk4=enabled",
+        "-Dqt5=disabled"
     ],
     "cleanup" : [
         "/include",
