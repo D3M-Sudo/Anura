@@ -2,9 +2,9 @@ name: Flatpak Build Check
 
 on:
   push:
-    branches: [ master ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ master ]
+    branches: [ "master" ]
 
 jobs:
   flatpak-builder:
@@ -13,12 +13,16 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+
       - name: Build Anura Flatpak
         uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:
           bundle: com.github.d3msudo.anura.flatpak
           manifest-path: flatpak/com.github.d3msudo.anura.json
           cache: true
-          # Aggiungiamo flathub per scaricare i runtime GNOME 47 necessari
           repository-name: flathub
           repository-url: https://dl.flathub.org/repo/flathub.flatpakrepo
