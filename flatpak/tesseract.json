@@ -29,7 +29,7 @@
                 {
                     "type" : "file",
                     "url" : "https://github.com/tesseract-ocr/tessdata_fast/raw/main/eng.traineddata",
-                    "sha256" : "708e1e793910c66063462c1995879796e62ee88523b1850117498c3971e44f5f"
+                    "sha256" : "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2"
                 },
                 {
                     "type" : "file",
