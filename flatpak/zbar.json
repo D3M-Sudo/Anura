@@ -1,7 +1,7 @@
 {
     "name" : "zbar",
     "buildsystem": "autotools",
-    "autogen": true,
+    "autogen": "autoreconf -fiv",
     "config-opts" : [
         "--disable-static",
         "--without-gtk",
