@@ -16,5 +16,5 @@ jobs:
       - name: Run Ruff Linter
         uses: chartboost/ruff-action@v1
         with:
-          # Aggiunto 'check' prima degli argomenti
-          args: check --select E,F,W,I --target-version py312
+          
+          args: check --select E,F,W,I --target-version py312 --fix
