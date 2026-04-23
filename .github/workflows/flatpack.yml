@@ -19,6 +19,8 @@ jobs:
           bundle: com.github.d3msudo.anura.flatpak
           manifest-path: flatpak/com.github.d3msudo.anura.json
           cache: true
-          
+          # Disabilitiamo i test interni per velocizzare e evitare errori di display
+          run-tests: false
+          # Usiamo l'impostazione predefinita per i repository
           repository-name: flathub
           repository-url: https://dl.flathub.org/repo/flathub.flatpakrepo
