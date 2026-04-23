@@ -8,7 +8,7 @@
 </figure>
 </div>
 
-Quickly extract text from almost any source: YouTube, screencasts, PDFs, webpages, photos, etc. 
+Quickly extract text from almost any source: YouTube, screencasts, PDFs, webpages, photos, etc.  
 Grab the image and get the text instantly.
 
 **Anura** also features built-in support for decoding QR codes in just a few clicks!
@@ -21,8 +21,14 @@ The package will soon be available for download as:
 
 ## Building
 
-I recommend using [GNOME Builder](https://wiki.gnome.org/Apps/Builder) for development. 
+I recommend using [GNOME Builder](https://wiki.gnome.org/Apps/Builder) for development.  
 To build the Anura application, simply open the project folder in Builder and press "Execute" (F5). It will automatically download the required runtimes and build the app.
+
+## Localization
+
+Anura is translated using Weblate. If you want to help translate the app into your language, please visit the project page:
+
+[![Translation status](https://hosted.weblate.org/widgets/anura/-/horizontal-auto.svg)](https://hosted.weblate.org/engage/anura/)
 
 ## Contribution
 
