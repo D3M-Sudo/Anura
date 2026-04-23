@@ -9,9 +9,6 @@ on:
 jobs:
   flatpak-builder:
     runs-on: ubuntu-latest
-    container:
-      image: mantle/flatpak-github-actions:gnome-47
-      options: --privileged
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -22,5 +19,6 @@ jobs:
           bundle: com.github.d3msudo.anura.flatpak
           manifest-path: flatpak/com.github.d3msudo.anura.json
           cache: true
-          
-          stop-at-module: anura
+          # Aggiungiamo flathub per scaricare i runtime GNOME 47 necessari
+          repository-name: flathub
+          repository-url: https://dl.flathub.org/repo/flathub.flatpakrepo
