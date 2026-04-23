@@ -5,7 +5,10 @@
     "modules" : [
         {
             "name" : "python3-pillow",
-            "buildsystem" : "python_pip",
+            "buildsystem" : "simple",
+            "build-commands" : [
+                "pip3 install --verbose --no-deps --prefix=/app ."
+            ],
             "sources" : [
                 {
                     "type" : "git",
@@ -16,7 +19,10 @@
         },
         {
             "name" : "python3-pytesseract",
-            "buildsystem" : "python_pip",
+            "buildsystem" : "simple",
+            "build-commands" : [
+                "pip3 install --verbose --no-deps --prefix=/app ."
+            ],
             "sources" : [
                 {
                     "type" : "git",
