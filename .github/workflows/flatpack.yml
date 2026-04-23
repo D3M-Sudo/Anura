@@ -9,6 +9,11 @@ on:
 jobs:
   flatpak-builder:
     runs-on: ubuntu-latest
+    # Usiamo un container che ha già Flatpak e le librerie GNOME installate
+    container:
+      image: bilelmoussaoui/flatpak-github-actions:gnome-47
+      options: --privileged
+    
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -19,8 +24,5 @@ jobs:
           bundle: com.github.d3msudo.anura.flatpak
           manifest-path: flatpak/com.github.d3msudo.anura.json
           cache: true
-          # IMPORTANTE: Aggiungiamo flathub come repository per le dipendenze
-          repository-name: flathub
-          repository-url: https://dl.flathub.org/repo/flathub.flatpakrepo
-          # Disabilitiamo i test per evitare la dipendenza da xvfb che sta fallendo
+          # Disabilitiamo i test grafici che causano l'errore xvfb
           run-tests: false
