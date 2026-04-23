@@ -9,7 +9,7 @@ author = 'd3msudo'
 domain = 'com.github'
 app_id = domain + '.' + author + '.' + meson.project_name()
 gitrepo = 'https://github.com/' + author + '/' + meson.project_name()
-website = 'https://github.com/d3msudo/anura' # Updated to your repo
+website = 'https://github.com/d3msudo/anura'
 
 i18n = import('i18n')
 pymod = import('python')
