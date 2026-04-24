@@ -1,8 +1,9 @@
-name: CI Quality Check
+name: CI Quality Check & Release
 
 on:
   push:
     branches: [ "master" ]
+    tags: [ "v*" ]
   pull_request:
     branches: [ "master" ]
 
@@ -17,28 +18,34 @@ jobs:
       - name: Run Ruff Linter
         uses: chartboost/ruff-action@v1
         with:
-          # --fix and --unsafe-fixes: automatically repair safe and unsafe issues
-          # --exit-zero: ensures the workflow continues even if some errors remain (shows as warning)
+          # Automatically repair safe issues and show warnings for the rest
           args: check --select E,F,W,I --target-version py312 --fix --unsafe-fixes --exit-zero
 
-  # JOB 2: Flatpak manifest and build validation
-  flatpak-validation:
-    needs: python-quality # Executes only after the Ruff job completes
+  # JOB 2: Flatpak build and optional release
+  flatpak-builder:
+    needs: python-quality
     runs-on: ubuntu-latest
+    # Using the specialized container to handle GNOME runtimes and permissions
+    container:
+      image: bilelmoussaoui/flatpak-github-actions:gnome-nightly
+      options: --privileged
+    
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Correct path: added /setup-flatpak to the repository name
-      - name: Setup Flatpak environment
-        uses: flatpak/flatpak-github-actions/setup-flatpak@master
+      - name: Build Anura Flatpak
+        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:
-          remote: flathub
-          remote-url: https://dl.flathub.org/repo/flathub.flatpakrepo
-
-      - name: Validate Flatpak Manifest
-        uses: flatpak/flatpak-github-actions/flatpak-builder@master
-        with:
-          bundle: anura-app.flatpak
+          bundle: com.github.d3msudo.anura.flatpak
           manifest-path: flatpak/com.github.d3msudo.anura.json
+          cache: false
           run-tests: false
+
+      - name: Upload Flatpak Bundle to Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: com.github.d3msudo.anura.flatpak
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
