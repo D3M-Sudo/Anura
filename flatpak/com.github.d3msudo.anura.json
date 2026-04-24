@@ -1,10 +1,10 @@
 {
-    "app-id" : "com.github.d3msudo.anura",
-    "runtime" : "org.gnome.Platform",
-    "runtime-version" : "49",
-    "sdk" : "org.gnome.Sdk",
-    "command" : "anura",
-    "finish-args" : [
+    "app-id": "com.github.d3msudo.anura",
+    "runtime": "org.gnome.Platform",
+    "runtime-version": "49",
+    "sdk": "org.gnome.Sdk",
+    "command": "anura",
+    "finish-args": [
         "--share=network",
         "--share=ipc",
         "--socket=fallback-x11",
@@ -12,13 +12,9 @@
         "--device=dri",
         "--talk-name=org.freedesktop.Notifications",
         "--talk-name=org.gnome.Shell.Screenshot",
-        "--talk-name=org.kde.kspread.screenshot",
-        "--filesystem=xdg-run/dconf",
-        "--filesystem=~/.config/dconf:ro",
-        "--talk-name=ca.desrt.dconf",
-        "--env=DCONF_USER_CONFIG_DIR=.config/dconf"
+        "--talk-name=org.kde.kspread.screenshot"
     ],
-    "cleanup" : [
+    "cleanup": [
         "/include",
         "/lib/pkgconfig",
         "/share/doc",
@@ -26,16 +22,16 @@
         "*.la",
         "*.a"
     ],
-    "modules" : [
+    "modules": [
         {
-            "name" : "blueprint-compiler",
-            "buildsystem" : "meson",
-            "cleanup" : [ "*" ],
-            "sources" : [
+            "name": "blueprint-compiler",
+            "buildsystem": "meson",
+            "cleanup": [ "*" ],
+            "sources": [
                 {
-                    "type" : "git",
-                    "url" : "https://gitlab.gnome.org/jwestman/blueprint-compiler.git",
-                    "tag" : "v0.18.0"
+                    "type": "git",
+                    "url": "https://gitlab.gnome.org/jwestman/blueprint-compiler.git",
+                    "tag": "v0.18.0"
                 }
             ]
         },
@@ -46,13 +42,14 @@
         "python3-modules.json",
         "python3-gTTS.json",
         {
-            "name" : "anura",
-            "builddir" : true,
-            "buildsystem" : "meson",
-            "sources" : [
+            "name": "anura",
+            "builddir": true,
+            "buildsystem": "meson",
+            "sources": [
                 {
-                    "type" : "dir",
-                    "path" : ".."
+                    "type": "git",
+                    "url": "https://github.com/D3M-Sudo/Anura.git",
+                    "tag": "v0.1.0"
                 }
             ]
         }
