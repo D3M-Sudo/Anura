@@ -11,7 +11,7 @@ Categories=GNOME;GTK;Utility;Office;Graphics;
 # Enriched keywords for better search indexing
 Keywords=OCR;Text;Extraction;Reader;QR;Scanner;
 StartupNotify=true
-# Enabled DBus for single-instance efficiency
+# Disabled DBus for compatibility with flatpack format
 DBusActivatable=false
 X-GNOME-UsesNotifications=true
 
