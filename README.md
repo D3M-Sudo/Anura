@@ -27,9 +27,11 @@ Capture a screen area and get the text instantly copied to your clipboard.
 ## Installation
 
 ### Flatpak (Stable Release)
+
 La prima versione stabile è ora disponibile. Puoi scaricare il bundle `.flatpak` direttamente dalla pagina delle [Releases](https://github.com/D3M-Sudo/Anura/releases/latest).
 
 Per installarlo sul tuo sistema Linux Mint:
+
 ```zsh
 flatpak install --user ~/Downloads/com.github.d3msudo.anura.flatpak
 ```
@@ -44,27 +46,19 @@ To compile Anura:
 
 2. Press **"Run" (F5)**. Builder will automatically download the required runtimes and compile the application.
 
-
 ## Localization
-
 
 Anura is translated using Weblate. If you want to help translate the app into your language, please visit our project page:
 
-
 [![Translation status](https://hosted.weblate.org/widgets/anura/-/horizontal-auto.svg)](https://hosted.weblate.org/engage/anura/)
-
 
 ## Contributing
 
-
 Any help is appreciated! Anura follows the GNOME project [Code of Conduct](https://gitlab.gnome.org/World/amberol/-/blob/main/code-of-conduct.md).
-
 
 ## License
 
-
 Anura is released under the **MIT** license. See the `LICENSE` file for more details.
-
 
 ---
 
