@@ -34,11 +34,21 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # RIGOR: Force a clean state to bypass broken caches
+      - name: Purge build caches and artifacts
+        run: |
+          rm -rf .flatpak-builder/
+          rm -rf _build/
+          rm -rf builddir/
+          # Ensure the builder starts with a fresh environment
+          echo "Caches purged. Proceeding with clean build."
+
       - name: Build Anura Flatpak
         uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:
           bundle: com.github.d3msudo.anura.flatpak
           manifest-path: flatpak/com.github.d3msudo.anura.json
+          # Explicitly disable action-level cache
           cache: false
           run-tests: false
 
