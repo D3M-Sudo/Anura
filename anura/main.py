@@ -23,7 +23,7 @@ from anura.window import anuraWindow
 class anuraApplication(Adw.Application):
     """
     Main application class for Anura OCR.
-    Optimized for stability on Linux Mint Cinnamon.
+    Optimized for stability on Linux.
     """
     __gtype_name__ = 'anuraApplication'
 
@@ -63,7 +63,7 @@ class anuraApplication(Adw.Application):
         # Register Application Actions
         self._setup_actions()
 
-        # Global look and feel for Cinnamon
+        # Global look and feel
         GLib.set_application_name("Anura OCR")
         GLib.set_prgname(APP_ID)
 
@@ -76,7 +76,10 @@ class anuraApplication(Adw.Application):
         self.create_action('paste_from_clipboard', self.on_paste_from_clipboard, ['<primary>v'])
         self.create_action('listen', self.on_listen, ['<primary>l'])
         self.create_action('listen_cancel', self.on_listen_cancel, ['<primary><shift>l'])
+        
+        # Shortcut action associated with the on_shortcuts method
         self.create_action('shortcuts', self.on_shortcuts, ['<primary>question'])
+        
         self.create_action('quit', lambda *_: self.quit(), ['<primary>q', '<primary>w'])
         self.create_action('preferences', self.on_preferences, ['<primary>comma'])
         self.create_action('about', self.on_about)
@@ -110,7 +113,7 @@ class anuraApplication(Adw.Application):
             version=self.version,
             copyright=f'© {datetime.date.today().year} D3M-Sudo & Anura Contributors',
             website="https://github.com/d3msudo/anura",
-            license_type=Gtk.License.MIT_X11,
+            license_type=Gtk.License.MIT,
             developers=["Andrey Maksimov", "D3M-Sudo"],
             designers=["Andrey Maksimov"],
             release_notes=_("Technical and rigorous OCR tool optimized for Linux.")
@@ -118,10 +121,10 @@ class anuraApplication(Adw.Application):
         about_window.present(self.props.active_window)
 
     def on_shortcuts(self, _action, _param):
-        builder = Gtk.Builder()
-        builder.add_from_resource(f"{RESOURCE_PREFIX}/ui/shortcuts.ui")
-        builder.get_object("shortcuts").set_transient_for(self.get_active_window())
-        builder.get_object("shortcuts").present()
+        """Sends the shortcut display command to the active window."""
+        window = self.get_active_window()
+        if window:
+            window.show_shortcuts()
 
     def on_copy_to_clipboard(self, _action, _param) -> None:
         self.get_active_window().on_copy_to_clipboard(self)

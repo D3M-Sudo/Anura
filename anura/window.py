@@ -153,7 +153,6 @@ class AnuraWindow(Adw.ApplicationWindow):
     def on_dnd_drop(self, _target, value: Gdk.FileList, _x, _y) -> bool:
         """Handles Drag-and-Drop events for image files."""
         files = value.get_files()
-        # Fix E701: Multiple statements on one line
         if not files:
             return False
 
@@ -187,6 +186,23 @@ class AnuraWindow(Adw.ApplicationWindow):
         dialog = PreferencesDialog()
         dialog.present(self)
 
+    def show_shortcuts(self):
+        """
+        Initializes and displays the keyboard shortcuts window.
+        Loads the UI definition from the compiled resource file.
+        """
+        try:
+            builder = Gtk.Builder.new_from_resource(f"{RESOURCE_PREFIX}/ui/shortcuts.ui")
+            shortcuts_window = builder.get_object("shortcuts")
+            
+            if shortcuts_window:
+                shortcuts_window.set_transient_for(self)
+                shortcuts_window.present()
+            else:
+                logger.error("Failed to locate 'shortcuts' object in the UI resource.")
+        except Exception as e:
+            logger.error(f"An error occurred while loading shortcuts: {e}")
+
     def show_welcome_page(self, *_):
         """Navigates back to the welcome view."""
         self.split_view.set_show_content(False)
@@ -203,10 +219,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         self.toast_overlay.add_toast(toast)
 
     def uri_validator(self, text: str) -> bool:
-        """
-        Validates if the provided text is a well-formed URI.
-        Fixes E722: Do not use bare 'except'
-        """
+        """Validates if the provided text is a well-formed URI."""
         try:
             res = urlparse(text.strip())
             return all([res.scheme, res.netloc])
