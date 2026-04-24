@@ -1,56 +1,57 @@
 using Gtk 4.0;
+using Adw 1;
 
-ShortcutsWindow shortcuts {
+Adw.ShortcutsWindow shortcuts {
   modal: true;
   title: C_("shortcut window", "Shortcuts");
 
-  ShortcutsSection {
+  Adw.ShortcutsSection {
     section-name: "shortcuts";
     max-height: 10;
 
-    ShortcutsGroup {
+    Adw.ShortcutsGroup {
       title: C_("shortcut window", "General");
 
-      ShortcutsShortcut {
+      Adw.ShortcutsShortcut {
         accelerator: "<ctrl>o";
         title: C_("shortcut window", "Open image");
       }
 
-      ShortcutsShortcut {
+      Adw.ShortcutsShortcut {
         accelerator: "<ctrl>g";
         title: C_("shortcut window", "Take screenshot and extract text");
       }
 
-      ShortcutsShortcut {
+      Adw.ShortcutsShortcut {
         accelerator: "<ctrl><shift>g";
         title: C_("shortcut window", "Extract text and copy it to clipboard");
         subtitle: C_("shortcut window", "May not work properly on Wayland");
       }
 
-      ShortcutsShortcut {
+      Adw.ShortcutsShortcut {
         accelerator: "<ctrl>c";
         title: C_("shortcut window", "Copy extracted text to clipboard");
       }
     }
 
-    ShortcutsGroup {
+    Adw.ShortcutsGroup {
       title: C_("shortcut window", "Application");
 
-      ShortcutsShortcut {
+      Adw.ShortcutsShortcut {
         accelerator: "<ctrl>comma";
         title: C_("shortcut window", "Preferences");
       }
 
-      ShortcutsShortcut {
+      Adw.ShortcutsShortcut {
         accelerator: "<ctrl>q";
         title: C_("shortcut window", "Quit");
       }
     }
 
-    ShortcutsGroup {
+    Adw.ShortcutsGroup {
       title: C_("shortcut window", "Help");
 
-      ShortcutsShortcut {
+      Adw.ShortcutsShortcut {
         accelerator: "<ctrl>question";
         title: C_("shortcut window", "Display Shortcuts");
       }
