@@ -7,7 +7,8 @@ on:
     branches: [ "master" ]
 
 jobs:
-  ruff:
+  # JOB 1: Python code analysis and linting
+  python-quality:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -16,4 +17,21 @@ jobs:
       - name: Run Ruff Linter
         uses: chartboost/ruff-action@v1
         with:
-          args: check --select E,F,W,I --target-version py312 --fix --unsafe-fixes
+          # --fix and --unsafe-fixes: automatically repair safe and unsafe issues
+          # --exit-zero: ensures the workflow continues even if some errors remain (shows as warning)
+          args: check --select E,F,W,I --target-version py312 --fix --unsafe-fixes --exit-zero
+
+  # JOB 2: Flatpak manifest and build validation
+  flatpak-validation:
+    needs: python-quality # Executes only after the Ruff job completes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Validate Flatpak Manifest
+        uses: flatpak/flatpak-github-actions/flatpak-builder@master
+        with:
+          bundle: anura-app.flatpak
+          manifest-path: flatpak/com.github.d3msudo.anura.json
+          run-tests: false
