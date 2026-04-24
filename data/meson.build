@@ -51,8 +51,6 @@ if compile_schemas.found()
 endif
 
 # Default tesseract trained model
-# Note: Usually these are handled by system dependencies, 
-# but kept here as per your current configuration.
 install_data('tessdata/eng.traineddata',
   install_dir: join_paths(get_option('datadir'), meson.project_name(), 'tessdata')
 )
@@ -60,7 +58,7 @@ install_data('tessdata/eng.traineddata',
 subdir('icons')
 
 # UI Blueprints Batch Compilation
-# Optimized to use the app_id variable where possible
+# Optimized path resolution to avoid blueprint-compiler sync issues
 blueprints = custom_target('blueprints',
   input: files(
     'ui/preferences_dialog.blp',
@@ -76,7 +74,13 @@ blueprints = custom_target('blueprints',
     'ui/share_row.blp',
   ),
   output: '.',
-  command: [find_program('blueprint-compiler'), 'batch-compile', '@OUTPUT@', '@CURRENT_SOURCE_DIR@', '@INPUT@'],
+  command: [
+    find_program('blueprint-compiler'), 
+    'batch-compile', 
+    '@OUTPUT@', 
+    meson.current_source_dir() / 'ui', 
+    '@INPUT@'
+  ],
 )
 
 # GResource Compilation
