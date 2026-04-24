@@ -29,10 +29,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Install dependencies and setup Flathub
         run: |
           sudo apt-get update
-          sudo apt-get install -y flatpak flatpak-builder  
+          sudo apt-get install -y flatpak flatpak-builder
+          # Setup Flathub repository to allow downloading SDKs and Runtimes
+          sudo flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
       - name: Validate Flatpak Manifest
         uses: flatpak/flatpak-github-actions/flatpak-builder@master
