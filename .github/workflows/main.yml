@@ -33,12 +33,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y flatpak flatpak-builder
-          # Setup Flathub repository to allow downloading SDKs and Runtimes
-          sudo flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-
+          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          
       - name: Validate Flatpak Manifest
         uses: flatpak/flatpak-github-actions/flatpak-builder@master
         with:
           bundle: anura-app.flatpak
           manifest-path: flatpak/com.github.d3msudo.anura.json
           run-tests: false
+          install-deps-from-flathub: true
