@@ -41,9 +41,6 @@ class ExtractedPage(Adw.NavigationPage):
         ttsservice.connect("stop", self._on_listen_end)
 
     def do_hiding(self) -> None:
-        """
-        Clears the buffer when the user navigates back to ensure system stability.
-        """
         self.buffer.set_text("")
         self.emit("go-back", 1)
 
@@ -63,9 +60,6 @@ class ExtractedPage(Adw.NavigationPage):
             logger.error(f"Error setting extracted text: {e}")
 
     def listen(self):
-        """
-        Starts Text-to-Speech (TTS) for the extracted text.
-        """
         self.swap_controls(True)
         lang = self.settings.get_string("active-language")
 
@@ -76,9 +70,6 @@ class ExtractedPage(Adw.NavigationPage):
         )
 
     def listen_cancel(self):
-        """
-        Stops the audio playback.
-        """
         ttsservice.stop_speaking()
         self.swap_controls(False)
 
@@ -94,8 +85,4 @@ class ExtractedPage(Adw.NavigationPage):
         self.swap_controls(False)
 
     def swap_controls(self, state: bool = False):
-        """
-        Handles widget states during audio playback.
-        Currently a placeholder for future UI integrations.
-        """
         pass

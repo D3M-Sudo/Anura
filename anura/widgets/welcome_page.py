@@ -27,7 +27,6 @@ class WelcomePage(Adw.NavigationPage):
 
         self.settings = settings
 
-        # Load branded logo from resource path
         try:
             logo_path = f"{RESOURCE_PREFIX}/icons/{APP_ID}.svg"
             logo = Gdk.Texture.new_from_resource(logo_path)
@@ -35,18 +34,13 @@ class WelcomePage(Adw.NavigationPage):
         except Exception as e:
             logger.error(f"Could not load welcome logo from {logo_path}: {e}")
 
-        # Signal connections
         self.language_popover.connect('language-changed', self._on_language_changed)
 
-        # Set initial label from settings
         current_lang_code = self.settings.get_string("active-language")
         self.lang_combo.set_label(
             language_manager.get_language(current_lang_code)
         )
 
     def _on_language_changed(self, _: LanguagePopover, language: LanguageItem):
-        """
-        Updates the primary OCR language and persists it to settings.
-        """
         self.lang_combo.set_label(language.title)
         self.settings.set_string("active-language", language.code)
