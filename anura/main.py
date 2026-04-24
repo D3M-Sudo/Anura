@@ -1,8 +1,3 @@
-# main.py
-#
-# Copyright 2021-2025 Andrey Maksimov
-# Copyright 2026 D3M-Sudo (Anura fork and modifications)
-
 import asyncio
 import datetime
 import sys
@@ -17,15 +12,11 @@ from anura.language_manager import language_manager
 from anura.services.clipboard_service import clipboard_service
 from anura.services.screenshot_service import ScreenshotService
 from anura.services.settings import settings
-from anura.window import anuraWindow
+from anura.window import AnuraWindow
 
 
-class anuraApplication(Adw.Application):
-    """
-    Main application class for Anura OCR.
-    Optimized for stability on Linux.
-    """
-    __gtype_name__ = 'anuraApplication'
+class AnuraApplication(Adw.Application):
+    __gtype_name__ = 'AnuraApplication'
 
     def __init__(self, version=None):
         super().__init__(application_id=APP_ID,
@@ -34,7 +25,6 @@ class anuraApplication(Adw.Application):
         self.version = version
         self.settings = settings
 
-        # Command line option: Extract directly to clipboard
         self.add_main_option(
             'extract_to_clipboard',
             ord('e'),
@@ -44,31 +34,21 @@ class anuraApplication(Adw.Application):
             None
         )
 
-        # Initialize tesseract data storage path
         language_manager.init_tessdata()
-
-        # Initialize libnotify for system notifications
         Notify.init(APP_ID)
 
     def do_startup(self, *args, **kwargs):
-        """
-        Initialization logic performed once when the application starts.
-        """
         Adw.Application.do_startup(self)
 
-        # Initialize OCR Backend
         self.backend = ScreenshotService()
         self.backend.connect('decoded', self.on_decoded)
 
-        # Register Application Actions
         self._setup_actions()
 
-        # Global look and feel
         GLib.set_application_name("Anura OCR")
         GLib.set_prgname(APP_ID)
 
     def _setup_actions(self):
-        """Registers keyboard shortcuts and application-wide actions."""
         self.create_action('get_screenshot', self.get_screenshot, ['<primary>g'])
         self.create_action('get_screenshot_and_copy', self.get_screenshot_and_copy, ['<primary><shift>g'])
         self.create_action('copy_to_clipboard', self.on_copy_to_clipboard, ['<primary>c'])
@@ -76,23 +56,18 @@ class anuraApplication(Adw.Application):
         self.create_action('paste_from_clipboard', self.on_paste_from_clipboard, ['<primary>v'])
         self.create_action('listen', self.on_listen, ['<primary>l'])
         self.create_action('listen_cancel', self.on_listen_cancel, ['<primary><shift>l'])
-        
-        # Shortcut action associated with the on_shortcuts method
         self.create_action('shortcuts', self.on_shortcuts, ['<primary>question'])
-        
         self.create_action('quit', lambda *_: self.quit(), ['<primary>q', '<primary>w'])
         self.create_action('preferences', self.on_preferences, ['<primary>comma'])
         self.create_action('about', self.on_about)
 
     def do_activate(self):
-        """Activates the main window."""
         win = self.props.active_window
         if not win:
-            win = anuraWindow(application=self)
+            win = AnuraWindow(application=self)
         win.present()
 
     def do_command_line(self, command_line):
-        """Handles command line arguments for CLI extraction."""
         options = command_line.get_options_dict().end().unpack()
 
         if "extract_to_clipboard" in options:
@@ -121,7 +96,6 @@ class anuraApplication(Adw.Application):
         about_window.present(self.props.active_window)
 
     def on_shortcuts(self, _action, _param):
-        """Sends the shortcut display command to the active window."""
         window = self.get_active_window()
         if window:
             window.show_shortcuts()
@@ -136,13 +110,12 @@ class anuraApplication(Adw.Application):
         self.get_active_window().get_screenshot(copy=True)
 
     def open_image(self, _action, _param) -> None:
-        self.get_active_window().open_image()
+        self.get_active_window().get_screenshot_from_file()
 
     def on_paste_from_clipboard(self, _action, _param) -> None:
         self.get_active_window().on_paste_from_clipboard(self)
 
     def on_decoded(self, _sender, text: str, copy: bool) -> None:
-        """Handles the output from the OCR backend."""
         if not text:
             notification = Notify.Notification.new(
                 summary='Anura OCR',
@@ -168,7 +141,6 @@ class anuraApplication(Adw.Application):
         self.get_active_window().on_listen_cancel()
 
     def create_action(self, name, callback, shortcuts=None):
-        """Utility to create simple actions with accelerators."""
         action = Gio.SimpleAction.new(name, None)
         action.connect("activate", callback)
         self.add_action(action)
@@ -177,7 +149,6 @@ class anuraApplication(Adw.Application):
 
 
 def main(version):
-    # Integration with GLib Event Loop for Asyncio compatibility
     asyncio.set_event_loop_policy(GLibEventLoopPolicy())
-    app = anuraApplication(version)
+    app = AnuraApplication(version)
     return app.run(sys.argv)
