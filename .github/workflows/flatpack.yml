@@ -23,7 +23,7 @@ jobs:
         with:
           bundle: com.github.d3msudo.anura.flatpak
           manifest-path: flatpak/com.github.d3msudo.anura.json
-          cache: true
+          cache: false
           run-tests: false
 
       - name: Upload Flatpak Bundle to Release
