@@ -29,16 +29,16 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install dependencies and setup Flathub
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y flatpak flatpak-builder
-          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-          
+      # Official action to install flatpak, flatpak-builder and configure Flathub correctly
+      - name: Setup Flatpak environment
+        uses: flatpak/flatpak-github-actions/setup-flatpak@master
+        with:
+          remote: flathub
+          remote-url: https://dl.flathub.org/repo/flathub.flatpakrepo
+
       - name: Validate Flatpak Manifest
         uses: flatpak/flatpak-github-actions/flatpak-builder@master
         with:
           bundle: anura-app.flatpak
           manifest-path: flatpak/com.github.d3msudo.anura.json
           run-tests: false
-          install-deps-from-flathub: true
