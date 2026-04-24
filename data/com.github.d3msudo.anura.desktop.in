@@ -12,7 +12,7 @@ Categories=GNOME;GTK;Utility;Office;Graphics;
 Keywords=OCR;Text;Extraction;Reader;QR;Scanner;
 StartupNotify=true
 # Enabled DBus for single-instance efficiency
-DBusActivatable=true
+DBusActivatable=false
 X-GNOME-UsesNotifications=true
 
 # Actions for right-click context menu
