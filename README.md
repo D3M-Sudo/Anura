@@ -31,7 +31,7 @@ La prima versione stabile è ora disponibile. Puoi scaricare il bundle `.flatpak
 
 Per installarlo sul tuo sistema Linux Mint:
 ```zsh
-flatpak install --user ~/Scaricati/com.github.d3msudo.anura.flatpak
+flatpak install --user ~/Downloads/com.github.d3msudo.anura.flatpak
 ```
 
 ## Development and Build
