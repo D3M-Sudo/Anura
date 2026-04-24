@@ -29,6 +29,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder  
+
       - name: Validate Flatpak Manifest
         uses: flatpak/flatpak-github-actions/flatpak-builder@master
         with:
