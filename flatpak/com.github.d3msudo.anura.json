@@ -153,6 +153,17 @@
             ]
         },
         {
+            "name": "blueprint-compiler",
+            "buildsystem": "meson",
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://gitlab.gnome.org/jwestman/blueprint-compiler.git",
+                    "tag": "v0.14.0"
+                }
+            ]
+        },
+        {
             "name": "python3-modules",
             "buildsystem": "simple",
             "build-commands": [],
@@ -233,6 +244,11 @@
             "name": "anura",
             "builddir": true,
             "buildsystem": "meson",
+            "build-options": {
+                "env": {
+                    "GI_TYPELIB_PATH": "/app/lib/girepository-2.0:/usr/lib/x86_64-linux-gnu/girepository-2.0:/usr/lib/girepository-2.0"
+                }
+            },
             "sources": [
                 {
                     "type": "git",
