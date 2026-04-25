@@ -235,6 +235,36 @@
         },
 
         {
+            "name": "python3-requests",
+            "buildsystem": "simple",
+            "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
+            "sources": [ { "type": "git", "url": "https://github.com/psf/requests.git", "tag": "v2.32.3" } ]
+        },
+        {
+            "name": "python3-pillow",
+            "buildsystem": "simple",
+            "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
+            "sources": [ { "type": "git", "url": "https://github.com/python-pillow/Pillow.git", "tag": "11.0.0" } ]
+        },
+        {
+            "name": "python3-pytesseract",
+            "buildsystem": "simple",
+            "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
+            "sources": [ { "type": "git", "url": "https://github.com/madmaze/pytesseract.git", "tag": "v0.3.13" } ]
+        },
+        {
+            "name": "python3-gTTS",
+            "buildsystem": "simple",
+            "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
+            "sources": [ { "type": "git", "url": "https://github.com/pndurette/gTTS.git", "tag": "v2.5.1" } ]
+        },
+        {
+            "name": "python3-dateutil",
+            "buildsystem": "simple",
+            "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
+            "sources": [ { "type": "git", "url": "https://github.com/dateutil/dateutil.git", "tag": "2.9.0.post0" } ]
+        },
+        {
             "name": "anura",
             "builddir": true,
             "buildsystem": "meson",
