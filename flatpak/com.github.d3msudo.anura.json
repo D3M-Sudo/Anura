@@ -176,7 +176,8 @@
             "buildsystem": "meson",
             "build-options": {
                 "env": {
-                    "GI_TYPELIB_PATH": "/app/lib/girepository-2.0:/usr/lib/x86_64-linux-gnu/girepository-2.0"
+                    "GI_TYPELIB_PATH": "/app/lib/girepository-2.0:/usr/lib/x86_64-linux-gnu/girepository-2.0:/usr/lib/girepository-2.0",
+                    "LD_LIBRARY_PATH": "/app/lib"
                 }
             },
             "sources": [
