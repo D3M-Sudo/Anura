@@ -157,6 +157,22 @@
             ]
         },
         {
+            "name": "gobject-introspection",
+            "buildsystem": "meson",
+            "cleanup": [
+                "/bin",
+                "/include",
+                "/lib/pkgconfig"
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://gitlab.gnome.org/GNOME/gobject-introspection.git",
+                    "tag": "1.82.0"
+                }
+            ]
+        },
+        {
             "name": "blueprint-compiler",
             "buildsystem": "meson",
             "sources": [
