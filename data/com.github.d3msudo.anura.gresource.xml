@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
     <gresource prefix="/com/github/d3msudo/anura">
-        <file preprocess="xml-stripblanks">ui/window.ui</file>
-        <file preprocess="xml-stripblanks">ui/welcome_page.ui</file>
-        <file preprocess="xml-stripblanks">ui/extracted_page.ui</file>
-        <file preprocess="xml-stripblanks">ui/language_popover.ui</file>
-        <file preprocess="xml-stripblanks">ui/language_popover_row.ui</file>
-        <file preprocess="xml-stripblanks">ui/language_row.ui</file>
-        <file preprocess="xml-stripblanks">ui/shortcuts.ui</file>
-        <file preprocess="xml-stripblanks">ui/preferences_dialog.ui</file>
-        <file preprocess="xml-stripblanks">ui/preferences_general.ui</file>
-        <file preprocess="xml-stripblanks">ui/preferences_languages.ui</file>
-        <file preprocess="xml-stripblanks">ui/share_row.ui</file>
+        <file preprocess="xml-stripblanks">window.ui</file>
+        <file preprocess="xml-stripblanks">welcome_page.ui</file>
+        <file preprocess="xml-stripblanks">extracted_page.ui</file>
+        <file preprocess="xml-stripblanks">language_popover.ui</file>
+        <file preprocess="xml-stripblanks">language_popover_row.ui</file>
+        <file preprocess="xml-stripblanks">language_row.ui</file>
+        <file preprocess="xml-stripblanks">shortcuts.ui</file>
+        <file preprocess="xml-stripblanks">preferences_dialog.ui</file>
+        <file preprocess="xml-stripblanks">preferences_general.ui</file>
+        <file preprocess="xml-stripblanks">preferences_languages.ui</file>
+        <file preprocess="xml-stripblanks">share_row.ui</file>
         
         <file>style.css</file>
         <file>icons/com.github.d3msudo.anura.svg</file>

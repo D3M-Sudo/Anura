@@ -88,6 +88,7 @@ app_resources = gnome.compile_resources(app_id,
     app_id + '.gresource.xml',
     gresource_bundle: true,
     dependencies: blueprints,
+    source_dir: [meson.current_build_dir(), meson.current_source_dir()],
     install: true,
     install_dir: pkgdatadir
 )
