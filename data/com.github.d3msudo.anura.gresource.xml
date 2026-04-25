@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
-    <gresource prefix="/com/github/d3msudo.anura">
+    <gresource prefix="/com/github/d3msudo/anura">
         <file preprocess="xml-stripblanks">window.ui</file>
         <file preprocess="xml-stripblanks">welcome_page.ui</file>
         <file preprocess="xml-stripblanks">extracted_page.ui</file>
