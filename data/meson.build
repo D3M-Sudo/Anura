@@ -1,8 +1,5 @@
-# Application ID definition
-# Rigor: Explicitly using the new namespace for Anura
 app_id = 'com.github.d3msudo.anura'
 
-# Desktop File Integration
 desktop_file = i18n.merge_file(
   input: app_id + '.desktop.in',
   output: app_id + '.desktop',
@@ -12,7 +9,6 @@ desktop_file = i18n.merge_file(
   install_dir: join_paths(get_option('datadir'), 'applications')
 )
 
-# Desktop File Validation
 desktop_utils = find_program('desktop-file-validate', required: false)
 if desktop_utils.found()
   test('Validate desktop file', desktop_utils,
@@ -20,16 +16,14 @@ if desktop_utils.found()
   )
 endif
 
-# AppStream Metadata (Required for Flathub/Software Manager)
 appstream_file = i18n.merge_file(
   input: app_id + '.appdata.xml.in',
   output: app_id + '.appdata.xml',
   po_dir: '../po',
   install: true,
-  install_dir: join_paths(get_option('datadir'), 'metainfo') # Modern path is 'metainfo'
+  install_dir: join_paths(get_option('datadir'), 'metainfo')
 )
 
-# AppStream Validation
 appstream_util = find_program('appstream-util', required: false)
 if appstream_util.found()
   test('Validate appstream file', appstream_util,
@@ -37,12 +31,10 @@ if appstream_util.found()
   )
 endif
 
-# GSettings Schema Installation
 install_data(app_id + '.gschema.xml',
   install_dir: join_paths(get_option('datadir'), 'glib-2.0', 'schemas')
 )
 
-# Compile Schemas Validation
 compile_schemas = find_program('glib-compile-schemas', required: false)
 if compile_schemas.found()
   test('Validate schema file', compile_schemas,
@@ -50,15 +42,12 @@ if compile_schemas.found()
   )
 endif
 
-# Default tesseract trained model
 install_data('tessdata/eng.traineddata',
   install_dir: join_paths(get_option('datadir'), meson.project_name(), 'tessdata')
 )
 
 subdir('icons')
 
-# UI Blueprints Batch Compilation
-# Optimized path resolution to avoid blueprint-compiler sync issues
 blueprints = custom_target('blueprints',
   input: files(
     'ui/preferences_dialog.blp',
@@ -83,7 +72,6 @@ blueprints = custom_target('blueprints',
   ],
 )
 
-# GResource Compilation
 app_resources = gnome.compile_resources(app_id,
     app_id + '.gresource.xml',
     gresource_bundle: true,

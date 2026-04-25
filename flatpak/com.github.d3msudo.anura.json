@@ -1,7 +1,7 @@
 {
     "app-id": "com.github.d3msudo.anura",
     "runtime": "org.gnome.Platform",
-    "runtime-version": "50",
+    "runtime-version": "49",
     "sdk": "org.gnome.Sdk",
     "command": "anura",
     "finish-args": [
@@ -13,7 +13,7 @@
         "--filesystem=xdg-run/dconf",
         "--filesystem=~/.config/dconf:ro",
         "--talk-name=org.gtk.vfs.*",
-        "--own-name=org.gnome.gsettings"
+        "--talk-name=ca.desrt.dconf"
     ],
     "cleanup": [
         "/include",
@@ -93,7 +93,7 @@
                 "-Dbackend-gtk4=enabled",
                 "-Dbackend-qt5=disabled"
             ],
-            "cleanup": [ "/include", "/lib/pkgconfig", "/share/gir-1.0", "*.la" ],
+            "cleanup": [ "/include", "/lib/pkgconfig", "*.la" ],
             "sources": [
                 {
                     "type": "git",
@@ -176,7 +176,7 @@
             "buildsystem": "meson",
             "build-options": {
                 "env": {
-                    "GI_TYPELIB_PATH": "/app/lib/girepository-2.0:/usr/lib/x86_64-linux-gnu/girepository-2.0:/usr/lib/girepository-2.0",
+                    "GI_TYPELIB_PATH": "/app/lib/girepository-1.0:/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0",
                     "LD_LIBRARY_PATH": "/app/lib"
                 }
             },
