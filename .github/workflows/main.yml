@@ -2,10 +2,10 @@ name: CI Quality Check & Release
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "main" ]
     tags: [ "v*" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "main" ]
 
 jobs:
   # JOB 1: Python code analysis and linting
