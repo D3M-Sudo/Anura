@@ -1,7 +1,7 @@
 {
     "app-id": "com.github.d3msudo.anura",
     "runtime": "org.gnome.Platform",
-    "runtime-version": "50",
+    "runtime-version": "49",
     "sdk": "org.gnome.Sdk",
     "command": "anura",
     "finish-args": [
@@ -9,7 +9,11 @@
         "--share=ipc",
         "--socket=fallback-x11",
         "--socket=wayland",
-        "--device=dri"
+        "--device=dri",
+        "--filesystem=xdg-run/dconf",
+        "--filesystem=~/.config/dconf:ro",
+        "--talk-name=org.gtk.vfs.*",
+        "--talk-name=ca.desrt.dconf"
     ],
     "cleanup": [
         "/include",
@@ -29,12 +33,7 @@
                 "--with-libtiff",
                 "--with-zlib"
             ],
-            "cleanup": [
-                "/bin",
-                "/include",
-                "/lib/pkgconfig",
-                "*.la"
-            ],
+            "cleanup": [ "/bin", "/include", "/lib/pkgconfig", "*.la" ],
             "sources": [
                 {
                     "type": "git",
@@ -50,11 +49,7 @@
                 "--disable-graphics",
                 "--enable-legacy"
             ],
-            "cleanup": [
-                "/include",
-                "/lib/pkgconfig",
-                "*.la"
-            ],
+            "cleanup": [ "/include", "/lib/pkgconfig", "*.la" ],
             "sources": [
                 {
                     "type": "git",
@@ -98,12 +93,7 @@
                 "-Dbackend-gtk4=enabled",
                 "-Dbackend-qt5=disabled"
             ],
-            "cleanup": [
-                "/include",
-                "/lib/pkgconfig",
-                "/share/gir-1.0",
-                "*.la"
-            ],
+            "cleanup": [ "/include", "/lib/pkgconfig", "*.la" ],
             "sources": [
                 {
                     "type": "git",
@@ -115,28 +105,17 @@
         {
             "name": "zbar",
             "buildsystem": "autotools",
-            "cleanup": [
-                "/bin",
-                "/include",
-                "/lib/pkgconfig",
-                "/share/doc",
-                "/share/man",
-                "*.la"
-            ],
+            "cleanup": [ "/bin", "/include", "/lib/pkgconfig", "*.la" ],
             "config-opts": [
                 "--disable-static",
                 "--without-gtk",
-                "--without-qt",
-                "--without-qt5",
-                "--without-xv",
-                "--without-dbus",
-                "--without-java",
                 "--without-python",
                 "--without-imagemagick",
+                "--without-dbus",
+                "--without-qt",
                 "--disable-video",
                 "--disable-doc",
-                "--with-introspection=no",
-                "--enable-codes=qrcode,code128,code39"
+                "--with-introspection=no"
             ],
             "sources": [
                 {
@@ -146,9 +125,7 @@
                 },
                 {
                     "type": "shell",
-                    "commands": [
-                        "autoreconf -vfi"
-                    ]
+                    "commands": [ "autoreconf -vfi" ]
                 }
             ]
         },
@@ -164,81 +141,34 @@
             ]
         },
         {
-            "name": "python3-modules",
+            "name": "python3-requests",
             "buildsystem": "simple",
-            "build-commands": [],
-            "modules": [
-                {
-                    "name": "python3-requests",
-                    "buildsystem": "simple",
-                    "build-commands": [
-                        "pip3 install --verbose --no-deps --no-build-isolation --prefix=/app ."
-                    ],
-                    "sources": [
-                        {
-                            "type": "git",
-                            "url": "https://github.com/psf/requests.git",
-                            "tag": "v2.32.3"
-                        }
-                    ]
-                },
-                {
-                    "name": "python3-pillow",
-                    "buildsystem": "simple",
-                    "build-commands": [
-                        "pip3 install --verbose --no-deps --no-build-isolation --prefix=/app ."
-                    ],
-                    "sources": [
-                        {
-                            "type": "git",
-                            "url": "https://github.com/python-pillow/Pillow.git",
-                            "tag": "11.0.0"
-                        }
-                    ]
-                },
-                {
-                    "name": "python3-pytesseract",
-                    "buildsystem": "simple",
-                    "build-commands": [
-                        "pip3 install --verbose --no-deps --no-build-isolation --prefix=/app ."
-                    ],
-                    "sources": [
-                        {
-                            "type": "git",
-                            "url": "https://github.com/madmaze/pytesseract.git",
-                            "tag": "v0.3.13"
-                        }
-                    ]
-                },
-                {
-                    "name": "python3-gTTS",
-                    "buildsystem": "simple",
-                    "build-commands": [
-                        "pip3 install --verbose --no-deps --no-build-isolation --prefix=/app ."
-                    ],
-                    "sources": [
-                        {
-                            "type": "git",
-                            "url": "https://github.com/pndurette/gTTS.git",
-                            "tag": "v2.5.1"
-                        }
-                    ]
-                },
-                {
-                    "name": "python3-dateutil",
-                    "buildsystem": "simple",
-                    "build-commands": [
-                        "pip3 install --verbose --no-deps --no-build-isolation --prefix=/app ."
-                    ],
-                    "sources": [
-                        {
-                            "type": "git",
-                            "url": "https://github.com/dateutil/dateutil.git",
-                            "tag": "2.9.0.post0"
-                        }
-                    ]
-                }
-            ]
+            "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
+            "sources": [ { "type": "git", "url": "https://github.com/psf/requests.git", "tag": "v2.32.3" } ]
+        },
+        {
+            "name": "python3-pillow",
+            "buildsystem": "simple",
+            "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
+            "sources": [ { "type": "git", "url": "https://github.com/python-pillow/Pillow.git", "tag": "11.0.0" } ]
+        },
+        {
+            "name": "python3-pytesseract",
+            "buildsystem": "simple",
+            "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
+            "sources": [ { "type": "git", "url": "https://github.com/madmaze/pytesseract.git", "tag": "v0.3.13" } ]
+        },
+        {
+            "name": "python3-gTTS",
+            "buildsystem": "simple",
+            "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
+            "sources": [ { "type": "git", "url": "https://github.com/pndurette/gTTS.git", "tag": "v2.5.1" } ]
+        },
+        {
+            "name": "python3-dateutil",
+            "buildsystem": "simple",
+            "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
+            "sources": [ { "type": "git", "url": "https://github.com/dateutil/dateutil.git", "tag": "2.9.0.post0" } ]
         },
         {
             "name": "anura",
@@ -246,7 +176,8 @@
             "buildsystem": "meson",
             "build-options": {
                 "env": {
-                    "GI_TYPELIB_PATH": "/app/lib/girepository-2.0:/usr/lib/x86_64-linux-gnu/girepository-2.0:/usr/lib/girepository-2.0"
+                    "GI_TYPELIB_PATH": "/app/lib/girepository-1.0:/app/lib/girepository-2.0:/usr/lib/girepository-1.0:/usr/lib/girepository-2.0",
+                    "LD_LIBRARY_PATH": "/app/lib"
                 }
             },
             "sources": [
