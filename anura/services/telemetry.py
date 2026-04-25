@@ -1,6 +1,7 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (modifiche Anura)
-# Distributed under the MIT License.
+#
+# MIT License.
 
 from typing import Any
 from gi.repository import GObject
