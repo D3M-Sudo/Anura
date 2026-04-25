@@ -123,6 +123,8 @@
                 "/bin",
                 "/include",
                 "/lib/pkgconfig",
+                "/share/doc",
+                "/share/man",
                 "*.la"
             ],
             "config-opts": [
@@ -130,6 +132,8 @@
                 "--without-gtk",
                 "--without-python",
                 "--without-imagemagick",
+                "--without-dbus",
+                "--without-qt",
                 "--disable-video",
                 "--disable-doc",
                 "--with-introspection=no"
