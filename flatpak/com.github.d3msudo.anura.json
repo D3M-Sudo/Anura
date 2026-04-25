@@ -33,12 +33,7 @@
                 "--with-libtiff",
                 "--with-zlib"
             ],
-            "cleanup": [
-                "/bin",
-                "/include",
-                "/lib/pkgconfig",
-                "*.la"
-            ],
+            "cleanup": [ "/bin", "/include", "/lib/pkgconfig", "*.la" ],
             "sources": [
                 {
                     "type": "git",
@@ -54,11 +49,7 @@
                 "--disable-graphics",
                 "--enable-legacy"
             ],
-            "cleanup": [
-                "/include",
-                "/lib/pkgconfig",
-                "*.la"
-            ],
+            "cleanup": [ "/include", "/lib/pkgconfig", "*.la" ],
             "sources": [
                 {
                     "type": "git",
@@ -102,12 +93,7 @@
                 "-Dbackend-gtk4=enabled",
                 "-Dbackend-qt5=disabled"
             ],
-            "cleanup": [
-                "/include",
-                "/lib/pkgconfig",
-                "/share/gir-1.0",
-                "*.la"
-            ],
+            "cleanup": [ "/include", "/lib/pkgconfig", "/share/gir-1.0", "*.la" ],
             "sources": [
                 {
                     "type": "git",
@@ -119,12 +105,7 @@
         {
             "name": "zbar",
             "buildsystem": "autotools",
-            "cleanup": [
-                "/bin",
-                "/include",
-                "/lib/pkgconfig",
-                "*.la"
-            ],
+            "cleanup": [ "/bin", "/include", "/lib/pkgconfig", "*.la" ],
             "config-opts": [
                 "--disable-static",
                 "--without-gtk",
@@ -144,9 +125,7 @@
                 },
                 {
                     "type": "shell",
-                    "commands": [
-                        "autoreconf -vfi"
-                    ]
+                    "commands": [ "autoreconf -vfi" ]
                 }
             ]
         },
@@ -164,31 +143,31 @@
         {
             "name": "python3-requests",
             "buildsystem": "simple",
-            "build-commands": [ "pip3 install --no-deps --prefix=/app ." ],
+            "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
             "sources": [ { "type": "git", "url": "https://github.com/psf/requests.git", "tag": "v2.32.3" } ]
         },
         {
             "name": "python3-pillow",
             "buildsystem": "simple",
-            "build-commands": [ "pip3 install --no-deps --prefix=/app ." ],
+            "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
             "sources": [ { "type": "git", "url": "https://github.com/python-pillow/Pillow.git", "tag": "11.0.0" } ]
         },
         {
             "name": "python3-pytesseract",
             "buildsystem": "simple",
-            "build-commands": [ "pip3 install --no-deps --prefix=/app ." ],
+            "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
             "sources": [ { "type": "git", "url": "https://github.com/madmaze/pytesseract.git", "tag": "v0.3.13" } ]
         },
         {
             "name": "python3-gTTS",
             "buildsystem": "simple",
-            "build-commands": [ "pip3 install --no-deps --prefix=/app ." ],
+            "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
             "sources": [ { "type": "git", "url": "https://github.com/pndurette/gTTS.git", "tag": "v2.5.1" } ]
         },
         {
             "name": "python3-dateutil",
             "buildsystem": "simple",
-            "build-commands": [ "pip3 install --no-deps --prefix=/app ." ],
+            "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
             "sources": [ { "type": "git", "url": "https://github.com/dateutil/dateutil.git", "tag": "2.9.0.post0" } ]
         },
         {
