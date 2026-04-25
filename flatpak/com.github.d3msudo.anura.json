@@ -144,31 +144,31 @@
             "name": "python3-requests",
             "buildsystem": "simple",
             "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
-            "sources": [ { "type": "git", "url": "https://github.com/psf/requests.git", "tag": "v2.32.3" } ]
+            "sources": [ { "type": "git", \"url\": \"https://github.com/psf/requests.git\", \"tag\": \"v2.32.3\" } ]
         },
         {
             "name": "python3-pillow",
             "buildsystem": "simple",
             "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
-            "sources": [ { "type": "git", "url": "https://github.com/python-pillow/Pillow.git", "tag": "11.0.0" } ]
+            "sources": [ { "type": "git", \"url\": \"https://github.com/python-pillow/Pillow.git\", \"tag\": \"11.0.0\" } ]
         },
         {
             "name": "python3-pytesseract",
             "buildsystem": "simple",
             "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
-            "sources": [ { "type": "git", "url": "https://github.com/madmaze/pytesseract.git", "tag": "v0.3.13" } ]
+            "sources": [ { "type": "git", \"url\": \"https://github.com/madmaze/pytesseract.git\", \"tag\": \"v0.3.13\" } ]
         },
         {
             "name": "python3-gTTS",
             "buildsystem": "simple",
             "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
-            "sources": [ { "type": "git", "url": "https://github.com/pndurette/gTTS.git", "tag": "v2.5.1" } ]
+            "sources": [ { "type": "git", \"url\": \"https://github.com/pndurette/gTTS.git\", \"tag\": \"v2.5.1\" } ]
         },
         {
             "name": "python3-dateutil",
             "buildsystem": "simple",
             "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
-            "sources": [ { "type": "git", "url": "https://github.com/dateutil/dateutil.git", "tag": "2.9.0.post0" } ]
+            "sources": [ { "type": "git", \"url\": \"https://github.com/dateutil/dateutil.git\", \"tag\": \"2.9.0.post0\" } ]
         },
         {
             "name": "anura",
@@ -176,7 +176,7 @@
             "buildsystem": "meson",
             "build-options": {
                 "env": {
-                    "GI_TYPELIB_PATH": "/app/lib/girepository-1.0:/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0",
+                    "GI_TYPELIB_PATH": "/app/lib/girepository-1.0:/app/lib/girepository-2.0:/usr/lib/girepository-1.0:/usr/lib/girepository-2.0",
                     "LD_LIBRARY_PATH": "/app/lib"
                 }
             },
