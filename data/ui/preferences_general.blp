@@ -30,5 +30,11 @@ template $PreferencesGeneralPage : Adw.PreferencesPage {
       use-underline: true;
       subtitle: _("Automatically open links extracted from QR codes");
     }
+
+    // NOTE: telemetry_switch has been removed from this template.
+    // The Python widget (PreferencesGeneralPage) previously declared it as a
+    // Gtk.Template.Child() and then set it invisible — causing a template
+    // mismatch warning if the widget was absent from the .ui file.
+    // Since telemetry is fully disabled in Anura, the widget is simply gone.
   }
 }

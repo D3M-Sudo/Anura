@@ -22,26 +22,26 @@ class LanguageManager(GObject.GObject):
     Centralized manager for Tesseract language models.
     Handles download, removal, and ISO 639-2 mapping.
     """
-    __gtype_name__ = 'LanguageManager'
 
-    # Signals for synchronization with UI widgets
+    __gtype_name__ = "LanguageManager"
+
     __gsignals__ = {
-        'added': (GObject.SIGNAL_RUN_FIRST, None, (str,)),
-        'downloading': (GObject.SIGNAL_RUN_FIRST, None, (str, int)),
-        'downloaded': (GObject.SIGNAL_RUN_FIRST, None, (str,)),
-        'removed': (GObject.SIGNAL_RUN_FIRST, None, (str,)),
+        "added": (GObject.SIGNAL_RUN_FIRST, None, (str,)),
+        "downloading": (GObject.SIGNAL_RUN_FIRST, None, (str, int)),
+        "downloaded": (GObject.SIGNAL_RUN_FIRST, None, (str,)),
+        "removed": (GObject.SIGNAL_RUN_FIRST, None, (str,)),
     }
 
-    _active_language: LanguageItem = LanguageItem(code='eng', title=_("English"))
+    _active_language: LanguageItem = LanguageItem(code="eng", title=_("English"))
 
     def __init__(self):
         super().__init__()
 
-        self.loading_languages: Dict[str, DownloadState] = dict()
+        self.loading_languages: Dict[str, DownloadState] = {}
         self._downloaded_codes = []
         self._need_update_cache = True
 
-        # Full ISO 639-2 Mapping (Tesseract compatible)
+        # Full ISO 639-2 mapping (Tesseract compatible)
         self._languages = {
             "afr": _("Afrikaans"), "amh": _("Amharic"), "ara": _("Arabic"),
             "asm": _("Assamese"), "aze": _("Azerbaijani"), "aze_cyrl": _("Azerbaijani - Cyrillic"),
@@ -94,7 +94,25 @@ class LanguageManager(GObject.GObject):
     @active_language.setter
     def active_language(self, language: LanguageItem):
         self._active_language = language
-        self.notify('active_language')
+        self.notify("active_language")
+
+    def init_tessdata(self):
+        """
+        FIX: method was called in main.py but never defined, causing AttributeError.
+        Ensures the tessdata directory exists and logs its status at startup.
+        """
+        if not os.path.exists(TESSDATA_DIR):
+            logger.warning(
+                f"Anura: tessdata directory not found at '{TESSDATA_DIR}'. "
+                "It will be created on first language download."
+            )
+            os.makedirs(TESSDATA_DIR, exist_ok=True)
+        else:
+            installed = self.get_downloaded_codes(force=True)
+            logger.info(
+                f"Anura: tessdata directory ready. "
+                f"{len(installed)} language model(s) installed: {installed or ['none']}"
+            )
 
     def get_language(self, code: str) -> str:
         """Returns the human-readable language name for a given ISO code."""
@@ -104,14 +122,14 @@ class LanguageManager(GObject.GObject):
         return LanguageItem(code=code, title=self.get_language(code))
 
     def get_downloaded_codes(self, force: bool = False) -> List[str]:
-        """Returns the codes of the currently installed languages."""
+        """Returns the codes of the currently installed language models."""
         if self._need_update_cache or force:
             if not os.path.exists(TESSDATA_DIR):
                 return []
             self._downloaded_codes = [
-                os.path.splitext(f)[0] 
-                for f in os.listdir(TESSDATA_DIR) 
-                if f.endswith('.traineddata')
+                os.path.splitext(f)[0]
+                for f in os.listdir(TESSDATA_DIR)
+                if f.endswith(".traineddata")
             ]
             self._need_update_cache = False
         return sorted(self._downloaded_codes, key=lambda x: self.get_language(x))
@@ -126,47 +144,47 @@ class LanguageManager(GObject.GObject):
         for code, lang_name in self._languages.items():
             if lang_name == name:
                 return code
-        return 'eng'
+        return "eng"
 
     def download(self, code: str):
         """Starts the asynchronous download process."""
         if code in self.loading_languages:
             return
-        
-        self.emit('added', code)
+        self.emit("added", code)
         self.loading_languages[code] = DownloadState()
         GObjectWorker.call(self.download_begin, (code,), self.download_done)
 
-    def download_begin(self, code: str) -> str:
+    def download_begin(self, code: str) -> str | None:
         """Performs the physical download of the .traineddata file."""
+
         def update_progress(block_num, block_size, total_size):
             if total_size > 0:
                 progress = int(block_num * block_size * 100 / total_size)
-                self.emit('downloading', code, min(progress, 100))
+                self.emit("downloading", code, min(progress, 100))
 
-        tessfile = f'{code}.traineddata'
+        tessfile = f"{code}.traineddata"
         tessfile_path = os.path.join(TESSDATA_DIR, tessfile)
-        
-        # Try 1: tessdata_best (High quality)
+
+        # Try 1: tessdata_best (high quality LSTM)
         try:
             request.urlretrieve(TESSDATA_BEST_URL + tessfile, tessfile_path, update_progress)
             return code
         except Exception:
-            logger.debug(f"Anura: tessdata_best not available for {code}, trying fallback...")
-            # Try 2: tessdata (Standard)
+            logger.debug(f"Anura: tessdata_best not available for '{code}', trying standard fallback...")
+            # Try 2: tessdata (standard)
             try:
                 request.urlretrieve(TESSDATA_URL + tessfile, tessfile_path, update_progress)
                 return code
             except Exception as e:
-                logger.error(f"Anura: Failed to download model {code}: {e}")
+                logger.error(f"Anura: Failed to download model '{code}': {e}")
                 return None
 
-    def download_done(self, code: str):
+    def download_done(self, code: str | None):
         """Callback when download completes."""
         self._need_update_cache = True
         if code and code in self.loading_languages:
             self.loading_languages.pop(code)
-        self.emit('downloaded', code)
+        self.emit("downloaded", code or "")
 
     def remove_language(self, code: str):
         """Removes the model file from the system."""
@@ -175,11 +193,11 @@ class LanguageManager(GObject.GObject):
             if os.path.exists(path):
                 os.remove(path)
                 self._need_update_cache = True
-                logger.info(f"Anura: Model {code} removed successfully.")
-                self.emit('removed', code)
+                logger.info(f"Anura: Model '{code}' removed successfully.")
+                self.emit("removed", code)
         except Exception as e:
-            logger.error(f"Anura: Error removing language {code}: {e}")
+            logger.error(f"Anura: Error removing language '{code}': {e}")
 
 
-# Singleton instance for the application
+# Singleton instance
 language_manager = LanguageManager()

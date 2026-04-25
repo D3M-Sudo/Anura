@@ -4,17 +4,19 @@
     "runtime-version": "49",
     "sdk": "org.gnome.Sdk",
     "command": "anura",
+
     "finish-args": [
         "--share=network",
         "--share=ipc",
         "--socket=fallback-x11",
         "--socket=wayland",
         "--device=dri",
-        "--filesystem=xdg-run/dconf",
-        "--filesystem=~/.config/dconf:ro",
         "--talk-name=org.gtk.vfs.*",
-        "--talk-name=ca.desrt.dconf"
+        "--talk-name=ca.desrt.dconf",
+        "--filesystem=xdg-run/dconf",
+        "--filesystem=~/.config/dconf:ro"
     ],
+
     "cleanup": [
         "/include",
         "/lib/pkgconfig",
@@ -23,6 +25,7 @@
         "*.la",
         "*.a"
     ],
+
     "modules": [
         {
             "name": "leptonica",
@@ -38,10 +41,12 @@
                 {
                     "type": "git",
                     "url": "https://github.com/DanBloomberg/leptonica.git",
-                    "tag": "1.85.0"
+                    "tag": "1.85.0",
+                    "commit": "63aef18"
                 }
             ]
         },
+
         {
             "name": "tesseract",
             "config-opts": [
@@ -54,7 +59,8 @@
                 {
                     "type": "git",
                     "url": "https://github.com/tesseract-ocr/tesseract.git",
-                    "tag": "5.5.0"
+                    "tag": "5.5.0",
+                    "commit": "64eab6c"
                 }
             ],
             "modules": [
@@ -80,6 +86,7 @@
                 }
             ]
         },
+
         {
             "name": "libportal",
             "buildsystem": "meson",
@@ -98,10 +105,12 @@
                 {
                     "type": "git",
                     "url": "https://github.com/flatpak/libportal.git",
-                    "tag": "0.9.1"
+                    "tag": "0.9.1",
+                    "commit": "8f5dc8d"
                 }
             ]
         },
+
         {
             "name": "zbar",
             "buildsystem": "autotools",
@@ -121,7 +130,8 @@
                 {
                     "type": "git",
                     "url": "https://github.com/mchehab/zbar.git",
-                    "tag": "0.23.93"
+                    "tag": "0.23.93",
+                    "commit": "bb05ec5"
                 },
                 {
                     "type": "shell",
@@ -129,54 +139,108 @@
                 }
             ]
         },
+
         {
             "name": "blueprint-compiler",
             "buildsystem": "meson",
+            "cleanup": [ "*" ],
             "sources": [
                 {
                     "type": "git",
                     "url": "https://gitlab.gnome.org/jwestman/blueprint-compiler.git",
-                    "tag": "v0.14.0"
+                    "tag": "v0.16.0",
+                    "commit": "5323e6b"
                 }
             ]
         },
+
         {
             "name": "python3-requests",
             "buildsystem": "simple",
-            "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
-            "sources": [ { "type": "git", "url": "https://github.com/psf/requests.git", "tag": "v2.32.3" } ]
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app ."
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/psf/requests.git",
+                    "tag": "v2.32.3",
+                    "commit": "0e322af"
+                }
+            ]
         },
+
         {
             "name": "python3-pillow",
             "buildsystem": "simple",
-            "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
-            "sources": [ { "type": "git", "url": "https://github.com/python-pillow/Pillow.git", "tag": "11.0.0" } ]
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app ."
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/python-pillow/Pillow.git",
+                    "tag": "11.0.0",
+                    "commit": "204aae6"
+                }
+            ]
         },
+
         {
             "name": "python3-pytesseract",
             "buildsystem": "simple",
-            "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
-            "sources": [ { "type": "git", "url": "https://github.com/madmaze/pytesseract.git", "tag": "v0.3.13" } ]
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app ."
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/madmaze/pytesseract.git",
+                    "tag": "v0.3.13",
+                    "commit": "bb128f3"
+                }
+            ]
         },
+
         {
             "name": "python3-gTTS",
             "buildsystem": "simple",
-            "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
-            "sources": [ { "type": "git", "url": "https://github.com/pndurette/gTTS.git", "tag": "v2.5.1" } ]
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app ."
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/pndurette/gTTS.git",
+                    "tag": "v2.5.1",
+                    "commit": "5cdaebf"
+                }
+            ]
         },
+
         {
             "name": "python3-dateutil",
             "buildsystem": "simple",
-            "build-commands": [ "pip3 install --no-deps --no-build-isolation --prefix=/app ." ],
-            "sources": [ { "type": "git", "url": "https://github.com/dateutil/dateutil.git", "tag": "2.9.0.post0" } ]
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app ."
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/dateutil/dateutil.git",
+                    "tag": "2.9.0.post0",
+                    "commit": "1ae8077"
+                }
+            ]
         },
+
         {
             "name": "anura",
             "builddir": true,
             "buildsystem": "meson",
             "build-options": {
                 "env": {
-                    "GI_TYPELIB_PATH": "/app/lib/girepository-1.0:/app/lib/girepository-2.0:/usr/lib/girepository-1.0:/usr/lib/girepository-2.0",
+                    "GI_TYPELIB_PATH": "/app/lib/girepository-1.0:/usr/lib/girepository-1.0",
                     "LD_LIBRARY_PATH": "/app/lib"
                 }
             },
@@ -184,7 +248,8 @@
                 {
                     "type": "git",
                     "url": "https://github.com/D3M-Sudo/Anura.git",
-                    "tag": "v0.1.2"
+                    "tag": "v0.1.2",
+                    "commit": "6841363"
                 }
             ]
         }
