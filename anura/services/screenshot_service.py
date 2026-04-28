@@ -11,10 +11,7 @@ from loguru import logger
 
 from anura.config import tessdata_config
 
-try:
-    from PIL import Image
-except ImportError:
-    import Image
+from PIL import Image
 import pytesseract
 from pyzbar.pyzbar import decode
 
@@ -117,7 +114,7 @@ class ScreenshotService(GObject.GObject):
         else:
             self.emit("error", _("No text found."))
 
-    def capture_cancelled(self, cancellable: Gio.Cancellable) -> None:
+    def capture_cancelled(self, cancellable: Gio.Cancellable, user_data=None) -> None:
         """Handles the cancellation of the screenshot request."""
         logger.info("Anura Screenshot: Capture cancelled by user.")
         self.emit("error", _("Cancelled"))

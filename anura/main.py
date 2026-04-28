@@ -110,7 +110,7 @@ class AnuraApplication(Adw.Application):
         self.get_active_window().get_screenshot(copy=True)
 
     def open_image(self, _action, _param) -> None:
-        self.get_active_window().get_screenshot_from_file()
+        self.get_active_window().open_image()
 
     def on_paste_from_clipboard(self, _action, _param) -> None:
         self.get_active_window().on_paste_from_clipboard(self)

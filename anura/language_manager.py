@@ -139,6 +139,10 @@ class LanguageManager(GObject.GObject):
         codes = self.get_downloaded_codes(force)
         return [self.get_language(code) for code in codes]
 
+    def get_available_codes(self) -> List[str]:
+        """Returns all ISO codes supported by Tesseract (installed or not)."""
+        return sorted(self._languages.keys())
+
     def get_language_code(self, name: str) -> str:
         """Reverse lookup: from name to ISO code."""
         for code, lang_name in self._languages.items():

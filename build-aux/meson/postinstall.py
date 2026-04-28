@@ -22,7 +22,7 @@ if not destdir:
     print('Anura: Updating icon cache...')
     call(['gtk-update-icon-cache', '-qtf', os.path.join(datadir, 'icons', 'hicolor')])
 
-    # Update Desktop File database for Cinnamon menu integration
+    # Update Desktop File database (XDG standard, distro-agnostic)
     print('Anura: Updating desktop database...')
     call(['update-desktop-database', '-q', os.path.join(datadir, 'applications')])
 

@@ -1,14 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- FIX: type="desktop-application" replaces deprecated type="desktop" -->
 <component type="desktop-application">
   <id>com.github.d3msudo.anura</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
-
-  <!-- FIX: <n> was an invalid tag — correct element is <name> -->
   <name>Anura</name>
   <summary>Extract text from anywhere on your screen</summary>
-
   <description>
     <p>
       Anura is an intuitive text extraction tool (OCR) designed for the GNOME desktop.
@@ -23,17 +19,12 @@
       <li>Privacy-focused: no telemetry and no anonymous data collection.</li>
       <li>Modern GTK4 / Libadwaita interface following GNOME Human Interface Guidelines.</li>
     </ul>
-    <!-- Justification for network access (required by Flathub when --share=network is used) -->
     <p>
       Network access is used exclusively to download Tesseract OCR language models
       on demand and for the optional text-to-speech feature (Google TTS).
       No user data is ever transmitted.
     </p>
   </description>
-
-  <!-- FIX: screenshot URL corrected — anura-window.png does not exist in the repo.
-       Using the two existing screenshots with proper captions.
-       Flathub requires images reachable via HTTPS and ideally 16:9, min 624px wide. -->
   <screenshots>
     <screenshot type="default">
       <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/main/data/screenshots/anura-window-dark.png</image>
@@ -44,11 +35,8 @@
       <caption>Extracted text displayed after OCR recognition</caption>
     </screenshot>
   </screenshots>
-
   <releases>
-    <!-- FIX: version aligned to meson.build (0.1.2) and manifest tag (v0.1.2).
-         The previous metainfo had version 0.1.0 while the project was already at 0.1.2. -->
-    <release version="0.1.2" type="stable" date="2026-04-25">
+    <release version="0.1.3" type="stable" date="2026-04-25">
       <description>
         <p>Bug fixes and stability improvements.</p>
         <ul>
@@ -73,24 +61,17 @@
       </description>
     </release>
   </releases>
-
-  <!-- FIX: <n> inside <developer> was invalid — correct element is <name> -->
   <developer id="com.github.d3msudo">
     <name>D3M-Sudo</name>
   </developer>
-
   <launchable type="desktop-id">com.github.d3msudo.anura.desktop</launchable>
   <translation type="gettext">anura</translation>
-
-  <!-- FIX: added <categories> for better Flathub/software-center discoverability -->
   <categories>
     <category>Graphics</category>
     <category>Utility</category>
     <category>GNOME</category>
     <category>GTK</category>
   </categories>
-
-  <!-- FIX: added keywords for search indexing -->
   <keywords>
     <keyword>OCR</keyword>
     <keyword>text</keyword>
@@ -100,16 +81,11 @@
     <keyword>scanner</keyword>
     <keyword>tesseract</keyword>
   </keywords>
-
   <url type="homepage">https://github.com/D3M-Sudo/Anura</url>
   <url type="bugtracker">https://github.com/D3M-Sudo/Anura/issues</url>
   <url type="vcs-browser">https://github.com/D3M-Sudo/Anura</url>
-  <!-- FIX: help URL should not duplicate bugtracker; pointing to README -->
   <url type="contribute">https://github.com/D3M-Sudo/Anura/blob/main/README.md</url>
-
   <content_rating type="oars-1.1"/>
-
-  <!-- Branding colors for GNOME Software and Flathub store page -->
   <branding>
     <color type="primary" scheme_preference="light">#3d8b37</color>
     <color type="primary" scheme_preference="dark">#235720</color>

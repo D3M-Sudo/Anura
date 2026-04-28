@@ -7,13 +7,12 @@ Exec=anura %U
 Terminal=false
 Type=Application
 # Expanded categories for better menu placement
-Categories=GNOME;GTK;Utility;Office;Graphics;
+Categories=GTK;Utility;Office;Graphics;
 # Enriched keywords for better search indexing
 Keywords=OCR;Text;Extraction;Reader;QR;Scanner;
 StartupNotify=true
-# Disabled DBus for compatibility with flatpack format
+# Disabled DBus for compatibility with flatpak format
 DBusActivatable=false
-X-GNOME-UsesNotifications=true
 
 # Actions for right-click context menu
 Actions=extractToClipboard;

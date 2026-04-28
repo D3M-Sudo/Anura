@@ -1,7 +1,10 @@
 project('anura',
-          version: '0.1.2',
+          version: '0.1.3',
     meson_version: '>= 1.5.0',
-  default_options: [ 'warning_level=2' ],
+  default_options: [ 
+    'warning_level=2',
+    'werror=false', # Forza i warning a non essere trattati come errori fatali
+  ],
 )
 
 author = 'd3msudo'

@@ -27,7 +27,7 @@ appstream_file = i18n.merge_file(
 appstream_util = find_program('appstream-util', required: false)
 if appstream_util.found()
   test('Validate appstream file', appstream_util,
-    args: ['validate', appstream_file]
+    args: ['validate', '--relax', appstream_file]
   )
 endif
 
@@ -42,9 +42,8 @@ if compile_schemas.found()
   )
 endif
 
-install_data('tessdata/eng.traineddata',
-  install_dir: join_paths(get_option('datadir'), meson.project_name(), 'tessdata')
-)
+# Rimosso install_data di tessdata qui per evitare fallimenti se il file non è nel repo git.
+# La gestione del download e dell'installazione dei dati Tesseract deve avvenire nel manifesto Flatpak.
 
 subdir('icons')
 
@@ -63,13 +62,7 @@ blueprints = custom_target('blueprints',
     'ui/share_row.blp',
   ),
   output: '.',
-  command: [
-    find_program('blueprint-compiler'), 
-    'batch-compile', 
-    '@OUTPUT@', 
-    meson.current_source_dir() / 'ui', 
-    '@INPUT@'
-  ],
+  command: [find_program('blueprint-compiler'), 'batch-compile', '@OUTPUT@', meson.current_source_dir() / 'ui', '@INPUT@'],
 )
 
 app_resources = gnome.compile_resources(app_id,

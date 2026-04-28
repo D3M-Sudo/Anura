@@ -25,7 +25,7 @@ sys.path.insert(1, pkgdatadir)
 # Handle SIGINT (Ctrl+C) to allow clean termination in terminal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-# L10n Setup: Standard for Linux Mint / Cinnamon environments
+# L10n Setup: Standard XDG locale initialisation, distro-agnostic
 try:
     locale.setlocale(locale.LC_ALL, '')
     locale.bindtextdomain(project_name, localedir)
