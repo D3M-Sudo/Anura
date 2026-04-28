@@ -6,7 +6,7 @@
 
 <div align="center">
 <figure>
-<img src="https://raw.githubusercontent.com/D3M-Sudo/Anura/master/data/screenshots/anura-window-dark.png" alt="Anura window dark" />
+<img src="data/screenshots/anura-window-dark.png" alt="Anura window dark">
 </figure>
 
 [![Latest Release](https://img.shields.io/github/v/release/D3M-Sudo/Anura?color=blue&logo=github)](https://github.com/D3M-Sudo/Anura/releases/latest)
