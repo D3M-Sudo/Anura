@@ -35,7 +35,7 @@ jobs:
     # When upgrading to a newer runtime, update both the manifest runtime-version
     # and this container tag to the same version.
     container:
-      image: bilelmoussaoui/flatpak-github-actions:gnome-49
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-49
       options: --privileged
     
     steps:
