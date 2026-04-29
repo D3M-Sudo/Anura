@@ -20,9 +20,10 @@
       <li>Modern GTK4 / Libadwaita interface following GNOME Human Interface Guidelines.</li>
     </ul>
     <p>
-      Network access is used exclusively to download Tesseract OCR language models
-      on demand and for the optional text-to-speech feature (Google TTS).
-      No user data is ever transmitted.
+      Network access is used exclusively for two purposes: downloading
+      Tesseract OCR language models on demand (sourced from GitHub), and
+      the optional text-to-speech feature powered by Google TTS. No user
+      data or extracted text is ever transmitted externally.
     </p>
   </description>
   <screenshots>
@@ -67,6 +68,7 @@
   <translation type="gettext">anura</translation>
   <provides>
     <binary>anura</binary>
+    <id>com.github.d3msudo.anura.desktop</id>
   </provides>
   <categories>
     <category>Graphics</category>
@@ -86,8 +88,10 @@
   <url type="homepage">https://github.com/D3M-Sudo/Anura</url>
   <url type="bugtracker">https://github.com/D3M-Sudo/Anura/issues</url>
   <url type="vcs-browser">https://github.com/D3M-Sudo/Anura</url>
-  <url type="contribute">https://github.com/D3M-Sudo/Anura/blob/main/README.md</url>
-  <content_rating type="oars-1.1"/>
+  <url type="help">https://github.com/D3M-Sudo/Anura/blob/main/README.md</url>
+  <content_rating type="oars-1.1">
+    <content_attribute id="social-info">mild</content_attribute>
+  </content_rating>
   <branding>
     <color type="primary" scheme_preference="light">#3d8b37</color>
     <color type="primary" scheme_preference="dark">#235720</color>

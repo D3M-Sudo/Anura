@@ -10,7 +10,7 @@ from loguru import logger
 from anura.config import APP_ID, RESOURCE_PREFIX
 from anura.gobject_worker import GObjectWorker
 from anura.language_manager import language_manager
-from anura.services.clipboard_service import clipboard_service, ClipboardService
+from anura.services.clipboard_service import clipboard_service
 from anura.services.screenshot_service import ScreenshotService
 from anura.services.share_service import ShareService
 from anura.widgets.extracted_page import ExtractedPage
@@ -27,7 +27,7 @@ class AnuraWindow(Adw.ApplicationWindow):
     welcome_page: WelcomePage = Gtk.Template.Child()
     extracted_page: ExtractedPage = Gtk.Template.Child()
 
-    def __init__(self, **kwargs):
+    def __init__(self, backend: ScreenshotService, **kwargs):
         super().__init__(**kwargs)
 
         self.settings = Gtk.Application.get_default().props.settings
@@ -40,7 +40,13 @@ class AnuraWindow(Adw.ApplicationWindow):
         self._setup_controllers()
         self.set_icon_name(APP_ID)
 
-        self.backend = ScreenshotService()
+        # Share service as instance attribute to avoid class-level launcher issues
+        self.share_service = ShareService()
+        share_action = Gio.SimpleAction.new("share", GLib.VariantType.new("s"))
+        share_action.connect("activate", self._on_share)
+        self.add_action(share_action)
+
+        self.backend = backend
         self.backend.connect("decoded", self.on_shot_done)
         self.backend.connect("error", self.on_shot_error)
 
@@ -48,8 +54,8 @@ class AnuraWindow(Adw.ApplicationWindow):
         clipboard_service.connect("paste_from_clipboard", self._on_paste_from_clipboard)
 
     def _setup_geometry(self):
-        width = self.settings.get_int("window-width")
-        height = self.settings.get_int("window-height")
+        width = max(400, self.settings.get_int("window-width"))  # Min 400px
+        height = max(300, self.settings.get_int("window-height"))  # Min 300px
         self.set_default_size(width, height)
 
     def _setup_controllers(self):
@@ -146,7 +152,8 @@ class AnuraWindow(Adw.ApplicationWindow):
         GObjectWorker.call(self.backend.decode_image, (self.get_language(), png_bytes))
 
     def do_close_request(self) -> bool:
-        width, height = self.get_default_size()
+        width = self.get_width()
+        height = self.get_height()
         self.settings.set_int("window-width", width)
         self.settings.set_int("window-height", height)
         return False
@@ -172,13 +179,38 @@ class AnuraWindow(Adw.ApplicationWindow):
         self.split_view.set_show_content(False)
         self.extracted_page.listen_cancel()
 
+    def on_listen(self) -> None:
+        """Starts TTS playback for the currently extracted text."""
+        self.extracted_page.listen()
+
+    def on_listen_cancel(self) -> None:
+        """Stops any active TTS playback."""
+        self.extracted_page.listen_cancel()
+
+    def _on_share(self, _action, variant: GLib.Variant) -> None:
+        """Dispatch share action to the correct provider."""
+        provider = variant.get_string()
+        text = self.extracted_page.extracted_text
+        if not text:
+            self.show_toast(_("No text to share."))
+            return
+        self.share_service.share(provider, text)
+
     def show_toast(self, title: str, priority=Adw.ToastPriority.NORMAL):
         self.toast_overlay.add_toast(Adw.Toast(title=title, priority=priority))
 
-    def _show_url_toast(self, url: str):
-        toast = Adw.Toast(title=_("Text contains a link"), button_label=_("Open"))
-        toast.set_detailed_action_name(f'app.show_uri("{url}")')
+    def _show_url_toast(self, url: str) -> None:
+        toast = Adw.Toast(
+            title=_("Text contains a link"),
+            button_label=_("Open"),
+        )
+        toast.connect("button-clicked", lambda _: self._launch_uri(url))
         self.toast_overlay.add_toast(toast)
+
+    def _launch_uri(self, url: str) -> None:
+        """Open a URI in the default system browser."""
+        launcher = Gtk.UriLauncher.new(url)
+        launcher.launch(self, None, None)
 
     def uri_validator(self, text: str) -> bool:
         try:

@@ -32,7 +32,7 @@ class ScreenshotService(GObject.GObject):
     def __init__(self):
         GObject.GObject.__init__(self)
         self.cancelable: Gio.Cancellable = Gio.Cancellable.new()
-        self.cancelable.connect(self.capture_cancelled)
+        self.cancelable.connect("cancelled", self.capture_cancelled)
         self.portal = Xdp.Portal()
 
     def capture(self, lang: str, copy: bool = False) -> None:
@@ -98,7 +98,7 @@ class ScreenshotService(GObject.GObject):
 
         except Exception as e:
             logger.error(f"Anura OCR/QR Error: {e}")
-            return self.emit("error", _("Failed to decode data."))
+            return GLib.idle_add(self.emit, "error", _("Failed to decode data."))
 
         finally:
             # Cleanup: Delete temporary portal files if requested
@@ -110,11 +110,14 @@ class ScreenshotService(GObject.GObject):
                     logger.warning(f"Anura OCR: Could not delete {file}: {e}")
 
         if extracted:
-            self.emit("decoded", extracted, copy)
+            GLib.idle_add(self.emit, "decoded", extracted, copy)
         else:
-            self.emit("error", _("No text found."))
+            GLib.idle_add(self.emit, "error", _("No text found."))
 
     def capture_cancelled(self, cancellable: Gio.Cancellable, user_data=None) -> None:
         """Handles the cancellation of the screenshot request."""
         logger.info("Anura Screenshot: Capture cancelled by user.")
         self.emit("error", _("Cancelled"))
+        # Reset cancellable for future use
+        self.cancelable = Gio.Cancellable.new()
+        self.cancelable.connect("cancelled", self.capture_cancelled)

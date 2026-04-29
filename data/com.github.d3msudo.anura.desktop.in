@@ -9,10 +9,7 @@ Type=Application
 Categories=GTK;Utility;
 Keywords=OCR;Text;Extraction;Reader;QR;Scanner;
 StartupNotify=true
-# Disabled DBus for compatibility with flatpak format
 DBusActivatable=false
-
-# Actions for right-click context menu
 Actions=extractToClipboard;
 
 [Desktop Action extractToClipboard]

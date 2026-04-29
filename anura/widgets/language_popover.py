@@ -87,7 +87,7 @@ class LanguagePopover(Gtk.Popover):
         
         
         self.settings.set_string('active-language', item.code)
-        logger.debug(f"Anura: Lingua OCR cambiata in {item.code}")
+        logger.debug(f"Anura: OCR language changed to '{item.code}'")
         self.popdown()
 
     @Gtk.Template.Callback()
@@ -113,7 +113,7 @@ class LanguagePopover(Gtk.Popover):
         self.activate_action('app.preferences')
         self.popdown()
 
-    def populate_model(self):
+    def populate_model(self) -> None:
         self.lang_list.remove_all()
 
         downloaded_languages = language_manager.get_downloaded_languages(force=True)
@@ -122,11 +122,12 @@ class LanguagePopover(Gtk.Popover):
             selected = (self.active_language == code)
             self.lang_list.append(LanguageItem(code=code, title=lang, selected=selected))
 
+        # Validate: emit only if language actually changed
         current_code = self.active_language
         if current_code not in language_manager.get_downloaded_codes():
-             current_code = 'eng'
-        
-        self.emit('language-changed', language_manager.get_language_item(current_code))
+            new_item = language_manager.get_language_item("eng")
+            self.active_language = "eng"
+            self.emit("language-changed", new_item)  # emit only on actual change
 
     def toggle_empty_state(self, is_empty: bool = False) -> None:
         if is_empty:

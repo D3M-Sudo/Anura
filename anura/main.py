@@ -64,7 +64,7 @@ class AnuraApplication(Adw.Application):
     def do_activate(self):
         win = self.props.active_window
         if not win:
-            win = AnuraWindow(application=self)
+            win = AnuraWindow(application=self, backend=self.backend)
         win.present()
 
     def do_command_line(self, command_line):

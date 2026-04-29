@@ -9,6 +9,7 @@ from loguru import logger
 from anura.config import RESOURCE_PREFIX
 from anura.language_manager import language_manager
 from anura.services.settings import settings
+from anura.services.tts import ttsservice
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/ui/preferences_general.ui")
@@ -18,6 +19,8 @@ class PreferencesGeneralPage(Adw.PreferencesPage):
     extra_language_combo: Adw.ComboRow = Gtk.Template.Child()
     autocopy_switch: Adw.SwitchRow = Gtk.Template.Child()
     autolinks_switch: Adw.SwitchRow = Gtk.Template.Child()
+    volume_row: Adw.SpinRow = Gtk.Template.Child()
+    tts_language_combo: Adw.ComboRow = Gtk.Template.Child()
     # FIX: telemetry_switch removed — it was declared as Template.Child() but the
     # widget no longer exists in preferences_general.blp (telemetry is fully
     # disabled in Anura). Keeping a Template.Child() for a non-existent widget
@@ -32,6 +35,13 @@ class PreferencesGeneralPage(Adw.PreferencesPage):
         self.settings.bind("autolinks", self.autolinks_switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
         self._setup_extra_languages()
+
+        # Update combo when languages are installed or removed
+        language_manager.connect("downloaded", self._on_language_changed)
+        language_manager.connect("removed", self._on_language_changed)
+
+        self._setup_tts_volume()
+        self._setup_tts_language()
 
     def _setup_extra_languages(self):
         downloaded_langs = language_manager.get_downloaded_languages()
@@ -59,3 +69,59 @@ class PreferencesGeneralPage(Adw.PreferencesPage):
         lang_code = language_manager.get_language_code(lang_name)
         logger.debug(f"Anura: Extra language set to {lang_name} ({lang_code})")
         self.settings.set_string("extra-language", lang_code)
+
+    def _on_language_changed(self, _sender, _code: str) -> None:
+        """Refresh the extra-language combo when models are installed or removed."""
+        # Disconnect old signal to avoid duplicate connections
+        try:
+            self.extra_language_combo.disconnect_by_func(self._on_extra_language_changed)
+        except Exception:
+            pass  # not connected yet on first call
+        self._setup_extra_languages()
+
+    def _setup_tts_volume(self):
+        """Setup TTS volume spin row with percentage display (0-100)."""
+        # Load initial value from settings (0.0-1.0) and convert to percentage
+        volume_normalized = self.settings.get_double("tts-volume")
+        self.volume_row.set_value(volume_normalized * 100)
+
+        # Connect to changes and convert back to 0.0-1.0 for GSettings
+        self.volume_row.connect("notify::value", self._on_volume_changed)
+
+    def _on_volume_changed(self, spin_row, _param):
+        """Convert percentage (0-100) to normalized value (0.0-1.0) for GSettings."""
+        percentage = spin_row.get_value()
+        normalized = percentage / 100.0
+        self.settings.set_double("tts-volume", normalized)
+        logger.debug(f"Anura: TTS volume set to {percentage:.0f}% ({normalized:.2f})")
+
+    def _setup_tts_language(self):
+        """Populate TTS language combo with gTTS supported languages."""
+        supported = ttsservice.get_supported_gtts_languages()
+
+        # Create list: "Auto (follow OCR)" + all supported languages
+        lang_names = [_("Auto (follow OCR language)")] + list(supported.values())
+        self.tts_language_combo.set_model(Gtk.StringList.new(lang_names))
+
+        # Select current setting
+        current = self.settings.get_string("tts-language")
+        if current:
+            try:
+                idx = list(supported.keys()).index(current) + 1  # +1 for "Auto"
+                self.tts_language_combo.set_selected(idx)
+            except ValueError:
+                self.tts_language_combo.set_selected(0)  # Auto
+        else:
+            self.tts_language_combo.set_selected(0)  # Auto
+
+        self.tts_language_combo.connect("notify::selected", self._on_tts_language_changed)
+
+    def _on_tts_language_changed(self, combo, _param):
+        idx = combo.get_selected()
+        if idx == 0:
+            self.settings.set_string("tts-language", "")  # Auto
+        else:
+            supported = ttsservice.get_supported_gtts_languages()
+            lang_code = list(supported.keys())[idx - 1]  # -1 for "Auto"
+            self.settings.set_string("tts-language", lang_code)
+            logger.debug(f"Anura: TTS language set to {lang_code}")

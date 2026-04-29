@@ -80,20 +80,12 @@
                         {
                             "type": "file",
                             "url": "https://github.com/tesseract-ocr/tessdata_fast/raw/main/eng.traineddata",
-                            "sha256": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2",
-                            "x-checker-data": {
-                                "type": "sha256",
-                                "url": "https://github.com/tesseract-ocr/tessdata_fast/raw/main/eng.traineddata"
-                            }
+                            "sha256": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2"
                         },
                         {
                             "type": "file",
                             "url": "https://github.com/tesseract-ocr/tessdata_fast/raw/main/ita.traineddata",
-                            "sha256": "b8f89e1e785118dac4d51ae042c029a64edb5c3ee42ef73027a6d412748d8827",
-                            "x-checker-data": {
-                                "type": "sha256",
-                                "url": "https://github.com/tesseract-ocr/tessdata_fast/raw/main/ita.traineddata"
-                            }
+                            "sha256": "b8f89e1e785118dac4d51ae042c029a64edb5c3ee42ef73027a6d412748d8827"
                         }
                     ]
                 }
@@ -187,27 +179,6 @@
         },
 
         {
-            "name": "python3-requests",
-            "buildsystem": "simple",
-            "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app ."
-            ],
-            "sources": [
-                {
-                    "type": "git",
-                    "url": "https://github.com/psf/requests.git",
-                    "tag": "v2.32.3",
-                    "commit": "0e322af87745eff34caffe4df68456ebc20d9068",
-                    "x-checker-data": {
-                        "type": "pypi",
-                        "name": "requests",
-                        "tag-template": "v$version"
-                    }
-                }
-            ]
-        },
-
-        {
             "name": "python3-pillow",
             "buildsystem": "simple",
             "build-commands": [
@@ -285,6 +256,48 @@
                     "x-checker-data": {
                         "type": "pypi",
                         "name": "python-dateutil",
+                        "tag-template": "$version"
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "python3-loguru",
+            "buildsystem": "simple",
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app ."
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/Delgan/loguru.git",
+                    "tag": "0.7.2",
+                    "commit": "b7bed6b85d2c809ea2d8c3e5dce41e38f9d2ac30",
+                    "x-checker-data": {
+                        "type": "pypi",
+                        "name": "loguru",
+                        "tag-template": "$version"
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "python3-pyzbar",
+            "buildsystem": "simple",
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app ."
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/NaturalHistoryMuseum/pyzbar.git",
+                    "tag": "0.1.9",
+                    "commit": "9ea0a6f1c7ddfa6cdf5d2fb1e7f1cef4fd76be32",
+                    "x-checker-data": {
+                        "type": "pypi",
+                        "name": "pyzbar",
                         "tag-template": "$version"
                     }
                 }

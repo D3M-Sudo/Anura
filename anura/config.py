@@ -13,11 +13,14 @@ RESOURCE_PREFIX = "/com/github/d3msudo/anura"
 XDG_DATA_HOME = os.getenv("XDG_DATA_HOME", os.path.expanduser("~/.local/share"))
 XDG_CACHE_HOME = os.getenv("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
 
-# Anura specific data directory for OCR models
+# Anura specific data directory for OCR models (user-downloaded)
 TESSDATA_DIR = os.path.join(XDG_DATA_HOME, "anura", "tessdata")
 
-# Ensure the local directory exists
-os.makedirs(TESSDATA_DIR, exist_ok=True)
+# System directory with models bundled by the Flatpak manifest
+TESSDATA_SYSTEM_DIR = "/app/share/tessdata"
+
+# Note: TESSDATA_DIR creation is handled by language_manager.init_tessdata()
+# to avoid side effects at import time.
 
 # Tesseract OCR Repository URLs
 TESSDATA_URL = "https://github.com/tesseract-ocr/tessdata/raw/main/"
@@ -32,4 +35,5 @@ REQUEST_TIMEOUT = 30  # seconds
 # --oem 1: Neural nets LSTM engine only
 # FIX: renamed from TESSDATA_CONFIG to tessdata_config (snake_case) to match
 # the import in screenshot_service.py: `from anura.config import tessdata_config`
-tessdata_config = f"--tessdata-dir {TESSDATA_DIR} --psm 3 --oem 1"
+# Pass both paths to Tesseract: user models take priority, system is the fallback
+tessdata_config = f'--tessdata-dir "{TESSDATA_DIR}:{TESSDATA_SYSTEM_DIR}" --psm 3 --oem 1'

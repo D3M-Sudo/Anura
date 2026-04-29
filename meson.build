@@ -3,7 +3,7 @@ project('anura',
     meson_version: '>= 1.5.0',
   default_options: [ 
     'warning_level=2',
-    'werror=false', # Forza i warning a non essere trattati come errori fatali
+    'werror=false', # Do not treat compiler warnings as fatal errors
   ],
 )
 

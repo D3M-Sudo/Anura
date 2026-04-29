@@ -19,10 +19,9 @@ class ShareService(GObject.GObject):
 
     __gsignals__ = {"share": (GObject.SIGNAL_RUN_LAST, None, (bool,))}
 
-    launcher: Gtk.UriLauncher = Gtk.UriLauncher()
-
     def __init__(self):
         super().__init__()
+        self.launcher = Gtk.UriLauncher()
 
     @staticmethod
     def providers() -> List[str]:
@@ -35,7 +34,7 @@ class ShareService(GObject.GObject):
             "reddit",
             "telegram",
             "x",
-            "instagram",
+            # NOTE: "instagram" removed — no URL prefill API available
         ]
 
     def share(self, provider: str, text: str):
@@ -51,7 +50,7 @@ class ShareService(GObject.GObject):
         
         if handler:
             try:
-                share_link: str = handler(quote(text))
+                share_link: str = handler(quote(text, safe=''))
                 self.launcher.set_uri(share_link)
                 self.launcher.launch(parent=None, cancellable=None, callback=self._on_share)
             except Exception as e:
@@ -87,13 +86,11 @@ class ShareService(GObject.GObject):
         """
         return f"https://x.com/intent/tweet?text={text}"
 
-    @staticmethod
-    def get_link_instagram(text: str):
-        """
-        Instagram doesn't support text-prefill via URL. 
-        Opening the direct web-create page as a fallback.
-        """
-        return "https://www.instagram.com/reels/create/"
+    # NOTE: get_link_instagram removed — Instagram has no URL prefill API
+    # If Instagram adds sharing URL support in the future, re-enable:
+    # @staticmethod
+    # def get_link_instagram(text: str):
+    #     return None  # Not supported
 
     @staticmethod
     def get_link_email(text: str):

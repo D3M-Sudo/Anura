@@ -20,9 +20,17 @@ class ClipboardService(GObject.GObject):
         'error': (GObject.SIGNAL_RUN_FIRST, None, (str,))
     }
 
-    # Obtain reference to the default clipboard for the current display
-    # Technical note: Gdk.Display.get_default() is essential for multi-head stability.
-    clipboard: Gdk.Clipboard = Gdk.Display.get_default().get_clipboard()
+    _clipboard: Gdk.Clipboard | None = None
+
+    @property
+    def clipboard(self) -> Gdk.Clipboard:
+        """Lazy initialization of clipboard to avoid crash on headless/CI."""
+        if self._clipboard is None:
+            display = Gdk.Display.get_default()
+            if display is None:
+                raise RuntimeError("No GTK display available.")
+            self._clipboard = display.get_clipboard()
+        return self._clipboard
 
     def __init__(self):
         super().__init__()

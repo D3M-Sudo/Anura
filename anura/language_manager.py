@@ -4,14 +4,16 @@
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
 import os
+import shutil
+import tempfile
 from gettext import gettext as _
 from typing import List, Dict
-from urllib import request
 
+import requests
 from gi.repository import GObject
 from loguru import logger
 
-from anura.config import TESSDATA_DIR, TESSDATA_URL, TESSDATA_BEST_URL
+from anura.config import TESSDATA_DIR, TESSDATA_URL, TESSDATA_BEST_URL, REQUEST_TIMEOUT
 from anura.gobject_worker import GObjectWorker
 from anura.types.download_state import DownloadState
 from anura.types.language_item import LanguageItem
@@ -159,29 +161,44 @@ class LanguageManager(GObject.GObject):
         GObjectWorker.call(self.download_begin, (code,), self.download_done)
 
     def download_begin(self, code: str) -> str | None:
-        """Performs the physical download of the .traineddata file."""
-
-        def update_progress(block_num, block_size, total_size):
-            if total_size > 0:
-                progress = int(block_num * block_size * 100 / total_size)
-                self.emit("downloading", code, min(progress, 100))
-
+        """Performs the physical download of the .traineddata file atomically."""
         tessfile = f"{code}.traineddata"
-        tessfile_path = os.path.join(TESSDATA_DIR, tessfile)
+        final_path = os.path.join(TESSDATA_DIR, tessfile)
+        tmp_path = None
 
-        # Try 1: tessdata_best (high quality LSTM)
-        try:
-            request.urlretrieve(TESSDATA_BEST_URL + tessfile, tessfile_path, update_progress)
-            return code
-        except Exception:
-            logger.debug(f"Anura: tessdata_best not available for '{code}', trying standard fallback...")
-            # Try 2: tessdata (standard)
+        for url_base in (TESSDATA_BEST_URL, TESSDATA_URL):
             try:
-                request.urlretrieve(TESSDATA_URL + tessfile, tessfile_path, update_progress)
+                url = url_base + tessfile
+                with tempfile.NamedTemporaryFile(
+                    dir=TESSDATA_DIR, suffix=".tmp", delete=False
+                ) as tmp:
+                    tmp_path = tmp.name
+
+                # Use requests with timeout instead of urlretrieve
+                response = requests.get(url, timeout=REQUEST_TIMEOUT, stream=True)
+                response.raise_for_status()
+
+                total_size = int(response.headers.get('content-length', 0))
+                downloaded = 0
+
+                with open(tmp_path, 'wb') as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
+                            downloaded += len(chunk)
+                            if total_size > 0:
+                                progress = int(downloaded * 100 / total_size)
+                                self.emit("downloading", code, min(progress, 100))
+
+                shutil.move(tmp_path, final_path)  # atomic on same filesystem
                 return code
             except Exception as e:
-                logger.error(f"Anura: Failed to download model '{code}': {e}")
-                return None
+                if tmp_path and os.path.exists(tmp_path):
+                    os.unlink(tmp_path)
+                logger.debug(f"Anura: download failed from {url_base}: {e}")
+
+        logger.error(f"Anura: Failed to download model '{code}' from all sources.")
+        return None
 
     def download_done(self, code: str | None):
         """Callback when download completes."""

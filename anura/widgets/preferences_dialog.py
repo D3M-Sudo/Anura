@@ -6,6 +6,7 @@
 from gi.repository import Gtk, Adw, GObject
 
 from anura.config import RESOURCE_PREFIX
+from anura.types.language_item import LanguageItem
 from anura.widgets.preferences_general_page import PreferencesGeneralPage
 from anura.widgets.preferences_languages_page import PreferencesLanguagesPage
 
@@ -20,13 +21,3 @@ class PreferencesDialog(Adw.PreferencesDialog):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-
-class LanguageItem(GObject.GObject):
-    title: str
-    code: str
-    progress: int = 0
-
-    def __init__(self, code: str, title: str):
-        GObject.GObject.__init__(self)
-        self.title = title
-        self.code = code

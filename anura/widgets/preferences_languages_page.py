@@ -49,13 +49,19 @@ class PreferencesLanguagesPage(Adw.PreferencesPage):
         self.activate_filter()
         self.check_connection()
 
-    def check_connection(self):
-        """
-        Technical check for network reachability to GitHub for OCR model downloads.
-        """
+    def check_connection(self) -> None:
+        """Asynchronously checks network reachability for OCR model downloads."""
         monitor = Gio.NetworkMonitor.get_default()
-        
-        if not monitor.can_reach(Gio.NetworkAddress.new('raw.githubusercontent.com', 443)):
+        address = Gio.NetworkAddress.new("raw.githubusercontent.com", 443)
+        monitor.can_reach_async(address, None, self._on_connection_checked)
+
+    def _on_connection_checked(self, monitor, result) -> None:
+        try:
+            reachable = monitor.can_reach_finish(result)
+        except Exception:
+            reachable = False
+
+        if not reachable:
             self.banner.set_title(_("OCR models unreachable. Please check your internet connection."))
             self.banner.set_revealed(True)
             return
