@@ -164,7 +164,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         except Exception as e:
             logger.debug(f"File selection cancelled or failed: {e}")
 
-    def on_dnd_drop(self, __target, value: Gdk.FileList, _x, _y) -> bool:
+    def on_dnd_drop(self, __target, value: Gdk.FileList, __x, __y) -> bool:
         import os
 
         files = value.get_files()
