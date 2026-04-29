@@ -131,7 +131,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             self.show_toast(_("File not found: {path}").format(path=file_path))
             return
 
-        mimetype, _ = guess_type(file_path)
+        mimetype, _encoding = guess_type(file_path)
         if not mimetype or not mimetype.startswith("image"):
             self.show_toast(_("Unsupported file format: {path}").format(path=file_path))
             return
