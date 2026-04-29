@@ -9,7 +9,6 @@ import time
 import gtts
 import requests.exceptions
 from gi.repository import GObject, Gst
-from anura.config import tessdata_config
 from anura.services.settings import settings
 from loguru import logger
 
@@ -51,6 +50,7 @@ class TTSService(GObject.GObject):
     }
 
     _gtts_languages: dict | None = None
+    _signal_watch_id: int | None = None
 
     @classmethod
     def get_supported_gtts_languages(cls) -> dict:
@@ -71,8 +71,9 @@ class TTSService(GObject.GObject):
 
         # 2. Validate 2-char prefix against supported languages
         supported = TTSService.get_supported_gtts_languages()
+        # Only use 2-char codes that look like valid ISO 639-1 (letters only)
         two_char = tess_code[:2]
-        if two_char in supported:
+        if two_char.isalpha() and two_char in supported:
             return two_char
 
         # 3. Fallback to English
@@ -137,7 +138,7 @@ class TTSService(GObject.GObject):
         self.player.set_property("volume", volume)
 
         bus = self.player.get_bus()
-        bus.add_signal_watch()
+        self._signal_watch_id = bus.add_signal_watch()
         bus.connect("message", self.on_gst_message)
         self.player.set_state(Gst.State.PLAYING)
 
@@ -145,7 +146,7 @@ class TTSService(GObject.GObject):
         """Handle GStreamer bus messages; clean up temp file on EOS."""
         if message.type == Gst.MessageType.EOS:
             logger.info("Anura TTS: Playback finished.")
-            self.player.set_state(Gst.State.NULL)
+            self._cleanup_gst_resources()
             # Cleanup temp file after playback
             if self._current_speech_file and os.path.exists(self._current_speech_file):
                 try:
@@ -158,14 +159,24 @@ class TTSService(GObject.GObject):
         elif message.type == Gst.MessageType.ERROR:
             err, _debug = message.parse_error()
             logger.error(f"Anura TTS Error: GStreamer playback error: {err}")
-            self.player.set_state(Gst.State.NULL)
+            self._cleanup_gst_resources()
             self.emit("stop", False)
+
+    def _cleanup_gst_resources(self) -> None:
+        """Remove signal watcher and release player resources."""
+        if self.player:
+            bus = self.player.get_bus()
+            if self._signal_watch_id is not None:
+                bus.remove_signal_watch()
+                self._signal_watch_id = None
+            self.player.set_state(Gst.State.NULL)
+            self.player = None
 
     def stop_speaking(self) -> None:
         """Interrupts playback and cleans up temp file."""
         if self.player:
             logger.info("Anura TTS: Stopping playback.")
-            self.player.set_state(Gst.State.NULL)
+            self._cleanup_gst_resources()
 
         # Cleanup temp file on manual stop
         if self._current_speech_file and os.path.exists(self._current_speech_file):

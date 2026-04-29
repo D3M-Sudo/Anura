@@ -122,6 +122,12 @@ class PreferencesGeneralPage(Adw.PreferencesPage):
             self.settings.set_string("tts-language", "")  # Auto
         else:
             supported = ttsservice.get_supported_gtts_languages()
-            lang_code = list(supported.keys())[idx - 1]  # -1 for "Auto"
-            self.settings.set_string("tts-language", lang_code)
-            logger.debug(f"Anura: TTS language set to {lang_code}")
+            supported_keys = list(supported.keys())
+            # Bounds check to prevent IndexError
+            if idx - 1 < len(supported_keys):
+                lang_code = supported_keys[idx - 1]  # -1 for "Auto"
+                self.settings.set_string("tts-language", lang_code)
+                logger.debug(f"Anura: TTS language set to {lang_code}")
+            else:
+                logger.warning(f"Anura: TTS language index {idx} out of bounds, falling back to Auto")
+                self.settings.set_string("tts-language", "")

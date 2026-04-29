@@ -4,6 +4,7 @@
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
 import requests.exceptions
+from gettext import gettext as _
 from gi.repository import Gtk, GObject, Adw
 from loguru import logger
 
@@ -81,7 +82,7 @@ class ExtractedPage(Adw.NavigationPage):
         """Switch Stack between button and spinner."""
         self.listen_stack.set_visible_child_name("spinner" if active else "button")
 
-    def _on_generate_error(self, error: Exception) -> None:
+    def _on_generate_error(self, error: Exception, traceback_str: str = None) -> None:
         """Handle generation errors (called on main thread by GObjectWorker)."""
         self._set_spinner_active(False)
         self.swap_controls(False)

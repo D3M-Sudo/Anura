@@ -37,6 +37,9 @@ class ShareService(GObject.GObject):
             # NOTE: "instagram" removed — no URL prefill API available
         ]
 
+    # Maximum URL length for safe sharing (most browsers support ~2000, be conservative)
+    MAX_URL_LENGTH = 2000
+
     def share(self, provider: str, text: str):
         """
         Generates a share link and launches the default system handler.
@@ -51,6 +54,10 @@ class ShareService(GObject.GObject):
         if handler:
             try:
                 share_link: str = handler(quote(text, safe=''))
+                # Validate URL length before attempting to launch
+                if len(share_link) > self.MAX_URL_LENGTH:
+                    logger.warning(f"Anura Share: URL too long ({len(share_link)} chars, max {self.MAX_URL_LENGTH})")
+                    return
                 self.launcher.set_uri(share_link)
                 self.launcher.launch(parent=None, cancellable=None, callback=self._on_share)
             except Exception as e:

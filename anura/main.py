@@ -79,7 +79,9 @@ class AnuraApplication(Adw.Application):
         return 0
 
     def on_preferences(self, _action, _param) -> None:
-        self.get_active_window().show_preferences()
+        window = self.get_active_window()
+        if window:
+            window.show_preferences()
 
     def on_about(self, _action, _param):
         about_window = Adw.AboutDialog(
@@ -101,19 +103,29 @@ class AnuraApplication(Adw.Application):
             window.show_shortcuts()
 
     def on_copy_to_clipboard(self, _action, _param) -> None:
-        self.get_active_window().on_copy_to_clipboard(self)
+        window = self.get_active_window()
+        if window:
+            window.on_copy_to_clipboard(self)
 
     def get_screenshot(self, _action, _param) -> None:
-        self.get_active_window().get_screenshot()
+        window = self.get_active_window()
+        if window:
+            window.get_screenshot()
 
     def get_screenshot_and_copy(self, _action, _param) -> None:
-        self.get_active_window().get_screenshot(copy=True)
+        window = self.get_active_window()
+        if window:
+            window.get_screenshot(copy=True)
 
     def open_image(self, _action, _param) -> None:
-        self.get_active_window().open_image()
+        window = self.get_active_window()
+        if window:
+            window.open_image()
 
     def on_paste_from_clipboard(self, _action, _param) -> None:
-        self.get_active_window().on_paste_from_clipboard(self)
+        window = self.get_active_window()
+        if window:
+            window.on_paste_from_clipboard(self)
 
     def on_decoded(self, _sender, text: str, copy: bool) -> None:
         if not text:
@@ -135,10 +147,14 @@ class AnuraApplication(Adw.Application):
             logger.debug(f'Extracted: {text}')
 
     def on_listen(self, _sender, _event):
-        self.get_active_window().on_listen()
+        window = self.get_active_window()
+        if window:
+            window.on_listen()
 
     def on_listen_cancel(self, _sender, _event):
-        self.get_active_window().on_listen_cancel()
+        window = self.get_active_window()
+        if window:
+            window.on_listen_cancel()
 
     def create_action(self, name, callback, shortcuts=None):
         action = Gio.SimpleAction.new(name, None)
