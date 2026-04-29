@@ -273,7 +273,7 @@
                     "type": "git",
                     "url": "https://github.com/Delgan/loguru.git",
                     "tag": "0.7.2",
-                    "commit": "b7bed6b85d2c809ea2d8c3e5dce41e38f9d2ac30",
+                    "commit": "e1f48c91cf2646b6429020f784881cd200663114",
                     "x-checker-data": {
                         "type": "pypi",
                         "name": "loguru",

@@ -149,11 +149,14 @@ class TTSService(GObject.GObject):
             self._cleanup_gst_resources()
             # Cleanup temp file after playback
             if self._current_speech_file and os.path.exists(self._current_speech_file):
+                filepath = self._current_speech_file
                 try:
-                    os.unlink(self._current_speech_file)
-                    logger.debug(f"Anura TTS: Cleaned up temp file: {self._current_speech_file}")
+                    os.unlink(filepath)
+                    logger.debug(f"Anura TTS: Cleaned up temp file: {filepath}")
+                    self._current_speech_file = None
                 except Exception as e:
                     logger.warning(f"Anura TTS: Failed to cleanup temp file: {e}")
+            else:
                 self._current_speech_file = None
             self.emit("stop", True)
         elif message.type == Gst.MessageType.ERROR:
@@ -167,7 +170,10 @@ class TTSService(GObject.GObject):
         if self.player:
             bus = self.player.get_bus()
             if self._signal_watch_id is not None:
-                bus.remove_signal_watch()
+                try:
+                    bus.remove_signal_watch()
+                except Exception:
+                    pass  # Already removed or invalid
                 self._signal_watch_id = None
             self.player.set_state(Gst.State.NULL)
             self.player = None
@@ -180,11 +186,14 @@ class TTSService(GObject.GObject):
 
         # Cleanup temp file on manual stop
         if self._current_speech_file and os.path.exists(self._current_speech_file):
+            filepath = self._current_speech_file
             try:
-                os.unlink(self._current_speech_file)
-                logger.debug(f"Anura TTS: Cleaned up temp file on stop: {self._current_speech_file}")
+                os.unlink(filepath)
+                logger.debug(f"Anura TTS: Cleaned up temp file on stop: {filepath}")
+                self._current_speech_file = None
             except Exception as e:
                 logger.warning(f"Anura TTS: Failed to cleanup on stop: {e}")
+        else:
             self._current_speech_file = None
 
 

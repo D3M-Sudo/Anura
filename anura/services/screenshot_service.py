@@ -55,7 +55,7 @@ class ScreenshotService(GObject.GObject):
         uri = self.portal.take_screenshot_finish(res)
 
         if uri.startswith("file://"):
-            filename = url2pathname(uri[7:])
+            filename = url2pathname(uri[len("file://"):])
         else:
             filename = GLib.Uri.unescape_string(uri)
 
