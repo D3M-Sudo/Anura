@@ -123,6 +123,22 @@ class AnuraWindow(Adw.ApplicationWindow):
 
         dialog.open(self, None, self._on_open_image_result)
 
+    def process_file(self, file_path: str) -> None:
+        """Process an image file directly from CLI."""
+        from os.path import exists
+
+        if not exists(file_path):
+            self.show_toast(_("File not found: {path}").format(path=file_path))
+            return
+
+        mimetype, _ = guess_type(file_path)
+        if not mimetype or not mimetype.startswith("image"):
+            self.show_toast(_("Unsupported file format: {path}").format(path=file_path))
+            return
+
+        self.welcome_page.spinner.set_visible(True)
+        GObjectWorker.call(self.backend.decode_image, (self.get_language(), file_path))
+
     def _on_open_image_result(self, dialog, result):
         try:
             file = dialog.open_finish(result)

@@ -34,6 +34,24 @@ class AnuraApplication(Adw.Application):
             None
         )
 
+        self.add_main_option(
+            'file',
+            ord('f'),
+            GLib.OptionFlags.NONE,
+            GLib.OptionArg.FILENAME,
+            _("Process image file for OCR"),
+            None
+        )
+
+        self.add_main_option(
+            'silent',
+            ord('s'),
+            GLib.OptionFlags.NONE,
+            GLib.OptionArg.NONE,
+            _("Run OCR without UI (copy result to clipboard)"),
+            None
+        )
+
         language_manager.init_tessdata()
         Notify.init(APP_ID)
 
@@ -74,6 +92,27 @@ class AnuraApplication(Adw.Application):
             logger.info("Anura: CLI Extraction triggered.")
             self.backend.capture(self.settings.get_string("active-language"), copy=True)
             return 1
+
+        if "file" in options:
+            file_path = options["file"]
+            logger.info(f"Anura: CLI file processing: {file_path}")
+
+            if "silent" in options:
+                # Silent mode: process file in background, copy to clipboard, no UI
+                self.backend.decode_image(
+                    self.settings.get_string("active-language"),
+                    file_path,
+                    copy=True,
+                    remove_source=False
+                )
+                return 1
+            else:
+                # UI mode: activate app and tell window to process the file
+                self.activate()
+                win = self.props.active_window
+                if win:
+                    win.process_file(file_path)
+                return 0
 
         self.activate()
         return 0
