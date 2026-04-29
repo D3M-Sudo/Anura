@@ -188,7 +188,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         except OSError:
             return False
 
-        mimetype, _ = guess_type(file_path)
+        mimetype, _encoding = guess_type(file_path)
 
         if mimetype and mimetype.startswith("image"):
             self.welcome_page.spinner.set_visible(True)
