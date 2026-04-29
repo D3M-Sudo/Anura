@@ -1,5 +1,8 @@
 name: CI Quality Check & Release
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [ "main", "development" ]
@@ -24,6 +27,8 @@ jobs:
   # JOB 2: Flatpak build and optional release
   flatpak-builder:
     needs: python-quality
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     # Using the specialized container to handle GNOME runtimes and permissions
     # NOTE: We intentionally use gnome-nightly to test forward compatibility
