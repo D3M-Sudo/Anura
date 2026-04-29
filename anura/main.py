@@ -117,51 +117,69 @@ class AnuraApplication(Adw.Application):
                     result["error"] = message
                     done_event.set()
 
-                # Temporarily connect to both signals for this operation
-                decoded_handler_id = self.backend.connect('decoded', on_silent_decoded)
-                error_handler_id = self.backend.connect('error', on_silent_error)
+                # Track handler IDs for safe cleanup
+                decoded_handler_id: int | None = None
+                error_handler_id: int | None = None
 
-                self.backend.decode_image(
-                    self.settings.get_string("active-language"),
-                    file_path,
-                    copy=True,
-                    remove_source=False
-                )
+                try:
+                    # Temporarily connect to both signals for this operation
+                    decoded_handler_id = self.backend.connect('decoded', on_silent_decoded)
+                    error_handler_id = self.backend.connect('error', on_silent_error)
 
-                # Wait for completion with timeout
-                # NOTE: decode_image emits signals via GLib.idle_add, so we must
-                # run the GLib main loop to process them. We do this by running
-                # a nested main loop until the event is set or timeout.
-                timeout_seconds = 60.0
-                start_time = time.time()
+                    self.backend.decode_image(
+                        self.settings.get_string("active-language"),
+                        file_path,
+                        copy=True,
+                        remove_source=False
+                    )
 
-                while not done_event.is_set():
-                    # Process pending GLib events (this allows idle_add callbacks to run)
-                    GLib.MainContext.default().iteration(False)
-                    # Check timeout
-                    if time.time() - start_time > timeout_seconds:
-                        logger.error("Anura: Silent mode timeout waiting for OCR")
-                        # Disconnect handlers BEFORE breaking to prevent race with callbacks
+                    # Wait for completion with timeout
+                    # NOTE: decode_image emits signals via GLib.idle_add, so we must
+                    # run the GLib main loop to process them. We do this by running
+                    # a nested main loop until the event is set or timeout.
+                    timeout_seconds = 60.0
+                    start_time = time.time()
+                    timed_out = False
+
+                    while not done_event.is_set():
+                        # Process pending GLib events (this allows idle_add callbacks to run)
+                        GLib.MainContext.default().iteration(False)
+                        # Check timeout
+                        if time.time() - start_time > timeout_seconds:
+                            logger.error("Anura: Silent mode timeout waiting for OCR")
+                            result["success"] = False
+                            result["error"] = "Timeout"
+                            timed_out = True
+                            break
+                        # Small sleep to prevent busy-waiting
+                        time.sleep(0.01)
+
+                    # Safely disconnect signal handlers (race-condition free)
+                    if decoded_handler_id is not None:
                         self.backend.disconnect(decoded_handler_id)
+                        decoded_handler_id = None
+                    if error_handler_id is not None:
                         self.backend.disconnect(error_handler_id)
-                        result["success"] = False
-                        result["error"] = "Timeout"
-                        break
-                    # Small sleep to prevent busy-waiting
-                    time.sleep(0.01)
+                        error_handler_id = None
 
-                # Disconnect signal handlers (only if not already disconnected by timeout)
-                if result.get("error") != "Timeout":
-                    self.backend.disconnect(decoded_handler_id)
-                    self.backend.disconnect(error_handler_id)
+                    if timed_out:
+                        return 1
 
-                # Determine exit code: 0 for success (text found), 1 for failure/no text
-                if result["success"] and result.get("text"):
-                    return 0
-                else:
-                    if result.get("error") and result["error"] != "Timeout":
-                        logger.error(f"Anura: Silent mode error: {result['error']}")
+                except Exception as e:
+                    # Ensure handlers are disconnected even on unexpected errors
+                    if decoded_handler_id is not None:
+                        try:
+                            self.backend.disconnect(decoded_handler_id)
+                        except Exception:
+                            pass
+                    if error_handler_id is not None:
+                        try:
+                            self.backend.disconnect(error_handler_id)
+                        except Exception:
+                            pass
+                    logger.error(f"Anura: Silent mode unexpected error: {e}")
                     return 1
+
             else:
                 # UI mode: activate app and tell window to process the file
                 self.activate()

@@ -96,8 +96,13 @@ class ScreenshotService(GObject.GObject):
                     )
                     extracted = text.strip()
 
+        except (IOError, OSError) as e:
+            logger.error(f"Anura OCR/QR File Error: {e}")
+            return GLib.idle_add(self.emit, "error", _("Failed to read image file."))
         except Exception as e:
-            logger.error(f"Anura OCR/QR Error: {e}")
+            # Catch-all for image decoding, tesseract, and zbar errors
+            # These include PIL.UnidentifiedImageError, pytesseract.TesseractError, etc.
+            logger.error(f"Anura OCR/QR Error: {type(e).__name__}: {e}")
             return GLib.idle_add(self.emit, "error", _("Failed to decode data."))
 
         finally:
@@ -106,7 +111,7 @@ class ScreenshotService(GObject.GObject):
                 try:
                     os.unlink(file)
                     logger.debug(f"Anura OCR: Cleaned up temporary file: {file}")
-                except Exception as e:
+                except (OSError, PermissionError) as e:
                     logger.warning(f"Anura OCR: Could not delete {file}: {e}")
 
         if extracted:

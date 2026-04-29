@@ -251,16 +251,20 @@ class LanguageManager(GObject.GObject):
 
     def remove_language(self, code: str):
         """Removes the model file from the system."""
+        path = os.path.join(TESSDATA_DIR, f"{code}.traineddata")
+        if not os.path.exists(path):
+            return
+
         try:
-            path = os.path.join(TESSDATA_DIR, f"{code}.traineddata")
-            if os.path.exists(path):
-                os.remove(path)
-                with self._cache_lock:
-                    self._need_update_cache = True
-                logger.info(f"Anura: Model '{code}' removed successfully.")
-                GLib.idle_add(self.emit, "removed", code)
-        except Exception as e:
-            logger.error(f"Anura: Error removing language '{code}': {e}")
+            os.remove(path)
+            with self._cache_lock:
+                self._need_update_cache = True
+            logger.info(f"Anura: Model '{code}' removed successfully.")
+            GLib.idle_add(self.emit, "removed", code)
+        except PermissionError as e:
+            logger.error(f"Anura: Permission denied removing language '{code}': {e}")
+        except OSError as e:
+            logger.error(f"Anura: OS error removing language '{code}': {e}")
 
 
 # Singleton instance

@@ -44,6 +44,10 @@ class TTSService(GObject.GObject):
         "ori": "or", "pan": "pa", "guj": "gu", "mar": "mr", "nep": "ne",
         "sin": "si", "urd": "ur", "uzb": "uz", "kaz": "kk", "kir": "ky",
         "tgk": "tg", "lao": "lo", "mya": "my", "khm": "km",
+        # Historical/specialty variants (fallback to modern equivalent)
+        "lat": "la", "grc": "el",  # Ancient Greek → Modern Greek
+        "epo": "eo",  # Esperanto (if supported by gTTS)
+        "enm": "en", "frm": "fr",  # Middle English/French → Modern
         # Vertical/special variants
         "jpn_vert": "ja", "kor_vert": "ko", "chi_sim_vert": "zh-CN",
         "chi_tra_vert": "zh-TW", "ita_old": "it", "eng_old": "en",

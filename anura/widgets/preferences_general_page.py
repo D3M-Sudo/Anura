@@ -77,8 +77,8 @@ class PreferencesGeneralPage(Adw.PreferencesPage):
         # Disconnect old signal to avoid duplicate connections
         try:
             self.extra_language_combo.disconnect_by_func(self._on_extra_language_changed)
-        except Exception:
-            pass  # not connected yet on first call
+        except TypeError:
+            pass  # Handler not connected yet (first call)
         self._setup_extra_languages()
 
     def _setup_tts_volume(self):

@@ -124,12 +124,27 @@ class AnuraWindow(Adw.ApplicationWindow):
 
         dialog.open(self, None, self._on_open_image_result)
 
+    # Maximum image file size: 50MB to prevent memory exhaustion
+    MAX_IMAGE_SIZE_MB = 50
+    MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024
+
     def process_file(self, file_path: str) -> None:
         """Process an image file directly from CLI."""
-        from os.path import exists
+        import os
 
-        if not exists(file_path):
+        if not os.path.exists(file_path):
             self.show_toast(_("File not found: {path}").format(path=file_path))
+            return
+
+        # Validate file size to prevent memory issues with very large images
+        file_size = os.path.getsize(file_path)
+        if file_size > self.MAX_IMAGE_SIZE_BYTES:
+            self.show_toast(
+                _("Image too large: {size}MB (max {max}MB)").format(
+                    size=round(file_size / (1024 * 1024), 1),
+                    max=self.MAX_IMAGE_SIZE_MB
+                )
+            )
             return
 
         mimetype, _encoding = guess_type(file_path)
@@ -150,16 +165,34 @@ class AnuraWindow(Adw.ApplicationWindow):
             logger.debug(f"File selection cancelled or failed: {e}")
 
     def on_dnd_drop(self, _target, value: Gdk.FileList, _x, _y) -> bool:
+        import os
+
         files = value.get_files()
         if not files:
             return False
 
         item = files[0]
-        mimetype, _ = guess_type(item.get_path())
+        file_path = item.get_path()
+
+        # Validate file size for drag-and-drop
+        try:
+            file_size = os.path.getsize(file_path)
+            if file_size > self.MAX_IMAGE_SIZE_BYTES:
+                self.show_toast(
+                    _("Image too large: {size}MB (max {max}MB)").format(
+                        size=round(file_size / (1024 * 1024), 1),
+                        max=self.MAX_IMAGE_SIZE_MB
+                    )
+                )
+                return False
+        except OSError:
+            return False
+
+        mimetype, _ = guess_type(file_path)
 
         if mimetype and mimetype.startswith("image"):
             self.welcome_page.spinner.set_visible(True)
-            GObjectWorker.call(self.backend.decode_image, (self.get_language(), item.get_path()))
+            GObjectWorker.call(self.backend.decode_image, (self.get_language(), file_path))
             return True
 
         self.show_toast(_("Unsupported file format."))

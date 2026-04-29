@@ -33,5 +33,24 @@ class Settings(Gio.Settings):
             raise RuntimeError(f"GSettings schema '{APP_ID}' not found.")
 
 
-# Singleton instance
-settings = Settings()
+class _LazySettings:
+    """
+    Lazy initializer for Settings singleton.
+    Allows CLI-only operation without GSettings being available at import time.
+    Settings are only initialized when first accessed.
+    """
+
+    _instance: Settings | None = None
+
+    def _get_instance(self) -> Settings:
+        if self._instance is None:
+            self._instance = Settings()
+        return self._instance
+
+    def __getattr__(self, name):
+        """Delegate all attribute access to the actual Settings instance."""
+        return getattr(self._get_instance(), name)
+
+
+# Lazy singleton - Settings only initialized on first access
+settings = _LazySettings()

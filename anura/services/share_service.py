@@ -6,7 +6,7 @@
 from typing import List
 from urllib.parse import quote
 
-from gi.repository import GObject, Gtk
+from gi.repository import GLib, GObject, Gtk
 from loguru import logger
 
 
@@ -72,10 +72,10 @@ class ShareService(GObject.GObject):
         """
         try:
             success = self.launcher.launch_finish(result)
-            self.emit("share", success)
+            GLib.idle_add(self.emit, "share", success)
         except Exception as e:
             logger.warning(f"Anura Share Warning: URI launch failed: {e}")
-            self.emit("share", False)
+            GLib.idle_add(self.emit, "share", False)
 
     @staticmethod
     def get_link_telegram(text: str):

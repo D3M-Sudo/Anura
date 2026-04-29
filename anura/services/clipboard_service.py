@@ -5,7 +5,7 @@
 
 from gettext import gettext as _
 
-from gi.repository import Gdk, Gio, GObject
+from gi.repository import Gdk, Gio, GLib, GObject
 from loguru import logger
 
 
@@ -65,13 +65,23 @@ class ClipboardService(GObject.GObject):
 
     def read_texture(self) -> None:
         """
-        Asynchronously reads a texture from the clipboard.
+        Asynchronously reads a texture from the clipboard with a 10-second timeout.
         """
-        # Telemetry removed for privacy compliance
+        # Create cancellable with timeout to prevent hanging on clipboard issues
+        cancellable = Gio.Cancellable()
+        GLib.timeout_add_seconds(10, self._on_clipboard_timeout, cancellable)
+
         self.clipboard.read_texture_async(
-            cancellable=None,
+            cancellable=cancellable,
             callback=self._on_read_texture
         )
+
+    def _on_clipboard_timeout(self, cancellable: Gio.Cancellable) -> bool:
+        """Cancel clipboard operation if it takes too long."""
+        if not cancellable.is_cancelled():
+            logger.warning("Anura Clipboard: Read operation timed out after 10s, cancelling.")
+            cancellable.cancel()
+        return False  # Don't repeat timeout
 
 
 # Singleton instance for global app access
