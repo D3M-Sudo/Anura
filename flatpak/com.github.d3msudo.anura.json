@@ -293,7 +293,7 @@
                 {
                     "type": "git",
                     "url": "https://github.com/NaturalHistoryMuseum/pyzbar.git",
-                    "tag": "0.1.9",
+                    "tag": "v0.1.9",
                     "commit": "9ea0a6f1c7ddfa6cdf5d2fb1e7f1cef4fd76be32",
                     "x-checker-data": {
                         "type": "pypi",
