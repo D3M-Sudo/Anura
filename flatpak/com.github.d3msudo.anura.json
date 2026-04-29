@@ -311,6 +311,7 @@
             "name": "python3-urllib3",
             "buildsystem": "simple",
             "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore hatchling",
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore ."
             ],
             "sources": [
