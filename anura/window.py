@@ -1,10 +1,9 @@
 from gettext import gettext as _
 from io import BytesIO
 from mimetypes import guess_type
-from typing import List
 from urllib.parse import urlparse
 
-from gi.repository import Gtk, Adw, Gio, GLib, Gdk, GObject
+from gi.repository import Gtk, Adw, Gio, GLib, Gdk
 from loguru import logger
 
 from anura.config import APP_ID, RESOURCE_PREFIX
@@ -31,7 +30,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         super().__init__(**kwargs)
 
         self.settings = Gtk.Application.get_default().props.settings
-        
+
         language_manager.active_language = language_manager.get_language_item(
             self.settings.get_string("active-language")
         )

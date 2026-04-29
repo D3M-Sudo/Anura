@@ -4,13 +4,14 @@
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
 from gettext import gettext as _
-from gi.repository import Gtk, Adw, Gio, GObject
+
+from gi.repository import Gtk, Adw, Gio
 
 from anura.config import RESOURCE_PREFIX
 from anura.language_manager import language_manager
+from anura.services.settings import settings
 from anura.types.language_item import LanguageItem
 from anura.widgets.language_row import LanguageRow
-from anura.services.settings import settings
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/ui/preferences_languages.ui")

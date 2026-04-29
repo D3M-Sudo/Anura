@@ -4,7 +4,6 @@
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
 from gi.repository import Gtk, GLib, GObject
-from loguru import logger
 
 from anura.config import RESOURCE_PREFIX
 from anura.language_manager import language_manager
@@ -44,7 +43,7 @@ class LanguageRow(Gtk.Overlay):
 
     def update_ui(self):
         """
-        Updates the visibility and sensitivity of control buttons 
+        Updates the visibility and sensitivity of control buttons
         based on the language installation status.
         """
         if not self._item:
@@ -83,7 +82,7 @@ class LanguageRow(Gtk.Overlay):
                 self.revealer.set_reveal_child(True)
 
             self.progress_bar.set_fraction(progress / 100)
-            
+
             if progress >= 100:
                 self.revealer.set_reveal_child(False)
 

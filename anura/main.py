@@ -4,10 +4,10 @@ import sys
 from gettext import gettext as _
 
 from gi.events import GLibEventLoopPolicy
-from gi.repository import Gtk, Gio, GLib, Notify, Adw, GdkPixbuf, Gdk, GObject
+from gi.repository import Gtk, Gio, GLib, Notify, Adw
 from loguru import logger
 
-from anura.config import RESOURCE_PREFIX, APP_ID
+from anura.config import APP_ID
 from anura.language_manager import language_manager
 from anura.services.clipboard_service import clipboard_service
 from anura.services.screenshot_service import ScreenshotService

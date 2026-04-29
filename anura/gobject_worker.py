@@ -9,7 +9,7 @@
 import logging
 import threading
 import traceback
-from typing import Callable, Any, Tuple
+from typing import Callable, Tuple
 
 from gi.repository import GLib
 
@@ -55,7 +55,7 @@ class GObjectWorker:
 
         thread_data = (command, args, callback, errorback)
         worker_thread = threading.Thread(target=run, args=(thread_data,))
-        
+
         # Set as daemon so it doesn't prevent app exit
         worker_thread.daemon = True
         worker_thread.start()

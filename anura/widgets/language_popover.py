@@ -25,8 +25,7 @@ class LanguagePopover(Gtk.Popover):
     search_box: Gtk.Box = Gtk.Template.Child()
     entry: Gtk.SearchEntry = Gtk.Template.Child()
     list_view: Gtk.ListBox = Gtk.Template.Child()
-    
-    
+
     lang_list: Gio.ListStore = Gio.ListStore(item_type=LanguageItem)
     filter_list: Gtk.FilterListModel
     filter: Gtk.CustomFilter
@@ -34,16 +33,13 @@ class LanguagePopover(Gtk.Popover):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        
         self.settings = settings
 
-        
         language_manager.connect("downloaded", self._on_language_downloaded)
         language_manager.connect("removed", self._on_language_removed)
 
-        
         self._active_language = self.settings.get_string('active-language')
-        
+
         self.bind_model()
 
     def bind_model(self):

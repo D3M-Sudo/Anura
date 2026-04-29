@@ -3,8 +3,9 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
-import requests.exceptions
 from gettext import gettext as _
+
+import requests.exceptions
 from gi.repository import Gtk, GObject, Adw
 from loguru import logger
 
@@ -14,6 +15,7 @@ from anura.services.share_service import ShareService
 from anura.services.tts import ttsservice, TTSService
 from anura.services.settings import settings
 from anura.widgets.share_row import ShareRow
+
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/ui/extracted_page.ui")

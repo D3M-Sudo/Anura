@@ -7,10 +7,10 @@ import os
 import time
 
 import gtts
-import requests.exceptions
 from gi.repository import GObject, Gst
-from anura.services.settings import settings
 from loguru import logger
+
+from anura.services.settings import settings
 
 
 class TTSService(GObject.GObject):

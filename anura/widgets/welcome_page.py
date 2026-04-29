@@ -6,11 +6,11 @@
 from gi.repository import Adw, Gtk, Gdk
 from loguru import logger
 
-from anura.config import RESOURCE_PREFIX, APP_ID
+from anura.config import APP_ID, RESOURCE_PREFIX
 from anura.language_manager import language_manager
+from anura.services.settings import settings
 from anura.types.language_item import LanguageItem
 from anura.widgets.language_popover import LanguagePopover
-from anura.services.settings import settings
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/ui/welcome_page.ui")

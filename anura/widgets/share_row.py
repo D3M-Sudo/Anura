@@ -33,3 +33,4 @@ class ShareRow(Gtk.ListBoxRow):
         self.activate_action(
             "window.share", GLib.Variant.new_string(self.provider_name)
         )
+

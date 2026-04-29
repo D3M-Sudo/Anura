@@ -3,6 +3,8 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
+from gettext import gettext as _
+
 from gi.repository import Gtk, Adw, Gio
 from loguru import logger
 

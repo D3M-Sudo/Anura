@@ -50,7 +50,7 @@ class ShareService(GObject.GObject):
 
         text = text.strip()
         handler = getattr(self, f"get_link_{provider}", None)
-        
+
         if handler:
             try:
                 share_link: str = handler(quote(text, safe=''))

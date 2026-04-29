@@ -6,14 +6,14 @@
 import os
 from gettext import gettext as _
 from urllib.request import url2pathname
+
 from gi.repository import GObject, Gio, GLib, Xdp
 from loguru import logger
-
-from anura.config import tessdata_config
-
 from PIL import Image
 import pytesseract
 from pyzbar.pyzbar import decode
+
+from anura.config import tessdata_config
 
 
 class ScreenshotService(GObject.GObject):
@@ -53,12 +53,12 @@ class ScreenshotService(GObject.GObject):
 
         lang, copy = user_data
         uri = self.portal.take_screenshot_finish(res)
-        
+
         if uri.startswith("file://"):
             filename = url2pathname(uri[7:])
         else:
             filename = GLib.Uri.unescape_string(uri)
-            
+
         self.decode_image(lang, filename, copy, True)
 
     def decode_image(self,
@@ -84,7 +84,7 @@ class ScreenshotService(GObject.GObject):
             with Image.open(file) as img:
                 # Step 1: QR Code detection
                 qr_data = decode(img)
-                
+
                 if len(qr_data) > 0:
                     extracted = qr_data[0].data.decode("utf-8")
                     logger.info("Anura OCR: QR code detected.")

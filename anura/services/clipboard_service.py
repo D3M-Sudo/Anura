@@ -4,6 +4,7 @@
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
 from gettext import gettext as _
+
 from gi.repository import Gdk, GObject, Gio
 from loguru import logger
 
@@ -53,10 +54,10 @@ class ClipboardService(GObject.GObject):
             texture = self.clipboard.read_texture_finish(result)
             if not texture:
                 raise ValueError("No valid texture found in result.")
-            
+
             logger.info("Anura Clipboard: Image texture retrieved.")
             self.emit('paste_from_clipboard', texture)
-            
+
         except Exception as e:
             # Technical rigor: log error for X11/Wayland clipboard synchronization issues
             logger.error(f"Anura Clipboard Error: {e}")

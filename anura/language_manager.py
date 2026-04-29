@@ -7,13 +7,13 @@ import os
 import shutil
 import tempfile
 from gettext import gettext as _
-from typing import List, Dict
+from typing import Dict, List
 
 import requests
 from gi.repository import GObject
 from loguru import logger
 
-from anura.config import TESSDATA_DIR, TESSDATA_URL, TESSDATA_BEST_URL, REQUEST_TIMEOUT
+from anura.config import TESSDATA_BEST_URL, TESSDATA_DIR, TESSDATA_URL, REQUEST_TIMEOUT
 from anura.gobject_worker import GObjectWorker
 from anura.types.download_state import DownloadState
 from anura.types.language_item import LanguageItem

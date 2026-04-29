@@ -3,10 +3,9 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
-from gi.repository import Gtk, Adw, GObject
+from gi.repository import Gtk, Adw
 
 from anura.config import RESOURCE_PREFIX
-from anura.types.language_item import LanguageItem
 from anura.widgets.preferences_general_page import PreferencesGeneralPage
 from anura.widgets.preferences_languages_page import PreferencesLanguagesPage
 
@@ -17,6 +16,7 @@ class PreferencesDialog(Adw.PreferencesDialog):
 
     general_page: PreferencesGeneralPage = Gtk.Template.Child()
     languages_page: PreferencesLanguagesPage = Gtk.Template.Child()
+
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
