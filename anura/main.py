@@ -4,7 +4,7 @@ import sys
 from gettext import gettext as _
 
 from gi.events import GLibEventLoopPolicy
-from gi.repository import Gtk, Gio, GLib, Notify, Adw
+from gi.repository import Adw, Gio, GLib, Gtk, Notify
 from loguru import logger
 
 from anura.config import APP_ID

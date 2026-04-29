@@ -3,7 +3,7 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
-from gi.repository import Gtk, GLib, GObject
+from gi.repository import GLib, GObject, Gtk
 
 from anura.config import RESOURCE_PREFIX
 from anura.language_manager import language_manager

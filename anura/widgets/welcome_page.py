@@ -3,7 +3,7 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
-from gi.repository import Adw, Gtk, Gdk
+from gi.repository import Adw, Gdk, Gtk
 from loguru import logger
 
 from anura.config import APP_ID, RESOURCE_PREFIX

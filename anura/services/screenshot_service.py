@@ -7,10 +7,10 @@ import os
 from gettext import gettext as _
 from urllib.request import url2pathname
 
-from gi.repository import GObject, Gio, GLib, Xdp
+import pytesseract
+from gi.repository import Gio, GLib, GObject, Xdp
 from loguru import logger
 from PIL import Image
-import pytesseract
 from pyzbar.pyzbar import decode
 
 from anura.config import tessdata_config

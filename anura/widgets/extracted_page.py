@@ -6,16 +6,15 @@
 from gettext import gettext as _
 
 import requests.exceptions
-from gi.repository import Gtk, GObject, Adw
+from gi.repository import Adw, GObject, Gtk
 from loguru import logger
 
 from anura.config import RESOURCE_PREFIX
 from anura.gobject_worker import GObjectWorker
-from anura.services.share_service import ShareService
-from anura.services.tts import ttsservice, TTSService
 from anura.services.settings import settings
+from anura.services.share_service import ShareService
+from anura.services.tts import TTSService, ttsservice
 from anura.widgets.share_row import ShareRow
-
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/ui/extracted_page.ui")

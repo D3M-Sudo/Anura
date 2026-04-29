@@ -3,7 +3,7 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
-from gi.repository import Gtk, Gio, GObject
+from gi.repository import Gio, GObject, Gtk
 from loguru import logger
 
 from anura.config import RESOURCE_PREFIX
@@ -80,8 +80,8 @@ class LanguagePopover(Gtk.Popover):
         self.emit('language-changed', item)
         self.active_language = item.code
         language_manager.active_language = item
-        
-        
+
+
         self.settings.set_string('active-language', item.code)
         logger.debug(f"Anura: OCR language changed to '{item.code}'")
         self.popdown()

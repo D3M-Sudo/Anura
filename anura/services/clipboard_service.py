@@ -5,7 +5,7 @@
 
 from gettext import gettext as _
 
-from gi.repository import Gdk, GObject, Gio
+from gi.repository import Gdk, Gio, GObject
 from loguru import logger
 
 

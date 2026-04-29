@@ -13,7 +13,7 @@ import requests
 from gi.repository import GObject
 from loguru import logger
 
-from anura.config import TESSDATA_BEST_URL, TESSDATA_DIR, TESSDATA_URL, REQUEST_TIMEOUT
+from anura.config import REQUEST_TIMEOUT, TESSDATA_BEST_URL, TESSDATA_DIR, TESSDATA_URL
 from anura.gobject_worker import GObjectWorker
 from anura.types.download_state import DownloadState
 from anura.types.language_item import LanguageItem

@@ -5,7 +5,7 @@
 
 from gettext import gettext as _
 
-from gi.repository import Gtk, Adw, Gio
+from gi.repository import Adw, Gio, Gtk
 
 from anura.config import RESOURCE_PREFIX
 from anura.language_manager import language_manager

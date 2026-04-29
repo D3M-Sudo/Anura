@@ -5,7 +5,7 @@
 
 from gettext import gettext as _
 
-from gi.repository import Gtk, GLib
+from gi.repository import GLib, Gtk
 
 from anura.config import RESOURCE_PREFIX
 

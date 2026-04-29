@@ -3,7 +3,7 @@ from io import BytesIO
 from mimetypes import guess_type
 from urllib.parse import urlparse
 
-from gi.repository import Gtk, Adw, Gio, GLib, Gdk
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk
 from loguru import logger
 
 from anura.config import APP_ID, RESOURCE_PREFIX
@@ -70,13 +70,13 @@ class AnuraWindow(Adw.ApplicationWindow):
     def get_screenshot(self, copy: bool = False) -> None:
         self.extracted_page.listen_cancel()
         lang = self.get_language()
-        self.hide() 
+        self.hide()
         self.backend.capture(lang, copy)
 
     def on_shot_done(self, _sender, text: str, copy: bool) -> None:
         self.present()
         self.welcome_page.spinner.set_visible(False)
-        
+
         if not text:
             return
 
@@ -109,11 +109,11 @@ class AnuraWindow(Adw.ApplicationWindow):
     def open_image(self):
         dialog = Gtk.FileDialog()
         dialog.set_title(_("Choose an image for extraction"))
-        
+
         img_filter = Gtk.FileFilter()
         img_filter.set_name(_("Images"))
         img_filter.add_pixbuf_formats()
-        
+
         filters = Gio.ListStore.new(Gtk.FileFilter)
         filters.append(img_filter)
         dialog.set_filters(filters)
@@ -136,12 +136,12 @@ class AnuraWindow(Adw.ApplicationWindow):
 
         item = files[0]
         mimetype, _ = guess_type(item.get_path())
-        
+
         if mimetype and mimetype.startswith("image"):
             self.welcome_page.spinner.set_visible(True)
             GObjectWorker.call(self.backend.decode_image, (self.get_language(), item.get_path()))
             return True
-        
+
         self.show_toast(_("Unsupported file format."))
         return False
 
@@ -165,7 +165,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         try:
             builder = Gtk.Builder.new_from_resource(f"{RESOURCE_PREFIX}/ui/shortcuts.ui")
             shortcuts_window = builder.get_object("shortcuts")
-            
+
             if shortcuts_window:
                 shortcuts_window.set_transient_for(self)
                 shortcuts_window.present()
