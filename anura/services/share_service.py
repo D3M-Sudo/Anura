@@ -53,7 +53,10 @@ class ShareService(GObject.GObject):
 
         if handler:
             try:
-                share_link: str = handler(quote(text, safe=''))
+                # Encode the text content, but preserve URL structure characters
+                # The handler functions are responsible for proper URL construction
+                encoded_text = quote(text, safe='')
+                share_link: str = handler(encoded_text)
                 # Validate URL length before attempting to launch
                 if len(share_link) > self.MAX_URL_LENGTH:
                     logger.warning(f"Anura Share: URL too long ({len(share_link)} chars, max {self.MAX_URL_LENGTH})")

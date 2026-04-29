@@ -4,6 +4,7 @@
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
 import os
+import threading
 import time
 
 import gtts
@@ -51,6 +52,7 @@ class TTSService(GObject.GObject):
 
     _gtts_languages: dict | None = None
     _signal_watch_id: int | None = None
+    _cleanup_lock: threading.Lock = threading.Lock()
 
     @classmethod
     def get_supported_gtts_languages(cls) -> dict:
@@ -146,23 +148,24 @@ class TTSService(GObject.GObject):
         """Handle GStreamer bus messages; clean up temp file on EOS."""
         if message.type == Gst.MessageType.EOS:
             logger.info("Anura TTS: Playback finished.")
-            self._cleanup_gst_resources()
-            # Cleanup temp file after playback
-            if self._current_speech_file and os.path.exists(self._current_speech_file):
+            with self._cleanup_lock:
+                self._cleanup_gst_resources()
+                # Cleanup temp file after playback
                 filepath = self._current_speech_file
+                self._current_speech_file = None
+            # File operations outside the lock to minimize lock time
+            if filepath and os.path.exists(filepath):
                 try:
                     os.unlink(filepath)
                     logger.debug(f"Anura TTS: Cleaned up temp file: {filepath}")
-                    self._current_speech_file = None
                 except Exception as e:
                     logger.warning(f"Anura TTS: Failed to cleanup temp file: {e}")
-            else:
-                self._current_speech_file = None
             self.emit("stop", True)
         elif message.type == Gst.MessageType.ERROR:
             err, _debug = message.parse_error()
             logger.error(f"Anura TTS Error: GStreamer playback error: {err}")
-            self._cleanup_gst_resources()
+            with self._cleanup_lock:
+                self._cleanup_gst_resources()
             self.emit("stop", False)
 
     def _cleanup_gst_resources(self) -> None:
@@ -180,21 +183,22 @@ class TTSService(GObject.GObject):
 
     def stop_speaking(self) -> None:
         """Interrupts playback and cleans up temp file."""
-        if self.player:
-            logger.info("Anura TTS: Stopping playback.")
-            self._cleanup_gst_resources()
+        with self._cleanup_lock:
+            if self.player:
+                logger.info("Anura TTS: Stopping playback.")
+                self._cleanup_gst_resources()
 
-        # Cleanup temp file on manual stop
-        if self._current_speech_file and os.path.exists(self._current_speech_file):
+            # Capture and clear filepath atomically under lock
             filepath = self._current_speech_file
+            self._current_speech_file = None
+
+        # File operations outside the lock to minimize lock time
+        if filepath and os.path.exists(filepath):
             try:
                 os.unlink(filepath)
                 logger.debug(f"Anura TTS: Cleaned up temp file on stop: {filepath}")
-                self._current_speech_file = None
             except Exception as e:
                 logger.warning(f"Anura TTS: Failed to cleanup on stop: {e}")
-        else:
-            self._current_speech_file = None
 
 
 # Singleton instance

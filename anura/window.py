@@ -46,12 +46,13 @@ class AnuraWindow(Adw.ApplicationWindow):
         self.add_action(share_action)
 
         self.backend = backend
-        self.backend.connect("decoded", self.on_shot_done)
-        self.backend.connect("error", self.on_shot_error)
+        self._handler_decoded = self.backend.connect("decoded", self.on_shot_done)
+        self._handler_error = self.backend.connect("error", self.on_shot_error)
 
-        self.extracted_page.connect("go-back", self.show_welcome_page)
+        self._handler_go_back = self.extracted_page.connect("go-back", self.show_welcome_page)
+        self._handler_clipboard = None
         try:
-            clipboard_service.connect("paste_from_clipboard", self._on_paste_from_clipboard)
+            self._handler_clipboard = clipboard_service.connect("paste_from_clipboard", self._on_paste_from_clipboard)
         except RuntimeError as e:
             logger.warning(f"Clipboard service unavailable: {e}")
 
@@ -176,6 +177,28 @@ class AnuraWindow(Adw.ApplicationWindow):
         self.settings.set_int("window-height", height)
         return False
 
+    def do_destroy(self):
+        """Clean up signal handlers to prevent memory leaks."""
+        # Disconnect backend signal handlers
+        if self.backend:
+            if self._handler_decoded:
+                self.backend.disconnect(self._handler_decoded)
+                self._handler_decoded = None
+            if self._handler_error:
+                self.backend.disconnect(self._handler_error)
+                self._handler_error = None
+
+        # Disconnect widget signal handlers
+        if self._handler_go_back:
+            self.extracted_page.disconnect(self._handler_go_back)
+            self._handler_go_back = None
+        if self._handler_clipboard:
+            clipboard_service.disconnect(self._handler_clipboard)
+            self._handler_clipboard = None
+
+        # Chain up to parent class
+        super().do_destroy()
+
     def show_preferences(self):
         dialog = PreferencesDialog()
         dialog.present(self)
@@ -234,5 +257,6 @@ class AnuraWindow(Adw.ApplicationWindow):
         try:
             res = urlparse(text.strip())
             return all([res.scheme, res.netloc])
-        except Exception:
+        except ValueError:
+            # urlparse raises ValueError for malformed URLs
             return False

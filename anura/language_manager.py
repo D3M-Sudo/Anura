@@ -189,6 +189,9 @@ class LanguageManager(GObject.GObject):
                             if total_size > 0:
                                 progress = int(downloaded * 100 / total_size)
                                 self.emit("downloading", code, min(progress, 100))
+                            else:
+                                # No content-length header, emit indeterminate progress
+                                self.emit("downloading", code, -1)
 
                 shutil.move(tmp_path, final_path)  # atomic on same filesystem
                 return code

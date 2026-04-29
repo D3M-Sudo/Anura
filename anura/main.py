@@ -60,6 +60,7 @@ class AnuraApplication(Adw.Application):
 
         self.backend = ScreenshotService()
         self.backend.connect('decoded', self.on_decoded)
+        self.backend.connect('error', self.on_error)
 
         self._setup_actions()
 
@@ -91,7 +92,7 @@ class AnuraApplication(Adw.Application):
         if "extract_to_clipboard" in options:
             logger.info("Anura: CLI Extraction triggered.")
             self.backend.capture(self.settings.get_string("active-language"), copy=True)
-            return 1
+            return 0
 
         if "file" in options:
             file_path = options["file"]
@@ -184,6 +185,19 @@ class AnuraApplication(Adw.Application):
             notification.show()
         else:
             logger.debug(f'Extracted: {text}')
+
+    def on_error(self, _sender, message: str) -> None:
+        """Handle screenshot service errors, skipping cancellation messages."""
+        if message == _("Cancelled"):
+            # User cancelled - no notification needed
+            logger.info("Anura: Screenshot cancelled by user.")
+            return
+        # Real error - show notification
+        notification = Notify.Notification.new(
+            summary='Anura OCR',
+            body=message
+        )
+        notification.show()
 
     def on_listen(self, _sender, _event):
         window = self.get_active_window()
