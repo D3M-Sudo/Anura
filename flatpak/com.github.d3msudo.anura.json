@@ -308,6 +308,27 @@
         },
 
         {
+            "name": "python3-urllib3",
+            "buildsystem": "simple",
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore ."
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/urllib3/urllib3.git",
+                    "tag": "2.2.3",
+                    "commit": "18c9016ad73486f9ae0cbb6ddf442a9b2ad3bab",
+                    "x-checker-data": {
+                        "type": "pypi",
+                        "name": "urllib3",
+                        "tag-template": "$version"
+                    }
+                }
+            ]
+        },
+
+        {
             "name": "python3-requests",
             "buildsystem": "simple",
             "build-commands": [
