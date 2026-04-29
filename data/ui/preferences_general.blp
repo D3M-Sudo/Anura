@@ -49,8 +49,8 @@ template $PreferencesGeneralPage : Adw.PreferencesPage {
         upper: 100.0;
         step-increment: 10.0;
       };
-      output: output.1 {
-        convert[lower, upper, value]: "@value %";
+      output: Expression {
+        expression: "$'{value} %'";
       };
     }
 
