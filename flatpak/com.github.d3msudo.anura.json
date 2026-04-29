@@ -308,6 +308,27 @@
         },
 
         {
+            "name": "python3-requests",
+            "buildsystem": "simple",
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore ."
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/psf/requests.git",
+                    "tag": "v2.32.3",
+                    "commit": "61e2240f283f15780ac2d0e2cfefb0fd6fdab62",
+                    "x-checker-data": {
+                        "type": "pypi",
+                        "name": "requests",
+                        "tag-template": "v$version"
+                    }
+                }
+            ]
+        },
+
+        {
             "name": "anura",
             "builddir": true,
             "buildsystem": "meson",
