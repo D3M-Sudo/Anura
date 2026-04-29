@@ -311,6 +311,7 @@
             "name": "python3-urllib3",
             "buildsystem": "simple",
             "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore pathspec-1.1.1-py3-none-any.whl",
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore hatchling-1.27.0-py3-none-any.whl",
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore ."
             ],
@@ -325,6 +326,11 @@
                         "name": "urllib3",
                         "tag-template": "$version"
                     }
+                },
+                {
+                    "type": "file",
+                    "url": "https://files.pythonhosted.org/packages/f1/d9/7fb5aa316bc299258e68c73ba3bddbc499654a07f151cba08f6153988714/pathspec-1.1.1-py3-none-any.whl",
+                    "sha256": "a00ce642f577bf7f473932318056212bc4f8bfdf53128c78bbd5af0b9b20b189"
                 },
                 {
                     "type": "file",
