@@ -21,6 +21,5 @@
         <file>icons/scalable/actions/share-reddit-symbolic.svg</file>
         <file>icons/scalable/actions/share-email-symbolic.svg</file>
         <file>icons/scalable/actions/share-x-symbolic.svg</file>
-        <file>icons/scalable/actions/share-instagram-symbolic.svg</file>
     </gresource>
 </gresources>

@@ -96,7 +96,7 @@
   <url type="vcs-browser">https://github.com/D3M-Sudo/Anura</url>
   <url type="help">https://github.com/D3M-Sudo/Anura/blob/main/README.md</url>
   <content_rating type="oars-1.1">
-    <content_attribute id="social-info">mild</content_attribute>
+    <content_attribute id="social-info">none</content_attribute>
   </content_rating>
   <branding>
     <color type="primary" scheme_preference="light">#3d8b37</color>

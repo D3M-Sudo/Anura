@@ -42,8 +42,8 @@ if compile_schemas.found()
   )
 endif
 
-# Rimosso install_data di tessdata qui per evitare fallimenti se il file non è nel repo git.
-# La gestione del download e dell'installazione dei dati Tesseract deve avvenire nel manifesto Flatpak.
+# tessdata install_data removed here to avoid build failures when the file is not in the git repo.
+# Tesseract model download and installation is handled by the Flatpak manifest instead.
 
 subdir('icons')
 

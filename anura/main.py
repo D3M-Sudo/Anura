@@ -1,6 +1,8 @@
 import asyncio
 import datetime
 import sys
+import threading
+import time
 from gettext import gettext as _
 
 from gi.events import GLibEventLoopPolicy
@@ -79,6 +81,7 @@ class AnuraApplication(Adw.Application):
         self.create_action('quit', lambda *_: self.quit(), ['<primary>q', '<primary>w'])
         self.create_action('preferences', self.on_preferences, ['<primary>comma'])
         self.create_action('about', self.on_about)
+        self.create_action('github_star', self.on_github_star)
 
     def do_activate(self):
         win = self.props.active_window
@@ -100,13 +103,65 @@ class AnuraApplication(Adw.Application):
 
             if "silent" in options:
                 # Silent mode: process file in background, copy to clipboard, no UI
+                # Use threading.Event to wait for async completion (thread-safe)
+                done_event = threading.Event()
+                result = {"success": False, "text": None}
+
+                def on_silent_decoded(_sender, text: str, copy: bool) -> None:
+                    result["success"] = True
+                    result["text"] = text
+                    done_event.set()
+
+                def on_silent_error(_sender, message: str) -> None:
+                    result["success"] = False
+                    result["error"] = message
+                    done_event.set()
+
+                # Temporarily connect to both signals for this operation
+                decoded_handler_id = self.backend.connect('decoded', on_silent_decoded)
+                error_handler_id = self.backend.connect('error', on_silent_error)
+
                 self.backend.decode_image(
                     self.settings.get_string("active-language"),
                     file_path,
                     copy=True,
                     remove_source=False
                 )
-                return 1
+
+                # Wait for completion with timeout
+                # NOTE: decode_image emits signals via GLib.idle_add, so we must
+                # run the GLib main loop to process them. We do this by running
+                # a nested main loop until the event is set or timeout.
+                timeout_seconds = 60.0
+                start_time = time.time()
+
+                while not done_event.is_set():
+                    # Process pending GLib events (this allows idle_add callbacks to run)
+                    GLib.MainContext.default().iteration(False)
+                    # Check timeout
+                    if time.time() - start_time > timeout_seconds:
+                        logger.error("Anura: Silent mode timeout waiting for OCR")
+                        # Disconnect handlers BEFORE breaking to prevent race with callbacks
+                        self.backend.disconnect(decoded_handler_id)
+                        self.backend.disconnect(error_handler_id)
+                        result["success"] = False
+                        result["error"] = "Timeout"
+                        break
+                    # Small sleep to prevent busy-waiting
+                    time.sleep(0.01)
+
+                # Disconnect signal handlers (only if not already disconnected by timeout)
+                if result.get("error") != "Timeout":
+                    self.backend.disconnect(decoded_handler_id)
+                    self.backend.disconnect(error_handler_id)
+
+                # Determine exit code: 0 for success (text found), 1 for failure/no text
+                if result["success"] and result.get("text"):
+                    return 0
+                else:
+                    if result.get("error") and result["error"] != "Timeout":
+                        logger.error(f"Anura: Silent mode error: {result['error']}")
+                    return 1
             else:
                 # UI mode: activate app and tell window to process the file
                 self.activate()
@@ -133,9 +188,39 @@ class AnuraApplication(Adw.Application):
             license_type=Gtk.License.MIT,
             developers=["Andrey Maksimov", "D3M-Sudo"],
             designers=["Andrey Maksimov"],
-            release_notes=_("Technical and rigorous OCR tool optimized for Linux.")
+            release_notes=_("Extract text from anywhere on your screen.")
         )
         about_window.present(self.props.active_window)
+
+    def on_github_star(self, _action, _param) -> None:
+        """Open the GitHub repository page in the default browser."""
+        launcher = Gtk.UriLauncher.new("https://github.com/d3msudo/anura")
+
+        def on_launch_finish(_launcher, result):
+            try:
+                launcher.launch_finish(result)
+            except GLib.Error as e:
+                logger.error(f"Anura: Failed to open browser: {e.message}")
+                # Show error dialog to user using Adw.AlertDialog
+                window = self.props.active_window
+                if window:
+                    dialog = Adw.AlertDialog()
+                    dialog.set_heading(_("Failed to Open Browser"))
+                    dialog.set_body(_("No web browser could be launched. Please open the link manually."))
+                    dialog.add_response("copy", _("Copy Link"))
+                    dialog.add_response("close", _("Close"))
+                    dialog.set_default_response("close")
+                    dialog.set_close_response("close")
+
+                    def on_dialog_response(_dlg, response):
+                        if response == "copy":
+                            clipboard_service.set("https://github.com/d3msudo/anura")
+                        _dlg.destroy()
+
+                    dialog.connect("response", on_dialog_response)
+                    dialog.present(window)
+
+        launcher.launch(self.props.active_window, None, on_launch_finish)
 
     def on_shortcuts(self, _action, _param):
         window = self.get_active_window()

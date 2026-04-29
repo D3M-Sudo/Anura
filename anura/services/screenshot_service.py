@@ -13,7 +13,7 @@ from loguru import logger
 from PIL import Image
 from pyzbar.pyzbar import decode
 
-from anura.config import tessdata_config
+from anura.config import get_tesseract_config
 
 
 class ScreenshotService(GObject.GObject):
@@ -92,7 +92,7 @@ class ScreenshotService(GObject.GObject):
                 # Step 2: Tesseract OCR
                 else:
                     text = pytesseract.image_to_string(
-                        img, lang=lang, config=tessdata_config
+                        img, lang=lang, config=get_tesseract_config(lang)
                     )
                     extracted = text.strip()
 
