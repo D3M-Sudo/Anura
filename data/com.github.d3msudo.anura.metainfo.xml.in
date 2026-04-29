@@ -28,11 +28,11 @@
   </description>
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/1bfa2f92f31a94cdc87f479d3bf6fbfd300aa8bd/data/screenshots/anura-window-dark.png</image>
+      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/main/data/screenshots/anura-window-dark.png</image>
       <caption>Main interface showing the text extraction screen (dark theme)</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/1bfa2f92f31a94cdc87f479d3bf6fbfd300aa8bd/data/screenshots/anura-window-decoded.png</image>
+      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/main/data/screenshots/anura-window-decoded.png</image>
       <caption>Extracted text displayed after OCR recognition</caption>
     </screenshot>
   </screenshots>
@@ -73,8 +73,6 @@
   <categories>
     <category>Graphics</category>
     <category>Utility</category>
-    <category>GNOME</category>
-    <category>GTK</category>
   </categories>
   <keywords>
     <keyword>OCR</keyword>
