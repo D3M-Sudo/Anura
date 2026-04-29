@@ -1,0 +1,133 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $WelcomePage : Adw.NavigationPage {
+  title: _("Welcome");
+
+  Adw.ToolbarView {
+      [top]
+      Adw.HeaderBar {
+        visible: true;
+        
+        [title]
+        Adw.WindowTitle {
+          title: "Anura";
+        }
+
+        [start]
+        MenuButton lang_combo {
+          label: _("Language");
+          tooltip-text: _("Select language to extract");
+          popover: $LanguagePopover language_popover {};
+        }
+
+        [start]
+        Adw.Spinner spinner {
+          visible: false;
+        }
+
+        [end]
+        MenuButton {
+          icon-name: "open-menu-symbolic";
+          menu-model: primary_menu;
+          tooltip-text: _("Open menu");
+        }
+      }
+
+      Adw.StatusPage welcome {
+        title: "Anura";
+        description: _("Extract text from anywhere");
+        icon-name: "com.github.d3msudo.anura";
+
+        Adw.Clamp {
+          maximum-size: 240;
+          child: Box {
+            orientation: vertical;
+            spacing: 12;
+
+            Button {
+              action-name: "app.get_screenshot";
+              tooltip-text: C_("Welcome screen", "Take a Screenshot");
+              styles ["pill", "suggested-action"]
+              
+              child: Box {
+                halign: center;
+                spacing: 6;
+                Image { icon-name: "camera-photo-symbolic"; }
+                Label {
+                  label: _("_Take a Screenshot");
+                  use-underline: true;
+                }
+              };
+            }
+
+            Button {
+              action-name: "app.open_image";
+              tooltip-text: C_("Welcome screen", "Open Image");
+              styles ["pill"]
+
+              child: Box {
+                halign: center;
+                spacing: 6;
+                Image { icon-name: "folder-open-symbolic"; }
+                Label {
+                  label: _("_Open Image");
+                  use-underline: true;
+                }
+              };
+            }
+
+             Button {
+              action-name: "app.paste_from_clipboard";
+              tooltip-text: C_("Welcome screen", "Paste image from clipboard");
+              styles ["pill"]
+
+              child: Box {
+                halign: center;
+                spacing: 6;
+                Image { icon-name: "edit-paste-symbolic"; }
+                Label {
+                  label: _("Paste Image");
+                  use-underline: true;
+                }
+              };
+            }
+
+            Label {
+              margin-top: 8;
+              label: _("...or drop image here");
+              styles ["dim-label"]
+            }
+          };
+        }
+      }
+  }
+}
+
+menu primary_menu {
+  section {
+    item {
+      label: _("Preferences");
+      action: "app.preferences";
+    }
+  }
+
+  section {
+    item {
+      label: _("Keyboard Shortcuts");
+      action: "app.shortcuts";
+    }
+
+    item {
+      label: _("About Anura");
+      action: "app.about";
+    }
+  }
+
+  section {
+    item {
+      label: _("⭐ Star on GitHub");
+      action: "app.github_star";
+    }
+  }
+}

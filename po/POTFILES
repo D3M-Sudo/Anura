@@ -1,0 +1,16 @@
+anura/language_manager.py
+anura/main.py
+anura/services/clipboard_service.py
+anura/services/screenshot_service.py
+anura/widgets/preferences_languages_page.py
+anura/widgets/share_row.py
+anura/window.py
+data/com.github.d3msudo.anura.desktop.in
+data/com.github.d3msudo.anura.metainfo.xml.in
+data/ui/extracted_page.blp
+data/ui/language_popover.blp
+data/ui/preferences_dialog.blp
+data/ui/preferences_general.blp
+data/ui/preferences_languages.blp
+data/ui/welcome_page.blp
+data/ui/window.blp

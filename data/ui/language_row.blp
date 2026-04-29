@@ -1,0 +1,51 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $LanguageRow : Overlay {
+  Box {
+    margin-bottom: 6;
+    margin-end: 8;
+    margin-start: 8;
+    margin-top: 6;
+
+    Label label {
+      hexpand: true;
+      halign: start;
+
+      styles [
+        "title",
+      ]
+    }
+
+    Button install_btn {
+      icon-name: "folder-download-symbolic";
+      tooltip-text: C_("Preferences Language Row", "Install language");
+      clicked => $_on_download();
+
+      styles ["flat"]
+    }
+
+    Button remove_btn {
+      visible: bind install_btn.visible inverted bidirectional;
+      icon-name: "user-trash-symbolic";
+      tooltip-text: C_("Preferences Language Row", "Remove language");
+      clicked => $_on_remove();
+
+      styles ["flat"]
+    }
+  }
+
+  [overlay]
+  Revealer revealer {
+    valign: end;
+
+    ProgressBar progress_bar {
+      valign: end;
+      fraction: 0.14;
+
+      styles [
+        "osd",
+      ]
+    }
+  }
+}

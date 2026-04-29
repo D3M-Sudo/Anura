@@ -1,0 +1,20 @@
+[Desktop Entry]
+Name=Anura
+GenericName=OCR Tool
+Comment=Extract text from any image, video, or web page
+Icon=com.github.d3msudo.anura
+Exec=anura
+Terminal=false
+Type=Application
+Categories=GTK;Utility;
+Keywords=OCR;Text;Extraction;Reader;QR;Scanner;
+StartupNotify=true
+# Disabled DBus for compatibility with flatpak format
+DBusActivatable=false
+
+# Actions for right-click context menu
+Actions=extractToClipboard;
+
+[Desktop Action extractToClipboard]
+Name=Extract Text to Clipboard
+Exec=anura --extract_to_clipboard

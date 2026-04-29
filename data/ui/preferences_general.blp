@@ -1,0 +1,40 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $PreferencesGeneralPage : Adw.PreferencesPage {
+  title: _("_General");
+  use-underline: true;
+  icon-name: "emblem-system-symbolic";
+
+  Adw.PreferencesGroup {
+    title: _("Text Extraction");
+
+    Adw.ComboRow extra_language_combo {
+      title: _("_Secondary Language");
+      use-underline: true;
+      subtitle: _("Additional language used in text recognition");
+    }
+  }
+
+  Adw.PreferencesGroup {
+    title: _("Behavior");
+
+    Adw.SwitchRow autocopy_switch {
+      title: _("_Copy to Clipboard");
+      use-underline: true;
+      subtitle: _("Automatically copy the extracted text after detection");
+    }
+
+    Adw.SwitchRow autolinks_switch {
+      title: _("_Open QR-code Links");
+      use-underline: true;
+      subtitle: _("Automatically open links extracted from QR codes");
+    }
+
+    // NOTE: telemetry_switch has been removed from this template.
+    // The Python widget (PreferencesGeneralPage) previously declared it as a
+    // Gtk.Template.Child() and then set it invisible — causing a template
+    // mismatch warning if the widget was absent from the .ui file.
+    // Since telemetry is fully disabled in Anura, the widget is simply gone.
+  }
+}

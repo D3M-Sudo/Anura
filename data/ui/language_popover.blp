@@ -1,0 +1,84 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $LanguagePopover : Popover {
+
+  show => $_on_popover_show();
+  closed => $_on_popover_closed();
+  styles ["lang-selector","menu"]
+
+  Box {
+    orientation: vertical;
+
+
+    Box search_box {
+      orientation: vertical;
+      styles ["search_box"]
+
+      SearchEntry entry {
+
+        placeholder-text: _("Search Languages…");
+        activate => $_on_search_activate();
+        search-changed => $_on_search_changed();
+        stop-search => $_on_stop_search();
+      }
+    }
+
+    // Separator {}
+
+    Stack views {
+      vexpand: false;
+      transition-type: crossfade;
+
+      StackPage {
+        name: 'languages_page';
+
+        child: ScrolledWindow {
+          vexpand: true;
+
+          ListBox list_view {
+            selection-mode: single;
+            row-activated => $_on_language_activate();
+          }
+        };
+      }
+
+      StackPage {
+        name: 'empty_page';
+
+        child: ScrolledWindow {
+          height-request: 166;
+
+          Box {
+            orientation: vertical;
+            margin-end: 6;
+            margin-start: 6;
+            margin-top: 6;
+            margin-bottom: 6;
+            spacing: 8;
+            vexpand: true;
+
+            Image {
+              icon-name: "system-search-symbolic";
+              pixel-size: 48;
+              margin-top: 8;
+              vexpand: true;
+            }
+
+            Label {
+              label: _("No Results Found");
+              styles ["heading"]
+            }
+
+            Button {
+              margin-top: 8;
+              hexpand: true;
+              label: _("Add Language");
+              clicked => $_on_add_clicked();
+            }
+          }
+        };
+      }
+    }
+  }
+}

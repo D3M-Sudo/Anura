@@ -1,0 +1,31 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $AnuraWindow : Adw.ApplicationWindow {
+  default-width: 480;
+  default-height: 480;
+  width-request: 360;
+  height-request: 360;
+  
+  icon-name: "com.github.d3msudo.anura";
+
+  [content]
+  Adw.ToastOverlay toast_overlay {
+
+    Adw.NavigationSplitView split_view {
+      collapsed: true;
+
+      [sidebar]
+      Adw.NavigationPage {
+        title: _("Welcome");
+        child: $WelcomePage welcome_page {};
+      }
+
+      [content]
+      Adw.NavigationPage {
+        title: _("Extracted Text");
+        child: $ExtractedPage extracted_page {};
+      }
+    }
+  }
+}

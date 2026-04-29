@@ -1,0 +1,312 @@
+{
+    "app-id": "com.github.d3msudo.anura",
+    "runtime": "org.gnome.Platform",
+    "runtime-version": "49",
+    "sdk": "org.gnome.Sdk",
+    "command": "anura",
+
+    "finish-args": [
+        "--share=network",
+        "--share=ipc",
+        "--socket=fallback-x11",
+        "--socket=wayland",
+        "--socket=pulseaudio",
+        "--device=dri"
+    ],
+
+    "cleanup": [
+        "/include",
+        "/lib/pkgconfig",
+        "/share/doc",
+        "/share/man",
+        "*.la",
+        "*.a"
+    ],
+
+    "modules": [
+        {
+            "name": "leptonica",
+            "config-opts": [
+                "--disable-static",
+                "--with-libpng",
+                "--with-jpeg",
+                "--with-libtiff",
+                "--with-zlib"
+            ],
+            "cleanup": [ "/bin", "/include", "/lib/pkgconfig", "*.la" ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/DanBloomberg/leptonica.git",
+                    "tag": "1.85.0",
+                    "commit": "63aef18d98432b8582a1565e241f7bd2ee9cc8d9",
+                    "x-checker-data": {
+                        "type": "git",
+                        "tag-pattern": "^([\\d.]+)$"
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "tesseract",
+            "config-opts": [
+                "--disable-static",
+                "--disable-graphics",
+                "--enable-legacy"
+            ],
+            "cleanup": [ "/include", "/lib/pkgconfig", "*.la" ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/tesseract-ocr/tesseract.git",
+                    "tag": "5.5.0",
+                    "commit": "64eab6c457b2337dd690746a5fde5c222b40d5f8",
+                    "x-checker-data": {
+                        "type": "git",
+                        "tag-pattern": "^([\\d.]+)$"
+                    }
+                }
+            ],
+            "modules": [
+                {
+                    "name": "tessdata-fast",
+                    "buildsystem": "simple",
+                    "build-commands": [
+                        "mkdir -p /app/share/tessdata",
+                        "cp eng.traineddata ita.traineddata /app/share/tessdata/"
+                    ],
+                    "sources": [
+                        {
+                            "type": "file",
+                            "url": "https://github.com/tesseract-ocr/tessdata_fast/raw/main/eng.traineddata",
+                            "sha256": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2",
+                            "x-checker-data": {
+                                "type": "sha256",
+                                "url": "https://github.com/tesseract-ocr/tessdata_fast/raw/main/eng.traineddata"
+                            }
+                        },
+                        {
+                            "type": "file",
+                            "url": "https://github.com/tesseract-ocr/tessdata_fast/raw/main/ita.traineddata",
+                            "sha256": "b8f89e1e785118dac4d51ae042c029a64edb5c3ee42ef73027a6d412748d8827",
+                            "x-checker-data": {
+                                "type": "sha256",
+                                "url": "https://github.com/tesseract-ocr/tessdata_fast/raw/main/ita.traineddata"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+
+        {
+            "name": "libportal",
+            "buildsystem": "meson",
+            "builddir": true,
+            "config-opts": [
+                "-Ddocs=false",
+                "-Dtests=false",
+                "-Dvapi=false",
+                "-Dintrospection=true",
+                "-Dbackend-gtk3=disabled",
+                "-Dbackend-gtk4=enabled",
+                "-Dbackend-qt5=disabled"
+            ],
+            "cleanup": [ "/include", "/lib/pkgconfig", "*.la" ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/flatpak/libportal.git",
+                    "tag": "0.9.1",
+                    "commit": "8f5dc8d192f6e31dafe69e35219e3b707bde71ce",
+                    "x-checker-data": {
+                        "type": "anitya",
+                        "project-id": 193688,
+                        "stable-only": true,
+                        "tag-template": "$version"
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "zbar",
+            "buildsystem": "autotools",
+            "cleanup": [ "/bin", "/include", "/lib/pkgconfig", "*.la" ],
+            "config-opts": [
+                "--disable-static",
+                "--without-gtk",
+                "--without-python",
+                "--without-imagemagick",
+                "--without-dbus",
+                "--without-qt",
+                "--without-x",
+                "--disable-video",
+                "--disable-doc",
+                "--with-introspection=no"
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/mchehab/zbar.git",
+                    "tag": "0.23.93",
+                    "commit": "bb05ec54eec57f8397cb13fb9161372a281a1219",
+                    "x-checker-data": {
+                        "type": "git",
+                        "tag-pattern": "^([\\d.]+)$"
+                    }
+                },
+                {
+                    "type": "shell",
+                    "commands": [
+                        "autoreconf -vfi",
+                        "sed -i 's/lpthread/pthread/g' configure"
+                    ]
+                }
+            ]
+        },
+
+        {
+            "name": "blueprint-compiler",
+            "buildsystem": "meson",
+            "cleanup": [ "*" ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://gitlab.gnome.org/jwestman/blueprint-compiler.git",
+                    "tag": "v0.16.0",
+                    "commit": "04ef0944db56ab01307a29aaa7303df6067cb3c0",
+                    "x-checker-data": {
+                        "type": "git",
+                        "tag-pattern": "^v([\\d.]+)$",
+                        "tag-template": "v$version"
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "python3-requests",
+            "buildsystem": "simple",
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app ."
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/psf/requests.git",
+                    "tag": "v2.32.3",
+                    "commit": "0e322af87745eff34caffe4df68456ebc20d9068",
+                    "x-checker-data": {
+                        "type": "pypi",
+                        "name": "requests",
+                        "tag-template": "v$version"
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "python3-pillow",
+            "buildsystem": "simple",
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app ."
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/python-pillow/Pillow.git",
+                    "tag": "11.0.0",
+                    "commit": "204aae6682fc936f5350b3fe70335776f81480a7",
+                    "x-checker-data": {
+                        "type": "pypi",
+                        "name": "Pillow",
+                        "tag-template": "$version"
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "python3-pytesseract",
+            "buildsystem": "simple",
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app ."
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/madmaze/pytesseract.git",
+                    "tag": "v0.3.13",
+                    "commit": "bb128f3ab846e4144d1e7529e37801554d5aef75",
+                    "x-checker-data": {
+                        "type": "pypi",
+                        "name": "pytesseract",
+                        "tag-template": "v$version"
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "python3-gTTS",
+            "buildsystem": "simple",
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app ."
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/pndurette/gTTS.git",
+                    "tag": "v2.5.1",
+                    "commit": "5cdaebfa7ad6856b051974d155e61ebfdfb0ab45",
+                    "x-checker-data": {
+                        "type": "pypi",
+                        "name": "gTTS",
+                        "tag-template": "v$version"
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "python3-dateutil",
+            "buildsystem": "simple",
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app ."
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/dateutil/dateutil.git",
+                    "tag": "2.9.0.post0",
+                    "commit": "1ae807774053c071acc9e7d3d27778fba0a7773e",
+                    "x-checker-data": {
+                        "type": "pypi",
+                        "name": "python-dateutil",
+                        "tag-template": "$version"
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "anura",
+            "builddir": true,
+            "buildsystem": "meson",
+            "build-options": {
+                "env": {
+                    "GI_TYPELIB_PATH": "/app/lib/girepository-1.0:/usr/lib/girepository-1.0",
+                    "LD_LIBRARY_PATH": "/app/lib"
+                }
+            },
+            "sources": [
+                {
+                    "type": "dir",
+                    "path": ".."
+                }
+            ]
+        }
+    ]
+}

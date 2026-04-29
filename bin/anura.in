@@ -1,0 +1,52 @@
+#!/@PYTHON@
+
+# anura.in
+#
+# Copyright 2021-2023 Andrey Maksimov
+# Copyright 2026 D3M-Sudo (Anura fork and modifications)
+#
+# Technical entry point for the Anura OCR application.
+# Meson replaces @ placeholders during the build process.
+
+import os
+import sys
+import signal
+import gettext
+import locale
+
+VERSION = '@VERSION@'
+pkgdatadir = '@pkgdatadir@'
+localedir = '@localedir@'
+project_name = '@projectname@'
+
+# Ensure the package data directory is in the path for module discovery
+sys.path.insert(1, pkgdatadir)
+
+# Handle SIGINT (Ctrl+C) to allow clean termination in terminal
+signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+# L10n Setup: Standard XDG locale initialisation, distro-agnostic
+try:
+    locale.setlocale(locale.LC_ALL, '')
+    locale.bindtextdomain(project_name, localedir)
+except Exception:
+    # Fallback if locale is not set correctly on the system
+    pass
+
+gettext.bindtextdomain(project_name, localedir)
+gettext.textdomain(project_name)
+
+if __name__ == '__main__':
+    import gi
+    from gi.repository import Gio
+
+    # Loading the compiled GResource containing UI (Blueprint) and Icons
+    # Must match: com.github.d3msudo.anura.gresource
+    resource_path = os.path.join(pkgdatadir, '@appid@.gresource')
+    if os.path.exists(resource_path):
+        resource = Gio.Resource.load(resource_path)
+        resource._register()
+
+    # Launching the main application loop
+    from anura import main
+    sys.exit(main.main(VERSION))

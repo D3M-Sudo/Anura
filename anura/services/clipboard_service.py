@@ -1,0 +1,69 @@
+# clipboard_service.py
+#
+# Copyright 2021-2025 Andrey Maksimov
+# Copyright 2026 D3M-Sudo (Anura fork and modifications)
+
+from gettext import gettext as _
+from gi.repository import Gdk, GObject, Gio
+from loguru import logger
+
+
+class ClipboardService(GObject.GObject):
+    """
+    Service responsible for interacting with the system clipboard.
+    Optimized for Anura OCR to handle text and image textures.
+    """
+    __gtype_name__ = 'ClipboardService'
+
+    __gsignals__ = {
+        'paste_from_clipboard': (GObject.SIGNAL_RUN_FIRST, None, (Gdk.Texture,)),
+        'error': (GObject.SIGNAL_RUN_FIRST, None, (str,))
+    }
+
+    # Obtain reference to the default clipboard for the current display
+    # Technical note: Gdk.Display.get_default() is essential for multi-head stability.
+    clipboard: Gdk.Clipboard = Gdk.Display.get_default().get_clipboard()
+
+    def __init__(self):
+        super().__init__()
+
+    def set(self, value: str) -> None:
+        """
+        Sets text to the system clipboard.
+        """
+        if value:
+            self.clipboard.set(value)
+            logger.debug("Anura Clipboard: Text successfully copied.")
+        else:
+            logger.warning("Anura Clipboard: Attempted to copy empty string.")
+
+    def _on_read_texture(self, _sender: GObject.GObject, result: Gio.AsyncResult) -> None:
+        """
+        Callback for texture reading from clipboard.
+        """
+        try:
+            texture = self.clipboard.read_texture_finish(result)
+            if not texture:
+                raise ValueError("No valid texture found in result.")
+            
+            logger.info("Anura Clipboard: Image texture retrieved.")
+            self.emit('paste_from_clipboard', texture)
+            
+        except Exception as e:
+            # Technical rigor: log error for X11/Wayland clipboard synchronization issues
+            logger.error(f"Anura Clipboard Error: {e}")
+            self.emit('error', _("No image in clipboard"))
+
+    def read_texture(self) -> None:
+        """
+        Asynchronously reads a texture from the clipboard.
+        """
+        # Telemetry removed for privacy compliance
+        self.clipboard.read_texture_async(
+            cancellable=None,
+            callback=self._on_read_texture
+        )
+
+
+# Singleton instance for global app access
+clipboard_service = ClipboardService()

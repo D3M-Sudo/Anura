@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.github.d3msudo.anura</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Anura</name>
+  <summary>Extract text from anywhere on your screen</summary>
+  <description>
+    <p>
+      Anura is an intuitive text extraction tool (OCR) designed for the GNOME desktop.
+      It allows you to quickly grab text from any source on your screen, including
+      videos, PDFs, images, or protected web pages.
+    </p>
+    <p>Key features include:</p>
+    <ul>
+      <li>High-accuracy OCR powered by Tesseract.</li>
+      <li>Built-in QR code decoding and link following.</li>
+      <li>Support for multiple languages with on-demand model download.</li>
+      <li>Privacy-focused: no telemetry and no anonymous data collection.</li>
+      <li>Modern GTK4 / Libadwaita interface following GNOME Human Interface Guidelines.</li>
+    </ul>
+    <p>
+      Network access is used exclusively to download Tesseract OCR language models
+      on demand and for the optional text-to-speech feature (Google TTS).
+      No user data is ever transmitted.
+    </p>
+  </description>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/1bfa2f92f31a94cdc87f479d3bf6fbfd300aa8bd/data/screenshots/anura-window-dark.png</image>
+      <caption>Main interface showing the text extraction screen (dark theme)</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/1bfa2f92f31a94cdc87f479d3bf6fbfd300aa8bd/data/screenshots/anura-window-decoded.png</image>
+      <caption>Extracted text displayed after OCR recognition</caption>
+    </screenshot>
+  </screenshots>
+  <releases>
+    <release version="0.1.3" type="stable" date="2026-04-25">
+      <description>
+        <p>Bug fixes and stability improvements.</p>
+        <ul>
+          <li>Fixed import error in screenshot service (tessdata_config casing).</li>
+          <li>Fixed missing init_tessdata() method in LanguageManager.</li>
+          <li>Fixed settings module path mismatch (moved to anura/services/settings.py).</li>
+          <li>Fixed blueprint-compiler GIRepository compatibility with GNOME Platform 49.</li>
+          <li>Improved TTS cache file location (XDG_CACHE_HOME).</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.0" type="stable" date="2026-04-23">
+      <description>
+        <p>Initial release of Anura (fork of Frog).</p>
+        <ul>
+          <li>Complete rebranding to Anura.</li>
+          <li>Removed all telemetry and PostHog tracking for total privacy.</li>
+          <li>Optimized sharing service: added X (formerly Twitter) and Instagram.</li>
+          <li>Updated dependencies for modern Linux distributions.</li>
+        </ul>
+      </description>
+    </release>
+  </releases>
+  <developer id="com.github.d3msudo">
+    <name>D3M-Sudo</name>
+  </developer>
+  <launchable type="desktop-id">com.github.d3msudo.anura.desktop</launchable>
+  <translation type="gettext">anura</translation>
+  <provides>
+    <binary>anura</binary>
+  </provides>
+  <categories>
+    <category>Graphics</category>
+    <category>Utility</category>
+    <category>GNOME</category>
+    <category>GTK</category>
+  </categories>
+  <keywords>
+    <keyword>OCR</keyword>
+    <keyword>text</keyword>
+    <keyword>extraction</keyword>
+    <keyword>screenshot</keyword>
+    <keyword>QR</keyword>
+    <keyword>scanner</keyword>
+    <keyword>tesseract</keyword>
+  </keywords>
+  <url type="homepage">https://github.com/D3M-Sudo/Anura</url>
+  <url type="bugtracker">https://github.com/D3M-Sudo/Anura/issues</url>
+  <url type="vcs-browser">https://github.com/D3M-Sudo/Anura</url>
+  <url type="contribute">https://github.com/D3M-Sudo/Anura/blob/main/README.md</url>
+  <content_rating type="oars-1.1"/>
+  <branding>
+    <color type="primary" scheme_preference="light">#3d8b37</color>
+    <color type="primary" scheme_preference="dark">#235720</color>
+  </branding>
+</component>

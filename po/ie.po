@@ -1,0 +1,993 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the anura package.
+# OIS <mistresssilvara@hotmail.com>, 2024.
+msgid ""
+msgstr ""
+"Project-Id-Version: anura 1.4.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-04-29 02:16+0200\n"
+"PO-Revision-Date: 2024-08-30 04:09+0000\n"
+"Last-Translator: OIS <mistresssilvara@hotmail.com>\n"
+"Language-Team: Occidental <https://hosted.weblate.org/projects/anura/default/ie/>\n"
+"Language: ie\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 5.7.1-dev\n"
+
+#: ../anura/main.py:33
+msgid "Extract directly into the clipboard"
+msgstr "Extraer directmen al Paperiere"
+
+#: ../anura/main.py:94
+msgid "Technical and rigorous OCR tool optimized for Linux."
+msgstr ""
+
+#: ../anura/main.py:122
+msgid "No text found. Try to grab another region."
+msgstr ""
+
+#: ../anura/main.py:131
+#, fuzzy
+msgid "Text extracted and copied to clipboard."
+msgstr "Li textu sta copiat al Paperiere"
+
+#: ../anura/window.py:83
+msgid "Text copied to clipboard"
+msgstr "Li textu sta copiat al Paperiere"
+
+#: ../anura/window.py:89
+msgid "URL opened automatically"
+msgstr ""
+
+#: ../anura/window.py:106
+#, fuzzy
+msgid "Choose an image for extraction"
+msgstr "Aperter un image por extraer textu"
+
+#: ../anura/window.py:109
+#, fuzzy
+msgid "Images"
+msgstr "Aperter un image"
+
+#: ../anura/window.py:140
+msgid "Unsupported file format."
+msgstr ""
+
+#: ../anura/window.py:179
+msgid "Text contains a link"
+msgstr ""
+
+#: ../anura/window.py:179
+msgid "Open"
+msgstr "Aperter"
+
+#: ../anura/widgets/preferences_languages_page.py:59
+msgid "OCR models unreachable. Please check your internet connection."
+msgstr ""
+
+#: ../anura/widgets/preferences_languages_page.py:64
+msgid "Metered connection detected. Model downloads may incur data costs."
+msgstr ""
+
+#: ../anura/widgets/share_row.py:27
+#, python-brace-format
+msgid "Share via {0}"
+msgstr "Partir med {0}"
+
+#: ../anura/services/clipboard_service.py:55
+msgid "No image in clipboard"
+msgstr "Hay null image in li Paperiere"
+
+#: ../anura/services/screenshot_service.py:52
+msgid "Can't take a screenshot."
+msgstr "Ne successat capter li ecran."
+
+#: ../anura/services/screenshot_service.py:101
+msgid "Failed to decode data."
+msgstr ""
+
+#: ../anura/services/screenshot_service.py:115
+#, fuzzy
+msgid "No text found."
+msgstr "Null resultates trovat"
+
+#: ../anura/services/screenshot_service.py:120
+msgid "Cancelled"
+msgstr ""
+
+#: ../anura/language_manager.py:35 ../anura/language_manager.py:54
+msgid "English"
+msgstr ""
+
+#: ../anura/language_manager.py:46
+msgid "Afrikaans"
+msgstr "Afrikaans"
+
+#: ../anura/language_manager.py:46
+msgid "Amharic"
+msgstr ""
+
+#: ../anura/language_manager.py:46
+msgid "Arabic"
+msgstr "Arabic"
+
+#: ../anura/language_manager.py:47
+msgid "Assamese"
+msgstr ""
+
+#: ../anura/language_manager.py:47
+msgid "Azerbaijani"
+msgstr ""
+
+#: ../anura/language_manager.py:47
+msgid "Azerbaijani - Cyrillic"
+msgstr ""
+
+#: ../anura/language_manager.py:48
+msgid "Belarusian"
+msgstr ""
+
+#: ../anura/language_manager.py:48
+msgid "Bengali"
+msgstr ""
+
+#: ../anura/language_manager.py:48
+msgid "Tibetan"
+msgstr ""
+
+#: ../anura/language_manager.py:49
+msgid "Bosnian"
+msgstr "Bosnian"
+
+#: ../anura/language_manager.py:49
+msgid "Breton"
+msgstr ""
+
+#: ../anura/language_manager.py:49
+msgid "Bulgarian"
+msgstr "Bulgarian"
+
+#: ../anura/language_manager.py:50
+msgid "Catalan"
+msgstr ""
+
+#: ../anura/language_manager.py:50
+msgid "Cebuano"
+msgstr ""
+
+#: ../anura/language_manager.py:50
+msgid "Czech"
+msgstr "Tchec"
+
+#: ../anura/language_manager.py:51
+msgid "Chinese - Simplified"
+msgstr "Chinesi (simplificat)"
+
+#: ../anura/language_manager.py:51
+msgid "Chinese - Traditional"
+msgstr "Chinesi (traditional)"
+
+#: ../anura/language_manager.py:52
+msgid "Cherokee"
+msgstr ""
+
+#: ../anura/language_manager.py:52
+msgid "Corsican"
+msgstr "Corsican"
+
+#: ../anura/language_manager.py:52
+msgid "Welsh"
+msgstr "Vallesi"
+
+#: ../anura/language_manager.py:53
+msgid "Danish"
+msgstr ""
+
+#: ../anura/language_manager.py:53
+msgid "German"
+msgstr ""
+
+#: ../anura/language_manager.py:53
+msgid "Dzongkha"
+msgstr ""
+
+#: ../anura/language_manager.py:54
+msgid "Greek"
+msgstr ""
+
+#: ../anura/language_manager.py:54
+#, fuzzy
+msgid "English, Middle"
+msgstr "Anglesi (medial, 1100-1500)"
+
+#: ../anura/language_manager.py:55
+msgid "Esperanto"
+msgstr "Esperanto"
+
+#: ../anura/language_manager.py:55
+#, fuzzy
+msgid "Math / Equation Detection"
+msgstr "Module de detection de equationes"
+
+#: ../anura/language_manager.py:56
+msgid "Estonian"
+msgstr "Estonian"
+
+#: ../anura/language_manager.py:56
+msgid "Basque"
+msgstr ""
+
+#: ../anura/language_manager.py:56
+msgid "Faroese"
+msgstr ""
+
+#: ../anura/language_manager.py:57
+msgid "Persian"
+msgstr ""
+
+#: ../anura/language_manager.py:57
+msgid "Filipino"
+msgstr ""
+
+#: ../anura/language_manager.py:57
+msgid "Finnish"
+msgstr ""
+
+#: ../anura/language_manager.py:58
+msgid "French"
+msgstr ""
+
+#: ../anura/language_manager.py:58
+msgid "German - Fraktur"
+msgstr "German (Fraktur)"
+
+#: ../anura/language_manager.py:58
+#, fuzzy
+msgid "French, Middle"
+msgstr "Francesi (medial, ca 1400-1600)"
+
+#: ../anura/language_manager.py:59
+msgid "Western Frisian"
+msgstr "West-Frisian"
+
+#: ../anura/language_manager.py:59
+msgid "Scottish Gaelic"
+msgstr ""
+
+#: ../anura/language_manager.py:59
+msgid "Irish"
+msgstr ""
+
+#: ../anura/language_manager.py:60
+msgid "Galician"
+msgstr "Galician"
+
+#: ../anura/language_manager.py:60
+msgid "Greek, Ancient"
+msgstr ""
+
+#: ../anura/language_manager.py:60
+msgid "Gujarati"
+msgstr ""
+
+#: ../anura/language_manager.py:61
+#, fuzzy
+msgid "Haitian"
+msgstr "Croatian"
+
+#: ../anura/language_manager.py:61
+msgid "Hebrew"
+msgstr "Hebreic"
+
+#: ../anura/language_manager.py:61
+msgid "Hindi"
+msgstr ""
+
+#: ../anura/language_manager.py:62
+msgid "Croatian"
+msgstr "Croatian"
+
+#: ../anura/language_manager.py:62
+msgid "Hungarian"
+msgstr "Hungarian"
+
+#: ../anura/language_manager.py:62
+msgid "Armenian"
+msgstr "Armenian"
+
+#: ../anura/language_manager.py:63
+msgid "Inuktitut"
+msgstr ""
+
+#: ../anura/language_manager.py:63
+msgid "Indonesian"
+msgstr "Indonesian"
+
+#: ../anura/language_manager.py:63
+msgid "Icelandic"
+msgstr "Islandesi"
+
+#: ../anura/language_manager.py:64
+msgid "Italian"
+msgstr "Italian"
+
+#: ../anura/language_manager.py:64
+msgid "Italian - Old"
+msgstr ""
+
+#: ../anura/language_manager.py:64
+msgid "Javanese"
+msgstr ""
+
+#: ../anura/language_manager.py:65
+msgid "Japanese"
+msgstr "Japanesi"
+
+#: ../anura/language_manager.py:65
+msgid "Japanese (vertical)"
+msgstr "Japanesi (vertical)"
+
+#: ../anura/language_manager.py:66
+msgid "Kannada"
+msgstr ""
+
+#: ../anura/language_manager.py:66
+msgid "Georgian"
+msgstr ""
+
+#: ../anura/language_manager.py:66
+msgid "Georgian - Old"
+msgstr ""
+
+#: ../anura/language_manager.py:67
+msgid "Kazakh"
+msgstr ""
+
+#: ../anura/language_manager.py:67
+msgid "Central Khmer"
+msgstr ""
+
+#: ../anura/language_manager.py:67
+msgid "Kirghiz"
+msgstr ""
+
+#: ../anura/language_manager.py:68
+msgid "Kurmanji"
+msgstr ""
+
+#: ../anura/language_manager.py:68
+msgid "Korean"
+msgstr ""
+
+#: ../anura/language_manager.py:68
+msgid "Korean (vertical)"
+msgstr ""
+
+#: ../anura/language_manager.py:69
+msgid "Lao"
+msgstr ""
+
+#: ../anura/language_manager.py:69
+msgid "Latin"
+msgstr ""
+
+#: ../anura/language_manager.py:69
+msgid "Latvian"
+msgstr ""
+
+#: ../anura/language_manager.py:70
+msgid "Lithuanian"
+msgstr ""
+
+#: ../anura/language_manager.py:70
+msgid "Luxembourgish"
+msgstr ""
+
+#: ../anura/language_manager.py:70
+msgid "Malayalam"
+msgstr ""
+
+#: ../anura/language_manager.py:71
+msgid "Marathi"
+msgstr ""
+
+#: ../anura/language_manager.py:71
+msgid "Macedonian"
+msgstr ""
+
+#: ../anura/language_manager.py:71
+msgid "Maltese"
+msgstr "Maltesi"
+
+#: ../anura/language_manager.py:72
+msgid "Mongolian"
+msgstr "Mongolian"
+
+#: ../anura/language_manager.py:72
+msgid "Maori"
+msgstr ""
+
+#: ../anura/language_manager.py:72
+msgid "Malay"
+msgstr ""
+
+#: ../anura/language_manager.py:73
+msgid "Burmese"
+msgstr ""
+
+#: ../anura/language_manager.py:73
+msgid "Nepali"
+msgstr ""
+
+#: ../anura/language_manager.py:73
+msgid "Dutch"
+msgstr ""
+
+#: ../anura/language_manager.py:74
+msgid "Norwegian"
+msgstr ""
+
+#: ../anura/language_manager.py:74
+msgid "Occitan"
+msgstr ""
+
+#: ../anura/language_manager.py:74
+msgid "Oriya"
+msgstr ""
+
+#: ../anura/language_manager.py:75
+msgid "OSD Module"
+msgstr ""
+
+#: ../anura/language_manager.py:75
+msgid "Panjabi"
+msgstr ""
+
+#: ../anura/language_manager.py:75
+msgid "Polish"
+msgstr ""
+
+#: ../anura/language_manager.py:76
+msgid "Portuguese"
+msgstr "Portuguesi"
+
+#: ../anura/language_manager.py:76
+msgid "Pushto"
+msgstr ""
+
+#: ../anura/language_manager.py:76
+msgid "Quechua"
+msgstr ""
+
+#: ../anura/language_manager.py:77
+#, fuzzy
+msgid "Romanian"
+msgstr "Bosnian"
+
+#: ../anura/language_manager.py:77
+msgid "Russian"
+msgstr "Russ"
+
+#: ../anura/language_manager.py:77
+msgid "Sanskrit"
+msgstr ""
+
+#: ../anura/language_manager.py:78
+msgid "Sinhala"
+msgstr ""
+
+#: ../anura/language_manager.py:78
+msgid "Slovak"
+msgstr "Slovac"
+
+#: ../anura/language_manager.py:78
+msgid "Slovenian"
+msgstr "Slovenian"
+
+#: ../anura/language_manager.py:79
+msgid "Sindhi"
+msgstr ""
+
+#: ../anura/language_manager.py:79
+msgid "Spanish"
+msgstr ""
+
+#: ../anura/language_manager.py:79
+msgid "Spanish - Old"
+msgstr ""
+
+#: ../anura/language_manager.py:80
+msgid "Albanian"
+msgstr ""
+
+#: ../anura/language_manager.py:80
+msgid "Serbian"
+msgstr ""
+
+#: ../anura/language_manager.py:80
+msgid "Serbian - Latin"
+msgstr "Serbian (latin)"
+
+#: ../anura/language_manager.py:81
+msgid "Sundanese"
+msgstr ""
+
+#: ../anura/language_manager.py:81
+msgid "Swahili"
+msgstr ""
+
+#: ../anura/language_manager.py:81
+msgid "Swedish"
+msgstr "Svedesi"
+
+#: ../anura/language_manager.py:82
+msgid "Syriac"
+msgstr "Sirian"
+
+#: ../anura/language_manager.py:82
+msgid "Tamil"
+msgstr ""
+
+#: ../anura/language_manager.py:82
+msgid "Tatar"
+msgstr ""
+
+#: ../anura/language_manager.py:83
+msgid "Telugu"
+msgstr ""
+
+#: ../anura/language_manager.py:83
+msgid "Tajik"
+msgstr ""
+
+#: ../anura/language_manager.py:83
+msgid "Thai"
+msgstr ""
+
+#: ../anura/language_manager.py:84
+msgid "Tigrinya"
+msgstr ""
+
+#: ../anura/language_manager.py:84
+msgid "Tonga"
+msgstr ""
+
+#: ../anura/language_manager.py:84
+msgid "Turkish"
+msgstr "Turcian"
+
+#: ../anura/language_manager.py:85
+msgid "Uighur"
+msgstr ""
+
+#: ../anura/language_manager.py:85
+msgid "Ukrainian"
+msgstr ""
+
+#: ../anura/language_manager.py:85
+msgid "Urdu"
+msgstr ""
+
+#: ../anura/language_manager.py:86
+msgid "Uzbek"
+msgstr ""
+
+#: ../anura/language_manager.py:86
+msgid "Uzbek - Cyrillic"
+msgstr ""
+
+#: ../anura/language_manager.py:86
+msgid "Vietnamese"
+msgstr ""
+
+#: ../anura/language_manager.py:87
+msgid "Yiddish"
+msgstr ""
+
+#: ../anura/language_manager.py:87
+msgid "Yoruba"
+msgstr ""
+
+#: ../data/ui/welcome_page.blp:5 ../data/ui/window.blp:20
+msgid "Welcome"
+msgstr ""
+
+#: ../data/ui/welcome_page.blp:19 ../data/ui/extracted_page.blp:17
+msgid "Language"
+msgstr ""
+
+#: ../data/ui/welcome_page.blp:20 ../data/ui/extracted_page.blp:18
+msgid "Select language to extract"
+msgstr "Selecter li lingue"
+
+#: ../data/ui/welcome_page.blp:33
+msgid "Open menu"
+msgstr "Aperter li menú"
+
+#: ../data/ui/welcome_page.blp:39
+msgid "Extract text from anywhere"
+msgstr "Extraer li textu de quelcunc medie"
+
+#: ../data/ui/welcome_page.blp:58
+msgid "_Take a Screenshot"
+msgstr "_Capturar li ecran"
+
+#: ../data/ui/welcome_page.blp:74
+msgid "_Open Image"
+msgstr "_Aperter un image"
+
+#: ../data/ui/welcome_page.blp:90
+msgid "Paste Image"
+msgstr "Collar un image"
+
+#: ../data/ui/welcome_page.blp:98
+msgid "...or drop image here"
+msgstr ""
+
+#: ../data/ui/welcome_page.blp:110 ../data/ui/extracted_page.blp:104 ../data/ui/preferences_dialog.blp:5
+msgid "Preferences"
+msgstr "Preferenties"
+
+#: ../data/ui/welcome_page.blp:117 ../data/ui/extracted_page.blp:111
+msgid "Keyboard Shortcuts"
+msgstr "Rapid-tastes"
+
+#: ../data/ui/welcome_page.blp:122
+#, fuzzy
+msgid "About Anura"
+msgstr "Pri anura"
+
+#: ../data/ui/welcome_page.blp:129
+msgid "⭐ Star on GitHub"
+msgstr "Adjunter⭐ che GitHub"
+
+#: ../data/ui/language_popover.blp:20 ../data/ui/preferences_languages.blp:19
+msgid "Search Languages…"
+msgstr "Serchar por lingues…"
+
+#: ../data/ui/language_popover.blp:69 ../data/ui/preferences_languages.blp:103
+msgid "No Results Found"
+msgstr "Null resultates trovat"
+
+#: ../data/ui/language_popover.blp:76
+msgid "Add Language"
+msgstr "Adjunter un lingue"
+
+#: ../data/ui/window.blp:26
+msgid "Extracted Text"
+msgstr ""
+
+#: ../data/ui/preferences_general.blp:5
+msgid "_General"
+msgstr "_General"
+
+#: ../data/ui/preferences_general.blp:10
+#, fuzzy
+msgid "Text Extraction"
+msgstr "Extraction de textu"
+
+#: ../data/ui/preferences_general.blp:13
+#, fuzzy
+msgid "_Secondary Language"
+msgstr "_Secund lingue"
+
+#: ../data/ui/preferences_general.blp:15
+msgid "Additional language used in text recognition"
+msgstr "Additional lingues usat por renossement"
+
+#: ../data/ui/preferences_general.blp:20
+msgid "Behavior"
+msgstr "Conduida"
+
+#: ../data/ui/preferences_general.blp:23
+#, fuzzy
+msgid "_Copy to Clipboard"
+msgstr "_Copiar al Paperiere"
+
+#: ../data/ui/preferences_general.blp:25
+msgid "Automatically copy the extracted text after detection"
+msgstr ""
+
+#: ../data/ui/preferences_general.blp:29
+#, fuzzy
+msgid "_Open QR-code Links"
+msgstr "_Aperter ligamentes de codes QR"
+
+#: ../data/ui/preferences_general.blp:31
+#, fuzzy
+msgid "Automatically open links extracted from QR codes"
+msgstr "Aperter automaticmen ligamentes de codes QR"
+
+#: ../data/ui/extracted_page.blp:25
+msgid "Take a screenshot"
+msgstr "Capturar li ecran"
+
+#: ../data/ui/extracted_page.blp:116
+msgid "About anura"
+msgstr "Pri anura"
+
+#: ../data/ui/extracted_page.blp:124
+msgid "Open image"
+msgstr "Aperter un image"
+
+#: ../data/ui/extracted_page.blp:125
+msgid "Paste from clipboard"
+msgstr "Collar ex li Paperiere"
+
+#: ../data/ui/preferences_languages.blp:6
+msgid "_Languages"
+msgstr "_Lingues"
+
+#: ../data/ui/preferences_languages.blp:24
+msgid "OCR models unreachable. Check your internet connection."
+msgstr ""
+
+#: ../data/ui/preferences_languages.blp:26
+msgid "Retry"
+msgstr "Repenar"
+
+#: ../data/ui/preferences_languages.blp:42
+#, fuzzy
+msgid "Installed Languages"
+msgstr "Installat lingues"
+
+#: ../data/ui/preferences_languages.blp:51
+#, fuzzy
+msgid "Add language"
+msgstr "Adjunter un lingue"
+
+#: ../data/com.github.d3msudo.anura.desktop.in:3
+#, fuzzy
+msgid "Anura"
+msgstr "anura"
+
+#: ../data/com.github.d3msudo.anura.desktop.in:4
+msgid "OCR Tool"
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.desktop.in:5
+#, fuzzy
+msgid "Extract text from any image, video, or web page"
+msgstr "Extraer li textu de quelcunc medie"
+
+#: ../data/com.github.d3msudo.anura.desktop.in:11
+#, fuzzy
+msgid "OCR;Text;Extraction;Reader;QR;Scanner;"
+msgstr "OCR;Textu;Extration;"
+
+#: ../data/com.github.d3msudo.anura.desktop.in:20
+#, fuzzy
+msgid "Extract Text to Clipboard"
+msgstr "Extraer li textu al Paperiere"
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:7
+#, fuzzy
+msgid "Extract text from anywhere on your screen"
+msgstr "Extraer li textu de quelcunc medie"
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:9
+msgid "Anura is an intuitive text extraction tool (OCR) designed for the GNOME desktop. It allows you to quickly grab text from any source on your screen, including videos, PDFs, images, or protected web pages."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:14
+msgid "Key features include:"
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:16
+msgid "High-accuracy OCR powered by Tesseract."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:17
+msgid "Built-in QR code decoding and link following."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:18
+msgid "Support for multiple languages with on-demand model download."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:19
+msgid "Privacy-focused: no telemetry and no anonymous data collection."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:20
+msgid "Modern GTK4 / Libadwaita interface following GNOME Human Interface Guidelines."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:22
+msgid "Network access is used exclusively to download Tesseract OCR language models on demand and for the optional text-to-speech feature (Google TTS). No user data is ever transmitted."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:31
+msgid "Main interface showing the text extraction screen (dark theme)"
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:35
+msgid "Extracted text displayed after OCR recognition"
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:41
+msgid "Bug fixes and stability improvements."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:43
+msgid "Fixed import error in screenshot service (tessdata_config casing)."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:44
+msgid "Fixed missing init_tessdata() method in LanguageManager."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:45
+msgid "Fixed settings module path mismatch (moved to anura/services/settings.py)."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:46
+msgid "Fixed blueprint-compiler GIRepository compatibility with GNOME Platform 49."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:47
+msgid "Improved TTS cache file location (XDG_CACHE_HOME)."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:53
+msgid "Initial release of Anura (fork of Frog)."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:55
+msgid "Complete rebranding to Anura."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:56
+msgid "Removed all telemetry and PostHog tracking for total privacy."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:57
+msgid "Optimized sharing service: added X (formerly Twitter) and Instagram."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:58
+msgid "Updated dependencies for modern Linux distributions."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:64
+msgid "D3M-Sudo"
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:78
+msgid "OCR"
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:79
+msgid "text"
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:80
+#, fuzzy
+msgid "extraction"
+msgstr "Extraction de textu"
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:81
+#, fuzzy
+msgid "screenshot"
+msgstr "Capturar li ecran"
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:82
+msgid "QR"
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:83
+msgid "scanner"
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:84
+msgid "tesseract"
+msgstr ""
+
+#~ msgid "Extract text from images"
+#~ msgstr "Extraher textu de images"
+
+#~ msgid "Text extraction tool"
+#~ msgstr "Utensile de extraction de textu"
+
+#~ msgctxt "Extracted screen"
+#~ msgid "Copy extracted text to clipboard"
+#~ msgstr "Copiar li extractet textu al Paperiere"
+
+#~ msgctxt "Extracted screen"
+#~ msgid "Listen to text"
+#~ msgstr "Escutar li textu"
+
+#~ msgctxt "Extracted screen"
+#~ msgid "Cancel listening to text"
+#~ msgstr "Interrupter li escuta"
+
+#~ msgctxt "Extracted screen"
+#~ msgid "Open menu"
+#~ msgstr "Aperter li menú"
+
+#~ msgctxt "Extracted screen"
+#~ msgid "Share To"
+#~ msgstr "Partir con"
+
+#~ msgid "Available Languages"
+#~ msgstr "Disponibil lingues"
+
+#~ msgctxt "Preferences Language Row"
+#~ msgid "Install language"
+#~ msgstr "Installar li lingue"
+
+#~ msgctxt "Preferences Language Row"
+#~ msgid "Remove language"
+#~ msgstr "Remover li lingue"
+
+#~ msgctxt "shortcut window"
+#~ msgid "General"
+#~ msgstr "General"
+
+#~ msgctxt "shortcut window"
+#~ msgid "Open image"
+#~ msgstr "Aperter un image"
+
+#~ msgctxt "shortcut window"
+#~ msgid "Take screenshot and extract text"
+#~ msgstr "Capturar li ecran e extraer li textu"
+
+#~ msgctxt "shortcut window"
+#~ msgid "May not work properly on wayland"
+#~ msgstr "Posse functionar íncorectmen in wayland"
+
+#~ msgctxt "shortcut window"
+#~ msgid "Copy extracted text to clipboard"
+#~ msgstr "Copiar li extractet textu al Paperiere"
+
+#~ msgctxt "shortcut window"
+#~ msgid "Application"
+#~ msgstr "Application"
+
+#~ msgctxt "shortcut window"
+#~ msgid "Display Shortcuts"
+#~ msgstr "Monstar li rapid-tastes"
+
+#~ msgctxt "Welcome screen"
+#~ msgid "Take a Screenshot"
+#~ msgstr "Capturar li ecran"
+
+#~ msgctxt "Welcome screen"
+#~ msgid "Paste image from clipboard"
+#~ msgstr "Collar un image del Paperiere"
+
+#~ msgid "Catalan; Valencian"
+#~ msgstr "Catalan (Valencian)"
+
+#~ msgid "Greek, Modern (1453-)"
+#~ msgstr "Grec (modern)"
+
+#~ msgid "Greek, Ancient (to 1453) (contrib)"
+#~ msgstr "Grec, antiqui (contribuet)"
+
+#~ msgid "Haitian; Haitian Creole"
+#~ msgstr "Haitian (creol)"
+
+#~ msgid "Orientation and script detection module"
+#~ msgstr "Module de detection de scriptura e de orientation"
+
+#~ msgid "Romanian; Moldavian; Moldovan"
+#~ msgstr "Romanian e moldovan"
+
+#~ msgid "QR-code URL opened"
+#~ msgstr "Adresse del code QR sta apertet"
+
+#~ msgid "QR-code contains URL."
+#~ msgstr "Li code QR contene un adresse."
+
+#~ msgid "Supported image files"
+#~ msgstr "Supportat files de images"
+
+#~ msgid "Text copied"
+#~ msgstr "Textu sta copiat"
+
+#~ msgid "View all available languages"
+#~ msgstr "Vider omni disponibil lingues"
