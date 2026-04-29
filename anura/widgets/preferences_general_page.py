@@ -87,14 +87,22 @@ class PreferencesGeneralPage(Adw.PreferencesPage):
         volume_normalized = self.settings.get_double("tts-volume")
         self.volume_row.set_value(volume_normalized * 100)
 
+        # Update subtitle to show current value with %
+        self._update_volume_subtitle(volume_normalized * 100)
+
         # Connect to changes and convert back to 0.0-1.0 for GSettings
         self.volume_row.connect("notify::value", self._on_volume_changed)
+
+    def _update_volume_subtitle(self, percentage: float):
+        """Update the volume row subtitle to show the percentage."""
+        self.volume_row.set_subtitle(_("TTS playback volume level: {percentage:.0f}%").format(percentage=percentage))
 
     def _on_volume_changed(self, spin_row, _param):
         """Convert percentage (0-100) to normalized value (0.0-1.0) for GSettings."""
         percentage = spin_row.get_value()
         normalized = percentage / 100.0
         self.settings.set_double("tts-volume", normalized)
+        self._update_volume_subtitle(percentage)
         logger.debug(f"Anura: TTS volume set to {percentage:.0f}% ({normalized:.2f})")
 
     def _setup_tts_language(self):
