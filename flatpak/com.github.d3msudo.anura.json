@@ -318,7 +318,7 @@
                     "type": "git",
                     "url": "https://github.com/urllib3/urllib3.git",
                     "tag": "2.2.3",
-                    "commit": "18c9016ad73486f9ae0cbb6ddf442a9b2ad3bab",
+                    "commit": "2458bfcd3dacdf6c196e98d077fc6bb02a5fc1df",
                     "x-checker-data": {
                         "type": "pypi",
                         "name": "urllib3",
