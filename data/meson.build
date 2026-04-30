@@ -65,8 +65,7 @@ blueprints = custom_target('blueprints',
   command: [
     find_program('blueprint-compiler'),
     'batch-compile',
-    '@OUTPUT@',
-    meson.current_source_dir() / 'ui',
+    '@OUTPUT@' / 'ui',
     '@INPUT@'
   ],
 )
