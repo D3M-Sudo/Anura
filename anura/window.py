@@ -160,23 +160,50 @@ class AnuraWindow(Adw.ApplicationWindow):
             file = dialog.open_finish(result)
             if file:
                 self.welcome_page.spinner.set_visible(True)
-                GObjectWorker.call(self.backend.decode_image, (self.get_language(), file.get_path()))
+                file.load_contents_async(None, self._on_file_contents_loaded)
         except Exception as e:
             logger.debug(f"File selection cancelled or failed: {e}")
 
-    def on_dnd_drop(self, __target, value: Gdk.FileList, __x, __y) -> bool:
-        import os
+    def _on_file_contents_loaded(self, gfile, result):
+        try:
+            ok, contents, _ = gfile.load_contents_finish(result)
+            if ok:
+                stream = BytesIO(contents)
+                GObjectWorker.call(self.backend.decode_image, (self.get_language(), stream))
+        except Exception as e:
+            logger.error(f"Failed to load file contents: {e}")
+            self.show_toast(_("Failed to load image file"))
 
+    def on_dnd_drop(self, __target, value: Gdk.FileList, __x, __y) -> bool:
         files = value.get_files()
         if not files:
             return False
 
         item = files[0]
-        file_path = item.get_path()
 
-        # Validate file size for drag-and-drop
+        # Check MIME type before starting async load
+        info = item.query_info("standard::content-type", Gio.FileQueryInfoFlags.NONE, None)
+        if not info:
+            return False
+
+        mimetype = info.get_content_type()
+        if not mimetype or not mimetype.startswith("image"):
+            self.show_toast(_("Unsupported file format."))
+            return False
+
+        self.welcome_page.spinner.set_visible(True)
+        item.load_contents_async(None, self._on_dnd_file_contents_loaded)
+        return True
+
+    def _on_dnd_file_contents_loaded(self, gfile, result):
         try:
-            file_size = os.path.getsize(file_path)
+            ok, contents, _ = gfile.load_contents_finish(result)
+            if not ok:
+                self.show_toast(_("Failed to load dropped file"))
+                return
+
+            # Validate file size
+            file_size = len(contents)
             if file_size > self.MAX_IMAGE_SIZE_BYTES:
                 self.show_toast(
                     _("Image too large: {size}MB (max {max}MB)").format(
@@ -184,19 +211,13 @@ class AnuraWindow(Adw.ApplicationWindow):
                         max=self.MAX_IMAGE_SIZE_MB
                     )
                 )
-                return False
-        except OSError:
-            return False
+                return
 
-        mimetype, _encoding = guess_type(file_path)
-
-        if mimetype and mimetype.startswith("image"):
-            self.welcome_page.spinner.set_visible(True)
-            GObjectWorker.call(self.backend.decode_image, (self.get_language(), file_path))
-            return True
-
-        self.show_toast(_("Unsupported file format."))
-        return False
+            stream = BytesIO(contents)
+            GObjectWorker.call(self.backend.decode_image, (self.get_language(), stream))
+        except Exception as e:
+            logger.error(f"Failed to load dropped file: {e}")
+            self.show_toast(_("Failed to load dropped file"))
 
     def _on_paste_from_clipboard(self, _service, texture: Gdk.Texture):
         self.welcome_page.spinner.set_visible(True)
