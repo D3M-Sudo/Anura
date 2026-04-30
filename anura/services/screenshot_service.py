@@ -33,17 +33,19 @@ class ScreenshotService(GObject.GObject):
         GObject.GObject.__init__(self)
         self.cancelable: Gio.Cancellable = Gio.Cancellable.new()
         self._cancelable_handler_id = self.cancelable.connect("cancelled", self.capture_cancelled)
+        self._cancellable_lock = threading.Lock()
         self.portal = Xdp.Portal()
 
     def capture(self, lang: str, copy: bool = False) -> None:
         """Requests a screenshot from the system portal."""
-        self.portal.take_screenshot(
-            None,
-            Xdp.ScreenshotFlags.INTERACTIVE,
-            self.cancelable,
-            self.take_screenshot_finish,
-            [lang, copy],
-        )
+        with self._cancellable_lock:
+            self.portal.take_screenshot(
+                None,
+                Xdp.ScreenshotFlags.INTERACTIVE,
+                self.cancelable,
+                self.take_screenshot_finish,
+                [lang, copy],
+            )
 
     def take_screenshot_finish(self, source_object, res: Gio.Task, user_data):
         """Callback triggered when the portal finishes the screenshot request."""
@@ -132,11 +134,12 @@ class ScreenshotService(GObject.GObject):
         """Handles the cancellation of the screenshot request."""
         logger.info("Anura Screenshot: Capture cancelled by user.")
         self.emit("error", _("Cancelled"))
-        # Disconnect old handler and reset cancellable for future use
-        if self._cancelable_handler_id is not None:
-            try:
-                self.cancelable.disconnect(self._cancelable_handler_id)
-            except Exception:
-                pass
-        self.cancelable = Gio.Cancellable.new()
-        self._cancelable_handler_id = self.cancelable.connect("cancelled", self.capture_cancelled)
+        # Disconnect old handler and reset cancellable for future use (with lock to prevent race condition)
+        with self._cancellable_lock:
+            if self._cancelable_handler_id is not None:
+                try:
+                    self.cancelable.disconnect(self._cancelable_handler_id)
+                except Exception:
+                    pass
+            self.cancelable = Gio.Cancellable.new()
+            self._cancelable_handler_id = self.cancelable.connect("cancelled", self.capture_cancelled)

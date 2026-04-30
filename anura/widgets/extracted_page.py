@@ -44,7 +44,7 @@ class ExtractedPage(Adw.NavigationPage):
         for provider in ShareService.providers():
             self.share_list_box.append(ShareRow(provider))
 
-        ttsservice.connect("stop", self._on_listen_end)
+        self._tts_stop_handler_id = ttsservice.connect("stop", self._on_listen_end)
 
     def do_hiding(self) -> None:
         self.buffer.set_text("")
@@ -123,3 +123,13 @@ class ExtractedPage(Adw.NavigationPage):
         self.text_copy_btn.set_sensitive(not state)
         self.listen_btn.set_visible(not state)
         self.listen_cancel_btn.set_visible(state)
+
+    def do_destroy(self):
+        """Clean up signal handlers to prevent memory leaks."""
+        if self._tts_stop_handler_id is not None:
+            try:
+                ttsservice.disconnect(self._tts_stop_handler_id)
+            except Exception:
+                pass
+            self._tts_stop_handler_id = None
+        super().do_destroy()

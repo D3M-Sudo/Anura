@@ -30,13 +30,16 @@ class LanguagePopover(Gtk.Popover):
     filter_list: Gtk.FilterListModel
     filter: Gtk.CustomFilter
 
+    _downloaded_handler_id: int | None = None
+    _removed_handler_id: int | None = None
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
         self.settings = settings
 
-        language_manager.connect("downloaded", self._on_language_downloaded)
-        language_manager.connect("removed", self._on_language_removed)
+        self._downloaded_handler_id = language_manager.connect("downloaded", self._on_language_downloaded)
+        self._removed_handler_id = language_manager.connect("removed", self._on_language_removed)
 
         self._active_language = self.settings.get_string('active-language')
 
@@ -130,3 +133,21 @@ class LanguagePopover(Gtk.Popover):
             self.views.set_visible_child_name('empty_page')
         else:
             self.views.set_visible_child_name('languages_page')
+
+    def do_destroy(self):
+        """Clean up signal handlers to prevent memory leaks."""
+        if self._downloaded_handler_id is not None:
+            try:
+                language_manager.disconnect(self._downloaded_handler_id)
+            except Exception:
+                pass
+            self._downloaded_handler_id = None
+
+        if self._removed_handler_id is not None:
+            try:
+                language_manager.disconnect(self._removed_handler_id)
+            except Exception:
+                pass
+            self._removed_handler_id = None
+
+        super().do_destroy()

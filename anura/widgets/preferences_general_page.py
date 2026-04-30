@@ -28,6 +28,9 @@ class PreferencesGeneralPage(Adw.PreferencesPage):
     # disabled in Anura). Keeping a Template.Child() for a non-existent widget
     # causes a Gtk.BuilderError at runtime.
 
+    _language_downloaded_handler_id: int | None = None
+    _language_removed_handler_id: int | None = None
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -39,8 +42,8 @@ class PreferencesGeneralPage(Adw.PreferencesPage):
         self._setup_extra_languages()
 
         # Update combo when languages are installed or removed
-        language_manager.connect("downloaded", self._on_language_changed)
-        language_manager.connect("removed", self._on_language_changed)
+        self._language_downloaded_handler_id = language_manager.connect("downloaded", self._on_language_changed)
+        self._language_removed_handler_id = language_manager.connect("removed", self._on_language_changed)
 
         self._setup_tts_volume()
         self._setup_tts_language()
@@ -141,3 +144,21 @@ class PreferencesGeneralPage(Adw.PreferencesPage):
             else:
                 logger.warning(f"Anura: TTS language index {idx} out of bounds, falling back to Auto")
                 self.settings.set_string("tts-language", "")
+
+    def do_destroy(self):
+        """Clean up signal handlers to prevent memory leaks."""
+        if self._language_downloaded_handler_id is not None:
+            try:
+                language_manager.disconnect(self._language_downloaded_handler_id)
+            except Exception:
+                pass
+            self._language_downloaded_handler_id = None
+
+        if self._language_removed_handler_id is not None:
+            try:
+                language_manager.disconnect(self._language_removed_handler_id)
+            except Exception:
+                pass
+            self._language_removed_handler_id = None
+
+        super().do_destroy()

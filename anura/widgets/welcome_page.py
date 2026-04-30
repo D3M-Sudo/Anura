@@ -22,6 +22,8 @@ class WelcomePage(Adw.NavigationPage):
     lang_combo: Gtk.MenuButton = Gtk.Template.Child()
     language_popover: LanguagePopover = Gtk.Template.Child()
 
+    _language_changed_handler_id: int | None = None
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -34,7 +36,7 @@ class WelcomePage(Adw.NavigationPage):
         except (GLib.Error, FileNotFoundError, ValueError) as e:
             logger.error(f"Could not load welcome logo from {logo_path}: {e}")
 
-        self.language_popover.connect('language-changed', self._on_language_changed)
+        self._language_changed_handler_id = self.language_popover.connect('language-changed', self._on_language_changed)
 
         current_lang_code = self.settings.get_string("active-language")
         self.lang_combo.set_label(
@@ -44,3 +46,13 @@ class WelcomePage(Adw.NavigationPage):
     def _on_language_changed(self, _: LanguagePopover, language: LanguageItem):
         self.lang_combo.set_label(language.title)
         self.settings.set_string("active-language", language.code)
+
+    def do_destroy(self):
+        """Clean up signal handlers to prevent memory leaks."""
+        if self._language_changed_handler_id is not None:
+            try:
+                self.language_popover.disconnect(self._language_changed_handler_id)
+            except Exception:
+                pass
+            self._language_changed_handler_id = None
+        super().do_destroy()

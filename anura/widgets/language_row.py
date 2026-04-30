@@ -21,16 +21,20 @@ class LanguageRow(Gtk.Overlay):
     revealer: Gtk.Revealer = Gtk.Template.Child()
 
     _item: LanguageItem | None = None
+    _downloading_handler_id: int | None = None
+    _downloaded_handler_id: int | None = None
+    _idle_ids: list[int] = []
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
         # Connect language manager signals for download updates
-        language_manager.connect("downloading", self.update_progress)
-        language_manager.connect("downloaded", self.on_downloaded)
+        self._downloading_handler_id = language_manager.connect("downloading", self.update_progress)
+        self._downloaded_handler_id = language_manager.connect("downloaded", self.on_downloaded)
 
         # Deferred UI update to ensure item is set
-        GLib.idle_add(self.update_ui)
+        idle_id = GLib.idle_add(self.update_ui)
+        self._idle_ids.append(idle_id)
 
     @GObject.Property(type=GObject.TYPE_PYOBJECT)
     def item(self) -> LanguageItem | None:
@@ -67,7 +71,8 @@ class LanguageRow(Gtk.Overlay):
             self.revealer.set_reveal_child(False)
 
     def update_progress(self, sender, code: str, progress: float) -> None:
-        """
+        """idle_id = )
+            self._idle_ids.append(idle_id
         Signal handler for download progress.
         """
         if self._item and code == self._item.code:
@@ -114,4 +119,32 @@ class LanguageRow(Gtk.Overlay):
         Signal handler for completed downloads.
         """
         if self._item and self._item.code == code:
-            GLib.idle_add(self.update_ui)
+            idle_id = GLib.idle_add(self.update_ui)
+            self._idle_ids.append(idle_id)
+
+    def do_destroy(self):
+        """Clean up signal handlers and pending idle_add callbacks to prevent memory leaks."""
+        # Remove pending idle_add callbacks
+        for idle_id in self._idle_ids:
+            try:
+                GLib.source_remove(idle_id)
+            except Exception:
+                pass
+        self._idle_ids.clear()
+
+        # Disconnect signal handlers
+        if self._downloading_handler_id is not None:
+            try:
+                language_manager.disconnect(self._downloading_handler_id)
+            except Exception:
+                pass
+            self._downloading_handler_id = None
+
+        if self._downloaded_handler_id is not None:
+            try:
+                language_manager.disconnect(self._downloaded_handler_id)
+            except Exception:
+                pass
+            self._downloaded_handler_id = None
+
+        super().do_destroy()
