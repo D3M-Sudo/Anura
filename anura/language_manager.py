@@ -150,17 +150,18 @@ class LanguageManager(GObject.GObject):
         """Returns the codes of the currently installed language models."""
         with self._cache_lock:
             need_update = self._need_update_cache
-        if need_update or force:
-            if not os.path.exists(TESSDATA_DIR):
-                return []
-            self._downloaded_codes = [
-                os.path.splitext(f)[0]
-                for f in os.listdir(TESSDATA_DIR)
-                if f.endswith(".traineddata")
-            ]
-            with self._cache_lock:
+            if need_update or force:
+                if not os.path.exists(TESSDATA_DIR):
+                    self._downloaded_codes = []
+                    self._need_update_cache = False
+                    return []
+                self._downloaded_codes = [
+                    os.path.splitext(f)[0]
+                    for f in os.listdir(TESSDATA_DIR)
+                    if f.endswith(".traineddata")
+                ]
                 self._need_update_cache = False
-        return sorted(self._downloaded_codes, key=lambda x: self.get_language(x))
+            return sorted(self._downloaded_codes, key=lambda x: self.get_language(x))
 
     def get_downloaded_languages(self, force: bool = False) -> List[str]:
         """Returns the names of the installed languages."""
@@ -180,10 +181,11 @@ class LanguageManager(GObject.GObject):
 
     def download(self, code: str):
         """Starts the asynchronous download process."""
-        if code in self.loading_languages:
-            return
+        with self._cache_lock:
+            if code in self.loading_languages:
+                return
+            self.loading_languages[code] = DownloadState()
         GLib.idle_add(self.emit, "added", code)
-        self.loading_languages[code] = DownloadState()
         # Use a wrapper to ensure download_done knows which code was being downloaded
         # even when download_begin returns None on failure
         def download_done_wrapper(result_code: str | None):
@@ -242,8 +244,8 @@ class LanguageManager(GObject.GObject):
         """
         with self._cache_lock:
             self._need_update_cache = True
-        if requested_code in self.loading_languages:
-            self.loading_languages.pop(requested_code)
+            if requested_code in self.loading_languages:
+                self.loading_languages.pop(requested_code)
         if result_code:
             GLib.idle_add(self.emit, "downloaded", result_code)
         else:

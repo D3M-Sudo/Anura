@@ -103,9 +103,14 @@ class ScreenshotService(GObject.GObject):
         except (IOError, OSError) as e:
             logger.error(f"Anura OCR/QR File Error: {e}")
             return GLib.idle_add(self.emit, "error", _("Failed to read image file."))
+        except (pytesseract.TesseractError, pytesseract.TesseractNotFoundError) as e:
+            logger.error(f"Anura OCR Error: Tesseract failed: {e}")
+            return GLib.idle_add(self.emit, "error", _("OCR engine failed to process image."))
         except Exception as e:
-            # Catch-all for image decoding, tesseract, and zbar errors
-            # These include PIL.UnidentifiedImageError, pytesseract.TesseractError, etc.
+            # Catch specific image/QR decoding errors (PIL, zbar) but NOT system exceptions
+            # KeyboardInterrupt and SystemExit will propagate correctly
+            if isinstance(e, (SystemExit, KeyboardInterrupt)):
+                raise
             logger.error(f"Anura OCR/QR Error: {type(e).__name__}: {e}")
             return GLib.idle_add(self.emit, "error", _("Failed to decode data."))
 
