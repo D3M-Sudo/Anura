@@ -63,7 +63,7 @@ class ShareService(GObject.GObject):
                     return
                 self.launcher.set_uri(share_link)
                 self.launcher.launch(parent=None, cancellable=None, callback=self._on_share)
-            except Exception as e:
+            except (ValueError, TypeError, AttributeError) as e:
                 logger.error(f"Anura Share Error: Failed to share via {provider}. Reason: {e}")
 
     def _on_share(self, _, result):
@@ -73,7 +73,7 @@ class ShareService(GObject.GObject):
         try:
             success = self.launcher.launch_finish(result)
             GLib.idle_add(self.emit, "share", success)
-        except Exception as e:
+        except (GLib.Error, RuntimeError) as e:
             logger.warning(f"Anura Share Warning: URI launch failed: {e}")
             GLib.idle_add(self.emit, "share", False)
 

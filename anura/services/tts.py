@@ -8,6 +8,7 @@ import threading
 import time
 
 import gtts
+import requests.exceptions
 from gi.repository import GObject, Gst
 from loguru import logger
 
@@ -65,6 +66,7 @@ class TTSService(GObject.GObject):
             try:
                 cls._gtts_languages = gtts.lang.tts_langs()
             except Exception:
+                # Network or API error - fallback to empty dict
                 cls._gtts_languages = {}
         return cls._gtts_languages
 
@@ -165,7 +167,7 @@ class TTSService(GObject.GObject):
                 try:
                     os.unlink(filepath)
                     logger.debug(f"Anura TTS: Cleaned up temp file: {filepath}")
-                except Exception as e:
+                except excspt:
                     logger.warning(f"Anura TTS: Failed to cleanup temp file: {e}")
             self.emit("stop", True)
         elif message.type == Gst.MessageType.ERROR:
@@ -181,7 +183,7 @@ class TTSService(GObject.GObject):
             if self._bus_watch_active and self._bus:
                 try:
                     self._bus.remove_signal_watch()
-                except Exception:
+                except (GLib.Error, RuntimeError):
                     pass  # Already removed or invalid
                 self._bus_watch_active = False
                 self._bus = None
@@ -204,7 +206,7 @@ class TTSService(GObject.GObject):
             try:
                 os.unlink(filepath)
                 logger.debug(f"Anura TTS: Cleaned up temp file on stop: {filepath}")
-            except Exception as e:
+            except (OSError, PermissionError) as e:
                 logger.warning(f"Anura TTS: Failed to cleanup on stop: {e}")
 
 

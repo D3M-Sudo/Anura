@@ -62,7 +62,7 @@ class ExtractedPage(Adw.NavigationPage):
     def extracted_text(self, text: str):
         try:
             self.buffer.set_text(text)
-        except Exception as e:
+        except (GLib.Error, ValueError) as e:
             logger.error(f"Error setting extracted text: {e}")
 
     def listen(self):

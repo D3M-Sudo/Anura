@@ -31,7 +31,7 @@ class WelcomePage(Adw.NavigationPage):
             logo_path = f"{RESOURCE_PREFIX}/icons/{APP_ID}.svg"
             logo = Gdk.Texture.new_from_resource(logo_path)
             self.welcome.set_paintable(logo)
-        except Exception as e:
+        except (GLib.Error, FileNotFoundError, ValueError) as e:
             logger.error(f"Could not load welcome logo from {logo_path}: {e}")
 
         self.language_popover.connect('language-changed', self._on_language_changed)
