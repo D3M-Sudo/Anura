@@ -1,5 +1,6 @@
 import datetime
 import os
+import signal
 import sys
 import threading
 import time
@@ -16,6 +17,16 @@ def _load_gresource_bundle():
     with resource_path, as those decorators validate resource existence at
     class definition time (import time).
     """
+    # Check if GResource is already registered (e.g., by anura.in launcher script)
+    # This prevents double registration when running via the standard entry point
+    try:
+        # Try to lookup a known resource - if found, bundle is already loaded
+        Gio.resources_lookup_data("/com/github/d3msudo/anura/window.ui", Gio.ResourceLookupFlags.NONE)
+        logger.debug("GResource bundle already registered (likely by anura.in)")
+        return True
+    except GLib.Error:
+        pass  # Not registered yet, continue with loading
+
     # Determine possible paths for the gresource bundle
     # Priority: Flatpak -> system -> user -> relative
     possible_paths = [
@@ -154,6 +165,7 @@ class AnuraApplication(Adw.Application):
         """Run OCR in silent mode without UI, return exit code."""
         done_event = threading.Event()
         result = {"success": False, "text": None}
+        _interrupted = threading.Event()
 
         def on_silent_decoded(_sender, text: str, copy: bool) -> None:
             result["success"] = True
@@ -165,9 +177,19 @@ class AnuraApplication(Adw.Application):
             result["error"] = message
             done_event.set()
 
+        def on_signal(signum, frame):
+            """Handle SIGINT/SIGTERM for clean shutdown."""
+            logger.info(f"Anura: Received signal {signum}, shutting down silently...")
+            _interrupted.set()
+            done_event.set()
+
         # Track handler IDs for safe cleanup
         decoded_handler_id: int | None = None
         error_handler_id: int | None = None
+
+        import signal
+        old_sigint = signal.signal(signal.SIGINT, on_signal)
+        old_sigterm = signal.signal(signal.SIGTERM, on_signal)
 
         try:
             # Temporarily connect to both signals for this operation
@@ -181,25 +203,45 @@ class AnuraApplication(Adw.Application):
                 remove_source=False
             )
 
-            # Wait for completion with timeout
-            # NOTE: decode_image emits signals via GLib.idle_add, so we must
-            # run the GLib main loop to process them.
+            # Wait for completion with timeout using GLib MainLoop (event-driven)
+            # This is more efficient than polling with time.sleep()
             timeout_seconds = 60.0
-            start_time = time.time()
-            timed_out = False
 
-            while not done_event.is_set():
-                # Process pending GLib events (this allows idle_add callbacks to run)
-                GLib.MainContext.default().iteration(False)
-                # Check timeout
-                if time.time() - start_time > timeout_seconds:
-                    logger.error("Anura: Silent mode timeout waiting for OCR")
-                    result["success"] = False
-                    result["error"] = "Timeout"
-                    timed_out = True
-                    break
-                # Small sleep to prevent busy-waiting
-                time.sleep(0.01)
+            # Create a main loop that will run until done_event is set or timeout
+            loop = GLib.MainLoop.new(GLib.MainContext.default(), False)
+
+            def on_timeout():
+                """Timeout callback - stop loop and mark as timed out."""
+                nonlocal timed_out
+                timed_out = True
+                result["success"] = False
+                result["error"] = "Timeout"
+                logger.error("Anura: Silent mode timeout waiting for OCR")
+                loop.quit()
+                return False  # Don't repeat
+
+            def on_done():
+                """Check if done_event is set, if so quit the loop."""
+                if done_event.is_set() or _interrupted.is_set():
+                    loop.quit()
+                    return False  # Stop checking
+                return True  # Continue checking
+
+            # Add timeout source (60 seconds)
+            timeout_id = GLib.timeout_add_seconds(int(timeout_seconds), on_timeout)
+            # Add idle source to check for completion (more efficient than polling)
+            idle_id = GLib.idle_add(on_done)
+
+            timed_out = False
+            loop.run()
+
+            # Cleanup sources
+            GLib.source_remove(timeout_id)
+            if not done_event.is_set() and not _interrupted.is_set():
+                GLib.source_remove(idle_id)
+
+            if _interrupted.is_set():
+                return 130  # Standard exit code for SIGINT
 
             if timed_out:
                 return 1
@@ -210,13 +252,16 @@ class AnuraApplication(Adw.Application):
             logger.error(f"Anura: Silent mode unexpected error: {e}")
             return 1
         finally:
+            # Restore original signal handlers
+            signal.signal(signal.SIGINT, old_sigint)
+            signal.signal(signal.SIGTERM, old_sigterm)
             # Always disconnect handlers in all scenarios
-            if decoded_handler_id is not None:
+            if decoded_handler_id is not None and self.backend:
                 try:
                     self.backend.disconnect(decoded_handler_id)
                 except Exception:
                     pass
-            if error_handler_id is not None:
+            if error_handler_id is not None and self.backend:
                 try:
                     self.backend.disconnect(error_handler_id)
                 except Exception:

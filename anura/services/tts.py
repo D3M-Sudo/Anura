@@ -46,7 +46,6 @@ class TTSService(GObject.GObject):
         "tgk": "tg", "lao": "lo", "mya": "my", "khm": "km",
         # Historical/specialty variants (fallback to modern equivalent)
         "lat": "la", "grc": "el",  # Ancient Greek → Modern Greek
-        "epo": "eo",  # Esperanto (if supported by gTTS)
         "enm": "en", "frm": "fr",  # Middle English/French → Modern
         # Vertical/special variants
         "jpn_vert": "ja", "kor_vert": "ko", "chi_sim_vert": "zh-CN",
@@ -100,7 +99,9 @@ class TTSService(GObject.GObject):
     def __init__(self):
         super().__init__()
         os.makedirs(self._speech_dir, exist_ok=True)
-        Gst.init(None)
+        # Initialize GStreamer only once to prevent crashes on multiple instantiations
+        if not Gst.is_initialized():
+            Gst.init(None)
 
     @staticmethod
     def get_languages():

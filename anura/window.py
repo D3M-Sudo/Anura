@@ -195,6 +195,16 @@ class AnuraWindow(Adw.ApplicationWindow):
         try:
             ok, contents, _ = gfile.load_contents_finish(result)
             if ok:
+                # Validate file size before processing (same check as DnD)
+                file_size = len(contents)
+                if file_size > self.MAX_IMAGE_SIZE_BYTES:
+                    self.show_toast(
+                        _("Image too large: {size}MB (max {max}MB)").format(
+                            size=round(file_size / (1024 * 1024), 1),
+                            max=self.MAX_IMAGE_SIZE_MB
+                        )
+                    )
+                    return
                 stream = BytesIO(contents)
                 GObjectWorker.call(self.backend.decode_image, (self.get_language(), stream))
         except Exception as e:
@@ -350,8 +360,27 @@ class AnuraWindow(Adw.ApplicationWindow):
         launcher.launch(self, None, None)
 
     def uri_validator(self, text: str) -> bool:
+        url = text.strip()
+
+        # Block control characters (0x00-0x1F) and DEL (0x7F)
+        # This prevents newline, tab, carriage return, null byte injection
+        if any(ord(c) < 0x20 or ord(c) == 0x7F for c in url):
+            return False
+
+        # Ensure URL is ASCII-only (prevent Unicode homograph attacks)
         try:
-            res = urlparse(text.strip())
-            return res.scheme in ("http", "https") and bool(res.netloc)
+            url.encode("ascii")
+        except UnicodeEncodeError:
+            return False
+
+        try:
+            res = urlparse(url)
+            # Require valid scheme, netloc, and at least one dot in netloc
+            # (prevents "http://localhost" or "http://evil" without TLD)
+            return (
+                res.scheme in ("http", "https")
+                and bool(res.netloc)
+                and "." in res.netloc
+            )
         except ValueError:
             return False

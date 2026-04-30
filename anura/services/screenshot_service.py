@@ -32,7 +32,7 @@ class ScreenshotService(GObject.GObject):
     def __init__(self):
         GObject.GObject.__init__(self)
         self.cancelable: Gio.Cancellable = Gio.Cancellable.new()
-        self.cancelable.connect("cancelled", self.capture_cancelled)
+        self._cancelable_handler_id = self.cancelable.connect("cancelled", self.capture_cancelled)
         self.portal = Xdp.Portal()
 
     def capture(self, lang: str, copy: bool = False) -> None:
@@ -132,6 +132,11 @@ class ScreenshotService(GObject.GObject):
         """Handles the cancellation of the screenshot request."""
         logger.info("Anura Screenshot: Capture cancelled by user.")
         self.emit("error", _("Cancelled"))
-        # Reset cancellable for future use
+        # Disconnect old handler and reset cancellable for future use
+        if self._cancelable_handler_id is not None:
+            try:
+                self.cancelable.disconnect(self._cancelable_handler_id)
+            except Exception:
+                pass
         self.cancelable = Gio.Cancellable.new()
-        self.cancelable.connect("cancelled", self.capture_cancelled)
+        self._cancelable_handler_id = self.cancelable.connect("cancelled", self.capture_cancelled)

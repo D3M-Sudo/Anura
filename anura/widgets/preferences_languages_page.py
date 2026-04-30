@@ -145,3 +145,15 @@ class PreferencesLanguagesPage(Adw.PreferencesPage):
     def toggle_empty_state(self, is_empty: bool = False) -> None:
         state = 'empty_state' if is_empty else 'languages_state'
         self.views.set_visible_child_name(state)
+
+    def do_destroy(self):
+        """Clean up signal handlers to prevent memory leaks."""
+        try:
+            language_manager.disconnect_by_func(self.on_language_added)
+        except TypeError:
+            pass
+        try:
+            language_manager.disconnect_by_func(self.on_language_removed)
+        except TypeError:
+            pass
+        super().do_destroy()

@@ -213,17 +213,30 @@ class LanguageManager(GObject.GObject):
                 total_size = int(response.headers.get('content-length', 0))
                 downloaded = 0
 
+                # Throttle progress updates to prevent main loop saturation
+                # Max 10 updates per second (every 100ms)
+                last_progress_time = time.monotonic()
+                last_progress_value = 0
+
                 with open(tmp_path, 'wb') as f:
                     for chunk in response.iter_content(chunk_size=8192):
                         if chunk:
                             f.write(chunk)
                             downloaded += len(chunk)
-                            if total_size > 0:
-                                progress = int(downloaded * 100 / total_size)
-                                GLib.idle_add(self.emit, "downloading", code, min(progress, 100))
-                            else:
-                                # No content-length header, emit indeterminate progress
-                                GLib.idle_add(self.emit, "downloading", code, -1)
+
+                            # Throttle progress updates (max 10/sec)
+                            now = time.monotonic()
+                            if now - last_progress_time >= 0.1:  # 100ms throttle
+                                if total_size > 0:
+                                    progress = int(downloaded * 100 / total_size)
+                                    # Only emit if progress actually changed
+                                    if progress != last_progress_value:
+                                        GLib.idle_add(self.emit, "downloading", code, min(progress, 100))
+                                        last_progress_value = progress
+                                else:
+                                    # No content-length header, emit indeterminate progress
+                                    GLib.idle_add(self.emit, "downloading", code, -1)
+                                last_progress_time = now
 
                 shutil.move(tmp_path, final_path)  # atomic on same filesystem
                 return code

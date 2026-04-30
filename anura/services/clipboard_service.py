@@ -58,7 +58,7 @@ class ClipboardService(GObject.GObject):
             logger.info("Anura Clipboard: Image texture retrieved.")
             self.emit('paste_from_clipboard', texture)
 
-        except Exception as e:
+        except (GLib.Error, ValueError, RuntimeError) as e:
             # Technical rigor: log error for X11/Wayland clipboard synchronization issues
             logger.error(f"Anura Clipboard Error: {e}")
             self.emit('error', _("No image in clipboard"))

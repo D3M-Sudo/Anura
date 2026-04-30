@@ -4,6 +4,7 @@
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
 import os
+import re
 
 from loguru import logger
 
@@ -58,6 +59,12 @@ def get_tesseract_config(lang_code: str) -> str:
         Config string with --tessdata-dir pointing to the correct directory.
         Paths are quoted to handle spaces in directory names.
     """
+    # Security: Validate lang_code is a valid ISO 639-2 code
+    #mport re
+    if not lang_code or not re.match(r'^[a-zA-Z0-9_]{2,8}$', lang_code):
+        logger.error(f"Anura: Invalid language code '{lang_code}' - using default 'eng'")
+        lang_code = "eng"
+
     # Check user directory first (user models take priority)
     user_model = os.path.join(TESSDATA_DIR, f"{lang_code}.traineddata")
     if os.path.exists(user_model):

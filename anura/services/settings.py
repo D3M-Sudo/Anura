@@ -10,7 +10,9 @@
 from gi.repository import Gio
 from loguru import logger
 
-from anura.config import APP_ID
+# Inline APP_ID to avoid circular import with config.py
+# This ensures settings can be imported independently
+APP_ID = "com.github.d3msudo.anura"
 
 
 class Settings(Gio.Settings):
