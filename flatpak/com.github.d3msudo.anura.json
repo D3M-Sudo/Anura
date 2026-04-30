@@ -317,12 +317,12 @@
             "name": "python3-urllib3",
             "buildsystem": "simple",
             "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore pathspec-1.1.1-py3-none-any.whl",
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore packaging-24.2-py3-none-any.whl",
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore pluggy-1.5.0-py3-none-any.whl",
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore trove_classifiers-2026.4.28.13-py3-none-any.whl",
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore hatchling-1.27.0-py3-none-any.whl",
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore ."
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed pathspec-1.1.1-py3-none-any.whl",
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed packaging-24.2-py3-none-any.whl",
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed pluggy-1.5.0-py3-none-any.whl",
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed trove_classifiers-2026.4.28.13-py3-none-any.whl",
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed hatchling-1.27.0-py3-none-any.whl",
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed ."
             ],
             "sources": [
                 {
