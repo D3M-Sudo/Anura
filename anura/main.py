@@ -47,12 +47,12 @@ def _load_gresource_bundle():
 # Load GResource before importing any widgets with @Gtk.Template decorators
 _load_gresource_bundle()
 
-from anura.config import APP_ID
-from anura.language_manager import language_manager
-from anura.services.clipboard_service import clipboard_service
-from anura.services.screenshot_service import ScreenshotService
-from anura.services.settings import settings
-from anura.window import AnuraWindow
+from anura.config import APP_ID  # noqa: E402
+from anura.language_manager import language_manager  # noqa: E402
+from anura.services.clipboard_service import clipboard_service  # noqa: E402
+from anura.services.screenshot_service import ScreenshotService  # noqa: E402
+from anura.services.settings import settings  # noqa: E402
+from anura.window import AnuraWindow  # noqa: E402
 
 
 class AnuraApplication(Adw.Application):
