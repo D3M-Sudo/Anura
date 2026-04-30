@@ -47,6 +47,8 @@ endif
 
 subdir('icons')
 
+blueprints_ui_dir = meson.current_build_dir() / 'ui'
+
 blueprints = custom_target('blueprints',
   input: files(
     'ui/preferences_dialog.blp',
@@ -61,11 +63,23 @@ blueprints = custom_target('blueprints',
     'ui/extracted_page.blp',
     'ui/share_row.blp',
   ),
-  output: 'blueprints',
+  output: [
+    'ui/preferences_dialog.ui',
+    'ui/preferences_general.ui',
+    'ui/preferences_languages.ui',
+    'ui/shortcuts.ui',
+    'ui/window.ui',
+    'ui/language_popover.ui',
+    'ui/language_popover_row.ui',
+    'ui/language_row.ui',
+    'ui/welcome_page.ui',
+    'ui/extracted_page.ui',
+    'ui/share_row.ui',
+  ],
   command: [
     find_program('blueprint-compiler'),
     'batch-compile',
-    '@OUTPUT@' / 'ui',
+    meson.current_build_dir(),
     '@INPUT@'
   ],
 )
@@ -74,7 +88,7 @@ app_resources = gnome.compile_resources(app_id,
     app_id + '.gresource.xml',
     gresource_bundle: true,
     dependencies: blueprints,
-    source_dir: [meson.current_build_dir() / 'blueprints', meson.current_source_dir()],
+    source_dir: [meson.current_build_dir(), meson.current_source_dir()],
     install: true,
     install_dir: pkgdatadir
 )
