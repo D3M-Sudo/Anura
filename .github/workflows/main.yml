@@ -66,6 +66,10 @@ jobs:
           manifest-path: flatpak/com.github.d3msudo.anura.json
           # Explicitly disable action-level cache
           cache: false
+          # Keep build directories for the verification step
+          keep-build-dirs: true
+          # Use consistent state-dir for predictable paths
+          state-dir: .flatpak-builder
 
       # 2b. VERIFICA STRUTTURA RISORSE BLUEPRINT
       - name: Verify Blueprint and Resource Structure
