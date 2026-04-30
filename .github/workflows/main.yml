@@ -67,6 +67,47 @@ jobs:
           # Explicitly disable action-level cache
           cache: false
 
+      # 2b. VERIFICA STRUTTURA RISORSE BLUEPRINT
+      - name: Verify Blueprint and Resource Structure
+        run: |
+          echo "=== Verifying generated UI files ==="
+          BUILD_DIR=".flatpak-builder/build/anura/_flatpak_build/data"
+          GRESOURCE_XML="data/com.github.d3msudo.anura.gresource.xml"
+          
+          # Check if UI files were generated
+          UI_COUNT=$(find "$BUILD_DIR" -name "*.ui" 2>/dev/null | wc -l)
+          if [ "$UI_COUNT" -eq 0 ]; then
+            echo "✗ ERROR: No .ui files found in build directory"
+            echo "Expected: $BUILD_DIR/*.ui or $BUILD_DIR/ui/*.ui"
+            exit 1
+          fi
+          echo "✓ Found $UI_COUNT .ui file(s)"
+          
+          # List found UI files
+          echo "Generated UI files:"
+          find "$BUILD_DIR" -name "*.ui" | head -20
+          
+          # Verify gresource.xml references match generated files
+          echo ""
+          echo "=== Checking gresource.xml paths ==="
+          MISSING=0
+          for file in $(grep -oP '(?<=<file[^>]*>)[^<]+\.ui' "$GRESOURCE_XML" | sed 's|ui/||'); do
+            if [ ! -f "$BUILD_DIR/$file" ] && [ ! -f "$BUILD_DIR/ui/$file" ]; then
+              echo "✗ Missing: $file (referenced in gresource.xml)"
+              MISSING=$((MISSING + 1))
+            fi
+          done
+          
+          if [ "$MISSING" -gt 0 ]; then
+            echo ""
+            echo "✗ RESOURCE VERIFICATION FAILED: $MISSING file(s) missing"
+            echo "Build directory contents:"
+            find "$BUILD_DIR" -type f | sort
+            exit 1
+          fi
+          
+          echo "✓ All gresource.xml references resolved successfully"
+
       # 3. HEADLESS RUNTIME SMOKE TEST
       - name: Smoke Test - Headless Runtime
         run: |
