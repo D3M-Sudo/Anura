@@ -73,12 +73,14 @@ jobs:
           echo "=== Verifying generated UI files ==="
           GRESOURCE_XML="data/com.github.d3msudo.anura.gresource.xml"
           
-          # Find the actual build directory (flatpak-builder structure varies)
-          BUILD_ROOT=".flatpak-builder/build/anura"
-          if [ ! -d "$BUILD_ROOT" ]; then
-            echo "✗ ERROR: Build root not found at $BUILD_ROOT"
+          # Find the actual build directory (flatpak-builder adds numeric suffixes like anura-1)
+          BUILD_ROOT=$(find .flatpak-builder/build -maxdepth 1 -type d -name 'anura*' | head -1)
+          if [ -z "$BUILD_ROOT" ]; then
+            echo "✗ ERROR: Build directory not found in .flatpak-builder/build/"
+            ls -la .flatpak-builder/build/ 2>/dev/null || echo "No build directory found"
             exit 1
           fi
+          echo "Found build directory: $BUILD_ROOT"
           
           # Search for .ui files in any subdirectory of the build
           UI_FILES=$(find "$BUILD_ROOT" -name "*.ui" -type f 2>/dev/null)
