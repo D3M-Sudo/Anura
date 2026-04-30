@@ -5,6 +5,7 @@
 
 from gettext import gettext as _
 
+import requests
 from gi.repository import Adw, GLib, GObject, Gtk
 from loguru import logger
 

@@ -9,12 +9,10 @@ import tempfile
 import threading
 import time
 from gettext import gettext as _
-from datetime import datetime
-from pathlib import Path
 from typing import Dict, List
 
 import requests
-from gi.repository import Gio, GLib, GObject
+from gi.repository import GLib, GObject
 from loguru import logger
 
 from anura.config import REQUEST_TIMEOUT, TESSDATA_BEST_URL, TESSDATA_DIR, TESSDATA_URL
