@@ -39,6 +39,9 @@ class AnuraWindow(Adw.ApplicationWindow):
         self._setup_controllers()
         self.set_icon_name(APP_ID)
 
+        # Safety timeout for portal screenshot (prevents hidden window on D-Bus hang)
+        self._screenshot_timeout_id: int | None = None
+
         # Share service as instance attribute to avoid class-level launcher issues
         self.share_service = ShareService()
         share_action = Gio.SimpleAction.new("share", GLib.VariantType.new("s"))
@@ -75,9 +78,28 @@ class AnuraWindow(Adw.ApplicationWindow):
         self.extracted_page.listen_cancel()
         lang = self.get_language()
         self.hide()
+
+        # Safety timeout: if portal doesn't respond within 30s, restore window
+        self._screenshot_timeout_id = GLib.timeout_add_seconds(
+            30, self._on_screenshot_timeout
+        )
+
         self.backend.capture(lang, copy)
 
+    def _on_screenshot_timeout(self) -> bool:
+        """Callback triggered when screenshot portal times out."""
+        self._screenshot_timeout_id = None
+        self.present()
+        self.show_toast(_("Screenshot service did not respond."))
+        logger.warning("Anura Screenshot: Portal timeout - window restored.")
+        return False  # Don't repeat timeout
+
     def on_shot_done(self, _sender, text: str, copy: bool) -> None:
+        # Cancel safety timeout if screenshot succeeded
+        if self._screenshot_timeout_id is not None:
+            GLib.source_remove(self._screenshot_timeout_id)
+            self._screenshot_timeout_id = None
+
         self.present()
         self.welcome_page.spinner.set_visible(False)
 
@@ -105,6 +127,11 @@ class AnuraWindow(Adw.ApplicationWindow):
             logger.error(f"Anura UI Error: {e}")
 
     def on_shot_error(self, _sender, message: str) -> None:
+        # Cancel safety timeout if screenshot failed
+        if self._screenshot_timeout_id is not None:
+            GLib.source_remove(self._screenshot_timeout_id)
+            self._screenshot_timeout_id = None
+
         self.present()
         self.welcome_page.spinner.set_visible(False)
         if message:
@@ -181,19 +208,34 @@ class AnuraWindow(Adw.ApplicationWindow):
 
         item = files[0]
 
-        # Check MIME type before starting async load
-        info = item.query_info("standard::content-type", Gio.FileQueryInfoFlags.NONE, None)
-        if not info:
-            return False
-
-        mimetype = info.get_content_type()
-        if not mimetype or not mimetype.startswith("image"):
-            self.show_toast(_("Unsupported file format."))
-            return False
-
         self.welcome_page.spinner.set_visible(True)
-        item.load_contents_async(None, self._on_dnd_file_contents_loaded)
+        item.query_info_async(
+            "standard::content-type",
+            Gio.FileQueryInfoFlags.NONE,
+            GLib.PRIORITY_DEFAULT,
+            None,
+            self._on_dnd_query_info_done,
+            item
+        )
         return True
+
+    def _on_dnd_query_info_done(self, gfile, result, item):
+        try:
+            info = gfile.query_info_finish(result)
+            if not info:
+                self.welcome_page.spinner.set_visible(False)
+                return
+
+            mimetype = info.get_content_type()
+            if not mimetype or not mimetype.startswith("image"):
+                self.welcome_page.spinner.set_visible(False)
+                self.show_toast(_("Unsupported file format."))
+                return
+
+            item.load_contents_async(None, self._on_dnd_file_contents_loaded)
+        except Exception as e:
+            logger.error(f"DnD query_info failed: {e}")
+            self.welcome_page.spinner.set_visible(False)
 
     def _on_dnd_file_contents_loaded(self, gfile, result):
         try:
@@ -310,7 +352,6 @@ class AnuraWindow(Adw.ApplicationWindow):
     def uri_validator(self, text: str) -> bool:
         try:
             res = urlparse(text.strip())
-            return all([res.scheme, res.netloc])
+            return res.scheme in ("http", "https") and bool(res.netloc)
         except ValueError:
-            # urlparse raises ValueError for malformed URLs
             return False

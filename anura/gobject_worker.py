@@ -43,11 +43,9 @@ class GObjectWorker:
             except Exception as e:
                 # Capture full traceback for technical debugging
                 tb_str = traceback.format_exc()
-                if eb:
-                    # Wrap exception with traceback info in a safe way
-                    GLib.idle_add(eb, e, tb_str)
-                else:
-                    GLib.idle_add(GObjectWorker._default_errorback, e, tb_str)
+                # Wrap exception with traceback info in a safe way
+                # (errorback is always set to _default_errorback if not provided)
+                GLib.idle_add(eb, e, tb_str)
 
         # Use default error handler if none provided
         if errorback is None:

@@ -1,4 +1,3 @@
-import asyncio
 import datetime
 import os
 import sys
@@ -6,7 +5,6 @@ import threading
 import time
 from gettext import gettext as _
 
-from gi.events import GLibEventLoopPolicy
 from gi.repository import Adw, Gio, GLib, Gtk, Notify
 from loguru import logger
 
@@ -354,6 +352,5 @@ class AnuraApplication(Adw.Application):
 
 
 def main(version):
-    asyncio.set_event_loop_policy(GLibEventLoopPolicy())
     app = AnuraApplication(version)
     return app.run(sys.argv)

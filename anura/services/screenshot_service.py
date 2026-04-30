@@ -54,6 +54,10 @@ class ScreenshotService(GObject.GObject):
         lang, copy = user_data
         uri = self.portal.take_screenshot_finish(res)
 
+        if not uri:
+            logger.warning("Anura Screenshot: Portal returned empty URI.")
+            return self.emit("error", _("Can't take a screenshot."))
+
         if uri.startswith("file://"):
             filename = url2pathname(uri[len("file://"):])
         else:

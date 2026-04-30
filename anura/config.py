@@ -72,8 +72,3 @@ def get_tesseract_config(lang_code: str) -> str:
     # Tesseract will fail gracefully with a missing language error
     logger.warning(f"Anura: Model '{lang_code}' not found in user or system tessdata directories")
     return f'--tessdata-dir "{TESSDATA_DIR}" --psm 3 --oem 1'
-
-
-# Deprecated: kept for backward compatibility, but should not be used
-# Use get_tesseract_config(lang_code) instead
-tessdata_config = f'--tessdata-dir "{TESSDATA_DIR}" --psm 3 --oem 1'

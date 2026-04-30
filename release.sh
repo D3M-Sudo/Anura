@@ -71,10 +71,8 @@ echo "Updating $METAINFO_FILE with new release entry..."
 # Create new release entry
 RELEASE_ENTRY="    <release version=\"$VERSION\" type=\"stable\" date=\"$DATE\">
       <description>
-        <p>New features and improvements.</p>
-        <ul>
-          <li>Version bump to $VERSION.</li>
-        </ul>
+        <!-- TODO: Add release notes before publishing -->
+        <p>Release $VERSION.</p>
       </description>
     </release>"
 
