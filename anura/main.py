@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import os
 import sys
 import threading
 import time
@@ -8,6 +9,43 @@ from gettext import gettext as _
 from gi.events import GLibEventLoopPolicy
 from gi.repository import Adw, Gio, GLib, Gtk, Notify
 from loguru import logger
+
+
+def _load_gresource_bundle():
+    """Load the GResource bundle containing UI files and icons.
+
+    This must be called before importing any widgets that use @Gtk.Template
+    with resource_path, as those decorators validate resource existence at
+    class definition time (import time).
+    """
+    # Determine possible paths for the gresource bundle
+    # Priority: Flatpak -> system -> user -> relative
+    possible_paths = [
+        "/app/share/anura/com.github.d3msudo.anura.gresource",
+        "/usr/share/anura/com.github.d3msudo.anura.gresource",
+        "/usr/local/share/anura/com.github.d3msudo.anura.gresource",
+        os.path.expanduser("~/.local/share/anura/com.github.d3msudo.anura.gresource"),
+        # Development fallback: relative to this file
+        os.path.join(os.path.dirname(__file__), "..", "data", "com.github.d3msudo.anura.gresource"),
+    ]
+
+    for path in possible_paths:
+        if os.path.exists(path):
+            try:
+                resource = Gio.Resource.load(path)
+                resource._register()
+                logger.debug(f"Loaded GResource bundle from {path}")
+                return True
+            except Exception as e:
+                logger.warning(f"Failed to load GResource from {path}: {e}")
+                continue
+
+    logger.error("Could not find or load GResource bundle - UI files may not be available")
+    return False
+
+
+# Load GResource before importing any widgets with @Gtk.Template decorators
+_load_gresource_bundle()
 
 from anura.config import APP_ID
 from anura.language_manager import language_manager
