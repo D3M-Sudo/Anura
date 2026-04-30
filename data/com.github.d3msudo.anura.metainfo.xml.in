@@ -39,9 +39,14 @@
   <releases>
     <release version="0.1.4" type="stable" date="2026-04-29">
       <description>
-        <p>New features and improvements.</p>
+        <p>Bug fixes and Flatpak sandbox improvements.</p>
         <ul>
-          <li>Version bump to 0.1.4.</li>
+          <li>Fixed Pillow wheel compatibility by building from source.</li>
+          <li>Fixed filesystem permissions for Open Image and Drag &amp; Drop in sandbox.</li>
+          <li>Fixed silent CLI mode opening UI window after completion.</li>
+          <li>Fixed GStreamer bus watch memory leak on every TTS playback.</li>
+          <li>Fixed Telegram share URL to send text as message instead of URL.</li>
+          <li>Updated OARS content rating for Flathub compliance.</li>
         </ul>
       </description>
     </release>
@@ -96,7 +101,34 @@
   <url type="vcs-browser">https://github.com/D3M-Sudo/Anura</url>
   <url type="help">https://github.com/D3M-Sudo/Anura/blob/main/README.md</url>
   <content_rating type="oars-1.1">
+    <content_attribute id="violence-cartoon">none</content_attribute>
+    <content_attribute id="violence-fantasy">none</content_attribute>
+    <content_attribute id="violence-realistic">none</content_attribute>
+    <content_attribute id="violence-bloodshed">none</content_attribute>
+    <content_attribute id="violence-sexual">none</content_attribute>
+    <content_attribute id="violence-desecration">none</content_attribute>
+    <content_attribute id="violence-slavery">none</content_attribute>
+    <content_attribute id="violence-worship">none</content_attribute>
+    <content_attribute id="drugs-alcohol">none</content_attribute>
+    <content_attribute id="drugs-narcotics">none</content_attribute>
+    <content_attribute id="drugs-tobacco">none</content_attribute>
+    <content_attribute id="sex-nudity">none</content_attribute>
+    <content_attribute id="sex-themes">none</content_attribute>
+    <content_attribute id="sex-homosexuality">none</content_attribute>
+    <content_attribute id="sex-prostitution">none</content_attribute>
+    <content_attribute id="sex-adultery">none</content_attribute>
+    <content_attribute id="sex-appearance">none</content_attribute>
+    <content_attribute id="language-profanity">none</content_attribute>
+    <content_attribute id="language-humor">none</content_attribute>
+    <content_attribute id="language-discrimination">none</content_attribute>
+    <content_attribute id="social-chat">none</content_attribute>
     <content_attribute id="social-info">none</content_attribute>
+    <content_attribute id="social-audio">none</content_attribute>
+    <content_attribute id="social-location">none</content_attribute>
+    <content_attribute id="social-contacts">none</content_attribute>
+    <content_attribute id="money-purchasing">none</content_attribute>
+    <content_attribute id="money-gambling">none</content_attribute>
+    <content_attribute id="money-advertising">none</content_attribute>
   </content_rating>
   <branding>
     <color type="primary" scheme_preference="light">#3d8b37</color>

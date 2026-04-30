@@ -55,7 +55,8 @@ class TTSService(GObject.GObject):
     }
 
     _gtts_languages: dict | None = None
-    _signal_watch_id: int | None = None
+    _bus_watch_active: bool = False
+    _bus: Gst.Bus | None = None
     _cleanup_lock: threading.Lock = threading.Lock()
 
     @classmethod
@@ -143,9 +144,10 @@ class TTSService(GObject.GObject):
         volume = settings.get_double("tts-volume")
         self.player.set_property("volume", volume)
 
-        bus = self.player.get_bus()
-        self._signal_watch_id = bus.add_signal_watch()
-        bus.connect("message", self.on_gst_message)
+        self._bus = self.player.get_bus()
+        self._bus.add_signal_watch()
+        self._bus_watch_active = True
+        self._bus.connect("message", self.on_gst_message)
         self.player.set_state(Gst.State.PLAYING)
 
     def on_gst_message(self, _bus, message: Gst.Message):
@@ -175,13 +177,13 @@ class TTSService(GObject.GObject):
     def _cleanup_gst_resources(self) -> None:
         """Remove signal watcher and release player resources."""
         if self.player:
-            bus = self.player.get_bus()
-            if self._signal_watch_id is not None:
+            if self._bus_watch_active and self._bus:
                 try:
-                    bus.remove_signal_watch()
+                    self._bus.remove_signal_watch()
                 except Exception:
                     pass  # Already removed or invalid
-                self._signal_watch_id = None
+                self._bus_watch_active = False
+                self._bus = None
             self.player.set_state(Gst.State.NULL)
             self.player = None
 

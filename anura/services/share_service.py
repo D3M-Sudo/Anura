@@ -79,7 +79,7 @@ class ShareService(GObject.GObject):
 
     @staticmethod
     def get_link_telegram(text: str):
-        return f"tg://msg_url?url={text}"
+        return f"https://t.me/share/url?text={text}"
 
     @staticmethod
     def get_link_reddit(text: str):
