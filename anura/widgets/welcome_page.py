@@ -13,7 +13,7 @@ from anura.types.language_item import LanguageItem
 from anura.widgets.language_popover import LanguagePopover
 
 
-@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/ui/welcome_page.ui")
+@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/welcome_page.ui")
 class WelcomePage(Adw.NavigationPage):
     __gtype_name__ = "WelcomePage"
 

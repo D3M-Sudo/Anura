@@ -17,7 +17,7 @@ from anura.widgets.preferences_dialog import PreferencesDialog
 from anura.widgets.welcome_page import WelcomePage
 
 
-@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/ui/window.ui")
+@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/window.ui")
 class AnuraWindow(Adw.ApplicationWindow):
     __gtype_name__ = "AnuraWindow"
 
@@ -238,7 +238,7 @@ class AnuraWindow(Adw.ApplicationWindow):
 
     def show_shortcuts(self):
         try:
-            builder = Gtk.Builder.new_from_resource(f"{RESOURCE_PREFIX}/ui/shortcuts.ui")
+            builder = Gtk.Builder.new_from_resource(f"{RESOURCE_PREFIX}/shortcuts.ui")
             shortcuts_window = builder.get_object("shortcuts")
 
             if shortcuts_window:

@@ -14,7 +14,7 @@ from anura.services.settings import settings
 from anura.services.tts import ttsservice
 
 
-@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/ui/preferences_general.ui")
+@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/preferences_general.ui")
 class PreferencesGeneralPage(Adw.PreferencesPage):
     __gtype_name__ = "PreferencesGeneralPage"
 

@@ -17,7 +17,7 @@ from anura.services.tts import TTSService, ttsservice
 from anura.widgets.share_row import ShareRow
 
 
-@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/ui/extracted_page.ui")
+@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/extracted_page.ui")
 class ExtractedPage(Adw.NavigationPage):
     __gtype_name__ = "ExtractedPage"
 

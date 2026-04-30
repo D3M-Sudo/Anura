@@ -10,7 +10,7 @@ from anura.language_manager import language_manager
 from anura.types.language_item import LanguageItem
 
 
-@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/ui/language_row.ui")
+@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/language_row.ui")
 class LanguageRow(Gtk.Overlay):
     __gtype_name__ = "LanguageRow"
 

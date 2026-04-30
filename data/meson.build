@@ -47,41 +47,46 @@ endif
 
 subdir('icons')
 
-blueprints_ui_dir = meson.current_build_dir() / 'ui'
+blueprint_compiler = find_program('blueprint-compiler')
 
+blueprint_files = [
+  'ui/preferences_dialog.blp',
+  'ui/preferences_general.blp',
+  'ui/preferences_languages.blp',
+  'ui/shortcuts.blp',
+  'ui/window.blp',
+  'ui/language_popover.blp',
+  'ui/language_popover_row.blp',
+  'ui/language_row.blp',
+  'ui/welcome_page.blp',
+  'ui/extracted_page.blp',
+  'ui/share_row.blp',
+]
+
+# Generate each blueprint file individually since blueprint-compiler
+# outputs to a subdirectory matching the input structure
+ui_outputs = []
+foreach blp : blueprint_files
+  ui_name = blp.replace('.blp', '.ui')
+  ui_file = custom_target(ui_name.underscorify(),
+    input: blp,
+    output: ui_name.split('/')[-1],
+    command: [
+      blueprint_compiler,
+      'compile',
+      '--output', '@OUTPUT@',
+      '@INPUT@'
+    ],
+  )
+  ui_outputs += ui_file
+endforeach
+
+# Create a dummy target that depends on all UI files for the resource compilation
 blueprints = custom_target('blueprints',
-  input: files(
-    'ui/preferences_dialog.blp',
-    'ui/preferences_general.blp',
-    'ui/preferences_languages.blp',
-    'ui/shortcuts.blp',
-    'ui/window.blp',
-    'ui/language_popover.blp',
-    'ui/language_popover_row.blp',
-    'ui/language_row.blp',
-    'ui/welcome_page.blp',
-    'ui/extracted_page.blp',
-    'ui/share_row.blp',
-  ),
-  output: [
-    'ui/preferences_dialog.ui',
-    'ui/preferences_general.ui',
-    'ui/preferences_languages.ui',
-    'ui/shortcuts.ui',
-    'ui/window.ui',
-    'ui/language_popover.ui',
-    'ui/language_popover_row.ui',
-    'ui/language_row.ui',
-    'ui/welcome_page.ui',
-    'ui/extracted_page.ui',
-    'ui/share_row.ui',
-  ],
-  command: [
-    find_program('blueprint-compiler'),
-    'batch-compile',
-    meson.current_build_dir(),
-    '@INPUT@'
-  ],
+  input: ui_outputs,
+  output: 'blueprints.stamp',
+  command: ['touch', '@OUTPUT@'],
+  depends: ui_outputs,
 )
 
 app_resources = gnome.compile_resources(app_id,

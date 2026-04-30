@@ -10,7 +10,7 @@ from anura.widgets.preferences_general_page import PreferencesGeneralPage
 from anura.widgets.preferences_languages_page import PreferencesLanguagesPage
 
 
-@Gtk.Template(resource_path=f'{RESOURCE_PREFIX}/ui/preferences_dialog.ui')
+@Gtk.Template(resource_path=f'{RESOURCE_PREFIX}/preferences_dialog.ui')
 class PreferencesDialog(Adw.PreferencesDialog):
     __gtype_name__ = 'PreferencesDialog'
 

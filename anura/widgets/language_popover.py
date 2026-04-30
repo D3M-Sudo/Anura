@@ -13,7 +13,7 @@ from anura.types.language_item import LanguageItem
 from anura.widgets.language_popover_row import LanguagePopoverRow
 
 
-@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/ui/language_popover.ui")
+@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/language_popover.ui")
 class LanguagePopover(Gtk.Popover):
     __gtype_name__ = "LanguagePopover"
 

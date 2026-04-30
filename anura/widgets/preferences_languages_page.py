@@ -14,7 +14,7 @@ from anura.types.language_item import LanguageItem
 from anura.widgets.language_row import LanguageRow
 
 
-@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/ui/preferences_languages.ui")
+@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/preferences_languages.ui")
 class PreferencesLanguagesPage(Adw.PreferencesPage):
     __gtype_name__ = 'PreferencesLanguagesPage'
 
