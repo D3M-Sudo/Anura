@@ -1,9 +1,0 @@
-{
-    "python.defaultInterpreterPath": "/home/damiano/Progetti Git/Anura-development/.venv/bin/python3",
-    "python.terminal.activateEnvInSelectedTerminal": true,
-    "python.languageServer": "Jedi",
-    "python.analysis.extraPaths": [
-        "/home/damiano/Progetti Git/Anura-development/anura"
-    ],
-    "windsurfPyright.disableLanguageServices": true
-}
