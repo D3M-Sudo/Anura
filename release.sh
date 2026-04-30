@@ -9,7 +9,7 @@
 set -e
 
 VERSION="$1"
-TESSDATA_COMMIT="${2:-4767ea922bcc460e70b87b1d303ebdfed0e3060b}"
+TESSDATA_COMMIT="${2:-923915d4ced2a7235221788285785a29c4a42d4a}"
 
 if [ -z "$VERSION" ]; then
     echo "Usage: $0 <version> [tessdata_commit]"

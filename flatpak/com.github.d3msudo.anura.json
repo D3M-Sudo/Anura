@@ -81,13 +81,13 @@
                         {
                             "type": "file",
                             "_comment": "NOTE: This commit SHA is pinned during release via ./release.sh",
-                            "url": "https://github.com/tesseract-ocr/tessdata_fast/raw/4767ea922bcc460e70b87b1d303ebdfed0e3060b/eng.traineddata",
+                            "url": "https://github.com/tesseract-ocr/tessdata_fast/raw/923915d4ced2a7235221788285785a29c4a42d4a/eng.traineddata",
                             "sha256": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2"
                         },
                         {
                             "type": "file",
                             "_comment": "NOTE: This commit SHA is pinned during release via ./release.sh",
-                            "url": "https://github.com/tesseract-ocr/tessdata_fast/raw/4767ea922bcc460e70b87b1d303ebdfed0e3060b/ita.traineddata",
+                            "url": "https://github.com/tesseract-ocr/tessdata_fast/raw/923915d4ced2a7235221788285785a29c4a42d4a/ita.traineddata",
                             "sha256": "b8f89e1e785118dac4d51ae042c029a64edb5c3ee42ef73027a6d412748d8827"
                         }
                     ]
