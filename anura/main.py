@@ -1,9 +1,7 @@
 import datetime
 import os
-import signal
 import sys
 import threading
-import time
 from gettext import gettext as _
 
 from gi.repository import Adw, Gio, GLib, Gtk, Notify
@@ -187,9 +185,9 @@ class AnuraApplication(Adw.Application):
         decoded_handler_id: int | None = None
         error_handler_id: int | None = None
 
-        import signal
-        old_sigint = signal.signal(signal.SIGINT, on_signal)
-        old_sigterm = signal.signal(signal.SIGTERM, on_signal)
+        import signal as sig
+        old_sigint = sig.signal(sig.SIGINT, on_signal)
+        old_sigterm = sig.signal(sig.SIGTERM, on_signal)
 
         try:
             # Temporarily connect to both signals for this operation
@@ -253,8 +251,8 @@ class AnuraApplication(Adw.Application):
             return 1
         finally:
             # Restore original signal handlers
-            signal.signal(signal.SIGINT, old_sigint)
-            signal.signal(signal.SIGTERM, old_sigterm)
+            sig.signal(sig.SIGINT, old_sigint)
+            sig.signal(sig.SIGTERM, old_sigterm)
             # Always disconnect handlers in all scenarios
             if decoded_handler_id is not None and self.backend:
                 try:

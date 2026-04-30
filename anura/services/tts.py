@@ -8,8 +8,7 @@ import threading
 import time
 
 import gtts
-import requests.exceptions
-from gi.repository import GObject, Gst
+from gi.repository import GLib, GObject, Gst
 from loguru import logger
 
 from anura.services.settings import settings
@@ -167,7 +166,7 @@ class TTSService(GObject.GObject):
                 try:
                     os.unlink(filepath)
                     logger.debug(f"Anura TTS: Cleaned up temp file: {filepath}")
-                except excspt:
+                except Exception as e:
                     logger.warning(f"Anura TTS: Failed to cleanup temp file: {e}")
             self.emit("stop", True)
         elif message.type == Gst.MessageType.ERROR:

@@ -5,8 +5,7 @@
 
 from gettext import gettext as _
 
-import requests.exceptions
-from gi.repository import Adw, GObject, Gtk
+from gi.repository import Adw, GLib, GObject, Gtk
 from loguru import logger
 
 from anura.config import RESOURCE_PREFIX

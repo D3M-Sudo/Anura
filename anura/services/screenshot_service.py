@@ -4,6 +4,7 @@
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
 import os
+import threading
 from gettext import gettext as _
 from urllib.request import url2pathname
 
