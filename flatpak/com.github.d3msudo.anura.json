@@ -185,7 +185,7 @@
             "name": "python3-pillow",
             "buildsystem": "simple",
             "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore ."
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed ."
             ],
             "sources": [
                 {
@@ -206,7 +206,7 @@
             "name": "python3-pytesseract",
             "buildsystem": "simple",
             "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore ."
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed ."
             ],
             "sources": [
                 {
@@ -227,7 +227,7 @@
             "name": "python3-gTTS",
             "buildsystem": "simple",
             "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore ."
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed ."
             ],
             "sources": [
                 {
@@ -248,8 +248,8 @@
             "name": "python3-dateutil",
             "buildsystem": "simple",
             "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore setuptools_scm-7.1.0-py3-none-any.whl",
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore ."
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed setuptools_scm-7.1.0-py3-none-any.whl",
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed ."
             ],
             "sources": [
                 {
@@ -275,7 +275,7 @@
             "name": "python3-loguru",
             "buildsystem": "simple",
             "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore ."
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed ."
             ],
             "sources": [
                 {
@@ -296,7 +296,7 @@
             "name": "python3-pyzbar",
             "buildsystem": "simple",
             "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore ."
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed ."
             ],
             "sources": [
                 {
@@ -368,7 +368,7 @@
             "name": "python3-requests",
             "buildsystem": "simple",
             "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore ."
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed ."
             ],
             "sources": [
                 {
