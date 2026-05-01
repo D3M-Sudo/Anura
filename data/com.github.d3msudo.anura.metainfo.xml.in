@@ -37,16 +37,23 @@
     </screenshot>
   </screenshots>
   <releases>
-    <release version="0.1.4" type="stable" date="2026-04-29">
+    <release version="0.1.4" type="stable" date="2026-05-01">
       <description>
-        <p>Bug fixes and Flatpak sandbox improvements.</p>
+        <p>Production release with critical bug fixes, security improvements, and Flathub compliance.</p>
         <ul>
-          <li>Fixed Pillow wheel compatibility by building from source.</li>
+          <li>Fixed critical thread-safety issues and race conditions in language manager and screenshot service.</li>
+          <li>Fixed memory leaks in widget lifecycle management and GStreamer bus watch.</li>
+          <li>Fixed all Flatpak manifest dependencies (requests, urllib3, certifi, hatchling, pyzbar).</li>
+          <li>Fixed blueprint compiler output directory for Flatpak builds.</li>
+          <li>Fixed gresource bundle loading with correct UI file paths.</li>
           <li>Fixed filesystem permissions for Open Image and Drag &amp; Drop in sandbox.</li>
-          <li>Fixed silent CLI mode opening UI window after completion.</li>
-          <li>Fixed GStreamer bus watch memory leak on every TTS playback.</li>
+          <li>Fixed silent CLI mode to properly exit without opening UI window.</li>
+          <li>Fixed CLI exit code to return 0 on success instead of 1.</li>
+          <li>Fixed code quality issues: lint errors, import sorting, gettext shadowing.</li>
           <li>Fixed Telegram share URL to send text as message instead of URL.</li>
           <li>Updated OARS content rating for Flathub compliance.</li>
+          <li>Improved CI/CD workflow with smoke tests and build verification.</li>
+          <li>Updated tessdata-fast to pinned commit SHA for reproducible builds.</li>
         </ul>
       </description>
     </release>
