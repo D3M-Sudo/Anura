@@ -1,3 +1,12 @@
+[project]
+name = "anura"
+requires-python = ">=3.10"
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.15.0",
+]
+
 [tool.ruff]
 line-length = 120
 

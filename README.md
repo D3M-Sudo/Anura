@@ -46,6 +46,25 @@ To compile Anura:
 
 2. Press **"Run" (F5)**. Builder will automatically download the required runtimes and compile the application.
 
+## Code Quality
+
+This project uses **Ruff** for linting and code formatting. The Ruff binary is located at `.venv/bin/ruff`.
+
+### Linting
+```bash
+.venv/bin/ruff check anura/
+```
+
+### Formatting
+```bash
+.venv/bin/ruff format anura/
+```
+
+### Auto-fix issues
+```bash
+.venv/bin/ruff check --fix anura/
+```
+
 ## Localization
 
 Anura is translated using Weblate. If you want to help translate the app into your language, please visit our project page:

@@ -3,11 +3,11 @@
 # Copyright 2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
-from typing import List
 from urllib.parse import quote
 
 from gi.repository import Adw, GLib, GObject, Gtk
 from loguru import logger
+
 
 def _(s: str) -> str:
     return s
@@ -27,7 +27,7 @@ class ShareService(GObject.GObject):
         self.launcher = Gtk.UriLauncher()
 
     @staticmethod
-    def providers() -> List[str]:
+    def providers() -> list[str]:
         """
         Returns a list of supported share providers.
         """
