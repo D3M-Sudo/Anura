@@ -5,13 +5,13 @@
 #
 # MIT License
 
-from gi.repository import Gtk, GObject
+from gi.repository import GObject, Gtk
 
 from anura.config import RESOURCE_PREFIX
 from anura.types.language_item import LanguageItem
 
 
-@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/ui/language_popover_row.ui")
+@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/language_popover_row.ui")
 class LanguagePopoverRow(Gtk.ListBoxRow):
     __gtype_name__ = 'LanguagePopoverRow'
 
@@ -32,3 +32,4 @@ class LanguagePopoverRow(Gtk.ListBoxRow):
             'visible',
             GObject.BindingFlags.SYNC_CREATE
         )
+

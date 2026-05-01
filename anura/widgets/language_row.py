@@ -3,15 +3,14 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
-from gi.repository import Gtk, GLib, GObject
-from loguru import logger
+from gi.repository import GLib, GObject, Gtk
 
 from anura.config import RESOURCE_PREFIX
 from anura.language_manager import language_manager
 from anura.types.language_item import LanguageItem
 
 
-@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/ui/language_row.ui")
+@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/language_row.ui")
 class LanguageRow(Gtk.Overlay):
     __gtype_name__ = "LanguageRow"
 
@@ -22,16 +21,20 @@ class LanguageRow(Gtk.Overlay):
     revealer: Gtk.Revealer = Gtk.Template.Child()
 
     _item: LanguageItem | None = None
+    _downloading_handler_id: int | None = None
+    _downloaded_handler_id: int | None = None
+    _idle_ids: list[int] = []
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
         # Connect language manager signals for download updates
-        language_manager.connect("downloading", self.update_progress)
-        language_manager.connect("downloaded", self.on_downloaded)
+        self._downloading_handler_id = language_manager.connect("downloading", self.update_progress)
+        self._downloaded_handler_id = language_manager.connect("downloaded", self.on_downloaded)
 
         # Deferred UI update to ensure item is set
-        GLib.idle_add(self.update_ui)
+        idle_id = GLib.idle_add(self.update_ui)
+        self._idle_ids.append(idle_id)
 
     @GObject.Property(type=GObject.TYPE_PYOBJECT)
     def item(self) -> LanguageItem | None:
@@ -44,7 +47,7 @@ class LanguageRow(Gtk.Overlay):
 
     def update_ui(self):
         """
-        Updates the visibility and sensitivity of control buttons 
+        Updates the visibility and sensitivity of control buttons
         based on the language installation status.
         """
         if not self._item:
@@ -68,7 +71,8 @@ class LanguageRow(Gtk.Overlay):
             self.revealer.set_reveal_child(False)
 
     def update_progress(self, sender, code: str, progress: float) -> None:
-        """
+        """idle_id = )
+            self._idle_ids.append(idle_id
         Signal handler for download progress.
         """
         if self._item and code == self._item.code:
@@ -83,7 +87,7 @@ class LanguageRow(Gtk.Overlay):
                 self.revealer.set_reveal_child(True)
 
             self.progress_bar.set_fraction(progress / 100)
-            
+
             if progress >= 100:
                 self.revealer.set_reveal_child(False)
 
@@ -115,4 +119,32 @@ class LanguageRow(Gtk.Overlay):
         Signal handler for completed downloads.
         """
         if self._item and self._item.code == code:
-            GLib.idle_add(self.update_ui)
+            idle_id = GLib.idle_add(self.update_ui)
+            self._idle_ids.append(idle_id)
+
+    def do_destroy(self):
+        """Clean up signal handlers and pending idle_add callbacks to prevent memory leaks."""
+        # Remove pending idle_add callbacks
+        for idle_id in self._idle_ids:
+            try:
+                GLib.source_remove(idle_id)
+            except Exception:
+                pass
+        self._idle_ids.clear()
+
+        # Disconnect signal handlers
+        if self._downloading_handler_id is not None:
+            try:
+                language_manager.disconnect(self._downloading_handler_id)
+            except Exception:
+                pass
+            self._downloading_handler_id = None
+
+        if self._downloaded_handler_id is not None:
+            try:
+                language_manager.disconnect(self._downloaded_handler_id)
+            except Exception:
+                pass
+            self._downloaded_handler_id = None
+
+        super().do_destroy()

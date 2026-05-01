@@ -3,7 +3,7 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
-from gi.repository import Gtk, Gio, GObject
+from gi.repository import Gio, GObject, Gtk
 from loguru import logger
 
 from anura.config import RESOURCE_PREFIX
@@ -13,7 +13,7 @@ from anura.types.language_item import LanguageItem
 from anura.widgets.language_popover_row import LanguagePopoverRow
 
 
-@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/ui/language_popover.ui")
+@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/language_popover.ui")
 class LanguagePopover(Gtk.Popover):
     __gtype_name__ = "LanguagePopover"
 
@@ -25,25 +25,24 @@ class LanguagePopover(Gtk.Popover):
     search_box: Gtk.Box = Gtk.Template.Child()
     entry: Gtk.SearchEntry = Gtk.Template.Child()
     list_view: Gtk.ListBox = Gtk.Template.Child()
-    
-    
+
     lang_list: Gio.ListStore = Gio.ListStore(item_type=LanguageItem)
     filter_list: Gtk.FilterListModel
     filter: Gtk.CustomFilter
 
+    _downloaded_handler_id: int | None = None
+    _removed_handler_id: int | None = None
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        
         self.settings = settings
 
-        
-        language_manager.connect("downloaded", self._on_language_downloaded)
-        language_manager.connect("removed", self._on_language_removed)
+        self._downloaded_handler_id = language_manager.connect("downloaded", self._on_language_downloaded)
+        self._removed_handler_id = language_manager.connect("removed", self._on_language_removed)
 
-        
         self._active_language = self.settings.get_string('active-language')
-        
+
         self.bind_model()
 
     def bind_model(self):
@@ -84,10 +83,10 @@ class LanguagePopover(Gtk.Popover):
         self.emit('language-changed', item)
         self.active_language = item.code
         language_manager.active_language = item
-        
-        
+
+
         self.settings.set_string('active-language', item.code)
-        logger.debug(f"Anura: Lingua OCR cambiata in {item.code}")
+        logger.debug(f"Anura: OCR language changed to '{item.code}'")
         self.popdown()
 
     @Gtk.Template.Callback()
@@ -113,7 +112,7 @@ class LanguagePopover(Gtk.Popover):
         self.activate_action('app.preferences')
         self.popdown()
 
-    def populate_model(self):
+    def populate_model(self) -> None:
         self.lang_list.remove_all()
 
         downloaded_languages = language_manager.get_downloaded_languages(force=True)
@@ -122,14 +121,33 @@ class LanguagePopover(Gtk.Popover):
             selected = (self.active_language == code)
             self.lang_list.append(LanguageItem(code=code, title=lang, selected=selected))
 
+        # Validate: emit only if language actually changed
         current_code = self.active_language
         if current_code not in language_manager.get_downloaded_codes():
-             current_code = 'eng'
-        
-        self.emit('language-changed', language_manager.get_language_item(current_code))
+            new_item = language_manager.get_language_item("eng")
+            self.active_language = "eng"
+            self.emit("language-changed", new_item)  # emit only on actual change
 
     def toggle_empty_state(self, is_empty: bool = False) -> None:
         if is_empty:
             self.views.set_visible_child_name('empty_page')
         else:
             self.views.set_visible_child_name('languages_page')
+
+    def do_destroy(self):
+        """Clean up signal handlers to prevent memory leaks."""
+        if self._downloaded_handler_id is not None:
+            try:
+                language_manager.disconnect(self._downloaded_handler_id)
+            except Exception:
+                pass
+            self._downloaded_handler_id = None
+
+        if self._removed_handler_id is not None:
+            try:
+                language_manager.disconnect(self._removed_handler_id)
+            except Exception:
+                pass
+            self._removed_handler_id = None
+
+        super().do_destroy()

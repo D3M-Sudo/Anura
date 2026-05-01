@@ -9,7 +9,7 @@
 import logging
 import threading
 import traceback
-from typing import Callable, Any, Tuple
+from typing import Callable, Tuple
 
 from gi.repository import GLib
 
@@ -42,9 +42,10 @@ class GObjectWorker:
                     GLib.idle_add(cb, result)
             except Exception as e:
                 # Capture full traceback for technical debugging
-                e.traceback = traceback.format_exc()
-                if eb:
-                    GLib.idle_add(eb, e)
+                tb_str = traceback.format_exc()
+                # Wrap exception with traceback info in a safe way
+                # (errorback is always set to _default_errorback if not provided)
+                GLib.idle_add(eb, e, tb_str)
 
         # Use default error handler if none provided
         if errorback is None:
@@ -52,14 +53,16 @@ class GObjectWorker:
 
         thread_data = (command, args, callback, errorback)
         worker_thread = threading.Thread(target=run, args=(thread_data,))
-        
+
         # Set as daemon so it doesn't prevent app exit
         worker_thread.daemon = True
         worker_thread.start()
 
     @staticmethod
-    def _default_errorback(error: Exception):
+    def _default_errorback(error: Exception, traceback_str: str = None):
         """
         Standardized error logging for worker thread failures.
         """
-        logging.error("Anura Worker Error: Unhandled exception in background thread:\n%s", error.traceback)
+        tb = traceback_str or getattr(error, '__traceback__', None)
+        if tb:
+            logging.error("Anura Worker Error: Unhandled exception in background thread:\n%s", tb)

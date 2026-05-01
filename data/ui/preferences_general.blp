@@ -37,4 +37,24 @@ template $PreferencesGeneralPage : Adw.PreferencesPage {
     // mismatch warning if the widget was absent from the .ui file.
     // Since telemetry is fully disabled in Anura, the widget is simply gone.
   }
+
+  Adw.PreferencesGroup {
+    title: _("Text-to-Speech");
+
+    Adw.SpinRow volume_row {
+      title: _("Volume");
+      subtitle: _("TTS playback volume level (0-100%)");
+      adjustment: Adjustment {
+        lower: 0.0;
+        upper: 100.0;
+        step-increment: 10.0;
+      };
+    }
+
+    Adw.ComboRow tts_language_combo {
+      title: _("TTS Language");
+      subtitle: _("Language for speech synthesis. Uses OCR language if not set.");
+      model: StringList {};
+    }
+  }
 }

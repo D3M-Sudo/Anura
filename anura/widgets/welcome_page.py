@@ -3,17 +3,17 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
-from gi.repository import Adw, Gtk, Gdk
+from gi.repository import Adw, Gdk, GLib, Gtk
 from loguru import logger
 
-from anura.config import RESOURCE_PREFIX, APP_ID
+from anura.config import APP_ID, RESOURCE_PREFIX
 from anura.language_manager import language_manager
+from anura.services.settings import settings
 from anura.types.language_item import LanguageItem
 from anura.widgets.language_popover import LanguagePopover
-from anura.services.settings import settings
 
 
-@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/ui/welcome_page.ui")
+@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/welcome_page.ui")
 class WelcomePage(Adw.NavigationPage):
     __gtype_name__ = "WelcomePage"
 
@@ -21,6 +21,8 @@ class WelcomePage(Adw.NavigationPage):
     welcome: Adw.StatusPage = Gtk.Template.Child()
     lang_combo: Gtk.MenuButton = Gtk.Template.Child()
     language_popover: LanguagePopover = Gtk.Template.Child()
+
+    _language_changed_handler_id: int | None = None
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -31,10 +33,10 @@ class WelcomePage(Adw.NavigationPage):
             logo_path = f"{RESOURCE_PREFIX}/icons/{APP_ID}.svg"
             logo = Gdk.Texture.new_from_resource(logo_path)
             self.welcome.set_paintable(logo)
-        except Exception as e:
+        except (GLib.Error, FileNotFoundError, ValueError) as e:
             logger.error(f"Could not load welcome logo from {logo_path}: {e}")
 
-        self.language_popover.connect('language-changed', self._on_language_changed)
+        self._language_changed_handler_id = self.language_popover.connect('language-changed', self._on_language_changed)
 
         current_lang_code = self.settings.get_string("active-language")
         self.lang_combo.set_label(
@@ -44,3 +46,13 @@ class WelcomePage(Adw.NavigationPage):
     def _on_language_changed(self, _: LanguagePopover, language: LanguageItem):
         self.lang_combo.set_label(language.title)
         self.settings.set_string("active-language", language.code)
+
+    def do_destroy(self):
+        """Clean up signal handlers to prevent memory leaks."""
+        if self._language_changed_handler_id is not None:
+            try:
+                self.language_popover.disconnect(self._language_changed_handler_id)
+            except Exception:
+                pass
+            self._language_changed_handler_id = None
+        super().do_destroy()

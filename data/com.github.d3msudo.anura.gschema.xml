@@ -12,9 +12,9 @@
     </key>
 
     <key name="extra-language" type="s">
-      <default>"eng"</default>
-      <summary>Secondary language</summary>
-      <description>Language to detect alongside the active one.</description>
+      <default>""</default>
+      <summary>Secondary OCR language</summary>
+      <description>Optional secondary language for text extraction. Leave empty to disable.</description>
     </key>
     <key name="active-language" type="s">
       <default>"eng"</default>
@@ -31,6 +31,19 @@
       <default>false</default>
       <summary>Auto-open QR links</summary>
       <description>Automatically open links extracted from QR codes.</description>
+    </key>
+
+    <key name="tts-volume" type="d">
+      <default>1.0</default>
+      <range min="0.0" max="1.0"/>
+      <summary>TTS Volume</summary>
+      <description>Volume level for text-to-speech playback (0.0 to 1.0).</description>
+    </key>
+
+    <key name="tts-language" type="s">
+      <default>""</default>
+      <summary>TTS Language</summary>
+      <description>Language code for text-to-speech. Empty means use the active OCR language.</description>
     </key>
   </schema>
 </schemalist>

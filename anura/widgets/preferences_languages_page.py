@@ -4,16 +4,17 @@
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
 from gettext import gettext as _
-from gi.repository import Gtk, Adw, Gio, GObject
+
+from gi.repository import Adw, Gio, Gtk
 
 from anura.config import RESOURCE_PREFIX
 from anura.language_manager import language_manager
+from anura.services.settings import settings
 from anura.types.language_item import LanguageItem
 from anura.widgets.language_row import LanguageRow
-from anura.services.settings import settings
 
 
-@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/ui/preferences_languages.ui")
+@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/preferences_languages.ui")
 class PreferencesLanguagesPage(Adw.PreferencesPage):
     __gtype_name__ = 'PreferencesLanguagesPage'
 
@@ -49,13 +50,19 @@ class PreferencesLanguagesPage(Adw.PreferencesPage):
         self.activate_filter()
         self.check_connection()
 
-    def check_connection(self):
-        """
-        Technical check for network reachability to GitHub for OCR model downloads.
-        """
+    def check_connection(self) -> None:
+        """Asynchronously checks network reachability for OCR model downloads."""
         monitor = Gio.NetworkMonitor.get_default()
-        
-        if not monitor.can_reach(Gio.NetworkAddress.new('raw.githubusercontent.com', 443)):
+        address = Gio.NetworkAddress.new("raw.githubusercontent.com", 443)
+        monitor.can_reach_async(address, None, self._on_connection_checked)
+
+    def _on_connection_checked(self, monitor, result) -> None:
+        try:
+            reachable = monitor.can_reach_finish(result)
+        except Exception:
+            reachable = False
+
+        if not reachable:
             self.banner.set_title(_("OCR models unreachable. Please check your internet connection."))
             self.banner.set_revealed(True)
             return
@@ -138,3 +145,15 @@ class PreferencesLanguagesPage(Adw.PreferencesPage):
     def toggle_empty_state(self, is_empty: bool = False) -> None:
         state = 'empty_state' if is_empty else 'languages_state'
         self.views.set_visible_child_name(state)
+
+    def do_destroy(self):
+        """Clean up signal handlers to prevent memory leaks."""
+        try:
+            language_manager.disconnect_by_func(self.on_language_added)
+        except TypeError:
+            pass
+        try:
+            language_manager.disconnect_by_func(self.on_language_removed)
+        except TypeError:
+            pass
+        super().do_destroy()

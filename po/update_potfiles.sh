@@ -36,12 +36,12 @@ find ../data/ui -iname "*.blp" | xargs xgettext --package-name=$APPNAME --packag
 # Desktop Entry Files
 find ../data/ -iname "*.desktop.in" | xargs xgettext --package-name=$APPNAME --package-version=$version --from-code=UTF-8 --output=$APPNAME-desktop.pot -L Desktop
 
-# AppData/AppStream metadata
-find ../data/ -iname "*.appdata.xml.in" | xargs xgettext --no-wrap --package-name=$APPNAME --package-version=$version --from-code=UTF-8 --output=$APPNAME-appdata.pot
+# AppStream metainfo (replaces deprecated .appdata.xml.in naming)
+find ../data/ -iname "*.metainfo.xml.in" | xargs xgettext --no-wrap --package-name=$APPNAME --package-version=$version --from-code=UTF-8 --output=$APPNAME-metainfo.pot
 
 # 4. Concatenation Phase
 # Combine all results into the official project template (APPID.pot)
-msgcat --use-first $APPNAME-python.pot $APPNAME-blueprint.pot $APPNAME-desktop.pot $APPNAME-appdata.pot > $APPID.pot
+msgcat --use-first $APPNAME-python.pot $APPNAME-blueprint.pot $APPNAME-desktop.pot $APPNAME-metainfo.pot > $APPID.pot
 
 # 5. POTFILES Generation
 # Update POTFILES for Meson/Intltool build compliance

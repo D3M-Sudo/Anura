@@ -17,8 +17,8 @@ if desktop_utils.found()
 endif
 
 appstream_file = i18n.merge_file(
-  input: app_id + '.appdata.xml.in',
-  output: app_id + '.appdata.xml',
+  input: app_id + '.metainfo.xml.in',
+  output: app_id + '.metainfo.xml',
   po_dir: '../po',
   install: true,
   install_dir: join_paths(get_option('datadir'), 'metainfo')
@@ -42,27 +42,51 @@ if compile_schemas.found()
   )
 endif
 
-# Rimosso install_data di tessdata qui per evitare fallimenti se il file non è nel repo git.
-# La gestione del download e dell'installazione dei dati Tesseract deve avvenire nel manifesto Flatpak.
+# tessdata install_data removed here to avoid build failures when the file is not in the git repo.
+# Tesseract model download and installation is handled by the Flatpak manifest instead.
 
 subdir('icons')
 
+blueprint_compiler = find_program('blueprint-compiler')
+
+blueprint_files = [
+  'ui/preferences_dialog.blp',
+  'ui/preferences_general.blp',
+  'ui/preferences_languages.blp',
+  'ui/shortcuts.blp',
+  'ui/window.blp',
+  'ui/language_popover.blp',
+  'ui/language_popover_row.blp',
+  'ui/language_row.blp',
+  'ui/welcome_page.blp',
+  'ui/extracted_page.blp',
+  'ui/share_row.blp',
+]
+
+# Generate each blueprint file individually since blueprint-compiler
+# outputs to a subdirectory matching the input structure
+ui_outputs = []
+foreach blp : blueprint_files
+  ui_name = blp.replace('.blp', '.ui')
+  ui_file = custom_target(ui_name.underscorify(),
+    input: blp,
+    output: ui_name.split('/')[-1],
+    command: [
+      blueprint_compiler,
+      'compile',
+      '--output', '@OUTPUT@',
+      '@INPUT@'
+    ],
+  )
+  ui_outputs += ui_file
+endforeach
+
+# Create a dummy target that depends on all UI files for the resource compilation
 blueprints = custom_target('blueprints',
-  input: files(
-    'ui/preferences_dialog.blp',
-    'ui/preferences_general.blp',
-    'ui/preferences_languages.blp',
-    'ui/shortcuts.blp',
-    'ui/window.blp',
-    'ui/language_popover.blp',
-    'ui/language_popover_row.blp',
-    'ui/language_row.blp',
-    'ui/welcome_page.blp',
-    'ui/extracted_page.blp',
-    'ui/share_row.blp',
-  ),
-  output: '.',
-  command: [find_program('blueprint-compiler'), 'batch-compile', '@OUTPUT@', meson.current_source_dir() / 'ui', '@INPUT@'],
+  input: ui_outputs,
+  output: 'blueprints.stamp',
+  command: ['touch', '@OUTPUT@'],
+  depends: ui_outputs,
 )
 
 app_resources = gnome.compile_resources(app_id,

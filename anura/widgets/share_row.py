@@ -5,12 +5,12 @@
 
 from gettext import gettext as _
 
-from gi.repository import Gtk, GLib
+from gi.repository import GLib, Gtk
 
 from anura.config import RESOURCE_PREFIX
 
 
-@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/ui/share_row.ui")
+@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/share_row.ui")
 class ShareRow(Gtk.ListBoxRow):
     __gtype_name__ = "ShareRow"
 
@@ -33,3 +33,4 @@ class ShareRow(Gtk.ListBoxRow):
         self.activate_action(
             "window.share", GLib.Variant.new_string(self.provider_name)
         )
+

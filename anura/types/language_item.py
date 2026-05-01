@@ -21,7 +21,7 @@ class LanguageItem(GObject.GObject):
     def __init__(self, code: str, title: str, selected: bool = False):
         """
         Initialize a new LanguageItem.
-        
+
         Args:
             code (str): ISO 639-2/T language code (e.g., 'eng', 'ita').
             title (str): Human-readable language name.

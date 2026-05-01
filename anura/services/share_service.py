@@ -6,7 +6,7 @@
 from typing import List
 from urllib.parse import quote
 
-from gi.repository import GObject, Gtk
+from gi.repository import GLib, GObject, Gtk
 from loguru import logger
 
 
@@ -19,10 +19,9 @@ class ShareService(GObject.GObject):
 
     __gsignals__ = {"share": (GObject.SIGNAL_RUN_LAST, None, (bool,))}
 
-    launcher: Gtk.UriLauncher = Gtk.UriLauncher()
-
     def __init__(self):
         super().__init__()
+        self.launcher = Gtk.UriLauncher()
 
     @staticmethod
     def providers() -> List[str]:
@@ -35,8 +34,11 @@ class ShareService(GObject.GObject):
             "reddit",
             "telegram",
             "x",
-            "instagram",
+            # NOTE: "instagram" removed — no URL prefill API available
         ]
+
+    # Maximum URL length for safe sharing (most browsers support ~2000, be conservative)
+    MAX_URL_LENGTH = 2000
 
     def share(self, provider: str, text: str):
         """
@@ -48,13 +50,20 @@ class ShareService(GObject.GObject):
 
         text = text.strip()
         handler = getattr(self, f"get_link_{provider}", None)
-        
+
         if handler:
             try:
-                share_link: str = handler(quote(text))
+                # Encode the text content, but preserve URL structure characters
+                # The handler functions are responsible for proper URL construction
+                encoded_text = quote(text, safe='')
+                share_link: str = handler(encoded_text)
+                # Validate URL length before attempting to launch
+                if len(share_link) > self.MAX_URL_LENGTH:
+                    logger.warning(f"Anura Share: URL too long ({len(share_link)} chars, max {self.MAX_URL_LENGTH})")
+                    return
                 self.launcher.set_uri(share_link)
                 self.launcher.launch(parent=None, cancellable=None, callback=self._on_share)
-            except Exception as e:
+            except (ValueError, TypeError, AttributeError) as e:
                 logger.error(f"Anura Share Error: Failed to share via {provider}. Reason: {e}")
 
     def _on_share(self, _, result):
@@ -63,14 +72,14 @@ class ShareService(GObject.GObject):
         """
         try:
             success = self.launcher.launch_finish(result)
-            self.emit("share", success)
-        except Exception as e:
+            GLib.idle_add(self.emit, "share", success)
+        except (GLib.Error, RuntimeError) as e:
             logger.warning(f"Anura Share Warning: URI launch failed: {e}")
-            self.emit("share", False)
+            GLib.idle_add(self.emit, "share", False)
 
     @staticmethod
     def get_link_telegram(text: str):
-        return f"tg://msg_url?url={text}"
+        return f"https://t.me/share/url?text={text}"
 
     @staticmethod
     def get_link_reddit(text: str):
@@ -87,13 +96,11 @@ class ShareService(GObject.GObject):
         """
         return f"https://x.com/intent/tweet?text={text}"
 
-    @staticmethod
-    def get_link_instagram(text: str):
-        """
-        Instagram doesn't support text-prefill via URL. 
-        Opening the direct web-create page as a fallback.
-        """
-        return "https://www.instagram.com/reels/create/"
+    # NOTE: get_link_instagram removed — Instagram has no URL prefill API
+    # If Instagram adds sharing URL support in the future, re-enable:
+    # @staticmethod
+    # def get_link_instagram(text: str):
+    #     return None  # Not supported
 
     @staticmethod
     def get_link_email(text: str):

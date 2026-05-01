@@ -1,7 +1,8 @@
 #!/bin/bash
 #
-# Root utility script for Anura translation management.
-# Refined for d3msudo fork and Linux Mint stability.
+# DEPRECATED — use po/update_potfiles.sh instead. That script regenerates anura.pot,
+# POTFILES (for Meson i18n.gettext), and matches the extraction split Weblate expects.
+#
 
 function generate_po()
 {

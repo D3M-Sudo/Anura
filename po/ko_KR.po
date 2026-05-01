@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: anura 1.4.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-12-25 11:43+0300\n"
+"POT-Creation-Date: 2026-04-29 02:16+0200\n"
 "PO-Revision-Date: 2023-10-29 23:00+0900\n"
 "Last-Translator: Seong Jin Kim <mirusu400@naver.com>\n"
 "Language-Team: \n"
@@ -18,130 +18,671 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Poedit 3.1.1\n"
 
-#: ../data/com.github.d3msudo.anura.appdata.xml.in:6
-#: ../data/com.github.d3msudo.anura.desktop.in:3
-msgid "anura"
+#: ../anura/main.py:33
+msgid "Extract directly into the clipboard"
+msgstr "클립보드로 바로 추출"
+
+#: ../anura/main.py:94
+msgid "Technical and rigorous OCR tool optimized for Linux."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.appdata.xml.in:7
-msgid "Extract text from images"
-msgstr "이미지에서 텍스트 추출"
+#: ../anura/main.py:122
+msgid "No text found. Try to grab another region."
+msgstr "텍스트를 발견하지 못했습니다. 다른 영역을 선택해보세요."
 
-#: ../data/com.github.d3msudo.anura.appdata.xml.in:9
-msgid ""
-"Extract text from images, websites, videos, and QR codes by taking a picture "
-"of the source."
-msgstr "사진을 찍어 이미지, 웹사이트, 동영상, QR 코드에서 텍스트 추출하세요."
-
-#: ../data/com.github.d3msudo.anura.desktop.in:4
-msgid "Text extraction tool"
-msgstr "텍스트 추출 도구"
-
-#: ../data/com.github.d3msudo.anura.desktop.in:5
-msgid "Extract text from any image, video or web page"
-msgstr "이미지, 비디오, 웹 페이지에서 텍스트 추출"
-
-#: ../data/com.github.d3msudo.anura.desktop.in:12
-msgid "OCR;Text;Extraction;"
-msgstr "OCR;텍스트;추출;"
-
-#: ../data/com.github.d3msudo.anura.desktop.in:18
-msgid "Extract Text to the Clipboard"
+#: ../anura/main.py:131
+#, fuzzy
+msgid "Text extracted and copied to clipboard."
 msgstr "텍스트를 클립보드로 추출"
 
-#: ../data/ui/extracted_page.blp:25
-msgid "Take a screenshot"
-msgstr "스크린샷 촬영"
+#: ../anura/window.py:83
+msgid "Text copied to clipboard"
+msgstr "텍스트 클립보드에 복사됨"
 
-#: ../data/ui/extracted_page.blp:33
-msgctxt "Extracted screen"
-msgid "Copy extracted text to clipboard"
-msgstr "추출된 텍스트를 클립보드에 복사"
+#: ../anura/window.py:89
+msgid "URL opened automatically"
+msgstr ""
 
-#: ../data/ui/extracted_page.blp:40
-msgctxt "Extracted screen"
-msgid "Listen to text"
-msgstr "텍스트 듣기"
+#: ../anura/window.py:106
+#, fuzzy
+msgid "Choose an image for extraction"
+msgstr "이미지를 열어 텍스트 추출"
 
-#: ../data/ui/extracted_page.blp:47
-msgctxt "Extracted screen"
-msgid "Cancel listening to text"
-msgstr "텍스트 듣기 취소"
+#: ../anura/window.py:109
+#, fuzzy
+msgid "Images"
+msgstr "이미지 열기"
 
-#: ../data/ui/extracted_page.blp:60
-msgctxt "Extracted screen"
+#: ../anura/window.py:140
+msgid "Unsupported file format."
+msgstr ""
+
+#: ../anura/window.py:179
+msgid "Text contains a link"
+msgstr ""
+
+#: ../anura/window.py:179
+msgid "Open"
+msgstr "열기"
+
+#: ../anura/widgets/preferences_languages_page.py:59
+msgid "OCR models unreachable. Please check your internet connection."
+msgstr ""
+
+#: ../anura/widgets/preferences_languages_page.py:64
+msgid "Metered connection detected. Model downloads may incur data costs."
+msgstr ""
+
+#: ../anura/widgets/share_row.py:27
+#, fuzzy, python-brace-format
+msgid "Share via {0}"
+msgstr "포켓을 통해 공유"
+
+#: ../anura/services/clipboard_service.py:55
+msgid "No image in clipboard"
+msgstr "클립보드에 이미지가 없습니다"
+
+#: ../anura/services/screenshot_service.py:52
+msgid "Can't take a screenshot."
+msgstr "스크린샷을 촬영할 수 없습니다."
+
+#: ../anura/services/screenshot_service.py:101
+msgid "Failed to decode data."
+msgstr ""
+
+#: ../anura/services/screenshot_service.py:115
+msgid "No text found."
+msgstr ""
+
+#: ../anura/services/screenshot_service.py:120
+msgid "Cancelled"
+msgstr ""
+
+#: ../anura/language_manager.py:35 ../anura/language_manager.py:54
+msgid "English"
+msgstr "영어"
+
+#: ../anura/language_manager.py:46
+msgid "Afrikaans"
+msgstr "아프리카어"
+
+#: ../anura/language_manager.py:46
+msgid "Amharic"
+msgstr "암하라어"
+
+#: ../anura/language_manager.py:46
+msgid "Arabic"
+msgstr "아랍어"
+
+#: ../anura/language_manager.py:47
+msgid "Assamese"
+msgstr "아삼어"
+
+#: ../anura/language_manager.py:47
+msgid "Azerbaijani"
+msgstr "아제르바이잔어"
+
+#: ../anura/language_manager.py:47
+#, fuzzy
+msgid "Azerbaijani - Cyrillic"
+msgstr "아제르바이잔어 - 키릴 문자"
+
+#: ../anura/language_manager.py:48
+msgid "Belarusian"
+msgstr "벨로루시어"
+
+#: ../anura/language_manager.py:48
+msgid "Bengali"
+msgstr "벵골어"
+
+#: ../anura/language_manager.py:48
+msgid "Tibetan"
+msgstr "티베트어"
+
+#: ../anura/language_manager.py:49
+msgid "Bosnian"
+msgstr "보스니아어"
+
+#: ../anura/language_manager.py:49
+msgid "Breton"
+msgstr "브르타뉴어"
+
+#: ../anura/language_manager.py:49
+msgid "Bulgarian"
+msgstr "불가리아어"
+
+#: ../anura/language_manager.py:50
+msgid "Catalan"
+msgstr ""
+
+#: ../anura/language_manager.py:50
+msgid "Cebuano"
+msgstr "세부아노어"
+
+#: ../anura/language_manager.py:50
+msgid "Czech"
+msgstr "체코어"
+
+#: ../anura/language_manager.py:51
+msgid "Chinese - Simplified"
+msgstr "중국어 - 간체자"
+
+#: ../anura/language_manager.py:51
+msgid "Chinese - Traditional"
+msgstr "중국어 - 본체자"
+
+#: ../anura/language_manager.py:52
+msgid "Cherokee"
+msgstr "체로키어"
+
+#: ../anura/language_manager.py:52
+msgid "Corsican"
+msgstr "코르시카어"
+
+#: ../anura/language_manager.py:52
+msgid "Welsh"
+msgstr "웨일스어"
+
+#: ../anura/language_manager.py:53
+msgid "Danish"
+msgstr "덴마크어"
+
+#: ../anura/language_manager.py:53
+msgid "German"
+msgstr "독일어"
+
+#: ../anura/language_manager.py:53
+msgid "Dzongkha"
+msgstr "종카어"
+
+#: ../anura/language_manager.py:54
+msgid "Greek"
+msgstr ""
+
+#: ../anura/language_manager.py:54
+#, fuzzy
+msgid "English, Middle"
+msgstr "중세 영어 (1100-1500)"
+
+#: ../anura/language_manager.py:55
+msgid "Esperanto"
+msgstr "에스페란토어"
+
+#: ../anura/language_manager.py:55
+#, fuzzy
+msgid "Math / Equation Detection"
+msgstr "수학 / 방정식 감지 모듈"
+
+#: ../anura/language_manager.py:56
+msgid "Estonian"
+msgstr "에스토니아어"
+
+#: ../anura/language_manager.py:56
+msgid "Basque"
+msgstr "바스크어"
+
+#: ../anura/language_manager.py:56
+msgid "Faroese"
+msgstr "페로어"
+
+#: ../anura/language_manager.py:57
+msgid "Persian"
+msgstr "페르시아어"
+
+#: ../anura/language_manager.py:57
+msgid "Filipino"
+msgstr ""
+
+#: ../anura/language_manager.py:57
+msgid "Finnish"
+msgstr "핀란드어"
+
+#: ../anura/language_manager.py:58
+msgid "French"
+msgstr "프랑스어"
+
+#: ../anura/language_manager.py:58
+msgid "German - Fraktur"
+msgstr "독일어 - 로마자"
+
+#: ../anura/language_manager.py:58
+#, fuzzy
+msgid "French, Middle"
+msgstr "중세 프랑스어 (ca.1400-1600)"
+
+#: ../anura/language_manager.py:59
+msgid "Western Frisian"
+msgstr "서브 프리지아어"
+
+#: ../anura/language_manager.py:59
+msgid "Scottish Gaelic"
+msgstr "스코틀랜드 게일어"
+
+#: ../anura/language_manager.py:59
+msgid "Irish"
+msgstr "아일랜드어"
+
+#: ../anura/language_manager.py:60
+msgid "Galician"
+msgstr "갈라시아어"
+
+#: ../anura/language_manager.py:60
+msgid "Greek, Ancient"
+msgstr ""
+
+#: ../anura/language_manager.py:60
+msgid "Gujarati"
+msgstr "구자라트어"
+
+#: ../anura/language_manager.py:61
+#, fuzzy
+msgid "Haitian"
+msgstr "크로아티아어"
+
+#: ../anura/language_manager.py:61
+msgid "Hebrew"
+msgstr "히브리어"
+
+#: ../anura/language_manager.py:61
+msgid "Hindi"
+msgstr "힌디어"
+
+#: ../anura/language_manager.py:62
+msgid "Croatian"
+msgstr "크로아티아어"
+
+#: ../anura/language_manager.py:62
+msgid "Hungarian"
+msgstr "헝가리어"
+
+#: ../anura/language_manager.py:62
+msgid "Armenian"
+msgstr "아르메니아어"
+
+#: ../anura/language_manager.py:63
+msgid "Inuktitut"
+msgstr "이누크티투트어"
+
+#: ../anura/language_manager.py:63
+msgid "Indonesian"
+msgstr "인도네시아어"
+
+#: ../anura/language_manager.py:63
+msgid "Icelandic"
+msgstr "아이슬란드어"
+
+#: ../anura/language_manager.py:64
+msgid "Italian"
+msgstr "이탈리아어"
+
+#: ../anura/language_manager.py:64
+msgid "Italian - Old"
+msgstr "구 이탈리아어"
+
+#: ../anura/language_manager.py:64
+msgid "Javanese"
+msgstr "자바어"
+
+#: ../anura/language_manager.py:65
+msgid "Japanese"
+msgstr "일본어"
+
+#: ../anura/language_manager.py:65
+msgid "Japanese (vertical)"
+msgstr "일본어 (세로)"
+
+#: ../anura/language_manager.py:66
+msgid "Kannada"
+msgstr "칸나다어"
+
+#: ../anura/language_manager.py:66
+msgid "Georgian"
+msgstr "조지아어"
+
+#: ../anura/language_manager.py:66
+msgid "Georgian - Old"
+msgstr "구 조지아어"
+
+#: ../anura/language_manager.py:67
+msgid "Kazakh"
+msgstr "카자흐스탄어"
+
+#: ../anura/language_manager.py:67
+msgid "Central Khmer"
+msgstr "중앙 크메르어"
+
+#: ../anura/language_manager.py:67
+#, fuzzy
+msgid "Kirghiz"
+msgstr "키르기스어"
+
+#: ../anura/language_manager.py:68
+msgid "Kurmanji"
+msgstr ""
+
+#: ../anura/language_manager.py:68
+msgid "Korean"
+msgstr "한국어"
+
+#: ../anura/language_manager.py:68
+msgid "Korean (vertical)"
+msgstr "한국어 (세로)"
+
+#: ../anura/language_manager.py:69
+msgid "Lao"
+msgstr "라오스어"
+
+#: ../anura/language_manager.py:69
+msgid "Latin"
+msgstr "라틴어"
+
+#: ../anura/language_manager.py:69
+msgid "Latvian"
+msgstr "라트비아어"
+
+#: ../anura/language_manager.py:70
+msgid "Lithuanian"
+msgstr "리투아니아어"
+
+#: ../anura/language_manager.py:70
+msgid "Luxembourgish"
+msgstr "룩셈부르크어"
+
+#: ../anura/language_manager.py:70
+msgid "Malayalam"
+msgstr "말라얄람어"
+
+#: ../anura/language_manager.py:71
+msgid "Marathi"
+msgstr "마라티어"
+
+#: ../anura/language_manager.py:71
+msgid "Macedonian"
+msgstr "마케도니아어"
+
+#: ../anura/language_manager.py:71
+msgid "Maltese"
+msgstr "몰타어"
+
+#: ../anura/language_manager.py:72
+msgid "Mongolian"
+msgstr "몽골어"
+
+#: ../anura/language_manager.py:72
+msgid "Maori"
+msgstr "마오리어"
+
+#: ../anura/language_manager.py:72
+msgid "Malay"
+msgstr "말레이어"
+
+#: ../anura/language_manager.py:73
+msgid "Burmese"
+msgstr "버마어"
+
+#: ../anura/language_manager.py:73
+msgid "Nepali"
+msgstr "네팔어"
+
+#: ../anura/language_manager.py:73
+msgid "Dutch"
+msgstr ""
+
+#: ../anura/language_manager.py:74
+msgid "Norwegian"
+msgstr "노르웨이어"
+
+#: ../anura/language_manager.py:74
+msgid "Occitan"
+msgstr ""
+
+#: ../anura/language_manager.py:74
+msgid "Oriya"
+msgstr "오리야어"
+
+#: ../anura/language_manager.py:75
+msgid "OSD Module"
+msgstr ""
+
+#: ../anura/language_manager.py:75
+#, fuzzy
+msgid "Panjabi"
+msgstr "판자비어; 펀자브어"
+
+#: ../anura/language_manager.py:75
+msgid "Polish"
+msgstr "폴란드어"
+
+#: ../anura/language_manager.py:76
+msgid "Portuguese"
+msgstr "포르투갈어"
+
+#: ../anura/language_manager.py:76
+#, fuzzy
+msgid "Pushto"
+msgstr "파슈토어"
+
+#: ../anura/language_manager.py:76
+msgid "Quechua"
+msgstr "케추아어"
+
+#: ../anura/language_manager.py:77
+#, fuzzy
+msgid "Romanian"
+msgstr "보스니아어"
+
+#: ../anura/language_manager.py:77
+msgid "Russian"
+msgstr "러시아어"
+
+#: ../anura/language_manager.py:77
+msgid "Sanskrit"
+msgstr "산스크리트어"
+
+#: ../anura/language_manager.py:78
+msgid "Sinhala"
+msgstr ""
+
+#: ../anura/language_manager.py:78
+msgid "Slovak"
+msgstr "슬로바키아어"
+
+#: ../anura/language_manager.py:78
+msgid "Slovenian"
+msgstr "슬로베니아어"
+
+#: ../anura/language_manager.py:79
+msgid "Sindhi"
+msgstr "신디어"
+
+#: ../anura/language_manager.py:79
+#, fuzzy
+msgid "Spanish"
+msgstr "덴마크어"
+
+#: ../anura/language_manager.py:79
+#, fuzzy
+msgid "Spanish - Old"
+msgstr "구 카스티아 스페인어"
+
+#: ../anura/language_manager.py:80
+msgid "Albanian"
+msgstr "알바니아어"
+
+#: ../anura/language_manager.py:80
+msgid "Serbian"
+msgstr "세르비아어"
+
+#: ../anura/language_manager.py:80
+msgid "Serbian - Latin"
+msgstr "세르비아어 - 라틴어"
+
+#: ../anura/language_manager.py:81
+msgid "Sundanese"
+msgstr "순다어"
+
+#: ../anura/language_manager.py:81
+msgid "Swahili"
+msgstr "스와힐리어"
+
+#: ../anura/language_manager.py:81
+msgid "Swedish"
+msgstr "스웨덴어"
+
+#: ../anura/language_manager.py:82
+msgid "Syriac"
+msgstr "시리아어"
+
+#: ../anura/language_manager.py:82
+msgid "Tamil"
+msgstr "타밀어"
+
+#: ../anura/language_manager.py:82
+msgid "Tatar"
+msgstr "타타르어"
+
+#: ../anura/language_manager.py:83
+msgid "Telugu"
+msgstr "텔루구어"
+
+#: ../anura/language_manager.py:83
+msgid "Tajik"
+msgstr "타지크어"
+
+#: ../anura/language_manager.py:83
+msgid "Thai"
+msgstr "태국어"
+
+#: ../anura/language_manager.py:84
+msgid "Tigrinya"
+msgstr "티그리냐어"
+
+#: ../anura/language_manager.py:84
+msgid "Tonga"
+msgstr "통가어"
+
+#: ../anura/language_manager.py:84
+msgid "Turkish"
+msgstr "터키어"
+
+#: ../anura/language_manager.py:85
+#, fuzzy
+msgid "Uighur"
+msgstr "위구르어"
+
+#: ../anura/language_manager.py:85
+msgid "Ukrainian"
+msgstr "우크라이나어"
+
+#: ../anura/language_manager.py:85
+msgid "Urdu"
+msgstr "우르두어"
+
+#: ../anura/language_manager.py:86
+msgid "Uzbek"
+msgstr "우즈베크어"
+
+#: ../anura/language_manager.py:86
+#, fuzzy
+msgid "Uzbek - Cyrillic"
+msgstr "우즈베크어 - 키릴 문자"
+
+#: ../anura/language_manager.py:86
+msgid "Vietnamese"
+msgstr "베트남어"
+
+#: ../anura/language_manager.py:87
+msgid "Yiddish"
+msgstr "이디시어"
+
+#: ../anura/language_manager.py:87
+msgid "Yoruba"
+msgstr "요루바어"
+
+#: ../data/ui/welcome_page.blp:5 ../data/ui/window.blp:20
+msgid "Welcome"
+msgstr ""
+
+#: ../data/ui/welcome_page.blp:19 ../data/ui/extracted_page.blp:17
+msgid "Language"
+msgstr "언어"
+
+#: ../data/ui/welcome_page.blp:20 ../data/ui/extracted_page.blp:18
+msgid "Select language to extract"
+msgstr "추출할 언어 선택"
+
+#: ../data/ui/welcome_page.blp:33
 msgid "Open menu"
 msgstr "메뉴 열기"
 
-#: ../data/ui/extracted_page.blp:67
-msgctxt "Extracted screen"
-msgid "Share To"
-msgstr "공유하기"
+#: ../data/ui/welcome_page.blp:39
+msgid "Extract text from anywhere"
+msgstr "어디서든지 텍스트 추출"
 
-#: ../data/ui/extracted_page.blp:104 ../data/ui/welcome_page.blp:127
+#: ../data/ui/welcome_page.blp:58
+msgid "_Take a Screenshot"
+msgstr "_스크린샷 촬영"
+
+#: ../data/ui/welcome_page.blp:74
+msgid "_Open Image"
+msgstr "_이미지 열기"
+
+#: ../data/ui/welcome_page.blp:90
+#, fuzzy
+msgid "Paste Image"
+msgstr "이미지 열기"
+
+#: ../data/ui/welcome_page.blp:98
+msgid "...or drop image here"
+msgstr ""
+
+#: ../data/ui/welcome_page.blp:110 ../data/ui/extracted_page.blp:104 ../data/ui/preferences_dialog.blp:5
 msgid "Preferences"
 msgstr "환경설정"
 
-#: ../data/ui/extracted_page.blp:111 ../data/ui/welcome_page.blp:134
+#: ../data/ui/welcome_page.blp:117 ../data/ui/extracted_page.blp:111
 msgid "Keyboard Shortcuts"
 msgstr "키보드 단축키"
 
-#: ../data/ui/extracted_page.blp:116 ../data/ui/welcome_page.blp:139
-msgid "About anura"
+#: ../data/ui/welcome_page.blp:122
+#, fuzzy
+msgid "About Anura"
 msgstr "anura에 관하여"
 
-#: ../data/ui/extracted_page.blp:124 ../data/ui/welcome_page.blp:154
-msgid "Open image"
-msgstr "이미지 열기"
+#: ../data/ui/welcome_page.blp:129
+msgid "⭐ Star on GitHub"
+msgstr ""
 
-#: ../data/ui/extracted_page.blp:125 ../data/ui/welcome_page.blp:155
-msgid "Paste from clipboard"
-msgstr "클립보드에서 붙여넣기"
-
-#: ../data/ui/language_dialog.blp:14
-msgid "Available Languages"
-msgstr "가능한 언어"
-
-#: ../data/ui/language_popover.blp:21 ../data/ui/preferences_languages.blp:19
+#: ../data/ui/language_popover.blp:20 ../data/ui/preferences_languages.blp:19
 #, fuzzy
-#| msgid "Search language"
 msgid "Search Languages…"
 msgstr "언어 검색"
 
-#: ../data/ui/language_popover.blp:70 ../data/ui/preferences_languages.blp:101
+#: ../data/ui/language_popover.blp:69 ../data/ui/preferences_languages.blp:103
 msgid "No Results Found"
 msgstr ""
 
-#: ../data/ui/language_popover.blp:77
+#: ../data/ui/language_popover.blp:76
 #, fuzzy
-#| msgid "Language"
 msgid "Add Language"
 msgstr "언어"
 
-#: ../data/ui/language_row.blp:21
-#, fuzzy
-#| msgid "Installed languages"
-msgctxt "Preferences Language Row"
-msgid "Install language"
-msgstr "설치된 언어들"
-
-#: ../data/ui/language_row.blp:30
-#, fuzzy
-#| msgid "_Second language"
-msgctxt "Preferences Language Row"
-msgid "Remove language"
-msgstr "_두번째 언어"
+#: ../data/ui/window.blp:26
+msgid "Extracted Text"
+msgstr ""
 
 #: ../data/ui/preferences_general.blp:5
 msgid "_General"
 msgstr "_일반"
 
 #: ../data/ui/preferences_general.blp:10
-msgid "Text Extracting"
+#, fuzzy
+msgid "Text Extraction"
 msgstr "텍스트 추출"
 
 #: ../data/ui/preferences_general.blp:13
-msgid "_Second language"
+#, fuzzy
+msgid "_Secondary Language"
 msgstr "_두번째 언어"
 
 #: ../data/ui/preferences_general.blp:15
@@ -153,27 +694,47 @@ msgid "Behavior"
 msgstr "행동"
 
 #: ../data/ui/preferences_general.blp:23
-msgid "_Copy to clipboard"
+#, fuzzy
+msgid "_Copy to Clipboard"
 msgstr "_클립보드에 복사"
 
 #: ../data/ui/preferences_general.blp:25
-msgid "Automatically copy the extracted text to clipboard"
+#, fuzzy
+msgid "Automatically copy the extracted text after detection"
 msgstr "추출된 텍스트를 클립보드에 자동으로 복사합니다"
 
-#: ../data/ui/preferences_general.blp:34
-msgid "_Open QR-code links"
+#: ../data/ui/preferences_general.blp:29
+#, fuzzy
+msgid "_Open QR-code Links"
 msgstr "_QR코드 링크 열기"
 
-#: ../data/ui/preferences_general.blp:36
-msgid "Automatically open links from QR-codes"
+#: ../data/ui/preferences_general.blp:31
+#, fuzzy
+msgid "Automatically open links extracted from QR codes"
 msgstr "자동으로 QR코드에서 링크를 엽니다"
+
+#: ../data/ui/extracted_page.blp:25
+msgid "Take a screenshot"
+msgstr "스크린샷 촬영"
+
+#: ../data/ui/extracted_page.blp:116
+msgid "About anura"
+msgstr "anura에 관하여"
+
+#: ../data/ui/extracted_page.blp:124
+msgid "Open image"
+msgstr "이미지 열기"
+
+#: ../data/ui/extracted_page.blp:125
+msgid "Paste from clipboard"
+msgstr "클립보드에서 붙여넣기"
 
 #: ../data/ui/preferences_languages.blp:6
 msgid "_Languages"
 msgstr "_언어"
 
 #: ../data/ui/preferences_languages.blp:24
-msgid "Models location unreachable. Check your internet connection"
+msgid "OCR models unreachable. Check your internet connection."
 msgstr ""
 
 #: ../data/ui/preferences_languages.blp:26
@@ -181,703 +742,321 @@ msgid "Retry"
 msgstr ""
 
 #: ../data/ui/preferences_languages.blp:42
-msgid "Installed languages"
+#, fuzzy
+msgid "Installed Languages"
 msgstr "설치된 언어들"
 
-#: ../data/ui/share_row.blp:14
-msgid "Share via Pocket"
-msgstr "포켓을 통해 공유"
-
-#: ../data/ui/share_row.blp:22
-msgid "Pocket"
-msgstr "포켓"
-
-#: ../data/ui/shortcuts.blp:5
+#: ../data/ui/preferences_languages.blp:51
 #, fuzzy
-#| msgid "Keyboard Shortcuts"
-msgctxt "shortcut window"
-msgid "Shortcuts"
-msgstr "키보드 단축키"
-
-#: ../data/ui/shortcuts.blp:12
-#, fuzzy
-#| msgid "_General"
-msgctxt "shortcut window"
-msgid "General"
-msgstr "_일반"
-
-#: ../data/ui/shortcuts.blp:16
-#, fuzzy
-#| msgid "Open image"
-msgctxt "shortcut window"
-msgid "Open image"
-msgstr "이미지 열기"
-
-#: ../data/ui/shortcuts.blp:21
-#, fuzzy
-#| msgid "Take a screenshot"
-msgctxt "shortcut window"
-msgid "Take screenshot and extract text"
-msgstr "스크린샷 촬영"
-
-#: ../data/ui/shortcuts.blp:26
-#, fuzzy
-#| msgid "Extract Text to the Clipboard"
-msgctxt "shortcut window"
-msgid "Extract text and copy it to clipboard"
-msgstr "텍스트를 클립보드로 추출"
-
-#: ../data/ui/shortcuts.blp:27
-msgctxt "shortcut window"
-msgid "May not work properly on wayland"
-msgstr ""
-
-#: ../data/ui/shortcuts.blp:32
-#, fuzzy
-#| msgctxt "Extracted screen"
-#| msgid "Copy extracted text to clipboard"
-msgctxt "shortcut window"
-msgid "Copy extracted text to clipboard"
-msgstr "추출된 텍스트를 클립보드에 복사"
-
-#: ../data/ui/shortcuts.blp:37
-msgctxt "shortcut window"
-msgid "Application"
-msgstr ""
-
-#: ../data/ui/shortcuts.blp:41
-#, fuzzy
-#| msgid "Preferences"
-msgctxt "shortcut window"
-msgid "Preferences"
-msgstr "환경설정"
-
-#: ../data/ui/shortcuts.blp:46
-msgctxt "shortcut window"
-msgid "Quit"
-msgstr ""
-
-#: ../data/ui/shortcuts.blp:51
-msgctxt "shortcut window"
-msgid "Help"
-msgstr ""
-
-#: ../data/ui/shortcuts.blp:55
-#, fuzzy
-#| msgid "Keyboard Shortcuts"
-msgctxt "shortcut window"
-msgid "Display Shortcuts"
-msgstr "키보드 단축키"
-
-#: ../data/ui/welcome_page.blp:12 ../data/ui/welcome_page.blp:49
-msgid "Extract text from anywhere"
-msgstr "어디서든지 텍스트 추출"
-
-#: ../data/ui/welcome_page.blp:21
-msgid "Language"
+msgid "Add language"
 msgstr "언어"
 
-#: ../data/ui/welcome_page.blp:22
-msgid "Select language to extract"
-msgstr "추출할 언어 선택"
+#: ../data/com.github.d3msudo.anura.desktop.in:3
+#, fuzzy
+msgid "Anura"
+msgstr "anura에 관하여"
 
-#: ../data/ui/welcome_page.blp:43
-msgid "Open menu"
-msgstr "메뉴 열기"
+#: ../data/com.github.d3msudo.anura.desktop.in:4
+msgid "OCR Tool"
+msgstr ""
 
-#: ../data/ui/welcome_page.blp:58
-msgctxt "Welcome screen"
-msgid "Take a Screenshot"
+#: ../data/com.github.d3msudo.anura.desktop.in:5
+#, fuzzy
+msgid "Extract text from any image, video, or web page"
+msgstr "이미지, 비디오, 웹 페이지에서 텍스트 추출"
+
+#: ../data/com.github.d3msudo.anura.desktop.in:11
+#, fuzzy
+msgid "OCR;Text;Extraction;Reader;QR;Scanner;"
+msgstr "OCR;텍스트;추출;"
+
+#: ../data/com.github.d3msudo.anura.desktop.in:20
+#, fuzzy
+msgid "Extract Text to Clipboard"
+msgstr "텍스트를 클립보드로 추출"
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:7
+#, fuzzy
+msgid "Extract text from anywhere on your screen"
+msgstr "어디서든지 텍스트 추출"
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:9
+msgid "Anura is an intuitive text extraction tool (OCR) designed for the GNOME desktop. It allows you to quickly grab text from any source on your screen, including videos, PDFs, images, or protected web pages."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:14
+msgid "Key features include:"
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:16
+msgid "High-accuracy OCR powered by Tesseract."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:17
+msgid "Built-in QR code decoding and link following."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:18
+msgid "Support for multiple languages with on-demand model download."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:19
+msgid "Privacy-focused: no telemetry and no anonymous data collection."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:20
+msgid "Modern GTK4 / Libadwaita interface following GNOME Human Interface Guidelines."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:22
+msgid "Network access is used exclusively to download Tesseract OCR language models on demand and for the optional text-to-speech feature (Google TTS). No user data is ever transmitted."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:31
+msgid "Main interface showing the text extraction screen (dark theme)"
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:35
+msgid "Extracted text displayed after OCR recognition"
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:41
+msgid "Bug fixes and stability improvements."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:43
+msgid "Fixed import error in screenshot service (tessdata_config casing)."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:44
+msgid "Fixed missing init_tessdata() method in LanguageManager."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:45
+msgid "Fixed settings module path mismatch (moved to anura/services/settings.py)."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:46
+msgid "Fixed blueprint-compiler GIRepository compatibility with GNOME Platform 49."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:47
+msgid "Improved TTS cache file location (XDG_CACHE_HOME)."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:53
+msgid "Initial release of Anura (fork of Frog)."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:55
+msgid "Complete rebranding to Anura."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:56
+msgid "Removed all telemetry and PostHog tracking for total privacy."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:57
+msgid "Optimized sharing service: added X (formerly Twitter) and Instagram."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:58
+msgid "Updated dependencies for modern Linux distributions."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:64
+msgid "D3M-Sudo"
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:78
+msgid "OCR"
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:79
+msgid "text"
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:80
+#, fuzzy
+msgid "extraction"
+msgstr "텍스트 추출"
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:81
+#, fuzzy
+msgid "screenshot"
 msgstr "스크린샷 촬영"
 
-#: ../data/ui/welcome_page.blp:71
-msgid "_Take a Screenshot"
-msgstr "_스크린샷 촬영"
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:82
+msgid "QR"
+msgstr ""
 
-#: ../data/ui/welcome_page.blp:79
-msgctxt "Welcome screen"
-msgid "Open Image"
-msgstr "이미지 열기"
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:83
+msgid "scanner"
+msgstr ""
 
-#: ../data/ui/welcome_page.blp:92
-msgid "_Open Image"
-msgstr "_이미지 열기"
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:84
+msgid "tesseract"
+msgstr ""
 
-#: ../data/ui/welcome_page.blp:100
+#~ msgid "Extract text from images"
+#~ msgstr "이미지에서 텍스트 추출"
+
+#~ msgid "Extract text from images, websites, videos, and QR codes by taking a picture of the source."
+#~ msgstr "사진을 찍어 이미지, 웹사이트, 동영상, QR 코드에서 텍스트 추출하세요."
+
+#~ msgid "Text extraction tool"
+#~ msgstr "텍스트 추출 도구"
+
+#~ msgctxt "Extracted screen"
+#~ msgid "Copy extracted text to clipboard"
+#~ msgstr "추출된 텍스트를 클립보드에 복사"
+
+#~ msgctxt "Extracted screen"
+#~ msgid "Listen to text"
+#~ msgstr "텍스트 듣기"
+
+#~ msgctxt "Extracted screen"
+#~ msgid "Cancel listening to text"
+#~ msgstr "텍스트 듣기 취소"
+
+#~ msgctxt "Extracted screen"
+#~ msgid "Open menu"
+#~ msgstr "메뉴 열기"
+
+#~ msgctxt "Extracted screen"
+#~ msgid "Share To"
+#~ msgstr "공유하기"
+
+#~ msgid "Available Languages"
+#~ msgstr "가능한 언어"
+
 #, fuzzy
-#| msgid "Paste from clipboard"
-msgctxt "Welcome screen"
-msgid "Paste image from clipboard"
-msgstr "클립보드에서 붙여넣기"
+#~| msgid "Installed languages"
+#~ msgctxt "Preferences Language Row"
+#~ msgid "Install language"
+#~ msgstr "설치된 언어들"
 
-#: ../data/ui/welcome_page.blp:113
 #, fuzzy
-#| msgctxt "Welcome screen"
-#| msgid "Open Image"
-msgid "Paste Image"
-msgstr "이미지 열기"
+#~| msgid "_Second language"
+#~ msgctxt "Preferences Language Row"
+#~ msgid "Remove language"
+#~ msgstr "_두번째 언어"
+
+#~ msgid "Share via Pocket"
+#~ msgstr "포켓을 통해 공유"
+
+#~ msgid "Pocket"
+#~ msgstr "포켓"
+
+#, fuzzy
+#~| msgid "Keyboard Shortcuts"
+#~ msgctxt "shortcut window"
+#~ msgid "Shortcuts"
+#~ msgstr "키보드 단축키"
 
-#: ../data/ui/welcome_page.blp:146
-msgid "⭐ Star on GitHub"
-msgstr ""
+#, fuzzy
+#~| msgid "_General"
+#~ msgctxt "shortcut window"
+#~ msgid "General"
+#~ msgstr "_일반"
 
-#: ../anura/language_manager.py:54 ../anura/language_manager.py:90
-msgid "English"
-msgstr "영어"
+#, fuzzy
+#~| msgid "Open image"
+#~ msgctxt "shortcut window"
+#~ msgid "Open image"
+#~ msgstr "이미지 열기"
 
-#: ../anura/language_manager.py:66
-msgid "Afrikaans"
-msgstr "아프리카어"
+#, fuzzy
+#~| msgid "Take a screenshot"
+#~ msgctxt "shortcut window"
+#~ msgid "Take screenshot and extract text"
+#~ msgstr "스크린샷 촬영"
 
-#: ../anura/language_manager.py:67
-msgid "Amharic"
-msgstr "암하라어"
+#, fuzzy
+#~| msgctxt "Extracted screen"
+#~| msgid "Copy extracted text to clipboard"
+#~ msgctxt "shortcut window"
+#~ msgid "Copy extracted text to clipboard"
+#~ msgstr "추출된 텍스트를 클립보드에 복사"
 
-#: ../anura/language_manager.py:68
-msgid "Arabic"
-msgstr "아랍어"
+#, fuzzy
+#~| msgid "Preferences"
+#~ msgctxt "shortcut window"
+#~ msgid "Preferences"
+#~ msgstr "환경설정"
 
-#: ../anura/language_manager.py:69
-msgid "Assamese"
-msgstr "아삼어"
+#, fuzzy
+#~| msgid "Keyboard Shortcuts"
+#~ msgctxt "shortcut window"
+#~ msgid "Display Shortcuts"
+#~ msgstr "키보드 단축키"
 
-#: ../anura/language_manager.py:70
-msgid "Azerbaijani"
-msgstr "아제르바이잔어"
+#~ msgctxt "Welcome screen"
+#~ msgid "Take a Screenshot"
+#~ msgstr "스크린샷 촬영"
 
-#: ../anura/language_manager.py:71
-msgid "Azerbaijani - Cyrilic"
-msgstr "아제르바이잔어 - 키릴 문자"
+#, fuzzy
+#~| msgid "Paste from clipboard"
+#~ msgctxt "Welcome screen"
+#~ msgid "Paste image from clipboard"
+#~ msgstr "클립보드에서 붙여넣기"
 
-#: ../anura/language_manager.py:72
-msgid "Belarusian"
-msgstr "벨로루시어"
+#~ msgid "Catalan; Valencian"
+#~ msgstr "카탈로니아어; 발렌시아어"
 
-#: ../anura/language_manager.py:73
-msgid "Bengali"
-msgstr "벵골어"
+#~ msgid "Greek, Modern (1453-)"
+#~ msgstr "현대 그리스어 (1453-)"
 
-#: ../anura/language_manager.py:74
-msgid "Tibetan"
-msgstr "티베트어"
+#~ msgid "Filipino (old - Tagalog)"
+#~ msgstr "필리핀어 (구 - 카탈로그어)"
 
-#: ../anura/language_manager.py:75
-msgid "Bosnian"
-msgstr "보스니아어"
+#~ msgid "Greek, Ancient (to 1453) (contrib)"
+#~ msgstr "고대 그리스어 (-1453) (기여)"
 
-#: ../anura/language_manager.py:76
-msgid "Breton"
-msgstr "브르타뉴어"
+#~ msgid "Haitian; Haitian Creole"
+#~ msgstr "아이티어"
 
-#: ../anura/language_manager.py:77
-msgid "Bulgarian"
-msgstr "불가리아어"
+#~ msgid "Kurmanji (Kurdish - Latin Script)"
+#~ msgstr "쿠르만지어 (쿠르드어 - 라틴어 스크립트)"
 
-#: ../anura/language_manager.py:78
-msgid "Catalan; Valencian"
-msgstr "카탈로니아어; 발렌시아어"
+#~ msgid "Dutch; Flemish"
+#~ msgstr "네덜란드어 (벨기에)"
 
-#: ../anura/language_manager.py:79
-msgid "Cebuano"
-msgstr "세부아노어"
+#~ msgid "Occitan (post 1500)"
+#~ msgstr "오크어 (1500년 이후)"
 
-#: ../anura/language_manager.py:80
-msgid "Czech"
-msgstr "체코어"
+#~ msgid "Orientation and script detection module"
+#~ msgstr "오리엔테이션 및 스크립트 감지 모듈"
 
-#: ../anura/language_manager.py:81
-msgid "Chinese - Simplified"
-msgstr "중국어 - 간체자"
+#~ msgid "Romanian; Moldavian; Moldovan"
+#~ msgstr "루마니아어; 몰도바어"
 
-#: ../anura/language_manager.py:82
-msgid "Chinese - Traditional"
-msgstr "중국어 - 본체자"
+#~ msgid "Sinhala; Sinhalese"
+#~ msgstr "싱할라어"
 
-#: ../anura/language_manager.py:83
-msgid "Cherokee"
-msgstr "체로키어"
+#~ msgid "Spanish; Castilian"
+#~ msgstr "카스티야 스페인어"
 
-#: ../anura/language_manager.py:84
-msgid "Corsican"
-msgstr "코르시카어"
+#~ msgid "Text extracted. You can paste it with Ctrl+V"
+#~ msgstr "텍스트가 추출되었습니다. Ctrl+V로 붙여넣기 할 수 있습니다."
 
-#: ../anura/language_manager.py:85
-msgid "Welsh"
-msgstr "웨일스어"
+#~ msgid "QR-code URL opened"
+#~ msgstr "QR코드 URL 열림"
 
-#: ../anura/language_manager.py:86
-msgid "Danish"
-msgstr "덴마크어"
+#~ msgid "QR-code contains URL."
+#~ msgstr "QR코드에 URL이 포함되어 있습니다."
 
-#: ../anura/language_manager.py:87
-msgid "German"
-msgstr "독일어"
+#~ msgid "Supported image files"
+#~ msgstr "지원하는 이미지 파일"
 
-#: ../anura/language_manager.py:88
-msgid "Dzongkha"
-msgstr "종카어"
+#~ msgid "Only images can be processed that way."
+#~ msgstr "이미지만 해당 방법으로 사용 가능합니다."
 
-#: ../anura/language_manager.py:89
-msgid "Greek, Modern (1453-)"
-msgstr "현대 그리스어 (1453-)"
+#~ msgid "Text copied"
+#~ msgstr "텍스트 복사됨"
 
-#: ../anura/language_manager.py:91
-msgid "English, Middle (1100-1500)"
-msgstr "중세 영어 (1100-1500)"
-
-#: ../anura/language_manager.py:92
-msgid "Esperanto"
-msgstr "에스페란토어"
-
-#: ../anura/language_manager.py:93
-msgid "Math / equation detection module"
-msgstr "수학 / 방정식 감지 모듈"
-
-#: ../anura/language_manager.py:94
-msgid "Estonian"
-msgstr "에스토니아어"
-
-#: ../anura/language_manager.py:95
-msgid "Basque"
-msgstr "바스크어"
-
-#: ../anura/language_manager.py:96
-msgid "Faroese"
-msgstr "페로어"
-
-#: ../anura/language_manager.py:97
-msgid "Persian"
-msgstr "페르시아어"
-
-#: ../anura/language_manager.py:98
-msgid "Filipino (old - Tagalog)"
-msgstr "필리핀어 (구 - 카탈로그어)"
-
-#: ../anura/language_manager.py:99
-msgid "Finnish"
-msgstr "핀란드어"
-
-#: ../anura/language_manager.py:100
-msgid "French"
-msgstr "프랑스어"
-
-#: ../anura/language_manager.py:101
-msgid "German - Fraktur"
-msgstr "독일어 - 로마자"
-
-#: ../anura/language_manager.py:102
-msgid "French, Middle (ca.1400-1600)"
-msgstr "중세 프랑스어 (ca.1400-1600)"
-
-#: ../anura/language_manager.py:103
-msgid "Western Frisian"
-msgstr "서브 프리지아어"
-
-#: ../anura/language_manager.py:104
-msgid "Scottish Gaelic"
-msgstr "스코틀랜드 게일어"
-
-#: ../anura/language_manager.py:105
-msgid "Irish"
-msgstr "아일랜드어"
-
-#: ../anura/language_manager.py:106
-msgid "Galician"
-msgstr "갈라시아어"
-
-#: ../anura/language_manager.py:107
-msgid "Greek, Ancient (to 1453) (contrib)"
-msgstr "고대 그리스어 (-1453) (기여)"
-
-#: ../anura/language_manager.py:108
-msgid "Gujarati"
-msgstr "구자라트어"
-
-#: ../anura/language_manager.py:109
-msgid "Haitian; Haitian Creole"
-msgstr "아이티어"
-
-#: ../anura/language_manager.py:110
-msgid "Hebrew"
-msgstr "히브리어"
-
-#: ../anura/language_manager.py:111
-msgid "Hindi"
-msgstr "힌디어"
-
-#: ../anura/language_manager.py:112
-msgid "Croatian"
-msgstr "크로아티아어"
-
-#: ../anura/language_manager.py:113
-msgid "Hungarian"
-msgstr "헝가리어"
-
-#: ../anura/language_manager.py:114
-msgid "Armenian"
-msgstr "아르메니아어"
-
-#: ../anura/language_manager.py:115
-msgid "Inuktitut"
-msgstr "이누크티투트어"
-
-#: ../anura/language_manager.py:116
-msgid "Indonesian"
-msgstr "인도네시아어"
-
-#: ../anura/language_manager.py:117
-msgid "Icelandic"
-msgstr "아이슬란드어"
-
-#: ../anura/language_manager.py:118
-msgid "Italian"
-msgstr "이탈리아어"
-
-#: ../anura/language_manager.py:119
-msgid "Italian - Old"
-msgstr "구 이탈리아어"
-
-#: ../anura/language_manager.py:120
-msgid "Javanese"
-msgstr "자바어"
-
-#: ../anura/language_manager.py:121
-msgid "Japanese"
-msgstr "일본어"
-
-#: ../anura/language_manager.py:122
-msgid "Japanese (vertical)"
-msgstr "일본어 (세로)"
-
-#: ../anura/language_manager.py:123
-msgid "Kannada"
-msgstr "칸나다어"
-
-#: ../anura/language_manager.py:124
-msgid "Georgian"
-msgstr "조지아어"
-
-#: ../anura/language_manager.py:125
-msgid "Georgian - Old"
-msgstr "구 조지아어"
-
-#: ../anura/language_manager.py:126
-msgid "Kazakh"
-msgstr "카자흐스탄어"
-
-#: ../anura/language_manager.py:127
-msgid "Central Khmer"
-msgstr "중앙 크메르어"
-
-#: ../anura/language_manager.py:128
-msgid "Kirghiz; Kyrgyz"
-msgstr "키르기스어"
-
-#: ../anura/language_manager.py:129
-msgid "Kurmanji (Kurdish - Latin Script)"
-msgstr "쿠르만지어 (쿠르드어 - 라틴어 스크립트)"
-
-#: ../anura/language_manager.py:130
-msgid "Korean"
-msgstr "한국어"
-
-#: ../anura/language_manager.py:131
-msgid "Korean (vertical)"
-msgstr "한국어 (세로)"
-
-#: ../anura/language_manager.py:132
-msgid "Lao"
-msgstr "라오스어"
-
-#: ../anura/language_manager.py:133
-msgid "Latin"
-msgstr "라틴어"
-
-#: ../anura/language_manager.py:134
-msgid "Latvian"
-msgstr "라트비아어"
-
-#: ../anura/language_manager.py:135
-msgid "Lithuanian"
-msgstr "리투아니아어"
-
-#: ../anura/language_manager.py:136
-msgid "Luxembourgish"
-msgstr "룩셈부르크어"
-
-#: ../anura/language_manager.py:137
-msgid "Malayalam"
-msgstr "말라얄람어"
-
-#: ../anura/language_manager.py:138
-msgid "Marathi"
-msgstr "마라티어"
-
-#: ../anura/language_manager.py:139
-msgid "Macedonian"
-msgstr "마케도니아어"
-
-#: ../anura/language_manager.py:140
-msgid "Maltese"
-msgstr "몰타어"
-
-#: ../anura/language_manager.py:141
-msgid "Mongolian"
-msgstr "몽골어"
-
-#: ../anura/language_manager.py:142
-msgid "Maori"
-msgstr "마오리어"
-
-#: ../anura/language_manager.py:143
-msgid "Malay"
-msgstr "말레이어"
-
-#: ../anura/language_manager.py:144
-msgid "Burmese"
-msgstr "버마어"
-
-#: ../anura/language_manager.py:145
-msgid "Nepali"
-msgstr "네팔어"
-
-#: ../anura/language_manager.py:146
-msgid "Dutch; Flemish"
-msgstr "네덜란드어 (벨기에)"
-
-#: ../anura/language_manager.py:147
-msgid "Norwegian"
-msgstr "노르웨이어"
-
-#: ../anura/language_manager.py:148
-msgid "Occitan (post 1500)"
-msgstr "오크어 (1500년 이후)"
-
-#: ../anura/language_manager.py:149
-msgid "Oriya"
-msgstr "오리야어"
-
-#: ../anura/language_manager.py:150
-msgid "Orientation and script detection module"
-msgstr "오리엔테이션 및 스크립트 감지 모듈"
-
-#: ../anura/language_manager.py:151
-msgid "Panjabi; Punjabi"
-msgstr "판자비어; 펀자브어"
-
-#: ../anura/language_manager.py:152
-msgid "Polish"
-msgstr "폴란드어"
-
-#: ../anura/language_manager.py:153
-msgid "Portuguese"
-msgstr "포르투갈어"
-
-#: ../anura/language_manager.py:154
-msgid "Pushto; Pashto"
-msgstr "파슈토어"
-
-#: ../anura/language_manager.py:155
-msgid "Quechua"
-msgstr "케추아어"
-
-#: ../anura/language_manager.py:156
-msgid "Romanian; Moldavian; Moldovan"
-msgstr "루마니아어; 몰도바어"
-
-#: ../anura/language_manager.py:157
-msgid "Russian"
-msgstr "러시아어"
-
-#: ../anura/language_manager.py:158
-msgid "Sanskrit"
-msgstr "산스크리트어"
-
-#: ../anura/language_manager.py:159
-msgid "Sinhala; Sinhalese"
-msgstr "싱할라어"
-
-#: ../anura/language_manager.py:160
-msgid "Slovak"
-msgstr "슬로바키아어"
-
-#: ../anura/language_manager.py:161
-msgid "Slovenian"
-msgstr "슬로베니아어"
-
-#: ../anura/language_manager.py:162
-msgid "Sindhi"
-msgstr "신디어"
-
-#: ../anura/language_manager.py:163
-msgid "Spanish; Castilian"
-msgstr "카스티야 스페인어"
-
-#: ../anura/language_manager.py:164
-msgid "Spanish; Castilian - Old"
-msgstr "구 카스티아 스페인어"
-
-#: ../anura/language_manager.py:165
-msgid "Albanian"
-msgstr "알바니아어"
-
-#: ../anura/language_manager.py:166
-msgid "Serbian"
-msgstr "세르비아어"
-
-#: ../anura/language_manager.py:167
-msgid "Serbian - Latin"
-msgstr "세르비아어 - 라틴어"
-
-#: ../anura/language_manager.py:168
-msgid "Sundanese"
-msgstr "순다어"
-
-#: ../anura/language_manager.py:169
-msgid "Swahili"
-msgstr "스와힐리어"
-
-#: ../anura/language_manager.py:170
-msgid "Swedish"
-msgstr "스웨덴어"
-
-#: ../anura/language_manager.py:171
-msgid "Syriac"
-msgstr "시리아어"
-
-#: ../anura/language_manager.py:172
-msgid "Tamil"
-msgstr "타밀어"
-
-#: ../anura/language_manager.py:173
-msgid "Tatar"
-msgstr "타타르어"
-
-#: ../anura/language_manager.py:174
-msgid "Telugu"
-msgstr "텔루구어"
-
-#: ../anura/language_manager.py:175
-msgid "Tajik"
-msgstr "타지크어"
-
-#: ../anura/language_manager.py:176
-msgid "Thai"
-msgstr "태국어"
-
-#: ../anura/language_manager.py:177
-msgid "Tigrinya"
-msgstr "티그리냐어"
-
-#: ../anura/language_manager.py:178
-msgid "Tonga"
-msgstr "통가어"
-
-#: ../anura/language_manager.py:179
-msgid "Turkish"
-msgstr "터키어"
-
-#: ../anura/language_manager.py:180
-msgid "Uighur; Uyghur"
-msgstr "위구르어"
-
-#: ../anura/language_manager.py:181
-msgid "Ukrainian"
-msgstr "우크라이나어"
-
-#: ../anura/language_manager.py:182
-msgid "Urdu"
-msgstr "우르두어"
-
-#: ../anura/language_manager.py:183
-msgid "Uzbek"
-msgstr "우즈베크어"
-
-#: ../anura/language_manager.py:184
-msgid "Uzbek - Cyrilic"
-msgstr "우즈베크어 - 키릴 문자"
-
-#: ../anura/language_manager.py:185
-msgid "Vietnamese"
-msgstr "베트남어"
-
-#: ../anura/language_manager.py:186
-msgid "Yiddish"
-msgstr "이디시어"
-
-#: ../anura/language_manager.py:187
-msgid "Yoruba"
-msgstr "요루바어"
-
-#: ../anura/main.py:63 ../anura/main.py:83
-msgid "Extract directly into the clipboard"
-msgstr "클립보드로 바로 추출"
-
-#: ../anura/main.py:194
-msgid "No text found. Try to grab another region."
-msgstr "텍스트를 발견하지 못했습니다. 다른 영역을 선택해보세요."
-
-#: ../anura/main.py:204
-msgid "Text extracted. You can paste it with Ctrl+V"
-msgstr "텍스트가 추출되었습니다. Ctrl+V로 붙여넣기 할 수 있습니다."
-
-#: ../anura/window.py:151
-msgid "Text copied to clipboard"
-msgstr "텍스트 클립보드에 복사됨"
-
-#: ../anura/window.py:162
-msgid "QR-code URL opened"
-msgstr "QR코드 URL 열림"
-
-#: ../anura/window.py:166
-msgid "QR-code contains URL."
-msgstr "QR코드에 URL이 포함되어 있습니다."
-
-#: ../anura/window.py:167
-msgid "Open"
-msgstr "열기"
-
-#: ../anura/window.py:194
-msgid "Supported image files"
-msgstr "지원하는 이미지 파일"
-
-#: ../anura/window.py:200
-msgid "Open image to extract text"
-msgstr "이미지를 열어 텍스트 추출"
-
-#: ../anura/window.py:260
-msgid "Only images can be processed that way."
-msgstr "이미지만 해당 방법으로 사용 가능합니다."
-
-#: ../anura/window.py:293
-msgid "Text copied"
-msgstr "텍스트 복사됨"
-
-#: ../anura/services/clipboard_service.py:54
-msgid "No image in clipboard"
-msgstr "클립보드에 이미지가 없습니다"
-
-#: ../anura/services/screenshot_service.py:94
-msgid "Can't take a screenshot."
-msgstr "스크린샷을 촬영할 수 없습니다."
-
-#: ../anura/widgets/preferences_languages_page.py:80
-msgid "Models location unreachable. Check your internet connection."
-msgstr ""
-
-#: ../anura/widgets/preferences_languages_page.py:86
-msgid "You are on a metered connection. Be careful to download languages."
-msgstr ""
-
-#: ../anura/widgets/preferences_languages_page.py:123
-msgid "View all available languages"
-msgstr "모든 가능한 언어 보기"
-
-#: ../anura/widgets/share_row.py:48
-#, fuzzy, python-brace-format
-#| msgid "Share via Pocket"
-msgid "Share via {0}"
-msgstr "포켓을 통해 공유"
+#~ msgid "View all available languages"
+#~ msgstr "모든 가능한 언어 보기"
 
 #~ msgid "Share via {provider_name.capitalize()}"
 #~ msgstr "{provider_name.capitalize()}에 공유"

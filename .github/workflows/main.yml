@@ -1,11 +1,14 @@
 name: CI Quality Check & Release
 
+permissions:
+  contents: read
+
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "development" ]
     tags: [ "v*" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "development" ]
 
 jobs:
   # JOB 1: Python code analysis and linting
@@ -18,16 +21,21 @@ jobs:
       - name: Run Ruff Linter
         uses: chartboost/ruff-action@v1
         with:
-          # Automatically repair safe issues and show warnings for the rest
-          args: check --select E,F,W,I --target-version py312 --fix --unsafe-fixes --exit-zero
+          # Strict linting with enforcement - no automatic fixes in CI
+          args: check --select E,F,W,I --target-version py312
 
   # JOB 2: Flatpak build and optional release
   flatpak-builder:
     needs: python-quality
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
-    # Using the specialized container to handle GNOME runtimes and permissions
+    # Using the specialized container to handle GNOME runtimes and permissions.
+    # Both CI and production target GNOME 49 (current stable).
+    # When upgrading to a newer runtime, update both the manifest runtime-version
+    # and this container tag to the same version.
     container:
-      image: bilelmoussaoui/flatpak-github-actions:gnome-nightly
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-49
       options: --privileged
     
     steps:
@@ -43,6 +51,14 @@ jobs:
           # Ensure the builder starts with a fresh environment
           echo "Caches purged. Proceeding with clean build."
 
+      # 1. VALIDAZIONE FORMALE DEL MANIFESTO
+      - name: Validate Flatpak Manifest
+        run: |
+          echo "=== Validating manifest syntax and permissions ==="
+          flatpak-builder --show-manifest flatpak/com.github.d3msudo.anura.json > /dev/null
+          echo "✓ Manifest validation passed"
+
+      # 2. BUILD (senza test unitari - il progetto non ha pytest)
       - name: Build Anura Flatpak
         uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:
@@ -50,7 +66,96 @@ jobs:
           manifest-path: flatpak/com.github.d3msudo.anura.json
           # Explicitly disable action-level cache
           cache: false
-          run-tests: false
+          # Keep build directories for the verification step
+          keep-build-dirs: true
+          # Use consistent state-dir for predictable paths
+          state-dir: .flatpak-builder
+
+      # 2b. VERIFICA STRUTTURA RISORSE BLUEPRINT
+      - name: Verify Blueprint and Resource Structure
+        run: |
+          echo "=== Verifying generated UI files ==="
+          GRESOURCE_XML="data/com.github.d3msudo.anura.gresource.xml"
+          
+          # Find the actual build directory (flatpak-builder adds numeric suffixes like anura-1)
+          BUILD_ROOT=$(find .flatpak-builder/build -maxdepth 1 -type d -name 'anura*' | head -1)
+          if [ -z "$BUILD_ROOT" ]; then
+            echo "✗ ERROR: Build directory not found in .flatpak-builder/build/"
+            ls -la .flatpak-builder/build/ 2>/dev/null || echo "No build directory found"
+            exit 1
+          fi
+          echo "Found build directory: $BUILD_ROOT"
+          
+          # Search for .ui files in any subdirectory of the build
+          UI_FILES=$(find "$BUILD_ROOT" -name "*.ui" -type f 2>/dev/null)
+          UI_COUNT=$(echo "$UI_FILES" | grep -c . || echo 0)
+          
+          if [ "$UI_COUNT" -eq 0 ]; then
+            echo "✗ ERROR: No .ui files found in build directory"
+            echo "Searched in: $BUILD_ROOT"
+            echo "Directory structure:"
+            find "$BUILD_ROOT" -type d | head -20
+            exit 1
+          fi
+          echo "✓ Found $UI_COUNT .ui file(s)"
+          
+          # List found UI files
+          echo "Generated UI files:"
+          echo "$UI_FILES" | head -20
+          
+          # Verify gresource.xml references match generated files
+          echo ""
+          echo "=== Checking gresource.xml paths ==="
+          MISSING=0
+          for file in $(grep -oP '(?<=<file[^>]*>)[^<]+\.ui' "$GRESOURCE_XML" | sed 's|ui/||'); do
+            if ! echo "$UI_FILES" | grep -q "/$file$"; then
+              echo "✗ Missing: $file (referenced in gresource.xml)"
+              MISSING=$((MISSING + 1))
+            fi
+          done
+          
+          if [ "$MISSING" -gt 0 ]; then
+            echo ""
+            echo "✗ RESOURCE VERIFICATION FAILED: $MISSING file(s) missing"
+            echo "All generated files:"
+            find "$BUILD_ROOT" -type f | sort
+            exit 1
+          fi
+          
+          echo "✓ All gresource.xml references resolved successfully"
+
+      # 3. HEADLESS RUNTIME SMOKE TEST
+      - name: Smoke Test - Headless Runtime
+        run: |
+          echo "=== Installing bundle for smoke test ==="
+          flatpak install --user --noninteractive --bundle com.github.d3msudo.anura.flatpak
+          
+          echo "=== Running smoke test with virtual display ==="
+          # Test app launch with virtual display and isolated D-Bus session
+          # --help exits immediately with code 0 if app starts correctly
+          # Environment variables to suppress harmless warnings in headless CI:
+          # - NO_AT_BRIDGE=1: disables a11y bus warnings
+          # - LIBGL_ALWAYS_SOFTWARE=1: forces software rendering, suppresses DRI3 warnings
+          if ! dbus-run-session xvfb-run -a flatpak run --env=NO_AT_BRIDGE=1 --env=LIBGL_ALWAYS_SOFTWARE=1 com.github.d3msudo.anura --help; then
+            echo "✗ Smoke test failed - app failed to launch"
+            exit 1
+          fi
+          
+          # Verify app is properly installed
+          if ! flatpak list --user | grep -q com.github.d3msudo.anura; then
+            echo "✗ Smoke test failed - app not found in installation"
+            exit 1
+          fi
+          echo "✓ Smoke test passed - app launches without critical errors"
+
+      # 4. ESPORTAZIONE ARTEFATTI PER DEBUG
+      - name: Upload Flatpak Artifact (Debug)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: com.github.d3msudo.anura-flatpak-${{ github.run_id }}
+          path: com.github.d3msudo.anura.flatpak
+          retention-days: 7
 
       - name: Upload Flatpak Bundle to Release
         if: startsWith(github.ref, 'refs/tags/')

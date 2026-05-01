@@ -6,7 +6,7 @@
 
 <div align="center">
 <figure>
-<img src="https://raw.githubusercontent.com/D3M-Sudo/Anura/master/data/screenshots/anura-window-dark.png" alt="Anura window dark" />
+<img src="data/screenshots/anura-window-dark.png" alt="Anura window dark">
 </figure>
 
 [![Latest Release](https://img.shields.io/github/v/release/D3M-Sudo/Anura?color=blue&logo=github)](https://github.com/D3M-Sudo/Anura/releases/latest)
@@ -21,7 +21,7 @@ Capture a screen area and get the text instantly copied to your clipboard.
 
 - **Instant OCR**: Select a portion of the screen and copy the text.
 - **QR Code Support**: Automatic recognition of links and data from QR codes.
-- **System Integration**: Designed to integrate seamlessly with Linux Mint and GTK-based desktops.
+- **System Integration**: Designed to integrate seamlessly with modern Linux desktop environments (especially GTK-based desktops).
 - **Privacy-focused**: Local text processing without sending data to external servers.
 
 ## Installation
@@ -30,7 +30,7 @@ Capture a screen area and get the text instantly copied to your clipboard.
 
 La prima versione stabile è ora disponibile. Puoi scaricare il bundle `.flatpak` direttamente dalla pagina delle [Releases](https://github.com/D3M-Sudo/Anura/releases/latest).
 
-Per installarlo sul tuo sistema Linux Mint:
+Per installarlo sul tuo sistema Linux:
 
 ```zsh
 flatpak install --user ~/Downloads/com.github.d3msudo.anura.flatpak
@@ -51,6 +51,8 @@ To compile Anura:
 Anura is translated using Weblate. If you want to help translate the app into your language, please visit our project page:
 
 [![Translation status](https://hosted.weblate.org/widgets/anura/-/horizontal-auto.svg)](https://hosted.weblate.org/engage/anura/)
+
+**Maintainers (template + `POTFILES`):** from the `po/` directory run `bash update_potfiles.sh` after changing translatable strings. That refreshes `anura.pot` and `POTFILES`. To update every locale file locally before a commit, run `for f in *.po; do msgmerge -U "$f" anura.pot --backup=none; done` in the same directory, then push `anura.pot`, `POTFILES`, and the updated `.po` files so Weblate stays in sync with the repository.
 
 ## Contributing
 
