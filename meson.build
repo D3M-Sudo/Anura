@@ -32,7 +32,7 @@ release_notes_py = custom_target('release_notes',
   output: '_release_notes.py',
   command: [
     python,
-    '@INPUT1@',
+    '@INPUT0@',
     '@OUTPUT@',
     meson.project_version()
   ],
