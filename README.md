@@ -28,23 +28,69 @@ Capture a screen area and get the text instantly copied to your clipboard.
 
 ### Flatpak (Stable Release)
 
-La prima versione stabile è ora disponibile. Puoi scaricare il bundle `.flatpak` direttamente dalla pagina delle [Releases](https://github.com/D3M-Sudo/Anura/releases/latest).
+Download the `.flatpak` bundle directly from the [Releases](https://github.com/D3M-Sudo/Anura/releases/latest) page.
 
-Per installarlo sul tuo sistema Linux:
+To install on your Linux system:
 
-```zsh
+```bash
 flatpak install --user ~/Downloads/com.github.d3msudo.anura.flatpak
 ```
 
 ## Development and Build
 
-[GNOME Builder](https://wiki.gnome.org/Apps/Builder) is recommended for development.  
+### Prerequisites
 
-To compile Anura:
+- **Meson** build system (version >= 1.5.0)
+- **Python** 3.x
+- **GTK4** and **LibAdwaita** development libraries
+- **Tesseract OCR** (with language data)
+- **ZBar** (for QR code scanning)
 
-1. Open the project folder in Builder.
+On Fedora:
+```bash
+sudo dnf install meson python3-gobject gtk4-devel libadwaita-devel tesseract zbar-devel
+```
 
-2. Press **"Run" (F5)**. Builder will automatically download the required runtimes and compile the application.
+On Ubuntu/Debian:
+```bash
+sudo apt install meson python3-gi python3-gi-cairo gir1.2-gtk-4.0 gir1.2-adw-1 tesseract-ocr libzbar0
+```
+
+### Building with GNOME Builder (Recommended)
+
+1. Install [GNOME Builder](https://wiki.gnome.org/Apps/Builder) from Flathub or your distribution's package manager.
+2. Open the project folder in Builder.
+3. Press **Run (F5)**. Builder will automatically download the required runtimes and compile the application.
+
+### Building Manually with Meson
+
+```bash
+# Clone the repository
+git clone https://github.com/D3M-Sudo/Anura.git
+cd Anura
+
+# Setup the build directory
+meson setup builddir --prefix=/usr/local
+
+# Compile
+ninja -C builddir
+
+# Install (optional)
+sudo ninja -C builddir install
+```
+
+To run without installing:
+```bash
+./builddir/bin/anura
+```
+
+### Building the Flatpak
+
+To build a distributable Flatpak package:
+
+```bash
+flatpak-builder --force-clean build-flatpak flatpak/com.github.d3msudo.anura.json
+```
 
 ## Code Quality
 
