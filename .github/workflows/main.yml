@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Run Ruff Linter
         uses: chartboost/ruff-action@v1
@@ -40,7 +40,7 @@ jobs:
     
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # RIGOR: Force a clean state to bypass broken caches
       - name: Purge build caches and artifacts
@@ -151,7 +151,7 @@ jobs:
       # 4. ESPORTAZIONE ARTEFATTI PER DEBUG
       - name: Upload Flatpak Artifact (Debug)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: com.github.d3msudo.anura-flatpak-${{ github.run_id }}
           path: com.github.d3msudo.anura.flatpak
@@ -159,7 +159,7 @@ jobs:
 
       - name: Upload Flatpak Bundle to Release
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: com.github.d3msudo.anura.flatpak
         env:
