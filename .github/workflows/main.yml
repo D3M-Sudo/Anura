@@ -159,7 +159,7 @@ jobs:
 
       - name: Upload Flatpak Bundle to Release
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: com.github.d3msudo.anura.flatpak
         env:
