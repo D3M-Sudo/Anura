@@ -1,11 +1,14 @@
 import datetime
 import os
+import subprocess
 import sys
 import threading
 from gettext import gettext as _
 
-from gi.repository import Adw, Gio, GLib, Gtk, Notify
+from gi.repository import Adw, Gio, GLib, Gtk
 from loguru import logger
+
+from .services.notification_service import NotificationService
 
 
 def _load_gresource_bundle():
@@ -100,7 +103,7 @@ class AnuraApplication(Adw.Application):
         )
 
         language_manager.init_tessdata()
-        Notify.init(APP_ID)
+        self.notification_service = NotificationService(APP_ID)
 
     def do_startup(self, *args, **kwargs):
         Adw.Application.do_startup(self)
@@ -146,15 +149,44 @@ class AnuraApplication(Adw.Application):
             file_path = options["file"]
             logger.info(f"Anura: CLI file processing: {file_path}")
 
-            if "silent" in options:
-                return self._run_silent_mode(file_path)
-            else:
-                # UI mode: activate app and tell window to process the file
-                self.activate()
-                win = self.props.active_window
-                if win:
-                    win.process_file(file_path)
-                return 0
+            # Try direct access first (for files in xdg-download)
+            try:
+                import os
+                if os.path.exists(file_path) and os.access(file_path, os.R_OK):
+                    # File accessible directly
+                    if "silent" in options:
+                        return self._run_silent_mode(file_path)
+                    else:
+                        # UI mode: activate app and tell window to process the file
+                        self.activate()
+                        win = self.props.active_window
+                        if win:
+                            win.process_file(file_path)
+                        return 0
+                else:
+                    # File not accessible in sandbox
+                    if "silent" in options:
+                        logger.error(f"File not accessible in sandbox: {file_path}")
+                        logger.error("Use files from ~/Downloads or run without --silent for file picker")
+                        return 1
+                    else:
+                        # Fallback to file picker for GUI mode
+                        logger.info("File not directly accessible, opening file picker")
+                        self.activate()
+                        win = self.props.active_window
+                        if win:
+                            win.open_image()
+                        return 0
+            except (OSError, PermissionError) as e:
+                logger.error(f"Error accessing file {file_path}: {e}")
+                if "silent" in options:
+                    return 1
+                else:
+                    self.activate()
+                    win = self.props.active_window
+                    if win:
+                        win.open_image()
+                    return 0
 
         self.activate()
         return 0
@@ -271,6 +303,41 @@ class AnuraApplication(Adw.Application):
         if window:
             window.show_preferences()
 
+    def _get_release_notes(self):
+        """Generate release notes from git history since last tag."""
+        try:
+            # Get app root directory
+            app_root_dir = os.path.dirname(os.path.dirname(__file__))
+
+            # Get last tag
+            result = subprocess.run(
+                ['git', 'describe', '--tags', '--abbrev=0'],
+                capture_output=True, text=True, cwd=app_root_dir, timeout=10
+            )
+            if result.returncode != 0:
+                raise Exception("No git tags found")
+
+            last_tag = result.stdout.strip()
+
+            # Get changelog since last tag (only fix/feat/chore commits)
+            result = subprocess.run(
+                ['git', 'log', f'{last_tag}..HEAD', '--oneline', '--grep=^(fix|feat|chore)', '--no-merges'],
+                capture_output=True, text=True, cwd=app_root_dir, timeout=10
+            )
+
+            commits = [line.strip() for line in result.stdout.strip().split('\n') if line.strip()]
+
+            if commits:
+                # Format commits for display (limit to 10 most recent)
+                commits_html = "".join([f"<li>{commit}</li>" for commit in commits[:10]])
+                return f"<p>Changes in this version:</p><ul>{commits_html}</ul>"
+
+        except Exception as e:
+            logger.debug(f"Could not generate git release notes: {e}")
+
+        # Fallback to version-specific message
+        return f"<p>Anura OCR {self.version} - Bug fixes and improvements.</p>"
+
     def on_about(self, _action, _param):
         about_window = Adw.AboutDialog(
             application_name="Anura",
@@ -281,7 +348,7 @@ class AnuraApplication(Adw.Application):
             license_type=Gtk.License.MIT,
             developers=["Andrey Maksimov", "D3M-Sudo"],
             designers=["Andrey Maksimov"],
-            release_notes="<p>" + _("Extract text from anywhere on your screen.") + "</p>"
+            release_notes=self._get_release_notes()
         )
         about_window.present(self.props.active_window)
 
@@ -347,20 +414,18 @@ class AnuraApplication(Adw.Application):
 
     def on_decoded(self, _sender, text: str, copy: bool) -> None:
         if not text:
-            notification = Notify.Notification.new(
-                summary='Anura OCR',
+            self.notification_service.show(
+                title='Anura OCR',
                 body=_("No text found. Try to grab another region.")
             )
-            notification.show()
             return
 
         if copy:
             clipboard_service.set(text)
-            notification = Notify.Notification.new(
-                summary='Anura OCR',
+            self.notification_service.show(
+                title='Anura OCR',
                 body=_("Text extracted and copied to clipboard.")
             )
-            notification.show()
         else:
             logger.debug(f'Extracted: {text}')
 
@@ -371,11 +436,10 @@ class AnuraApplication(Adw.Application):
             logger.info("Anura: Screenshot cancelled by user.")
             return
         # Real error - show notification
-        notification = Notify.Notification.new(
-            summary='Anura OCR',
+        self.notification_service.show(
+            title='Anura OCR',
             body=message
         )
-        notification.show()
 
     def on_listen(self, _sender, _event):
         window = self.get_active_window()

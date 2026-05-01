@@ -4,7 +4,6 @@
     "runtime-version": "49",
     "sdk": "org.gnome.Sdk",
     "command": "anura",
-    "x-ci-notes": "CI and production both aligned to GNOME 49 stable runtime",
 
     "finish-args": [
         "--share=network",
