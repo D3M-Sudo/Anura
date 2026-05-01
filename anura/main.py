@@ -308,7 +308,7 @@ class AnuraApplication(Adw.Application):
         try:
             # Get app root directory
             app_root_dir = os.path.dirname(os.path.dirname(__file__))
-            
+
             # Get last tag
             result = subprocess.run(
                 ['git', 'describe', '--tags', '--abbrev=0'],
@@ -316,25 +316,25 @@ class AnuraApplication(Adw.Application):
             )
             if result.returncode != 0:
                 raise Exception("No git tags found")
-            
+
             last_tag = result.stdout.strip()
-            
+
             # Get changelog since last tag (only fix/feat/chore commits)
             result = subprocess.run(
                 ['git', 'log', f'{last_tag}..HEAD', '--oneline', '--grep=^(fix|feat|chore)', '--no-merges'],
                 capture_output=True, text=True, cwd=app_root_dir, timeout=10
             )
-            
+
             commits = [line.strip() for line in result.stdout.strip().split('\n') if line.strip()]
-            
+
             if commits:
                 # Format commits for display (limit to 10 most recent)
                 commits_html = "".join([f"<li>{commit}</li>" for commit in commits[:10]])
                 return f"<p>Changes in this version:</p><ul>{commits_html}</ul>"
-            
+
         except Exception as e:
             logger.debug(f"Could not generate git release notes: {e}")
-        
+
         # Fallback to version-specific message
         return f"<p>Anura OCR {self.version} - Bug fixes and improvements.</p>"
 

@@ -6,9 +6,11 @@
 from typing import List
 from urllib.parse import quote
 
-from gettext import gettext as _
 from gi.repository import Adw, GLib, GObject, Gtk
 from loguru import logger
+
+def _(s: str) -> str:
+    return s
 
 
 class ShareService(GObject.GObject):
@@ -58,11 +60,11 @@ class ShareService(GObject.GObject):
                 # The handler functions are responsible for proper URL construction
                 encoded_text = quote(text, safe='')
                 share_link: str = handler(encoded_text)
-                
+
                 # Special handling for Mastodon with fallback
                 if provider == "mastodon":
                     return self._share_mastodon_with_fallback(encoded_text)
-                
+
                 # Validate URL length before attempting to launch
                 if len(share_link) > self.MAX_URL_LENGTH:
                     logger.warning(f"Anura Share: URL too long ({len(share_link)} chars, max {self.MAX_URL_LENGTH})")
@@ -104,27 +106,27 @@ class ShareService(GObject.GObject):
         """Show dialog to select Mastodon instance for fallback sharing."""
         instances = [
             ("mastodon.social", "Mastodon Official"),
-            ("mastodon.online", "Mastodon Online"), 
+            ("mastodon.online", "Mastodon Online"),
             ("fosstodon.org", "Fosstodon - Open Source"),
             ("hachyderm.io", "Hachyderm - Tech Community")
         ]
-        
+
         # Create selection dialog
         dialog = Adw.MessageDialog()
         dialog.set_heading(_("Select Mastodon Instance"))
         dialog.set_body(_("Choose your Mastodon instance to share the extracted text:"))
-        
+
         # Add instance buttons
         for domain, name in instances:
             dialog.add_response(f"instance_{domain}", name)
-        
+
         dialog.add_response("cancel", _("Cancel"))
         dialog.set_default_response("cancel")
         dialog.set_close_response("cancel")
-        
+
         # Connect response signal
         dialog.connect("response", lambda d, response: self._on_mastodon_instance_selected(d, response, encoded_text))
-        
+
         # Show dialog (we need a parent window)
         try:
             # Try to get the active window from the application
@@ -141,14 +143,14 @@ class ShareService(GObject.GObject):
         if response.startswith("instance_"):
             domain = response.replace("instance_", "")
             share_url = f"https://{domain}/share?text={encoded_text}"
-            
+
             try:
                 self.launcher.set_uri(share_url)
                 self.launcher.launch(parent=None, cancellable=None, callback=self._on_share)
             except Exception as e:
                 logger.error(f"Anura Share: Failed to share via Mastodon instance {domain}: {e}")
                 GLib.idle_add(self.emit, "share", False)
-        
+
         dialog.destroy()
 
     def _on_share(self, _, result):
