@@ -26,6 +26,21 @@ pkgdatadir = prefix / datadir / meson.project_name()
 pythondir = python.get_install_dir() / 'anura'
 localedir = prefix / get_option('localedir')
 
+# Generate _release_notes.py from CHANGELOG.md
+release_notes_py = custom_target('release_notes',
+  input: 'CHANGELOG.md',
+  output: '_release_notes.py',
+  command: [
+    python,
+    meson.project_source_root() / 'build-aux' / 'generate_release_notes.py',
+    '@INPUT@',
+    '@OUTPUT@',
+    meson.project_version()
+  ],
+  install: true,
+  install_dir: pythondir
+)
+
 install_subdir('anura', install_dir: python.get_install_dir())
 
 subdir('data')

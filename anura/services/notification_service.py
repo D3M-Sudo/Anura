@@ -8,10 +8,11 @@
 from loguru import logger
 
 try:
-    from gi.repository import Notify
+    from gi.repository import GLib, Notify
     HAS_LIBNOTIFY = True
 except ImportError:
     HAS_LIBNOTIFY = False
+    GLib = None
     Notify = None
 
 try:
@@ -32,35 +33,28 @@ class NotificationService:
 
     def __init__(self, app_id: str):
         self.app_id = app_id
-        self.use_portal = self._detect_portal_available()
         self.libnotify_initialized = False
 
-        if not self.use_portal and HAS_LIBNOTIFY:
+        # Initialize libnotify as fallback
+        if HAS_LIBNOTIFY:
             try:
                 Notify.init(app_id)
                 self.libnotify_initialized = True
-                logger.debug("NotificationService: Using libnotify backend")
+                logger.debug("NotificationService: libnotify fallback ready")
             except Exception as e:
                 logger.warning(f"NotificationService: Failed to initialize libnotify: {e}")
 
-        if self.use_portal:
-            logger.debug("NotificationService: Using XDG Portal backend")
-        elif not self.libnotify_initialized:
+        if not HAS_PORTAL and not self.libnotify_initialized:
             logger.warning("NotificationService: No notification backend available")
 
     def _detect_portal_available(self) -> bool:
-        """Check if XDG notification portal is available."""
-        if not HAS_PORTAL:
-            return False
+        """
+        Try to use XDG portal for a notification.
 
-        try:
-            portal = Xdp.Portal.new()
-            # Check if notification portal is available
-            # This is a basic check - in practice, we'll try to use it and fallback if needed
-            return portal is not None
-        except Exception as e:
-            logger.debug(f"NotificationService: Portal detection failed: {e}")
-            return False
+        Returns True if portal succeeded, False otherwise (libnotify will be used).
+        """
+        # Simplified: always try portal first, handle fallback per-notification
+        return HAS_PORTAL
 
     def show(self, title: str, body: str, priority: str = "normal") -> bool:
         """
@@ -74,42 +68,51 @@ class NotificationService:
         Returns:
             True if notification was shown successfully, False otherwise
         """
-        if self.use_portal:
-            return self._show_portal_notification(title, body, priority)
-        elif self.libnotify_initialized:
+        # Try portal first, then fallback to libnotify
+        if HAS_PORTAL:
+            result = self._show_portal_notification(title, body, priority)
+            if result:
+                return True
+            # Portal failed, try libnotify
+        if self.libnotify_initialized:
             return self._show_libnotify_notification(title, body)
-        else:
-            logger.warning("NotificationService: No backend available for notification")
-            return False
+        logger.warning("NotificationService: No backend available for notification")
+        return False
 
     def _show_portal_notification(self, title: str, body: str, priority: str) -> bool:
         """Show notification via XDG Desktop Portal."""
         try:
             portal = Xdp.Portal.new()
 
-            # Prepare notification according to XDG Portal specification
-            notification = {
-                "title": title,
-                "body": body,
-                "priority": priority,
-                # Use app icon for better recognition
-                "icon": {"themed": [self.app_id]}
-            }
+            # Prepare notification as GLib.Variant according to XDG Portal spec
+            # Schema: a{sv} (dictionary of string -> variant)
+            notification = GLib.Variant("a{sv}", {
+                "title": GLib.Variant("s", title),
+                "body": GLib.Variant("s", body),
+                "priority": GLib.Variant("s", priority),
+                # Icon: (sv) tuple with themed icon name and string array
+                "icon": GLib.Variant("(sv)", ("themed", GLib.Variant("as", [self.app_id])))
+            })
 
             # Generate unique ID for this notification
             import time
             notification_id = f"{self.app_id}-{int(time.time())}"
 
             # Show notification via portal
-            portal.add_notification(notification_id, notification)
+            # Full signature: add_notification(id, notification, flags, cancellable, callback, data)
+            portal.add_notification(
+                notification_id,
+                notification,
+                Xdp.NotificationFlags.NONE,
+                None,  # cancellable
+                None,  # callback
+                None   # data
+            )
             logger.debug(f"NotificationService: Portal notification sent: {title}")
             return True
 
         except Exception as e:
             logger.warning(f"NotificationService: Portal notification failed: {e}")
-            # Fallback to libnotify if available
-            if self.libnotify_initialized:
-                return self._show_libnotify_notification(title, body)
             return False
 
     def _show_libnotify_notification(self, title: str, body: str) -> bool:
@@ -125,11 +128,11 @@ class NotificationService:
 
     def is_available(self) -> bool:
         """Check if any notification backend is available."""
-        return self.use_portal or self.libnotify_initialized
+        return HAS_PORTAL or self.libnotify_initialized
 
     def get_backend_info(self) -> str:
         """Get information about the active notification backend."""
-        if self.use_portal:
+        if HAS_PORTAL:
             return "XDG Portal (preferred)"
         elif self.libnotify_initialized:
             return "libnotify (fallback)"

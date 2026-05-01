@@ -1,6 +1,5 @@
 import datetime
 import os
-import subprocess
 import sys
 import threading
 from gettext import gettext as _
@@ -8,7 +7,7 @@ from gettext import gettext as _
 from gi.repository import Adw, Gio, GLib, Gtk
 from loguru import logger
 
-from .services.notification_service import NotificationService
+from anura.services.notification_service import NotificationService
 
 
 def _load_gresource_bundle():
@@ -258,10 +257,15 @@ class AnuraApplication(Adw.Application):
                     return False  # Stop checking
                 return True  # Continue checking
 
-            # Add timeout source (60 seconds)
-            timeout_id = GLib.timeout_add_seconds(int(timeout_seconds), on_timeout)
-            # Add idle source to check for completion (more efficient than polling)
-            idle_id = GLib.idle_add(on_done)
+            # Create timeout source (60 seconds) and attach to ctx
+            timeout_source = GLib.timeout_source_new_seconds(int(timeout_seconds))
+            timeout_source.set_callback(on_timeout)
+            timeout_id = timeout_source.attach(ctx)
+
+            # Create idle source to check for completion and attach to ctx
+            idle_source = GLib.idle_source_new()
+            idle_source.set_callback(on_done)
+            idle_id = idle_source.attach(ctx)
 
             timed_out = False
             loop.run()
@@ -304,36 +308,13 @@ class AnuraApplication(Adw.Application):
             window.show_preferences()
 
     def _get_release_notes(self):
-        """Generate release notes from git history since last tag."""
+        """Get release notes from generated _release_notes module."""
         try:
-            # Get app root directory
-            app_root_dir = os.path.dirname(os.path.dirname(__file__))
-
-            # Get last tag
-            result = subprocess.run(
-                ['git', 'describe', '--tags', '--abbrev=0'],
-                capture_output=True, text=True, cwd=app_root_dir, timeout=10
-            )
-            if result.returncode != 0:
-                raise Exception("No git tags found")
-
-            last_tag = result.stdout.strip()
-
-            # Get changelog since last tag (only fix/feat/chore commits)
-            result = subprocess.run(
-                ['git', 'log', f'{last_tag}..HEAD', '--oneline', '--grep=^(fix|feat|chore)', '--no-merges'],
-                capture_output=True, text=True, cwd=app_root_dir, timeout=10
-            )
-
-            commits = [line.strip() for line in result.stdout.strip().split('\n') if line.strip()]
-
-            if commits:
-                # Format commits for display (limit to 10 most recent)
-                commits_html = "".join([f"<li>{commit}</li>" for commit in commits[:10]])
-                return f"<p>Changes in this version:</p><ul>{commits_html}</ul>"
-
+            from anura._release_notes import get_release_notes
+            notes = get_release_notes()
+            return f"<p>Anura OCR {self.version}</p>{notes}"
         except Exception as e:
-            logger.debug(f"Could not generate git release notes: {e}")
+            logger.debug(f"Could not load release notes: {e}")
 
         # Fallback to version-specific message
         return f"<p>Anura OCR {self.version} - Bug fixes and improvements.</p>"

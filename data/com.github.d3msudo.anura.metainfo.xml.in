@@ -107,6 +107,7 @@
   <url type="bugtracker">https://github.com/D3M-Sudo/Anura/issues</url>
   <url type="vcs-browser">https://github.com/D3M-Sudo/Anura</url>
   <url type="help">https://github.com/D3M-Sudo/Anura/blob/main/README.md</url>
+  <url type="translate">https://hosted.weblate.org/engage/anura/</url>
   <content_rating type="oars-1.1">
     <content_attribute id="violence-cartoon">none</content_attribute>
     <content_attribute id="violence-fantasy">none</content_attribute>
