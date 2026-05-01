@@ -12,7 +12,10 @@ def parse_changelog(changelog_path: Path) -> dict:
     content = changelog_path.read_text()
 
     # Pattern to match version sections
-    version_pattern = r'^## \[(?P<version>\d+\.\d+\.\d+)\] - (?P<date>\d{4}-\d{2}-\d{2})\n+(?P<content>.*?)(?=^## \[|\Z)'
+    version_pattern = (
+        r'^## \[(?P<version>\d+\.\d+\.\d+)\] - (?P<date>\d{4}-\d{2}-\d{2})\n+'
+        r'(?P<content>.*?)(?=^## \[|\Z)'
+    )
 
     releases = {}
 

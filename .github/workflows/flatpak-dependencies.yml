@@ -1,0 +1,144 @@
+name: Check Flatpak Dependencies
+
+on:
+  schedule:
+    # Run weekly (same as Dependabot)
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  check-flatpak-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install flatpak-external-data-checker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak-external-data-checker
+
+      - name: Check for available updates
+        id: check
+        run: |
+          # Run FEDC in dry-run mode to see what would be updated
+          set +e
+          OUTPUT=$(flatpak-external-data-checker \
+            --dry-run \
+            --verbose \
+            flatpak/com.github.d3msudo.anura.json 2>&1)
+          FEDC_EXIT_CODE=$?
+          set -e
+
+          # FEDC exits with code 1 when updates are available, which is expected
+          if [ $FEDC_EXIT_CODE -ne 0 ] && [ $FEDC_EXIT_CODE -ne 1 ]; then
+            echo "Error: flatpak-external-data-checker failed with exit code $FEDC_EXIT_CODE"
+            echo "$OUTPUT"
+            exit 1
+          fi
+
+          echo "$OUTPUT"
+          
+          # Filter Python dependencies (excluding certifi which is auto-updated)
+          PYTHON_UPDATES=$(echo "$OUTPUT" | grep -E "python3-(pillow|pytesseract|click|gTTS|six|dateutil|loguru|pyzbar|urllib3|charset-normalizer|idna|requests|certifi)" || true)
+          
+          # Check if there are any manual updates needed
+          if [ -n "$PYTHON_UPDATES" ]; then
+            echo "has_updates=true" >> $GITHUB_OUTPUT
+            echo "updates<<EOF" >> $GITHUB_OUTPUT
+            echo "$PYTHON_UPDATES" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "has_updates=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Issue for Manual Updates
+        if: steps.check.outputs.has_updates == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '📦 Flatpak Python dependencies need manual update';
+            const body = `## Available Updates
+
+            The following Python dependencies in the Flatpak manifest have updates available:
+
+            \`\`\`
+            ${{ steps.check.outputs.updates }}
+            \`\`\`
+
+            ### Action Required
+            These dependencies require manual testing before update:
+            - gTTS - API may change
+            - Pillow - Breaking changes possible
+            - pytesseract - Check compatibility with tesseract version
+            - Others - Verify runtime compatibility
+
+            ### Files to update
+            - \`flatpak/com.github.d3msudo.anura.json\`
+
+            Run locally:
+            \`\`\`bash
+            flatpak-external-data-checker --update flatpak/com.github.d3msudo.anura.json
+            flatpak-builder builddir flatpak/com.github.d3msudo.anura.json --force-clean
+            \`\`\`
+
+            _This issue was automatically created by the Flatpak dependency checker._`;
+
+            // Check if an open issue already exists
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'dependencies',
+              creator: 'github-actions[bot]'
+            });
+
+            const existing = issues.data.find(i => i.title === title);
+
+            if (!existing) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['dependencies']
+              });
+            }
+
+      - name: Auto-update certifi only
+        run: |
+          # Apply only certifi updates automatically (security-critical, stable API)
+          # FEDC exits with code 1 when it applies updates, 0 when no updates needed
+          set +e
+          flatpak-external-data-checker \
+            --update \
+            --filter python3-certifi \
+            flatpak/com.github.d3msudo.anura.json
+          FEDC_EXIT_CODE=$?
+          set -e
+
+          # Exit code 1 means updates were applied (expected), 0 means no updates needed
+          if [ $FEDC_EXIT_CODE -ne 0 ] && [ $FEDC_EXIT_CODE -ne 1 ]; then
+            echo "Error: flatpak-external-data-checker failed with exit code $FEDC_EXIT_CODE"
+            exit 1
+          fi
+
+          echo "Certifi check completed (exit code: $FEDC_EXIT_CODE)"
+
+      - name: Create PR for certifi updates
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Update certifi"
+          title: "Update certifi"
+          body: |
+            Automated update of certifi (SSL certificates).
+
+            This is a security-critical dependency updated automatically.
+          branch: update-certifi
+          delete-branch: true
