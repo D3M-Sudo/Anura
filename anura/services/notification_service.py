@@ -5,14 +5,19 @@
 # Notification service with XDG Portal and libnotify fallback
 # Provides maximum compatibility across desktop environments
 
+import time
 from loguru import logger
 
 try:
-    from gi.repository import GLib, Notify
+    from gi.repository import GLib
+except ImportError:
+    GLib = None
+
+try:
+    from gi.repository import Notify
     HAS_LIBNOTIFY = True
 except ImportError:
     HAS_LIBNOTIFY = False
-    GLib = None
     Notify = None
 
 try:
@@ -46,15 +51,6 @@ class NotificationService:
 
         if not HAS_PORTAL and not self.libnotify_initialized:
             logger.warning("NotificationService: No notification backend available")
-
-    def _detect_portal_available(self) -> bool:
-        """
-        Try to use XDG portal for a notification.
-
-        Returns True if portal succeeded, False otherwise (libnotify will be used).
-        """
-        # Simplified: always try portal first, handle fallback per-notification
-        return HAS_PORTAL
 
     def show(self, title: str, body: str, priority: str = "normal") -> bool:
         """
@@ -95,7 +91,6 @@ class NotificationService:
             })
 
             # Generate unique ID for this notification
-            import time
             notification_id = f"{self.app_id}-{int(time.time())}"
 
             # Show notification via portal

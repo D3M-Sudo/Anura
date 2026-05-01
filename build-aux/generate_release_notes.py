@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Generate _release_notes.py from CHANGELOG.md during build."""
 
+import html
 import re
 import sys
 from pathlib import Path
@@ -24,15 +25,15 @@ def parse_changelog(changelog_path: Path) -> dict:
         for line in section_content.strip().split('\n'):
             line = line.strip()
             if line.startswith('- '):
-                # Remove the leading "- " and any markdown bold markers
-                item_text = line[2:].replace('**', '')
+                # Remove the leading "- " and any markdown bold markers, then escape HTML
+                item_text = html.escape(line[2:].replace('**', ''))
                 items.append(item_text)
 
         if items:
             # Build HTML
             html_items = ''.join(f'<li>{item}</li>' for item in items)
-            html = f'<ul>{html_items}</ul>'
-            releases[version] = html
+            html_output = f'<ul>{html_items}</ul>'
+            releases[version] = html_output
 
     return releases
 
@@ -51,8 +52,8 @@ def generate_release_notes_py(changelog_path: Path, output_path: Path, current_v
         'RELEASE_NOTES = {',
     ]
 
-    for version, html in releases.items():
-        lines.append(f'    "{version}": """{html}""",')
+    for version, html_content in releases.items():
+        lines.append(f'    "{version}": """{html_content}""",')
 
     lines.extend([
         '}',
