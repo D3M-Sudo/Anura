@@ -28,11 +28,12 @@ localedir = prefix / get_option('localedir')
 
 # Generate _release_notes.py from CHANGELOG.md
 release_notes_py = custom_target('release_notes',
-  input: ['CHANGELOG.md', 'build-aux/generate_release_notes.py'],
+  input: ['build-aux/generate_release_notes.py', 'CHANGELOG.md'],
   output: '_release_notes.py',
   command: [
     python,
     '@INPUT0@',
+    '@INPUT1@',
     '@OUTPUT@',
     meson.project_version()
   ],
