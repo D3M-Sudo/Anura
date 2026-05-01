@@ -260,20 +260,17 @@ class AnuraApplication(Adw.Application):
             # Create timeout source (60 seconds) and attach to ctx
             timeout_source = GLib.timeout_source_new_seconds(int(timeout_seconds))
             timeout_source.set_callback(on_timeout)
-            timeout_id = timeout_source.attach(ctx)
+            timeout_source.attach(ctx)
 
             # Create idle source to check for completion and attach to ctx
             idle_source = GLib.idle_source_new()
             idle_source.set_callback(on_done)
-            idle_id = idle_source.attach(ctx)
+            idle_source.attach(ctx)
 
             timed_out = False
             loop.run()
 
-            # Cleanup sources
-            GLib.source_remove(timeout_id)
-            if not done_event.is_set() and not _interrupted.is_set():
-                GLib.source_remove(idle_id)
+            # Sources will be automatically cleaned up when context is destroyed
 
             if _interrupted.is_set():
                 return 130  # Standard exit code for SIGINT

@@ -5,7 +5,6 @@
 # Notification service with XDG Portal and libnotify fallback
 # Provides maximum compatibility across desktop environments
 
-import time
 from loguru import logger
 
 try:
@@ -77,6 +76,9 @@ class NotificationService:
 
     def _show_portal_notification(self, title: str, body: str, priority: str) -> bool:
         """Show notification via XDG Desktop Portal."""
+        import time
+        if GLib is None:
+            return False
         try:
             portal = Xdp.Portal.new()
 
@@ -127,8 +129,10 @@ class NotificationService:
 
     def get_backend_info(self) -> str:
         """Get information about the active notification backend."""
-        if HAS_PORTAL:
-            return "XDG Portal (preferred)"
+        if HAS_PORTAL and self.libnotify_initialized:
+            return "XDG Portal (primary) + libnotify (fallback)"
+        elif HAS_PORTAL:
+            return "XDG Portal (available, untested)"
         elif self.libnotify_initialized:
             return "libnotify (fallback)"
         else:

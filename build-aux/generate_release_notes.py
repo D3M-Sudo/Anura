@@ -25,15 +25,22 @@ def parse_changelog(changelog_path: Path) -> dict:
         for line in section_content.strip().split('\n'):
             line = line.strip()
             if line.startswith('- '):
-                # Remove the leading "- " and any markdown bold markers, then escape HTML
-                item_text = html.escape(line[2:].replace('**', ''))
+                # Remove the leading "- " and any markdown syntax, then escape HTML
+                item_text = html.escape(line[2:]
+                    .replace('**', '')
+                    .replace('__', '')
+                    .replace('*', '')
+                    .replace('_', '')
+                    .replace('`', ''))
                 items.append(item_text)
 
         if items:
             # Build HTML
             html_items = ''.join(f'<li>{item}</li>' for item in items)
             html_output = f'<ul>{html_items}</ul>'
-            releases[version] = html_output
+        else:
+            html_output = '<p>No changes listed.</p>'
+        releases[version] = html_output
 
     return releases
 
