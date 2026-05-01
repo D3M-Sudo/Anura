@@ -326,8 +326,8 @@
             "sources": [
                 {
                     "type": "file",
-                    "url": "https://files.pythonhosted.org/packages/38/fc/bce832fd4fd99766c04d1ee0eead7b0eafe4d0dd6c0c02c5e18580c26522/certifi-2025.1.31-py3-none-any.whl",
-                    "sha256": "6657b9651f459eb8134f83afe339872ee47e7ce029de0d93f822ffe3899aee97"
+                    "url": "https://files.pythonhosted.org/packages/38/fc/bce832fd4fd99766c04d1ee0eead6b0ec6486fb100ae5e74c1d91292b982/certifi-2025.1.31-py3-none-any.whl",
+                    "sha256": "ca78db4565a652026a4db2bcdf68f2fb589ea80d0be70e03929ed2f84d60c17b"
                 }
             ]
         },
