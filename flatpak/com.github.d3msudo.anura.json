@@ -13,8 +13,7 @@
         "--socket=wayland",
         "--socket=pulseaudio",
         "--device=dri",
-        "--filesystem=xdg-download",
-        "--filesystem=xdg-pictures"
+        "--filesystem=xdg-download"
     ],
 
     "cleanup": [
@@ -192,8 +191,8 @@
             "sources": [
                 {
                     "type": "archive",
-                    "url": "https://files.pythonhosted.org/packages/a5/26/0d95c04c868f6bdb0c447e3ee2de5564411845e36a858cfd63766bc7b563/pillow-11.0.0.tar.gz",
-                    "sha256": "72bacbaf24ac003fea9bff9837d1eedb6088758d41e100c1552930151f677739"
+                    "url": "https://files.pythonhosted.org/packages/af/36/5ccc39f4c49f8080e0214659f6d4256a034a7d281ec3dd2f5e13e3073a11/pillow-11.2.1.tar.gz",
+                    "sha256": "e4c47b97abf444b60aad9c7d9dda9d20137e1bca1776f8f48d38dda96ff820ae"
                 }
             ]
         },
@@ -322,13 +321,13 @@
             "name": "python3-certifi",
             "buildsystem": "simple",
             "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed certifi-2024.8.30-py3-none-any.whl"
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed certifi-2025.1.31-py3-none-any.whl"
             ],
             "sources": [
                 {
                     "type": "file",
-                    "url": "https://files.pythonhosted.org/packages/12/90/3c9ff0512038035f59d279fddeb79f5f1eccd8859f06d6163c58798b9487/certifi-2024.8.30-py3-none-any.whl",
-                    "sha256": "922820b53db7a7257ffbda3f597266d435245903d80737e34f8a45ff3e3230d8"
+                    "url": "https://files.pythonhosted.org/packages/38/fc/bce832fd4fd99766c04d1ee0eead7b0eafe4d0dd6c0c02c5e18580c26522/certifi-2025.1.31-py3-none-any.whl",
+                    "sha256": "6657b9651f459eb8134f83afe339872ee47e7ce029de0d93f822ffe3899aee97"
                 }
             ]
         },

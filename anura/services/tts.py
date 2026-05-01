@@ -135,7 +135,7 @@ class TTSService(GObject.GObject):
         """Plays the generated speech file using GStreamer's playbin."""
         filepath = os.path.abspath(speech_file)
 
-        self.player = Gst.ElementFactory.make("playbin", "player")
+        self.player = Gst.ElementFactory.make("playbin3", "player")
         if not self.player:
             logger.error("Anura TTS Error: Failed to create GStreamer playbin.")
             return

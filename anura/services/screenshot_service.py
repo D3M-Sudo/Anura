@@ -40,13 +40,15 @@ class ScreenshotService(GObject.GObject):
     def capture(self, lang: str, copy: bool = False) -> None:
         """Requests a screenshot from the system portal."""
         with self._cancellable_lock:
-            self.portal.take_screenshot(
-                None,
-                Xdp.ScreenshotFlags.INTERACTIVE,
-                self.cancelable,
-                self.take_screenshot_finish,
-                [lang, copy],
-            )
+            cancellable = self.cancelable
+        # Release lock before async D-Bus call to prevent deadlock
+        self.portal.take_screenshot(
+            None,
+            Xdp.ScreenshotFlags.INTERACTIVE,
+            cancellable,
+            self.take_screenshot_finish,
+            [lang, copy],
+        )
 
     def take_screenshot_finish(self, source_object, res: Gio.Task, user_data):
         """Callback triggered when the portal finishes the screenshot request."""
@@ -134,7 +136,7 @@ class ScreenshotService(GObject.GObject):
     def capture_cancelled(self, cancellable: Gio.Cancellable, user_data=None) -> None:
         """Handles the cancellation of the screenshot request."""
         logger.info("Anura Screenshot: Capture cancelled by user.")
-        self.emit("error", _("Cancelled"))
+        GLib.idle_add(self.emit, "error", _("Cancelled"))
         # Disconnect old handler and reset cancellable for future use (with lock to prevent race condition)
         with self._cancellable_lock:
             if self._cancelable_handler_id is not None:

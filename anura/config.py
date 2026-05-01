@@ -60,7 +60,6 @@ def get_tesseract_config(lang_code: str) -> str:
         Paths are quoted to handle spaces in directory names.
     """
     # Security: Validate lang_code is a valid ISO 639-2 code
-    #mport re
     if not lang_code or not re.match(r'^[a-zA-Z0-9_]{2,8}$', lang_code):
         logger.error(f"Anura: Invalid language code '{lang_code}' - using default 'eng'")
         lang_code = "eng"

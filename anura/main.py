@@ -202,11 +202,12 @@ class AnuraApplication(Adw.Application):
             )
 
             # Wait for completion with timeout using GLib MainLoop (event-driven)
-            # This is more efficient than polling with time.sleep()
+            # Create a main loop that will run until done_event is set or timeout
             timeout_seconds = 60.0
 
-            # Create a main loop that will run until done_event is set or timeout
-            loop = GLib.MainLoop.new(GLib.MainContext.default(), False)
+            # Create a main loop with new context (not default) for thread safety
+            ctx = GLib.MainContext.new()
+            loop = GLib.MainLoop.new(ctx, False)
 
             def on_timeout():
                 """Timeout callback - stop loop and mark as timed out."""
@@ -280,7 +281,7 @@ class AnuraApplication(Adw.Application):
             license_type=Gtk.License.MIT,
             developers=["Andrey Maksimov", "D3M-Sudo"],
             designers=["Andrey Maksimov"],
-            release_notes=_("Extract text from anywhere on your screen.")
+            release_notes="<p>" + _("Extract text from anywhere on your screen.") + "</p>"
         )
         about_window.present(self.props.active_window)
 
