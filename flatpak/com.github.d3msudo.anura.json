@@ -191,8 +191,8 @@
             "sources": [
                 {
                     "type": "archive",
-                    "url": "https://files.pythonhosted.org/packages/af/36/5ccc39f4c49f8080e0214659f6d4256a034a7d281ec3dd2f5e13e3073a11/pillow-11.2.1.tar.gz",
-                    "sha256": "e4c47b97abf444b60aad9c7d9dda9d20137e1bca1776f8f48d38dda96ff820ae"
+                    "url": "https://files.pythonhosted.org/packages/af/cb/bb5c01fcd2a69335b86c22142b2bccfc3464087efb7fd382eee5ffc7fdf7/pillow-11.2.1.tar.gz",
+                    "sha256": "a64dd61998416367b7ef979b73d3a85853ba9bec4c2925f74e588879a58716b6"
                 }
             ]
         },
@@ -326,8 +326,8 @@
             "sources": [
                 {
                     "type": "file",
-                    "url": "https://files.pythonhosted.org/packages/38/fc/bce832fd4fd99766c04d1ee0eead7b0eafe4d0dd6c0c02c5e18580c26522/certifi-2025.1.31-py3-none-any.whl",
-                    "sha256": "6657b9651f459eb8134f83afe339872ee47e7ce029de0d93f822ffe3899aee97"
+                    "url": "https://files.pythonhosted.org/packages/38/fc/bce832fd4fd99766c04d1ee0eead6b0ec6486fb100ae5e74c1d91292b982/certifi-2025.1.31-py3-none-any.whl",
+                    "sha256": "ca78db4565a652026a4db2bcdf68f2fb589ea80d0be70e03929ed730746b84fe"
                 }
             ]
         },
