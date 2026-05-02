@@ -101,6 +101,11 @@ def generate_release_notes_py(changelog_path: Path, output_path: Path, current_v
     output_path.write_text('\n'.join(lines))
 
 
+def validate_version(version: str) -> bool:
+    """Validate version string format (e.g., '0.1.4' or '0.1.4.1')."""
+    return bool(re.match(r'^[0-9]+\.[0-9]+\.[0-9]+(?:\.[0-9]+)?$', version))
+
+
 if __name__ == '__main__':
     if len(sys.argv) != 4:
         print(f'Usage: {sys.argv[0]} <changelog.md> <output.py> <version>', file=sys.stderr)
@@ -109,6 +114,11 @@ if __name__ == '__main__':
     changelog = Path(sys.argv[1])
     output = Path(sys.argv[2])
     version = sys.argv[3]
+
+    if not validate_version(version):
+        print(f'Error: Invalid version format: {version}', file=sys.stderr)
+        print('Expected format: MAJOR.MINOR.PATCH[.PATCH2] (e.g., 0.1.4 or 0.1.4.1)', file=sys.stderr)
+        sys.exit(1)
 
     generate_release_notes_py(changelog, output, version)
     print(f'Generated {output} with release notes for version {version}')

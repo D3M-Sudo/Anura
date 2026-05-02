@@ -82,9 +82,11 @@ class TTSService(GObject.GObject):
         # 2. Validate 2-char prefix against supported languages
         supported = TTSService.get_supported_gtts_languages()
         # Only use 2-char codes that look like valid ISO 639-1 (letters only)
-        two_char = tess_code[:2]
-        if two_char.isalpha() and two_char in supported:
-            return two_char
+        # Require at least 2 characters to prevent single-char false matches
+        if len(tess_code) >= 2:
+            two_char = tess_code[:2]
+            if two_char.isalpha() and two_char in supported:
+                return two_char
 
         # 3. Fallback to English
         logger.warning(f"Anura TTS: No mapping for '{tess_code}', falling back to 'en'")

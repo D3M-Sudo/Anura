@@ -32,9 +32,10 @@ class ScreenshotService(GObject.GObject):
 
     def __init__(self):
         GObject.GObject.__init__(self)
-        self.cancelable: Gio.Cancellable = Gio.Cancellable.new()
-        self._cancelable_handler_id = self.cancelable.connect("cancelled", self.capture_cancelled)
         self._cancellable_lock = threading.Lock()
+        with self._cancellable_lock:
+            self.cancelable: Gio.Cancellable = Gio.Cancellable.new()
+            self._cancelable_handler_id = self.cancelable.connect("cancelled", self.capture_cancelled)
         self.portal = Xdp.Portal()
 
     def capture(self, lang: str, copy: bool = False) -> None:
@@ -85,6 +86,12 @@ class ScreenshotService(GObject.GObject):
                    - text: The extracted text or QR code content (None if failed or no text)
                    - error_message: Error description if failed, None otherwise
         """
+        import re
+        # Security: Validate language code before processing (same as decode_image)
+        if not lang or not re.match(LANG_CODE_PATTERN, lang):
+            logger.error(f"Anura: Invalid language code '{lang}' for OCR")
+            return (False, None, _("Invalid language code specified."))
+
         # Rigor: Ensure source removal only for valid local file paths
         is_physical_file = isinstance(file, str) and os.path.exists(file)
         if not is_physical_file:

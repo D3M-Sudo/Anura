@@ -84,7 +84,16 @@ class AnuraWindow(Adw.ApplicationWindow):
             30, self._on_screenshot_timeout
         )
 
-        self.backend.capture(lang, copy)
+        try:
+            self.backend.capture(lang, copy)
+        except Exception as e:
+            # Clean up timeout and restore window on error
+            if self._screenshot_timeout_id is not None:
+                GLib.source_remove(self._screenshot_timeout_id)
+                self._screenshot_timeout_id = None
+            self.present()
+            logger.error(f"Anura: Screenshot capture failed: {e}")
+            self.show_toast(_("Failed to capture screenshot"))
 
     def _on_screenshot_timeout(self) -> bool:
         """Callback triggered when screenshot portal times out."""

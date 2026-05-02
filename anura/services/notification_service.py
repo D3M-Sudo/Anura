@@ -60,6 +60,9 @@ class NotificationService:
         if not HAS_PORTAL and not self.libnotify_initialized:
             logger.warning("NotificationService: No notification backend available")
 
+    # Valid priority levels according to XDG Portal specification
+    _VALID_PRIORITIES = {"low", "normal", "high", "urgent"}
+
     def show(self, title: str, body: str, priority: str = "normal") -> bool:
         """
         Show a notification with automatic backend selection.
@@ -72,6 +75,11 @@ class NotificationService:
         Returns:
             True if notification was shown successfully, False otherwise
         """
+        # Validate priority parameter
+        if priority not in self._VALID_PRIORITIES:
+            logger.warning(f"NotificationService: Invalid priority '{priority}', using 'normal'")
+            priority = "normal"
+
         # Try portal first, then fallback to libnotify
         if HAS_PORTAL:
             result = self._show_portal_notification(title, body, priority)
