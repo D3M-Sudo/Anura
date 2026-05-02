@@ -37,6 +37,20 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="0.1.4.1" type="stable" date="2026-05-02">
+      <description>
+        <p>Hotfix release for UI initialization issues and notification improvements.</p>
+        <ul>
+          <li>Fixed missing Adw.init() call causing "greyed out UI" on some systems.</li>
+          <li>Fixed GResource bundle loading to properly exit on failure instead of continuing with broken UI.</li>
+          <li>Fixed notification portal API to use proper GLib.Variant format (a{sv}) for XDG Portal compatibility.</li>
+          <li>Fixed notification import consistency with absolute imports throughout main.py.</li>
+          <li>Fixed HTML escaping in release notes generation to prevent XSS vulnerabilities.</li>
+          <li>Added CHANGELOG.md as source of truth for release notes.</li>
+          <li>Added translate URL to metainfo for Weblate integration.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.4" type="stable" date="2026-05-01">
       <description>
         <p>Production release with critical bug fixes, security improvements, and Flathub compliance.</p>

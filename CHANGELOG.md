@@ -4,11 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.1.4.1] - 2026-05-02
+
+### Fixed
+- Fixed missing `Adw.init()` call causing "greyed out UI" on some systems
+- Fixed GResource bundle loading to properly exit on failure instead of continuing with broken UI
+- Fixed notification portal API to use proper GLib.Variant format (a{sv}) for XDG Portal compatibility
+- Fixed notification import consistency with absolute imports throughout main.py
+- Fixed HTML escaping in release notes generation to prevent XSS vulnerabilities
+
+### Changed
+- Added CHANGELOG.md as source of truth for release notes
+- Added translate URL to metainfo for Weblate integration
+
 ## [0.1.4] - 2026-05-01
 
 ### Fixed
-- Fixed missing `Adw.init()` call causing "greyed out UI" on some systems (Issue #261)
-- Fixed GResource bundle loading to properly exit on failure instead of continuing with broken UI
 - Fixed critical thread-safety issues and race conditions in language manager and screenshot service
 - Fixed memory leaks in widget lifecycle management and GStreamer bus watch
 - Fixed all Flatpak manifest dependencies (requests, urllib3, certifi, hatchling, pyzbar)
