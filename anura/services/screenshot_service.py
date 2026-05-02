@@ -9,10 +9,11 @@ import threading
 from gettext import gettext as _
 from urllib.request import url2pathname
 
+import pytesseract
+
 from gi.repository import Gio, GLib, GObject, Xdp
 from loguru import logger
 from PIL import Image
-import pytesseract
 from pyzbar.pyzbar import decode
 
 from anura.config import get_tesseract_config, LANG_CODE_PATTERN

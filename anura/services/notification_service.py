@@ -7,6 +7,7 @@
 
 import time
 from itertools import count
+
 from loguru import logger
 
 try:
