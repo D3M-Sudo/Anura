@@ -12,6 +12,9 @@ from loguru import logger
 APP_ID = "com.github.d3msudo.anura"
 RESOURCE_PREFIX = "/com/github/d3msudo/anura"
 
+# Language code validation pattern (ISO 639-2, 2-8 alphanumeric chars with underscore)
+LANG_CODE_PATTERN = r'^[a-zA-Z0-9_]{2,8}$'
+
 # XDG Base Directory specification compliance
 XDG_DATA_HOME = os.getenv("XDG_DATA_HOME", os.path.expanduser("~/.local/share"))
 XDG_CACHE_HOME = os.getenv("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
@@ -60,7 +63,7 @@ def get_tesseract_config(lang_code: str) -> str:
         Paths are quoted to handle spaces in directory names.
     """
     # Security: Validate lang_code is a valid ISO 639-2 code
-    if not lang_code or not re.match(r'^[a-zA-Z0-9_]{2,8}$', lang_code):
+    if not lang_code or not re.match(LANG_CODE_PATTERN, lang_code):
         logger.error(f"Anura: Invalid language code '{lang_code}' - using default 'eng'")
         lang_code = "eng"
 

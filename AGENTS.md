@@ -1,0 +1,262 @@
+# AGENTS.md — Anura OCR AI Assistant Guide
+
+> Canonical AI-assistant guide for this repository. Also read by Claude Code, Cursor, Aider, Continue, and Zed via the AGENTS.md convention.
+
+## Project Overview
+
+Anura OCR is a GTK4/Libadwaita desktop application for GNOME that extracts text from screenshots, images, and clipboard using Tesseract OCR, with QR code support, text-to-speech, and social sharing. It is a fork of Frog OCR with complete telemetry removal.
+
+**Key Facts:**
+
+- Python 3.11+ required
+- GTK4 + Libadwaita + Blueprint Compiler for declarative UI
+- OCR via `pytesseract` (Tesseract 5.x wrapper)
+- QR code via `pyzbar` + `zbar`
+- TTS via `gTTS` + GStreamer `playbin3`
+- Screenshots via XDG Desktop Portal (`libportal` / `Xdp`)
+- Distributed as Flatpak (`com.github.d3msudo.anura`) — GNOME 49 runtime
+- Internationalization with gettext: 25+ languages (see `po/LINGUAS`)
+- Build system: Meson ≥ 1.5.0
+- License: MIT
+
+## Repository Structure
+
+```
+anura/
+├── anura/                      Python application source
+│   ├── main.py                 AnuraApplication (Adw.Application) + CLI + AboutDialog
+│   ├── window.py               AnuraWindow — DnD, FileDialog, paste, URI validation
+│   ├── config.py               Constants APP_ID, tessdata URL, lang_code validation
+│   ├── gobject_worker.py       Generic thread pool with GLib.idle_add
+│   ├── language_manager.py     Tessdata model download/management (singleton)
+│   ├── services/
+│   │   ├── screenshot_service.py   Screenshot capture via Xdp.Portal
+│   │   ├── clipboard_service.py    Clipboard read/write (Gdk.Clipboard)
+│   │   ├── notification_service.py Notifications: XDG Portal → libnotify fallback
+│   │   ├── tts.py                  Text-to-speech via gTTS + GStreamer
+│   │   ├── share_service.py        Social sharing (5 providers)
+│   │   └── settings.py             GSettings singleton wrapper
+│   ├── types/
+│   │   ├── download_state.py       DownloadState enum
+│   │   └── language_item.py        LanguageItem dataclass
+│   └── widgets/
+│       ├── extracted_page.py       OCR result page with share/TTS actions
+│       ├── language_popover.py     Language selector with search
+│       ├── language_popover_row.py Language row in popover
+│       ├── language_row.py         Language row in preferences page
+│       ├── list_menu_row.py        Generic menu row
+│       ├── preferences_dialog.py   Preferences dialog (Adw.PreferencesDialog)
+│       ├── preferences_general_page.py   General preferences page
+│       ├── preferences_languages_page.py Language management/download page
+│       ├── share_row.py            Share provider row
+│       └── welcome_page.py         Welcome page
+├── data/
+│   ├── ui/                     Blueprint files (.blp) → compiled to .ui
+│   ├── icons/                  Scalable SVG icons + symbolic variants
+│   ├── screenshots/            Screenshots for Flathub/metainfo
+│   ├── com.github.d3msudo.anura.desktop.in
+│   ├── com.github.d3msudo.anura.gresource.xml
+│   ├── com.github.d3msudo.anura.gschema.xml
+│   ├── com.github.d3msudo.anura.metainfo.xml.in
+│   └── style.css
+├── flatpak/
+│   └── com.github.d3msudo.anura.json   Flatpak manifest with all dependencies
+├── build-aux/
+│   ├── generate_release_notes.py   CHANGELOG.md parser → _release_notes.py
+│   └── meson/postinstall.py
+├── bin/
+│   └── anura.in                Entry point script (installed as `anura`)
+├── po/                         Gettext translations (25+ languages)
+├── .github/
+│   ├── workflows/
+│   │   ├── main.yml                    CI build and smoke tests
+│   │   └── flatpak-dependencies.yml    Weekly FEDC + auto-PR certifi
+│   └── dependabot.yml                  Automatic pip and Actions updates
+├── meson.build                 Main build (also generates _release_notes.py)
+├── CHANGELOG.md                Versioned changelog (source for release notes)
+└── release.sh                  Release script (pin tessdata SHA, bump version)
+```
+
+## Development Commands
+
+### Environment Setup
+
+```bash
+# System dependencies (Ubuntu/Debian)
+sudo apt install python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 \
+    blueprint-compiler libportal-gtk4-dev \
+    tesseract-ocr python3-pil python3-pip \
+    gstreamer1.0-plugins-good gstreamer1.0-pulseaudio
+
+# Python dependencies
+pip install pytesseract gtts pyzbar loguru pillow requests
+
+# Build with Meson (local development)
+meson setup builddir
+meson compile -C builddir
+
+# Run from source tree (without installing)
+GSETTINGS_SCHEMA_DIR=builddir/data python3 -m anura.main
+```
+
+### Flatpak Build
+
+```bash
+# Full build
+flatpak-builder --force-clean builddir flatpak/com.github.d3msudo.anura.json
+
+# Run the build
+flatpak-builder --run builddir flatpak/com.github.d3msudo.anura.json anura
+
+# Install locally for testing
+flatpak-builder --install --user builddir flatpak/com.github.d3msudo.anura.json
+```
+
+### Flatpak Dependency Updates
+
+```bash
+# Check for available updates (dry-run)
+flatpak-external-data-checker --dry-run flatpak/com.github.d3msudo.anura.json
+
+# Apply updates (requires manual verification for critical dependencies)
+flatpak-external-data-checker --update flatpak/com.github.d3msudo.anura.json
+```
+
+### Internationalization
+
+```bash
+# Regenerate POT template after string changes
+./generate_pot.sh
+
+# Update existing .po files
+for lang in po/*.po; do msgmerge -U "$lang" po/anura.pot; done
+```
+
+## Code Patterns & Conventions
+
+### Thread Safety — Fundamental Rule
+
+**Never emit GObject signals or modify GTK widgets from secondary threads.**
+Always use `GLib.idle_add()` to schedule UI operations from the main thread:
+
+```python
+# CORRECT — emit from secondary thread
+GLib.idle_add(self.emit, "decoded", text, copy)
+GLib.idle_add(self.emit, "error", _("Error message"))
+
+# WRONG — crash from race condition
+self.emit("decoded", text, copy)  # ← never do this from a thread
+```
+
+### GLib MainContext — Silent Mode and Custom Loops
+
+When creating a custom `GLib.MainLoop` (e.g., silent CLI mode), GLib sources must be **explicitly** attached to the loop's context:
+
+```python
+ctx = GLib.MainContext.new()
+loop = GLib.MainLoop.new(ctx, False)
+
+# CORRECT — source attached to ctx
+timeout_source = GLib.timeout_source_new_seconds(60)
+timeout_source.set_callback(on_timeout)
+timeout_source.attach(ctx)
+
+idle_source = GLib.idle_source_new()
+idle_source.set_callback(on_done)
+idle_source.attach(ctx)
+
+# WRONG — attaches to default context, never invoked by loop.run()
+GLib.idle_add(on_done)           # ← don't do this in a custom loop
+GLib.timeout_add_seconds(60, cb) # ← same issue
+```
+
+### Internationalization (i18n)
+
+All user-facing strings must be translatable with gettext:
+
+```python
+from gettext import gettext as _
+from gettext import ngettext
+
+# Simple strings
+label.set_text(_("Extracted text"))
+
+# WRONG — xgettext doesn't extract f-strings
+label.set_text(_(f"Language: {lang}"))
+
+# CORRECT — format after translation
+label.set_text(_("Language: {lang}").format(lang=lang))
+
+# Plurals
+msg = ngettext("{n} file processed", "{n} files processed", count).format(n=count)
+```
+
+**Do NOT translate:**
+- Logger messages (`logger.debug/info/warning/error`)
+- Developer exceptions
+- GSettings keys, CSS class names, D-Bus paths, technical identifiers
+
+### lang_code Validation
+
+Always validate any language code before passing to Tesseract using the regex in `config.py`:
+
+```python
+from anura.config import LANG_CODE_PATTERN
+
+if not re.match(LANG_CODE_PATTERN, lang_code):
+    raise ValueError(f"Invalid language code: {lang_code}")
+```
+
+### URI and URL Handling
+
+Always validate URIs before opening or displaying to user. The `uri_validator()` method in `window.py` protects against homograph attacks, control characters, and disallowed schemes.
+
+```python
+# Use validator before Gtk.UriLauncher
+if self.uri_validator(url):
+    launcher = Gtk.UriLauncher.new(url)
+    launcher.launch(...)
+```
+
+### XDG Desktop Portal — Screenshots
+
+Always use `Xdp.Portal` for screenshots. Do not use direct Wayland or X11 APIs.
+
+### Notifications
+
+Always use `NotificationService` — never `Notify.Notification` directly. The service automatically falls back from XDG Portal to libnotify.
+
+### GStreamer TTS
+
+Use `playbin3` (not deprecated `playbin`). GStreamer resource cleanup must occur under a lock to prevent race conditions.
+
+### Tessdata Download — Atomic Writes
+
+Downloads use atomic writes with `tempfile` + `shutil.move` to prevent corruption.
+
+### Release Notes — Build Time
+
+Release notes for `Adw.AboutDialog` are generated from `CHANGELOG.md` during Meson build. Do NOT generate them at runtime.
+
+## Security Considerations
+
+1. **lang_code validation**: always use `LANG_CODE_PATTERN` before passing to Tesseract (injection prevention)
+2. **URI validation**: use `uri_validator()` before opening URLs (homograph attack protection)
+3. **Atomic writes**: use `tempfile` + `shutil.move` for downloads
+4. **Thread safety**: use `GLib.idle_add()` for all emissions from secondary threads
+5. **No runtime subprocess**: never use `subprocess` for operations possible via GLib/GIO
+6. **Flatpak sandbox**: don't assume filesystem access beyond `xdg-download`
+7. **No telemetry**: Anura is privacy-first — never add analytics without explicit user consent
+
+## Module Reference
+
+| Module | Responsibility |
+|---|---|
+| `anura/main.py` | Application lifecycle, CLI parsing, AboutDialog |
+| `anura/window.py` | Main window, DnD, FileDialog, URI validation |
+| `anura/config.py` | App constants and configuration |
+| `anura/language_manager.py` | Tessdata download/management (singleton) |
+| `anura/services/screenshot_service.py` | XDG Portal screenshot + OCR/QR |
+| `anura/services/notification_service.py` | Notifications with fallback |
+| `anura/services/tts.py` | Text-to-speech via gTTS + GStreamer |
+| `anura/services/share_service.py` | Social sharing providers |
