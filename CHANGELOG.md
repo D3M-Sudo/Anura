@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.1.4] - 2026-05-01
 
 ### Fixed
+- Fixed missing `Adw.init()` call causing "greyed out UI" on some systems (Issue #261)
+- Fixed GResource bundle loading to properly exit on failure instead of continuing with broken UI
 - Fixed critical thread-safety issues and race conditions in language manager and screenshot service
 - Fixed memory leaks in widget lifecycle management and GStreamer bus watch
 - Fixed all Flatpak manifest dependencies (requests, urllib3, certifi, hatchling, pyzbar)

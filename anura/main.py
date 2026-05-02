@@ -53,7 +53,9 @@ def _load_gresource_bundle():
 
 
 # Load GResource before importing any widgets with @Gtk.Template decorators
-_load_gresource_bundle()
+if not _load_gresource_bundle():
+    logger.critical("GResource bundle is required to run Anura. The application cannot start.")
+    sys.exit(1)
 
 from anura.config import APP_ID  # noqa: E402
 from anura.language_manager import language_manager  # noqa: E402
@@ -104,6 +106,7 @@ class AnuraApplication(Adw.Application):
         self.notification_service = NotificationService(APP_ID)
 
     def do_startup(self, *args, **kwargs):
+        Adw.init()
         Adw.Application.do_startup(self)
 
         self.backend = ScreenshotService()
