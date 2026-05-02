@@ -70,23 +70,29 @@ class ScreenshotService(GObject.GObject):
 
         self.decode_image(lang, filename, copy, True)
 
-    def decode_image(self,
-                     lang: str,
-                     file: str | Image.Image | object,
-                     copy: bool = False,
-                     remove_source: bool = False,
-                     ) -> None:
+    def decode_image_sync(self,
+                          lang: str,
+                          file: str | Image.Image | object,
+                          remove_source: bool = False,
+                          ) -> tuple[bool, str | None, str | None]:
         """
-        Decodes the image to find QR codes or extracts text using Tesseract OCR.
+        Synchronously decodes the image to find QR codes or extract text using Tesseract OCR.
         Supports file paths (str) and binary streams (BytesIO).
+
+        Returns:
+            tuple: (success: bool, text: str | None, error_message: str | None)
+                   - success: True if text was extracted, False otherwise
+                   - text: The extracted text or QR code content (None if failed or no text)
+                   - error_message: Error description if failed, None otherwise
         """
         # Rigor: Ensure source removal only for valid local file paths
         is_physical_file = isinstance(file, str) and os.path.exists(file)
         if not is_physical_file:
             remove_source = False
 
-        logger.debug(f"Anura OCR: Decoding image with language: {lang}")
+        logger.debug(f"Anura OCR: Decoding image synchronously with language: {lang}")
         extracted = None
+        error_message = None
 
         try:
             # Image.open is polymorphic: handles both paths and byte streams
@@ -107,17 +113,17 @@ class ScreenshotService(GObject.GObject):
 
         except (IOError, OSError) as e:
             logger.error(f"Anura OCR/QR File Error: {e}")
-            return GLib.idle_add(self.emit, "error", _("Failed to read image file."))
+            error_message = _("Failed to read image file.")
         except (pytesseract.TesseractError, pytesseract.TesseractNotFoundError) as e:
             logger.error(f"Anura OCR Error: Tesseract failed: {e}")
-            return GLib.idle_add(self.emit, "error", _("OCR engine failed to process image."))
+            error_message = _("OCR engine failed to process image.")
         except Exception as e:
             # Catch specific image/QR decoding errors (PIL, zbar) but NOT system exceptions
             # KeyboardInterrupt and SystemExit will propagate correctly
             if isinstance(e, (SystemExit, KeyboardInterrupt)):
                 raise
             logger.error(f"Anura OCR/QR Error: {type(e).__name__}: {e}")
-            return GLib.idle_add(self.emit, "error", _("Failed to decode data."))
+            error_message = _("Failed to decode data.")
 
         finally:
             # Cleanup: Delete temporary portal files if requested
@@ -129,9 +135,29 @@ class ScreenshotService(GObject.GObject):
                     logger.warning(f"Anura OCR: Could not delete {file}: {e}")
 
         if extracted:
+            return (True, extracted, None)
+        elif error_message:
+            return (False, None, error_message)
+        else:
+            return (False, None, _("No text found."))
+
+    def decode_image(self,
+                     lang: str,
+                     file: str | Image.Image | object,
+                     copy: bool = False,
+                     remove_source: bool = False,
+                     ) -> None:
+        """
+        Asynchronously decodes the image and emits GObject signals.
+        Wraps decode_image_sync() for use with GUI mode.
+        Supports file paths (str) and binary streams (BytesIO).
+        """
+        success, extracted, error_message = self.decode_image_sync(lang, file, remove_source)
+
+        if success:
             GLib.idle_add(self.emit, "decoded", extracted, copy)
         else:
-            GLib.idle_add(self.emit, "error", _("No text found."))
+            GLib.idle_add(self.emit, "error", error_message)
 
     def capture_cancelled(self, cancellable: Gio.Cancellable, user_data=None) -> None:
         """Handles the cancellation of the screenshot request."""

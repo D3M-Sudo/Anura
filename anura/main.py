@@ -1,14 +1,12 @@
 import datetime
 import os
-import subprocess
 import sys
-import threading
 from gettext import gettext as _
 
 from gi.repository import Adw, Gio, GLib, Gtk
 from loguru import logger
 
-from .services.notification_service import NotificationService
+from anura.services.notification_service import NotificationService
 
 
 def _load_gresource_bundle():
@@ -55,7 +53,9 @@ def _load_gresource_bundle():
 
 
 # Load GResource before importing any widgets with @Gtk.Template decorators
-_load_gresource_bundle()
+if not _load_gresource_bundle():
+    logger.critical("GResource bundle is required to run Anura. The application cannot start.")
+    sys.exit(1)
 
 from anura.config import APP_ID  # noqa: E402
 from anura.language_manager import language_manager  # noqa: E402
@@ -106,6 +106,7 @@ class AnuraApplication(Adw.Application):
         self.notification_service = NotificationService(APP_ID)
 
     def do_startup(self, *args, **kwargs):
+        Adw.init()
         Adw.Application.do_startup(self)
 
         self.backend = ScreenshotService()
@@ -193,92 +194,35 @@ class AnuraApplication(Adw.Application):
 
     def _run_silent_mode(self, file_path: str) -> int:
         """Run OCR in silent mode without UI, return exit code."""
-        done_event = threading.Event()
-        result = {"success": False, "text": None}
-        _interrupted = threading.Event()
-
-        def on_silent_decoded(_sender, text: str, copy: bool) -> None:
-            result["success"] = True
-            result["text"] = text
-            done_event.set()
-
-        def on_silent_error(_sender, message: str) -> None:
-            result["success"] = False
-            result["error"] = message
-            done_event.set()
+        import signal as sig
 
         def on_signal(signum, frame):
             """Handle SIGINT/SIGTERM for clean shutdown."""
             logger.info(f"Anura: Received signal {signum}, shutting down silently...")
-            _interrupted.set()
-            done_event.set()
+            raise KeyboardInterrupt()
 
-        # Track handler IDs for safe cleanup
-        decoded_handler_id: int | None = None
-        error_handler_id: int | None = None
-
-        import signal as sig
         old_sigint = sig.signal(sig.SIGINT, on_signal)
         old_sigterm = sig.signal(sig.SIGTERM, on_signal)
 
         try:
-            # Temporarily connect to both signals for this operation
-            decoded_handler_id = self.backend.connect('decoded', on_silent_decoded)
-            error_handler_id = self.backend.connect('error', on_silent_error)
-
-            self.backend.decode_image(
+            # Use synchronous decode for silent mode - no signals, no main loop needed
+            success, text, error_message = self.backend.decode_image_sync(
                 self.settings.get_string("active-language"),
                 file_path,
-                copy=True,
                 remove_source=False
             )
 
-            # Wait for completion with timeout using GLib MainLoop (event-driven)
-            # Create a main loop that will run until done_event is set or timeout
-            timeout_seconds = 60.0
-
-            # Create a main loop with new context (not default) for thread safety
-            ctx = GLib.MainContext.new()
-            loop = GLib.MainLoop.new(ctx, False)
-
-            def on_timeout():
-                """Timeout callback - stop loop and mark as timed out."""
-                nonlocal timed_out
-                timed_out = True
-                result["success"] = False
-                result["error"] = "Timeout"
-                logger.error("Anura: Silent mode timeout waiting for OCR")
-                loop.quit()
-                return False  # Don't repeat
-
-            def on_done():
-                """Check if done_event is set, if so quit the loop."""
-                if done_event.is_set() or _interrupted.is_set():
-                    loop.quit()
-                    return False  # Stop checking
-                return True  # Continue checking
-
-            # Add timeout source (60 seconds)
-            timeout_id = GLib.timeout_add_seconds(int(timeout_seconds), on_timeout)
-            # Add idle source to check for completion (more efficient than polling)
-            idle_id = GLib.idle_add(on_done)
-
-            timed_out = False
-            loop.run()
-
-            # Cleanup sources
-            GLib.source_remove(timeout_id)
-            if not done_event.is_set() and not _interrupted.is_set():
-                GLib.source_remove(idle_id)
-
-            if _interrupted.is_set():
-                return 130  # Standard exit code for SIGINT
-
-            if timed_out:
+            if success and text:
+                clipboard_service.set(text)
+                logger.info("Anura: OCR completed successfully in silent mode.")
+                return 0
+            else:
+                logger.error(f"Anura: Silent mode failed: {error_message}")
                 return 1
 
-            return 0 if result["success"] else 1
-
+        except KeyboardInterrupt:
+            logger.info("Anura: Silent mode interrupted by user.")
+            return 130  # Standard exit code for SIGINT
         except Exception as e:
             logger.error(f"Anura: Silent mode unexpected error: {e}")
             return 1
@@ -286,17 +230,6 @@ class AnuraApplication(Adw.Application):
             # Restore original signal handlers
             sig.signal(sig.SIGINT, old_sigint)
             sig.signal(sig.SIGTERM, old_sigterm)
-            # Always disconnect handlers in all scenarios
-            if decoded_handler_id is not None and self.backend:
-                try:
-                    self.backend.disconnect(decoded_handler_id)
-                except Exception:
-                    pass
-            if error_handler_id is not None and self.backend:
-                try:
-                    self.backend.disconnect(error_handler_id)
-                except Exception:
-                    pass
 
     def on_preferences(self, _action, _param) -> None:
         window = self.get_active_window()
@@ -304,36 +237,13 @@ class AnuraApplication(Adw.Application):
             window.show_preferences()
 
     def _get_release_notes(self):
-        """Generate release notes from git history since last tag."""
+        """Get release notes from generated _release_notes module."""
         try:
-            # Get app root directory
-            app_root_dir = os.path.dirname(os.path.dirname(__file__))
-
-            # Get last tag
-            result = subprocess.run(
-                ['git', 'describe', '--tags', '--abbrev=0'],
-                capture_output=True, text=True, cwd=app_root_dir, timeout=10
-            )
-            if result.returncode != 0:
-                raise Exception("No git tags found")
-
-            last_tag = result.stdout.strip()
-
-            # Get changelog since last tag (only fix/feat/chore commits)
-            result = subprocess.run(
-                ['git', 'log', f'{last_tag}..HEAD', '--oneline', '--grep=^(fix|feat|chore)', '--no-merges'],
-                capture_output=True, text=True, cwd=app_root_dir, timeout=10
-            )
-
-            commits = [line.strip() for line in result.stdout.strip().split('\n') if line.strip()]
-
-            if commits:
-                # Format commits for display (limit to 10 most recent)
-                commits_html = "".join([f"<li>{commit}</li>" for commit in commits[:10]])
-                return f"<p>Changes in this version:</p><ul>{commits_html}</ul>"
-
+            from anura._release_notes import get_release_notes
+            notes = get_release_notes()
+            return f"<p>Anura OCR {self.version}</p>{notes}"
         except Exception as e:
-            logger.debug(f"Could not generate git release notes: {e}")
+            logger.debug(f"Could not load release notes: {e}")
 
         # Fallback to version-specific message
         return f"<p>Anura OCR {self.version} - Bug fixes and improvements.</p>"

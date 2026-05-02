@@ -1,5 +1,5 @@
 project('anura',
-          version: '0.1.4',
+          version: '0.1.4.1',
     meson_version: '>= 1.5.0',
   default_options: [ 
     'warning_level=2',
@@ -25,6 +25,21 @@ datadir = get_option('datadir')
 pkgdatadir = prefix / datadir / meson.project_name()
 pythondir = python.get_install_dir() / 'anura'
 localedir = prefix / get_option('localedir')
+
+# Generate _release_notes.py from CHANGELOG.md
+release_notes_py = custom_target('release_notes',
+  input: ['CHANGELOG.md', 'build-aux/generate_release_notes.py'],
+  output: '_release_notes.py',
+  command: [
+    python,
+    '@INPUT1@',
+    '@INPUT0@',
+    '@OUTPUT@',
+    meson.project_version()
+  ],
+  install: true,
+  install_dir: pythondir
+)
 
 install_subdir('anura', install_dir: python.get_install_dir())
 
