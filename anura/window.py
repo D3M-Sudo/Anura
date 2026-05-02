@@ -400,8 +400,26 @@ class AnuraWindow(Adw.ApplicationWindow):
 
         try:
             res = urlparse(url)
-            # Require valid scheme, netloc, and at least one dot in netloc
-            # (prevents "http://localhost" or "http://evil" without TLD)
-            return res.scheme in ("http", "https") and bool(res.netloc) and "." in res.netloc
+            if not (res.scheme in ("http", "https") and bool(res.netloc)):
+                return False
+
+            # Allow localhost and IP addresses (common in development/enterprise)
+            # Also allow hostnames with dots (normal domains)
+            netloc_lower = res.netloc.lower()
+            if netloc_lower == "localhost" or netloc_lower.startswith("localhost:"):
+                return True
+            if "." in res.netloc:
+                return True
+            # Check for IP address (IPv4 or IPv6)
+            import re
+            # IPv4 pattern: matches 192.168.1.1, 10.0.0.1, etc.
+            ipv4_pattern = r'^(\d{1,3}\.){3}\d{1,3}(:\d+)?$'
+            # IPv6 pattern (simplified): matches bracketed IPv6 with optional port
+            ipv6_pattern = r'^\[?[0-9a-fA-F:]+\]?(:\d+)?$'
+            if re.match(ipv4_pattern, res.netloc) or re.match(ipv6_pattern, res.netloc):
+                return True
+
+            # Reject single-word hostnames without dots (prevents "http://evil")
+            return False
         except ValueError:
             return False

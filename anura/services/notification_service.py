@@ -5,6 +5,8 @@
 # Notification service with XDG Portal and libnotify fallback
 # Provides maximum compatibility across desktop environments
 
+import time
+from itertools import count
 from loguru import logger
 
 try:
@@ -39,6 +41,7 @@ class NotificationService:
         self.app_id = app_id
         self.libnotify_initialized = False
         self._portal = None
+        self._notification_id_counter = count()  # Monotonic counter for unique IDs
 
         # Initialize XDP portal once for reuse
         if HAS_PORTAL:
@@ -93,7 +96,6 @@ class NotificationService:
 
     def _show_portal_notification(self, title: str, body: str, priority: str) -> bool:
         """Show notification via XDG Desktop Portal."""
-        import time
         if GLib is None:
             return False
         if self._portal is None:
@@ -111,8 +113,8 @@ class NotificationService:
                 "icon": GLib.Variant("(sv)", ("themed", GLib.Variant("as", [self.app_id])))
             })
 
-            # Generate unique ID for this notification
-            notification_id = f"{self.app_id}-{int(time.time())}"
+            # Generate unique ID for this notification (timestamp + monotonic counter)
+            notification_id = f"{self.app_id}-{int(time.time())}-{next(self._notification_id_counter)}"
 
             # Show notification via portal
             # Full signature: add_notification(id, notification, flags, cancellable, callback, data)
