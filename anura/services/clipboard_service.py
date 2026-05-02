@@ -23,6 +23,7 @@ class ClipboardService(GObject.GObject):
     }
 
     _clipboard: Gdk.Clipboard | None = None
+    _clipboard_timeout_id: int | None = None
 
     @property
     def clipboard(self) -> Gdk.Clipboard:
@@ -51,6 +52,11 @@ class ClipboardService(GObject.GObject):
         """
         Callback for texture reading from clipboard.
         """
+        # Cancel the timeout since operation completed (success or failure)
+        if self._clipboard_timeout_id is not None:
+            GLib.source_remove(self._clipboard_timeout_id)
+            self._clipboard_timeout_id = None
+
         try:
             texture = self.clipboard.read_texture_finish(result)
             if not texture:
@@ -68,9 +74,14 @@ class ClipboardService(GObject.GObject):
         """
         Asynchronously reads a texture from the clipboard with a 10-second timeout.
         """
+        # Cancel any previous timeout to prevent accumulation
+        if self._clipboard_timeout_id is not None:
+            GLib.source_remove(self._clipboard_timeout_id)
+            self._clipboard_timeout_id = None
+
         # Create cancellable with timeout to prevent hanging on clipboard issues
         cancellable = Gio.Cancellable()
-        GLib.timeout_add_seconds(10, self._on_clipboard_timeout, cancellable)
+        self._clipboard_timeout_id = GLib.timeout_add_seconds(10, self._on_clipboard_timeout, cancellable)
 
         self.clipboard.read_texture_async(cancellable=cancellable, callback=self._on_read_texture)
 

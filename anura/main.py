@@ -146,8 +146,6 @@ class AnuraApplication(Adw.Application):
 
             # Try direct access first (for files in xdg-download)
             try:
-                import os
-
                 if os.path.exists(file_path) and os.access(file_path, os.R_OK):
                     # File accessible directly
                     if "silent" in options:
