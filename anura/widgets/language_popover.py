@@ -121,12 +121,13 @@ class LanguagePopover(Gtk.Popover):
             selected = (self.active_language == code)
             self.lang_list.append(LanguageItem(code=code, title=lang, selected=selected))
 
-        # Validate: emit only if language actually changed
+        # Fallback to English if current language was removed, emitting only on actual change
         current_code = self.active_language
         if current_code not in language_manager.get_downloaded_codes():
             new_item = language_manager.get_language_item("eng")
-            self.active_language = "eng"
-            self.emit("language-changed", new_item)  # emit only on actual change
+            if self.active_language != "eng":  # emit only if language actually changed
+                self.active_language = "eng"
+                self.emit("language-changed", new_item)
 
     def toggle_empty_state(self, is_empty: bool = False) -> None:
         if is_empty:

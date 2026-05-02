@@ -15,7 +15,7 @@ import requests
 from gi.repository import GLib, GObject
 from loguru import logger
 
-from anura.config import REQUEST_TIMEOUT, TESSDATA_BEST_URL, TESSDATA_DIR, TESSDATA_URL
+from anura.config import REQUEST_TIMEOUT, TESSDATA_BEST_URL, TESSDATA_DIR, TESSDATA_SYSTEM_DIR, TESSDATA_URL
 from anura.gobject_worker import GObjectWorker
 from anura.types.download_state import DownloadState
 from anura.types.language_item import LanguageItem
@@ -148,19 +148,29 @@ class LanguageManager(GObject.GObject):
         return LanguageItem(code=code, title=self.get_language(code))
 
     def get_downloaded_codes(self, force: bool = False) -> List[str]:
-        """Returns the codes of the currently installed language models."""
+        """Returns the codes of all installed language models (user + system bundled)."""
         with self._cache_lock:
             need_update = self._need_update_cache
             if need_update or force:
-                if not os.path.exists(TESSDATA_DIR):
-                    self._downloaded_codes = []
-                    self._need_update_cache = False
-                    return []
-                self._downloaded_codes = [
-                    os.path.splitext(f)[0]
-                    for f in os.listdir(TESSDATA_DIR)
-                    if f.endswith(".traineddata")
-                ]
+                codes = set()
+
+                # User-downloaded models (~/.var/app/.../data/anura/tessdata/)
+                if os.path.exists(TESSDATA_DIR):
+                    codes.update(
+                        os.path.splitext(f)[0]
+                        for f in os.listdir(TESSDATA_DIR)
+                        if f.endswith(".traineddata")
+                    )
+
+                # Bundled system models (/app/share/tessdata/ — eng, ita pre-installed)
+                if os.path.exists(TESSDATA_SYSTEM_DIR):
+                    codes.update(
+                        os.path.splitext(f)[0]
+                        for f in os.listdir(TESSDATA_SYSTEM_DIR)
+                        if f.endswith(".traineddata")
+                    )
+
+                self._downloaded_codes = list(codes)
                 self._need_update_cache = False
             return sorted(self._downloaded_codes, key=lambda x: self.get_language(x))
 

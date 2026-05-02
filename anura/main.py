@@ -185,6 +185,9 @@ class AnuraApplication(Adw.Application):
                     return 0
 
         self.activate()
+        win = self.props.active_window
+        if win:
+            win.present()
         return 0
 
     def _run_silent_mode(self, file_path: str) -> int:
