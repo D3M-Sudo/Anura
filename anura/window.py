@@ -80,9 +80,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         self.hide()
 
         # Safety timeout: if portal doesn't respond within 30s, restore window
-        self._screenshot_timeout_id = GLib.timeout_add_seconds(
-            30, self._on_screenshot_timeout
-        )
+        self._screenshot_timeout_id = GLib.timeout_add_seconds(30, self._on_screenshot_timeout)
 
         try:
             self.backend.capture(lang, copy)
@@ -174,8 +172,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             if file_size > self.MAX_IMAGE_SIZE_BYTES:
                 self.show_toast(
                     _("Image too large: {size}MB (max {max}MB)").format(
-                        size=round(file_size / (1024 * 1024), 1),
-                        max=self.MAX_IMAGE_SIZE_MB
+                        size=round(file_size / (1024 * 1024), 1), max=self.MAX_IMAGE_SIZE_MB
                     )
                 )
                 return
@@ -213,8 +210,7 @@ class AnuraWindow(Adw.ApplicationWindow):
                 if file_size > self.MAX_IMAGE_SIZE_BYTES:
                     self.show_toast(
                         _("Image too large: {size}MB (max {max}MB)").format(
-                            size=round(file_size / (1024 * 1024), 1),
-                            max=self.MAX_IMAGE_SIZE_MB
+                            size=round(file_size / (1024 * 1024), 1), max=self.MAX_IMAGE_SIZE_MB
                         )
                     )
                     return
@@ -238,7 +234,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             GLib.PRIORITY_DEFAULT,
             None,
             self._on_dnd_query_info_done,
-            item
+            item,
         )
         return True
 
@@ -272,8 +268,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             if file_size > self.MAX_IMAGE_SIZE_BYTES:
                 self.show_toast(
                     _("Image too large: {size}MB (max {max}MB)").format(
-                        size=round(file_size / (1024 * 1024), 1),
-                        max=self.MAX_IMAGE_SIZE_MB
+                        size=round(file_size / (1024 * 1024), 1), max=self.MAX_IMAGE_SIZE_MB
                     )
                 )
                 return
@@ -297,7 +292,12 @@ class AnuraWindow(Adw.ApplicationWindow):
         return False
 
     def do_destroy(self):
-        """Clean up signal handlers to prevent memory leaks."""
+        """Clean up signal handlers and timeouts to prevent memory leaks."""
+        # Cancel screenshot timeout if active
+        if self._screenshot_timeout_id is not None:
+            GLib.source_remove(self._screenshot_timeout_id)
+            self._screenshot_timeout_id = None
+
         # Disconnect backend signal handlers
         if self.backend:
             if self._handler_decoded:
@@ -402,10 +402,6 @@ class AnuraWindow(Adw.ApplicationWindow):
             res = urlparse(url)
             # Require valid scheme, netloc, and at least one dot in netloc
             # (prevents "http://localhost" or "http://evil" without TLD)
-            return (
-                res.scheme in ("http", "https")
-                and bool(res.netloc)
-                and "." in res.netloc
-            )
+            return res.scheme in ("http", "https") and bool(res.netloc) and "." in res.netloc
         except ValueError:
             return False

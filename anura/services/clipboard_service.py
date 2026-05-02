@@ -14,11 +14,12 @@ class ClipboardService(GObject.GObject):
     Service responsible for interacting with the system clipboard.
     Optimized for Anura OCR to handle text and image textures.
     """
-    __gtype_name__ = 'ClipboardService'
+
+    __gtype_name__ = "ClipboardService"
 
     __gsignals__ = {
-        'paste_from_clipboard': (GObject.SIGNAL_RUN_FIRST, None, (Gdk.Texture,)),
-        'error': (GObject.SIGNAL_RUN_FIRST, None, (str,))
+        "paste_from_clipboard": (GObject.SIGNAL_RUN_FIRST, None, (Gdk.Texture,)),
+        "error": (GObject.SIGNAL_RUN_FIRST, None, (str,)),
     }
 
     _clipboard: Gdk.Clipboard | None = None
@@ -56,12 +57,12 @@ class ClipboardService(GObject.GObject):
                 raise ValueError("No valid texture found in result.")
 
             logger.info("Anura Clipboard: Image texture retrieved.")
-            self.emit('paste_from_clipboard', texture)
+            GLib.idle_add(self.emit, "paste_from_clipboard", texture)
 
         except (GLib.Error, ValueError, RuntimeError) as e:
             # Technical rigor: log error for X11/Wayland clipboard synchronization issues
             logger.error(f"Anura Clipboard Error: {e}")
-            self.emit('error', _("No image in clipboard"))
+            GLib.idle_add(self.emit, "error", _("No image in clipboard"))
 
     def read_texture(self) -> None:
         """
@@ -71,10 +72,7 @@ class ClipboardService(GObject.GObject):
         cancellable = Gio.Cancellable()
         GLib.timeout_add_seconds(10, self._on_clipboard_timeout, cancellable)
 
-        self.clipboard.read_texture_async(
-            cancellable=cancellable,
-            callback=self._on_read_texture
-        )
+        self.clipboard.read_texture_async(cancellable=cancellable, callback=self._on_read_texture)
 
     def _on_clipboard_timeout(self, cancellable: Gio.Cancellable) -> bool:
         """Cancel clipboard operation if it takes too long."""

@@ -41,6 +41,10 @@ class ScreenshotService(GObject.GObject):
     def capture(self, lang: str, copy: bool = False) -> None:
         """Requests a screenshot from the system portal."""
         with self._cancellable_lock:
+            # If previous request was cancelled, create fresh cancellable
+            if self.cancelable.is_cancelled():
+                self.cancelable = Gio.Cancellable.new()
+                self._cancelable_handler_id = self.cancelable.connect("cancelled", self.capture_cancelled)
             cancellable = self.cancelable
         # Release lock before async D-Bus call to prevent deadlock
         self.portal.take_screenshot(
@@ -65,17 +69,18 @@ class ScreenshotService(GObject.GObject):
             return self.emit("error", _("Can't take a screenshot."))
 
         if uri.startswith("file://"):
-            filename = url2pathname(uri[len("file://"):])
+            filename = url2pathname(uri[len("file://") :])
         else:
             filename = GLib.Uri.unescape_string(uri)
 
         self.decode_image(lang, filename, copy, True)
 
-    def decode_image_sync(self,
-                          lang: str,
-                          file: str | Image.Image | object,
-                          remove_source: bool = False,
-                          ) -> tuple[bool, str | None, str | None]:
+    def decode_image_sync(
+        self,
+        lang: str,
+        file: str | Image.Image | object,
+        remove_source: bool = False,
+    ) -> tuple[bool, str | None, str | None]:
         """
         Synchronously decodes the image to find QR codes or extract text using Tesseract OCR.
         Supports file paths (str) and binary streams (BytesIO).
@@ -87,6 +92,7 @@ class ScreenshotService(GObject.GObject):
                    - error_message: Error description if failed, None otherwise
         """
         import re
+
         # Security: Validate language code before processing (same as decode_image)
         if not lang or not re.match(LANG_CODE_PATTERN, lang):
             logger.error(f"Anura: Invalid language code '{lang}' for OCR")
@@ -113,9 +119,7 @@ class ScreenshotService(GObject.GObject):
 
                 # Step 2: Tesseract OCR
                 else:
-                    text = pytesseract.image_to_string(
-                        img, lang=lang, config=get_tesseract_config(lang)
-                    )
+                    text = pytesseract.image_to_string(img, lang=lang, config=get_tesseract_config(lang))
                     extracted = text.strip()
 
         except (IOError, OSError) as e:
@@ -148,18 +152,20 @@ class ScreenshotService(GObject.GObject):
         else:
             return (False, None, _("No text found."))
 
-    def decode_image(self,
-                     lang: str,
-                     file: str | Image.Image | object,
-                     copy: bool = False,
-                     remove_source: bool = False,
-                     ) -> None:
+    def decode_image(
+        self,
+        lang: str,
+        file: str | Image.Image | object,
+        copy: bool = False,
+        remove_source: bool = False,
+    ) -> None:
         """
         Asynchronously decodes the image and emits GObject signals.
         Wraps decode_image_sync() for use with GUI mode.
         Supports file paths (str) and binary streams (BytesIO).
         """
         import re
+
         # Validate language code before processing
         if not lang or not re.match(LANG_CODE_PATTERN, lang):
             logger.error(f"Anura: Invalid language code '{lang}' for OCR")
