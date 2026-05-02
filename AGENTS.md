@@ -112,6 +112,22 @@ flatpak-builder --run builddir flatpak/com.github.d3msudo.anura.json anura
 flatpak-builder --install --user builddir flatpak/com.github.d3msudo.anura.json
 ```
 
+### Local Build with Meson (venv)
+
+To test the build system without Flatpak:
+
+```bash
+# System requirements needed:
+sudo apt install blueprint-compiler libportal-gtk4-dev
+
+# Setup and build using venv meson
+.venv/bin/meson setup builddir
+.venv/bin/meson compile -C builddir
+
+# Full local install (optional)
+.venv/bin/meson install -C builddir --destdir /tmp/install-test
+```
+
 ### Flatpak Dependency Updates
 
 ```bash
@@ -130,6 +146,86 @@ flatpak-external-data-checker --update flatpak/com.github.d3msudo.anura.json
 
 # Update existing .po files
 for lang in po/*.po; do msgmerge -U "$lang" po/anura.pot; done
+```
+
+## Dependency Management
+
+Anura uses a hybrid dependency system: Python packages via pip/venv for dev tools, and native dependencies via Flatpak for runtime.
+
+### Python Dependencies (Development Tools)
+
+**File:** `pyproject.toml`
+
+Development dependencies (linter, build system):
+
+```toml
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.15.0",      # Linter and formatter
+    "meson>=1.5.0",      # Build system (optional, for local testing)
+]
+```
+
+**Virtual Environment:** `.venv/` (already present in repo, not committed)
+
+```bash
+# Install all dev dependencies
+pip install -e ".[dev]"
+
+# Or specifically meson for local build testing
+pip install "meson>=1.5.0"
+# Automatically installs ninja if needed
+```
+
+**Typical venv packages for testing:**
+- `meson` — Build system
+- `ninja` — Build tool (meson dependency)
+- `ruff` — Linter
+- `pytesseract`, `Pillow`, `pyzbar` — For local OCR testing (requires system tesseract)
+
+### Runtime Dependencies (Flatpak/System)
+
+**File:** `flatpak/com.github.d3msudo.anura.json`
+
+Native dependencies compiled in the Flatpak:
+
+| Module | Version | Purpose |
+|--------|---------|---------|
+| leptonica | 1.85.0 | Image processing for Tesseract |
+| tesseract | 5.5.0 | OCR engine |
+| tessdata-fast | pinned | Language models (eng, ita) |
+| libportal | 0.9.1 | XDG Desktop Portal API |
+| zbar | 0.23.93 | QR code decoding |
+| blueprint-compiler | 0.16.0 | UI compilation .blp → .ui |
+
+Python runtime dependencies (installed in Flatpak):
+- pytesseract, Pillow, pyzbar, gTTS, loguru, requests, etc.
+
+### Build System Configuration
+
+**File:** `meson.build`
+
+```meson
+project('anura',
+    version: '0.1.4',
+    meson_version: '>= 1.5.0',
+    ...
+)
+```
+
+Release notes generation from CHANGELOG.md:
+```meson
+custom_target('release_notes',
+  input: ['CHANGELOG.md', 'build-aux/generate_release_notes.py'],
+  output: '_release_notes.py',
+  ...
+)
+```
+
+**Build commands with venv:**
+```bash
+.venv/bin/meson setup builddir
+.venv/bin/meson compile -C builddir
 ```
 
 ## Code Patterns & Conventions
@@ -260,3 +356,13 @@ Release notes for `Adw.AboutDialog` are generated from `CHANGELOG.md` during Mes
 | `anura/services/notification_service.py` | Notifications with fallback |
 | `anura/services/tts.py` | Text-to-speech via gTTS + GStreamer |
 | `anura/services/share_service.py` | Social sharing providers |
+
+### Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `pyproject.toml` | Python project config, dev deps (ruff, meson) |
+| `meson.build` | Main build system, generates `_release_notes.py` |
+| `flatpak/com.github.d3msudo.anura.json` | Flatpak manifest with all native dependencies |
+| `build-aux/generate_release_notes.py` | CHANGELOG.md parser → `_release_notes.py` |
+| `CHANGELOG.md` | Versioned changelog (source for release notes) |
