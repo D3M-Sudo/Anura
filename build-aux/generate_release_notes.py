@@ -12,9 +12,10 @@ def parse_changelog(changelog_path: Path) -> dict:
     content = changelog_path.read_text()
 
     # Pattern to match version sections (supports 3 or 4 component versions like 0.1.4 or 0.1.4.1)
+    # Uses atomic-like grouping and limited repetition to prevent catastrophic backtracking
     version_pattern = (
-        r'^## \[(?P<version>\d+\.\d+\.\d+(?:\.\d+)?)\] - (?P<date>\d{4}-\d{2}-\d{2})\n+'
-        r'(?P<content>.*?)(?=^## \[|\Z)'
+        r'^## \[(?P<version>\d{1,4}\.\d{1,4}\.\d{1,4}(?:\.\d{1,4})?)\] - (?P<date>\d{4}-\d{2}-\d{2})\n+'
+        r'(?P<content>[^#]*?)(?=^## \[|\Z)'
     )
 
     releases = {}
@@ -34,8 +35,12 @@ def parse_changelog(changelog_path: Path) -> dict:
                 current_section = line[4:].strip()
                 sections.setdefault(current_section, [])
             elif line.startswith('- '):
-                # Remove the leading "- " and any markdown syntax, then escape HTML
-                item_text = html.escape(line[2:]
+                # Remove the leading "- " first
+                item_text = line[2:]
+                # Escape HTML FIRST to prevent injection from markdown links [text](url)
+                item_text = html.escape(item_text)
+                # Then remove markdown syntax (now safe from HTML injection)
+                item_text = (item_text
                     .replace('**', '')
                     .replace('__', '')
                     .replace('*', '')

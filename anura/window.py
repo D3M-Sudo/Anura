@@ -159,28 +159,32 @@ class AnuraWindow(Adw.ApplicationWindow):
         """Process an image file directly from CLI."""
         import os
 
-        if not os.path.exists(file_path):
-            self.show_toast(_("File not found: {path}").format(path=file_path))
-            return
-
-        # Validate file size to prevent memory issues with very large images
-        file_size = os.path.getsize(file_path)
-        if file_size > self.MAX_IMAGE_SIZE_BYTES:
-            self.show_toast(
-                _("Image too large: {size}MB (max {max}MB)").format(
-                    size=round(file_size / (1024 * 1024), 1),
-                    max=self.MAX_IMAGE_SIZE_MB
+        try:
+            # Validate file size to prevent memory issues with very large images
+            file_size = os.path.getsize(file_path)
+            if file_size > self.MAX_IMAGE_SIZE_BYTES:
+                self.show_toast(
+                    _("Image too large: {size}MB (max {max}MB)").format(
+                        size=round(file_size / (1024 * 1024), 1),
+                        max=self.MAX_IMAGE_SIZE_MB
+                    )
                 )
-            )
-            return
+                return
 
-        mimetype, _encoding = guess_type(file_path)
-        if not mimetype or not mimetype.startswith("image"):
-            self.show_toast(_("Unsupported file format: {path}").format(path=file_path))
-            return
+            mimetype, _encoding = guess_type(file_path)
+            if not mimetype or not mimetype.startswith("image"):
+                self.show_toast(_("Unsupported file format: {path}").format(path=file_path))
+                return
 
-        self.welcome_page.spinner.set_visible(True)
-        GObjectWorker.call(self.backend.decode_image, (self.get_language(), file_path))
+            self.welcome_page.spinner.set_visible(True)
+            GObjectWorker.call(self.backend.decode_image, (self.get_language(), file_path))
+        except FileNotFoundError:
+            self.show_toast(_("File not found: {path}").format(path=file_path))
+        except PermissionError:
+            self.show_toast(_("Permission denied: {path}").format(path=file_path))
+        except OSError as e:
+            logger.error(f"Error accessing file {file_path}: {e}")
+            self.show_toast(_("Cannot access file: {path}").format(path=file_path))
 
     def _on_open_image_result(self, dialog, result):
         try:
@@ -288,18 +292,30 @@ class AnuraWindow(Adw.ApplicationWindow):
         # Disconnect backend signal handlers
         if self.backend:
             if self._handler_decoded:
-                self.backend.disconnect(self._handler_decoded)
+                try:
+                    self.backend.disconnect(self._handler_decoded)
+                except (TypeError, RuntimeError):
+                    pass  # Handler already disconnected or object disposed
                 self._handler_decoded = None
             if self._handler_error:
-                self.backend.disconnect(self._handler_error)
+                try:
+                    self.backend.disconnect(self._handler_error)
+                except (TypeError, RuntimeError):
+                    pass
                 self._handler_error = None
 
         # Disconnect widget signal handlers
         if self._handler_go_back:
-            self.extracted_page.disconnect(self._handler_go_back)
+            try:
+                self.extracted_page.disconnect(self._handler_go_back)
+            except (TypeError, RuntimeError):
+                pass
             self._handler_go_back = None
         if self._handler_clipboard:
-            clipboard_service.disconnect(self._handler_clipboard)
+            try:
+                clipboard_service.disconnect(self._handler_clipboard)
+            except (TypeError, RuntimeError):
+                pass
             self._handler_clipboard = None
 
         # Chain up to parent class

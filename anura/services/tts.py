@@ -72,6 +72,9 @@ class TTSService(GObject.GObject):
     @staticmethod
     def map_tesseract_to_gtts(tess_code: str) -> str:
         """Map Tesseract language code to gTTS-compatible ISO 639-1 code."""
+        # Normalize to lowercase for case-insensitive matching
+        tess_code = tess_code.lower()
+
         # 1. Direct lookup in explicit map
         if tess_code in TTSService.LANG_MAP:
             return TTSService.LANG_MAP[tess_code]

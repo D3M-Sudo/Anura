@@ -14,7 +14,7 @@ from loguru import logger
 from PIL import Image
 from pyzbar.pyzbar import decode
 
-from anura.config import get_tesseract_config
+from anura.config import get_tesseract_config, LANG_CODE_PATTERN
 
 
 class ScreenshotService(GObject.GObject):
@@ -152,6 +152,13 @@ class ScreenshotService(GObject.GObject):
         Wraps decode_image_sync() for use with GUI mode.
         Supports file paths (str) and binary streams (BytesIO).
         """
+        import re
+        # Validate language code before processing
+        if not lang or not re.match(LANG_CODE_PATTERN, lang):
+            logger.error(f"Anura: Invalid language code '{lang}' for OCR")
+            GLib.idle_add(self.emit, "error", _("Invalid language code specified."))
+            return
+
         success, extracted, error_message = self.decode_image_sync(lang, file, remove_source)
 
         if success:
@@ -165,9 +172,12 @@ class ScreenshotService(GObject.GObject):
         GLib.idle_add(self.emit, "error", _("Cancelled"))
         # Disconnect old handler and reset cancellable for future use (with lock to prevent race condition)
         with self._cancellable_lock:
-            if self._cancelable_handler_id is not None:
+            # Clear handler ID first to prevent race with concurrent cancellation
+            old_handler_id = self._cancelable_handler_id
+            self._cancelable_handler_id = None
+            if old_handler_id is not None:
                 try:
-                    self.cancelable.disconnect(self._cancelable_handler_id)
+                    self.cancelable.disconnect(old_handler_id)
                 except Exception:
                     pass
             self.cancelable = Gio.Cancellable.new()

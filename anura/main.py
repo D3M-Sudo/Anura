@@ -195,21 +195,21 @@ class AnuraApplication(Adw.Application):
     def _run_silent_mode(self, file_path: str) -> int:
         """Run OCR in silent mode without UI, return exit code."""
         import signal as sig
+        import threading
 
-        interrupted = False
+        interrupted = threading.Event()
 
         def on_signal(signum, frame):
             """Handle SIGINT/SIGTERM for clean shutdown."""
-            nonlocal interrupted
             logger.info(f"Anura: Received signal {signum}, shutting down silently...")
-            interrupted = True
+            interrupted.set()
 
         old_sigint = sig.signal(sig.SIGINT, on_signal)
         old_sigterm = sig.signal(sig.SIGTERM, on_signal)
 
         try:
             # Check if interrupted before starting
-            if interrupted:
+            if interrupted.is_set():
                 logger.info("Anura: Silent mode interrupted by user.")
                 return 130
 
@@ -221,7 +221,7 @@ class AnuraApplication(Adw.Application):
             )
 
             # Check if interrupted during processing
-            if interrupted:
+            if interrupted.is_set():
                 logger.info("Anura: Silent mode interrupted by user.")
                 return 130  # Standard exit code for SIGINT
 

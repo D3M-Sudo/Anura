@@ -38,6 +38,15 @@ class NotificationService:
     def __init__(self, app_id: str):
         self.app_id = app_id
         self.libnotify_initialized = False
+        self._portal = None
+
+        # Initialize XDP portal once for reuse
+        if HAS_PORTAL:
+            try:
+                self._portal = Xdp.Portal()
+                logger.debug("NotificationService: XDG Portal initialized")
+            except Exception as e:
+                logger.warning(f"NotificationService: Failed to initialize XDG Portal: {e}")
 
         # Initialize libnotify as fallback
         if HAS_LIBNOTIFY:
@@ -79,8 +88,10 @@ class NotificationService:
         import time
         if GLib is None:
             return False
+        if self._portal is None:
+            logger.warning("NotificationService: XDG Portal not available")
+            return False
         try:
-            portal = Xdp.Portal()
 
             # Prepare notification as GLib.Variant according to XDG Portal spec
             # Schema: a{sv} (dictionary of string -> variant)
@@ -97,7 +108,7 @@ class NotificationService:
 
             # Show notification via portal
             # Full signature: add_notification(id, notification, flags, cancellable, callback, data)
-            portal.add_notification(
+            self._portal.add_notification(
                 notification_id,
                 notification,
                 Xdp.NotificationFlags.NONE,
