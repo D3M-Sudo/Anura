@@ -10,13 +10,12 @@ from gettext import gettext as _
 from urllib.request import url2pathname
 
 import pytesseract
-
 from gi.repository import Gio, GLib, GObject, Xdp
 from loguru import logger
 from PIL import Image
 from pyzbar.pyzbar import decode
 
-from anura.config import get_tesseract_config, LANG_CODE_PATTERN
+from anura.config import LANG_CODE_PATTERN, get_tesseract_config
 
 
 class ScreenshotService(GObject.GObject):

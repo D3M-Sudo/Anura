@@ -127,6 +127,7 @@ class LanguagePopover(Gtk.Popover):
             new_item = language_manager.get_language_item("eng")
             if self.active_language != "eng":  # emit only if language actually changed
                 self.active_language = "eng"
+                self.settings.set_string('active-language', 'eng')
                 self.emit("language-changed", new_item)
 
     def toggle_empty_state(self, is_empty: bool = False) -> None:

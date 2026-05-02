@@ -1,3 +1,4 @@
+import ipaddress
 from gettext import gettext as _
 from io import BytesIO
 from mimetypes import guess_type
@@ -410,14 +411,20 @@ class AnuraWindow(Adw.ApplicationWindow):
                 return True
             if "." in res.netloc:
                 return True
-            # Check for IP address (IPv4 or IPv6)
-            import re
-            # IPv4 pattern: matches 192.168.1.1, 10.0.0.1, etc.
-            ipv4_pattern = r'^(\d{1,3}\.){3}\d{1,3}(:\d+)?$'
-            # IPv6 pattern (simplified): matches bracketed IPv6 with optional port
-            ipv6_pattern = r'^\[?[0-9a-fA-F:]+\]?(:\d+)?$'
-            if re.match(ipv4_pattern, res.netloc) or re.match(ipv6_pattern, res.netloc):
+            # Check for valid IP address (IPv4 or IPv6)
+            # Remove port if present for validation
+            host = res.netloc
+            if ':' in host and not host.endswith(']'):
+                # Could be IPv4:port or IPv6:port - split on last colon
+                host = host.rsplit(':', 1)[0]
+            # Unbracket IPv6 if bracketed
+            if host.startswith('[') and host.endswith(']'):
+                host = host[1:-1]
+            try:
+                ipaddress.ip_address(host)
                 return True
+            except ValueError:
+                pass
 
             # Reject single-word hostnames without dots (prevents "http://evil")
             return False

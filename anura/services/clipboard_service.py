@@ -90,6 +90,7 @@ class ClipboardService(GObject.GObject):
         if not cancellable.is_cancelled():
             logger.warning("Anura Clipboard: Read operation timed out after 10s, cancelling.")
             cancellable.cancel()
+        self._clipboard_timeout_id = None
         return False  # Don't repeat timeout
 
 
