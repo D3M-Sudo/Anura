@@ -11,9 +11,9 @@ def parse_changelog(changelog_path: Path) -> dict:
     """Parse CHANGELOG.md and return a dict of version -> html notes."""
     content = changelog_path.read_text()
 
-    # Pattern to match version sections
+    # Pattern to match version sections (supports 3 or 4 component versions like 0.1.4 or 0.1.4.1)
     version_pattern = (
-        r'^## \[(?P<version>\d+\.\d+\.\d+)\] - (?P<date>\d{4}-\d{2}-\d{2})\n+'
+        r'^## \[(?P<version>\d+\.\d+\.\d+(?:\.\d+)?)\] - (?P<date>\d{4}-\d{2}-\d{2})\n+'
         r'(?P<content>.*?)(?=^## \[|\Z)'
     )
 
@@ -74,14 +74,16 @@ def generate_release_notes_py(changelog_path: Path, output_path: Path, current_v
     ]
 
     for version, html_content in releases.items():
-        lines.append(f'    "{version}": """{html_content}""",')
+        # Use repr() to safely escape the content and avoid triple-quote issues
+        lines.append(f'    "{version}": {repr(html_content)},')
 
     lines.extend([
         '}',
         '',
         f'CURRENT_VERSION = "{current_version}"',
         '',
-        f'CURRENT_NOTES = """{current_notes}"""',
+        # Use repr() to safely escape current_notes
+        f'CURRENT_NOTES = {repr(current_notes)}',
         '',
         'def get_release_notes(version: str = None) -> str:',
         '    """Get release notes for a specific version or current version."""',

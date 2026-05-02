@@ -196,21 +196,34 @@ class AnuraApplication(Adw.Application):
         """Run OCR in silent mode without UI, return exit code."""
         import signal as sig
 
+        interrupted = False
+
         def on_signal(signum, frame):
             """Handle SIGINT/SIGTERM for clean shutdown."""
+            nonlocal interrupted
             logger.info(f"Anura: Received signal {signum}, shutting down silently...")
-            raise KeyboardInterrupt()
+            interrupted = True
 
         old_sigint = sig.signal(sig.SIGINT, on_signal)
         old_sigterm = sig.signal(sig.SIGTERM, on_signal)
 
         try:
+            # Check if interrupted before starting
+            if interrupted:
+                logger.info("Anura: Silent mode interrupted by user.")
+                return 130
+
             # Use synchronous decode for silent mode - no signals, no main loop needed
             success, text, error_message = self.backend.decode_image_sync(
                 self.settings.get_string("active-language"),
                 file_path,
                 remove_source=False
             )
+
+            # Check if interrupted during processing
+            if interrupted:
+                logger.info("Anura: Silent mode interrupted by user.")
+                return 130  # Standard exit code for SIGINT
 
             if success and text:
                 clipboard_service.set(text)
@@ -220,9 +233,6 @@ class AnuraApplication(Adw.Application):
                 logger.error(f"Anura: Silent mode failed: {error_message}")
                 return 1
 
-        except KeyboardInterrupt:
-            logger.info("Anura: Silent mode interrupted by user.")
-            return 130  # Standard exit code for SIGINT
         except Exception as e:
             logger.error(f"Anura: Silent mode unexpected error: {e}")
             return 1
