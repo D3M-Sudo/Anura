@@ -1,7 +1,6 @@
 import datetime
 import os
 import sys
-import threading
 from gettext import gettext as _
 
 from gi.repository import Adw, Gio, GLib, Gtk
@@ -192,94 +191,35 @@ class AnuraApplication(Adw.Application):
 
     def _run_silent_mode(self, file_path: str) -> int:
         """Run OCR in silent mode without UI, return exit code."""
-        done_event = threading.Event()
-        result = {"success": False, "text": None}
-        _interrupted = threading.Event()
-
-        def on_silent_decoded(_sender, text: str, copy: bool) -> None:
-            result["success"] = True
-            result["text"] = text
-            done_event.set()
-
-        def on_silent_error(_sender, message: str) -> None:
-            result["success"] = False
-            result["error"] = message
-            done_event.set()
+        import signal as sig
 
         def on_signal(signum, frame):
             """Handle SIGINT/SIGTERM for clean shutdown."""
             logger.info(f"Anura: Received signal {signum}, shutting down silently...")
-            _interrupted.set()
-            done_event.set()
+            raise KeyboardInterrupt()
 
-        # Track handler IDs for safe cleanup
-        decoded_handler_id: int | None = None
-        error_handler_id: int | None = None
-
-        import signal as sig
         old_sigint = sig.signal(sig.SIGINT, on_signal)
         old_sigterm = sig.signal(sig.SIGTERM, on_signal)
 
         try:
-            # Temporarily connect to both signals for this operation
-            decoded_handler_id = self.backend.connect('decoded', on_silent_decoded)
-            error_handler_id = self.backend.connect('error', on_silent_error)
-
-            self.backend.decode_image(
+            # Use synchronous decode for silent mode - no signals, no main loop needed
+            success, text, error_message = self.backend.decode_image_sync(
                 self.settings.get_string("active-language"),
                 file_path,
-                copy=True,
                 remove_source=False
             )
 
-            # Wait for completion with timeout using GLib MainLoop (event-driven)
-            # Create a main loop that will run until done_event is set or timeout
-            timeout_seconds = 60.0
-
-            # Create a main loop with new context (not default) for thread safety
-            ctx = GLib.MainContext.new()
-            loop = GLib.MainLoop.new(ctx, False)
-
-            def on_timeout():
-                """Timeout callback - stop loop and mark as timed out."""
-                nonlocal timed_out
-                timed_out = True
-                result["success"] = False
-                result["error"] = "Timeout"
-                logger.error("Anura: Silent mode timeout waiting for OCR")
-                loop.quit()
-                return False  # Don't repeat
-
-            def on_done():
-                """Check if done_event is set, if so quit the loop."""
-                if done_event.is_set() or _interrupted.is_set():
-                    loop.quit()
-                    return False  # Stop checking
-                return True  # Continue checking
-
-            # Create timeout source (60 seconds) and attach to ctx
-            timeout_source = GLib.timeout_source_new_seconds(int(timeout_seconds))
-            timeout_source.set_callback(on_timeout)
-            timeout_source.attach(ctx)
-
-            # Create idle source to check for completion and attach to ctx
-            idle_source = GLib.idle_source_new()
-            idle_source.set_callback(on_done)
-            idle_source.attach(ctx)
-
-            timed_out = False
-            loop.run()
-
-            # Sources will be automatically cleaned up when context is destroyed
-
-            if _interrupted.is_set():
-                return 130  # Standard exit code for SIGINT
-
-            if timed_out:
+            if success and text:
+                clipboard_service.set(text)
+                logger.info("Anura: OCR completed successfully in silent mode.")
+                return 0
+            else:
+                logger.error(f"Anura: Silent mode failed: {error_message}")
                 return 1
 
-            return 0 if result["success"] else 1
-
+        except KeyboardInterrupt:
+            logger.info("Anura: Silent mode interrupted by user.")
+            return 130  # Standard exit code for SIGINT
         except Exception as e:
             logger.error(f"Anura: Silent mode unexpected error: {e}")
             return 1
@@ -287,17 +227,6 @@ class AnuraApplication(Adw.Application):
             # Restore original signal handlers
             sig.signal(sig.SIGINT, old_sigint)
             sig.signal(sig.SIGTERM, old_sigterm)
-            # Always disconnect handlers in all scenarios
-            if decoded_handler_id is not None and self.backend:
-                try:
-                    self.backend.disconnect(decoded_handler_id)
-                except Exception:
-                    pass
-            if error_handler_id is not None and self.backend:
-                try:
-                    self.backend.disconnect(error_handler_id)
-                except Exception:
-                    pass
 
     def on_preferences(self, _action, _param) -> None:
         window = self.get_active_window()

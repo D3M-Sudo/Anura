@@ -24,10 +24,16 @@ def parse_changelog(changelog_path: Path) -> dict:
         section_content = match.group('content')
 
         # Parse subsections (### Added, ### Fixed, etc.)
-        items = []
+        sections = {}
+        current_section = "Changes"
+
         for line in section_content.strip().split('\n'):
             line = line.strip()
-            if line.startswith('- '):
+            if line.startswith('### '):
+                # New section header
+                current_section = line[4:].strip()
+                sections.setdefault(current_section, [])
+            elif line.startswith('- '):
                 # Remove the leading "- " and any markdown syntax, then escape HTML
                 item_text = html.escape(line[2:]
                     .replace('**', '')
@@ -35,12 +41,17 @@ def parse_changelog(changelog_path: Path) -> dict:
                     .replace('*', '')
                     .replace('_', '')
                     .replace('`', ''))
-                items.append(item_text)
+                sections.setdefault(current_section, []).append(item_text)
 
-        if items:
-            # Build HTML
-            html_items = ''.join(f'<li>{item}</li>' for item in items)
-            html_output = f'<ul>{html_items}</ul>'
+        if sections:
+            # Build HTML with sections
+            html_parts = []
+            for section_name, items in sections.items():
+                if items:
+                    html_parts.append(f'<b>{html.escape(section_name)}</b>')
+                    html_items = ''.join(f'<li>{item}</li>' for item in items)
+                    html_parts.append(f'<ul>{html_items}</ul>')
+            html_output = ''.join(html_parts)
         else:
             html_output = '<p>No changes listed.</p>'
         releases[version] = html_output

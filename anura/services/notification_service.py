@@ -80,7 +80,7 @@ class NotificationService:
         if GLib is None:
             return False
         try:
-            portal = Xdp.Portal.new()
+            portal = Xdp.Portal()
 
             # Prepare notification as GLib.Variant according to XDG Portal spec
             # Schema: a{sv} (dictionary of string -> variant)
