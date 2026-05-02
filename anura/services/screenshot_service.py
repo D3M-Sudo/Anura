@@ -4,6 +4,7 @@
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
 import os
+import re
 import threading
 from gettext import gettext as _
 from urllib.request import url2pathname
@@ -91,8 +92,6 @@ class ScreenshotService(GObject.GObject):
                    - text: The extracted text or QR code content (None if failed or no text)
                    - error_message: Error description if failed, None otherwise
         """
-        import re
-
         # Security: Validate language code before processing (same as decode_image)
         if not lang or not re.match(LANG_CODE_PATTERN, lang):
             logger.error(f"Anura: Invalid language code '{lang}' for OCR")
@@ -164,8 +163,6 @@ class ScreenshotService(GObject.GObject):
         Wraps decode_image_sync() for use with GUI mode.
         Supports file paths (str) and binary streams (BytesIO).
         """
-        import re
-
         # Validate language code before processing
         if not lang or not re.match(LANG_CODE_PATTERN, lang):
             logger.error(f"Anura: Invalid language code '{lang}' for OCR")
