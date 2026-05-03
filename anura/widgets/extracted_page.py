@@ -4,10 +4,11 @@
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
 from gettext import gettext as _
+from typing import ClassVar
 
-import requests
 from gi.repository import Adw, GLib, GObject, Gtk
 from loguru import logger
+import requests
 
 from anura.config import RESOURCE_PREFIX
 from anura.gobject_worker import GObjectWorker
@@ -21,7 +22,7 @@ from anura.widgets.share_row import ShareRow
 class ExtractedPage(Adw.NavigationPage):
     __gtype_name__ = "ExtractedPage"
 
-    __gsignals__ = {
+    __gsignals__: ClassVar[dict[str, tuple]] = {
         "go-back": (GObject.SIGNAL_RUN_LAST, None, (int,)),
         "on-listen-start": (GObject.SIGNAL_RUN_LAST, None, ()),
         "on-listen-stop": (GObject.SIGNAL_RUN_LAST, None, ()),
@@ -83,7 +84,7 @@ class ExtractedPage(Adw.NavigationPage):
         """Switch Stack between button and spinner."""
         self.listen_stack.set_visible_child_name("spinner" if active else "button")
 
-    def _on_generate_error(self, error: Exception, traceback_str: str = None) -> None:
+    def _on_generate_error(self, error: Exception, traceback_str: str | None = None) -> None:
         """Handle generation errors (called on main thread by GObjectWorker)."""
         self._set_spinner_active(False)
         self.swap_controls(False)

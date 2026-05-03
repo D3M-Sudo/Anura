@@ -6,9 +6,10 @@
 import os
 import threading
 import time
+from typing import ClassVar
 
-import gtts
 from gi.repository import GLib, GObject, Gst
+import gtts
 from loguru import logger
 
 from anura.services.settings import settings
@@ -22,7 +23,7 @@ class TTSService(GObject.GObject):
 
     __gtype_name__ = "TTSService"
 
-    __gsignals__ = {
+    __gsignals__: ClassVar[dict[str, tuple]] = {
         "speak": (GObject.SIGNAL_RUN_LAST, None, (str,)),
         "stop": (GObject.SIGNAL_RUN_LAST, None, (bool,)),
     }
@@ -30,7 +31,7 @@ class TTSService(GObject.GObject):
     _tld: str = "com"
 
     # Mapping Tesseract 3-letter → gTTS 2-letter ISO 639-1
-    LANG_MAP: dict[str, str] = {
+    LANG_MAP: ClassVar[dict[str, str]] = {
         "eng": "en", "ita": "it", "fra": "fr", "deu": "de", "spa": "es",
         "por": "pt", "rus": "ru", "chi_sim": "zh-CN", "chi_tra": "zh-TW",
         "jpn": "ja", "kor": "ko", "ara": "ar", "hin": "hi", "tha": "th",

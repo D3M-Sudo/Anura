@@ -392,3 +392,5 @@ Release notes for `Adw.AboutDialog` are generated from `CHANGELOG.md` during Mes
 | 2026-05-03 | Bug 1/2/3 main fixes were already applied in a previous session | Verified via pre-fix grep checks from bug report v2 |
 | 2026-05-03 | GSK_RENDERER=cairo added to Flatpak finish-args | GL renderer fails on non-GNOME desktops (LXQt, XFCE, KDE) causing grayed-out UI |
 | 2026-05-03 | Defensive audit confirmed: button state controlled by Gio.SimpleAction via action-name, not set_sensitive | No Python sensitivity code needed — GTK handles it automatically |
+| 2026-05-03 | Full ruff cleanup — zero warnings across entire codebase | 28 pre-existing warnings fixed in 14 files |
+| 2026-05-03 | Added test_language_manager.py — 8 tests for pure-Python LanguageManager methods | All marked @pytest.mark.gtk, deselected correctly without GTK environment |

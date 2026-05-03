@@ -3,16 +3,17 @@
 # Copyright 2022-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
+from gettext import gettext as _
 import os
 import re
 import threading
-from gettext import gettext as _
+from typing import ClassVar
 from urllib.request import url2pathname
 
-import pytesseract
 from gi.repository import Gio, GLib, GObject, Xdp
 from loguru import logger
 from PIL import Image
+import pytesseract
 from pyzbar.pyzbar import decode
 
 from anura.config import LANG_CODE_PATTERN, get_tesseract_config
@@ -26,7 +27,7 @@ class ScreenshotService(GObject.GObject):
 
     __gtype_name__ = "ScreenshotService"
 
-    __gsignals__ = {
+    __gsignals__: ClassVar[dict[str, tuple]] = {
         "error": (GObject.SIGNAL_RUN_LAST, None, (str,)),
         "decoded": (GObject.SIGNAL_RUN_FIRST, None, (str, bool)),
     }
@@ -121,7 +122,7 @@ class ScreenshotService(GObject.GObject):
                     text = pytesseract.image_to_string(img, lang=lang, config=get_tesseract_config(lang))
                     extracted = text.strip()
 
-        except (IOError, OSError) as e:
+        except OSError as e:
             logger.error(f"Anura OCR/QR File Error: {e}")
             error_message = _("Failed to read image file.")
         except (pytesseract.TesseractError, pytesseract.TesseractNotFoundError) as e:

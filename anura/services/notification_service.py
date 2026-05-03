@@ -5,8 +5,9 @@
 # Notification service with XDG Portal and libnotify fallback
 # Provides maximum compatibility across desktop environments
 
-import time
 from itertools import count
+import time
+from typing import ClassVar
 
 from loguru import logger
 
@@ -65,7 +66,7 @@ class NotificationService:
             logger.warning("NotificationService: No notification backend available")
 
     # Valid priority levels according to XDG Portal specification
-    _VALID_PRIORITIES = {"low", "normal", "high", "urgent"}
+    _VALID_PRIORITIES: ClassVar[set[str]] = {"low", "normal", "high", "urgent"}
 
     def show(self, title: str, body: str, priority: str = "normal") -> bool:
         """

@@ -1,6 +1,6 @@
-import ipaddress
 from gettext import gettext as _
 from io import BytesIO
+import ipaddress
 from mimetypes import guess_type
 from urllib.parse import urlparse
 

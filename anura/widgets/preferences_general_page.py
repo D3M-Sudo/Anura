@@ -113,7 +113,7 @@ class PreferencesGeneralPage(Adw.PreferencesPage):
         supported = ttsservice.get_supported_gtts_languages()
 
         # Create list: "Auto (follow OCR)" + all supported languages
-        lang_names = [_("Auto (follow OCR language)")] + list(supported.values())
+        lang_names = [_("Auto (follow OCR language)"), *list(supported.values())]
         self.tts_language_combo.set_model(Gtk.StringList.new(lang_names))
 
         # Select current setting

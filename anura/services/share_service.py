@@ -3,6 +3,7 @@
 # Copyright 2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
+from typing import ClassVar
 from urllib.parse import quote
 
 from gi.repository import Adw, GLib, GObject, Gtk
@@ -20,7 +21,7 @@ class ShareService(GObject.GObject):
     """
     __gtype_name__ = "ShareService"
 
-    __gsignals__ = {"share": (GObject.SIGNAL_RUN_LAST, None, (bool,))}
+    __gsignals__: ClassVar[dict[str, tuple]] = {"share": (GObject.SIGNAL_RUN_LAST, None, (bool,))}
 
     def __init__(self):
         super().__init__()

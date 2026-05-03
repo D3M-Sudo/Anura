@@ -6,10 +6,10 @@
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 #
 
+from collections.abc import Callable
 import logging
 import threading
 import traceback
-from typing import Callable, Tuple
 
 from gi.repository import GLib
 
@@ -22,7 +22,7 @@ class GObjectWorker:
     """
 
     @staticmethod
-    def call(command: Callable, args: Tuple = (), callback: Callable = None, errorback: Callable = None):
+    def call(command: Callable, args: tuple = (), callback: Callable | None = None, errorback: Callable | None = None):
         """
         Executes a command in a separate thread.
 
@@ -59,7 +59,7 @@ class GObjectWorker:
         worker_thread.start()
 
     @staticmethod
-    def _default_errorback(error: Exception, traceback_str: str = None):
+    def _default_errorback(error: Exception, traceback_str: str | None = None):
         """
         Standardized error logging for worker thread failures.
         """

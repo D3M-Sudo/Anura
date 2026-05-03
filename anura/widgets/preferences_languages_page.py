@@ -107,7 +107,7 @@ class PreferencesLanguagesPage(Adw.PreferencesPage):
     def is_search_mode(self):
         return self.search_bar.get_search_mode()
 
-    def activate_filter(self, search_text: str = None) -> None:
+    def activate_filter(self, search_text: str | None = None) -> None:
         _filter = Gtk.CustomFilter.new(PreferencesLanguagesPage.filter_func, search_text)
         self.model.set_filter(_filter)
         self.toggle_empty_state(not self.model.get_n_items())
@@ -134,7 +134,7 @@ class PreferencesLanguagesPage(Adw.PreferencesPage):
             return user_data.lower() in item.title.lower()
         return item.code in language_manager.get_downloaded_codes()
 
-    def on_language_added(self, _sender, _code: str = None) -> None:
+    def on_language_added(self, _sender, _code: str | None = None) -> None:
         if not self.search_bar.get_search_mode():
             self.activate_filter()
 

@@ -4,6 +4,7 @@
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
 from gettext import gettext as _
+from typing import ClassVar
 
 from gi.repository import Gdk, Gio, GLib, GObject
 from loguru import logger
@@ -17,7 +18,7 @@ class ClipboardService(GObject.GObject):
 
     __gtype_name__ = "ClipboardService"
 
-    __gsignals__ = {
+    __gsignals__: ClassVar[dict[str, tuple]] = {
         "paste_from_clipboard": (GObject.SIGNAL_RUN_FIRST, None, (Gdk.Texture,)),
         "error": (GObject.SIGNAL_RUN_FIRST, None, (str,)),
     }

@@ -1,7 +1,7 @@
 import datetime
+from gettext import gettext as _
 import os
 import sys
-from gettext import gettext as _
 
 from gi.repository import Adw, Gio, GLib, Gtk
 from loguru import logger
