@@ -386,3 +386,7 @@ Release notes for `Adw.AboutDialog` are generated from `CHANGELOG.md` during Mes
 | Date | Decision | Reason |
 |------|----------|--------|
 | 2026-05-03 | Removed set_paintable() from welcome_page.py | Gdk.Texture on transparent widget causes checkerboard pattern |
+| 2026-05-03 | osd filter added to get_downloaded_codes() | osd.traineddata is a Tesseract orientation file, not a real language |
+| 2026-05-03 | new_item None guard added in populate_model() | Prevents crash if get_language_item("eng") returns None |
+| 2026-05-03 | SIM105 added to ruff ignore list in pyproject.toml | Pre-existing style preference across the codebase |
+| 2026-05-03 | Bug 1/2/3 main fixes were already applied in a previous session | Verified via pre-fix grep checks from bug report v2 |

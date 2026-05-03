@@ -3,17 +3,17 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
+from gettext import gettext as _
 import os
 import shutil
 import tempfile
 import threading
 import time
-from gettext import gettext as _
-from typing import Dict, List
+from typing import ClassVar
 
-import requests
 from gi.repository import GLib, GObject
 from loguru import logger
+import requests
 
 from anura.config import REQUEST_TIMEOUT, TESSDATA_BEST_URL, TESSDATA_DIR, TESSDATA_SYSTEM_DIR, TESSDATA_URL
 from anura.gobject_worker import GObjectWorker
@@ -29,7 +29,7 @@ class LanguageManager(GObject.GObject):
 
     __gtype_name__ = "LanguageManager"
 
-    __gsignals__ = {
+    __gsignals__: ClassVar[dict[str, tuple]] = {
         "added": (GObject.SIGNAL_RUN_FIRST, None, (str,)),
         "downloading": (GObject.SIGNAL_RUN_FIRST, None, (str, int)),
         "downloaded": (GObject.SIGNAL_RUN_FIRST, None, (str,)),
@@ -42,7 +42,7 @@ class LanguageManager(GObject.GObject):
     def __init__(self):
         super().__init__()
 
-        self.loading_languages: Dict[str, DownloadState] = {}
+        self.loading_languages: dict[str, DownloadState] = {}
         self._downloaded_codes = []
         self._need_update_cache = True
         self._cache_lock = threading.Lock()
@@ -147,7 +147,7 @@ class LanguageManager(GObject.GObject):
     def get_language_item(self, code: str) -> LanguageItem:
         return LanguageItem(code=code, title=self.get_language(code))
 
-    def get_downloaded_codes(self, force: bool = False) -> List[str]:
+    def get_downloaded_codes(self, force: bool = False) -> list[str]:
         """Returns the codes of all installed language models (user + system bundled)."""
         with self._cache_lock:
             need_update = self._need_update_cache
@@ -159,7 +159,7 @@ class LanguageManager(GObject.GObject):
                     codes.update(
                         os.path.splitext(f)[0]
                         for f in os.listdir(TESSDATA_DIR)
-                        if f.endswith(".traineddata")
+                        if f.endswith(".traineddata") and not f.startswith("osd")
                     )
 
                 # Bundled system models (/app/share/tessdata/ — eng, ita pre-installed)
@@ -167,19 +167,19 @@ class LanguageManager(GObject.GObject):
                     codes.update(
                         os.path.splitext(f)[0]
                         for f in os.listdir(TESSDATA_SYSTEM_DIR)
-                        if f.endswith(".traineddata")
+                        if f.endswith(".traineddata") and not f.startswith("osd")
                     )
 
                 self._downloaded_codes = list(codes)
                 self._need_update_cache = False
             return sorted(self._downloaded_codes, key=lambda x: self.get_language(x))
 
-    def get_downloaded_languages(self, force: bool = False) -> List[str]:
+    def get_downloaded_languages(self, force: bool = False) -> list[str]:
         """Returns the names of the installed languages."""
         codes = self.get_downloaded_codes(force)
         return [self.get_language(code) for code in codes]
 
-    def get_available_codes(self) -> List[str]:
+    def get_available_codes(self) -> list[str]:
         """Returns all ISO codes supported by Tesseract (installed or not)."""
         return sorted(self._languages.keys())
 

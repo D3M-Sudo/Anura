@@ -3,6 +3,8 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
+from typing import ClassVar
+
 from gi.repository import Gio, GObject, Gtk
 from loguru import logger
 
@@ -17,7 +19,7 @@ from anura.widgets.language_popover_row import LanguagePopoverRow
 class LanguagePopover(Gtk.Popover):
     __gtype_name__ = "LanguagePopover"
 
-    __gsignals__ = {
+    __gsignals__: ClassVar[dict[str, tuple]] = {
         'language-changed': (GObject.SIGNAL_RUN_LAST, None, (LanguageItem,)),
     }
 
@@ -59,7 +61,7 @@ class LanguagePopover(Gtk.Popover):
     def active_language(self, lang_code: str):
         self._active_language = lang_code
 
-    def _on_language_filter(self, proposal: LanguageItem, text: str = None) -> bool:
+    def _on_language_filter(self, proposal: LanguageItem, text: str | None = None) -> bool:
         if not text:
             return True
         return text.lower() in proposal.title.lower()
@@ -125,7 +127,7 @@ class LanguagePopover(Gtk.Popover):
         current_code = self.active_language
         if current_code not in language_manager.get_downloaded_codes():
             new_item = language_manager.get_language_item("eng")
-            if self.active_language != "eng":  # emit only if language actually changed
+            if new_item and self.active_language != "eng":  # emit only if language actually changed
                 self.active_language = "eng"
                 self.settings.set_string('active-language', 'eng')
                 self.emit("language-changed", new_item)
