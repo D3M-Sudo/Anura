@@ -377,6 +377,10 @@ Release notes for `Adw.AboutDialog` are generated from `CHANGELOG.md` during Mes
 - Thread safety: never emit GObject signals from secondary threads — use `GLib.idle_add()`
 - When in doubt about an architectural choice, ask before proceeding
 
+### Test Architecture Note
+
+`anura/__init__.py` imports `gi` at module level, so ALL tests that import from `anura` require PyGObject (`python3-gi` system package) and must be marked with `@pytest.mark.gtk`. Only tests with zero `anura` imports (like `test_uri_validator.py`) run without a GTK environment.
+
 ## Decision Log
 
 | Date | Decision | Reason |

@@ -10,6 +10,8 @@ build/
 dist/
 *.egg-info/
 __pycache__/
+tests/__pycache__/
+**/__pycache__/
 *.pyc
 *.pyo
 *.pyd
