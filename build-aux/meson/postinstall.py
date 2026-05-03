@@ -9,8 +9,8 @@
 # Updates system databases to recognize Anura's icons, schemas, and desktop files.
 
 import os
-import sys
 from subprocess import run
+import sys
 
 # Meson sets these environment variables during the install process
 prefix = os.environ.get('MESON_INSTALL_PREFIX', '/usr/local')

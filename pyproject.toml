@@ -17,7 +17,7 @@ dev = [
 [tool.ruff]
 line-length = 120
 target-version = "py312"
-src = ["anura"]
+src = ["anura", "build-aux"]
 
 [tool.ruff.lint]
 select = [

@@ -2,9 +2,9 @@
 """Generate _release_notes.py from CHANGELOG.md during build."""
 
 import html
+from pathlib import Path
 import re
 import sys
-from pathlib import Path
 
 
 def parse_changelog(changelog_path: Path) -> dict:
@@ -80,7 +80,7 @@ def generate_release_notes_py(changelog_path: Path, output_path: Path, current_v
 
     for version, html_content in releases.items():
         # Use repr() to safely escape the content and avoid triple-quote issues
-        lines.append(f'    "{version}": {repr(html_content)},')
+        lines.append(f'    "{version}": {html_content!r},')
 
     lines.extend([
         '}',
@@ -88,7 +88,7 @@ def generate_release_notes_py(changelog_path: Path, output_path: Path, current_v
         f'CURRENT_VERSION = "{current_version}"',
         '',
         # Use repr() to safely escape current_notes
-        f'CURRENT_NOTES = {repr(current_notes)}',
+        f'CURRENT_NOTES = {current_notes!r}',
         '',
         'def get_release_notes(version: str = None) -> str:',
         '    """Get release notes for a specific version or current version."""',
