@@ -12,7 +12,8 @@
         "--socket=wayland",
         "--socket=pulseaudio",
         "--device=dri",
-        "--filesystem=xdg-download"
+        "--filesystem=xdg-download",
+        "--env=GSK_RENDERER=cairo"
     ],
 
     "cleanup": [

@@ -390,3 +390,5 @@ Release notes for `Adw.AboutDialog` are generated from `CHANGELOG.md` during Mes
 | 2026-05-03 | new_item None guard added in populate_model() | Prevents crash if get_language_item("eng") returns None |
 | 2026-05-03 | SIM105 added to ruff ignore list in pyproject.toml | Pre-existing style preference across the codebase |
 | 2026-05-03 | Bug 1/2/3 main fixes were already applied in a previous session | Verified via pre-fix grep checks from bug report v2 |
+| 2026-05-03 | GSK_RENDERER=cairo added to Flatpak finish-args | GL renderer fails on non-GNOME desktops (LXQt, XFCE, KDE) causing grayed-out UI |
+| 2026-05-03 | Defensive audit confirmed: button state controlled by Gio.SimpleAction via action-name, not set_sensitive | No Python sensitivity code needed — GTK handles it automatically |
