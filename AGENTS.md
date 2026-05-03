@@ -394,3 +394,4 @@ Release notes for `Adw.AboutDialog` are generated from `CHANGELOG.md` during Mes
 | 2026-05-03 | Defensive audit confirmed: button state controlled by Gio.SimpleAction via action-name, not set_sensitive | No Python sensitivity code needed — GTK handles it automatically |
 | 2026-05-03 | Full ruff cleanup — zero warnings across entire codebase | 28 pre-existing warnings fixed in 14 files |
 | 2026-05-03 | Added test_language_manager.py — 8 tests for pure-Python LanguageManager methods | All marked @pytest.mark.gtk, deselected correctly without GTK environment |
+| 2026-05-03 | GTK tests require Flatpak sandbox — Xdp namespace not available on host | Use pytest -m "not gtk" on host; run full suite inside flatpak sandbox |

@@ -3,6 +3,17 @@
 # Shared fixtures and setup for Anura test suite.
 # GTK/GLib are NOT initialized here — tests that need them must be
 # marked with @pytest.mark.gtk and skipped in CI without a display.
+#
+# NOTE: @pytest.mark.gtk tests require the Flatpak runtime environment.
+# They cannot run on the host system because anura depends on:
+# - Xdp (libportal) — only available in /app inside the Flatpak sandbox
+# - GTK4/Adwaita GI bindings — may differ between host and Flatpak runtime
+#
+# To run GTK tests, enter the Flatpak sandbox first:
+#   flatpak run --devel --command=bash com.github.d3msudo.anura
+#   python3 -m pytest tests/ -m "gtk" -v
+#
+# On the host system, always use: pytest tests/ -m "not gtk"
 
 import os
 import sys
