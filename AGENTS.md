@@ -366,3 +366,19 @@ Release notes for `Adw.AboutDialog` are generated from `CHANGELOG.md` during Mes
 | `flatpak/com.github.d3msudo.anura.json` | Flatpak manifest with all native dependencies |
 | `build-aux/generate_release_notes.py` | CHANGELOG.md parser → `_release_notes.py` |
 | `CHANGELOG.md` | Versioned changelog (source for release notes) |
+
+## For Cascade / AI Agents
+
+- Read this file BEFORE any operation on the codebase
+- Do NOT add dependencies not present in the Flatpak manifest without discussing first
+- The only official linter is `ruff` — do not suggest flake8, pylint or black
+- Never modify: `po/*.po`, `anura/_release_notes.py`, `data/ui/*.ui`, `CHANGELOG.md`
+- After any new UI string, remind the user to run `./generate_pot.sh`
+- Thread safety: never emit GObject signals from secondary threads — use `GLib.idle_add()`
+- When in doubt about an architectural choice, ask before proceeding
+
+## Decision Log
+
+| Date | Decision | Reason |
+|------|----------|--------|
+| 2026-05-03 | Removed set_paintable() from welcome_page.py | Gdk.Texture on transparent widget causes checkerboard pattern |
