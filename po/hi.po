@@ -1141,176 +1141,54 @@ msgstr ""
 msgid "tesseract"
 msgstr ""
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "निकाले गए पाठ को क्लिपबोर्ड पर कॉपी करें"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Listen to text"
-#~ msgstr "पाठ सुनें"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Cancel listening to text"
-#~ msgstr "पाठ सुनना रद्द करें"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Open menu"
-#~ msgstr "मेनू खोलें"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Share To"
-#~ msgstr "इससे साझा करें"
 
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Install language"
-#~ msgstr "भाषा स्थापित करें"
 
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Remove language"
-#~ msgstr "भाषा हटाएं"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Shortcuts"
-#~ msgstr "शॉर्टकट"
 
-#~ msgctxt "shortcut window"
-#~ msgid "General"
-#~ msgstr "सामान्य"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Open image"
-#~ msgstr "छवि खोलें"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Take screenshot and extract text"
-#~ msgstr "स्क्रीनशॉट लें और पाठ निकालें"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "निकाले गए पाठ को क्लिपबोर्ड पर कॉपी करें"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Application"
-#~ msgstr "अनुप्रयोग"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Preferences"
-#~ msgstr "प्राथमिकताएं"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Quit"
-#~ msgstr "छोड़ें"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Help"
-#~ msgstr "सहायता"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Display Shortcuts"
-#~ msgstr "शॉर्टकट्स प्रदर्शित करें"
 
-#~ msgctxt "Welcome screen"
-#~ msgid "Take a Screenshot"
-#~ msgstr "स्क्रीनशॉट लें"
 
-#~ msgctxt "Welcome screen"
-#~ msgid "Paste image from clipboard"
-#~ msgstr "क्लिपबोर्ड से छवि पेस्ट करें"
 
 #, python-brace-format
-#~ msgid "Share via {0}"
-#~ msgstr "{0} के ज़रिए शेयर करें"
 
-#~ msgid "About anura"
-#~ msgstr "anura के बारे में"
 
 #, fuzzy
-#~ msgid "OCR models unreachable. Check your internet connection."
-#~ msgstr "मॉडल का स्थान पहुंच योग्य नहीं है. अपना इंटरनेट संपर्क जांचे।"
 
-#~ msgid "Extract text from images"
-#~ msgstr "छवियों से पाठ निकालें"
 
-#~ msgid ""
-#~ "Extract text from images, websites, videos, and QR codes by taking a "
-#~ "picture of the source."
-#~ msgstr "स्रोत की तस्वीर लेकर छवियों, वेबसाइटों, वीडियो और QR कोड से पाठ निकालें।"
 
-#~ msgid "Text extraction tool"
-#~ msgstr "पाठ निष्कर्षण उपकरण"
 
-#~ msgid "Available Languages"
-#~ msgstr "उपलब्ध भाषाएं"
 
-#~ msgid "Models location unreachable. Check your internet connection"
-#~ msgstr "मॉडल का स्थान पहुंच योग्य नहीं है। अपना इंटरनेट संपर्क जांचे"
 
-#~ msgid "Share via Pocket"
-#~ msgstr "Pocket के ज़रिए साझा करें"
 
-#~ msgid "Pocket"
-#~ msgstr "Pocket"
 
-#~ msgctxt "shortcut window"
-#~ msgid "May not work properly on wayland"
-#~ msgstr "शायद Wayland पर ठीक से काम न करे"
 
-#~ msgid "Catalan; Valencian"
-#~ msgstr "कैटलन; वैलेंसियन"
 
-#~ msgid "Greek, Modern (1453-)"
-#~ msgstr "ग्रीक, आधुनिक (1453-)"
 
-#~ msgid "Filipino (old - Tagalog)"
-#~ msgstr "फिलिपिनो (पुरानी - तागालोग)"
 
-#~ msgid "Greek, Ancient (to 1453) (contrib)"
-#~ msgstr "ग्रीक, प्राचीन (1453 तक) (योगदान)"
 
-#~ msgid "Haitian; Haitian Creole"
-#~ msgstr "हाईटियन; हाईटियन क्रियोल"
 
-#~ msgid "Kurmanji (Kurdish - Latin Script)"
-#~ msgstr "कुरमानजी (कुर्दिश - लैटिन लिपि)"
 
-#~ msgid "Dutch; Flemish"
-#~ msgstr "डच; फ्लेमिश"
 
-#~ msgid "Occitan (post 1500)"
-#~ msgstr "ओसीटान (1500 के बाद)"
 
-#~ msgid "Orientation and script detection module"
-#~ msgstr "ओरिएंटेशन और स्क्रिप्ट डिटेक्शन मॉड्यूल"
 
-#~ msgid "Romanian; Moldavian; Moldovan"
-#~ msgstr "रोमानियाई; मोल्डावियन; मोल्दोवन"
 
-#~ msgid "Sinhala; Sinhalese"
-#~ msgstr "सिंहल; सिंहली"
 
-#~ msgid "Spanish; Castilian"
-#~ msgstr "स्पैनिश; केस्टेलियन"
 
-#~ msgid "Text extracted. You can paste it with Ctrl+V"
-#~ msgstr "पाठ निकाला गया. आप इसे Ctrl+V से पेस्ट कर सकते हैं"
 
-#~ msgid "QR-code URL opened"
-#~ msgstr "QR-कोड URL खोला गया"
 
-#~ msgid "QR-code contains URL."
-#~ msgstr "QR-कोड में URL है।"
 
-#~ msgid "Supported image files"
-#~ msgstr "समर्थित छवि फाइलें"
 
-#~ msgid "Only images can be processed that way."
-#~ msgstr "केवल छवियों को इस तरह से संसाधित किया जा सकता है।"
 
-#~ msgid "Text copied"
-#~ msgstr "पाठ कॉपी किया गया"
 
-#~ msgid "You are on a metered connection. Be careful to download languages."
-#~ msgstr "आप मीटर वाले कनेक्शन पर हैं. भाषाएं डाउनलोड करते समय सावधान रहें।"
 
-#~ msgid "View all available languages"
-#~ msgstr "सभी उपलब्ध भाषाएं देखें"

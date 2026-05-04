@@ -1,26 +1,27 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the anura package.
-# Sergi Marquez <sergimrqz@gmail.com>, 2024.
+# This is a Translation File of anura.
+# 小山田 純 <oyamadajun@outlook.jp>, 2022.
+# Ryo Nakano <ryonakaknock3@gmail.com>, 2024.
 msgid ""
 msgstr ""
-"Project-Id-Version: anura 1.4.0\n"
+"Project-Id-Version: anura\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-05-04 03:08+0200\n"
-"PO-Revision-Date: 2024-04-25 11:07+0000\n"
-"Last-Translator: Sergi Marquez <sergimrqz@gmail.com>\n"
-"Language-Team: Catalan <https://hosted.weblate.org/projects/anura/default/ca/"
-">\n"
-"Language: ca\n"
+"PO-Revision-Date: 2024-04-18 13:03+0000\n"
+"Last-Translator: Ryo Nakano <ryonakaknock3@gmail.com>\n"
+"Language-Team: Japanese <https://hosted.weblate.org/projects/anura/default/"
+"ja/>\n"
+"Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.5.1-dev\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Weblate 5.5-dev\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-SearchPath-0: .\n"
 
 #: ../anura/main.py:82
 msgid "Extract directly into the clipboard"
-msgstr "Extreu directament al porta-retalls"
+msgstr "抽出したテキストを直接クリップボードにコピーする"
 
 #: ../anura/main.py:87
 msgid "Process image file for OCR"
@@ -48,12 +49,12 @@ msgstr ""
 
 #: ../anura/main.py:337
 msgid "No text found. Try to grab another region."
-msgstr "No s'ha trobat cap text. Intenta capturar una altra regió."
+msgstr "テキストが見つかりません。別の領域を選択してみてください。"
 
 #: ../anura/main.py:342
 #, fuzzy
 msgid "Text extracted and copied to clipboard."
-msgstr "Extreure text i copiar-lo al porta-retalls"
+msgstr "テキストを抽出してクリップボードにコピーする"
 
 #: ../anura/main.py:348 ../anura/services/screenshot_service.py:183
 msgid "Cancelled"
@@ -62,7 +63,7 @@ msgstr ""
 #: ../anura/window.py:95
 #, fuzzy
 msgid "Failed to capture screenshot"
-msgstr "Fer una captura d'imatge"
+msgstr "スクリーンショットサービスの初期化に失敗しました。"
 
 #: ../anura/window.py:101
 msgid "Screenshot service did not respond."
@@ -70,7 +71,7 @@ msgstr ""
 
 #: ../anura/window.py:122
 msgid "Text copied to clipboard"
-msgstr "Text copiat al porta-retalls"
+msgstr "テキストをクリップボードにコピーしました"
 
 #: ../anura/window.py:128
 msgid "URL opened automatically"
@@ -79,12 +80,12 @@ msgstr ""
 #: ../anura/window.py:150
 #, fuzzy
 msgid "Choose an image for extraction"
-msgstr "Obrir imatge per extreure'n el text"
+msgstr "画像を開いてテキストを抽出"
 
 #: ../anura/window.py:153
 #, fuzzy
 msgid "Images"
-msgstr "Obrir imatge"
+msgstr "画像を開く"
 
 #: ../anura/window.py:175 ../anura/window.py:213 ../anura/window.py:271
 #, python-brace-format
@@ -133,12 +134,12 @@ msgstr ""
 
 #: ../anura/window.py:378
 msgid "Open"
-msgstr "Obrir"
+msgstr "開く"
 
 #: ../anura/widgets/preferences_languages_page.py:66
 #, fuzzy
 msgid "OCR models unreachable. Please check your internet connection."
-msgstr "Ubicació del model  inabastable. Revisa la teva connexió d'internet"
+msgstr "モデルの場所に到達できません。インターネット接続を確認してください。"
 
 #: ../anura/widgets/preferences_languages_page.py:71
 msgid "Metered connection detected. Model downloads may incur data costs."
@@ -171,12 +172,12 @@ msgstr ""
 
 #: ../anura/services/clipboard_service.py:72
 msgid "No image in clipboard"
-msgstr "Cap imatge al porta-retalls"
+msgstr "クリップボードに画像なし"
 
 #: ../anura/services/screenshot_service.py:64
 #: ../anura/services/screenshot_service.py:71
 msgid "Can't take a screenshot."
-msgstr "No es pot capturar imatge"
+msgstr "スクリーンショットを撮影できません。"
 
 #: ../anura/services/screenshot_service.py:99
 #: ../anura/services/screenshot_service.py:170
@@ -198,7 +199,7 @@ msgstr ""
 #: ../anura/services/screenshot_service.py:153
 #, fuzzy
 msgid "No text found."
-msgstr "No s'ha trobat cap resultat"
+msgstr "結果なし"
 
 #: ../anura/services/share_service.py:117
 msgid "Select Mastodon Instance"
@@ -214,55 +215,56 @@ msgstr ""
 
 #: ../anura/language_manager.py:40 ../anura/language_manager.py:60
 msgid "English"
-msgstr "Anglès"
+msgstr "英語"
 
 #: ../anura/language_manager.py:52
 msgid "Afrikaans"
-msgstr "Afrikaans"
+msgstr "アフリカーンス語"
 
 #: ../anura/language_manager.py:52
 msgid "Amharic"
-msgstr ""
+msgstr "アムハラ語"
 
 #: ../anura/language_manager.py:52
 msgid "Arabic"
-msgstr "Àrab"
+msgstr "アラビア語"
 
 #: ../anura/language_manager.py:53
 msgid "Assamese"
-msgstr ""
+msgstr "アッサム語"
 
 #: ../anura/language_manager.py:53
 msgid "Azerbaijani"
-msgstr ""
+msgstr "アゼルバイジャン語"
 
 #: ../anura/language_manager.py:53
+#, fuzzy
 msgid "Azerbaijani - Cyrillic"
-msgstr ""
+msgstr "アゼルバイジャン語 - キリル文字"
 
 #: ../anura/language_manager.py:54
 msgid "Belarusian"
-msgstr "Bielorús"
+msgstr "ベラルーシ語"
 
 #: ../anura/language_manager.py:54
 msgid "Bengali"
-msgstr "Bengalí"
+msgstr "ベンガル語"
 
 #: ../anura/language_manager.py:54
 msgid "Tibetan"
-msgstr "Tibetà"
+msgstr "チベット語"
 
 #: ../anura/language_manager.py:55
 msgid "Bosnian"
-msgstr "Bosni"
+msgstr "ボスニア語"
 
 #: ../anura/language_manager.py:55
 msgid "Breton"
-msgstr "Bretó"
+msgstr "ブルトン語"
 
 #: ../anura/language_manager.py:55
 msgid "Bulgarian"
-msgstr "Bulgar"
+msgstr "ブルガリア語"
 
 #: ../anura/language_manager.py:56
 msgid "Catalan"
@@ -270,43 +272,43 @@ msgstr ""
 
 #: ../anura/language_manager.py:56
 msgid "Cebuano"
-msgstr ""
+msgstr "セブアノ語"
 
 #: ../anura/language_manager.py:56
 msgid "Czech"
-msgstr "Txec"
+msgstr "チェコ語"
 
 #: ../anura/language_manager.py:57
 msgid "Chinese - Simplified"
-msgstr "Xinès - Simplificat"
+msgstr "中国語 - 簡体字"
 
 #: ../anura/language_manager.py:57
 msgid "Chinese - Traditional"
-msgstr "Xinès - Tradicional"
+msgstr "中国語 - 繁体字"
 
 #: ../anura/language_manager.py:58
 msgid "Cherokee"
-msgstr ""
+msgstr "チェロキー語"
 
 #: ../anura/language_manager.py:58
 msgid "Corsican"
-msgstr "Cors"
+msgstr "コルシカ語"
 
 #: ../anura/language_manager.py:58
 msgid "Welsh"
-msgstr "Gal·lès"
+msgstr "ウェールズ語"
 
 #: ../anura/language_manager.py:59
 msgid "Danish"
-msgstr "Danès"
+msgstr "デンマーク語"
 
 #: ../anura/language_manager.py:59
 msgid "German"
-msgstr "Alemany"
+msgstr "ドイツ語"
 
 #: ../anura/language_manager.py:59
 msgid "Dzongkha"
-msgstr ""
+msgstr "ゾンカ語"
 
 #: ../anura/language_manager.py:60
 msgid "Greek"
@@ -315,31 +317,32 @@ msgstr ""
 #: ../anura/language_manager.py:60
 #, fuzzy
 msgid "English, Middle"
-msgstr "Anglès"
+msgstr "中英語 (1100-1500)"
 
 #: ../anura/language_manager.py:61
 msgid "Esperanto"
-msgstr "Esperanto"
+msgstr "エスペラント"
 
 #: ../anura/language_manager.py:61
+#, fuzzy
 msgid "Math / Equation Detection"
-msgstr ""
+msgstr "算術 / 方程式検出モジュール"
 
 #: ../anura/language_manager.py:62
 msgid "Estonian"
-msgstr "Estonià"
+msgstr "エストニア語"
 
 #: ../anura/language_manager.py:62
 msgid "Basque"
-msgstr "Vasc"
+msgstr "バスク語"
 
 #: ../anura/language_manager.py:62
 msgid "Faroese"
-msgstr ""
+msgstr "フェロー語"
 
 #: ../anura/language_manager.py:63
 msgid "Persian"
-msgstr "Persa"
+msgstr "ペルシア語"
 
 #: ../anura/language_manager.py:63
 msgid "Filipino"
@@ -347,36 +350,36 @@ msgstr ""
 
 #: ../anura/language_manager.py:63
 msgid "Finnish"
-msgstr "Finès"
+msgstr "フィンランド語"
 
 #: ../anura/language_manager.py:64
 msgid "French"
-msgstr "Francès"
+msgstr "フランス語"
 
 #: ../anura/language_manager.py:64
 msgid "German - Fraktur"
-msgstr ""
+msgstr "ドイツ語 - フラクトゥール"
 
 #: ../anura/language_manager.py:64
 #, fuzzy
 msgid "French, Middle"
-msgstr "Francès"
+msgstr "中世フランス語 (1400-1600 頃)"
 
 #: ../anura/language_manager.py:65
 msgid "Western Frisian"
-msgstr ""
+msgstr "西フリジア語"
 
 #: ../anura/language_manager.py:65
 msgid "Scottish Gaelic"
-msgstr ""
+msgstr "スコットランド・ゲール語"
 
 #: ../anura/language_manager.py:65
 msgid "Irish"
-msgstr "Irlandès"
+msgstr "アイルランド語"
 
 #: ../anura/language_manager.py:66
 msgid "Galician"
-msgstr "Gallec"
+msgstr "ガリシア語"
 
 #: ../anura/language_manager.py:66
 msgid "Greek, Ancient"
@@ -384,88 +387,89 @@ msgstr ""
 
 #: ../anura/language_manager.py:66
 msgid "Gujarati"
-msgstr ""
+msgstr "グジャラート語"
 
 #: ../anura/language_manager.py:67
 #, fuzzy
 msgid "Haitian"
-msgstr "Croat"
+msgstr "クロアチア語"
 
 #: ../anura/language_manager.py:67
 msgid "Hebrew"
-msgstr "Hebreu"
+msgstr "ヘブライ語"
 
 #: ../anura/language_manager.py:67
 msgid "Hindi"
-msgstr ""
+msgstr "ヒンディー語"
 
 #: ../anura/language_manager.py:68
 msgid "Croatian"
-msgstr "Croat"
+msgstr "クロアチア語"
 
 #: ../anura/language_manager.py:68
 msgid "Hungarian"
-msgstr "Hongarès"
+msgstr "ハンガリー語"
 
 #: ../anura/language_manager.py:68
 msgid "Armenian"
-msgstr "Armeni"
+msgstr "アルメニア語"
 
 #: ../anura/language_manager.py:69
 msgid "Inuktitut"
-msgstr ""
+msgstr "イヌクティトゥット語"
 
 #: ../anura/language_manager.py:69
 msgid "Indonesian"
-msgstr ""
+msgstr "インドネシア語"
 
 #: ../anura/language_manager.py:69
 msgid "Icelandic"
-msgstr "Islandès"
+msgstr "アイスランド語"
 
 #: ../anura/language_manager.py:70
 msgid "Italian"
-msgstr "Italià"
+msgstr "イタリア語"
 
 #: ../anura/language_manager.py:70
 msgid "Italian - Old"
-msgstr ""
+msgstr "古イタリア語"
 
 #: ../anura/language_manager.py:70
 msgid "Javanese"
-msgstr ""
+msgstr "ジャワ語"
 
 #: ../anura/language_manager.py:71
 msgid "Japanese"
-msgstr "Japonès"
+msgstr "日本語"
 
 #: ../anura/language_manager.py:71
 msgid "Japanese (vertical)"
-msgstr ""
+msgstr "日本語 (縦書き)"
 
 #: ../anura/language_manager.py:72
 msgid "Kannada"
-msgstr ""
+msgstr "カンナダ語"
 
 #: ../anura/language_manager.py:72
 msgid "Georgian"
-msgstr ""
+msgstr "グルジア語"
 
 #: ../anura/language_manager.py:72
 msgid "Georgian - Old"
-msgstr ""
+msgstr "古グルジア語"
 
 #: ../anura/language_manager.py:73
 msgid "Kazakh"
-msgstr ""
+msgstr "カザフ語"
 
 #: ../anura/language_manager.py:73
 msgid "Central Khmer"
-msgstr ""
+msgstr "クメール語 (中部方言)"
 
 #: ../anura/language_manager.py:73
+#, fuzzy
 msgid "Kirghiz"
-msgstr ""
+msgstr "キルギス語"
 
 #: ../anura/language_manager.py:74
 msgid "Kurmanji"
@@ -473,67 +477,67 @@ msgstr ""
 
 #: ../anura/language_manager.py:74
 msgid "Korean"
-msgstr "Coreà"
+msgstr "韓国語"
 
 #: ../anura/language_manager.py:74
 msgid "Korean (vertical)"
-msgstr ""
+msgstr "韓国語 (縦書き)"
 
 #: ../anura/language_manager.py:75
 msgid "Lao"
-msgstr ""
+msgstr "ラーオ語"
 
 #: ../anura/language_manager.py:75
 msgid "Latin"
-msgstr ""
+msgstr "ラテン語"
 
 #: ../anura/language_manager.py:75
 msgid "Latvian"
-msgstr ""
+msgstr "ラトビア語"
 
 #: ../anura/language_manager.py:76
 msgid "Lithuanian"
-msgstr ""
+msgstr "リトアニア語"
 
 #: ../anura/language_manager.py:76
 msgid "Luxembourgish"
-msgstr ""
+msgstr "ルクセンブルク語"
 
 #: ../anura/language_manager.py:76
 msgid "Malayalam"
-msgstr ""
+msgstr "マラヤーラム語"
 
 #: ../anura/language_manager.py:77
 msgid "Marathi"
-msgstr ""
+msgstr "マラーティー語"
 
 #: ../anura/language_manager.py:77
 msgid "Macedonian"
-msgstr ""
+msgstr "マケドニア語"
 
 #: ../anura/language_manager.py:77
 msgid "Maltese"
-msgstr ""
+msgstr "マルタ語"
 
 #: ../anura/language_manager.py:78
 msgid "Mongolian"
-msgstr ""
+msgstr "モンゴル語"
 
 #: ../anura/language_manager.py:78
 msgid "Maori"
-msgstr ""
+msgstr "マオリ語"
 
 #: ../anura/language_manager.py:78
 msgid "Malay"
-msgstr ""
+msgstr "マレー語"
 
 #: ../anura/language_manager.py:79
 msgid "Burmese"
-msgstr ""
+msgstr "ビルマ語"
 
 #: ../anura/language_manager.py:79
 msgid "Nepali"
-msgstr ""
+msgstr "ネパール語"
 
 #: ../anura/language_manager.py:79
 msgid "Dutch"
@@ -541,7 +545,7 @@ msgstr ""
 
 #: ../anura/language_manager.py:80
 msgid "Norwegian"
-msgstr ""
+msgstr "ノルウェー語"
 
 #: ../anura/language_manager.py:80
 msgid "Occitan"
@@ -549,44 +553,46 @@ msgstr ""
 
 #: ../anura/language_manager.py:80
 msgid "Oriya"
-msgstr ""
+msgstr "オリヤー語"
 
 #: ../anura/language_manager.py:81
 msgid "OSD Module"
 msgstr ""
 
 #: ../anura/language_manager.py:81
+#, fuzzy
 msgid "Panjabi"
-msgstr ""
+msgstr "パンジャーブ語"
 
 #: ../anura/language_manager.py:81
 msgid "Polish"
-msgstr ""
+msgstr "ポーランド語"
 
 #: ../anura/language_manager.py:82
 msgid "Portuguese"
-msgstr ""
+msgstr "ポルトガル語"
 
 #: ../anura/language_manager.py:82
+#, fuzzy
 msgid "Pushto"
-msgstr ""
+msgstr "パシュトー語"
 
 #: ../anura/language_manager.py:82
 msgid "Quechua"
-msgstr ""
+msgstr "ケチュア語"
 
 #: ../anura/language_manager.py:83
 #, fuzzy
 msgid "Romanian"
-msgstr "Bosni"
+msgstr "ボスニア語"
 
 #: ../anura/language_manager.py:83
 msgid "Russian"
-msgstr ""
+msgstr "ロシア語"
 
 #: ../anura/language_manager.py:83
 msgid "Sanskrit"
-msgstr ""
+msgstr "サンスクリット"
 
 #: ../anura/language_manager.py:84
 msgid "Sinhala"
@@ -594,116 +600,119 @@ msgstr ""
 
 #: ../anura/language_manager.py:84
 msgid "Slovak"
-msgstr ""
+msgstr "スロバキア語"
 
 #: ../anura/language_manager.py:84
 msgid "Slovenian"
-msgstr ""
+msgstr "スロベニア語"
 
 #: ../anura/language_manager.py:85
 msgid "Sindhi"
-msgstr ""
+msgstr "シンド語"
 
 #: ../anura/language_manager.py:85
 #, fuzzy
 msgid "Spanish"
-msgstr "Danès"
+msgstr "デンマーク語"
 
 #: ../anura/language_manager.py:85
+#, fuzzy
 msgid "Spanish - Old"
-msgstr ""
+msgstr "古スペイン語; カスティーリャ語"
 
 #: ../anura/language_manager.py:86
 msgid "Albanian"
-msgstr ""
+msgstr "アルバニア語"
 
 #: ../anura/language_manager.py:86
 msgid "Serbian"
-msgstr ""
+msgstr "セルビア語"
 
 #: ../anura/language_manager.py:86
 msgid "Serbian - Latin"
-msgstr ""
+msgstr "セルビア語 - ラテン文字"
 
 #: ../anura/language_manager.py:87
 msgid "Sundanese"
-msgstr ""
+msgstr "スンダ語"
 
 #: ../anura/language_manager.py:87
 msgid "Swahili"
-msgstr ""
+msgstr "スワヒリ語"
 
 #: ../anura/language_manager.py:87
 msgid "Swedish"
-msgstr ""
+msgstr "スウェーデン語"
 
 #: ../anura/language_manager.py:88
 msgid "Syriac"
-msgstr ""
+msgstr "シリア語"
 
 #: ../anura/language_manager.py:88
 msgid "Tamil"
-msgstr ""
+msgstr "タミル語"
 
 #: ../anura/language_manager.py:88
 msgid "Tatar"
-msgstr ""
+msgstr "タタール語"
 
 #: ../anura/language_manager.py:89
 msgid "Telugu"
-msgstr ""
+msgstr "テルグ語"
 
 #: ../anura/language_manager.py:89
 msgid "Tajik"
-msgstr ""
+msgstr "タジク語"
 
 #: ../anura/language_manager.py:89
 msgid "Thai"
-msgstr ""
+msgstr "タイ語"
 
 #: ../anura/language_manager.py:90
 msgid "Tigrinya"
-msgstr ""
+msgstr "ティグリニャ語"
 
 #: ../anura/language_manager.py:90
 msgid "Tonga"
-msgstr ""
+msgstr "トンガ語"
 
 #: ../anura/language_manager.py:90
 msgid "Turkish"
-msgstr ""
+msgstr "トルコ語"
 
 #: ../anura/language_manager.py:91
+#, fuzzy
 msgid "Uighur"
-msgstr ""
+msgstr "ウイグル語"
 
 #: ../anura/language_manager.py:91
 msgid "Ukrainian"
-msgstr ""
+msgstr "ウクライナ語"
 
 #: ../anura/language_manager.py:91
 msgid "Urdu"
-msgstr ""
+msgstr "ウルドゥー語"
 
 #: ../anura/language_manager.py:92
 msgid "Uzbek"
-msgstr ""
+msgstr "ウズベク語"
 
 #: ../anura/language_manager.py:92
+#, fuzzy
 msgid "Uzbek - Cyrillic"
-msgstr ""
+msgstr "ウズベク語 - キリル文字"
 
 #: ../anura/language_manager.py:92
 msgid "Vietnamese"
-msgstr ""
+msgstr "ベトナム語"
 
 #: ../anura/language_manager.py:93
 msgid "Yiddish"
-msgstr ""
+msgstr "イディッシュ語"
 
 #: ../anura/language_manager.py:93
 msgid "Yoruba"
-msgstr ""
+msgstr "ヨルバ語"
 
 #: ../data/ui/welcome_page.blp:5 ../data/ui/window.blp:20
 msgid "Welcome"
@@ -711,31 +720,31 @@ msgstr ""
 
 #: ../data/ui/welcome_page.blp:19 ../data/ui/extracted_page.blp:17
 msgid "Language"
-msgstr "Llengua"
+msgstr "言語"
 
 #: ../data/ui/welcome_page.blp:20 ../data/ui/extracted_page.blp:18
 msgid "Select language to extract"
-msgstr "Selecciona llengua a extreure"
+msgstr "検出する言語を選択"
 
 #: ../data/ui/welcome_page.blp:33
 msgid "Open menu"
-msgstr "Obrir menú"
+msgstr "メニューを開く"
 
 #: ../data/ui/welcome_page.blp:39
 msgid "Extract text from anywhere"
-msgstr "Extreu text de qualsevol lloc"
+msgstr "テキストを抽出します"
 
 #: ../data/ui/welcome_page.blp:58
 msgid "_Take a Screenshot"
-msgstr "_Fer una captura"
+msgstr "スクリーンショットを撮る(_T)"
 
 #: ../data/ui/welcome_page.blp:74
 msgid "_Open Image"
-msgstr "_Obrir imatge"
+msgstr "画像を開く(_O)"
 
 #: ../data/ui/welcome_page.blp:90
 msgid "Paste Image"
-msgstr "Enganxa imatge"
+msgstr "画像を貼り付け"
 
 #: ../data/ui/welcome_page.blp:98
 msgid "...or drop image here"
@@ -744,32 +753,32 @@ msgstr ""
 #: ../data/ui/welcome_page.blp:110 ../data/ui/extracted_page.blp:112
 #: ../data/ui/preferences_dialog.blp:5
 msgid "Preferences"
-msgstr "Preferències"
+msgstr "設定"
 
 #: ../data/ui/welcome_page.blp:117 ../data/ui/extracted_page.blp:119
 msgid "Keyboard Shortcuts"
-msgstr "Dreceres de teclat"
+msgstr "キーボードショートカット"
 
 #: ../data/ui/welcome_page.blp:122 ../data/ui/extracted_page.blp:124
 #, fuzzy
 msgid "About Anura"
-msgstr "Sobre Granota"
+msgstr "anura について"
 
 #: ../data/ui/welcome_page.blp:129
 msgid "⭐ Star on GitHub"
-msgstr "⭐ Estrella a Github"
+msgstr "⭐ GitHub で Star を付ける"
 
 #: ../data/ui/language_popover.blp:19 ../data/ui/preferences_languages.blp:19
 msgid "Search Languages…"
-msgstr "Buscar llengües…"
+msgstr "言語を選択…"
 
 #: ../data/ui/language_popover.blp:68 ../data/ui/preferences_languages.blp:103
 msgid "No Results Found"
-msgstr "No s'ha trobat cap resultat"
+msgstr "結果なし"
 
 #: ../data/ui/language_popover.blp:75
 msgid "Add Language"
-msgstr "Afegir llengua"
+msgstr "言語を追加"
 
 #: ../data/ui/window.blp:26
 msgid "Extracted Text"
@@ -777,45 +786,45 @@ msgstr ""
 
 #: ../data/ui/preferences_general.blp:5
 msgid "_General"
-msgstr "_General"
+msgstr "一般(_G)"
 
 #: ../data/ui/preferences_general.blp:10
 #, fuzzy
 msgid "Text Extraction"
-msgstr "Extracció de text"
+msgstr "テキスト抽出"
 
 #: ../data/ui/preferences_general.blp:13
 #, fuzzy
 msgid "_Secondary Language"
-msgstr "_Segona llengua"
+msgstr "第二言語(_S)"
 
 #: ../data/ui/preferences_general.blp:15
 msgid "Additional language used in text recognition"
-msgstr "Llengua adicional emprada en reconeixement de text"
+msgstr "テキスト認識で使用する追加の言語"
 
 #: ../data/ui/preferences_general.blp:20
 msgid "Behavior"
-msgstr "Comportament"
+msgstr "動作"
 
 #: ../data/ui/preferences_general.blp:23
 #, fuzzy
 msgid "_Copy to Clipboard"
-msgstr "_Copia al porta-retalls"
+msgstr "クリップボードにコピー(_C)"
 
 #: ../data/ui/preferences_general.blp:25
 #, fuzzy
 msgid "Automatically copy the extracted text after detection"
-msgstr "Copia el text extret automàticament al porta-retalls"
+msgstr "抽出したテキストを自動的にクリップボードにコピーします"
 
 #: ../data/ui/preferences_general.blp:29
 #, fuzzy
 msgid "_Open QR-code Links"
-msgstr "_Obrir enllaç QR"
+msgstr "QR コードのリンクを開く"
 
 #: ../data/ui/preferences_general.blp:31
 #, fuzzy
 msgid "Automatically open links extracted from QR codes"
-msgstr "Obrir automàticament enllaços QR"
+msgstr "QR コードのリンクを自動的に開きます"
 
 #: ../data/ui/preferences_general.blp:42
 msgid "Text-to-Speech"
@@ -839,38 +848,38 @@ msgstr ""
 
 #: ../data/ui/extracted_page.blp:25
 msgid "Take a screenshot"
-msgstr "Fer una captura d'imatge"
+msgstr "スクリーンショットを撮る"
 
 #: ../data/ui/extracted_page.blp:132
 msgid "Open image"
-msgstr "Obrir imatge"
+msgstr "画像を開く"
 
 #: ../data/ui/extracted_page.blp:133
 msgid "Paste from clipboard"
-msgstr "Enganxa des del porta-retalls"
+msgstr "クリップボードから貼り付け"
 
 #: ../data/ui/preferences_languages.blp:6
 msgid "_Languages"
-msgstr "_Llengües"
+msgstr "言語(_L)"
 
 #: ../data/ui/preferences_languages.blp:26
 msgid "Retry"
-msgstr "Torna a intentar"
+msgstr "再試行"
 
 #: ../data/ui/preferences_languages.blp:42
 #, fuzzy
 msgid "Installed Languages"
-msgstr "Llengües instal·lades"
+msgstr "インストール済み言語"
 
 #: ../data/ui/preferences_languages.blp:51
 #, fuzzy
 msgid "Add language"
-msgstr "Afegir llengua"
+msgstr "言語を追加"
 
 #: ../data/com.github.d3msudo.anura.desktop.in:3
 #, fuzzy
 msgid "Anura"
-msgstr "Granota"
+msgstr "anura"
 
 #: ../data/com.github.d3msudo.anura.desktop.in:4
 msgid "OCR Tool"
@@ -879,22 +888,22 @@ msgstr ""
 #: ../data/com.github.d3msudo.anura.desktop.in:5
 #, fuzzy
 msgid "Extract text from any image, video, or web page"
-msgstr "Extreu text de qualsevol imatge, vídeo oo pàgina web"
+msgstr "画像、動画、Web ページからテキストを抽出します"
 
 #: ../data/com.github.d3msudo.anura.desktop.in:11
 #, fuzzy
 msgid "OCR;Text;Extraction;Reader;QR;Scanner;"
-msgstr "ROC;Text;Extracció;"
+msgstr "OCR;Text;Extraction;テキスト;抽出;"
 
 #: ../data/com.github.d3msudo.anura.desktop.in:17
 #, fuzzy
 msgid "Extract Text to Clipboard"
-msgstr "Extreure text al porta-retalls"
+msgstr "抽出したテキストをクリップボードにコピー"
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:7
 #, fuzzy
 msgid "Extract text from anywhere on your screen"
-msgstr "Extreu text de qualsevol lloc"
+msgstr "画面上の文字やQRコードを検出します"
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:9
 msgid ""
@@ -1113,12 +1122,12 @@ msgstr ""
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:114
 #, fuzzy
 msgid "extraction"
-msgstr "Extracció de text"
+msgstr "テキスト抽出"
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:115
 #, fuzzy
 msgid "screenshot"
-msgstr "Fer una captura d'imatge"
+msgstr "スクリーンショットを撮る"
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:116
 msgid "QR"
@@ -1132,45 +1141,237 @@ msgstr ""
 msgid "tesseract"
 msgstr ""
 
+#~ msgctxt "Extracted screen"
+#~ msgid "Copy extracted text to clipboard"
+#~ msgstr "抽出したテキストをクリップボードにコピー"
 
+#~ msgctxt "Extracted screen"
+#~ msgid "Listen to text"
+#~ msgstr "テキストを聴く"
 
+#~ msgctxt "Extracted screen"
+#~ msgid "Cancel listening to text"
+#~ msgstr "\"テキストを聴く\" をキャンセル"
 
+#~ msgctxt "Extracted screen"
+#~ msgid "Open menu"
+#~ msgstr "メニューを開く"
 
+#~ msgctxt "Extracted screen"
+#~ msgid "Share To"
+#~ msgstr "共有"
 
+#~ msgctxt "Preferences Language Row"
+#~ msgid "Install language"
+#~ msgstr "言語をインストール"
 
+#~ msgctxt "Preferences Language Row"
+#~ msgid "Remove language"
+#~ msgstr "言語を削除"
 
+#~ msgctxt "shortcut window"
+#~ msgid "Shortcuts"
+#~ msgstr "ショートカット"
 
+#~ msgctxt "shortcut window"
+#~ msgid "General"
+#~ msgstr "一般"
 
+#~ msgctxt "shortcut window"
+#~ msgid "Open image"
+#~ msgstr "画像を開く"
 
+#~ msgctxt "shortcut window"
+#~ msgid "Take screenshot and extract text"
+#~ msgstr "スクリーンショットを撮影してテキストを抽出する"
 
+#~ msgctxt "shortcut window"
+#~ msgid "Copy extracted text to clipboard"
+#~ msgstr "抽出したテキストをクリップボードにコピーする"
 
+#~ msgctxt "shortcut window"
+#~ msgid "Application"
+#~ msgstr "アプリケーション"
 
+#~ msgctxt "shortcut window"
+#~ msgid "Preferences"
+#~ msgstr "設定"
 
+#~ msgctxt "shortcut window"
+#~ msgid "Quit"
+#~ msgstr "終了する"
 
+#~ msgctxt "shortcut window"
+#~ msgid "Help"
+#~ msgstr "ヘルプ"
 
+#~ msgctxt "shortcut window"
+#~ msgid "Display Shortcuts"
+#~ msgstr "ショートカット一覧を表示する"
 
+#~ msgctxt "Welcome screen"
+#~ msgid "Take a Screenshot"
+#~ msgstr "スクリーンショットを撮る"
 
+#~ msgctxt "Welcome screen"
+#~ msgid "Paste image from clipboard"
+#~ msgstr "クリップボードから画像を貼り付け"
 
 #, python-brace-format
+#~ msgid "Share via {0}"
+#~ msgstr "{0} で共有"
 
+#~ msgid "About anura"
+#~ msgstr "anura について"
 
 #, fuzzy
+#~ msgid "OCR models unreachable. Check your internet connection."
+#~ msgstr ""
+#~ "モデルの場所に到達できません。インターネット接続を確認してください。"
 
+#~ msgid "Extract text from images"
+#~ msgstr "画像からテキストを抽出します"
 
+#~ msgid ""
+#~ "Extract text from images, websites, videos, and QR codes by taking a "
+#~ "picture of the source."
+#~ msgstr ""
+#~ "画像、Web サイト、動画、QR コードの画像を撮り、そこからテキストを抽出しま"
+#~ "す。"
 
+#~ msgid "Text extraction tool"
+#~ msgstr "テキスト抽出ツール"
 
+#~ msgid "Available Languages"
+#~ msgstr "利用可能な言語"
 
+#~ msgid "Models location unreachable. Check your internet connection"
+#~ msgstr "モデルの場所に到達できません。インターネット接続を確認してください"
 
+#~ msgid "Share via Pocket"
+#~ msgstr "Pocket で共有"
 
+#~ msgid "Pocket"
+#~ msgstr "Pocket"
 
+#~ msgctxt "shortcut window"
+#~ msgid "May not work properly on wayland"
+#~ msgstr "Wayland では適切に動作しない可能性があります"
 
+#~ msgid "Catalan; Valencian"
+#~ msgstr "カタルーニャ語; バレンシア語"
 
+#~ msgid "Greek, Modern (1453-)"
+#~ msgstr "現代ギリシア語 (1453-)"
 
+#~ msgid "Filipino (old - Tagalog)"
+#~ msgstr "フィリピン語 (旧・タガログ語)"
 
+#~ msgid "Greek, Ancient (to 1453) (contrib)"
+#~ msgstr "古代・中世ギリシア語 (-1453) (contrib)"
 
+#~ msgid "Haitian; Haitian Creole"
+#~ msgstr "ハイチ語; ハイチクレオール"
 
+#~ msgid "Kurmanji (Kurdish - Latin Script)"
+#~ msgstr "クルマンジー (クルド語 - ラテン文字)"
 
+#~ msgid "Dutch; Flemish"
+#~ msgstr "オランダ語; フラマン語"
 
+#~ msgid "Occitan (post 1500)"
+#~ msgstr "オック語 (1500 年以降)"
 
+#~ msgid "Orientation and script detection module"
+#~ msgstr "傾斜角度と文字種別検出モジュール"
 
+#~ msgid "Romanian; Moldavian; Moldovan"
+#~ msgstr "ルーマニア語; モルドバ語"
 
+#~ msgid "Sinhala; Sinhalese"
+#~ msgstr "シンハラ語"
+
+#~ msgid "Spanish; Castilian"
+#~ msgstr "スペイン語; カスティーリャ語"
+
+#~ msgid "Text extracted. You can paste it with Ctrl+V"
+#~ msgstr "テキストを抽出しました。Ctrl+V で貼り付けできます"
+
+#~ msgid "QR-code URL opened"
+#~ msgstr "QR コードの URL を開きました"
+
+#~ msgid "QR-code contains URL."
+#~ msgstr "QR コードは URL を含んでいます。"
+
+#~ msgid "Supported image files"
+#~ msgstr "対応する画像ファイル"
+
+#~ msgid "Only images can be processed that way."
+#~ msgstr "この方法では画像のみ処理できます。"
+
+#~ msgid "Text copied"
+#~ msgstr "テキストをコピーしました"
+
+#~ msgid "You are on a metered connection. Be careful to download languages."
+#~ msgstr ""
+#~ "従量制課金で接続しています。言語のダウンロードの通信量にご注意ください。"
+
+#~ msgid "View all available languages"
+#~ msgstr "すべての利用可能な言語を見る"
+
+#, fuzzy
+#~| msgid "Active language to extract the text."
+#~ msgid "Open Image to extract text"
+#~ msgstr "文字を検出する言語です。"
+
+#, fuzzy
+#~ msgid "Fix language packs download."
+#~ msgstr "{language} をダウンロードしました"
+
+#, fuzzy, python-brace-format
+#~ msgid "{language} language downloaded."
+#~ msgstr "{language} をダウンロードしました"
+
+#~ msgid "Configure Languages"
+#~ msgstr "言語なし"
+
+#~ msgid "Clear the extraction results"
+#~ msgstr "検出結果を消去"
+
+#~ msgid ""
+#~ "Copy extracted text to clipboard\n"
+#~ "                                "
+#~ msgstr "クリップボードに検出結果をコピー"
+
+#~ msgid "Learn more about anura"
+#~ msgstr "anuraのウェブサイト"
+
+#~ msgid "Window size in px"
+#~ msgstr "ウィンドウサイズ(px)"
+
+#~ msgid "Window size (width and height)."
+#~ msgstr "ウィンドウサイズ(横幅と高さ)"
+
+#~ msgid "Window position on screen in px"
+#~ msgstr "画面上のウィンドウの位置(px)"
+
+#~ msgid "Window position on screen."
+#~ msgstr "画面上のウィンドウの位置"
+
+#~ msgid "Language to detect alongside with the active one."
+#~ msgstr "第一言語とともに検出する言語です。"
+
+#~ msgid "button"
+#~ msgstr "ボタン"
+
+#~ msgid "Failed Attempt"
+#~ msgstr "失敗しました"
+
+#~ msgid "OK"
+#~ msgstr "閉じる"
+
+#~ msgid "Screenshot service unavailable."
+#~ msgstr "スクリーンショットサービスが利用できません。"
+
+#~ msgid "Copied!"
+#~ msgstr "コピーしました"

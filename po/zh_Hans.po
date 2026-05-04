@@ -1145,329 +1145,96 @@ msgstr ""
 msgid "tesseract"
 msgstr ""
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "将提取的文本复制到剪贴板"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Listen to text"
-#~ msgstr "听写文本"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Cancel listening to text"
-#~ msgstr "取消文本听写"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Open menu"
-#~ msgstr "打开菜单"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Share To"
-#~ msgstr "分享"
 
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Install language"
-#~ msgstr "安装语言"
 
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Remove language"
-#~ msgstr "删除语言"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Shortcuts"
-#~ msgstr "快捷方式"
 
-#~ msgctxt "shortcut window"
-#~ msgid "General"
-#~ msgstr "常规"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Open image"
-#~ msgstr "打开图像"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Take screenshot and extract text"
-#~ msgstr "截图并提取文本"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "将提取的文本复制到剪贴板"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Application"
-#~ msgstr "应用程序"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Preferences"
-#~ msgstr "首选项"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Quit"
-#~ msgstr "退出"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Help"
-#~ msgstr "帮助"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Display Shortcuts"
-#~ msgstr "显示快捷方式"
 
-#~ msgctxt "Welcome screen"
-#~ msgid "Take a Screenshot"
-#~ msgstr "截屏"
 
-#~ msgctxt "Welcome screen"
-#~ msgid "Paste image from clipboard"
-#~ msgstr "从剪贴板粘贴图像"
 
 #, python-brace-format
-#~ msgid "Share via {0}"
-#~ msgstr "用 {0} 分享"
 
-#~ msgid "About anura"
-#~ msgstr "关于 anura(_A)"
 
 #, fuzzy
-#~ msgid "OCR models unreachable. Check your internet connection."
-#~ msgstr "无法访问模型位置。请检查网络连接。"
 
-#~ msgid "Extract text from images"
-#~ msgstr "从图像中提取文本"
 
-#~ msgid ""
-#~ "Extract text from images, websites, videos, and QR codes by taking a "
-#~ "picture of the source."
-#~ msgstr "为图像、网页、视频和二维码拍照，以从中提取文本。"
 
-#~ msgid "Text extraction tool"
-#~ msgstr "文本提取工具"
 
-#~ msgid "Available Languages"
-#~ msgstr "可用的语言"
 
-#~ msgid "Models location unreachable. Check your internet connection"
-#~ msgstr "无法访问模型位置。请检查网络连接"
 
-#~ msgid "Share via Pocket"
-#~ msgstr "用 Pocket 分享"
 
-#~ msgid "Pocket"
-#~ msgstr "Pocket"
 
-#~ msgctxt "shortcut window"
-#~ msgid "May not work properly on wayland"
-#~ msgstr "可能无法在 wayland 上正常工作"
 
-#~ msgid "Catalan; Valencian"
-#~ msgstr "加泰罗尼亚语；巴伦西亚语"
 
-#~ msgid "Greek, Modern (1453-)"
-#~ msgstr "希腊语， 现代 （1453-）"
 
-#~ msgid "Filipino (old - Tagalog)"
-#~ msgstr "菲律宾语（旧 - 他加禄语）"
 
-#~ msgid "Greek, Ancient (to 1453) (contrib)"
-#~ msgstr "希腊语，古代（至 1453 年）（贡献）"
 
-#~ msgid "Haitian; Haitian Creole"
-#~ msgstr "海地语；海地克里奥尔语"
 
-#~ msgid "Kurmanji (Kurdish - Latin Script)"
-#~ msgstr "Kurmanji（库尔德语 - 拉丁文字）"
 
-#~ msgid "Dutch; Flemish"
-#~ msgstr "荷兰语；佛兰芒语"
 
-#~ msgid "Occitan (post 1500)"
-#~ msgstr "奥克西坦语（1500 年后）"
 
-#~ msgid "Orientation and script detection module"
-#~ msgstr "方向和脚本检测模块"
 
-#~ msgid "Romanian; Moldavian; Moldovan"
-#~ msgstr "罗马尼亚语；摩尔达维亚语；摩尔多瓦语"
 
-#~ msgid "Sinhala; Sinhalese"
-#~ msgstr "僧伽罗语"
 
-#~ msgid "Spanish; Castilian"
-#~ msgstr "西班牙语；卡斯蒂利亚语"
 
-#~ msgid "Text extracted. You can paste it with Ctrl+V"
-#~ msgstr "提取的文本。你可以用 Ctrl+V 粘贴它"
 
-#~ msgid "QR-code URL opened"
-#~ msgstr "已打开二维码 URL"
 
-#~ msgid "QR-code contains URL."
-#~ msgstr "二维码含有 URL。"
 
-#~ msgid "Supported image files"
-#~ msgstr "支持的图像文件"
 
-#~ msgid "Only images can be processed that way."
-#~ msgstr "只有图像可以这样处理。"
 
-#~ msgid "Text copied"
-#~ msgstr "文本已复制"
 
-#~ msgid "You are on a metered connection. Be careful to download languages."
-#~ msgstr "您已连接计费网络。请谨慎下载语言。"
 
-#~ msgid "View all available languages"
-#~ msgstr "查看所有可用语言"
 
-#~ msgid "Tender Owl"
-#~ msgstr "Tender Owl"
 
 #, fuzzy
-#~ msgid "Open Image to extract text"
-#~ msgstr "打开图像以提取文本"
 
-#~ msgid "In this update, we've made a number of improvements to our app."
-#~ msgstr "在此次更新中，我们对应用做出了一些改进。"
 
-#~ msgid "We hope you enjoy our work!"
-#~ msgstr "希望你享受我们的成果！"
 
-#~ msgid ""
-#~ "We have redesigned the settings dialog to make it more user-friendly and "
-#~ "understandable."
-#~ msgstr "我们重新设计了设置对话框，使其更对用户友好、更易于理解。"
 
-#~ msgid "Now you can easily find the language you want by searching."
-#~ msgstr "现在，你可以通过搜索轻松找到所需语言。"
 
-#~ msgid ""
-#~ "In addition, we have added the ability to select a second language for "
-#~ "extracting text from images."
-#~ msgstr "除此之外，我们也添加了选择第二种语言从图片中提取文本的功能。"
 
-#~ msgid "The anura can automatically follow links extracted from QR codes."
-#~ msgstr "anura 可以自动跟踪从二维码中提取的链接。"
 
-#~ msgid ""
-#~ "We also updated the localization and improved the overall performance of "
-#~ "the app."
-#~ msgstr "我们也更新了本地化内容，改善了应用的整体性能。"
 
-#~ msgid "Fixed some bugs and bugs."
-#~ msgstr "修复了一些 bug。"
 
-#~ msgid "What's new:"
-#~ msgstr "更新内容："
 
-#~ msgid "Open image button now available."
-#~ msgstr "现在可以使用“打开图像”按钮了。"
 
-#~ msgid "Translations updated."
-#~ msgstr "更新了翻译。"
 
-#~ msgid "When no text is found, anura returns to the main window."
-#~ msgstr "当没有找到文本时，anura 会返回到主窗口。"
 
-#~ msgid "Updated UI"
-#~ msgstr "用户界面更新"
 
-#~ msgid "Translated to a bunch of new languages"
-#~ msgstr "已被翻译成一大批新语言"
 
-#~ msgid "Drag-n-drop support. For images only"
-#~ msgstr "拖放支持。（仅限图像）"
 
-#~ msgid "Dark mode support"
-#~ msgstr "暗色模式支持"
 
-#~ msgid "Localized interface"
-#~ msgstr "用户界面本地化"
 
-#~ msgid ""
-#~ "anura now is available on the Flathub and use modern Portal "
-#~ "implementation. We also updated the UI accordingly to the GNOME HIG and "
-#~ "fixed some bugs we've found :)"
-#~ msgstr ""
-#~ "anura 现在在 Flathub 上可用，使用现代 Portal 实现。我们也参照 GNOME HIG 更"
-#~ "新了用户界面，修复了已经找到的一些 bug :)"
 
-#~ msgid ""
-#~ "Now you're free to run anura with `-e` option to extract text and "
-#~ "instantly copy it to the clipboard."
-#~ msgstr ""
-#~ "现在你尽可以带 `-e` 参数运行 anura 来提取文本，并将其立即复制到剪贴板。"
 
-#~ msgid "English model included with anura itself"
-#~ msgstr "anura 自带英语模型"
 
-#~ msgid "QR code detection. If one in the selected area - it will be decoded."
-#~ msgstr "检测二维码。如果在选区检测到——就会将其解码。"
 
-#~ msgid ""
-#~ "New command line shortcut to run with \"Extract to clipboard\" feature."
-#~ msgstr "新增启用“提取到剪贴板”功能的命令行快捷方式。"
 
-#~ msgid "Granite.HyperTextView to support QR encoded links"
-#~ msgstr "使用 Granite.HyperTextView 支持二维码中编码的链接"
 
-#~ msgid "Fix language packs download."
-#~ msgstr "{language} 语言已下载。"
 
-#~ msgid "Dark mode+"
-#~ msgstr "暗色模式+"
 
-#~ msgid "Dark mode support."
-#~ msgstr "暗色模式支持。"
 
-#~ msgid "Application will hide the main window for the cleaner shots. #11"
-#~ msgstr "应用会隐藏主窗口，以便截图更清晰。#11"
 
-#~ msgid ""
-#~ "Quickly extract any text from anywhere you need it: webpages, videos, "
-#~ "photos, etc."
-#~ msgstr "从任何所需之处提取文本：网页、视频、照片等等。"
 
-#~ msgid ""
-#~ "Quickly extract text from any source such as images, websites, even video "
-#~ "- everywhere you can grab an image shot. Even if it is encoded in a QR "
-#~ "code!"
-#~ msgstr ""
-#~ "从任何来源（如图像、网页甚至视频——任何可以截图的地方）中快速提取文本，即使"
-#~ "编码在二维码中的也可以！"
 
 #, python-brace-format
-#~ msgid "{language} language downloaded."
-#~ msgstr "{language} 语言已下载。"
 
-#~ msgid "Configure Languages"
-#~ msgstr "配置语言(_C)"
 
-#~ msgid "Clear the extraction results"
-#~ msgstr "清除提取结果"
 
-#~ msgid ""
-#~ "Copy extracted text to clipboard\n"
-#~ "                                "
-#~ msgstr ""
-#~ "将提取的文本复制到剪贴板上\n"
-#~ "                                "
 
-#~ msgid ""
-#~ "anura can help you to instantly extract text\n"
-#~ "from any QR code, image, video, PDF, etc."
-#~ msgstr ""
-#~ "anura 可以帮你立即\n"
-#~ "从任何二维码、图像、视频、PDF 等中提取文本。"
 
-#~ msgid "Learn more about anura"
-#~ msgstr "了解更多关于 anura 的信息"
 
-#~ msgid "Configure"
-#~ msgstr "配置(_C)"
 
-#~ msgid "Search language"
-#~ msgstr "搜索语言"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Get screenshot and extract text"
-#~ msgstr "获取屏幕截图并提取文本"

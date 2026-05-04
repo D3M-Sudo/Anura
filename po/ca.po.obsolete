@@ -1132,45 +1132,152 @@ msgstr ""
 msgid "tesseract"
 msgstr ""
 
+#~ msgctxt "Extracted screen"
+#~ msgid "Copy extracted text to clipboard"
+#~ msgstr "Copia el text extret al porta-retalls"
 
+#~ msgctxt "Extracted screen"
+#~ msgid "Listen to text"
+#~ msgstr "Escolta el text"
 
+#~ msgctxt "Extracted screen"
+#~ msgid "Cancel listening to text"
+#~ msgstr "Cancel·la escoltar el text"
 
+#~ msgctxt "Extracted screen"
+#~ msgid "Open menu"
+#~ msgstr "Obrir  menú"
 
+#~ msgctxt "Extracted screen"
+#~ msgid "Share To"
+#~ msgstr "Compartir"
 
+#~ msgctxt "Preferences Language Row"
+#~ msgid "Install language"
+#~ msgstr "Instal·lar llengua"
 
+#~ msgctxt "Preferences Language Row"
+#~ msgid "Remove language"
+#~ msgstr "Esborrar llengua"
 
+#~ msgctxt "shortcut window"
+#~ msgid "Shortcuts"
+#~ msgstr "Dreceres"
 
+#~ msgctxt "shortcut window"
+#~ msgid "General"
+#~ msgstr "General"
 
+#~ msgctxt "shortcut window"
+#~ msgid "Open image"
+#~ msgstr "Obrir imatge"
 
+#~ msgctxt "shortcut window"
+#~ msgid "Take screenshot and extract text"
+#~ msgstr "Fer captura i extreure'n el  text"
 
+#~ msgctxt "shortcut window"
+#~ msgid "Copy extracted text to clipboard"
+#~ msgstr "Copiar el text extret al porta-retalls"
 
+#~ msgctxt "shortcut window"
+#~ msgid "Application"
+#~ msgstr "Aplicació"
 
+#~ msgctxt "shortcut window"
+#~ msgid "Preferences"
+#~ msgstr "Preferències"
 
+#~ msgctxt "shortcut window"
+#~ msgid "Quit"
+#~ msgstr "Sortir"
 
+#~ msgctxt "shortcut window"
+#~ msgid "Help"
+#~ msgstr "Ajuda"
 
+#~ msgctxt "shortcut window"
+#~ msgid "Display Shortcuts"
+#~ msgstr "Veure dreceres"
 
+#~ msgctxt "Welcome screen"
+#~ msgid "Take a Screenshot"
+#~ msgstr "Fer una captura"
 
+#~ msgctxt "Welcome screen"
+#~ msgid "Paste image from clipboard"
+#~ msgstr "Enganxa imatge del porta-retalls"
 
 #, python-brace-format
+#~ msgid "Share via {0}"
+#~ msgstr "Compartir a {0}"
 
+#~ msgid "About anura"
+#~ msgstr "Sobre Granota"
 
 #, fuzzy
+#~ msgid "OCR models unreachable. Check your internet connection."
+#~ msgstr "Ubicació del model  inabastable. Revisa la teva connexió d'internet"
 
+#~ msgid "Extract text from images"
+#~ msgstr "Extreure text d'imatges"
 
+#~ msgid ""
+#~ "Extract text from images, websites, videos, and QR codes by taking a "
+#~ "picture of the source."
+#~ msgstr ""
+#~ "Extreu text d'imatges, pàgines web, vídeos i codis QR fent una captura de "
+#~ "la font."
 
+#~ msgid "Text extraction tool"
+#~ msgstr "Eina d'extracció de text"
 
+#~ msgid "Available Languages"
+#~ msgstr "Llengües disponibles"
 
+#~ msgid "Models location unreachable. Check your internet connection"
+#~ msgstr "Ubicació del model inabastable. Revisa la teva connexió a internet."
 
+#~ msgid "Share via Pocket"
+#~ msgstr "Compartir al Pocket"
 
+#~ msgid "Pocket"
+#~ msgstr "Pocket"
 
+#~ msgctxt "shortcut window"
+#~ msgid "May not work properly on wayland"
+#~ msgstr "Pot no funcionar correctament amb Wayland"
 
+#~ msgid "Catalan; Valencian"
+#~ msgstr "Català; Valencià"
 
+#~ msgid "Greek, Modern (1453-)"
+#~ msgstr "Grec, (Modern 1453-)"
 
+#~ msgid "Haitian; Haitian Creole"
+#~ msgstr "Haitià"
 
+#~ msgid "Text extracted. You can paste it with Ctrl+V"
+#~ msgstr "Text extret. Pots enganxar amb Ctrl+V"
 
+#~ msgid "QR-code URL opened"
+#~ msgstr "URL de codi QR oberta"
 
+#~ msgid "QR-code contains URL."
+#~ msgstr "El codi QR conté una URL"
 
+#~ msgid "Supported image files"
+#~ msgstr "Arxius d'imatge suportats"
 
+#~ msgid "Only images can be processed that way."
+#~ msgstr "Només es poden processar imatges d'aquesta manera"
 
+#~ msgid "Text copied"
+#~ msgstr "Text copiat"
 
+#~ msgid "You are on a metered connection. Be careful to download languages."
+#~ msgstr ""
+#~ "Estàs en una connexió mesurada. Aneu amb cura a l'hora de baixar llengües"
 
+#~ msgid "View all available languages"
+#~ msgstr "Veure totes les llengües disponibles"

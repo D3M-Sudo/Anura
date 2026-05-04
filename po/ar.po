@@ -1114,77 +1114,21 @@ msgstr ""
 msgid "tesseract"
 msgstr ""
 
-#~ msgid "Text extraction tool"
-#~ msgstr "أداة لاستخراج النصوص"
 
-#~ msgid "What's new:"
-#~ msgstr "التحديثات:"
 
-#~ msgid "Updated UI"
-#~ msgstr "تحديث الواجهة"
 
-#~ msgid "Translated to a bunch of new languages"
-#~ msgstr "الترجمة إلى بضعة لغات جديدة"
 
-#~ msgid "Drag-n-drop support. For images only"
-#~ msgstr "دعم السحب والإفلات. للصور فقط"
 
-#~ msgid "Dark mode support"
-#~ msgstr "دعم المظهر الداكن"
 
-#~ msgid "Localized interface"
-#~ msgstr "واجهة محلية"
 
-#~ msgid ""
-#~ "anura now is available on the Flathub and use modern Portal "
-#~ "implementation. We also updated the UI accordingly to the GNOME HIG and "
-#~ "fixed some bugs we've found :)"
-#~ msgstr ""
-#~ "فروج متوفر الآن عبر فلات هب ويطبق بورتال حديث. لقد حدثنا الواجهة تبعا "
-#~ "لقواعد واجهة جنوم وأصلحنا بعض الأخطاء التي وجدناها :)"
 
-#~ msgid ""
-#~ "Now you're free to run anura with `-e` option to extract text and "
-#~ "instantly copy it to the clipboard."
-#~ msgstr ""
-#~ "يمكنك الآن تشغل فروج بخيار `-e` لاستخراج النص ونسخه فورا إلى الحافظة."
 
-#~ msgid "English model included with anura itself"
-#~ msgstr "نموذج اللغة الإنجليزية مضمن مع فروج نفسه"
 
-#~ msgid "QR code detection. If one in the selected area - it will be decoded."
-#~ msgstr ""
-#~ "التعرف على رموز QR. إذا كان هناك رمز QR في المنطقة المحددة - سيتم فكه."
 
-#~ msgid ""
-#~ "New command line shortcut to run with \"Extract to clipboard\" feature."
-#~ msgstr "اختصارجديد من سطر الأوامر للتشغيل مع خاصية \"استخراج إلى الحافظة\"."
 
-#~ msgid "Granite.HyperTextView to support QR encoded links"
-#~ msgstr "Granite.HyperTextView لدعم الروابط المضمنة في رموز QR"
 
-#~ msgid "Fix language packs download."
-#~ msgstr "إصلاح تحميل حزم اللغات."
 
-#~ msgid "Dark mode+"
-#~ msgstr "المظهر الداكن+"
 
-#~ msgid "Dark mode support."
-#~ msgstr "دعم المظهر الداكن."
 
-#~ msgid "Application will hide the main window for the cleaner shots. #11"
-#~ msgstr "سيخفي التطبيق النافذة الرئيسية للحصول على لقطات أنظف. #11"
 
-#~ msgid ""
-#~ "Quickly extract any text from anywhere you need it: webpages, videos, "
-#~ "photos, etc."
-#~ msgstr ""
-#~ "استخراج أي نص من أي مكان تحتاجه: صفحات الويت، مقاطع الفيديو، الصور، إلخ."
 
-#~ msgid ""
-#~ "Quickly extract text from any source such as images, websites, even video "
-#~ "- everywhere you can grab an image shot. Even if it is encoded in a QR "
-#~ "code!"
-#~ msgstr ""
-#~ "استخراج النصوص سريعا من أي مصدر كالصور والمواقع وحتى مقاطع الفيديو - "
-#~ "يمكنك أخذ لقطة من أي مكان. حتى إذا كان النص ضمن رمز QR!"

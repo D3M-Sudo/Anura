@@ -1144,387 +1144,98 @@ msgstr ""
 msgid "tesseract"
 msgstr ""
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "Copia il testo estratto negli appunti"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Listen to text"
-#~ msgstr "Ascolta il testo"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Cancel listening to text"
-#~ msgstr "Annulla l'ascolto del testo"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Open menu"
-#~ msgstr "Apri menu"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Share To"
-#~ msgstr "Condividi su"
 
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Install language"
-#~ msgstr "Installa lingua"
 
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Remove language"
-#~ msgstr "Rimuovi lingua"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Shortcuts"
-#~ msgstr "Scorciatoie da tastiera"
 
-#~ msgctxt "shortcut window"
-#~ msgid "General"
-#~ msgstr "Generale"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Open image"
-#~ msgstr "Apri immagine"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Take screenshot and extract text"
-#~ msgstr "Fai uno screenshot ed estrai il testo"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "Copia il testo estratto negli appunti"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Application"
-#~ msgstr "Applicazione"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Preferences"
-#~ msgstr "Preferenze"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Quit"
-#~ msgstr "Esci"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Help"
-#~ msgstr "Aiuto"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Display Shortcuts"
-#~ msgstr "Visualizza scorciatoie"
 
-#~ msgctxt "Welcome screen"
-#~ msgid "Take a Screenshot"
-#~ msgstr "Fai uno screenshot"
 
-#~ msgctxt "Welcome screen"
-#~ msgid "Paste image from clipboard"
-#~ msgstr "Incolla l'immagine dagli appunti"
 
 #, python-brace-format
-#~ msgid "Share via {0}"
-#~ msgstr "Condividi tramite {0}"
 
-#~ msgid "About anura"
-#~ msgstr "Informazioni su anura"
 
 #, fuzzy
-#~ msgid "OCR models unreachable. Check your internet connection."
-#~ msgstr ""
-#~ "Posizione dei modelli irraggiungibile. Controlla la tua connessione "
-#~ "Internet."
 
-#~ msgid "Extract text from images"
-#~ msgstr "Estrai testo dalle immagini"
 
-#~ msgid ""
-#~ "Extract text from images, websites, videos, and QR codes by taking a "
-#~ "picture of the source."
-#~ msgstr ""
-#~ "Estrai testo da immagini, siti Web, video e codici QR scattando una foto "
-#~ "della fonte."
 
-#~ msgid "Text extraction tool"
-#~ msgstr "Strumento di estrazione del testo"
 
-#~ msgid "Available Languages"
-#~ msgstr "Lingue disponibili"
 
-#~ msgid "Models location unreachable. Check your internet connection"
-#~ msgstr ""
-#~ "Posizione dei modelli irraggiungibile. Controlla la tua connessione "
-#~ "Internet"
 
-#~ msgid "Share via Pocket"
-#~ msgstr "Condividi tramite Pocket"
 
-#~ msgid "Pocket"
-#~ msgstr "Pocket"
 
-#~ msgctxt "shortcut window"
-#~ msgid "May not work properly on wayland"
-#~ msgstr "Potrebbe non funzionare correttamente su Wayland"
 
-#~ msgid "Catalan; Valencian"
-#~ msgstr "Catalano; Valenzano"
 
-#~ msgid "Greek, Modern (1453-)"
-#~ msgstr "Greco moderno (dal 1453)"
 
-#~ msgid "Filipino (old - Tagalog)"
-#~ msgstr "Filippino (tagalog)"
 
-#~ msgid "Greek, Ancient (to 1453) (contrib)"
-#~ msgstr "Greco antico (fino al 1453)"
 
-#~ msgid "Haitian; Haitian Creole"
-#~ msgstr "Haitiano; creolo haitiano"
 
-#~ msgid "Kurmanji (Kurdish - Latin Script)"
-#~ msgstr "Kurmanji (curdo - alfabeto latino)"
 
-#~ msgid "Dutch; Flemish"
-#~ msgstr "Olandese; Fiammingo"
 
-#~ msgid "Occitan (post 1500)"
-#~ msgstr "Occitano (dal 1500)"
 
-#~ msgid "Orientation and script detection module"
-#~ msgstr "Riconoscimento dell'alfabeto e dell'orientamento"
 
-#~ msgid "Romanian; Moldavian; Moldovan"
-#~ msgstr "Romeno; moldavo"
-
-#~ msgid "Sinhala; Sinhalese"
-#~ msgstr "Singalese; cingalese"
 
-#~ msgid "Spanish; Castilian"
-#~ msgstr "Spagnolo; castigliano"
-
-#~ msgid "Text extracted. You can paste it with Ctrl+V"
-#~ msgstr "Testo riconosciuto. Puoi incollarlo con Ctrl+V"
-
-#~ msgid "QR-code URL opened"
-#~ msgstr "URL del codice QR aperto"
-
-#~ msgid "QR-code contains URL."
-#~ msgstr "Il codice QR contiene l'URL."
 
-#~ msgid "Supported image files"
-#~ msgstr "File immagine supportati"
 
-#~ msgid "Only images can be processed that way."
-#~ msgstr "Solo le immagini possono essere elaborate in questo modo."
 
-#~ msgid "Text copied"
-#~ msgstr "Testo copiato"
-
-#~ msgid "You are on a metered connection. Be careful to download languages."
-#~ msgstr ""
-#~ "Stai utilizzando una connessione a consumo. Fare attenzione quando si "
-#~ "scaricano le lingue."
 
-#~ msgid "View all available languages"
-#~ msgstr "Visualizza tutte le lingue disponibili"
 
-#~ msgid "Tender Owl"
-#~ msgstr "Tender Owl"
 
-#~ msgid "Open Image to extract text"
-#~ msgstr "Apri l'immagine per estrarre il testo"
-
-#~ msgid "In this update, we've made a number of improvements to our app."
-#~ msgstr ""
-#~ "In questo aggiornamento, abbiamo apportato una serie di miglioramenti "
-#~ "alla nostra app."
-
-#~ msgid ""
-#~ "Share extracted text: This means you can now share your findings with the "
-#~ "wider community."
-#~ msgstr ""
-#~ "Condividi il testo estratto: ciò significa che ora puoi condividere i "
-#~ "tuoi risultati con la comunità più ampia."
-
-#~ msgid ""
-#~ "Add Text-to-speech to be able to listen to the extracted text without any "
-#~ "additional apps (internet connection required)."
-#~ msgstr ""
-#~ "Aggiungi la sintesi vocale per poter ascoltare il testo estratto senza "
-#~ "app aggiuntive (è necessaria una connessione Internet)."
-
-#~ msgid ""
-#~ "Add the ability to insert images from the clipboard by using the "
-#~ "<code>Ctrl+V</code> shortcut."
-#~ msgstr ""
-#~ "Aggiungi la possibilità di inserire immagini dagli appunti utilizzando la "
-#~ "scorciatoia <code>Ctrl+V</code>."
-
-#~ msgid ""
-#~ "In addition, we have upgraded the language selection dropdown to popover "
-#~ "with a quick search of a language."
-#~ msgstr ""
-#~ "Inoltre, abbiamo aggiornato il menu a discesa per la selezione della "
-#~ "lingua in un popover con una rapida ricerca di una lingua."
-
-#~ msgid "Last but not least, anura has become more accessibility-friendly."
-#~ msgstr "Ultimo ma non meno importante, anura è diventato più accessibile."
-
-#~ msgid "We hope you enjoy our work!"
-#~ msgstr "Speriamo che ti piaccia il nostro lavoro!"
-
-#~ msgid ""
-#~ "We have redesigned the settings dialog to make it more user-friendly and "
-#~ "understandable."
-#~ msgstr ""
-#~ "Abbiamo riprogettato la finestra di dialogo delle impostazioni per "
-#~ "renderla più user-friendly e comprensibile."
-
-#~ msgid "Now you can easily find the language you want by searching."
-#~ msgstr ""
-#~ "Ora puoi trovare facilmente la lingua che desideri effettuando una "
-#~ "ricerca."
-
-#~ msgid ""
-#~ "In addition, we have added the ability to select a second language for "
-#~ "extracting text from images."
-#~ msgstr ""
-#~ "Inoltre, abbiamo aggiunto la possibilità di selezionare una seconda "
-#~ "lingua per l'estrazione del testo dalle immagini."
-
-#~ msgid "The anura can automatically follow links extracted from QR codes."
-#~ msgstr ""
-#~ "anura può seguire automaticamente i collegamenti estratti dai codici QR."
-
-#~ msgid ""
-#~ "We also updated the localization and improved the overall performance of "
-#~ "the app."
-#~ msgstr ""
-#~ "Abbiamo anche aggiornato la localizzazione e migliorato le prestazioni "
-#~ "complessive dell'app."
-
-#~ msgid "Fixed some bugs and bugs."
-#~ msgstr "Risolti alcuni bug e bug."
-
-#~ msgid "What's new:"
-#~ msgstr "Cosa c'è di nuovo:"
-
-#~ msgid "Open image button now available."
-#~ msgstr "Pulsante apri immagine ora disponibile."
-
-#~ msgid "Translations updated."
-#~ msgstr "Traduzioni aggiornate."
-
-#~ msgid "When no text is found, anura returns to the main window."
-#~ msgstr ""
-#~ "Traduzioni aggiornate. Quando non viene trovato alcun testo, anura torna "
-#~ "alla finestra principale."
-
-#~ msgid "Updated UI"
-#~ msgstr "Interfaccia utente aggiornata"
-
-#~ msgid "Translated to a bunch of new languages"
-#~ msgstr "Tradotto in un sacco di nuove lingue"
-
-#~ msgid "Drag-n-drop support. For images only"
-#~ msgstr "Supporto drag-n-drop. Solo per immagini"
-
-#~ msgid "Dark mode support"
-#~ msgstr "Supporto della modalità scura"
-
-#~ msgid "Localized interface"
-#~ msgstr "Interfaccia localizzata"
-
-#~ msgid ""
-#~ "anura now is available on the Flathub and use modern Portal "
-#~ "implementation. We also updated the UI accordingly to the GNOME HIG and "
-#~ "fixed some bugs we've found :)"
-#~ msgstr ""
-#~ "L'interfaccia localizzata anura ora è disponibile su Flathub e utilizza "
-#~ "la moderna implementazione del portale. Abbiamo anche aggiornato "
-#~ "l'interfaccia utente in base a GNOME HIG e corretto alcuni bug che "
-#~ "abbiamo trovato :)"
-
-#~ msgid ""
-#~ "Now you're free to run anura with `-e` option to extract text and "
-#~ "instantly copy it to the clipboard."
-#~ msgstr ""
-#~ "Ora sei libero di eseguire anura con l'opzione `-e` per estrarre il testo "
-#~ "e copiarlo istantaneamente negli appunti."
-
-#~ msgid "English model included with anura itself"
-#~ msgstr "Modello inglese incluso con anura"
-
-#~ msgid "QR code detection. If one in the selected area - it will be decoded."
-#~ msgstr ""
-#~ "Rilevamento del codice QR. Se presente nell'area selezionata, verrà "
-#~ "decodificato."
-
-#~ msgid ""
-#~ "New command line shortcut to run with \"Extract to clipboard\" feature."
-#~ msgstr ""
-#~ "Nuovo collegamento alla riga di comando da eseguire con la funzione "
-#~ "\"Estrai negli appunti\"."
-
-#~ msgid "Granite.HyperTextView to support QR encoded links"
-#~ msgstr ""
-#~ "Granite.Visualizzazione ipertesto per supportare i collegamenti con "
-#~ "codifica QR"
-
-#~ msgid "Fix language packs download."
-#~ msgstr "Risolto il problema con il download dei language pack."
-
-#~ msgid "Dark mode+"
-#~ msgstr "Modalità scura+"
-
-#~ msgid "Dark mode support."
-#~ msgstr "Supporto della modalità scura."
-
-#~ msgid "Application will hide the main window for the cleaner shots. #11"
-#~ msgstr ""
-#~ "L'applicazione nasconderà la finestra principale per gli scatti più "
-#~ "puliti. #11"
-
-#~ msgid ""
-#~ "Quickly extract any text from anywhere you need it: webpages, videos, "
-#~ "photos, etc."
-#~ msgstr ""
-#~ "Estrai rapidamente qualsiasi testo da qualsiasi luogo ti serva: pagine "
-#~ "web, video, foto, ecc."
-
-#~ msgid ""
-#~ "Quickly extract text from any source such as images, websites, even video "
-#~ "- everywhere you can grab an image shot. Even if it is encoded in a QR "
-#~ "code!"
-#~ msgstr ""
-#~ "Estrai rapidamente il testo da qualsiasi fonte come immagini, siti Web e "
-#~ "persino video: ovunque puoi acquisire un'immagine. Anche se è codificato "
-#~ "in un codice QR!"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #, python-brace-format
-#~ msgid "{language} language downloaded."
-#~ msgstr "{language} scaricato."
 
-#~ msgid "Configure Languages"
-#~ msgstr "Configura lingue"
 
-#~ msgid "Clear the extraction results"
-#~ msgstr "Torna alla schermata iniziale"
 
-#~ msgid ""
-#~ "Copy extracted text to clipboard\n"
-#~ "                                "
-#~ msgstr ""
-#~ "Copia il testo estratto negli appunti\n"
-#~ "                                "
 
-#~ msgid ""
-#~ "anura can help you to instantly extract text\n"
-#~ "from any QR code, image, video, PDF, etc."
-#~ msgstr ""
-#~ "anura permette di riconoscere testo da\n"
-#~ "codici QR, immagini, video, PDF, ecc."
 
-#~ msgid "Learn more about anura"
-#~ msgstr "Maggiori informazioni"
 
-#~ msgid "Configure"
-#~ msgstr "Configura lingue"

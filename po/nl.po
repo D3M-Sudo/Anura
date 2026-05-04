@@ -1143,293 +1143,83 @@ msgstr ""
 msgid "tesseract"
 msgstr ""
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "Geëxtraheerde tekst naar klembord kopiëren"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Listen to text"
-#~ msgstr "Luisteren naar tekst"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Cancel listening to text"
-#~ msgstr "Luisteren naar tekst annuleren"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Open menu"
-#~ msgstr "Menu openen"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Share To"
-#~ msgstr "Delen"
 
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Install language"
-#~ msgstr "Taal installeren"
 
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Remove language"
-#~ msgstr "Taal verwijderen"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Shortcuts"
-#~ msgstr "Sneltoetsen"
 
-#~ msgctxt "shortcut window"
-#~ msgid "General"
-#~ msgstr "Algemeen"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Open image"
-#~ msgstr "Afbeelding openen"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Take screenshot and extract text"
-#~ msgstr "Scherm­afdruk nemen en tekst extraheren"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "Geëxtraheerde tekst naar klem­bord kopiëren"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Application"
-#~ msgstr "App"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Preferences"
-#~ msgstr "Voorkeuren"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Quit"
-#~ msgstr "Afsluiten"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Help"
-#~ msgstr "Hulp"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Display Shortcuts"
-#~ msgstr "Sneltoetsen tonen"
 
-#~ msgctxt "Welcome screen"
-#~ msgid "Take a Screenshot"
-#~ msgstr "Scherm­afdruk nemen"
 
-#~ msgctxt "Welcome screen"
-#~ msgid "Paste image from clipboard"
-#~ msgstr "Afbeelding van klem­bord plakken"
 
 #, python-brace-format
-#~ msgid "Share via {0}"
-#~ msgstr "Delen via {0}"
 
-#~ msgid "About anura"
-#~ msgstr "Over anura"
 
 #, fuzzy
-#~ msgid "OCR models unreachable. Check your internet connection."
-#~ msgstr ""
-#~ "Locatie van modellen onbereikbaar. Controleer uw internet­verbinding."
 
-#~ msgid "Extract text from images"
-#~ msgstr "Extraheer tekst uit afbeeldingen"
 
-#~ msgid ""
-#~ "Extract text from images, websites, videos, and QR codes by taking a "
-#~ "picture of the source."
-#~ msgstr ""
-#~ "Extraheer tekst uit afbeeldingen, websites, video's en QR-codes door een "
-#~ "foto van de bron te maken."
 
-#~ msgid "Text extraction tool"
-#~ msgstr "Tekst­extractie­gereedschap"
 
-#~ msgid "Available Languages"
-#~ msgstr "Beschikbare talen"
 
-#~ msgid "Models location unreachable. Check your internet connection"
-#~ msgstr "Locatie van modellen onbereikbaar. Controleer uw internet­verbinding"
 
-#~ msgid "Share via Pocket"
-#~ msgstr "Delen via Pocket"
 
-#~ msgid "Pocket"
-#~ msgstr "Pocket"
 
-#~ msgctxt "shortcut window"
-#~ msgid "May not work properly on wayland"
-#~ msgstr "Werkt mogelijk niet goed op Wayland"
 
-#~ msgid "Catalan; Valencian"
-#~ msgstr "Catalaans; Valenciaans"
 
-#~ msgid "Greek, Modern (1453-)"
-#~ msgstr "Grieks, Modern (1453-)"
 
-#~ msgid "Filipino (old - Tagalog)"
-#~ msgstr "Filipijns (oud - Tagalog)"
 
-#~ msgid "Greek, Ancient (to 1453) (contrib)"
-#~ msgstr "Grieks, Oud (tot 1453)"
 
-#~ msgid "Haitian; Haitian Creole"
-#~ msgstr "Haïtiaans; Haïtiaans Creools"
 
-#~ msgid "Kurmanji (Kurdish - Latin Script)"
-#~ msgstr "Kurmanji (Koerdisch - Latijns schrift)"
 
-#~ msgid "Dutch; Flemish"
-#~ msgstr "Nederlands; Vlaams"
 
-#~ msgid "Occitan (post 1500)"
-#~ msgstr "Occitaans (na 1500)"
 
-#~ msgid "Orientation and script detection module"
-#~ msgstr "Orientatie- en scriptdetectiemodule"
 
-#~ msgid "Romanian; Moldavian; Moldovan"
-#~ msgstr "Roemeens; Moldavisch"
 
-#~ msgid "Sinhala; Sinhalese"
-#~ msgstr "Sinhala; Singalees"
 
-#~ msgid "Spanish; Castilian"
-#~ msgstr "Spaans; Castiliaans"
 
-#~ msgid "Text extracted. You can paste it with Ctrl+V"
-#~ msgstr "Tekst geëxtraheerd. U kunt het plakken met Ctrl+V."
 
-#~ msgid "QR-code URL opened"
-#~ msgstr "URL van QR-code geopend"
 
-#~ msgid "QR-code contains URL."
-#~ msgstr "QR-code bevat een URL"
 
-#~ msgid "Supported image files"
-#~ msgstr "Ondersteunde afbeeldings­formaten"
 
-#~ msgid "Only images can be processed that way."
-#~ msgstr "Alleen afbeeldingen kunnen op die manier verwerkt worden."
 
-#~ msgid "Text copied"
-#~ msgstr "Tekst gekopieerd"
 
-#~ msgid "You are on a metered connection. Be careful to download languages."
-#~ msgstr ""
-#~ "U heeft een gemeten verbinding. Wees voorzichtig met het downloaden van "
-#~ "talen."
 
-#~ msgid "View all available languages"
-#~ msgstr "Alle beschikbare talen tonen"
 
-#~ msgid "Tender Owl"
-#~ msgstr "Tender Owl"
 
 #, fuzzy
-#~| msgid "Open image to extract text"
-#~ msgid "Open Image to extract text"
-#~ msgstr "Afbeelding openen om tekst te extraheren"
 
-#~ msgid "In this update, we've made a number of improvements to our app."
-#~ msgstr ""
-#~ "In deze update hebben we een aantal verbeteringen aangebracht in onze app."
 
-#~ msgid "We hope you enjoy our work!"
-#~ msgstr "Wij wensen u veel plezier met ons werk!"
 
-#~ msgid ""
-#~ "We have redesigned the settings dialog to make it more user-friendly and "
-#~ "understandable."
-#~ msgstr ""
-#~ "We hebben het instellingenvenster opnieuw ontworpen om het "
-#~ "gebruiksvriendelijker en begrijpelijker te maken."
 
-#~ msgid "Now you can easily find the language you want by searching."
-#~ msgstr "Nu kunt u gemakkelijk de gewenste taal vinden door te zoeken."
 
-#~ msgid ""
-#~ "In addition, we have added the ability to select a second language for "
-#~ "extracting text from images."
-#~ msgstr ""
-#~ "Bovendien hebben we de mogelijkheid toegevoegd om een tweede taal te "
-#~ "selecteren voor het extraheren van tekst uit afbeeldingen."
 
-#~ msgid "The anura can automatically follow links extracted from QR codes."
-#~ msgstr "anura kan automatisch links volgen die uit QR-codes zijn gehaald."
 
-#~ msgid ""
-#~ "We also updated the localization and improved the overall performance of "
-#~ "the app."
-#~ msgstr ""
-#~ "We hebben ook de lokalisatie bijgewerkt en de algemene prestaties van de "
-#~ "app verbeterd."
 
-#~ msgid "Fixed some bugs and bugs."
-#~ msgstr "Enkele bugs en foutjes verholpen."
 
-#~ msgid "What's new:"
-#~ msgstr "Wat is er nieuw:"
 
-#~ msgid "Open image button now available."
-#~ msgstr "Knop ‘Afbeelding openen’ nu beschikbaar."
 
-#~ msgid "Translations updated."
-#~ msgstr "Vertalingen bijgewerkt."
 
-#~ msgid "When no text is found, anura returns to the main window."
-#~ msgstr ""
-#~ "Wanneer geen tekst wordt gevonden, keert anura terug naar het "
-#~ "hoofdvenster."
 
-#~ msgid "Updated UI"
-#~ msgstr "Gebruikersinterface bijgewerkt"
 
-#~ msgid "Translated to a bunch of new languages"
-#~ msgstr "Vertaald naar een heleboel nieuwe talen"
 
-#~ msgid "Drag-n-drop support. For images only"
-#~ msgstr "Ondersteuning voor slepen en neerzetten. Alleen voor afbeeldingen"
 
-#~ msgid "Dark mode support"
-#~ msgstr "Ondersteuning voor donkere modus"
 
-#~ msgid "Localized interface"
-#~ msgstr "Gelokaliseerde interface"
 
-#~ msgid ""
-#~ "Quickly extract text from any source such as images, websites, even video "
-#~ "- everywhere you can grab an image shot. Even if it is encoded in a QR "
-#~ "code!"
-#~ msgstr ""
-#~ "Extraheer snel tekst vanuit elke bron, zoals afbeeldingen, websites, "
-#~ "video en zelfs QR-codes!"
 
 #, python-brace-format
-#~ msgid "{language} language downloaded."
-#~ msgstr "{language} gedownload"
 
-#~ msgid "Configure Languages"
-#~ msgstr "Talen configureren"
 
-#~ msgid "Clear the extraction results"
-#~ msgstr "Extractieresultaten wissen"
 
-#~ msgid ""
-#~ "Copy extracted text to clipboard\n"
-#~ "                                "
-#~ msgstr ""
-#~ "Geëxtraheerde tekst naar het klembord kopiëren\n"
-#~ "                                "
 
-#~ msgid ""
-#~ "anura can help you to instantly extract text\n"
-#~ "from any QR code, image, video, PDF, etc."
-#~ msgstr ""
-#~ "anura kan u helpen om direct tekst vanuit elke QR-code, afbeelding, "
-#~ "video, PDF, of andere bron te extraheren"
 
-#~ msgid "Learn more about anura"
-#~ msgstr "Meer over anura te weten komen"
 
-#~ msgid "Configure"
-#~ msgstr "Configureren"

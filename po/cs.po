@@ -1140,372 +1140,99 @@ msgstr ""
 msgid "tesseract"
 msgstr ""
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "Kopírovat extrahovaný text do schránky"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Listen to text"
-#~ msgstr "Poslouchat text"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Cancel listening to text"
-#~ msgstr "Zrušit poslech textu"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Open menu"
-#~ msgstr "Otevřít nabídku"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Share To"
-#~ msgstr "Sdílet do"
 
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Install language"
-#~ msgstr "Nainstalovat jazyk"
 
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Remove language"
-#~ msgstr "Odebrat jazyk"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Shortcuts"
-#~ msgstr "Zkratky"
 
-#~ msgctxt "shortcut window"
-#~ msgid "General"
-#~ msgstr "Obecné"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Open image"
-#~ msgstr "Otevřít obrázek"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Take screenshot and extract text"
-#~ msgstr "Pořiďte snímek obrazovky a extrahujte text"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "Kopírovat extrahovaný text do schránky"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Application"
-#~ msgstr "Aplikace"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Preferences"
-#~ msgstr "Předvolby"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Quit"
-#~ msgstr "Ukončit"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Help"
-#~ msgstr "Nápověda"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Display Shortcuts"
-#~ msgstr "Zobrazit zkratky"
 
-#~ msgctxt "Welcome screen"
-#~ msgid "Take a Screenshot"
-#~ msgstr "Pořídit snímek obrazovky"
 
-#~ msgctxt "Welcome screen"
-#~ msgid "Paste image from clipboard"
-#~ msgstr "Vložit obrázek ze schránky"
 
 #, python-brace-format
-#~ msgid "Share via {0}"
-#~ msgstr "Sdílet přes {0}"
 
-#~ msgid "About anura"
-#~ msgstr "O anurau"
 
 #, fuzzy
-#~ msgid "OCR models unreachable. Check your internet connection."
-#~ msgstr ""
-#~ "Umístění modelů není dostupné. Zkontrolujte své připojení k internetu."
 
-#~ msgid "Extract text from images"
-#~ msgstr "Získávání textu z obrázků"
 
-#~ msgid ""
-#~ "Extract text from images, websites, videos, and QR codes by taking a "
-#~ "picture of the source."
-#~ msgstr ""
-#~ "Extrahujte text z obrázků, webových stránek, videí a QR kódů pořízením "
-#~ "obrázku zdroje."
 
-#~ msgid "Text extraction tool"
-#~ msgstr "Nástroj pro extrakci textu"
 
-#~ msgid "Available Languages"
-#~ msgstr "Dostupné jazyky"
 
-#~ msgid "Models location unreachable. Check your internet connection"
-#~ msgstr ""
-#~ "Umístění modelů není dostupné. Zkontrolujte své připojení k internetu"
 
-#~ msgid "Share via Pocket"
-#~ msgstr "Sdílet přes Pocket"
 
-#~ msgid "Pocket"
-#~ msgstr "Pocket"
 
-#~ msgctxt "shortcut window"
-#~ msgid "May not work properly on wayland"
-#~ msgstr "Nemusí správně fungovat na Waylandu"
 
-#~ msgid "Catalan; Valencian"
-#~ msgstr "katalánština; valencijština"
 
-#~ msgid "Greek, Modern (1453-)"
-#~ msgstr "řečtina, moderní (1453-)"
 
-#~ msgid "Filipino (old - Tagalog)"
-#~ msgstr "filipínština (stará - tagalština)"
 
-#~ msgid "Greek, Ancient (to 1453) (contrib)"
-#~ msgstr "řečtina, starověká (do roku 1453) (příspěvek)"
 
-#~ msgid "Haitian; Haitian Creole"
-#~ msgstr "haitština; haitská kreolština"
 
-#~ msgid "Kurmanji (Kurdish - Latin Script)"
-#~ msgstr "kurmándží (kurdština - latinka)"
 
-#~ msgid "Dutch; Flemish"
-#~ msgstr "nizozemština; vlámština"
 
-#~ msgid "Occitan (post 1500)"
-#~ msgstr "okcitánština (po roce 1500)"
 
-#~ msgid "Orientation and script detection module"
-#~ msgstr "Modul pro detekci orientace a skriptů"
 
-#~ msgid "Romanian; Moldavian; Moldovan"
-#~ msgstr "rumunština; moldavština; moldovština"
 
-#~ msgid "Sinhala; Sinhalese"
-#~ msgstr "sinhálština"
 
-#~ msgid "Spanish; Castilian"
-#~ msgstr "španělština; kastilština"
 
-#~ msgid "Text extracted. You can paste it with Ctrl+V"
-#~ msgstr "Text extrahován. Můžete jej vložit pomocí Ctrl+V"
 
-#~ msgid "QR-code URL opened"
-#~ msgstr "Otevření adresy URL kódu QR"
 
-#~ msgid "QR-code contains URL."
-#~ msgstr "QR kód obsahuje adresu URL."
 
-#~ msgid "Supported image files"
-#~ msgstr "Podporované soubory obrázků"
 
-#~ msgid "Only images can be processed that way."
-#~ msgstr "Tímto způsobem lze zpracovávat pouze obrázky."
 
-#~ msgid "Text copied"
-#~ msgstr "Text zkopírován"
 
-#~ msgid "You are on a metered connection. Be careful to download languages."
-#~ msgstr "Nacházíte se na měřené síti. Buďte opatrní při stahování jazyků."
 
-#~ msgid "View all available languages"
-#~ msgstr "Zobrazit všechny dostupné jazyky"
 
-#~ msgid "Tender Owl"
-#~ msgstr "Tender Owl"
 
-#~ msgid "Open Image to extract text"
-#~ msgstr "Otevřít obrázek pro získání textu"
 
-#~ msgid "In this update, we've made a number of improvements to our app."
-#~ msgstr "V této aktualizaci jsme v aplikaci provedli řadu vylepšení."
-
-#~ msgid ""
-#~ "Share extracted text: This means you can now share your findings with the "
-#~ "wider community."
-#~ msgstr "Sdílení extrahovaného textu: rozšiřte své nálezy v širší komunitě."
-
-#~ msgid ""
-#~ "Add Text-to-speech to be able to listen to the extracted text without any "
-#~ "additional apps (internet connection required)."
-#~ msgstr ""
-#~ "Přidán převod textu na řeč, abyste mohli poslouchat extrahovaný text bez "
-#~ "jakýchkoli dodatečných aplikací (vyžadováno připojení k internetu)."
-
-#~ msgid ""
-#~ "Add the ability to insert images from the clipboard by using the "
-#~ "<code>Ctrl+V</code> shortcut."
-#~ msgstr ""
-#~ "Přidána možnost vložit obrázky ze schránky pomocí klávesové zkratky "
-#~ "<code>Ctrl+V</code>."
-
-#~ msgid ""
-#~ "In addition, we have upgraded the language selection dropdown to popover "
-#~ "with a quick search of a language."
-#~ msgstr ""
-#~ "Dále jsme vylepšili rozbalovací nabídku s výběrem jazyků na překryvné "
-#~ "okno s rychlým vyhledáním jazyka."
-
-#~ msgid "Last but not least, anura has become more accessibility-friendly."
-#~ msgstr "A v neposlední řadě se anura stal přístupnějším."
-
-#~ msgid "We hope you enjoy our work!"
-#~ msgstr "Doufáme, že se vám naše práce bude líbit!"
-
-#~ msgid ""
-#~ "We have redesigned the settings dialog to make it more user-friendly and "
-#~ "understandable."
-#~ msgstr ""
-#~ "Přepracovali jsme dialogové okno nastavení, aby bylo uživatelsky "
-#~ "přívětivější a srozumitelnější."
-
-#~ msgid "Now you can easily find the language you want by searching."
-#~ msgstr "Nyní můžete snadno najít požadovaný jazyk pomocí vyhledávání."
-
-#~ msgid ""
-#~ "In addition, we have added the ability to select a second language for "
-#~ "extracting text from images."
-#~ msgstr ""
-#~ "Kromě toho jsme přidali možnost výběru druhého jazyka pro extrakci textu "
-#~ "z obrázků."
-
-#~ msgid "The anura can automatically follow links extracted from QR codes."
-#~ msgstr "anura dokáže automaticky otevírat odkazy získané z kódů QR."
-
-#~ msgid ""
-#~ "We also updated the localization and improved the overall performance of "
-#~ "the app."
-#~ msgstr ""
-#~ "Také jsme aktualizovali lokalizaci a zlepšili celkový výkon aplikace."
-
-#~ msgid "Fixed some bugs and bugs."
-#~ msgstr "Opraveno několik chyb."
-
-#~ msgid "What's new:"
-#~ msgstr "Co je nového:"
-
-#~ msgid "Open image button now available."
-#~ msgstr "Tlačítko Otevřít obrázek je nyní k dispozici."
-
-#~ msgid "Translations updated."
-#~ msgstr "Aktualizovány překlady."
-
-#~ msgid "When no text is found, anura returns to the main window."
-#~ msgstr "Pokud není nalezen žádný text, vrátí se anura do hlavního okna."
-
-#~ msgid "Updated UI"
-#~ msgstr "Aktualizované uživatelské rozhraní"
-
-#~ msgid "Translated to a bunch of new languages"
-#~ msgstr "Přeloženo do několika nových jazyků"
-
-#~ msgid "Drag-n-drop support. For images only"
-#~ msgstr "Podpora přetažení. Pouze pro obrázky"
-
-#~ msgid "Dark mode support"
-#~ msgstr "Podpora tmavého režimu"
-
-#~ msgid "Localized interface"
-#~ msgstr "Lokalizované rozhraní"
-
-#~ msgid ""
-#~ "anura now is available on the Flathub and use modern Portal "
-#~ "implementation. We also updated the UI accordingly to the GNOME HIG and "
-#~ "fixed some bugs we've found :)"
-#~ msgstr ""
-#~ "anura je nyní k dispozici na Flathubu a používá moderní implementaci "
-#~ "Portalu. Také jsme aktualizovali uživatelské rozhraní podle GNOME HIG a "
-#~ "opravili některé nalezené chyby :)"
-
-#~ msgid ""
-#~ "Now you're free to run anura with `-e` option to extract text and "
-#~ "instantly copy it to the clipboard."
-#~ msgstr ""
-#~ "Nyní můžete spustit program anura s možností `-e` pro extrakci textu a "
-#~ "jeho okamžité zkopírování do schránky."
-
-#~ msgid "English model included with anura itself"
-#~ msgstr "Anglický model dodávaný s programem anura"
-
-#~ msgid "QR code detection. If one in the selected area - it will be decoded."
-#~ msgstr ""
-#~ "Detekce QR kódu. Pokud se ve vybrané oblasti nějaký nachází - bude "
-#~ "dekódován."
-
-#~ msgid ""
-#~ "New command line shortcut to run with \"Extract to clipboard\" feature."
-#~ msgstr ""
-#~ "Nový zástupce příkazového řádku pro spuštění s funkcí „Extrakce do "
-#~ "schránky“."
-
-#~ msgid "Granite.HyperTextView to support QR encoded links"
-#~ msgstr "Granite.HyperTextView pro podporu odkazů kódovaných QR"
-
-#~ msgid "Fix language packs download."
-#~ msgstr "Oprava stahování jazykových balíčků."
-
-#~ msgid "Dark mode+"
-#~ msgstr "Tmavý režim+"
-
-#~ msgid "Dark mode support."
-#~ msgstr "Podpora tmavého režimu."
-
-#~ msgid "Application will hide the main window for the cleaner shots. #11"
-#~ msgstr "Aplikace skryje hlavní okno pro čistší snímky. #11"
-
-#~ msgid ""
-#~ "Quickly extract any text from anywhere you need it: webpages, videos, "
-#~ "photos, etc."
-#~ msgstr ""
-#~ "Rychle extrahujte jakýkoli text odkudkoli, kde ho potřebujete: z webových "
-#~ "stránek, videí, fotografií atd."
-
-#~ msgid ""
-#~ "Quickly extract text from any source such as images, websites, even video "
-#~ "- everywhere you can grab an image shot. Even if it is encoded in a QR "
-#~ "code!"
-#~ msgstr ""
-#~ "Rychle extrahujte text z jakéhokoli zdroje, například z obrázků, webových "
-#~ "stránek, dokonce i z videa - všude tam, kde můžete pořídit snímek. "
-#~ "Dokonce i když je zakódován v QR kódu!"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #, python-brace-format
-#~ msgid "{language} language downloaded."
-#~ msgstr "Jazyk {language} stažen."
 
-#~ msgid "Configure Languages"
-#~ msgstr "Konfigurace jazyků"
 
-#~ msgid "Clear the extraction results"
-#~ msgstr "Vymazat výsledky extrakce"
 
-#~ msgid ""
-#~ "Copy extracted text to clipboard\n"
-#~ "                                "
-#~ msgstr ""
-#~ "Zkopírovat extrahovaný text do schránky\n"
-#~ "                                "
 
-#~ msgid ""
-#~ "anura can help you to instantly extract text\n"
-#~ "from any QR code, image, video, PDF, etc."
-#~ msgstr ""
-#~ "anura vám pomůže okamžitě extrahovat text\n"
-#~ "z jakéhokoli QR kódu, obrázku, videa, PDF atd."
 
-#~ msgid "Learn more about anura"
-#~ msgstr "Další informace o anurau"
 
-#~ msgid "Search language"
-#~ msgstr "Hledat jazyk"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Get screenshot and extract text"
-#~ msgstr "Získání snímku obrazovky a extrakce textu"

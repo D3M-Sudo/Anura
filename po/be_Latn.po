@@ -1143,183 +1143,54 @@ msgstr ""
 msgid "tesseract"
 msgstr ""
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "Skapijavać vyniaty tekst u bufar pamienu"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Listen to text"
-#~ msgstr "Prasłuchać tekst"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Cancel listening to text"
-#~ msgstr "Skasavać prasłuchoŭvańnie tekstu"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Open menu"
-#~ msgstr "Adčynić meniu"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Share To"
-#~ msgstr "Abahulić"
 
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Install language"
-#~ msgstr "Ustalavanyja movy"
 
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Remove language"
-#~ msgstr "Vydalić movu"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Shortcuts"
-#~ msgstr "Haračyja klavišy"
 
-#~ msgctxt "shortcut window"
-#~ msgid "General"
-#~ msgstr "Ahulnaje"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Open image"
-#~ msgstr "Adkryć vyjavu"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Take screenshot and extract text"
-#~ msgstr "Zrabić ekranny zdymak i vyniać tekst"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "Skapijavać vyniaty tekst u bufar pamienu"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Application"
-#~ msgstr "Aplikacyja"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Preferences"
-#~ msgstr "Nałady"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Quit"
-#~ msgstr "Vyjści"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Help"
-#~ msgstr "Dapamoha"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Display Shortcuts"
-#~ msgstr "Pakazać haračyja klavišy"
 
-#~ msgctxt "Welcome screen"
-#~ msgid "Take a Screenshot"
-#~ msgstr "Zrabić ekranny zdymak"
 
-#~ msgctxt "Welcome screen"
-#~ msgid "Paste image from clipboard"
-#~ msgstr "Ustavić z bufara pamienu"
 
 #, python-brace-format
-#~ msgid "Share via {0}"
-#~ msgstr "Abahulić praz {0}"
 
-#~ msgid "About anura"
-#~ msgstr "Ab Žabie"
 
 #, fuzzy
-#~ msgid "OCR models unreachable. Check your internet connection."
-#~ msgstr ""
-#~ "Miescaznachodžańnie madelaŭ niadasiahalnaje. Praviercie jynternet-"
-#~ "padłučeńnie."
 
-#~ msgid "Extract text from images"
-#~ msgstr "Vymańnie tekstu z vyjavaŭ"
 
-#~ msgid ""
-#~ "Extract text from images, websites, videos, and QR codes by taking a "
-#~ "picture of the source."
-#~ msgstr ""
-#~ "Vymajcie tekst z vyjavaŭ veb-sajtaŭ, videa j QR-kodaŭ, fatahrafujučy "
-#~ "krynicu."
 
-#~ msgid "Text extraction tool"
-#~ msgstr "Instrument dla vymańnia tekstu"
 
-#~ msgid "Available Languages"
-#~ msgstr "Dastupnyja movy"
 
-#~ msgid "Models location unreachable. Check your internet connection"
-#~ msgstr ""
-#~ "Znachodžańnie madelaŭ niadasiahalna. Praviercie vašaje jynternet-"
-#~ "padłučeńnie"
 
-#~ msgid "Share via Pocket"
-#~ msgstr "Zachavać u Kišeni [Pocket]"
 
-#~ msgid "Pocket"
-#~ msgstr "Kišenia [Pocket]"
 
-#~ msgctxt "shortcut window"
-#~ msgid "May not work properly on wayland"
-#~ msgstr "Moža nia pracavać na Šlamje [Wayland]"
 
-#~ msgid "Catalan; Valencian"
-#~ msgstr "Katałonskaja; Valensijskaja"
 
-#~ msgid "Greek, Modern (1453-)"
-#~ msgstr "Hreckaja, Sučasnaja (1453-)"
 
-#~ msgid "Filipino (old - Tagalog)"
-#~ msgstr "Filipinskaja (stary — Tahaloh)"
 
-#~ msgid "Greek, Ancient (to 1453) (contrib)"
-#~ msgstr "Hreckaja, Staražytnaja (da 1453)"
 
-#~ msgid "Haitian; Haitian Creole"
-#~ msgstr "Hajicianskaja; Hajicianskaja kreolskaja"
 
-#~ msgid "Kurmanji (Kurdish - Latin Script)"
-#~ msgstr "Kurmandžy (Kurdzkaja - Łacinka)"
 
-#~ msgid "Dutch; Flemish"
-#~ msgstr "Halandzkaja; Flamandzkaja"
 
-#~ msgid "Occitan (post 1500)"
-#~ msgstr "Aksitanskaja (paśla 1500)"
 
-#~ msgid "Orientation and script detection module"
-#~ msgstr "Modul vyjaŭleńnia aryjentacyju j scenaru"
 
-#~ msgid "Romanian; Moldavian; Moldovan"
-#~ msgstr "Rumynskaja; Małdaŭskaja"
 
-#~ msgid "Sinhala; Sinhalese"
-#~ msgstr "Sinhalskaja"
 
-#~ msgid "Spanish; Castilian"
-#~ msgstr "Hišpanskaja; Kastylskaja"
 
-#~ msgid "Text extracted. You can paste it with Ctrl+V"
-#~ msgstr "Tekst vyniaty. Vy možacie ŭstavić jaho praz Ctrl+V"
 
-#~ msgid "QR-code URL opened"
-#~ msgstr "URL z QR-kodu adčynieny"
 
-#~ msgid "QR-code contains URL."
-#~ msgstr "QR-kod źmiaščaje URL."
 
-#~ msgid "Supported image files"
-#~ msgstr "Farmaty vyjavaŭ jakia padtrymoŭvajucca"
 
-#~ msgid "Only images can be processed that way."
-#~ msgstr "Tolki vyjavy mohuć być apracavanya takim čynam."
 
-#~ msgid "Text copied"
-#~ msgstr "Tekst skapijavany"
 
-#~ msgid "You are on a metered connection. Be careful to download languages."
-#~ msgstr ""
-#~ "U vas limitavanaje złučeńnie. Budzcie aściarožniej pry zapampoŭcy movaŭ."
 
-#~ msgid "View all available languages"
-#~ msgstr "Pakazać usie dastupnyja movy"

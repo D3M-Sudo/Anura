@@ -1141,161 +1141,56 @@ msgstr ""
 msgid "tesseract"
 msgstr ""
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "추출된 텍스트를 클립보드에 복사"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Listen to text"
-#~ msgstr "텍스트 듣기"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Cancel listening to text"
-#~ msgstr "텍스트 듣기 취소"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Open menu"
-#~ msgstr "메뉴 열기"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Share To"
-#~ msgstr "공유하기"
 
 #, fuzzy
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Install language"
-#~ msgstr "설치된 언어들"
 
 #, fuzzy
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Remove language"
-#~ msgstr "_두번째 언어"
 
 #, fuzzy
-#~ msgctxt "shortcut window"
-#~ msgid "Shortcuts"
-#~ msgstr "키보드 단축키"
 
 #, fuzzy
-#~ msgctxt "shortcut window"
-#~ msgid "General"
-#~ msgstr "_일반"
 
 #, fuzzy
-#~ msgctxt "shortcut window"
-#~ msgid "Open image"
-#~ msgstr "이미지 열기"
 
 #, fuzzy
-#~ msgctxt "shortcut window"
-#~ msgid "Take screenshot and extract text"
-#~ msgstr "스크린샷 촬영"
 
 #, fuzzy
-#~ msgctxt "shortcut window"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "추출된 텍스트를 클립보드에 복사"
 
 #, fuzzy
-#~ msgctxt "shortcut window"
-#~ msgid "Preferences"
-#~ msgstr "환경설정"
 
 #, fuzzy
-#~ msgctxt "shortcut window"
-#~ msgid "Display Shortcuts"
-#~ msgstr "키보드 단축키"
 
-#~ msgctxt "Welcome screen"
-#~ msgid "Take a Screenshot"
-#~ msgstr "스크린샷 촬영"
 
 #, fuzzy
-#~ msgctxt "Welcome screen"
-#~ msgid "Paste image from clipboard"
-#~ msgstr "클립보드에서 붙여넣기"
 
 #, fuzzy, python-brace-format
-#~ msgid "Share via {0}"
-#~ msgstr "포켓을 통해 공유"
 
-#~ msgid "About anura"
-#~ msgstr "anura에 관하여"
 
-#~ msgid "Extract text from images"
-#~ msgstr "이미지에서 텍스트 추출"
 
-#~ msgid ""
-#~ "Extract text from images, websites, videos, and QR codes by taking a "
-#~ "picture of the source."
-#~ msgstr ""
-#~ "사진을 찍어 이미지, 웹사이트, 동영상, QR 코드에서 텍스트 추출하세요."
 
-#~ msgid "Text extraction tool"
-#~ msgstr "텍스트 추출 도구"
 
-#~ msgid "Available Languages"
-#~ msgstr "가능한 언어"
 
-#~ msgid "Share via Pocket"
-#~ msgstr "포켓을 통해 공유"
 
-#~ msgid "Pocket"
-#~ msgstr "포켓"
 
-#~ msgid "Catalan; Valencian"
-#~ msgstr "카탈로니아어; 발렌시아어"
 
-#~ msgid "Greek, Modern (1453-)"
-#~ msgstr "현대 그리스어 (1453-)"
 
-#~ msgid "Filipino (old - Tagalog)"
-#~ msgstr "필리핀어 (구 - 카탈로그어)"
 
-#~ msgid "Greek, Ancient (to 1453) (contrib)"
-#~ msgstr "고대 그리스어 (-1453) (기여)"
 
-#~ msgid "Haitian; Haitian Creole"
-#~ msgstr "아이티어"
 
-#~ msgid "Kurmanji (Kurdish - Latin Script)"
-#~ msgstr "쿠르만지어 (쿠르드어 - 라틴어 스크립트)"
 
-#~ msgid "Dutch; Flemish"
-#~ msgstr "네덜란드어 (벨기에)"
 
-#~ msgid "Occitan (post 1500)"
-#~ msgstr "오크어 (1500년 이후)"
 
-#~ msgid "Orientation and script detection module"
-#~ msgstr "오리엔테이션 및 스크립트 감지 모듈"
 
-#~ msgid "Romanian; Moldavian; Moldovan"
-#~ msgstr "루마니아어; 몰도바어"
 
-#~ msgid "Sinhala; Sinhalese"
-#~ msgstr "싱할라어"
 
-#~ msgid "Spanish; Castilian"
-#~ msgstr "카스티야 스페인어"
 
-#~ msgid "Text extracted. You can paste it with Ctrl+V"
-#~ msgstr "텍스트가 추출되었습니다. Ctrl+V로 붙여넣기 할 수 있습니다."
 
-#~ msgid "QR-code URL opened"
-#~ msgstr "QR코드 URL 열림"
 
-#~ msgid "QR-code contains URL."
-#~ msgstr "QR코드에 URL이 포함되어 있습니다."
 
-#~ msgid "Supported image files"
-#~ msgstr "지원하는 이미지 파일"
 
-#~ msgid "Only images can be processed that way."
-#~ msgstr "이미지만 해당 방법으로 사용 가능합니다."
 
-#~ msgid "Text copied"
-#~ msgstr "텍스트 복사됨"
 
-#~ msgid "View all available languages"
-#~ msgstr "모든 가능한 언어 보기"

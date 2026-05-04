@@ -1141,208 +1141,62 @@ msgstr ""
 msgid "tesseract"
 msgstr ""
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "Copiar texto extraído para a área de transferência"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Listen to text"
-#~ msgstr "Ouvir texto"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Cancel listening to text"
-#~ msgstr "Cancelar audição do texto"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Open menu"
-#~ msgstr "Abrir menu"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Share To"
-#~ msgstr "Partilhar"
 
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Install language"
-#~ msgstr "Instalar idioma"
 
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Remove language"
-#~ msgstr "Remover idioma"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Shortcuts"
-#~ msgstr "Atalhos"
 
-#~ msgctxt "shortcut window"
-#~ msgid "General"
-#~ msgstr "Geral"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Open image"
-#~ msgstr "Abrir imagem"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Take screenshot and extract text"
-#~ msgstr "Capturar o ecrã e extrair texto"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "Copiar texto extraído para a área de transferência"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Application"
-#~ msgstr "Aplicação"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Preferences"
-#~ msgstr "Preferências"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Quit"
-#~ msgstr "Sair"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Help"
-#~ msgstr "Ajuda"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Display Shortcuts"
-#~ msgstr "Mostrar atalhos"
 
-#~ msgctxt "Welcome screen"
-#~ msgid "Take a Screenshot"
-#~ msgstr "Tirar uma captura de ecrã"
 
-#~ msgctxt "Welcome screen"
-#~ msgid "Paste image from clipboard"
-#~ msgstr "Colar imagem da área de transferência"
 
 #, python-brace-format
-#~ msgid "Share via {0}"
-#~ msgstr "Partilhar via {0}"
 
-#~ msgid "About anura"
-#~ msgstr "Sobre o anura"
 
 #, fuzzy
-#~ msgid "OCR models unreachable. Check your internet connection."
-#~ msgstr ""
-#~ "Não foi possível aceder o local dos modelos. Verifique a sua conexão de "
-#~ "rede."
 
-#~ msgid "Extract text from images"
-#~ msgstr "Extraia texto de imagens"
 
-#~ msgid ""
-#~ "Extract text from images, websites, videos, and QR codes by taking a "
-#~ "picture of the source."
-#~ msgstr ""
-#~ "Extraia texto de imagens, páginas da web, vídeos e códigos QR, tirando "
-#~ "uma foto da fonte."
 
-#~ msgid "Text extraction tool"
-#~ msgstr "Ferramenta de extração de texto"
 
-#~ msgid "Available Languages"
-#~ msgstr "Idiomas Disponíveis"
 
-#~ msgid "Models location unreachable. Check your internet connection"
-#~ msgstr ""
-#~ "Não foi possível aceder o local dos modelos. Verifique a sua conexão de "
-#~ "rede"
 
-#~ msgid "Share via Pocket"
-#~ msgstr "Partilhar via Pocket"
 
-#~ msgid "Pocket"
-#~ msgstr "Pocket"
 
-#~ msgctxt "shortcut window"
-#~ msgid "May not work properly on wayland"
-#~ msgstr "Pode não funcionar corretamente no Wayland"
 
-#~ msgid "Catalan; Valencian"
-#~ msgstr "Catalão; Valenciano"
 
-#~ msgid "Greek, Modern (1453-)"
-#~ msgstr "Grego, Moderno (1453-)"
 
-#~ msgid "Filipino (old - Tagalog)"
-#~ msgstr "Filipino (antigo - Tagalo)"
 
-#~ msgid "Greek, Ancient (to 1453) (contrib)"
-#~ msgstr "Grego, Clássico (até 1453) (contrib)"
 
-#~ msgid "Haitian; Haitian Creole"
-#~ msgstr "Haitiano; Crioulo Haitiano"
 
-#~ msgid "Kurmanji (Kurdish - Latin Script)"
-#~ msgstr "Kurmanji (Curdo - Escrita Latina)"
 
-#~ msgid "Dutch; Flemish"
-#~ msgstr "Holandês; Flamengo"
 
-#~ msgid "Occitan (post 1500)"
-#~ msgstr "Occitano (pós 1500)"
 
-#~ msgid "Orientation and script detection module"
-#~ msgstr "Módulo de detecção de orientação e script"
 
-#~ msgid "Romanian; Moldavian; Moldovan"
-#~ msgstr "Romeno; Moldávio; Moldavo"
 
-#~ msgid "Sinhala; Sinhalese"
-#~ msgstr "Cingala; Cingalês"
 
-#~ msgid "Spanish; Castilian"
-#~ msgstr "Espanhol; Castelhano"
 
-#~ msgid "Text extracted. You can paste it with Ctrl+V"
-#~ msgstr "Texto extraído. Pode colá-lo com Ctrl+V"
 
-#~ msgid "QR-code URL opened"
-#~ msgstr "URL do código QR aberta"
 
-#~ msgid "QR-code contains URL."
-#~ msgstr "O código QR contém uma URL."
 
-#~ msgid "Supported image files"
-#~ msgstr "Ficheiros de imagem suportados"
 
-#~ msgid "Only images can be processed that way."
-#~ msgstr "Apenas imagens podem ser processadas daquela forma."
 
-#~ msgid "Text copied"
-#~ msgstr "Texto copiado"
 
-#~ msgid "You are on a metered connection. Be careful to download languages."
-#~ msgstr ""
-#~ "Está numa conexão com medição de dados. Cuidado ao descarregar idiomas."
 
-#~ msgid "View all available languages"
-#~ msgstr "Ver todos os idiomas disponíveis"
 
 #, fuzzy
-#~| msgid "Select language to extract"
-#~ msgid "Open Image to extract text"
-#~ msgstr "Selecione idioma para extrair"
 
 #, python-brace-format
-#~ msgid "{language} language downloaded."
-#~ msgstr "Língua {language} descarregada."
 
-#~ msgid "Configure Languages"
-#~ msgstr "Configurar idiomas"
 
-#~ msgid "Clear the extraction results"
-#~ msgstr "Limpar os resultados da extração"
 
-#~ msgid ""
-#~ "anura can help you to instantly extract text\n"
-#~ "from any QR code, image, video, PDF, etc."
-#~ msgstr ""
-#~ "anura pode ajudá-lo a instantaneamente extrair texto\n"
-#~ "de qualquer QR code, imagem, vídeo, PDF, etc."
 
-#~ msgid "Learn more about anura"
-#~ msgstr "Saiba mais sobre o anura"

@@ -1124,57 +1124,22 @@ msgid "tesseract"
 msgstr ""
 
 #, fuzzy
-#~ msgctxt "Extracted screen"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "Arbelean ateratako testua kopiatu"
 
 #, fuzzy
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Install language"
-#~ msgstr "Hizkuntza erabilgarriak"
 
 #, fuzzy
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Remove language"
-#~ msgstr "Hizkuntza"
 
 #, fuzzy
-#~ msgctxt "shortcut window"
-#~ msgid "Shortcuts"
-#~ msgstr "Lasterbideak"
 
 #, fuzzy
-#~ msgctxt "shortcut window"
-#~ msgid "General"
-#~ msgstr "Orokorra"
 
 #, fuzzy
-#~ msgctxt "shortcut window"
-#~ msgid "Take screenshot and extract text"
-#~ msgstr "Pantaila-kaptura bat egin eta testua atera"
 
 #, fuzzy
-#~ msgctxt "shortcut window"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "Arbelean ateratako testua kopiatu"
 
 #, fuzzy
-#~ msgctxt "shortcut window"
-#~ msgid "Preferences"
-#~ msgstr "Erakutsi lehentasunak"
 
 #, fuzzy
-#~ msgctxt "shortcut window"
-#~ msgid "Display Shortcuts"
-#~ msgstr "Lasterbideak"
 
-#~ msgid "Available Languages"
-#~ msgstr "Hizkuntza erabilgarriak"
 
-#~ msgid "Configure Languages"
-#~ msgstr "Hizkuntza erabilgarriak"
 
-#~ msgid ""
-#~ "Copy extracted text to clipboard\n"
-#~ "                                "
-#~ msgstr "Arbelean ateratako testua kopiatu"

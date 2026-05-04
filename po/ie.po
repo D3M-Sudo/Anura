@@ -1130,115 +1130,35 @@ msgstr ""
 msgid "tesseract"
 msgstr ""
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "Copiar li extractet textu al Paperiere"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Listen to text"
-#~ msgstr "Escutar li textu"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Cancel listening to text"
-#~ msgstr "Interrupter li escuta"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Open menu"
-#~ msgstr "Aperter li menú"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Share To"
-#~ msgstr "Partir con"
 
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Install language"
-#~ msgstr "Installar li lingue"
 
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Remove language"
-#~ msgstr "Remover li lingue"
 
-#~ msgctxt "shortcut window"
-#~ msgid "General"
-#~ msgstr "General"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Open image"
-#~ msgstr "Aperter un image"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Take screenshot and extract text"
-#~ msgstr "Capturar li ecran e extraer li textu"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "Copiar li extractet textu al Paperiere"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Application"
-#~ msgstr "Application"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Display Shortcuts"
-#~ msgstr "Monstar li rapid-tastes"
 
-#~ msgctxt "Welcome screen"
-#~ msgid "Take a Screenshot"
-#~ msgstr "Capturar li ecran"
 
-#~ msgctxt "Welcome screen"
-#~ msgid "Paste image from clipboard"
-#~ msgstr "Collar un image del Paperiere"
 
 #, python-brace-format
-#~ msgid "Share via {0}"
-#~ msgstr "Partir med {0}"
 
-#~ msgid "About anura"
-#~ msgstr "Pri anura"
 
-#~ msgid "Extract text from images"
-#~ msgstr "Extraher textu de images"
 
-#~ msgid "Text extraction tool"
-#~ msgstr "Utensile de extraction de textu"
 
-#~ msgid "Available Languages"
-#~ msgstr "Disponibil lingues"
 
-#~ msgctxt "shortcut window"
-#~ msgid "May not work properly on wayland"
-#~ msgstr "Posse functionar íncorectmen in wayland"
 
-#~ msgid "Catalan; Valencian"
-#~ msgstr "Catalan (Valencian)"
 
-#~ msgid "Greek, Modern (1453-)"
-#~ msgstr "Grec (modern)"
 
-#~ msgid "Greek, Ancient (to 1453) (contrib)"
-#~ msgstr "Grec, antiqui (contribuet)"
 
-#~ msgid "Haitian; Haitian Creole"
-#~ msgstr "Haitian (creol)"
 
-#~ msgid "Orientation and script detection module"
-#~ msgstr "Module de detection de scriptura e de orientation"
 
-#~ msgid "Romanian; Moldavian; Moldovan"
-#~ msgstr "Romanian e moldovan"
 
-#~ msgid "QR-code URL opened"
-#~ msgstr "Adresse del code QR sta apertet"
 
-#~ msgid "QR-code contains URL."
-#~ msgstr "Li code QR contene un adresse."
 
-#~ msgid "Supported image files"
-#~ msgstr "Supportat files de images"
 
-#~ msgid "Text copied"
-#~ msgstr "Textu sta copiat"
 
-#~ msgid "View all available languages"
-#~ msgstr "Vider omni disponibil lingues"

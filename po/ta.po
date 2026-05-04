@@ -1140,178 +1140,54 @@ msgstr ""
 msgid "tesseract"
 msgstr ""
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "பிரித்தெடுக்கப்பட்ட உரையை இடைநிலைப்பலகைக்கு நகலெடுக்கவும்"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Listen to text"
-#~ msgstr "உரையைக் கேளுங்கள்"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Cancel listening to text"
-#~ msgstr "உரையைக் கேட்பதை ரத்துசெய்"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Open menu"
-#~ msgstr "திறந்த பட்டியல்"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Share To"
-#~ msgstr "பகிர்ந்து கொள்ளுங்கள்"
 
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Install language"
-#~ msgstr "மொழியை நிறுவவும்"
 
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Remove language"
-#~ msgstr "மொழியை அகற்று"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Shortcuts"
-#~ msgstr "குறுக்குவழிகள்"
 
-#~ msgctxt "shortcut window"
-#~ msgid "General"
-#~ msgstr "பொது"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Open image"
-#~ msgstr "திறந்த படத்தை"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Take screenshot and extract text"
-#~ msgstr "திரைக்காட்சி எடுத்து உரையை பிரித்தெடுக்கவும்"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "பிரித்தெடுக்கப்பட்ட உரையை இடைநிலைப்பலகைக்கு நகலெடுக்கவும்"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Application"
-#~ msgstr "பயன்பாடு"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Preferences"
-#~ msgstr "விருப்பத்தேர்வுகள்"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Quit"
-#~ msgstr "வெளியேறு"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Help"
-#~ msgstr "உதவி"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Display Shortcuts"
-#~ msgstr "குறுக்குவழிகளைக் காண்பி"
 
-#~ msgctxt "Welcome screen"
-#~ msgid "Take a Screenshot"
-#~ msgstr "திரை காட்சி எடுத்துக் கொள்ளுங்கள்"
 
-#~ msgctxt "Welcome screen"
-#~ msgid "Paste image from clipboard"
-#~ msgstr "கிளிப்போர்டிலிருந்து படத்தை ஒட்டவும்"
 
 #, python-brace-format
-#~ msgid "Share via {0}"
-#~ msgstr "{0} வழியாகப் பகிர்"
 
-#~ msgid "About anura"
-#~ msgstr "தவளை பற்றி"
 
 #, fuzzy
-#~ msgid "OCR models unreachable. Check your internet connection."
-#~ msgstr "மாதிரிகள் அணுக முடியாதவை. உங்கள் இணைய இணைப்பை சரிபார்க்கவும்."
 
-#~ msgid "Extract text from images"
-#~ msgstr "படங்களிலிருந்து உரையை பிரித்தெடுக்கவும்"
 
-#~ msgid ""
-#~ "Extract text from images, websites, videos, and QR codes by taking a "
-#~ "picture of the source."
-#~ msgstr ""
-#~ "மூலத்தின் படத்தை எடுத்துக்கொள்வதன் மூலம் படங்கள், வலைத்தளங்கள், வீடியோக்கள் மற்றும் QR "
-#~ "குறியீடுகளிலிருந்து உரையை பிரித்தெடுக்கவும்."
 
-#~ msgid "Text extraction tool"
-#~ msgstr "உரை பிரித்தெடுத்தல் கருவி"
 
-#~ msgid "Available Languages"
-#~ msgstr "கிடைக்கும் மொழிகள்"
 
-#~ msgid "Models location unreachable. Check your internet connection"
-#~ msgstr "மாதிரிகள் அணுக முடியாதவை. உங்கள் இணைய இணைப்பை சரிபார்க்கவும்"
 
-#~ msgid "Share via Pocket"
-#~ msgstr "பாக்கெட் வழியாக பகிரவும்"
 
-#~ msgid "Pocket"
-#~ msgstr "பாக்கெட்"
 
-#~ msgctxt "shortcut window"
-#~ msgid "May not work properly on wayland"
-#~ msgstr "வேலண்டில் சரியாக வேலை செய்யக்கூடாது"
 
-#~ msgid "Catalan; Valencian"
-#~ msgstr "காட்டலான்;வாலேன்சியன்"
 
-#~ msgid "Greek, Modern (1453-)"
-#~ msgstr "கிரீக், மார்டன் (1453-)"
 
-#~ msgid "Filipino (old - Tagalog)"
-#~ msgstr "பிலிப்பைன்ச் (பழைய - டாக்லாக்)"
 
-#~ msgid "Greek, Ancient (to 1453) (contrib)"
-#~ msgstr "கிரேக்கம், பண்டைய (முதல் 1453 வரை) (பங்களிப்பு)"
 
-#~ msgid "Haitian; Haitian Creole"
-#~ msgstr "ஆய்டியன்; ஆய்டியன் க்ரிலோ"
 
-#~ msgid "Kurmanji (Kurdish - Latin Script)"
-#~ msgstr "குர்மன்சி (குர்திச் - லத்தீன் ச்கிரிப்ட்)"
 
-#~ msgid "Dutch; Flemish"
-#~ msgstr "டச்சு; ஃப்லீமிச்"
 
-#~ msgid "Occitan (post 1500)"
-#~ msgstr "ஓக்சிடியன்(போச்ட் 1500)"
 
-#~ msgid "Orientation and script detection module"
-#~ msgstr "நோக்குநிலை மற்றும் ச்கிரிப்ட் கண்டறிதல் தொகுதி"
 
-#~ msgid "Romanian; Moldavian; Moldovan"
-#~ msgstr "ரோமேனியன்; மோல்டாவியன்; மோல்டோவேன்"
 
-#~ msgid "Sinhala; Sinhalese"
-#~ msgstr "சின்ஆலா; சின்ஆலிசி"
 
-#~ msgid "Spanish; Castilian"
-#~ msgstr "ச்பானிச்; காச்டிலியன்"
 
-#~ msgid "Text extracted. You can paste it with Ctrl+V"
-#~ msgstr "உரை பிரித்தெடுக்கப்பட்டது. நீங்கள் அதை Ctrl+V உடன் ஒட்டலாம்"
 
-#~ msgid "QR-code URL opened"
-#~ msgstr "QR-CODE முகவரி திறக்கப்பட்டது"
 
-#~ msgid "QR-code contains URL."
-#~ msgstr "QR-குறியீட்டில் முகவரி உள்ளது."
 
-#~ msgid "Supported image files"
-#~ msgstr "ஆதரிக்கப்பட்ட படக் கோப்புகள்"
 
-#~ msgid "Only images can be processed that way."
-#~ msgstr "படங்களை மட்டுமே அவ்வாறு செயலாக்க முடியும்."
 
-#~ msgid "Text copied"
-#~ msgstr "உரை நகலெடுக்கப்பட்டது"
 
-#~ msgid "You are on a metered connection. Be careful to download languages."
-#~ msgstr "நீங்கள் ஒரு மீட்டர் இணைப்பில் இருக்கிறீர்கள். மொழிகளைப் பதிவிறக்க கவனமாக இருங்கள்."
 
-#~ msgid "View all available languages"
-#~ msgstr "கிடைக்கக்கூடிய அனைத்து மொழிகளையும் காண்க"

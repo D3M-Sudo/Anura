@@ -1141,178 +1141,54 @@ msgstr ""
 msgid "tesseract"
 msgstr ""
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "Çıkarılan metni panoya kopyala"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Listen to text"
-#~ msgstr "Metin dinle"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Cancel listening to text"
-#~ msgstr "Metin dinlemeyi iptal et"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Open menu"
-#~ msgstr "Menüyü aç"
 
-#~ msgctxt "Extracted screen"
-#~ msgid "Share To"
-#~ msgstr "Paylaş"
 
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Install language"
-#~ msgstr "Dili Kur"
 
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Remove language"
-#~ msgstr "Dili Kaldır"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Shortcuts"
-#~ msgstr "Kısayollar"
 
-#~ msgctxt "shortcut window"
-#~ msgid "General"
-#~ msgstr "Genel"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Open image"
-#~ msgstr "Görüntü aç"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Take screenshot and extract text"
-#~ msgstr "Ekran görüntüsü al ve metin ayıkla"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "Çıkarılan metni panoya kopyala"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Application"
-#~ msgstr "Uygulama"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Preferences"
-#~ msgstr "Tercihler"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Quit"
-#~ msgstr "Çık"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Help"
-#~ msgstr "Yardım"
 
-#~ msgctxt "shortcut window"
-#~ msgid "Display Shortcuts"
-#~ msgstr "Kısayolları Göster"
 
-#~ msgctxt "Welcome screen"
-#~ msgid "Take a Screenshot"
-#~ msgstr "Ekran Görüntüsü Al"
 
-#~ msgctxt "Welcome screen"
-#~ msgid "Paste image from clipboard"
-#~ msgstr "Görüntüyü Panodan Yapıştır"
 
 #, python-brace-format
-#~ msgid "Share via {0}"
-#~ msgstr "{0} ile paylaş"
 
-#~ msgid "About anura"
-#~ msgstr "Kurbağa Hakkında"
 
 #, fuzzy
-#~ msgid "OCR models unreachable. Check your internet connection."
-#~ msgstr "Modellerin konumuna ulaşılamıyor. İnternet bağlantınızı denetleyin."
 
-#~ msgid "Extract text from images"
-#~ msgstr "Görüntülerden metin ayıkla"
 
-#~ msgid ""
-#~ "Extract text from images, websites, videos, and QR codes by taking a "
-#~ "picture of the source."
-#~ msgstr ""
-#~ "Kaynağın fotoğrafını çekerek görüntülerden, web sitelerinden, videolardan "
-#~ "ve QR kodlarından metin ayıkla."
 
-#~ msgid "Text extraction tool"
-#~ msgstr "Metin ayıklama aracı"
 
-#~ msgid "Available Languages"
-#~ msgstr "Kullanılabilir Diller"
 
-#~ msgid "Models location unreachable. Check your internet connection"
-#~ msgstr "Modellerin konumuna ulaşılamıyor. İnternet bağlantınızı denetleyin"
 
-#~ msgid "Share via Pocket"
-#~ msgstr "Pocket ile Paylaş"
 
-#~ msgid "Pocket"
-#~ msgstr "Pocket"
 
-#~ msgctxt "shortcut window"
-#~ msgid "May not work properly on wayland"
-#~ msgstr "Wayland üzerinde düzgün çalışmayabilir"
 
-#~ msgid "Catalan; Valencian"
-#~ msgstr "Katalanca; Valensiya"
 
-#~ msgid "Greek, Modern (1453-)"
-#~ msgstr "Yunanca, Modern (1453-)"
 
-#~ msgid "Filipino (old - Tagalog)"
-#~ msgstr "Filipince (eski - Tagalogca)"
 
-#~ msgid "Greek, Ancient (to 1453) (contrib)"
-#~ msgstr "Yunanca, Antik (1453'e kadar) (katkı)"
 
-#~ msgid "Haitian; Haitian Creole"
-#~ msgstr "Haitili; Haiti Kreolesi"
 
-#~ msgid "Kurmanji (Kurdish - Latin Script)"
-#~ msgstr "Kurmanci (Kürtçe - Latin Alfabesi)"
 
-#~ msgid "Dutch; Flemish"
-#~ msgstr "Felemenkçe; Flamanca"
 
-#~ msgid "Occitan (post 1500)"
-#~ msgstr "Oksitanca (1500 sonrası)"
 
-#~ msgid "Orientation and script detection module"
-#~ msgstr "Yönlendirme ve alfabe algılama modülü"
 
-#~ msgid "Romanian; Moldavian; Moldovan"
-#~ msgstr "Rumence; Moldavyaca; Moldovaca"
 
-#~ msgid "Sinhala; Sinhalese"
-#~ msgstr "Sinhala; Singalaca"
 
-#~ msgid "Spanish; Castilian"
-#~ msgstr "İspanyolca; Kastilya"
 
-#~ msgid "Text extracted. You can paste it with Ctrl+V"
-#~ msgstr "Metin ayıklandı. Ctrl+V ile yapıştırabilirsiniz"
 
-#~ msgid "QR-code URL opened"
-#~ msgstr "QR kodu URL'si açıldı"
 
-#~ msgid "QR-code contains URL."
-#~ msgstr "QR kodu URL içerir."
 
-#~ msgid "Supported image files"
-#~ msgstr "Desteklenen görüntü dosyaları"
 
-#~ msgid "Only images can be processed that way."
-#~ msgstr "Sadece görüntüler bu şekilde işlenebilir."
 
-#~ msgid "Text copied"
-#~ msgstr "Metin kopyalandı"
 
-#~ msgid "You are on a metered connection. Be careful to download languages."
-#~ msgstr "Ölçülü bağlantı kullanıyorsunuz. Dilleri indirirken dikkatli olun."
 
-#~ msgid "View all available languages"
-#~ msgstr "Mevcut tüm dilleri görüntüle"
