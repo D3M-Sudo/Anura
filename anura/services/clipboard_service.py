@@ -25,8 +25,6 @@ class ClipboardService(GObject.GObject):
 
     __slots__ = ("_cancellable", "_clipboard", "_clipboard_timeout_id")
 
-    _clipboard_timeout_id: int | None = None
-
     # Timeout for clipboard read operations (seconds)
     CLIPBOARD_TIMEOUT_SECONDS = 10
 
