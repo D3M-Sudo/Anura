@@ -57,6 +57,7 @@ class TTSService(GObject.GObject):
     _gtts_languages: dict | None = None
     _bus_watch_active: bool = False
     _bus: Gst.Bus | None = None
+    _bus_message_handler_id: int | None = None
     _cleanup_lock: threading.Lock = threading.Lock()
 
     @classmethod
@@ -156,7 +157,7 @@ class TTSService(GObject.GObject):
         self._bus = self.player.get_bus()
         self._bus.add_signal_watch()
         self._bus_watch_active = True
-        self._bus.connect("message", self.on_gst_message)
+        self._bus_message_handler_id = self._bus.connect("message", self.on_gst_message)
         self.player.set_state(Gst.State.PLAYING)
 
     def on_gst_message(self, _bus, message: Gst.Message):
@@ -186,6 +187,14 @@ class TTSService(GObject.GObject):
     def _cleanup_gst_resources(self) -> None:
         """Remove signal watcher and release player resources."""
         if self.player:
+            # Explicitly disconnect the bus message handler
+            if self._bus_message_handler_id is not None and self._bus is not None:
+                try:
+                    self._bus.disconnect(self._bus_message_handler_id)
+                except (TypeError, RuntimeError):
+                    pass  # Already disconnected or invalid
+                self._bus_message_handler_id = None
+
             if self._bus_watch_active and self._bus:
                 try:
                     self._bus.remove_signal_watch()

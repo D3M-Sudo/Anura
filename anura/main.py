@@ -6,7 +6,11 @@ import sys
 from gi.repository import Adw, Gio, GLib, Gtk
 from loguru import logger
 
-from anura.services.notification_service import NotificationService
+from anura.services.notification_service import (
+    HAS_LIBNOTIFY,
+    NotificationService,
+    Notify,
+)
 
 
 def _load_gresource_bundle():
@@ -99,18 +103,58 @@ class AnuraApplication(Adw.Application):
         language_manager.init_tessdata()
         self.notification_service = NotificationService(APP_ID)
 
+        # Track backend signal handler IDs for cleanup in do_shutdown
+        self._backend_decoded_handler_id: int | None = None
+        self._backend_error_handler_id: int | None = None
+
     def do_startup(self, *args, **kwargs):
         Adw.init()
         Adw.Application.do_startup(self)
 
         self.backend = ScreenshotService()
-        self.backend.connect("decoded", self.on_decoded)
-        self.backend.connect("error", self.on_error)
+        self._backend_decoded_handler_id = self.backend.connect("decoded", self.on_decoded)
+        self._backend_error_handler_id = self.backend.connect("error", self.on_error)
+
+        # Initialize clipboard service on main thread to avoid race conditions
+        clipboard_service.init()
 
         self._setup_actions()
 
         GLib.set_application_name("Anura OCR")
         GLib.set_prgname(APP_ID)
+
+    def do_shutdown(self, *args, **kwargs):
+        """Clean up resources on application shutdown."""
+        # Disconnect backend signal handlers
+        if self.backend is not None:
+            if self._backend_decoded_handler_id is not None:
+                try:
+                    self.backend.disconnect(self._backend_decoded_handler_id)
+                except (TypeError, RuntimeError):
+                    pass
+                self._backend_decoded_handler_id = None
+            if self._backend_error_handler_id is not None:
+                try:
+                    self.backend.disconnect(self._backend_error_handler_id)
+                except (TypeError, RuntimeError):
+                    pass
+                self._backend_error_handler_id = None
+
+        # Uninitialize libnotify to release resources
+        if HAS_LIBNOTIFY and Notify is not None:
+            try:
+                Notify.uninit()
+            except Exception:
+                pass
+
+        # Call clipboard_service cleanup if it exists
+        try:
+            from anura.services.clipboard_service import clipboard_service
+            clipboard_service.cancel_pending_operations()
+        except Exception:
+            pass
+
+        Adw.Application.do_shutdown(self)
 
     def _setup_actions(self):
         self.create_action("get_screenshot", self.get_screenshot, ["<primary>g"])

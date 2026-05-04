@@ -41,6 +41,20 @@ class ClipboardService(GObject.GObject):
         super().__init__()
         self._cancellable = None
 
+    def init(self) -> None:
+        """
+        Initialize the clipboard on the main thread.
+
+        This method should be called during AnuraApplication.do_startup to ensure
+        Gdk.Clipboard is created on the main thread, avoiding race conditions that
+        can occur with lazy initialization from background threads.
+        """
+        if self._clipboard is None:
+            display = Gdk.Display.get_default()
+            if display is not None:
+                self._clipboard = display.get_clipboard()
+                logger.debug("Anura Clipboard: Initialized on main thread.")
+
     def set(self, value: str) -> None:
         """
         Sets text to the system clipboard.

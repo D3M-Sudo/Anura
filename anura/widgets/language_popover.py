@@ -12,11 +12,12 @@ from anura.config import RESOURCE_PREFIX
 from anura.language_manager import language_manager
 from anura.services.settings import settings
 from anura.types.language_item import LanguageItem
+from anura.utils.signal_manager import SignalManagerMixin
 from anura.widgets.language_popover_row import LanguagePopoverRow
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/language_popover.ui")
-class LanguagePopover(Gtk.Popover):
+class LanguagePopover(Gtk.Popover, SignalManagerMixin):
     __gtype_name__ = "LanguagePopover"
 
     __gsignals__: ClassVar[dict[str, tuple]] = {
@@ -32,16 +33,14 @@ class LanguagePopover(Gtk.Popover):
     filter_list: Gtk.FilterListModel
     filter: Gtk.CustomFilter
 
-    _downloaded_handler_id: int | None = None
-    _removed_handler_id: int | None = None
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        SignalManagerMixin.__init__(self)
 
         self.settings = settings
 
-        self._downloaded_handler_id = language_manager.connect("downloaded", self._on_language_downloaded)
-        self._removed_handler_id = language_manager.connect("removed", self._on_language_removed)
+        self.connect_tracked(language_manager, "downloaded", self._on_language_downloaded)
+        self.connect_tracked(language_manager, "removed", self._on_language_removed)
 
         self._active_language = self.settings.get_string('active-language')
 
@@ -139,19 +138,6 @@ class LanguagePopover(Gtk.Popover):
             self.views.set_visible_child_name('languages_page')
 
     def do_destroy(self):
-        """Clean up signal handlers to prevent memory leaks."""
-        if self._downloaded_handler_id is not None:
-            try:
-                language_manager.disconnect(self._downloaded_handler_id)
-            except Exception:
-                pass
-            self._downloaded_handler_id = None
-
-        if self._removed_handler_id is not None:
-            try:
-                language_manager.disconnect(self._removed_handler_id)
-            except Exception:
-                pass
-            self._removed_handler_id = None
-
+        """Clean up all tracked signal handlers to prevent memory leaks."""
+        self.disconnect_all_signals()
         super().do_destroy()

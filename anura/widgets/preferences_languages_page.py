@@ -11,11 +11,12 @@ from anura.config import RESOURCE_PREFIX
 from anura.language_manager import language_manager
 from anura.services.settings import settings
 from anura.types.language_item import LanguageItem
+from anura.utils.signal_manager import SignalManagerMixin
 from anura.widgets.language_row import LanguageRow
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/preferences_languages.ui")
-class PreferencesLanguagesPage(Adw.PreferencesPage):
+class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
     __gtype_name__ = 'PreferencesLanguagesPage'
 
     banner: Adw.Banner = Gtk.Template.Child()
@@ -29,6 +30,7 @@ class PreferencesLanguagesPage(Adw.PreferencesPage):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        SignalManagerMixin.__init__(self)
 
         self.settings = settings
 
@@ -36,15 +38,15 @@ class PreferencesLanguagesPage(Adw.PreferencesPage):
         for lang_code in language_manager.get_available_codes():
             self.list_store.append(LanguageItem(lang_code, title=language_manager.get_language(lang_code)))
 
-        # Signals for dynamic model updates
-        language_manager.connect('added', self.on_language_added)
-        language_manager.connect('downloaded', self.on_language_added)
-        language_manager.connect('removed', self.on_language_removed)
+        # Signals for dynamic model updates (tracked for automatic cleanup)
+        self.connect_tracked(language_manager, 'added', self.on_language_added)
+        self.connect_tracked(language_manager, 'downloaded', self.on_language_added)
+        self.connect_tracked(language_manager, 'removed', self.on_language_removed)
 
-        # UI signal connections
-        self.language_search_entry.connect('search-changed', self.on_language_search)
-        self.language_search_entry.connect('stop-search', self.on_language_search_stop)
-        self.search_bar.connect('notify::search-mode-enabled', self.on_search_mode_enabled)
+        # UI signal connections (tracked for automatic cleanup)
+        self.connect_tracked(self.language_search_entry, 'search-changed', self.on_language_search)
+        self.connect_tracked(self.language_search_entry, 'stop-search', self.on_language_search_stop)
+        self.connect_tracked(self.search_bar, 'notify::search-mode-enabled', self.on_search_mode_enabled)
 
         self.load_languages()
         self.activate_filter()
@@ -147,13 +149,6 @@ class PreferencesLanguagesPage(Adw.PreferencesPage):
         self.views.set_visible_child_name(state)
 
     def do_destroy(self):
-        """Clean up signal handlers to prevent memory leaks."""
-        try:
-            language_manager.disconnect_by_func(self.on_language_added)
-        except TypeError:
-            pass
-        try:
-            language_manager.disconnect_by_func(self.on_language_removed)
-        except TypeError:
-            pass
+        """Clean up all tracked signal handlers to prevent memory leaks."""
+        self.disconnect_all_signals()
         super().do_destroy()

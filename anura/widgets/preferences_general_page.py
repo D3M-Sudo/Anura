@@ -12,10 +12,11 @@ from anura.config import RESOURCE_PREFIX
 from anura.language_manager import language_manager
 from anura.services.settings import settings
 from anura.services.tts import ttsservice
+from anura.utils.signal_manager import SignalManagerMixin
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/preferences_general.ui")
-class PreferencesGeneralPage(Adw.PreferencesPage):
+class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
     __gtype_name__ = "PreferencesGeneralPage"
 
     extra_language_combo: Adw.ComboRow = Gtk.Template.Child()
@@ -28,11 +29,9 @@ class PreferencesGeneralPage(Adw.PreferencesPage):
     # disabled in Anura). Keeping a Template.Child() for a non-existent widget
     # causes a Gtk.BuilderError at runtime.
 
-    _language_downloaded_handler_id: int | None = None
-    _language_removed_handler_id: int | None = None
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        SignalManagerMixin.__init__(self)
 
         self.settings = settings
 
@@ -41,9 +40,9 @@ class PreferencesGeneralPage(Adw.PreferencesPage):
 
         self._setup_extra_languages()
 
-        # Update combo when languages are installed or removed
-        self._language_downloaded_handler_id = language_manager.connect("downloaded", self._on_language_changed)
-        self._language_removed_handler_id = language_manager.connect("removed", self._on_language_changed)
+        # Update combo when languages are installed or removed (tracked for cleanup)
+        self.connect_tracked(language_manager, "downloaded", self._on_language_changed)
+        self.connect_tracked(language_manager, "removed", self._on_language_changed)
 
         self._setup_tts_volume()
         self._setup_tts_language()
@@ -64,7 +63,7 @@ class PreferencesGeneralPage(Adw.PreferencesPage):
         except ValueError:
             logger.warning(f"Anura: Extra language '{current_name}' not found among installed models.")
 
-        self.extra_language_combo.connect("notify::selected-item", self._on_extra_language_changed)
+        self.connect_tracked(self.extra_language_combo, "notify::selected-item", self._on_extra_language_changed)
 
     def _on_extra_language_changed(self, combo_row: Adw.ComboRow, _param):
         selected_item = combo_row.get_selected_item()
@@ -94,7 +93,7 @@ class PreferencesGeneralPage(Adw.PreferencesPage):
         self._update_volume_subtitle(volume_normalized * 100)
 
         # Connect to changes and convert back to 0.0-1.0 for GSettings
-        self.volume_row.connect("notify::value", self._on_volume_changed)
+        self.connect_tracked(self.volume_row, "notify::value", self._on_volume_changed)
 
     def _update_volume_subtitle(self, percentage: float):
         """Update the volume row subtitle to show the percentage."""
@@ -127,7 +126,7 @@ class PreferencesGeneralPage(Adw.PreferencesPage):
         else:
             self.tts_language_combo.set_selected(0)  # Auto
 
-        self.tts_language_combo.connect("notify::selected", self._on_tts_language_changed)
+        self.connect_tracked(self.tts_language_combo, "notify::selected", self._on_tts_language_changed)
 
     def _on_tts_language_changed(self, combo, _param):
         idx = combo.get_selected()
@@ -146,19 +145,6 @@ class PreferencesGeneralPage(Adw.PreferencesPage):
                 self.settings.set_string("tts-language", "")
 
     def do_destroy(self):
-        """Clean up signal handlers to prevent memory leaks."""
-        if self._language_downloaded_handler_id is not None:
-            try:
-                language_manager.disconnect(self._language_downloaded_handler_id)
-            except Exception:
-                pass
-            self._language_downloaded_handler_id = None
-
-        if self._language_removed_handler_id is not None:
-            try:
-                language_manager.disconnect(self._language_removed_handler_id)
-            except Exception:
-                pass
-            self._language_removed_handler_id = None
-
+        """Clean up all tracked signal handlers to prevent memory leaks."""
+        self.disconnect_all_signals()
         super().do_destroy()

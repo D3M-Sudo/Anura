@@ -22,12 +22,47 @@ XDG_CACHE_HOME = os.getenv("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
 # Anura specific data directory for OCR models (user-downloaded)
 TESSDATA_DIR = os.path.join(XDG_DATA_HOME, "anura", "tessdata")
 
+
+def _get_tessdata_system_dir() -> str:
+    """
+    Resolve the system tessdata directory with multiple fallback paths.
+
+    Check order:
+    1. Environment variable (TESSDATA_PREFIX_SYSTEM)
+    2. Flatpak path (/app/share/tessdata)
+    3. System paths common on Linux distributions
+
+    Returns:
+        The first valid directory path found, or the Flatpak default as fallback.
+    """
+    # Priority 1: Environment variable override
+    env_path = os.getenv("TESSDATA_PREFIX_SYSTEM")
+    if env_path and os.path.isdir(env_path):
+        return env_path
+
+    # Priority 2: Flatpak path
+    flatpak_path = "/app/share/tessdata"
+    if os.path.isdir(flatpak_path):
+        return flatpak_path
+
+    # Priority 3: Common system paths
+    system_paths = [
+        "/usr/share/tesseract-ocr/4.00/tessdata",
+        "/usr/share/tesseract-ocr/tessdata",
+        "/usr/share/tessdata",
+    ]
+
+    for path in system_paths:
+        if os.path.isdir(path):
+            return path
+
+    # Fallback to Flatpak default even if not present (for Flatpak builds)
+    return flatpak_path
+
+
 # System directory with models bundled by the Flatpak manifest
-# Configurable via env var for development/testing outside Flatpak sandbox
-TESSDATA_SYSTEM_DIR = os.getenv(
-    "TESSDATA_PREFIX_SYSTEM",
-    "/app/share/tessdata"
-)
+# Uses dynamic resolution with fallbacks for non-Flatpak installations
+TESSDATA_SYSTEM_DIR = _get_tessdata_system_dir()
 
 # Note: TESSDATA_DIR creation is handled by language_manager.init_tessdata()
 # to avoid side effects at import time.
