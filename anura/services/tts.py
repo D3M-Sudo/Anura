@@ -208,16 +208,19 @@ class TTSService(GObject.GObject):
             logger.info("Anura TTS: Playback finished.")
             with self._cleanup_lock:
                 self._cleanup_gst_resources()
-                # Cleanup temp file after playback
+                # Cleanup temp file after playback - atomic file operations
                 filepath = self._current_speech_file
                 self._current_speech_file = None
-            # File operations outside the lock to minimize lock time
-            if filepath and os.path.exists(filepath):
-                try:
-                    os.unlink(filepath)
-                    logger.debug("Anura TTS: Cleaned up temporary speech file")
-                except Exception:
-                    logger.warning("Anura TTS: Failed to cleanup temporary speech file")
+
+                # Atomic file cleanup: check existence and remove inside lock
+                if filepath and os.path.exists(filepath):
+                    try:
+                        os.unlink(filepath)
+                        logger.debug("Anura TTS: Cleaned up temporary speech file")
+                    except Exception:
+                        logger.warning("Anura TTS: Failed to cleanup temporary speech file")
+                elif filepath:
+                    logger.debug("Anura TTS: Cleanup skipped, file already removed")
             GLib.idle_add(self.emit, "stop", True)
         elif message.type == Gst.MessageType.ERROR:
             err, _debug = message.parse_error()
@@ -258,13 +261,15 @@ class TTSService(GObject.GObject):
             filepath = self._current_speech_file
             self._current_speech_file = None
 
-        # File operations outside the lock to minimize lock time
-        if filepath and os.path.exists(filepath):
-            try:
-                os.unlink(filepath)
-                logger.debug("Anura TTS: Cleaned up temporary speech file on stop")
-            except (OSError, PermissionError):
-                logger.warning("Anura TTS: Failed to cleanup temporary speech file on stop")
+            # Atomic file cleanup: check existence and remove inside lock
+            if filepath and os.path.exists(filepath):
+                try:
+                    os.unlink(filepath)
+                    logger.debug("Anura TTS: Cleaned up temporary speech file on stop")
+                except (OSError, PermissionError):
+                    logger.warning("Anura TTS: Failed to cleanup temporary speech file on stop")
+            elif filepath:
+                logger.debug("Anura TTS: Cleanup skipped on stop, file already removed")
 
 
 # Singleton instance

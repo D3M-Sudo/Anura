@@ -125,16 +125,27 @@ class ClipboardService(GObject.GObject):
 
     def _on_clipboard_timeout(self, cancellable: Gio.Cancellable) -> bool:
         """Cancel clipboard operation if it takes too long."""
+        # Enhanced null check for cancellable object
+        if cancellable is None:
+            logger.debug("Anura Clipboard: Timeout called with null cancellable")
+            return False
+
         # Check if this cancellable is still the active one (not replaced by new operation)
         if cancellable is not self._cancellable:
             # Stale timeout from previous operation - ignore
-            self._clipboard_timeout_id = None
+            logger.debug("Anura Clipboard: Stale timeout detected, ignoring")
+            # Only clear timeout ID if this is still the active timeout context
+            if self._clipboard_timeout_id is not None:
+                self._clipboard_timeout_id = None
             return False
+
         if not cancellable.is_cancelled():
             logger.warning("Anura Clipboard: Read operation timed out after 10s, cancelling.")
             cancellable.cancel()
             # Emit error signal so UI can show user feedback
             GLib.idle_add(self.emit, "error", _("Clipboard read operation timed out."))
+
+        # Clear timeout ID only in the active context to prevent race conditions
         self._clipboard_timeout_id = None
         return False  # Don't repeat timeout
 
