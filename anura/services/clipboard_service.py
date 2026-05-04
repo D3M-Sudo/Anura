@@ -27,7 +27,6 @@ class ClipboardService(GObject.GObject):
 
     _clipboard: Gdk.Clipboard | None = None
     _clipboard_timeout_id: int | None = None
-    _cancellable: Gio.Cancellable | None = None
 
     # Timeout for clipboard read operations (seconds)
     CLIPBOARD_TIMEOUT_SECONDS = 10
