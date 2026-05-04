@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: anura\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-04 03:08+0200\n"
+"POT-Creation-Date: 2026-05-04 21:03+0200\n"
 "PO-Revision-Date: 2024-01-23 22:01+0000\n"
 "Last-Translator: RealZero <realzero@protonmail.com>\n"
 "Language-Team: German <https://hosted.weblate.org/projects/anura/default/de/"
@@ -21,199 +21,231 @@ msgstr ""
 "X-Poedit-SearchPath-2: data/com.github.d3msudo.anura.metainfo.xml.in\n"
 "X-Poedit-SearchPath-3: anura\n"
 
-#: ../anura/main.py:82
+#: ../anura/main.py:87
 msgid "Extract directly into the clipboard"
 msgstr "Direkt in Zwischenablage extrahieren"
 
-#: ../anura/main.py:87
+#: ../anura/main.py:92
 msgid "Process image file for OCR"
 msgstr ""
 
-#: ../anura/main.py:95
+#: ../anura/main.py:100
 msgid "Run OCR without UI (copy result to clipboard)"
 msgstr ""
 
-#: ../anura/main.py:288
+#: ../anura/main.py:347
 msgid "Failed to Open Browser"
 msgstr ""
 
-#: ../anura/main.py:289
+#: ../anura/main.py:348
 msgid "No web browser could be launched. Please open the link manually."
 msgstr ""
 
-#: ../anura/main.py:290
+#: ../anura/main.py:349
 msgid "Copy Link"
 msgstr ""
 
-#: ../anura/main.py:291
+#: ../anura/main.py:350
 msgid "Close"
 msgstr ""
 
-#: ../anura/main.py:337
+#: ../anura/main.py:396
 msgid "No text found. Try to grab another region."
 msgstr "Kein Text gefunden. Versuchen Sie eine andere Region zu wählen."
 
-#: ../anura/main.py:342
+#: ../anura/main.py:401
 #, fuzzy
 msgid "Text extracted and copied to clipboard."
 msgstr "Text extrahieren und in Zwischenablage kopieren"
 
-#: ../anura/main.py:348 ../anura/services/screenshot_service.py:183
+#: ../anura/main.py:407 ../anura/services/screenshot_service.py:191
 msgid "Cancelled"
 msgstr ""
 
-#: ../anura/window.py:95
+#: ../anura/window.py:113
 #, fuzzy
 msgid "Failed to capture screenshot"
 msgstr "Bildschirmfoto aufnehmen"
 
-#: ../anura/window.py:101
+#: ../anura/window.py:119
 msgid "Screenshot service did not respond."
 msgstr ""
 
-#: ../anura/window.py:122
+#: ../anura/window.py:140 ../anura/window.py:337 ../anura/window.py:346
 msgid "Text copied to clipboard"
 msgstr "Text in Zwischenablage kopiert"
 
-#: ../anura/window.py:128
+#: ../anura/window.py:147
 msgid "URL opened automatically"
 msgstr ""
 
-#: ../anura/window.py:150
+#: ../anura/window.py:169
 #, fuzzy
 msgid "Choose an image for extraction"
 msgstr "Bild öffnen um Text zu extrahieren"
 
-#: ../anura/window.py:153
+#: ../anura/window.py:172
 #, fuzzy
 msgid "Images"
 msgstr "Bild öffnen"
 
-#: ../anura/window.py:175 ../anura/window.py:213 ../anura/window.py:271
+#: ../anura/window.py:193 ../anura/window.py:231 ../anura/window.py:317
 #, python-brace-format
 msgid "Image too large: {size}MB (max {max}MB)"
 msgstr ""
 
-#: ../anura/window.py:183
+#: ../anura/window.py:201
 #, python-brace-format
 msgid "Unsupported file format: {path}"
 msgstr ""
 
-#: ../anura/window.py:189
+#: ../anura/window.py:207
 #, python-brace-format
 msgid "File not found: {path}"
 msgstr ""
 
-#: ../anura/window.py:191
+#: ../anura/window.py:209
 #, python-brace-format
 msgid "Permission denied: {path}"
 msgstr ""
 
-#: ../anura/window.py:194
+#: ../anura/window.py:212
 #, python-brace-format
 msgid "Cannot access file: {path}"
 msgstr ""
 
-#: ../anura/window.py:222
+#: ../anura/window.py:249
+msgid "Corrupt or unsupported image file"
+msgstr ""
+
+#: ../anura/window.py:253
+msgid "Unsupported image format"
+msgstr ""
+
+#: ../anura/window.py:257 ../anura/window.py:261
+msgid "Failed to validate image file"
+msgstr ""
+
+#: ../anura/window.py:268
 msgid "Failed to load image file"
 msgstr ""
 
-#: ../anura/window.py:252
+#: ../anura/window.py:298
 msgid "Unsupported file format."
 msgstr ""
 
-#: ../anura/window.py:264 ../anura/window.py:281
+#: ../anura/window.py:310 ../anura/window.py:327
 msgid "Failed to load dropped file"
 msgstr ""
 
-#: ../anura/window.py:368
+#: ../anura/window.py:339 ../anura/window.py:348
+#, fuzzy
+msgid "No text to copy"
+msgstr "Keine Ergebnisse gefunden"
+
+#: ../anura/window.py:443
 msgid "No text to share."
 msgstr ""
 
-#: ../anura/window.py:377
+#: ../anura/window.py:452
 msgid "Text contains a link"
 msgstr ""
 
-#: ../anura/window.py:378
+#: ../anura/window.py:453
 msgid "Open"
 msgstr "Öffnen"
 
-#: ../anura/widgets/preferences_languages_page.py:66
+#: ../anura/window.py:463
+msgid "Invalid URL blocked for security"
+msgstr ""
+
+#: ../anura/widgets/preferences_languages_page.py:70
 #, fuzzy
 msgid "OCR models unreachable. Please check your internet connection."
 msgstr "Modellspeicherort nicht erreichbar. Prüfe deine Internetverbindung."
 
-#: ../anura/widgets/preferences_languages_page.py:71
+#: ../anura/widgets/preferences_languages_page.py:75
 msgid "Metered connection detected. Model downloads may incur data costs."
 msgstr ""
 
-#: ../anura/widgets/extracted_page.py:94
+#: ../anura/widgets/extracted_page.py:99
 msgid "Network error. Please check your internet connection."
 msgstr ""
 
-#: ../anura/widgets/extracted_page.py:96
+#: ../anura/widgets/extracted_page.py:101
 msgid "Request timed out. Please try again."
 msgstr ""
 
-#: ../anura/widgets/extracted_page.py:98
+#: ../anura/widgets/extracted_page.py:103
 msgid "Failed to generate speech."
 msgstr ""
 
-#: ../anura/widgets/preferences_general_page.py:101
+#: ../anura/widgets/preferences_general_page.py:100
 #, python-brace-format
 msgid "TTS playback volume level: {percentage:.0f}%"
 msgstr ""
 
-#: ../anura/widgets/preferences_general_page.py:116
+#: ../anura/widgets/preferences_general_page.py:115
 msgid "Auto (follow OCR language)"
 msgstr ""
 
 #: ../anura/widgets/share_row.py:27
-msgid "Share via {provider_name.capitalize()}"
-msgstr "Über {provider_name.capitalize()} teilen"
+#, python-brace-format
+msgid "Share via {name}"
+msgstr ""
 
-#: ../anura/services/clipboard_service.py:72
+#: ../anura/services/clipboard_service.py:93
+#: ../anura/services/clipboard_service.py:97
 msgid "No image in clipboard"
 msgstr "Kein Bild in der Zwischenablage"
 
-#: ../anura/services/screenshot_service.py:64
-#: ../anura/services/screenshot_service.py:71
+#: ../anura/services/clipboard_service.py:146
+msgid "Clipboard read operation timed out."
+msgstr ""
+
+#: ../anura/services/screenshot_service.py:72
+#: ../anura/services/screenshot_service.py:79
 msgid "Can't take a screenshot."
 msgstr "Kann Bildschirmfoto nicht aufnehmen."
 
-#: ../anura/services/screenshot_service.py:99
-#: ../anura/services/screenshot_service.py:170
+#: ../anura/services/screenshot_service.py:107
+#: ../anura/services/screenshot_service.py:178
 msgid "Invalid language code specified."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:127
+#: ../anura/services/screenshot_service.py:135
 msgid "Failed to read image file."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:130
+#: ../anura/services/screenshot_service.py:138
 msgid "OCR engine failed to process image."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:137
+#: ../anura/services/screenshot_service.py:145
 msgid "Failed to decode data."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:153
+#: ../anura/services/screenshot_service.py:161
 #, fuzzy
 msgid "No text found."
 msgstr "Keine Ergebnisse gefunden"
 
-#: ../anura/services/share_service.py:117
+#: ../anura/services/share_service.py:164
 msgid "Select Mastodon Instance"
 msgstr ""
 
-#: ../anura/services/share_service.py:118
+#: ../anura/services/share_service.py:165
 msgid "Choose your Mastodon instance to share the extracted text:"
 msgstr ""
 
-#: ../anura/services/share_service.py:124
+#: ../anura/services/share_service.py:171
 msgid "Cancel"
 msgstr ""
+
+#: ../anura/services/share_service.py:255
+#, fuzzy
+msgid "Extracted Text from Anura"
+msgstr "Text von überall extrahieren"
 
 #: ../anura/language_manager.py:40 ../anura/language_manager.py:60
 msgid "English"
@@ -1143,99 +1175,5 @@ msgstr ""
 msgid "tesseract"
 msgstr ""
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#, python-brace-format
-
-
-#, fuzzy
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#, python-brace-format
-
-#, fuzzy
-
-
-#, fuzzy
-
-
-
+#~ msgid "Share via {provider_name.capitalize()}"
+#~ msgstr "Über {provider_name.capitalize()} teilen"
