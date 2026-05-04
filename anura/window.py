@@ -64,7 +64,10 @@ class AnuraWindow(Adw.ApplicationWindow):
         self._handler_go_back = self.extracted_page.connect("go-back", self.show_welcome_page)
         self._handler_clipboard = None
         try:
-            self._handler_clipboard = clipboard_service.connect("paste_from_clipboard", self._on_paste_from_clipboard_texture)
+            self._handler_clipboard = clipboard_service.connect(
+                "paste_from_clipboard",
+                self._on_paste_from_clipboard_texture
+            )
         except RuntimeError as e:
             logger.warning(f"Clipboard service unavailable: {e}")
 

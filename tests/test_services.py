@@ -3,8 +3,9 @@
 # Unit tests for Anura services
 # No GTK/GLib required — pure Python only with mocks
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
 
 import anura.services.tts as tts_module
 

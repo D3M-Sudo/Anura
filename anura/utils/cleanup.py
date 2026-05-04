@@ -74,7 +74,7 @@ def _cleanup_tessdata_temp_files(cutoff_time: float) -> None:
             return
 
         if not os.access(TESSDATA_DIR, os.R_OK | os.W_OK):
-            logger.warning(f"Anura Cleanup: Cannot access tessdata directory for cleanup")
+            logger.warning("Anura Cleanup: Cannot access tessdata directory for cleanup")
             return
 
         cleaned_count = 0

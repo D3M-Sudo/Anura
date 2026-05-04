@@ -119,7 +119,11 @@ class ClipboardService(GObject.GObject):
 
         # Create new cancellable for this operation
         self._cancellable = Gio.Cancellable()
-        self._clipboard_timeout_id = GLib.timeout_add_seconds(self.CLIPBOARD_TIMEOUT_SECONDS, self._on_clipboard_timeout, self._cancellable)
+        self._clipboard_timeout_id = GLib.timeout_add_seconds(
+            self.CLIPBOARD_TIMEOUT_SECONDS,
+            self._on_clipboard_timeout,
+            self._cancellable
+        )
 
         self.clipboard.read_texture_async(cancellable=self._cancellable, callback=self._on_read_texture)
 
