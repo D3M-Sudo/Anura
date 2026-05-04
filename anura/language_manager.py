@@ -174,7 +174,7 @@ class LanguageManager(GObject.GObject):
 
                 self._downloaded_codes = list(codes)
                 self._need_update_cache = False
-            return sorted(self._downloaded_codes, key=lambda x: str(self.get_language(x)))
+            return sorted(self._downloaded_codes, key=lambda x: self.get_language(x))
 
     def get_downloaded_languages(self, force: bool = False) -> list[str]:
         """Returns the names of the installed languages."""

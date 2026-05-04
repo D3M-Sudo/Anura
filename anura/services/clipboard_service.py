@@ -25,6 +25,7 @@ class ClipboardService(GObject.GObject):
 
     _clipboard: Gdk.Clipboard | None = None
     _clipboard_timeout_id: int | None = None
+    _cancellable: Gio.Cancellable | None = None
 
     @property
     def clipboard(self) -> Gdk.Clipboard:
@@ -38,6 +39,7 @@ class ClipboardService(GObject.GObject):
 
     def __init__(self):
         super().__init__()
+        self._cancellable = None
 
     def set(self, value: str) -> None:
         """
@@ -66,10 +68,21 @@ class ClipboardService(GObject.GObject):
             logger.info("Anura Clipboard: Image texture retrieved.")
             GLib.idle_add(self.emit, "paste_from_clipboard", texture)
 
-        except (GLib.Error, ValueError, RuntimeError) as e:
+        except GLib.Error as e:
+            # Check if operation was cancelled
+            if e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED):
+                logger.debug("Anura Clipboard: Read operation cancelled.")
+                return
+            # Other errors - log and emit error signal
+            logger.error(f"Anura Clipboard Error: {e}")
+            GLib.idle_add(self.emit, "error", _("No image in clipboard"))
+        except (ValueError, RuntimeError) as e:
             # Technical rigor: log error for X11/Wayland clipboard synchronization issues
             logger.error(f"Anura Clipboard Error: {e}")
             GLib.idle_add(self.emit, "error", _("No image in clipboard"))
+        finally:
+            # Clean up cancellable regardless of outcome
+            self._cancellable = None
 
     def read_texture(self) -> None:
         """
@@ -80,11 +93,16 @@ class ClipboardService(GObject.GObject):
             GLib.source_remove(self._clipboard_timeout_id)
             self._clipboard_timeout_id = None
 
-        # Create cancellable with timeout to prevent hanging on clipboard issues
-        cancellable = Gio.Cancellable()
-        self._clipboard_timeout_id = GLib.timeout_add_seconds(10, self._on_clipboard_timeout, cancellable)
+        # Cancel any previous pending operation to prevent race conditions
+        if self._cancellable is not None:
+            self._cancellable.cancel()
+            self._cancellable = None
 
-        self.clipboard.read_texture_async(cancellable=cancellable, callback=self._on_read_texture)
+        # Create new cancellable for this operation
+        self._cancellable = Gio.Cancellable()
+        self._clipboard_timeout_id = GLib.timeout_add_seconds(10, self._on_clipboard_timeout, self._cancellable)
+
+        self.clipboard.read_texture_async(cancellable=self._cancellable, callback=self._on_read_texture)
 
     def _on_clipboard_timeout(self, cancellable: Gio.Cancellable) -> bool:
         """Cancel clipboard operation if it takes too long."""
