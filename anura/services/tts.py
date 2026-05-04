@@ -107,8 +107,6 @@ class TTSService(GObject.GObject):
 
     _current_speech_file: str | None = None
 
-    player: Gst.Element | None = None
-
     def __init__(self):
         super().__init__()
         os.makedirs(self._speech_dir, exist_ok=True)
