@@ -1175,6 +1175,3 @@ msgstr ""
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:118
 msgid "tesseract"
 msgstr ""
-
-#~ msgid "Share via {provider_name.capitalize()}"
-#~ msgstr "Partager via {provider_name.capitalize()}"
