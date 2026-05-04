@@ -127,7 +127,7 @@ class TTSService(GObject.GObject):
         logger.debug(f"Anura TTS: Speech file saved to {filepath}")
 
         self._current_speech_file = filepath
-        self.emit("speak", filepath)
+        GLib.idle_add(self.emit, "speak", filepath)
         return filepath
 
     def get_effective_language(self, ocr_lang: str) -> str:

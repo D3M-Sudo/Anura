@@ -144,8 +144,10 @@ class LanguageManager(GObject.GObject):
         """Returns the human-readable language name for a given ISO code."""
         return self._languages.get(code, code)
 
-    def get_language_item(self, code: str) -> LanguageItem:
-        return LanguageItem(code=code, title=self.get_language(code))
+    def get_language_item(self, code: str) -> LanguageItem | None:
+        if code not in self._languages:
+            return None
+        return LanguageItem(code=code, title=self._languages[code])
 
     def get_downloaded_codes(self, force: bool = False) -> list[str]:
         """Returns the codes of all installed language models (user + system bundled)."""
@@ -172,7 +174,7 @@ class LanguageManager(GObject.GObject):
 
                 self._downloaded_codes = list(codes)
                 self._need_update_cache = False
-            return sorted(self._downloaded_codes, key=lambda x: self.get_language(x))
+            return sorted(self._downloaded_codes, key=lambda x: str(self.get_language(x)))
 
     def get_downloaded_languages(self, force: bool = False) -> list[str]:
         """Returns the names of the installed languages."""
