@@ -4,6 +4,14 @@ version = "0.1.4.1"
 description = "GTK4/Libadwaita desktop app for OCR via Tesseract — fork of Frog OCR"
 requires-python = ">=3.12"
 license = { text = "MIT" }
+dependencies = [
+    "gtts>=2.5.4",
+    "loguru>=0.7.3",
+    "pillow>=12.2.0",
+    "pytesseract>=0.3.13",
+    "pyzbar>=0.1.9",
+    "requests>=2.33.1",
+]
 
 [project.optional-dependencies]
 dev = [
@@ -70,3 +78,6 @@ markers = [
 ]
 # Skip GTK tests in CI unless DISPLAY or WAYLAND_DISPLAY is set
 addopts = "-v --tb=short"
+
+[dependency-groups]
+dev = []
