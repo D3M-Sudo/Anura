@@ -395,3 +395,4 @@ Release notes for `Adw.AboutDialog` are generated from `CHANGELOG.md` during Mes
 | 2026-05-03 | Full ruff cleanup — zero warnings across entire codebase | 28 pre-existing warnings fixed in 14 files |
 | 2026-05-03 | Added test_language_manager.py — 8 tests for pure-Python LanguageManager methods | All marked @pytest.mark.gtk, deselected correctly without GTK environment |
 | 2026-05-03 | GTK tests require Flatpak sandbox — Xdp namespace not available on host | Use pytest -m "not gtk" on host; run full suite inside flatpak sandbox |
+| 2026-05-03 | Regenerated anura.pot and synced all 25 .po files via msgmerge | 91 stale strings removed, share_service.py added to POTFILES, 262 active strings |
