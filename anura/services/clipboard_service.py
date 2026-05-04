@@ -112,6 +112,16 @@ class ClipboardService(GObject.GObject):
         self._clipboard_timeout_id = None
         return False  # Don't repeat timeout
 
+    def cancel_pending_operations(self) -> None:
+        """Cancel any pending clipboard read operations. Called during window cleanup."""
+        if self._cancellable is not None and not self._cancellable.is_cancelled():
+            logger.debug("Anura Clipboard: Cancelling pending clipboard operation.")
+            self._cancellable.cancel()
+        if self._clipboard_timeout_id is not None:
+            GLib.source_remove(self._clipboard_timeout_id)
+            self._clipboard_timeout_id = None
+        self._cancellable = None
+
 
 # Singleton instance for global app access
 clipboard_service = ClipboardService()

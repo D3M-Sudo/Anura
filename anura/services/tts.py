@@ -175,13 +175,13 @@ class TTSService(GObject.GObject):
                     logger.debug(f"Anura TTS: Cleaned up temp file: {filepath}")
                 except Exception as e:
                     logger.warning(f"Anura TTS: Failed to cleanup temp file: {e}")
-            self.emit("stop", True)
+            GLib.idle_add(self.emit, "stop", True)
         elif message.type == Gst.MessageType.ERROR:
             err, _debug = message.parse_error()
             logger.error(f"Anura TTS Error: GStreamer playback error: {err}")
             with self._cleanup_lock:
                 self._cleanup_gst_resources()
-            self.emit("stop", False)
+            GLib.idle_add(self.emit, "stop", False)
 
     def _cleanup_gst_resources(self) -> None:
         """Remove signal watcher and release player resources."""

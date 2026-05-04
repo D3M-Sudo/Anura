@@ -299,6 +299,9 @@ class AnuraWindow(Adw.ApplicationWindow):
             GLib.source_remove(self._screenshot_timeout_id)
             self._screenshot_timeout_id = None
 
+        # Cancel any pending clipboard operations before disconnecting handler
+        clipboard_service.cancel_pending_operations()
+
         # Disconnect backend signal handlers
         if self.backend:
             if self._handler_decoded:
