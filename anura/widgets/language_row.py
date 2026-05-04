@@ -3,6 +3,8 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
+from typing import ClassVar
+
 from gi.repository import GLib, GObject, Gtk
 
 from anura.config import RESOURCE_PREFIX
@@ -23,7 +25,7 @@ class LanguageRow(Gtk.Overlay):
     _item: LanguageItem | None = None
     _downloading_handler_id: int | None = None
     _downloaded_handler_id: int | None = None
-    _idle_ids: list[int] = []
+    _idle_ids: ClassVar[list[int]] = []
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

@@ -3,19 +3,19 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
+from gettext import gettext as _
 import os
 import shutil
 import tempfile
 import threading
 import time
-from gettext import gettext as _
-from typing import Dict, List
+from typing import ClassVar
 
-import requests
 from gi.repository import GLib, GObject
 from loguru import logger
+import requests
 
-from anura.config import REQUEST_TIMEOUT, TESSDATA_BEST_URL, TESSDATA_DIR, TESSDATA_URL
+from anura.config import REQUEST_TIMEOUT, TESSDATA_BEST_URL, TESSDATA_DIR, TESSDATA_SYSTEM_DIR, TESSDATA_URL
 from anura.gobject_worker import GObjectWorker
 from anura.types.download_state import DownloadState
 from anura.types.language_item import LanguageItem
@@ -29,7 +29,7 @@ class LanguageManager(GObject.GObject):
 
     __gtype_name__ = "LanguageManager"
 
-    __gsignals__ = {
+    __gsignals__: ClassVar[dict[str, tuple]] = {
         "added": (GObject.SIGNAL_RUN_FIRST, None, (str,)),
         "downloading": (GObject.SIGNAL_RUN_FIRST, None, (str, int)),
         "downloaded": (GObject.SIGNAL_RUN_FIRST, None, (str,)),
@@ -42,7 +42,7 @@ class LanguageManager(GObject.GObject):
     def __init__(self):
         super().__init__()
 
-        self.loading_languages: Dict[str, DownloadState] = {}
+        self.loading_languages: dict[str, DownloadState] = {}
         self._downloaded_codes = []
         self._need_update_cache = True
         self._cache_lock = threading.Lock()
@@ -104,72 +104,95 @@ class LanguageManager(GObject.GObject):
 
     def init_tessdata(self):
         """
-        FIX: method was called in main.py but never defined, causing AttributeError.
         Ensures the tessdata directory exists and logs its status at startup.
         Also cleans up orphaned temporary files from interrupted downloads.
         """
-        if not os.path.exists(TESSDATA_DIR):
-            logger.warning(
-                f"Anura: tessdata directory not found at '{TESSDATA_DIR}'. "
-                "It will be created on first language download."
-            )
-            os.makedirs(TESSDATA_DIR, exist_ok=True)
-        else:
-            # Clean up orphaned temp files from crashed/interrupted downloads
-            try:
-                # Check directory readability first
-                if not os.access(TESSDATA_DIR, os.R_OK | os.X_OK):
-                    logger.warning(f"Anura: Cannot read tessdata directory for cleanup: {TESSDATA_DIR}")
-                else:
-                    temp_files = [f for f in os.listdir(TESSDATA_DIR) if f.endswith('.tmp')]
-                    for temp_file in temp_files:
-                        temp_path = os.path.join(TESSDATA_DIR, temp_file)
-                        try:
-                            os.remove(temp_path)
-                            logger.warning(f"Anura: Cleaned up orphaned temp file: {temp_file}")
-                        except PermissionError:
-                            logger.error(f"Anura: Permission denied removing orphaned temp file {temp_file}")
-                        except OSError as e:
-                            logger.error(f"Anura: Failed to remove orphaned temp file {temp_file}: {e}")
-            except OSError as e:
-                logger.error(f"Anura: Error scanning for orphaned temp files: {e}")
+        # Use lock to prevent race condition when multiple threads try to create directory
+        with self._cache_lock:
+            if not os.path.exists(TESSDATA_DIR):
+                logger.warning(
+                    "Anura: tessdata directory not found. "
+                    "It will be created on first language download."
+                )
+                try:
+                    os.makedirs(TESSDATA_DIR, exist_ok=True)
+                except FileExistsError:
+                    # Another thread created it between check and makedirs
+                    pass
 
-            installed = self.get_downloaded_codes(force=True)
-            logger.info(
-                f"Anura: tessdata directory ready. "
-                f"{len(installed)} language model(s) installed: {installed or ['none']}"
-            )
+        # Clean up orphaned temp files from crashed/interrupted downloads
+        try:
+            # Check directory readability first
+            if not os.access(TESSDATA_DIR, os.R_OK | os.X_OK):
+                logger.warning("Anura: Cannot read tessdata directory for cleanup")
+            else:
+                temp_files = [f for f in os.listdir(TESSDATA_DIR) if f.endswith('.tmp')]
+                for temp_file in temp_files:
+                    temp_path = os.path.join(TESSDATA_DIR, temp_file)
+                    try:
+                        os.remove(temp_path)
+                        logger.warning("Anura: Cleaned up orphaned temporary language file")
+                    except PermissionError:
+                        logger.error("Anura: Permission denied removing orphaned temporary language file")
+                    except OSError:
+                        logger.error("Anura: Failed to remove orphaned temporary language file")
+        except OSError:
+            logger.error("Anura: Error scanning for orphaned temporary language files")
+
+        installed = self.get_downloaded_codes(force=True)
+        logger.info(
+            f"Anura: tessdata directory ready. "
+            f"{len(installed)} language model(s) installed: {installed or ['none']}"
+        )
 
     def get_language(self, code: str) -> str:
         """Returns the human-readable language name for a given ISO code."""
         return self._languages.get(code, code)
 
-    def get_language_item(self, code: str) -> LanguageItem:
-        return LanguageItem(code=code, title=self.get_language(code))
+    def get_language_item(self, code: str) -> LanguageItem | None:
+        if code not in self._languages:
+            return None
+        return LanguageItem(code=code, title=self._languages[code])
 
-    def get_downloaded_codes(self, force: bool = False) -> List[str]:
-        """Returns the codes of the currently installed language models."""
+    def get_downloaded_codes(self, force: bool = False) -> list[str]:
+        """Returns the codes of all installed language models (user + system bundled)."""
         with self._cache_lock:
             need_update = self._need_update_cache
             if need_update or force:
-                if not os.path.exists(TESSDATA_DIR):
-                    self._downloaded_codes = []
-                    self._need_update_cache = False
-                    return []
-                self._downloaded_codes = [
-                    os.path.splitext(f)[0]
-                    for f in os.listdir(TESSDATA_DIR)
-                    if f.endswith(".traineddata")
-                ]
+                codes = set()
+
+                # User-downloaded models (~/.var/app/.../data/anura/tessdata/)
+                if os.path.exists(TESSDATA_DIR):
+                    try:
+                        codes.update(
+                            os.path.splitext(f)[0]
+                            for f in os.listdir(TESSDATA_DIR)
+                            if f.endswith(".traineddata") and not f.startswith("osd")
+                        )
+                    except OSError:
+                        logger.warning("Anura: Error reading user tessdata directory")
+
+                # Bundled system models (/app/share/tessdata/ — eng, ita pre-installed)
+                if os.path.exists(TESSDATA_SYSTEM_DIR):
+                    try:
+                        codes.update(
+                            os.path.splitext(f)[0]
+                            for f in os.listdir(TESSDATA_SYSTEM_DIR)
+                            if f.endswith(".traineddata") and not f.startswith("osd")
+                        )
+                    except OSError:
+                        logger.warning("Anura: Error reading system tessdata directory")
+
+                self._downloaded_codes = list(codes)
                 self._need_update_cache = False
             return sorted(self._downloaded_codes, key=lambda x: self.get_language(x))
 
-    def get_downloaded_languages(self, force: bool = False) -> List[str]:
+    def get_downloaded_languages(self, force: bool = False) -> list[str]:
         """Returns the names of the installed languages."""
         codes = self.get_downloaded_codes(force)
         return [self.get_language(code) for code in codes]
 
-    def get_available_codes(self) -> List[str]:
+    def get_available_codes(self) -> list[str]:
         """Returns all ISO codes supported by Tesseract (installed or not)."""
         return sorted(self._languages.keys())
 

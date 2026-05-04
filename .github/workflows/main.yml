@@ -37,8 +37,11 @@ jobs:
     container:
       image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-49
       options: --privileged
-    
+
     steps:
+      - name: Configure git default branch
+        run: git config --global init.defaultBranch main
+
       - name: Checkout Code
         uses: actions/checkout@v6
 

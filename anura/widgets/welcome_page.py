@@ -3,10 +3,11 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
-from gi.repository import Adw, Gdk, GLib, Gtk
-from loguru import logger
+import contextlib
 
-from anura.config import APP_ID, RESOURCE_PREFIX
+from gi.repository import Adw, Gtk
+
+from anura.config import RESOURCE_PREFIX
 from anura.language_manager import language_manager
 from anura.services.settings import settings
 from anura.types.language_item import LanguageItem
@@ -29,13 +30,6 @@ class WelcomePage(Adw.NavigationPage):
 
         self.settings = settings
 
-        try:
-            logo_path = f"{RESOURCE_PREFIX}/icons/{APP_ID}.svg"
-            logo = Gdk.Texture.new_from_resource(logo_path)
-            self.welcome.set_paintable(logo)
-        except (GLib.Error, FileNotFoundError, ValueError) as e:
-            logger.error(f"Could not load welcome logo from {logo_path}: {e}")
-
         self._language_changed_handler_id = self.language_popover.connect('language-changed', self._on_language_changed)
 
         current_lang_code = self.settings.get_string("active-language")
@@ -50,9 +44,7 @@ class WelcomePage(Adw.NavigationPage):
     def do_destroy(self):
         """Clean up signal handlers to prevent memory leaks."""
         if self._language_changed_handler_id is not None:
-            try:
+            with contextlib.suppress(Exception):
                 self.language_popover.disconnect(self._language_changed_handler_id)
-            except Exception:
-                pass
             self._language_changed_handler_id = None
         super().do_destroy()

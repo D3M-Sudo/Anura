@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Fixed
+- Fixed `__slots__` conflict in ClipboardService - missing `_cancellable` in declaration causing AttributeError
+- Fixed ruff linting errors across codebase including import sorting and code style issues
+- Fixed concurrency issues in TTS and clipboard services against race conditions
+- Fixed memory leaks and added structural robustness throughout application
+- Fixed API contract, thread safety, and race condition issues in core services
+- Fixed Flatpak manifest warnings by removing `_comment` properties
+
+### Changed
+- Extracted URI validation to utils module and relaxed IP/localhost restrictions
+- Improved code quality with comprehensive type hints and cleanup
+- Implemented atomic cancellation for Clipboard and thread-safe signal emission for TTS GStreamer bus
+- Enhanced thread safety patterns across all services
+
 ## [0.1.4.1] - 2026-05-02
 
 ### Fixed

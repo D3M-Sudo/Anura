@@ -39,17 +39,22 @@ anura/
 │   ├── types/
 │   │   ├── download_state.py       DownloadState enum
 │   │   └── language_item.py        LanguageItem dataclass
-│   └── widgets/
-│       ├── extracted_page.py       OCR result page with share/TTS actions
-│       ├── language_popover.py     Language selector with search
-│       ├── language_popover_row.py Language row in popover
-│       ├── language_row.py         Language row in preferences page
-│       ├── list_menu_row.py        Generic menu row
-│       ├── preferences_dialog.py   Preferences dialog (Adw.PreferencesDialog)
-│       ├── preferences_general_page.py   General preferences page
-│       ├── preferences_languages_page.py Language management/download page
-│       ├── share_row.py            Share provider row
-│       └── welcome_page.py         Welcome page
+│   ├── utils/
+│   │   ├── __init__.py
+│   │   ├── validators.py          URI validation utilities
+│   │   ├── cleanup.py             Resource cleanup utilities
+│   │   └── signal_manager.py      GLib signal management
+│   ├── widgets/
+│   │   ├── extracted_page.py       OCR result page with share/TTS actions
+│   │   ├── language_popover.py     Language selector with search
+│   │   ├── language_popover_row.py Language row in popover
+│   │   ├── language_row.py         Language row in preferences page
+│   │   ├── list_menu_row.py        Generic menu row
+│   │   ├── preferences_dialog.py   Preferences dialog (Adw.PreferencesDialog)
+│   │   ├── preferences_general_page.py   General preferences page
+│   │   ├── preferences_languages_page.py Language management/download page
+│   │   ├── share_row.py            Share provider row
+│   │   └── welcome_page.py         Welcome page
 ├── data/
 │   ├── ui/                     Blueprint files (.blp) → compiled to .ui
 │   ├── icons/                  Scalable SVG icons + symbolic variants
@@ -244,6 +249,24 @@ GLib.idle_add(self.emit, "error", _("Error message"))
 self.emit("decoded", text, copy)  # ← never do this from a thread
 ```
 
+### Atomic Cancellation Pattern
+
+Core services use `__slots__` for memory efficiency and implement atomic cancellation:
+
+```python
+class ClipboardService(GObject.GObject):
+    __slots__ = ("_cancellable", "_clipboard", "_clipboard_timeout_id")
+    
+    def cancel_pending_operations(self) -> None:
+        """Cancel any pending operations atomically."""
+        if self._cancellable is not None and not self._cancellable.is_cancelled():
+            self._cancellable.cancel()
+        if self._clipboard_timeout_id and self._clipboard_timeout_id > 0:
+            GLib.source_remove(self._clipboard_timeout_id)
+            self._clipboard_timeout_id = None
+        self._cancellable = None
+```
+
 ### GLib MainContext — Silent Mode and Custom Loops
 
 When creating a custom `GLib.MainLoop` (e.g., silent CLI mode), GLib sources must be **explicitly** attached to the loop's context:
@@ -305,11 +328,13 @@ if not re.match(LANG_CODE_PATTERN, lang_code):
 
 ### URI and URL Handling
 
-Always validate URIs before opening or displaying to user. The `uri_validator()` method in `window.py` protects against homograph attacks, control characters, and disallowed schemes.
+Always validate URIs before opening or displaying to user. The `uri_validator()` function in `anura/utils/validators.py` protects against homograph attacks, control characters, and disallowed schemes.
 
 ```python
+from anura.utils.validators import uri_validator
+
 # Use validator before Gtk.UriLauncher
-if self.uri_validator(url):
+if uri_validator(url):
     launcher = Gtk.UriLauncher.new(url)
     launcher.launch(...)
 ```
@@ -356,6 +381,9 @@ Release notes for `Adw.AboutDialog` are generated from `CHANGELOG.md` during Mes
 | `anura/services/notification_service.py` | Notifications with fallback |
 | `anura/services/tts.py` | Text-to-speech via gTTS + GStreamer |
 | `anura/services/share_service.py` | Social sharing providers |
+| `anura/utils/validators.py` | URI validation and security utilities |
+| `anura/utils/cleanup.py` | Resource cleanup utilities |
+| `anura/utils/signal_manager.py` | GLib signal management |
 
 ### Configuration Files
 
@@ -366,3 +394,38 @@ Release notes for `Adw.AboutDialog` are generated from `CHANGELOG.md` during Mes
 | `flatpak/com.github.d3msudo.anura.json` | Flatpak manifest with all native dependencies |
 | `build-aux/generate_release_notes.py` | CHANGELOG.md parser → `_release_notes.py` |
 | `CHANGELOG.md` | Versioned changelog (source for release notes) |
+
+## For Cascade / AI Agents
+
+- Read this file BEFORE any operation on the codebase
+- Do NOT add dependencies not present in the Flatpak manifest without discussing first
+- The only official linter is `ruff` — do not suggest flake8, pylint or black
+- Never modify: `po/*.po`, `anura/_release_notes.py`, `data/ui/*.ui`, `CHANGELOG.md`
+- After any new UI string, remind the user to run `./generate_pot.sh`
+- Thread safety: never emit GObject signals from secondary threads — use `GLib.idle_add()`
+- When in doubt about an architectural choice, ask before proceeding
+
+### Test Architecture Note
+
+`anura/__init__.py` imports `gi` at module level, so ALL tests that import from `anura` require PyGObject (`python3-gi` system package) and must be marked with `@pytest.mark.gtk`. Only tests with zero `anura` imports (like `test_uri_validator.py`) run without a GTK environment.
+
+## Decision Log
+
+| Date | Decision | Reason |
+|------|----------|--------|
+| 2026-05-03 | Removed set_paintable() from welcome_page.py | Gdk.Texture on transparent widget causes checkerboard pattern |
+| 2026-05-03 | osd filter added to get_downloaded_codes() | osd.traineddata is a Tesseract orientation file, not a real language |
+| 2026-05-03 | new_item None guard added in populate_model() | Prevents crash if get_language_item("eng") returns None |
+| 2026-05-03 | SIM105 added to ruff ignore list in pyproject.toml | Pre-existing style preference across the codebase |
+| 2026-05-03 | Bug 1/2/3 main fixes were already applied in a previous session | Verified via pre-fix grep checks from bug report v2 |
+| 2026-05-03 | GSK_RENDERER=cairo added to Flatpak finish-args | GL renderer fails on non-GNOME desktops (LXQt, XFCE, KDE) causing grayed-out UI |
+| 2026-05-03 | Defensive audit confirmed: button state controlled by Gio.SimpleAction via action-name, not set_sensitive | No Python sensitivity code needed — GTK handles it automatically |
+| 2026-05-03 | Full ruff cleanup — zero warnings across entire codebase | 28 pre-existing warnings fixed in 14 files |
+| 2026-05-03 | Added test_language_manager.py — 8 tests for pure-Python LanguageManager methods | All marked @pytest.mark.gtk, deselected correctly without GTK environment |
+| 2026-05-03 | GTK tests require Flatpak sandbox — Xdp namespace not available on host | Use pytest -m "not gtk" on host; run full suite inside flatpak sandbox |
+| 2026-05-03 | Regenerated anura.pot and synced all 25 .po files via msgmerge | 91 stale strings removed, share_service.py added to POTFILES, 262 active strings |
+| 2026-05-04 | Fixed __slots__ conflict in ClipboardService | Missing _cancellable in declaration causing AttributeError |
+| 2026-05-04 | Extracted URI validation to utils module | Centralized security utilities and relaxed IP/localhost restrictions |
+| 2026-05-04 | Implemented atomic cancellation pattern | Enhanced thread safety across Clipboard, TTS, and Screenshot services |
+| 2026-05-04 | Fixed ruff linting errors across codebase | Resolved import sorting and code style issues in 14 files |
+| 2026-05-04 | Fixed Flatpak manifest warnings | Removed _comment properties causing flatpak-builder warnings |

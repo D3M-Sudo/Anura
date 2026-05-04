@@ -5,6 +5,10 @@
 # Notification service with XDG Portal and libnotify fallback
 # Provides maximum compatibility across desktop environments
 
+from itertools import count
+import time
+from typing import ClassVar
+
 from loguru import logger
 
 try:
@@ -38,6 +42,16 @@ class NotificationService:
     def __init__(self, app_id: str):
         self.app_id = app_id
         self.libnotify_initialized = False
+        self._portal = None
+        self._notification_id_counter = count()  # Monotonic counter for unique IDs
+
+        # Initialize XDP portal once for reuse
+        if HAS_PORTAL:
+            try:
+                self._portal = Xdp.Portal()
+                logger.debug("NotificationService: XDG Portal initialized")
+            except Exception as e:
+                logger.warning(f"NotificationService: Failed to initialize XDG Portal: {e}")
 
         # Initialize libnotify as fallback
         if HAS_LIBNOTIFY:
@@ -51,6 +65,9 @@ class NotificationService:
         if not HAS_PORTAL and not self.libnotify_initialized:
             logger.warning("NotificationService: No notification backend available")
 
+    # Valid priority levels according to XDG Portal specification
+    _VALID_PRIORITIES: ClassVar[set[str]] = {"low", "normal", "high", "urgent"}
+
     def show(self, title: str, body: str, priority: str = "normal") -> bool:
         """
         Show a notification with automatic backend selection.
@@ -63,6 +80,11 @@ class NotificationService:
         Returns:
             True if notification was shown successfully, False otherwise
         """
+        # Validate priority parameter
+        if priority not in self._VALID_PRIORITIES:
+            logger.warning(f"NotificationService: Invalid priority '{priority}', using 'normal'")
+            priority = "normal"
+
         # Try portal first, then fallback to libnotify
         if HAS_PORTAL:
             result = self._show_portal_notification(title, body, priority)
@@ -76,11 +98,12 @@ class NotificationService:
 
     def _show_portal_notification(self, title: str, body: str, priority: str) -> bool:
         """Show notification via XDG Desktop Portal."""
-        import time
         if GLib is None:
             return False
+        if self._portal is None:
+            logger.warning("NotificationService: XDG Portal not available")
+            return False
         try:
-            portal = Xdp.Portal()
 
             # Prepare notification as GLib.Variant according to XDG Portal spec
             # Schema: a{sv} (dictionary of string -> variant)
@@ -92,12 +115,12 @@ class NotificationService:
                 "icon": GLib.Variant("(sv)", ("themed", GLib.Variant("as", [self.app_id])))
             })
 
-            # Generate unique ID for this notification
-            notification_id = f"{self.app_id}-{int(time.time())}"
+            # Generate unique ID for this notification (timestamp + monotonic counter)
+            notification_id = f"{self.app_id}-{int(time.time())}-{next(self._notification_id_counter)}"
 
             # Show notification via portal
             # Full signature: add_notification(id, notification, flags, cancellable, callback, data)
-            portal.add_notification(
+            self._portal.add_notification(
                 notification_id,
                 notification,
                 Xdp.NotificationFlags.NONE,

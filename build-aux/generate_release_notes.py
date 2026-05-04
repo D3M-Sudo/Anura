@@ -2,19 +2,20 @@
 """Generate _release_notes.py from CHANGELOG.md during build."""
 
 import html
+from pathlib import Path
 import re
 import sys
-from pathlib import Path
 
 
 def parse_changelog(changelog_path: Path) -> dict:
     """Parse CHANGELOG.md and return a dict of version -> html notes."""
     content = changelog_path.read_text()
 
-    # Pattern to match version sections
+    # Pattern to match version sections (supports 3 or 4 component versions like 0.1.4 or 0.1.4.1)
+    # Uses atomic-like grouping and limited repetition to prevent catastrophic backtracking
     version_pattern = (
-        r'^## \[(?P<version>\d+\.\d+\.\d+)\] - (?P<date>\d{4}-\d{2}-\d{2})\n+'
-        r'(?P<content>.*?)(?=^## \[|\Z)'
+        r'^## \[(?P<version>\d{1,4}\.\d{1,4}\.\d{1,4}(?:\.\d{1,4})?)\] - (?P<date>\d{4}-\d{2}-\d{2})\n+'
+        r'(?P<content>[^#]*?)(?=^## \[|\Z)'
     )
 
     releases = {}
@@ -34,8 +35,12 @@ def parse_changelog(changelog_path: Path) -> dict:
                 current_section = line[4:].strip()
                 sections.setdefault(current_section, [])
             elif line.startswith('- '):
-                # Remove the leading "- " and any markdown syntax, then escape HTML
-                item_text = html.escape(line[2:]
+                # Remove the leading "- " first
+                item_text = line[2:]
+                # Escape HTML FIRST to prevent injection from markdown links [text](url)
+                item_text = html.escape(item_text)
+                # Then remove markdown syntax (now safe from HTML injection)
+                item_text = (item_text
                     .replace('**', '')
                     .replace('__', '')
                     .replace('*', '')
@@ -74,14 +79,16 @@ def generate_release_notes_py(changelog_path: Path, output_path: Path, current_v
     ]
 
     for version, html_content in releases.items():
-        lines.append(f'    "{version}": """{html_content}""",')
+        # Use repr() to safely escape the content and avoid triple-quote issues
+        lines.append(f'    "{version}": {html_content!r},')
 
     lines.extend([
         '}',
         '',
         f'CURRENT_VERSION = "{current_version}"',
         '',
-        f'CURRENT_NOTES = """{current_notes}"""',
+        # Use repr() to safely escape current_notes
+        f'CURRENT_NOTES = {current_notes!r}',
         '',
         'def get_release_notes(version: str = None) -> str:',
         '    """Get release notes for a specific version or current version."""',
@@ -94,6 +101,11 @@ def generate_release_notes_py(changelog_path: Path, output_path: Path, current_v
     output_path.write_text('\n'.join(lines))
 
 
+def validate_version(version: str) -> bool:
+    """Validate version string format (e.g., '0.1.4' or '0.1.4.1')."""
+    return bool(re.match(r'^[0-9]+\.[0-9]+\.[0-9]+(?:\.[0-9]+)?$', version))
+
+
 if __name__ == '__main__':
     if len(sys.argv) != 4:
         print(f'Usage: {sys.argv[0]} <changelog.md> <output.py> <version>', file=sys.stderr)
@@ -102,6 +114,11 @@ if __name__ == '__main__':
     changelog = Path(sys.argv[1])
     output = Path(sys.argv[2])
     version = sys.argv[3]
+
+    if not validate_version(version):
+        print(f'Error: Invalid version format: {version}', file=sys.stderr)
+        print('Expected format: MAJOR.MINOR.PATCH[.PATCH2] (e.g., 0.1.4 or 0.1.4.1)', file=sys.stderr)
+        sys.exit(1)
 
     generate_release_notes_py(changelog, output, version)
     print(f'Generated {output} with release notes for version {version}')

@@ -3,6 +3,8 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
+from typing import ClassVar
+
 from gi.repository import Gio, GObject, Gtk
 from loguru import logger
 
@@ -10,14 +12,15 @@ from anura.config import RESOURCE_PREFIX
 from anura.language_manager import language_manager
 from anura.services.settings import settings
 from anura.types.language_item import LanguageItem
+from anura.utils.signal_manager import SignalManagerMixin
 from anura.widgets.language_popover_row import LanguagePopoverRow
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/language_popover.ui")
-class LanguagePopover(Gtk.Popover):
+class LanguagePopover(Gtk.Popover, SignalManagerMixin):
     __gtype_name__ = "LanguagePopover"
 
-    __gsignals__ = {
+    __gsignals__: ClassVar[dict[str, tuple]] = {
         'language-changed': (GObject.SIGNAL_RUN_LAST, None, (LanguageItem,)),
     }
 
@@ -30,16 +33,14 @@ class LanguagePopover(Gtk.Popover):
     filter_list: Gtk.FilterListModel
     filter: Gtk.CustomFilter
 
-    _downloaded_handler_id: int | None = None
-    _removed_handler_id: int | None = None
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        SignalManagerMixin.__init__(self)
 
         self.settings = settings
 
-        self._downloaded_handler_id = language_manager.connect("downloaded", self._on_language_downloaded)
-        self._removed_handler_id = language_manager.connect("removed", self._on_language_removed)
+        self.connect_tracked(language_manager, "downloaded", self._on_language_downloaded)
+        self.connect_tracked(language_manager, "removed", self._on_language_removed)
 
         self._active_language = self.settings.get_string('active-language')
 
@@ -59,7 +60,7 @@ class LanguagePopover(Gtk.Popover):
     def active_language(self, lang_code: str):
         self._active_language = lang_code
 
-    def _on_language_filter(self, proposal: LanguageItem, text: str = None) -> bool:
+    def _on_language_filter(self, proposal: LanguageItem, text: str | None = None) -> bool:
         if not text:
             return True
         return text.lower() in proposal.title.lower()
@@ -121,12 +122,14 @@ class LanguagePopover(Gtk.Popover):
             selected = (self.active_language == code)
             self.lang_list.append(LanguageItem(code=code, title=lang, selected=selected))
 
-        # Validate: emit only if language actually changed
+        # Fallback to English if current language was removed, emitting only on actual change
         current_code = self.active_language
         if current_code not in language_manager.get_downloaded_codes():
             new_item = language_manager.get_language_item("eng")
-            self.active_language = "eng"
-            self.emit("language-changed", new_item)  # emit only on actual change
+            if new_item and self.active_language != "eng":  # emit only if language actually changed
+                self.active_language = "eng"
+                self.settings.set_string('active-language', 'eng')
+                self.emit("language-changed", new_item)
 
     def toggle_empty_state(self, is_empty: bool = False) -> None:
         if is_empty:
@@ -135,19 +138,6 @@ class LanguagePopover(Gtk.Popover):
             self.views.set_visible_child_name('languages_page')
 
     def do_destroy(self):
-        """Clean up signal handlers to prevent memory leaks."""
-        if self._downloaded_handler_id is not None:
-            try:
-                language_manager.disconnect(self._downloaded_handler_id)
-            except Exception:
-                pass
-            self._downloaded_handler_id = None
-
-        if self._removed_handler_id is not None:
-            try:
-                language_manager.disconnect(self._removed_handler_id)
-            except Exception:
-                pass
-            self._removed_handler_id = None
-
+        """Clean up all tracked signal handlers to prevent memory leaks."""
+        self.disconnect_all_signals()
         super().do_destroy()

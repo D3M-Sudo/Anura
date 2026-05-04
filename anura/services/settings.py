@@ -3,9 +3,8 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 #
-# FIX: file moved from anura/settings.py to anura/services/settings.py
-# All widgets import from `anura.services.settings` — the old path caused
-# a ModuleNotFoundError at runtime inside the Flatpak sandbox.
+# Settings module - moved from anura/settings.py to anura/services/settings.py
+# to avoid ModuleNotFoundError in Flatpak sandbox.
 
 from gi.repository import Gio
 from loguru import logger

@@ -1,15 +1,19 @@
 import datetime
+from gettext import gettext as _
 import os
 import sys
-from gettext import gettext as _
 
 from gi.repository import Adw, Gio, GLib, Gtk
 from loguru import logger
 
-from anura.services.notification_service import NotificationService
+from anura.services.notification_service import (
+    HAS_LIBNOTIFY,
+    NotificationService,
+    Notify,
+)
 
 
-def _load_gresource_bundle():
+def _load_gresource_bundle() -> bool:
     """Load the GResource bundle containing UI files and icons.
 
     This must be called before importing any widgets that use @Gtk.Template
@@ -41,7 +45,7 @@ def _load_gresource_bundle():
         if os.path.exists(path):
             try:
                 resource = Gio.Resource.load(path)
-                resource._register()
+                resource.register()
                 logger.debug(f"Loaded GResource bundle from {path}")
                 return True
             except Exception as e:
@@ -62,83 +66,120 @@ from anura.language_manager import language_manager  # noqa: E402
 from anura.services.clipboard_service import clipboard_service  # noqa: E402
 from anura.services.screenshot_service import ScreenshotService  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
+from anura.utils import cleanup_orphaned_resources  # noqa: E402
 from anura.window import AnuraWindow  # noqa: E402
 
 
 class AnuraApplication(Adw.Application):
-    __gtype_name__ = 'AnuraApplication'
+    __gtype_name__ = "AnuraApplication"
 
-    def __init__(self, version=None):
-        super().__init__(application_id=APP_ID,
-                         flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
+    def __init__(self, version: str | None = None) -> None:
+        super().__init__(application_id=APP_ID, flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
         self.backend = None
         self.version = version
         self.settings = settings
 
         self.add_main_option(
-            'extract_to_clipboard',
-            ord('e'),
+            "extract_to_clipboard",
+            ord("e"),
             GLib.OptionFlags.NONE,
             GLib.OptionArg.NONE,
             _("Extract directly into the clipboard"),
-            None
+            None,
         )
 
         self.add_main_option(
-            'file',
-            ord('f'),
-            GLib.OptionFlags.NONE,
-            GLib.OptionArg.FILENAME,
-            _("Process image file for OCR"),
-            None
+            "file", ord("f"), GLib.OptionFlags.NONE, GLib.OptionArg.FILENAME, _("Process image file for OCR"), None
         )
 
         self.add_main_option(
-            'silent',
-            ord('s'),
+            "silent",
+            ord("s"),
             GLib.OptionFlags.NONE,
             GLib.OptionArg.NONE,
             _("Run OCR without UI (copy result to clipboard)"),
-            None
+            None,
         )
 
         language_manager.init_tessdata()
         self.notification_service = NotificationService(APP_ID)
 
-    def do_startup(self, *args, **kwargs):
+        # Track backend signal handler IDs for cleanup in do_shutdown
+        self._backend_decoded_handler_id: int | None = None
+        self._backend_error_handler_id: int | None = None
+
+    def do_startup(self, *args, **kwargs) -> None:
         Adw.init()
         Adw.Application.do_startup(self)
 
+        # Clean up orphaned resources from previous sessions
+        cleanup_orphaned_resources()
+
         self.backend = ScreenshotService()
-        self.backend.connect('decoded', self.on_decoded)
-        self.backend.connect('error', self.on_error)
+        self._backend_decoded_handler_id = self.backend.connect("decoded", self.on_decoded)
+        self._backend_error_handler_id = self.backend.connect("error", self.on_error)
+
+        # Initialize clipboard service on main thread to avoid race conditions
+        clipboard_service.init()
 
         self._setup_actions()
 
         GLib.set_application_name("Anura OCR")
         GLib.set_prgname(APP_ID)
 
-    def _setup_actions(self):
-        self.create_action('get_screenshot', self.get_screenshot, ['<primary>g'])
-        self.create_action('get_screenshot_and_copy', self.get_screenshot_and_copy, ['<primary><shift>g'])
-        self.create_action('copy_to_clipboard', self.on_copy_to_clipboard, ['<primary>c'])
-        self.create_action('open_image', self.open_image, ['<primary>o'])
-        self.create_action('paste_from_clipboard', self.on_paste_from_clipboard, ['<primary>v'])
-        self.create_action('listen', self.on_listen, ['<primary>l'])
-        self.create_action('listen_cancel', self.on_listen_cancel, ['<primary><shift>l'])
-        self.create_action('shortcuts', self.on_shortcuts, ['<primary>question'])
-        self.create_action('quit', lambda *_: self.quit(), ['<primary>q', '<primary>w'])
-        self.create_action('preferences', self.on_preferences, ['<primary>comma'])
-        self.create_action('about', self.on_about)
-        self.create_action('github_star', self.on_github_star)
+    def do_shutdown(self, *args, **kwargs) -> None:
+        """Clean up resources on application shutdown."""
+        # Disconnect backend signal handlers
+        if self.backend is not None:
+            if self._backend_decoded_handler_id is not None:
+                try:
+                    self.backend.disconnect(self._backend_decoded_handler_id)
+                except (TypeError, RuntimeError):
+                    pass
+                self._backend_decoded_handler_id = None
+            if self._backend_error_handler_id is not None:
+                try:
+                    self.backend.disconnect(self._backend_error_handler_id)
+                except (TypeError, RuntimeError):
+                    pass
+                self._backend_error_handler_id = None
 
-    def do_activate(self):
+        # Uninitialize libnotify to release resources
+        if HAS_LIBNOTIFY and Notify is not None:
+            try:
+                Notify.uninit()
+            except Exception:
+                pass
+
+        # Call clipboard_service cleanup (already imported at module level)
+        try:
+            clipboard_service.cancel_pending_operations()
+        except Exception:
+            pass
+
+        Adw.Application.do_shutdown(self)
+
+    def _setup_actions(self) -> None:
+        self.create_action("get_screenshot", self.get_screenshot, ["<primary>g"])
+        self.create_action("get_screenshot_and_copy", self.get_screenshot_and_copy, ["<primary><shift>g"])
+        self.create_action("copy_to_clipboard", self.on_copy_to_clipboard, ["<primary>c"])
+        self.create_action("open_image", self.open_image, ["<primary>o"])
+        self.create_action("paste_from_clipboard", self.on_paste_from_clipboard, ["<primary>v"])
+        self.create_action("listen", self.on_listen, ["<primary>l"])
+        self.create_action("listen_cancel", self.on_listen_cancel, ["<primary><shift>l"])
+        self.create_action("shortcuts", self.on_shortcuts, ["<primary>question"])
+        self.create_action("quit", lambda *_: self.quit(), ["<primary>q", "<primary>w"])
+        self.create_action("preferences", self.on_preferences, ["<primary>comma"])
+        self.create_action("about", self.on_about)
+        self.create_action("github_star", self.on_github_star)
+
+    def do_activate(self) -> None:
         win = self.props.active_window
         if not win:
             win = AnuraWindow(application=self, backend=self.backend)
         win.present()
 
-    def do_command_line(self, command_line):
+    def do_command_line(self, command_line) -> int:
         options = command_line.get_options_dict().end().unpack()
 
         if "extract_to_clipboard" in options:
@@ -152,7 +193,6 @@ class AnuraApplication(Adw.Application):
 
             # Try direct access first (for files in xdg-download)
             try:
-                import os
                 if os.path.exists(file_path) and os.access(file_path, os.R_OK):
                     # File accessible directly
                     if "silent" in options:
@@ -190,39 +230,67 @@ class AnuraApplication(Adw.Application):
                     return 0
 
         self.activate()
+        win = self.props.active_window
+        if win:
+            win.present()
         return 0
 
     def _run_silent_mode(self, file_path: str) -> int:
         """Run OCR in silent mode without UI, return exit code."""
         import signal as sig
+        import threading
 
-        def on_signal(signum, frame):
+        interrupted = threading.Event()
+
+        def on_signal(signum: int, frame) -> None:
             """Handle SIGINT/SIGTERM for clean shutdown."""
             logger.info(f"Anura: Received signal {signum}, shutting down silently...")
-            raise KeyboardInterrupt()
+            interrupted.set()
 
         old_sigint = sig.signal(sig.SIGINT, on_signal)
         old_sigterm = sig.signal(sig.SIGTERM, on_signal)
 
         try:
+            # Check if interrupted before starting
+            if interrupted.is_set():
+                logger.info("Anura: Silent mode interrupted by user.")
+                return 130
+
             # Use synchronous decode for silent mode - no signals, no main loop needed
             success, text, error_message = self.backend.decode_image_sync(
-                self.settings.get_string("active-language"),
-                file_path,
-                remove_source=False
+                self.settings.get_string("active-language"), file_path, remove_source=False
             )
 
+            # Check if interrupted during processing
+            if interrupted.is_set():
+                logger.info("Anura: Silent mode interrupted by user.")
+                return 130  # Standard exit code for SIGINT
+
             if success and text:
-                clipboard_service.set(text)
-                logger.info("Anura: OCR completed successfully in silent mode.")
-                return 0
+                # Double-check interrupted before copying to minimize race window
+                if not interrupted.is_set():
+                    clipboard_service.set(text)
+                    logger.info("Anura: OCR completed successfully in silent mode.")
+                    return 0
+                else:
+                    logger.info("Anura: Silent mode interrupted by user (post-OCR).")
+                    return 130
             else:
                 logger.error(f"Anura: Silent mode failed: {error_message}")
                 return 1
 
-        except KeyboardInterrupt:
-            logger.info("Anura: Silent mode interrupted by user.")
-            return 130  # Standard exit code for SIGINT
+        except FileNotFoundError as e:
+            logger.error(f"Anura: Silent mode - file not found: {e}")
+            return 2
+        except PermissionError as e:
+            logger.error(f"Anura: Silent mode - permission denied: {e}")
+            return 3
+        except OSError as e:
+            logger.error(f"Anura: Silent mode - file system error: {e}")
+            return 4
+        except ImportError as e:
+            logger.error(f"Anura: Silent mode - missing dependency: {e}")
+            return 5
         except Exception as e:
             logger.error(f"Anura: Silent mode unexpected error: {e}")
             return 1
@@ -236,10 +304,11 @@ class AnuraApplication(Adw.Application):
         if window:
             window.show_preferences()
 
-    def _get_release_notes(self):
+    def _get_release_notes(self) -> str:
         """Get release notes from generated _release_notes module."""
         try:
             from anura._release_notes import get_release_notes
+
             notes = get_release_notes()
             return f"<p>Anura OCR {self.version}</p>{notes}"
         except Exception as e:
@@ -248,17 +317,17 @@ class AnuraApplication(Adw.Application):
         # Fallback to version-specific message
         return f"<p>Anura OCR {self.version} - Bug fixes and improvements.</p>"
 
-    def on_about(self, _action, _param):
+    def on_about(self, _action, _param) -> None:
         about_window = Adw.AboutDialog(
             application_name="Anura",
             application_icon=APP_ID,
             version=self.version,
-            copyright=f'© {datetime.date.today().year} D3M-Sudo & Anura Contributors',
+            copyright=f"© {datetime.date.today().year} D3M-Sudo & Anura Contributors",
             website="https://github.com/d3msudo/anura",
             license_type=Gtk.License.MIT,
             developers=["Andrey Maksimov", "D3M-Sudo"],
             designers=["Andrey Maksimov"],
-            release_notes=self._get_release_notes()
+            release_notes=self._get_release_notes(),
         )
         about_window.present(self.props.active_window)
 
@@ -266,7 +335,7 @@ class AnuraApplication(Adw.Application):
         """Open the GitHub repository page in the default browser."""
         launcher = Gtk.UriLauncher.new("https://github.com/d3msudo/anura")
 
-        def on_launch_finish(_launcher, result):
+        def on_launch_finish(_launcher, result) -> None:
             try:
                 launcher.launch_finish(result)
             except GLib.Error as e:
@@ -282,7 +351,7 @@ class AnuraApplication(Adw.Application):
                     dialog.set_default_response("close")
                     dialog.set_close_response("close")
 
-                    def on_dialog_response(_dlg, response):
+                    def on_dialog_response(_dlg, response) -> None:
                         if response == "copy":
                             clipboard_service.set("https://github.com/d3msudo/anura")
                         _dlg.destroy()
@@ -292,7 +361,7 @@ class AnuraApplication(Adw.Application):
 
         launcher.launch(self.props.active_window, None, on_launch_finish)
 
-    def on_shortcuts(self, _action, _param):
+    def on_shortcuts(self, _action, _param) -> None:
         window = self.get_active_window()
         if window:
             window.show_shortcuts()
@@ -300,7 +369,7 @@ class AnuraApplication(Adw.Application):
     def on_copy_to_clipboard(self, _action, _param) -> None:
         window = self.get_active_window()
         if window:
-            window.on_copy_to_clipboard(self)
+            window.copy_to_clipboard_direct()
 
     def get_screenshot(self, _action, _param) -> None:
         window = self.get_active_window()
@@ -324,20 +393,14 @@ class AnuraApplication(Adw.Application):
 
     def on_decoded(self, _sender, text: str, copy: bool) -> None:
         if not text:
-            self.notification_service.show(
-                title='Anura OCR',
-                body=_("No text found. Try to grab another region.")
-            )
+            self.notification_service.show(title="Anura OCR", body=_("No text found. Try to grab another region."))
             return
 
         if copy:
             clipboard_service.set(text)
-            self.notification_service.show(
-                title='Anura OCR',
-                body=_("Text extracted and copied to clipboard.")
-            )
+            self.notification_service.show(title="Anura OCR", body=_("Text extracted and copied to clipboard."))
         else:
-            logger.debug(f'Extracted: {text}')
+            logger.debug(f"Extracted: {text}")
 
     def on_error(self, _sender, message: str) -> None:
         """Handle screenshot service errors, skipping cancellation messages."""
@@ -346,22 +409,19 @@ class AnuraApplication(Adw.Application):
             logger.info("Anura: Screenshot cancelled by user.")
             return
         # Real error - show notification
-        self.notification_service.show(
-            title='Anura OCR',
-            body=message
-        )
+        self.notification_service.show(title="Anura OCR", body=message)
 
-    def on_listen(self, _sender, _event):
+    def on_listen(self, _sender, _event) -> None:
         window = self.get_active_window()
         if window:
             window.on_listen()
 
-    def on_listen_cancel(self, _sender, _event):
+    def on_listen_cancel(self, _sender, _event) -> None:
         window = self.get_active_window()
         if window:
             window.on_listen_cancel()
 
-    def create_action(self, name, callback, shortcuts=None):
+    def create_action(self, name: str, callback, shortcuts: list[str] | None = None) -> None:
         action = Gio.SimpleAction.new(name, None)
         action.connect("activate", callback)
         self.add_action(action)
@@ -369,6 +429,6 @@ class AnuraApplication(Adw.Application):
             self.set_accels_for_action(f"app.{name}", shortcuts)
 
 
-def main(version):
+def main(version: str) -> int:
     app = AnuraApplication(version)
     return app.run(sys.argv)

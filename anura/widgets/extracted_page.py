@@ -4,10 +4,11 @@
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
 from gettext import gettext as _
+from typing import ClassVar
 
-import requests
 from gi.repository import Adw, GLib, GObject, Gtk
 from loguru import logger
+import requests
 
 from anura.config import RESOURCE_PREFIX
 from anura.gobject_worker import GObjectWorker
@@ -21,7 +22,7 @@ from anura.widgets.share_row import ShareRow
 class ExtractedPage(Adw.NavigationPage):
     __gtype_name__ = "ExtractedPage"
 
-    __gsignals__ = {
+    __gsignals__: ClassVar[dict[str, tuple]] = {
         "go-back": (GObject.SIGNAL_RUN_LAST, None, (int,)),
         "on-listen-start": (GObject.SIGNAL_RUN_LAST, None, ()),
         "on-listen-stop": (GObject.SIGNAL_RUN_LAST, None, ()),
@@ -44,7 +45,12 @@ class ExtractedPage(Adw.NavigationPage):
         for provider in ShareService.providers():
             self.share_list_box.append(ShareRow(provider))
 
-        self._tts_stop_handler_id = ttsservice.connect("stop", self._on_listen_end)
+        # Initialize handler ID to ensure consistent state for do_destroy
+        self._tts_stop_handler_id: int | None = None
+        try:
+            self._tts_stop_handler_id = ttsservice.connect("stop", self._on_listen_end)
+        except (TypeError, RuntimeError) as e:
+            logger.warning(f"Failed to connect TTS stop signal: {e}")
 
     def do_hiding(self) -> None:
         self.buffer.set_text("")
@@ -83,7 +89,7 @@ class ExtractedPage(Adw.NavigationPage):
         """Switch Stack between button and spinner."""
         self.listen_stack.set_visible_child_name("spinner" if active else "button")
 
-    def _on_generate_error(self, error: Exception, traceback_str: str = None) -> None:
+    def _on_generate_error(self, error: Exception, traceback_str: str | None = None) -> None:
         """Handle generation errors (called on main thread by GObjectWorker)."""
         self._set_spinner_active(False)
         self.swap_controls(False)
@@ -124,12 +130,13 @@ class ExtractedPage(Adw.NavigationPage):
         self.listen_btn.set_visible(not state)
         self.listen_cancel_btn.set_visible(state)
 
-    def do_destroy(self):
+    def do_destroy(self) -> None:
         """Clean up signal handlers to prevent memory leaks."""
-        if self._tts_stop_handler_id is not None:
+        # Check handler is not None AND service is valid before disconnecting
+        if self._tts_stop_handler_id is not None and ttsservice is not None:
             try:
                 ttsservice.disconnect(self._tts_stop_handler_id)
-            except Exception:
-                pass
+            except (TypeError, RuntimeError, AttributeError):
+                pass  # Handler already disconnected or service disposed
             self._tts_stop_handler_id = None
         super().do_destroy()
