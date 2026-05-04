@@ -34,9 +34,11 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
 
         self.settings = settings
 
-        # Dynamic language store initialization
+        # Dynamic language store initialization - use centralized get_language_item pattern
         for lang_code in language_manager.get_available_codes():
-            self.list_store.append(LanguageItem(lang_code, title=language_manager.get_language(lang_code)))
+            item = language_manager.get_language_item(lang_code)
+            if item is not None:
+                self.list_store.append(item)
 
         # Signals for dynamic model updates (tracked for automatic cleanup)
         self.connect_tracked(language_manager, 'added', self.on_language_added)
@@ -55,7 +57,7 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
     def check_connection(self) -> None:
         """Asynchronously checks network reachability for OCR model downloads."""
         monitor = Gio.NetworkMonitor.get_default()
-        address = Gio.NetworkAddress.new("raw.githubusercontent.com", 443)
+        address = Gio.NetworkAddress.new("google.com", 443)
         monitor.can_reach_async(address, None, self._on_connection_checked)
 
     def _on_connection_checked(self, monitor, result) -> None:
@@ -102,8 +104,12 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
 
     def load_languages(self):
         self.list_store.remove_all()
+        existing_codes = set()
         for lang_code in language_manager.get_available_codes():
-            self.list_store.append(language_manager.get_language_item(lang_code))
+            item = language_manager.get_language_item(lang_code)
+            if item is not None and item.code not in existing_codes:
+                self.list_store.append(item)
+                existing_codes.add(item.code)
 
     @property
     def is_search_mode(self):
@@ -136,7 +142,14 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
             return user_data.lower() in item.title.lower()
         return item.code in language_manager.get_downloaded_codes()
 
-    def on_language_added(self, _sender, _code: str | None = None) -> None:
+    def on_language_added(self, _sender, code: str | None = None) -> None:
+        # Idempotent: only add if not already in the list
+        if code is not None:
+            existing_codes = {item.code for item in self.list_store}
+            if code not in existing_codes:
+                item = language_manager.get_language_item(code)
+                if item is not None:
+                    self.list_store.append(item)
         if not self.search_bar.get_search_mode():
             self.activate_filter()
 

@@ -28,6 +28,8 @@ class TTSService(GObject.GObject):
         "stop": (GObject.SIGNAL_RUN_LAST, None, (bool,)),
     }
 
+    __slots__ = ("player",)
+
     _tld: str = "com"
 
     # Mapping Tesseract 3-letter → gTTS 2-letter ISO 639-1
@@ -56,9 +58,11 @@ class TTSService(GObject.GObject):
 
     _gtts_languages: dict | None = None
     _bus_watch_active: bool = False
+    _bus_watch_setup_in_progress: bool = False
     _bus: Gst.Bus | None = None
     _bus_message_handler_id: int | None = None
     _cleanup_lock: threading.Lock = threading.Lock()
+    _bus_watch_lock: threading.Lock = threading.Lock()
 
     @classmethod
     def get_supported_gtts_languages(cls) -> dict:
@@ -95,7 +99,7 @@ class TTSService(GObject.GObject):
         logger.warning(f"Anura TTS: No mapping for '{tess_code}', falling back to 'en'")
         return "en"
 
-    # FIX: use XDG_CACHE_HOME for temporary files, not XDG_DATA_HOME.
+    # Use XDG_CACHE_HOME for temporary files (not XDG_DATA_HOME).
     # Cache dir is the correct location for ephemeral data; data dir is for
     # persistent user data like tessdata models.
     _cache_home = os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
@@ -119,12 +123,26 @@ class TTSService(GObject.GObject):
 
     def generate(self, text: str, lang: str = "en") -> str:
         """Generates MP3. Raises exception on failure for errorback handling."""
+        # Input validation: avoid unnecessary gTTS calls for empty/whitespace text
+        if not text or not text.strip():
+            logger.debug("Anura TTS: Empty text provided, returning empty path")
+            return ""
         timestamp = int(time.monotonic() * 1000)
         filepath = os.path.join(self._speech_dir, f"speech_{timestamp}.mp3")
 
         tts = gtts.gTTS(text, lang=lang, tld=self._tld)
         logger.info(f"Anura TTS: Generating speech for language: {lang}")
-        tts.save(filepath)
+        try:
+            tts.save(filepath)
+        except Exception as e:
+            logger.error(f"Anura TTS: Failed to save speech file: {e}")
+            if os.path.exists(filepath):
+                try:
+                    os.remove(filepath)
+                except OSError:
+                    pass
+            raise
+
         logger.debug(f"Anura TTS: Speech file saved to {filepath}")
 
         self._current_speech_file = filepath
@@ -150,15 +168,33 @@ class TTSService(GObject.GObject):
 
         self.player.set_property("uri", f"file://{filepath}")
 
-        # Read volume from settings
-        volume = settings.get_double("tts-volume")
+        # Read volume from settings and clamp to valid range
+        volume = max(0.0, min(1.0, settings.get_double("tts-volume")))
         self.player.set_property("volume", volume)
 
         self._bus = self.player.get_bus()
-        self._bus.add_signal_watch()
-        self._bus_watch_active = True
-        self._bus_message_handler_id = self._bus.connect("message", self.on_gst_message)
+
+        # Thread-safety: schedule bus operations on main thread via idle_add
+        GLib.idle_add(self._setup_bus_watch)
+
         self.player.set_state(Gst.State.PLAYING)
+
+    def _setup_bus_watch(self) -> bool:
+        """Set up GStreamer bus signal watch on main thread."""
+        # Thread-safe guard against concurrent setup calls
+        with self._bus_watch_lock:
+            if self._bus_watch_setup_in_progress:
+                return False
+            self._bus_watch_setup_in_progress = True
+        try:
+            if self._bus is not None:
+                self._bus.add_signal_watch()
+                self._bus_watch_active = True
+                self._bus_message_handler_id = self._bus.connect("message", self.on_gst_message)
+        finally:
+            with self._bus_watch_lock:
+                self._bus_watch_setup_in_progress = False
+        return False  # Don't repeat
 
     def on_gst_message(self, _bus, message: Gst.Message):
         """Handle GStreamer bus messages; clean up temp file on EOS."""

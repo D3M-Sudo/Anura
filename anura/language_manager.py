@@ -104,41 +104,46 @@ class LanguageManager(GObject.GObject):
 
     def init_tessdata(self):
         """
-        FIX: method was called in main.py but never defined, causing AttributeError.
         Ensures the tessdata directory exists and logs its status at startup.
         Also cleans up orphaned temporary files from interrupted downloads.
         """
-        if not os.path.exists(TESSDATA_DIR):
-            logger.warning(
-                f"Anura: tessdata directory not found at '{TESSDATA_DIR}'. "
-                "It will be created on first language download."
-            )
-            os.makedirs(TESSDATA_DIR, exist_ok=True)
-        else:
-            # Clean up orphaned temp files from crashed/interrupted downloads
-            try:
-                # Check directory readability first
-                if not os.access(TESSDATA_DIR, os.R_OK | os.X_OK):
-                    logger.warning(f"Anura: Cannot read tessdata directory for cleanup: {TESSDATA_DIR}")
-                else:
-                    temp_files = [f for f in os.listdir(TESSDATA_DIR) if f.endswith('.tmp')]
-                    for temp_file in temp_files:
-                        temp_path = os.path.join(TESSDATA_DIR, temp_file)
-                        try:
-                            os.remove(temp_path)
-                            logger.warning(f"Anura: Cleaned up orphaned temp file: {temp_file}")
-                        except PermissionError:
-                            logger.error(f"Anura: Permission denied removing orphaned temp file {temp_file}")
-                        except OSError as e:
-                            logger.error(f"Anura: Failed to remove orphaned temp file {temp_file}: {e}")
-            except OSError as e:
-                logger.error(f"Anura: Error scanning for orphaned temp files: {e}")
+        # Use lock to prevent race condition when multiple threads try to create directory
+        with self._cache_lock:
+            if not os.path.exists(TESSDATA_DIR):
+                logger.warning(
+                    f"Anura: tessdata directory not found at '{TESSDATA_DIR}'. "
+                    "It will be created on first language download."
+                )
+                try:
+                    os.makedirs(TESSDATA_DIR, exist_ok=True)
+                except FileExistsError:
+                    # Another thread created it between check and makedirs
+                    pass
 
-            installed = self.get_downloaded_codes(force=True)
-            logger.info(
-                f"Anura: tessdata directory ready. "
-                f"{len(installed)} language model(s) installed: {installed or ['none']}"
-            )
+        # Clean up orphaned temp files from crashed/interrupted downloads
+        try:
+            # Check directory readability first
+            if not os.access(TESSDATA_DIR, os.R_OK | os.X_OK):
+                logger.warning(f"Anura: Cannot read tessdata directory for cleanup: {TESSDATA_DIR}")
+            else:
+                temp_files = [f for f in os.listdir(TESSDATA_DIR) if f.endswith('.tmp')]
+                for temp_file in temp_files:
+                    temp_path = os.path.join(TESSDATA_DIR, temp_file)
+                    try:
+                        os.remove(temp_path)
+                        logger.warning(f"Anura: Cleaned up orphaned temp file: {temp_file}")
+                    except PermissionError:
+                        logger.error(f"Anura: Permission denied removing orphaned temp file {temp_file}")
+                    except OSError as e:
+                        logger.error(f"Anura: Failed to remove orphaned temp file {temp_file}: {e}")
+        except OSError as e:
+            logger.error(f"Anura: Error scanning for orphaned temp files: {e}")
+
+        installed = self.get_downloaded_codes(force=True)
+        logger.info(
+            f"Anura: tessdata directory ready. "
+            f"{len(installed)} language model(s) installed: {installed or ['none']}"
+        )
 
     def get_language(self, code: str) -> str:
         """Returns the human-readable language name for a given ISO code."""
@@ -158,19 +163,25 @@ class LanguageManager(GObject.GObject):
 
                 # User-downloaded models (~/.var/app/.../data/anura/tessdata/)
                 if os.path.exists(TESSDATA_DIR):
-                    codes.update(
-                        os.path.splitext(f)[0]
-                        for f in os.listdir(TESSDATA_DIR)
-                        if f.endswith(".traineddata") and not f.startswith("osd")
-                    )
+                    try:
+                        codes.update(
+                            os.path.splitext(f)[0]
+                            for f in os.listdir(TESSDATA_DIR)
+                            if f.endswith(".traineddata") and not f.startswith("osd")
+                        )
+                    except OSError as e:
+                        logger.warning(f"Anura: Error reading user tessdata directory: {e}")
 
                 # Bundled system models (/app/share/tessdata/ — eng, ita pre-installed)
                 if os.path.exists(TESSDATA_SYSTEM_DIR):
-                    codes.update(
-                        os.path.splitext(f)[0]
-                        for f in os.listdir(TESSDATA_SYSTEM_DIR)
-                        if f.endswith(".traineddata") and not f.startswith("osd")
-                    )
+                    try:
+                        codes.update(
+                            os.path.splitext(f)[0]
+                            for f in os.listdir(TESSDATA_SYSTEM_DIR)
+                            if f.endswith(".traineddata") and not f.startswith("osd")
+                        )
+                    except OSError as e:
+                        logger.warning(f"Anura: Error reading system tessdata directory: {e}")
 
                 self._downloaded_codes = list(codes)
                 self._need_update_cache = False

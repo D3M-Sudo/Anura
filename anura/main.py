@@ -147,9 +147,8 @@ class AnuraApplication(Adw.Application):
             except Exception:
                 pass
 
-        # Call clipboard_service cleanup if it exists
+        # Call clipboard_service cleanup (already imported at module level)
         try:
-            from anura.services.clipboard_service import clipboard_service
             clipboard_service.cancel_pending_operations()
         except Exception:
             pass
@@ -276,6 +275,18 @@ class AnuraApplication(Adw.Application):
                 logger.error(f"Anura: Silent mode failed: {error_message}")
                 return 1
 
+        except FileNotFoundError as e:
+            logger.error(f"Anura: Silent mode - file not found: {e}")
+            return 2
+        except PermissionError as e:
+            logger.error(f"Anura: Silent mode - permission denied: {e}")
+            return 3
+        except OSError as e:
+            logger.error(f"Anura: Silent mode - file system error: {e}")
+            return 4
+        except ImportError as e:
+            logger.error(f"Anura: Silent mode - missing dependency: {e}")
+            return 5
         except Exception as e:
             logger.error(f"Anura: Silent mode unexpected error: {e}")
             return 1
@@ -354,7 +365,7 @@ class AnuraApplication(Adw.Application):
     def on_copy_to_clipboard(self, _action, _param) -> None:
         window = self.get_active_window()
         if window:
-            window.on_copy_to_clipboard(self)
+            window.copy_to_clipboard_direct()
 
     def get_screenshot(self, _action, _param) -> None:
         window = self.get_active_window()

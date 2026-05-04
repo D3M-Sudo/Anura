@@ -32,6 +32,8 @@ class ScreenshotService(GObject.GObject):
         "decoded": (GObject.SIGNAL_RUN_FIRST, None, (str, bool)),
     }
 
+    __slots__ = ("_cancelable_handler_id", "_cancellable_lock", "cancelable", "portal")
+
     def __init__(self):
         GObject.GObject.__init__(self)
         self._cancellable_lock = threading.Lock()
@@ -45,6 +47,12 @@ class ScreenshotService(GObject.GObject):
         with self._cancellable_lock:
             # If previous request was cancelled, create fresh cancellable
             if self.cancelable.is_cancelled():
+                # Disconnect old handler before creating new cancellable
+                if self._cancelable_handler_id is not None:
+                    try:
+                        self.cancelable.disconnect(self._cancelable_handler_id)
+                    except (TypeError, RuntimeError):
+                        pass
                 self.cancelable = Gio.Cancellable.new()
                 self._cancelable_handler_id = self.cancelable.connect("cancelled", self.capture_cancelled)
             cancellable = self.cancelable
@@ -61,14 +69,14 @@ class ScreenshotService(GObject.GObject):
         """Callback triggered when the portal finishes the screenshot request."""
         if res.had_error():
             logger.error("Anura Screenshot: Portal failed to provide a screenshot.")
-            return self.emit("error", _("Can't take a screenshot."))
+            return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))
 
         lang, copy = user_data
         uri = self.portal.take_screenshot_finish(res)
 
         if not uri:
             logger.warning("Anura Screenshot: Portal returned empty URI.")
-            return self.emit("error", _("Can't take a screenshot."))
+            return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))
 
         if uri.startswith("file://"):
             filename = url2pathname(uri[len("file://") :])
@@ -191,5 +199,19 @@ class ScreenshotService(GObject.GObject):
                     self.cancelable.disconnect(old_handler_id)
                 except Exception:
                     pass
+            self.cancelable = Gio.Cancellable.new()
+            self._cancelable_handler_id = self.cancelable.connect("cancelled", self.capture_cancelled)
+
+    def do_destroy(self) -> None:
+        """Clean up signal handlers and cancellable to prevent leaks."""
+        with self._cancellable_lock:
+            if self._cancelable_handler_id is not None:
+                try:
+                    self.cancelable.disconnect(self._cancelable_handler_id)
+                except (TypeError, RuntimeError):
+                    pass
+                self._cancelable_handler_id = None
+            if not self.cancelable.is_cancelled():
+                self.cancelable.cancel()
             self.cancelable = Gio.Cancellable.new()
             self._cancelable_handler_id = self.cancelable.connect("cancelled", self.capture_cancelled)

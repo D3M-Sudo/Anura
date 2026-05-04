@@ -45,7 +45,12 @@ class ExtractedPage(Adw.NavigationPage):
         for provider in ShareService.providers():
             self.share_list_box.append(ShareRow(provider))
 
-        self._tts_stop_handler_id = ttsservice.connect("stop", self._on_listen_end)
+        # Initialize handler ID to ensure consistent state for do_destroy
+        self._tts_stop_handler_id: int | None = None
+        try:
+            self._tts_stop_handler_id = ttsservice.connect("stop", self._on_listen_end)
+        except (TypeError, RuntimeError) as e:
+            logger.warning(f"Failed to connect TTS stop signal: {e}")
 
     def do_hiding(self) -> None:
         self.buffer.set_text("")
@@ -125,12 +130,13 @@ class ExtractedPage(Adw.NavigationPage):
         self.listen_btn.set_visible(not state)
         self.listen_cancel_btn.set_visible(state)
 
-    def do_destroy(self):
+    def do_destroy(self) -> None:
         """Clean up signal handlers to prevent memory leaks."""
-        if self._tts_stop_handler_id is not None:
+        # Check handler is not None AND service is valid before disconnecting
+        if self._tts_stop_handler_id is not None and ttsservice is not None:
             try:
                 ttsservice.disconnect(self._tts_stop_handler_id)
-            except Exception:
-                pass
+            except (TypeError, RuntimeError, AttributeError):
+                pass  # Handler already disconnected or service disposed
             self._tts_stop_handler_id = None
         super().do_destroy()

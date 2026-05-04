@@ -40,6 +40,9 @@ class GObjectWorker:
                 # Return result to the UI thread safely
                 if cb:
                     GLib.idle_add(cb, result)
+            except (KeyboardInterrupt, SystemExit):
+                # Re-raise to allow clean shutdown
+                raise
             except Exception as e:
                 # Capture full traceback for technical debugging
                 tb_str = traceback.format_exc()

@@ -33,6 +33,12 @@ class TestLangCodePattern:
         assert self._match("chi_tra")
         assert self._match("aze_cyrl")
 
+    def test_multi_language_code(self):
+        # Multi-language OCR codes like "eng+ita" are supported
+        assert self._match("eng+ita")
+        assert self._match("deu+fra")
+        assert self._match("eng+ita+fra")
+
     def test_2letter_minimum(self):
         assert self._match("en")
 

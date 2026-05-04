@@ -12,8 +12,9 @@ from loguru import logger
 APP_ID = "com.github.d3msudo.anura"
 RESOURCE_PREFIX = "/com/github/d3msudo/anura"
 
-# Language code validation pattern (ISO 639-2, 2-8 alphanumeric chars with underscore)
-LANG_CODE_PATTERN = r'^[a-zA-Z0-9_]{2,8}$'
+# Language code validation pattern (ISO 639-2, 2-18 alphanumeric chars with underscore and plus)
+# Plus character allows multi-language OCR codes like "eng+ita"
+LANG_CODE_PATTERN = r'^[a-zA-Z0-9_+]{2,18}$'
 
 # XDG Base Directory specification compliance
 XDG_DATA_HOME = os.getenv("XDG_DATA_HOME", os.path.expanduser("~/.local/share"))
@@ -30,7 +31,7 @@ def _get_tessdata_system_dir() -> str:
     Check order:
     1. Environment variable (TESSDATA_PREFIX_SYSTEM)
     2. Flatpak path (/app/share/tessdata)
-    3. System paths common on Linux distributions
+    3. Common system paths on Linux distributions
 
     Returns:
         The first valid directory path found, or the Flatpak default as fallback.
@@ -40,24 +41,21 @@ def _get_tessdata_system_dir() -> str:
     if env_path and os.path.isdir(env_path):
         return env_path
 
-    # Priority 2: Flatpak path
-    flatpak_path = "/app/share/tessdata"
-    if os.path.isdir(flatpak_path):
-        return flatpak_path
-
-    # Priority 3: Common system paths
-    system_paths = [
-        "/usr/share/tesseract-ocr/4.00/tessdata",
-        "/usr/share/tesseract-ocr/tessdata",
-        "/usr/share/tessdata",
+    # Priority 2: Dynamic scan of candidate directories
+    # Scan in order of preference - first existing directory wins
+    candidate_dirs = [
+        "/app/share/tessdata",           # Flatpak
+        "/usr/share/tesseract-ocr/tessdata",  # Debian/Ubuntu, Arch, Fedora
+        "/usr/share/tesseract/tessdata",      # Alternative layout
+        "/usr/share/tessdata",               # Alternative system path
     ]
 
-    for path in system_paths:
+    for path in candidate_dirs:
         if os.path.isdir(path):
             return path
 
     # Fallback to Flatpak default even if not present (for Flatpak builds)
-    return flatpak_path
+    return "/app/share/tessdata"
 
 
 # System directory with models bundled by the Flatpak manifest

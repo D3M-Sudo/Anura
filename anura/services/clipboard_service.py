@@ -23,9 +23,14 @@ class ClipboardService(GObject.GObject):
         "error": (GObject.SIGNAL_RUN_FIRST, None, (str,)),
     }
 
+    __slots__ = ("_cancellable", "_clipboard", "_clipboard_timeout_id")
+
     _clipboard: Gdk.Clipboard | None = None
     _clipboard_timeout_id: int | None = None
     _cancellable: Gio.Cancellable | None = None
+
+    # Timeout for clipboard read operations (seconds)
+    CLIPBOARD_TIMEOUT_SECONDS = 10
 
     @property
     def clipboard(self) -> Gdk.Clipboard:
@@ -70,7 +75,7 @@ class ClipboardService(GObject.GObject):
         Callback for texture reading from clipboard.
         """
         # Cancel the timeout since operation completed (success or failure)
-        if self._clipboard_timeout_id is not None:
+        if self._clipboard_timeout_id and self._clipboard_timeout_id > 0:
             GLib.source_remove(self._clipboard_timeout_id)
             self._clipboard_timeout_id = None
 
@@ -103,7 +108,7 @@ class ClipboardService(GObject.GObject):
         Asynchronously reads a texture from the clipboard with a 10-second timeout.
         """
         # Cancel any previous timeout to prevent accumulation
-        if self._clipboard_timeout_id is not None:
+        if self._clipboard_timeout_id and self._clipboard_timeout_id > 0:
             GLib.source_remove(self._clipboard_timeout_id)
             self._clipboard_timeout_id = None
 
@@ -114,15 +119,22 @@ class ClipboardService(GObject.GObject):
 
         # Create new cancellable for this operation
         self._cancellable = Gio.Cancellable()
-        self._clipboard_timeout_id = GLib.timeout_add_seconds(10, self._on_clipboard_timeout, self._cancellable)
+        self._clipboard_timeout_id = GLib.timeout_add_seconds(self.CLIPBOARD_TIMEOUT_SECONDS, self._on_clipboard_timeout, self._cancellable)
 
         self.clipboard.read_texture_async(cancellable=self._cancellable, callback=self._on_read_texture)
 
     def _on_clipboard_timeout(self, cancellable: Gio.Cancellable) -> bool:
         """Cancel clipboard operation if it takes too long."""
+        # Check if this cancellable is still the active one (not replaced by new operation)
+        if cancellable is not self._cancellable:
+            # Stale timeout from previous operation - ignore
+            self._clipboard_timeout_id = None
+            return False
         if not cancellable.is_cancelled():
             logger.warning("Anura Clipboard: Read operation timed out after 10s, cancelling.")
             cancellable.cancel()
+            # Emit error signal so UI can show user feedback
+            GLib.idle_add(self.emit, "error", _("Clipboard read operation timed out."))
         self._clipboard_timeout_id = None
         return False  # Don't repeat timeout
 
@@ -131,7 +143,7 @@ class ClipboardService(GObject.GObject):
         if self._cancellable is not None and not self._cancellable.is_cancelled():
             logger.debug("Anura Clipboard: Cancelling pending clipboard operation.")
             self._cancellable.cancel()
-        if self._clipboard_timeout_id is not None:
+        if self._clipboard_timeout_id and self._clipboard_timeout_id > 0:
             GLib.source_remove(self._clipboard_timeout_id)
             self._clipboard_timeout_id = None
         self._cancellable = None

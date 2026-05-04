@@ -29,8 +29,8 @@
     </key>
     <key name="autolinks" type="b">
       <default>false</default>
-      <summary>Auto-open QR links</summary>
-      <description>Automatically open links extracted from QR codes.</description>
+      <summary>Auto-open detected links</summary>
+      <description>Automatically open URLs found in extracted text.</description>
     </key>
 
     <key name="tts-volume" type="d">
