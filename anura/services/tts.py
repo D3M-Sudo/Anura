@@ -143,7 +143,7 @@ class TTSService(GObject.GObject):
                     pass
             raise
 
-        logger.debug(f"Anura TTS: Speech file saved to {filepath}")
+        logger.debug("Anura TTS: Speech file saved to cache directory")
 
         self._current_speech_file = filepath
         GLib.idle_add(self.emit, "speak", filepath)
@@ -185,12 +185,18 @@ class TTSService(GObject.GObject):
         with self._bus_watch_lock:
             if self._bus_watch_setup_in_progress:
                 return False
+            # Check if bus watch is already active to prevent duplicates
+            if self._bus_watch_active and self._bus_message_handler_id is not None:
+                return False
             self._bus_watch_setup_in_progress = True
         try:
             if self._bus is not None:
-                self._bus.add_signal_watch()
-                self._bus_watch_active = True
-                self._bus_message_handler_id = self._bus.connect("message", self.on_gst_message)
+                # Double-check under lock to prevent race conditions
+                with self._bus_watch_lock:
+                    if not self._bus_watch_active:
+                        self._bus.add_signal_watch()
+                        self._bus_watch_active = True
+                        self._bus_message_handler_id = self._bus.connect("message", self.on_gst_message)
         finally:
             with self._bus_watch_lock:
                 self._bus_watch_setup_in_progress = False
@@ -209,9 +215,9 @@ class TTSService(GObject.GObject):
             if filepath and os.path.exists(filepath):
                 try:
                     os.unlink(filepath)
-                    logger.debug(f"Anura TTS: Cleaned up temp file: {filepath}")
-                except Exception as e:
-                    logger.warning(f"Anura TTS: Failed to cleanup temp file: {e}")
+                    logger.debug("Anura TTS: Cleaned up temporary speech file")
+                except Exception:
+                    logger.warning("Anura TTS: Failed to cleanup temporary speech file")
             GLib.idle_add(self.emit, "stop", True)
         elif message.type == Gst.MessageType.ERROR:
             err, _debug = message.parse_error()
@@ -256,9 +262,9 @@ class TTSService(GObject.GObject):
         if filepath and os.path.exists(filepath):
             try:
                 os.unlink(filepath)
-                logger.debug(f"Anura TTS: Cleaned up temp file on stop: {filepath}")
-            except (OSError, PermissionError) as e:
-                logger.warning(f"Anura TTS: Failed to cleanup on stop: {e}")
+                logger.debug("Anura TTS: Cleaned up temporary speech file on stop")
+            except (OSError, PermissionError):
+                logger.warning("Anura TTS: Failed to cleanup temporary speech file on stop")
 
 
 # Singleton instance

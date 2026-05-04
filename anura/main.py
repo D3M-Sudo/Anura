@@ -13,7 +13,7 @@ from anura.services.notification_service import (
 )
 
 
-def _load_gresource_bundle():
+def _load_gresource_bundle() -> bool:
     """Load the GResource bundle containing UI files and icons.
 
     This must be called before importing any widgets that use @Gtk.Template
@@ -66,13 +66,14 @@ from anura.language_manager import language_manager  # noqa: E402
 from anura.services.clipboard_service import clipboard_service  # noqa: E402
 from anura.services.screenshot_service import ScreenshotService  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
+from anura.utils import cleanup_orphaned_resources  # noqa: E402
 from anura.window import AnuraWindow  # noqa: E402
 
 
 class AnuraApplication(Adw.Application):
     __gtype_name__ = "AnuraApplication"
 
-    def __init__(self, version=None):
+    def __init__(self, version: str | None = None) -> None:
         super().__init__(application_id=APP_ID, flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
         self.backend = None
         self.version = version
@@ -107,9 +108,12 @@ class AnuraApplication(Adw.Application):
         self._backend_decoded_handler_id: int | None = None
         self._backend_error_handler_id: int | None = None
 
-    def do_startup(self, *args, **kwargs):
+    def do_startup(self, *args, **kwargs) -> None:
         Adw.init()
         Adw.Application.do_startup(self)
+
+        # Clean up orphaned resources from previous sessions
+        cleanup_orphaned_resources()
 
         self.backend = ScreenshotService()
         self._backend_decoded_handler_id = self.backend.connect("decoded", self.on_decoded)
@@ -123,7 +127,7 @@ class AnuraApplication(Adw.Application):
         GLib.set_application_name("Anura OCR")
         GLib.set_prgname(APP_ID)
 
-    def do_shutdown(self, *args, **kwargs):
+    def do_shutdown(self, *args, **kwargs) -> None:
         """Clean up resources on application shutdown."""
         # Disconnect backend signal handlers
         if self.backend is not None:
@@ -155,7 +159,7 @@ class AnuraApplication(Adw.Application):
 
         Adw.Application.do_shutdown(self)
 
-    def _setup_actions(self):
+    def _setup_actions(self) -> None:
         self.create_action("get_screenshot", self.get_screenshot, ["<primary>g"])
         self.create_action("get_screenshot_and_copy", self.get_screenshot_and_copy, ["<primary><shift>g"])
         self.create_action("copy_to_clipboard", self.on_copy_to_clipboard, ["<primary>c"])
@@ -169,13 +173,13 @@ class AnuraApplication(Adw.Application):
         self.create_action("about", self.on_about)
         self.create_action("github_star", self.on_github_star)
 
-    def do_activate(self):
+    def do_activate(self) -> None:
         win = self.props.active_window
         if not win:
             win = AnuraWindow(application=self, backend=self.backend)
         win.present()
 
-    def do_command_line(self, command_line):
+    def do_command_line(self, command_line) -> int:
         options = command_line.get_options_dict().end().unpack()
 
         if "extract_to_clipboard" in options:
@@ -238,7 +242,7 @@ class AnuraApplication(Adw.Application):
 
         interrupted = threading.Event()
 
-        def on_signal(signum, frame):
+        def on_signal(signum: int, frame) -> None:
             """Handle SIGINT/SIGTERM for clean shutdown."""
             logger.info(f"Anura: Received signal {signum}, shutting down silently...")
             interrupted.set()
@@ -300,7 +304,7 @@ class AnuraApplication(Adw.Application):
         if window:
             window.show_preferences()
 
-    def _get_release_notes(self):
+    def _get_release_notes(self) -> str:
         """Get release notes from generated _release_notes module."""
         try:
             from anura._release_notes import get_release_notes
@@ -313,7 +317,7 @@ class AnuraApplication(Adw.Application):
         # Fallback to version-specific message
         return f"<p>Anura OCR {self.version} - Bug fixes and improvements.</p>"
 
-    def on_about(self, _action, _param):
+    def on_about(self, _action, _param) -> None:
         about_window = Adw.AboutDialog(
             application_name="Anura",
             application_icon=APP_ID,
@@ -331,7 +335,7 @@ class AnuraApplication(Adw.Application):
         """Open the GitHub repository page in the default browser."""
         launcher = Gtk.UriLauncher.new("https://github.com/d3msudo/anura")
 
-        def on_launch_finish(_launcher, result):
+        def on_launch_finish(_launcher, result) -> None:
             try:
                 launcher.launch_finish(result)
             except GLib.Error as e:
@@ -347,7 +351,7 @@ class AnuraApplication(Adw.Application):
                     dialog.set_default_response("close")
                     dialog.set_close_response("close")
 
-                    def on_dialog_response(_dlg, response):
+                    def on_dialog_response(_dlg, response) -> None:
                         if response == "copy":
                             clipboard_service.set("https://github.com/d3msudo/anura")
                         _dlg.destroy()
@@ -357,7 +361,7 @@ class AnuraApplication(Adw.Application):
 
         launcher.launch(self.props.active_window, None, on_launch_finish)
 
-    def on_shortcuts(self, _action, _param):
+    def on_shortcuts(self, _action, _param) -> None:
         window = self.get_active_window()
         if window:
             window.show_shortcuts()
@@ -407,17 +411,17 @@ class AnuraApplication(Adw.Application):
         # Real error - show notification
         self.notification_service.show(title="Anura OCR", body=message)
 
-    def on_listen(self, _sender, _event):
+    def on_listen(self, _sender, _event) -> None:
         window = self.get_active_window()
         if window:
             window.on_listen()
 
-    def on_listen_cancel(self, _sender, _event):
+    def on_listen_cancel(self, _sender, _event) -> None:
         window = self.get_active_window()
         if window:
             window.on_listen_cancel()
 
-    def create_action(self, name, callback, shortcuts=None):
+    def create_action(self, name: str, callback, shortcuts: list[str] | None = None) -> None:
         action = Gio.SimpleAction.new(name, None)
         action.connect("activate", callback)
         self.add_action(action)
@@ -425,6 +429,6 @@ class AnuraApplication(Adw.Application):
             self.set_accels_for_action(f"app.{name}", shortcuts)
 
 
-def main(version):
+def main(version: str) -> int:
     app = AnuraApplication(version)
     return app.run(sys.argv)

@@ -68,12 +68,12 @@ class AnuraWindow(Adw.ApplicationWindow):
         except RuntimeError as e:
             logger.warning(f"Clipboard service unavailable: {e}")
 
-    def _setup_geometry(self):
+    def _setup_geometry(self) -> None:
         width = max(400, self.settings.get_int("window-width"))  # Min 400px
         height = max(300, self.settings.get_int("window-height"))  # Min 300px
         self.set_default_size(width, height)
 
-    def _setup_controllers(self):
+    def _setup_controllers(self) -> None:
         drop_target = Gtk.DropTarget.new(type=Gdk.FileList, actions=Gdk.DragAction.COPY)
         drop_target.connect("drop", self.on_dnd_drop)
         self.split_view.add_controller(drop_target)
@@ -208,7 +208,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             logger.error(f"Error accessing file {file_path}: {e}")
             self.show_toast(_("Cannot access file: {path}").format(path=file_path))
 
-    def _on_open_image_result(self, dialog, result):
+    def _on_open_image_result(self, dialog, result) -> None:
         try:
             file = dialog.open_finish(result)
             if file:
@@ -217,7 +217,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         except Exception as e:
             logger.debug(f"File selection cancelled or failed: {e}")
 
-    def _on_file_contents_loaded(self, gfile, result):
+    def _on_file_contents_loaded(self, gfile, result) -> None:
         try:
             ok, contents, _ = gfile.load_contents_finish(result)
             if ok:
@@ -230,6 +230,34 @@ class AnuraWindow(Adw.ApplicationWindow):
                         )
                     )
                     return
+
+                # Validate image format before passing to OCR
+                try:
+                    from gi.repository import GdkPixbuf
+                    stream = BytesIO(contents)
+                    # Try to create a pixbuf to validate the image
+                    GdkPixbuf.Pixbuf.new_from_stream_at_scale(
+                        Gio.MemoryInputStream.new_from_bytes(GLib.Bytes.new(contents)),
+                        -1, -1, False, None
+                    )
+                except GLib.Error as e:
+                    if e.matches(GdkPixbuf.pixbuf_error_quark(), GdkPixbuf.PixbufError.CORRUPT_IMAGE):
+                        logger.error(f"Anura: Corrupt image file: {e.message}")
+                        self.show_toast(_("Corrupt or unsupported image file"))
+                        return
+                    elif e.matches(GdkPixbuf.pixbuf_error_quark(), GdkPixbuf.PixbufError.UNKNOWN_TYPE):
+                        logger.error(f"Anura: Unknown image format: {e.message}")
+                        self.show_toast(_("Unsupported image format"))
+                        return
+                    else:
+                        logger.error(f"Anura: Image validation error: {e.message}")
+                        self.show_toast(_("Failed to validate image file"))
+                        return
+                except Exception as e:
+                    logger.error(f"Anura: Unexpected image validation error: {e}")
+                    self.show_toast(_("Failed to validate image file"))
+                    return
+
                 stream = BytesIO(contents)
                 GObjectWorker.call(self.backend.decode_image, (self.get_language(), stream))
         except Exception as e:
@@ -254,7 +282,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         )
         return True
 
-    def _on_dnd_query_info_done(self, gfile, result, item):
+    def _on_dnd_query_info_done(self, gfile, result, item) -> None:
         try:
             info = gfile.query_info_finish(result)
             if not info:
@@ -272,7 +300,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             logger.error(f"DnD query_info failed: {e}")
             self.welcome_page.spinner.set_visible(False)
 
-    def _on_dnd_file_contents_loaded(self, gfile, result):
+    def _on_dnd_file_contents_loaded(self, gfile, result) -> None:
         try:
             ok, contents, _ = gfile.load_contents_finish(result)
             if not ok:
@@ -427,7 +455,7 @@ class AnuraWindow(Adw.ApplicationWindow):
     def _launch_uri(self, url: str) -> None:
         """Open a URI in the default system browser."""
         # Security: validate URL before launching (defense in depth)
-        if not self.uri_validator(url):
+        if not uri_validator(url):
             logger.warning(f"Anura: Blocked invalid URL launch: {url}")
             self.show_toast(_("Invalid URL blocked for security"))
             return

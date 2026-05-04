@@ -60,3 +60,6 @@ coverage.xml
 
 # Local install test directory
 /tmp/install-test/
+
+# Test runner script (development utility)
+run_tests.py

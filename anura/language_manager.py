@@ -111,7 +111,7 @@ class LanguageManager(GObject.GObject):
         with self._cache_lock:
             if not os.path.exists(TESSDATA_DIR):
                 logger.warning(
-                    f"Anura: tessdata directory not found at '{TESSDATA_DIR}'. "
+                    "Anura: tessdata directory not found. "
                     "It will be created on first language download."
                 )
                 try:
@@ -124,20 +124,20 @@ class LanguageManager(GObject.GObject):
         try:
             # Check directory readability first
             if not os.access(TESSDATA_DIR, os.R_OK | os.X_OK):
-                logger.warning(f"Anura: Cannot read tessdata directory for cleanup: {TESSDATA_DIR}")
+                logger.warning("Anura: Cannot read tessdata directory for cleanup")
             else:
                 temp_files = [f for f in os.listdir(TESSDATA_DIR) if f.endswith('.tmp')]
                 for temp_file in temp_files:
                     temp_path = os.path.join(TESSDATA_DIR, temp_file)
                     try:
                         os.remove(temp_path)
-                        logger.warning(f"Anura: Cleaned up orphaned temp file: {temp_file}")
+                        logger.warning("Anura: Cleaned up orphaned temporary language file")
                     except PermissionError:
-                        logger.error(f"Anura: Permission denied removing orphaned temp file {temp_file}")
-                    except OSError as e:
-                        logger.error(f"Anura: Failed to remove orphaned temp file {temp_file}: {e}")
-        except OSError as e:
-            logger.error(f"Anura: Error scanning for orphaned temp files: {e}")
+                        logger.error("Anura: Permission denied removing orphaned temporary language file")
+                    except OSError:
+                        logger.error("Anura: Failed to remove orphaned temporary language file")
+        except OSError:
+            logger.error("Anura: Error scanning for orphaned temporary language files")
 
         installed = self.get_downloaded_codes(force=True)
         logger.info(
@@ -169,8 +169,8 @@ class LanguageManager(GObject.GObject):
                             for f in os.listdir(TESSDATA_DIR)
                             if f.endswith(".traineddata") and not f.startswith("osd")
                         )
-                    except OSError as e:
-                        logger.warning(f"Anura: Error reading user tessdata directory: {e}")
+                    except OSError:
+                        logger.warning("Anura: Error reading user tessdata directory")
 
                 # Bundled system models (/app/share/tessdata/ — eng, ita pre-installed)
                 if os.path.exists(TESSDATA_SYSTEM_DIR):
@@ -180,8 +180,8 @@ class LanguageManager(GObject.GObject):
                             for f in os.listdir(TESSDATA_SYSTEM_DIR)
                             if f.endswith(".traineddata") and not f.startswith("osd")
                         )
-                    except OSError as e:
-                        logger.warning(f"Anura: Error reading system tessdata directory: {e}")
+                    except OSError:
+                        logger.warning("Anura: Error reading system tessdata directory")
 
                 self._downloaded_codes = list(codes)
                 self._need_update_cache = False
