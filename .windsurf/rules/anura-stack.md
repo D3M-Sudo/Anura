@@ -4,7 +4,7 @@ trigger: always_on
 
 # Anura OCR — Tech Stack
 
-- Language: Python 3.11+
+- Language: Python 3.12+
 - Build: Meson ≥ 1.5.0
 - Distribution: Flatpak (com.github.d3msudo.anura)
 - UI: GTK4 + Libadwaita + Blueprint Compiler 0.16.0
