@@ -32,13 +32,16 @@ GSETTINGS_SCHEMA_DIR=builddir/data python3 -m anura.main
 
 ```bash
 # All pure-Python tests (no GTK required)
-pytest tests/ -v
+pytest tests/ -v -m "not gtk"
 
 # Skip network-dependent tests
 pytest tests/ -v -m "not network"
 
 # Run only a specific file
 pytest tests/test_config.py -v
+
+# Run URI validator tests specifically
+pytest tests/test_uri_validator.py -v
 ```
 
 ## Linting

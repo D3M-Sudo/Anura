@@ -53,7 +53,7 @@ This policy will be updated as the project matures.
 | **Denial of Service** | Crashes or resource exhaustion from malformed images (Pillow, pyzbar, pytesseract) |
 | **Race Conditions** | TOCTOU vulnerabilities in temporary file operations |
 | **Symlink Attacks** | Improper symlink handling in download or cache paths |
-| **URI Injection** | Bypass of `uri_validator()` in `window.py` (homograph attacks, control chars, disallowed schemes) |
+| **URI Injection** | Bypass of `uri_validator()` in `utils/validators.py` (homograph attacks, control chars, disallowed schemes) |
 | **Notification Spoofing** | Manipulation of notification content through malformed OCR text |
 
 ### 🔍 Areas of Concern
@@ -61,7 +61,7 @@ This policy will be updated as the project matures.
 | File | Area |
 |------|------|
 | `anura/config.py` | `lang_code` validation — used as Tesseract argument |
-| `anura/window.py` | URI handling → `uri_validator()` |
+| `anura/utils/validators.py` | URI validation → `uri_validator()` |
 | `anura/language_manager.py` | Tessdata model download and writing |
 | `anura/services/notification_service.py` | XDG Portal notification payloads |
 | `anura/services/share_service.py` | Share provider URL building |
