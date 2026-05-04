@@ -11,6 +11,7 @@ from typing import ClassVar
 from gi.repository import GLib, GObject, Gst
 import gtts
 from loguru import logger
+import requests
 
 from anura.services.settings import settings
 
@@ -70,7 +71,7 @@ class TTSService(GObject.GObject):
         if cls._gtts_languages is None:
             try:
                 cls._gtts_languages = gtts.lang.tts_langs()
-            except Exception:
+            except (requests.RequestException, ValueError, OSError):
                 # Network or API error - fallback to empty dict
                 cls._gtts_languages = {}
         return cls._gtts_languages
@@ -132,7 +133,7 @@ class TTSService(GObject.GObject):
         logger.info(f"Anura TTS: Generating speech for language: {lang}")
         try:
             tts.save(filepath)
-        except Exception as e:
+        except (gtts.gTTSError, requests.RequestException, OSError) as e:
             logger.error(f"Anura TTS: Failed to save speech file: {e}")
             if os.path.exists(filepath):
                 try:

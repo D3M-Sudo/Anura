@@ -3,8 +3,6 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
-from typing import ClassVar
-
 from gi.repository import GLib, GObject, Gtk
 
 from anura.config import RESOURCE_PREFIX
@@ -25,10 +23,12 @@ class LanguageRow(Gtk.Overlay):
     _item: LanguageItem | None = None
     _downloading_handler_id: int | None = None
     _downloaded_handler_id: int | None = None
-    _idle_ids: ClassVar[list[int]] = []
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        # Instance-level idle ID tracking to prevent cross-instance interference
+        self._idle_ids: list[int] = []
 
         # Connect language manager signals for download updates
         self._downloading_handler_id = language_manager.connect("downloading", self.update_progress)
@@ -72,15 +72,12 @@ class LanguageRow(Gtk.Overlay):
         if not is_loading:
             self.revealer.set_reveal_child(False)
 
-    def update_progress(self, sender, code: str, progress: float) -> None:
-        """idle_id = )
-            self._idle_ids.append(idle_id
-        Signal handler for download progress.
-        """
+    def update_progress(self, sender: GObject.GObject, code: str, progress: float) -> None:
+        """Signal handler for download progress."""
         if self._item and code == self._item.code:
             GLib.idle_add(self.late_update, code, progress)
 
-    def late_update(self, code, progress):
+    def late_update(self, code: str, progress: float) -> None:
         """
         Updates the progress bar on the main thread.
         """
@@ -116,7 +113,7 @@ class LanguageRow(Gtk.Overlay):
             language_manager.remove_language(self._item.code)
             self.update_ui()
 
-    def on_downloaded(self, sender, code):
+    def on_downloaded(self, sender: GObject.GObject, code: str) -> None:
         """
         Signal handler for completed downloads.
         """
