@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: anura\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-04 03:08+0200\n"
+"POT-Creation-Date: 2026-05-04 21:03+0200\n"
 "PO-Revision-Date: 2024-02-23 09:02+0000\n"
 "Last-Translator: Philip Goto <philip.goto@gmail.com>\n"
 "Language-Team: Dutch <https://hosted.weblate.org/projects/anura/default/nl/"
@@ -21,199 +21,231 @@ msgstr ""
 "X-Poedit-SearchPath-2: data/com.github.d3msudo.anura.metainfo.xml.in\n"
 "X-Poedit-SearchPath-3: anura\n"
 
-#: ../anura/main.py:82
+#: ../anura/main.py:87
 msgid "Extract directly into the clipboard"
 msgstr "Direct naar het klembord extraheren"
 
-#: ../anura/main.py:87
+#: ../anura/main.py:92
 msgid "Process image file for OCR"
 msgstr ""
 
-#: ../anura/main.py:95
+#: ../anura/main.py:100
 msgid "Run OCR without UI (copy result to clipboard)"
 msgstr ""
 
-#: ../anura/main.py:288
+#: ../anura/main.py:347
 msgid "Failed to Open Browser"
 msgstr ""
 
-#: ../anura/main.py:289
+#: ../anura/main.py:348
 msgid "No web browser could be launched. Please open the link manually."
 msgstr ""
 
-#: ../anura/main.py:290
+#: ../anura/main.py:349
 msgid "Copy Link"
 msgstr ""
 
-#: ../anura/main.py:291
+#: ../anura/main.py:350
 msgid "Close"
 msgstr ""
 
-#: ../anura/main.py:337
+#: ../anura/main.py:396
 msgid "No text found. Try to grab another region."
 msgstr "Geen tekst gevonden. Probeer een ander gebied te selecteren."
 
-#: ../anura/main.py:342
+#: ../anura/main.py:401
 #, fuzzy
 msgid "Text extracted and copied to clipboard."
 msgstr "Tekst extraheren en naar het klembord kopiëren"
 
-#: ../anura/main.py:348 ../anura/services/screenshot_service.py:183
+#: ../anura/main.py:407 ../anura/services/screenshot_service.py:191
 msgid "Cancelled"
 msgstr ""
 
-#: ../anura/window.py:95
+#: ../anura/window.py:113
 #, fuzzy
 msgid "Failed to capture screenshot"
 msgstr "Schermafdruk nemen"
 
-#: ../anura/window.py:101
+#: ../anura/window.py:119
 msgid "Screenshot service did not respond."
 msgstr ""
 
-#: ../anura/window.py:122
+#: ../anura/window.py:140 ../anura/window.py:337 ../anura/window.py:346
 msgid "Text copied to clipboard"
 msgstr "Tekst naar klembord gekopieerd"
 
-#: ../anura/window.py:128
+#: ../anura/window.py:147
 msgid "URL opened automatically"
 msgstr ""
 
-#: ../anura/window.py:150
+#: ../anura/window.py:169
 #, fuzzy
 msgid "Choose an image for extraction"
 msgstr "Afbeelding openen om tekst te extraheren"
 
-#: ../anura/window.py:153
+#: ../anura/window.py:172
 #, fuzzy
 msgid "Images"
 msgstr "Afbeelding openen"
 
-#: ../anura/window.py:175 ../anura/window.py:213 ../anura/window.py:271
+#: ../anura/window.py:193 ../anura/window.py:231 ../anura/window.py:317
 #, python-brace-format
 msgid "Image too large: {size}MB (max {max}MB)"
 msgstr ""
 
-#: ../anura/window.py:183
+#: ../anura/window.py:201
 #, python-brace-format
 msgid "Unsupported file format: {path}"
 msgstr ""
 
-#: ../anura/window.py:189
+#: ../anura/window.py:207
 #, python-brace-format
 msgid "File not found: {path}"
 msgstr ""
 
-#: ../anura/window.py:191
+#: ../anura/window.py:209
 #, python-brace-format
 msgid "Permission denied: {path}"
 msgstr ""
 
-#: ../anura/window.py:194
+#: ../anura/window.py:212
 #, python-brace-format
 msgid "Cannot access file: {path}"
 msgstr ""
 
-#: ../anura/window.py:222
+#: ../anura/window.py:249
+msgid "Corrupt or unsupported image file"
+msgstr ""
+
+#: ../anura/window.py:253
+msgid "Unsupported image format"
+msgstr ""
+
+#: ../anura/window.py:257 ../anura/window.py:261
+msgid "Failed to validate image file"
+msgstr ""
+
+#: ../anura/window.py:268
 msgid "Failed to load image file"
 msgstr ""
 
-#: ../anura/window.py:252
+#: ../anura/window.py:298
 msgid "Unsupported file format."
 msgstr ""
 
-#: ../anura/window.py:264 ../anura/window.py:281
+#: ../anura/window.py:310 ../anura/window.py:327
 msgid "Failed to load dropped file"
 msgstr ""
 
-#: ../anura/window.py:368
+#: ../anura/window.py:339 ../anura/window.py:348
+#, fuzzy
+msgid "No text to copy"
+msgstr "Geen resultaten gevonden"
+
+#: ../anura/window.py:443
 msgid "No text to share."
 msgstr ""
 
-#: ../anura/window.py:377
+#: ../anura/window.py:452
 msgid "Text contains a link"
 msgstr ""
 
-#: ../anura/window.py:378
+#: ../anura/window.py:453
 msgid "Open"
 msgstr "Openen"
 
-#: ../anura/widgets/preferences_languages_page.py:66
+#: ../anura/window.py:463
+msgid "Invalid URL blocked for security"
+msgstr ""
+
+#: ../anura/widgets/preferences_languages_page.py:70
 #, fuzzy
 msgid "OCR models unreachable. Please check your internet connection."
 msgstr "Locatie van modellen onbereikbaar. Controleer uw internet­verbinding."
 
-#: ../anura/widgets/preferences_languages_page.py:71
+#: ../anura/widgets/preferences_languages_page.py:75
 msgid "Metered connection detected. Model downloads may incur data costs."
 msgstr ""
 
-#: ../anura/widgets/extracted_page.py:94
+#: ../anura/widgets/extracted_page.py:99
 msgid "Network error. Please check your internet connection."
 msgstr ""
 
-#: ../anura/widgets/extracted_page.py:96
+#: ../anura/widgets/extracted_page.py:101
 msgid "Request timed out. Please try again."
 msgstr ""
 
-#: ../anura/widgets/extracted_page.py:98
+#: ../anura/widgets/extracted_page.py:103
 msgid "Failed to generate speech."
 msgstr ""
 
-#: ../anura/widgets/preferences_general_page.py:101
+#: ../anura/widgets/preferences_general_page.py:100
 #, python-brace-format
 msgid "TTS playback volume level: {percentage:.0f}%"
 msgstr ""
 
-#: ../anura/widgets/preferences_general_page.py:116
+#: ../anura/widgets/preferences_general_page.py:115
 msgid "Auto (follow OCR language)"
 msgstr ""
 
 #: ../anura/widgets/share_row.py:27
-msgid "Share via {provider_name.capitalize()}"
+#, python-brace-format
+msgid "Share via {name}"
 msgstr ""
 
-#: ../anura/services/clipboard_service.py:72
+#: ../anura/services/clipboard_service.py:93
+#: ../anura/services/clipboard_service.py:97
 msgid "No image in clipboard"
 msgstr "Geen afbeelding op het klem­bord"
 
-#: ../anura/services/screenshot_service.py:64
-#: ../anura/services/screenshot_service.py:71
+#: ../anura/services/clipboard_service.py:146
+msgid "Clipboard read operation timed out."
+msgstr ""
+
+#: ../anura/services/screenshot_service.py:72
+#: ../anura/services/screenshot_service.py:79
 msgid "Can't take a screenshot."
 msgstr "Kan geen scherm­afdruk maken."
 
-#: ../anura/services/screenshot_service.py:99
-#: ../anura/services/screenshot_service.py:170
+#: ../anura/services/screenshot_service.py:107
+#: ../anura/services/screenshot_service.py:178
 msgid "Invalid language code specified."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:127
+#: ../anura/services/screenshot_service.py:135
 msgid "Failed to read image file."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:130
+#: ../anura/services/screenshot_service.py:138
 msgid "OCR engine failed to process image."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:137
+#: ../anura/services/screenshot_service.py:145
 msgid "Failed to decode data."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:153
+#: ../anura/services/screenshot_service.py:161
 #, fuzzy
 msgid "No text found."
 msgstr "Geen resultaten gevonden"
 
-#: ../anura/services/share_service.py:117
+#: ../anura/services/share_service.py:164
 msgid "Select Mastodon Instance"
 msgstr ""
 
-#: ../anura/services/share_service.py:118
+#: ../anura/services/share_service.py:165
 msgid "Choose your Mastodon instance to share the extracted text:"
 msgstr ""
 
-#: ../anura/services/share_service.py:124
+#: ../anura/services/share_service.py:171
 msgid "Cancel"
 msgstr ""
+
+#: ../anura/services/share_service.py:255
+#, fuzzy
+msgid "Extracted Text from Anura"
+msgstr "Extraheer tekst vanuit elke bron"
 
 #: ../anura/language_manager.py:40 ../anura/language_manager.py:60
 msgid "English"
@@ -1142,294 +1174,3 @@ msgstr ""
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:118
 msgid "tesseract"
 msgstr ""
-
-#~ msgctxt "Extracted screen"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "Geëxtraheerde tekst naar klembord kopiëren"
-
-#~ msgctxt "Extracted screen"
-#~ msgid "Listen to text"
-#~ msgstr "Luisteren naar tekst"
-
-#~ msgctxt "Extracted screen"
-#~ msgid "Cancel listening to text"
-#~ msgstr "Luisteren naar tekst annuleren"
-
-#~ msgctxt "Extracted screen"
-#~ msgid "Open menu"
-#~ msgstr "Menu openen"
-
-#~ msgctxt "Extracted screen"
-#~ msgid "Share To"
-#~ msgstr "Delen"
-
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Install language"
-#~ msgstr "Taal installeren"
-
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Remove language"
-#~ msgstr "Taal verwijderen"
-
-#~ msgctxt "shortcut window"
-#~ msgid "Shortcuts"
-#~ msgstr "Sneltoetsen"
-
-#~ msgctxt "shortcut window"
-#~ msgid "General"
-#~ msgstr "Algemeen"
-
-#~ msgctxt "shortcut window"
-#~ msgid "Open image"
-#~ msgstr "Afbeelding openen"
-
-#~ msgctxt "shortcut window"
-#~ msgid "Take screenshot and extract text"
-#~ msgstr "Scherm­afdruk nemen en tekst extraheren"
-
-#~ msgctxt "shortcut window"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "Geëxtraheerde tekst naar klem­bord kopiëren"
-
-#~ msgctxt "shortcut window"
-#~ msgid "Application"
-#~ msgstr "App"
-
-#~ msgctxt "shortcut window"
-#~ msgid "Preferences"
-#~ msgstr "Voorkeuren"
-
-#~ msgctxt "shortcut window"
-#~ msgid "Quit"
-#~ msgstr "Afsluiten"
-
-#~ msgctxt "shortcut window"
-#~ msgid "Help"
-#~ msgstr "Hulp"
-
-#~ msgctxt "shortcut window"
-#~ msgid "Display Shortcuts"
-#~ msgstr "Sneltoetsen tonen"
-
-#~ msgctxt "Welcome screen"
-#~ msgid "Take a Screenshot"
-#~ msgstr "Scherm­afdruk nemen"
-
-#~ msgctxt "Welcome screen"
-#~ msgid "Paste image from clipboard"
-#~ msgstr "Afbeelding van klem­bord plakken"
-
-#, python-brace-format
-#~ msgid "Share via {0}"
-#~ msgstr "Delen via {0}"
-
-#~ msgid "About anura"
-#~ msgstr "Over anura"
-
-#, fuzzy
-#~ msgid "OCR models unreachable. Check your internet connection."
-#~ msgstr ""
-#~ "Locatie van modellen onbereikbaar. Controleer uw internet­verbinding."
-
-#~ msgid "Extract text from images"
-#~ msgstr "Extraheer tekst uit afbeeldingen"
-
-#~ msgid ""
-#~ "Extract text from images, websites, videos, and QR codes by taking a "
-#~ "picture of the source."
-#~ msgstr ""
-#~ "Extraheer tekst uit afbeeldingen, websites, video's en QR-codes door een "
-#~ "foto van de bron te maken."
-
-#~ msgid "Text extraction tool"
-#~ msgstr "Tekst­extractie­gereedschap"
-
-#~ msgid "Available Languages"
-#~ msgstr "Beschikbare talen"
-
-#~ msgid "Models location unreachable. Check your internet connection"
-#~ msgstr "Locatie van modellen onbereikbaar. Controleer uw internet­verbinding"
-
-#~ msgid "Share via Pocket"
-#~ msgstr "Delen via Pocket"
-
-#~ msgid "Pocket"
-#~ msgstr "Pocket"
-
-#~ msgctxt "shortcut window"
-#~ msgid "May not work properly on wayland"
-#~ msgstr "Werkt mogelijk niet goed op Wayland"
-
-#~ msgid "Catalan; Valencian"
-#~ msgstr "Catalaans; Valenciaans"
-
-#~ msgid "Greek, Modern (1453-)"
-#~ msgstr "Grieks, Modern (1453-)"
-
-#~ msgid "Filipino (old - Tagalog)"
-#~ msgstr "Filipijns (oud - Tagalog)"
-
-#~ msgid "Greek, Ancient (to 1453) (contrib)"
-#~ msgstr "Grieks, Oud (tot 1453)"
-
-#~ msgid "Haitian; Haitian Creole"
-#~ msgstr "Haïtiaans; Haïtiaans Creools"
-
-#~ msgid "Kurmanji (Kurdish - Latin Script)"
-#~ msgstr "Kurmanji (Koerdisch - Latijns schrift)"
-
-#~ msgid "Dutch; Flemish"
-#~ msgstr "Nederlands; Vlaams"
-
-#~ msgid "Occitan (post 1500)"
-#~ msgstr "Occitaans (na 1500)"
-
-#~ msgid "Orientation and script detection module"
-#~ msgstr "Orientatie- en scriptdetectiemodule"
-
-#~ msgid "Romanian; Moldavian; Moldovan"
-#~ msgstr "Roemeens; Moldavisch"
-
-#~ msgid "Sinhala; Sinhalese"
-#~ msgstr "Sinhala; Singalees"
-
-#~ msgid "Spanish; Castilian"
-#~ msgstr "Spaans; Castiliaans"
-
-#~ msgid "Text extracted. You can paste it with Ctrl+V"
-#~ msgstr "Tekst geëxtraheerd. U kunt het plakken met Ctrl+V."
-
-#~ msgid "QR-code URL opened"
-#~ msgstr "URL van QR-code geopend"
-
-#~ msgid "QR-code contains URL."
-#~ msgstr "QR-code bevat een URL"
-
-#~ msgid "Supported image files"
-#~ msgstr "Ondersteunde afbeeldings­formaten"
-
-#~ msgid "Only images can be processed that way."
-#~ msgstr "Alleen afbeeldingen kunnen op die manier verwerkt worden."
-
-#~ msgid "Text copied"
-#~ msgstr "Tekst gekopieerd"
-
-#~ msgid "You are on a metered connection. Be careful to download languages."
-#~ msgstr ""
-#~ "U heeft een gemeten verbinding. Wees voorzichtig met het downloaden van "
-#~ "talen."
-
-#~ msgid "View all available languages"
-#~ msgstr "Alle beschikbare talen tonen"
-
-#~ msgid "Tender Owl"
-#~ msgstr "Tender Owl"
-
-#, fuzzy
-#~| msgid "Open image to extract text"
-#~ msgid "Open Image to extract text"
-#~ msgstr "Afbeelding openen om tekst te extraheren"
-
-#~ msgid "In this update, we've made a number of improvements to our app."
-#~ msgstr ""
-#~ "In deze update hebben we een aantal verbeteringen aangebracht in onze app."
-
-#~ msgid "We hope you enjoy our work!"
-#~ msgstr "Wij wensen u veel plezier met ons werk!"
-
-#~ msgid ""
-#~ "We have redesigned the settings dialog to make it more user-friendly and "
-#~ "understandable."
-#~ msgstr ""
-#~ "We hebben het instellingenvenster opnieuw ontworpen om het "
-#~ "gebruiksvriendelijker en begrijpelijker te maken."
-
-#~ msgid "Now you can easily find the language you want by searching."
-#~ msgstr "Nu kunt u gemakkelijk de gewenste taal vinden door te zoeken."
-
-#~ msgid ""
-#~ "In addition, we have added the ability to select a second language for "
-#~ "extracting text from images."
-#~ msgstr ""
-#~ "Bovendien hebben we de mogelijkheid toegevoegd om een tweede taal te "
-#~ "selecteren voor het extraheren van tekst uit afbeeldingen."
-
-#~ msgid "The anura can automatically follow links extracted from QR codes."
-#~ msgstr "anura kan automatisch links volgen die uit QR-codes zijn gehaald."
-
-#~ msgid ""
-#~ "We also updated the localization and improved the overall performance of "
-#~ "the app."
-#~ msgstr ""
-#~ "We hebben ook de lokalisatie bijgewerkt en de algemene prestaties van de "
-#~ "app verbeterd."
-
-#~ msgid "Fixed some bugs and bugs."
-#~ msgstr "Enkele bugs en foutjes verholpen."
-
-#~ msgid "What's new:"
-#~ msgstr "Wat is er nieuw:"
-
-#~ msgid "Open image button now available."
-#~ msgstr "Knop ‘Afbeelding openen’ nu beschikbaar."
-
-#~ msgid "Translations updated."
-#~ msgstr "Vertalingen bijgewerkt."
-
-#~ msgid "When no text is found, anura returns to the main window."
-#~ msgstr ""
-#~ "Wanneer geen tekst wordt gevonden, keert anura terug naar het "
-#~ "hoofdvenster."
-
-#~ msgid "Updated UI"
-#~ msgstr "Gebruikersinterface bijgewerkt"
-
-#~ msgid "Translated to a bunch of new languages"
-#~ msgstr "Vertaald naar een heleboel nieuwe talen"
-
-#~ msgid "Drag-n-drop support. For images only"
-#~ msgstr "Ondersteuning voor slepen en neerzetten. Alleen voor afbeeldingen"
-
-#~ msgid "Dark mode support"
-#~ msgstr "Ondersteuning voor donkere modus"
-
-#~ msgid "Localized interface"
-#~ msgstr "Gelokaliseerde interface"
-
-#~ msgid ""
-#~ "Quickly extract text from any source such as images, websites, even video "
-#~ "- everywhere you can grab an image shot. Even if it is encoded in a QR "
-#~ "code!"
-#~ msgstr ""
-#~ "Extraheer snel tekst vanuit elke bron, zoals afbeeldingen, websites, "
-#~ "video en zelfs QR-codes!"
-
-#, python-brace-format
-#~ msgid "{language} language downloaded."
-#~ msgstr "{language} gedownload"
-
-#~ msgid "Configure Languages"
-#~ msgstr "Talen configureren"
-
-#~ msgid "Clear the extraction results"
-#~ msgstr "Extractieresultaten wissen"
-
-#~ msgid ""
-#~ "Copy extracted text to clipboard\n"
-#~ "                                "
-#~ msgstr ""
-#~ "Geëxtraheerde tekst naar het klembord kopiëren\n"
-#~ "                                "
-
-#~ msgid ""
-#~ "anura can help you to instantly extract text\n"
-#~ "from any QR code, image, video, PDF, etc."
-#~ msgstr ""
-#~ "anura kan u helpen om direct tekst vanuit elke QR-code, afbeelding, "
-#~ "video, PDF, of andere bron te extraheren"
-
-#~ msgid "Learn more about anura"
-#~ msgstr "Meer over anura te weten komen"
-
-#~ msgid "Configure"
-#~ msgstr "Configureren"

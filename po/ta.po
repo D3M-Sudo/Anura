@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: anura 1.4.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-04 03:08+0200\n"
+"POT-Creation-Date: 2026-05-04 21:03+0200\n"
 "PO-Revision-Date: 2025-04-27 14:01+0000\n"
 "Last-Translator: தமிழ்நேரம் <anishprabu.t@gmail.com>\n"
 "Language-Team: Tamil <https://hosted.weblate.org/projects/anura/default/ta/"
@@ -18,199 +18,231 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 "X-Generator: Weblate 5.12-dev\n"
 
-#: ../anura/main.py:82
+#: ../anura/main.py:87
 msgid "Extract directly into the clipboard"
 msgstr "கிளிப்போர்டில் நேரடியாக பிரித்தெடுக்கவும்"
 
-#: ../anura/main.py:87
+#: ../anura/main.py:92
 msgid "Process image file for OCR"
 msgstr ""
 
-#: ../anura/main.py:95
+#: ../anura/main.py:100
 msgid "Run OCR without UI (copy result to clipboard)"
 msgstr ""
 
-#: ../anura/main.py:288
+#: ../anura/main.py:347
 msgid "Failed to Open Browser"
 msgstr ""
 
-#: ../anura/main.py:289
+#: ../anura/main.py:348
 msgid "No web browser could be launched. Please open the link manually."
 msgstr ""
 
-#: ../anura/main.py:290
+#: ../anura/main.py:349
 msgid "Copy Link"
 msgstr ""
 
-#: ../anura/main.py:291
+#: ../anura/main.py:350
 msgid "Close"
 msgstr ""
 
-#: ../anura/main.py:337
+#: ../anura/main.py:396
 msgid "No text found. Try to grab another region."
 msgstr "உரை எதுவும் கிடைக்கவில்லை. மற்றொரு பகுதியைப் பிடிக்க முயற்சி செய்யுங்கள்."
 
-#: ../anura/main.py:342
+#: ../anura/main.py:401
 #, fuzzy
 msgid "Text extracted and copied to clipboard."
 msgstr "உரையைப் பிரித்தெடுத்து இடைநிலைப்பலகைக்கு நகலெடுக்கவும்"
 
-#: ../anura/main.py:348 ../anura/services/screenshot_service.py:183
+#: ../anura/main.py:407 ../anura/services/screenshot_service.py:191
 msgid "Cancelled"
 msgstr ""
 
-#: ../anura/window.py:95
+#: ../anura/window.py:113
 #, fuzzy
 msgid "Failed to capture screenshot"
 msgstr "திரை காட்சி எடுத்துக் கொள்ளுங்கள்"
 
-#: ../anura/window.py:101
+#: ../anura/window.py:119
 msgid "Screenshot service did not respond."
 msgstr ""
 
-#: ../anura/window.py:122
+#: ../anura/window.py:140 ../anura/window.py:337 ../anura/window.py:346
 msgid "Text copied to clipboard"
 msgstr "உரை இடைநிலைப்பலகைக்கு நகலெடுக்கப்பட்டது"
 
-#: ../anura/window.py:128
+#: ../anura/window.py:147
 msgid "URL opened automatically"
 msgstr ""
 
-#: ../anura/window.py:150
+#: ../anura/window.py:169
 #, fuzzy
 msgid "Choose an image for extraction"
 msgstr "உரையை பிரித்தெடுக்க படத்தைத் திறக்கவும்"
 
-#: ../anura/window.py:153
+#: ../anura/window.py:172
 #, fuzzy
 msgid "Images"
 msgstr "திறந்த படத்தை"
 
-#: ../anura/window.py:175 ../anura/window.py:213 ../anura/window.py:271
+#: ../anura/window.py:193 ../anura/window.py:231 ../anura/window.py:317
 #, python-brace-format
 msgid "Image too large: {size}MB (max {max}MB)"
 msgstr ""
 
-#: ../anura/window.py:183
+#: ../anura/window.py:201
 #, python-brace-format
 msgid "Unsupported file format: {path}"
 msgstr ""
 
-#: ../anura/window.py:189
+#: ../anura/window.py:207
 #, python-brace-format
 msgid "File not found: {path}"
 msgstr ""
 
-#: ../anura/window.py:191
+#: ../anura/window.py:209
 #, python-brace-format
 msgid "Permission denied: {path}"
 msgstr ""
 
-#: ../anura/window.py:194
+#: ../anura/window.py:212
 #, python-brace-format
 msgid "Cannot access file: {path}"
 msgstr ""
 
-#: ../anura/window.py:222
+#: ../anura/window.py:249
+msgid "Corrupt or unsupported image file"
+msgstr ""
+
+#: ../anura/window.py:253
+msgid "Unsupported image format"
+msgstr ""
+
+#: ../anura/window.py:257 ../anura/window.py:261
+msgid "Failed to validate image file"
+msgstr ""
+
+#: ../anura/window.py:268
 msgid "Failed to load image file"
 msgstr ""
 
-#: ../anura/window.py:252
+#: ../anura/window.py:298
 msgid "Unsupported file format."
 msgstr ""
 
-#: ../anura/window.py:264 ../anura/window.py:281
+#: ../anura/window.py:310 ../anura/window.py:327
 msgid "Failed to load dropped file"
 msgstr ""
 
-#: ../anura/window.py:368
+#: ../anura/window.py:339 ../anura/window.py:348
+#, fuzzy
+msgid "No text to copy"
+msgstr "முடிவுகள் எதுவும் கிடைக்கவில்லை"
+
+#: ../anura/window.py:443
 msgid "No text to share."
 msgstr ""
 
-#: ../anura/window.py:377
+#: ../anura/window.py:452
 msgid "Text contains a link"
 msgstr ""
 
-#: ../anura/window.py:378
+#: ../anura/window.py:453
 msgid "Open"
 msgstr "திற"
 
-#: ../anura/widgets/preferences_languages_page.py:66
+#: ../anura/window.py:463
+msgid "Invalid URL blocked for security"
+msgstr ""
+
+#: ../anura/widgets/preferences_languages_page.py:70
 #, fuzzy
 msgid "OCR models unreachable. Please check your internet connection."
 msgstr "மாதிரிகள் அணுக முடியாதவை. உங்கள் இணைய இணைப்பை சரிபார்க்கவும்."
 
-#: ../anura/widgets/preferences_languages_page.py:71
+#: ../anura/widgets/preferences_languages_page.py:75
 msgid "Metered connection detected. Model downloads may incur data costs."
 msgstr ""
 
-#: ../anura/widgets/extracted_page.py:94
+#: ../anura/widgets/extracted_page.py:99
 msgid "Network error. Please check your internet connection."
 msgstr ""
 
-#: ../anura/widgets/extracted_page.py:96
+#: ../anura/widgets/extracted_page.py:101
 msgid "Request timed out. Please try again."
 msgstr ""
 
-#: ../anura/widgets/extracted_page.py:98
+#: ../anura/widgets/extracted_page.py:103
 msgid "Failed to generate speech."
 msgstr ""
 
-#: ../anura/widgets/preferences_general_page.py:101
+#: ../anura/widgets/preferences_general_page.py:100
 #, python-brace-format
 msgid "TTS playback volume level: {percentage:.0f}%"
 msgstr ""
 
-#: ../anura/widgets/preferences_general_page.py:116
+#: ../anura/widgets/preferences_general_page.py:115
 msgid "Auto (follow OCR language)"
 msgstr ""
 
 #: ../anura/widgets/share_row.py:27
-msgid "Share via {provider_name.capitalize()}"
+#, python-brace-format
+msgid "Share via {name}"
 msgstr ""
 
-#: ../anura/services/clipboard_service.py:72
+#: ../anura/services/clipboard_service.py:93
+#: ../anura/services/clipboard_service.py:97
 msgid "No image in clipboard"
 msgstr "கிளிப்போர்டில் படம் இல்லை"
 
-#: ../anura/services/screenshot_service.py:64
-#: ../anura/services/screenshot_service.py:71
+#: ../anura/services/clipboard_service.py:146
+msgid "Clipboard read operation timed out."
+msgstr ""
+
+#: ../anura/services/screenshot_service.py:72
+#: ../anura/services/screenshot_service.py:79
 msgid "Can't take a screenshot."
 msgstr "திரை காட்சி எடுக்க முடியாது."
 
-#: ../anura/services/screenshot_service.py:99
-#: ../anura/services/screenshot_service.py:170
+#: ../anura/services/screenshot_service.py:107
+#: ../anura/services/screenshot_service.py:178
 msgid "Invalid language code specified."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:127
+#: ../anura/services/screenshot_service.py:135
 msgid "Failed to read image file."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:130
+#: ../anura/services/screenshot_service.py:138
 msgid "OCR engine failed to process image."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:137
+#: ../anura/services/screenshot_service.py:145
 msgid "Failed to decode data."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:153
+#: ../anura/services/screenshot_service.py:161
 #, fuzzy
 msgid "No text found."
 msgstr "முடிவுகள் எதுவும் கிடைக்கவில்லை"
 
-#: ../anura/services/share_service.py:117
+#: ../anura/services/share_service.py:164
 msgid "Select Mastodon Instance"
 msgstr ""
 
-#: ../anura/services/share_service.py:118
+#: ../anura/services/share_service.py:165
 msgid "Choose your Mastodon instance to share the extracted text:"
 msgstr ""
 
-#: ../anura/services/share_service.py:124
+#: ../anura/services/share_service.py:171
 msgid "Cancel"
 msgstr ""
+
+#: ../anura/services/share_service.py:255
+#, fuzzy
+msgid "Extracted Text from Anura"
+msgstr "எங்கிருந்தும் உரையை பிரித்தெடுக்கவும்"
 
 #: ../anura/language_manager.py:40 ../anura/language_manager.py:60
 msgid "English"
@@ -1139,179 +1171,3 @@ msgstr ""
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:118
 msgid "tesseract"
 msgstr ""
-
-#~ msgctxt "Extracted screen"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "பிரித்தெடுக்கப்பட்ட உரையை இடைநிலைப்பலகைக்கு நகலெடுக்கவும்"
-
-#~ msgctxt "Extracted screen"
-#~ msgid "Listen to text"
-#~ msgstr "உரையைக் கேளுங்கள்"
-
-#~ msgctxt "Extracted screen"
-#~ msgid "Cancel listening to text"
-#~ msgstr "உரையைக் கேட்பதை ரத்துசெய்"
-
-#~ msgctxt "Extracted screen"
-#~ msgid "Open menu"
-#~ msgstr "திறந்த பட்டியல்"
-
-#~ msgctxt "Extracted screen"
-#~ msgid "Share To"
-#~ msgstr "பகிர்ந்து கொள்ளுங்கள்"
-
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Install language"
-#~ msgstr "மொழியை நிறுவவும்"
-
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Remove language"
-#~ msgstr "மொழியை அகற்று"
-
-#~ msgctxt "shortcut window"
-#~ msgid "Shortcuts"
-#~ msgstr "குறுக்குவழிகள்"
-
-#~ msgctxt "shortcut window"
-#~ msgid "General"
-#~ msgstr "பொது"
-
-#~ msgctxt "shortcut window"
-#~ msgid "Open image"
-#~ msgstr "திறந்த படத்தை"
-
-#~ msgctxt "shortcut window"
-#~ msgid "Take screenshot and extract text"
-#~ msgstr "திரைக்காட்சி எடுத்து உரையை பிரித்தெடுக்கவும்"
-
-#~ msgctxt "shortcut window"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr "பிரித்தெடுக்கப்பட்ட உரையை இடைநிலைப்பலகைக்கு நகலெடுக்கவும்"
-
-#~ msgctxt "shortcut window"
-#~ msgid "Application"
-#~ msgstr "பயன்பாடு"
-
-#~ msgctxt "shortcut window"
-#~ msgid "Preferences"
-#~ msgstr "விருப்பத்தேர்வுகள்"
-
-#~ msgctxt "shortcut window"
-#~ msgid "Quit"
-#~ msgstr "வெளியேறு"
-
-#~ msgctxt "shortcut window"
-#~ msgid "Help"
-#~ msgstr "உதவி"
-
-#~ msgctxt "shortcut window"
-#~ msgid "Display Shortcuts"
-#~ msgstr "குறுக்குவழிகளைக் காண்பி"
-
-#~ msgctxt "Welcome screen"
-#~ msgid "Take a Screenshot"
-#~ msgstr "திரை காட்சி எடுத்துக் கொள்ளுங்கள்"
-
-#~ msgctxt "Welcome screen"
-#~ msgid "Paste image from clipboard"
-#~ msgstr "கிளிப்போர்டிலிருந்து படத்தை ஒட்டவும்"
-
-#, python-brace-format
-#~ msgid "Share via {0}"
-#~ msgstr "{0} வழியாகப் பகிர்"
-
-#~ msgid "About anura"
-#~ msgstr "தவளை பற்றி"
-
-#, fuzzy
-#~ msgid "OCR models unreachable. Check your internet connection."
-#~ msgstr "மாதிரிகள் அணுக முடியாதவை. உங்கள் இணைய இணைப்பை சரிபார்க்கவும்."
-
-#~ msgid "Extract text from images"
-#~ msgstr "படங்களிலிருந்து உரையை பிரித்தெடுக்கவும்"
-
-#~ msgid ""
-#~ "Extract text from images, websites, videos, and QR codes by taking a "
-#~ "picture of the source."
-#~ msgstr ""
-#~ "மூலத்தின் படத்தை எடுத்துக்கொள்வதன் மூலம் படங்கள், வலைத்தளங்கள், வீடியோக்கள் மற்றும் QR "
-#~ "குறியீடுகளிலிருந்து உரையை பிரித்தெடுக்கவும்."
-
-#~ msgid "Text extraction tool"
-#~ msgstr "உரை பிரித்தெடுத்தல் கருவி"
-
-#~ msgid "Available Languages"
-#~ msgstr "கிடைக்கும் மொழிகள்"
-
-#~ msgid "Models location unreachable. Check your internet connection"
-#~ msgstr "மாதிரிகள் அணுக முடியாதவை. உங்கள் இணைய இணைப்பை சரிபார்க்கவும்"
-
-#~ msgid "Share via Pocket"
-#~ msgstr "பாக்கெட் வழியாக பகிரவும்"
-
-#~ msgid "Pocket"
-#~ msgstr "பாக்கெட்"
-
-#~ msgctxt "shortcut window"
-#~ msgid "May not work properly on wayland"
-#~ msgstr "வேலண்டில் சரியாக வேலை செய்யக்கூடாது"
-
-#~ msgid "Catalan; Valencian"
-#~ msgstr "காட்டலான்;வாலேன்சியன்"
-
-#~ msgid "Greek, Modern (1453-)"
-#~ msgstr "கிரீக், மார்டன் (1453-)"
-
-#~ msgid "Filipino (old - Tagalog)"
-#~ msgstr "பிலிப்பைன்ச் (பழைய - டாக்லாக்)"
-
-#~ msgid "Greek, Ancient (to 1453) (contrib)"
-#~ msgstr "கிரேக்கம், பண்டைய (முதல் 1453 வரை) (பங்களிப்பு)"
-
-#~ msgid "Haitian; Haitian Creole"
-#~ msgstr "ஆய்டியன்; ஆய்டியன் க்ரிலோ"
-
-#~ msgid "Kurmanji (Kurdish - Latin Script)"
-#~ msgstr "குர்மன்சி (குர்திச் - லத்தீன் ச்கிரிப்ட்)"
-
-#~ msgid "Dutch; Flemish"
-#~ msgstr "டச்சு; ஃப்லீமிச்"
-
-#~ msgid "Occitan (post 1500)"
-#~ msgstr "ஓக்சிடியன்(போச்ட் 1500)"
-
-#~ msgid "Orientation and script detection module"
-#~ msgstr "நோக்குநிலை மற்றும் ச்கிரிப்ட் கண்டறிதல் தொகுதி"
-
-#~ msgid "Romanian; Moldavian; Moldovan"
-#~ msgstr "ரோமேனியன்; மோல்டாவியன்; மோல்டோவேன்"
-
-#~ msgid "Sinhala; Sinhalese"
-#~ msgstr "சின்ஆலா; சின்ஆலிசி"
-
-#~ msgid "Spanish; Castilian"
-#~ msgstr "ச்பானிச்; காச்டிலியன்"
-
-#~ msgid "Text extracted. You can paste it with Ctrl+V"
-#~ msgstr "உரை பிரித்தெடுக்கப்பட்டது. நீங்கள் அதை Ctrl+V உடன் ஒட்டலாம்"
-
-#~ msgid "QR-code URL opened"
-#~ msgstr "QR-CODE முகவரி திறக்கப்பட்டது"
-
-#~ msgid "QR-code contains URL."
-#~ msgstr "QR-குறியீட்டில் முகவரி உள்ளது."
-
-#~ msgid "Supported image files"
-#~ msgstr "ஆதரிக்கப்பட்ட படக் கோப்புகள்"
-
-#~ msgid "Only images can be processed that way."
-#~ msgstr "படங்களை மட்டுமே அவ்வாறு செயலாக்க முடியும்."
-
-#~ msgid "Text copied"
-#~ msgstr "உரை நகலெடுக்கப்பட்டது"
-
-#~ msgid "You are on a metered connection. Be careful to download languages."
-#~ msgstr "நீங்கள் ஒரு மீட்டர் இணைப்பில் இருக்கிறீர்கள். மொழிகளைப் பதிவிறக்க கவனமாக இருங்கள்."
-
-#~ msgid "View all available languages"
-#~ msgstr "கிடைக்கக்கூடிய அனைத்து மொழிகளையும் காண்க"

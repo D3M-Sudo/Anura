@@ -429,3 +429,4 @@ Release notes for `Adw.AboutDialog` are generated from `CHANGELOG.md` during Mes
 | 2026-05-04 | Implemented atomic cancellation pattern | Enhanced thread safety across Clipboard, TTS, and Screenshot services |
 | 2026-05-04 | Fixed ruff linting errors across codebase | Resolved import sorting and code style issues in 14 files |
 | 2026-05-04 | Fixed Flatpak manifest warnings | Removed _comment properties causing flatpak-builder warnings |
+| 2026-05-04 | Regenerated anura.pot (+30 net strings) and synced 25 .po files | Image validation, clipboard timeout, URL security blocking strings added |
