@@ -5,16 +5,16 @@ msgstr ""
 "Project-Id-Version: anura\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-05-02 17:05+0200\n"
-"PO-Revision-Date: 2023-09-09 21:50+0000\n"
-"Last-Translator: gallegonovato <fran-carro@hotmail.es>\n"
-"Language-Team: Spanish <https://hosted.weblate.org/projects/anura/default/es/"
-">\n"
+"PO-Revision-Date: 2026-05-04 17:08+0000\n"
+"Last-Translator: Francisco Serrador <fserrador@gmail.com>\n"
+"Language-Team: Spanish <https://hosted.weblate.org/projects/anura/anura/es/>"
+"\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.0.1-dev\n"
+"X-Generator: Weblate 5.17.1\n"
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 "X-Poedit-SearchPath-0: data/ui\n"
@@ -24,92 +24,91 @@ msgstr ""
 
 #: ../data/com.github.d3msudo.anura.gschema.xml:7
 msgid "Default window width"
-msgstr ""
+msgstr "Ancho de ventana predeterminado"
 
 #: ../data/com.github.d3msudo.anura.gschema.xml:11
 msgid "Default window height"
-msgstr ""
+msgstr "Altura de ventana predeterminada"
 
 #: ../data/com.github.d3msudo.anura.gschema.xml:16
 msgid "Secondary OCR language"
-msgstr ""
+msgstr "Idioma secundario de OCR"
 
 #: ../data/com.github.d3msudo.anura.gschema.xml:17
 msgid ""
 "Optional secondary language for text extraction. Leave empty to disable."
 msgstr ""
+"Idioma secundario opcional para la extracción de texto. Déjelo en blanco "
+"para desactivarlo."
 
 #: ../data/com.github.d3msudo.anura.gschema.xml:21
 msgid "Primary language"
-msgstr ""
+msgstr "Idioma principal"
 
 #: ../data/com.github.d3msudo.anura.gschema.xml:22
 msgid "Primary language for text extraction."
-msgstr ""
+msgstr "Idioma principal para la extracción de texto."
 
 #: ../data/com.github.d3msudo.anura.gschema.xml:27
 msgid "Autocopy text to clipboard"
-msgstr ""
+msgstr "Copiar automáticamente el texto al portapapeles"
 
 #: ../data/com.github.d3msudo.anura.gschema.xml:28
 msgid "Automatically copy the extracted text to the clipboard."
-msgstr ""
+msgstr "Copia automáticamente el texto extraído al portapapeles."
 
 #: ../data/com.github.d3msudo.anura.gschema.xml:32
 msgid "Auto-open QR links"
-msgstr ""
+msgstr "Enlaces QR de apertura automática"
 
 #: ../data/com.github.d3msudo.anura.gschema.xml:33
 msgid "Automatically open links extracted from QR codes."
-msgstr ""
+msgstr "Abrir automáticamente los enlaces extraídos de los códigos QR."
 
 #: ../data/com.github.d3msudo.anura.gschema.xml:39
 msgid "TTS Volume"
-msgstr ""
+msgstr "Volumen TTS"
 
 #: ../data/com.github.d3msudo.anura.gschema.xml:40
 msgid "Volume level for text-to-speech playback (0.0 to 1.0)."
-msgstr ""
+msgstr "Nivel de volumen para la reproducción de texto a voz (de 0,0 a 1,0)."
 
 #: ../data/com.github.d3msudo.anura.gschema.xml:45
 #: ../data/ui/preferences_general.blp:55
 msgid "TTS Language"
-msgstr ""
+msgstr "Idioma TTS"
 
 #: ../data/com.github.d3msudo.anura.gschema.xml:46
 msgid ""
 "Language code for text-to-speech. Empty means use the active OCR language."
 msgstr ""
+"Código de idioma para la conversión de texto a voz. Si está vacío, se "
+"utilizará el idioma OCR activo."
 
 #: ../data/com.github.d3msudo.anura.desktop.in:3
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:6
-#, fuzzy
 msgid "Anura"
-msgstr "anura"
+msgstr "Anura"
 
 #: ../data/com.github.d3msudo.anura.desktop.in:4
 msgid "OCR Tool"
-msgstr ""
+msgstr "Herramienta OCR"
 
 #: ../data/com.github.d3msudo.anura.desktop.in:5
-#, fuzzy
 msgid "Extract text from any image, video, or web page"
 msgstr "Extraer texto de cualquier imagen, vídeo o página web"
 
 #: ../data/com.github.d3msudo.anura.desktop.in:11
-#, fuzzy
 msgid "OCR;Text;Extraction;Reader;QR;Scanner;"
-msgstr "OCR;Text;Extraction;Texto;Extracción;"
+msgstr "OCR;Text;Extraction;Texto;QR;Extracción;"
 
 #: ../data/com.github.d3msudo.anura.desktop.in:17
-#, fuzzy
 msgid "Extract Text to Clipboard"
 msgstr "Extraer texto al portapapeles"
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:7
-#, fuzzy
 msgid "Extract text from anywhere on your screen"
-msgstr "Extraer texto de cualquier lugar"
+msgstr "Extraer texto desde cualquier lugar en su pantalla"
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:9
 msgid ""
@@ -117,32 +116,41 @@ msgid ""
 "desktop. It allows you to quickly grab text from any source on your screen, "
 "including videos, PDFs, images, or protected web pages."
 msgstr ""
+"Anura es una herramienta intuitiva de extracción de texto (OCR) diseñada "
+"para el entorno de escritorio GNOME. Permite extraer rápidamente texto de "
+"cualquier fuente en la pantalla, incluyendo vídeos, archivos PDF, imágenes o "
+"páginas web protegidas."
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:14
 msgid "Key features include:"
-msgstr ""
+msgstr "Las características principales incluyen:"
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:16
 msgid "High-accuracy OCR powered by Tesseract."
 msgstr ""
+"Reconocimiento óptico de caracteres (OCR) de alta precisión con tecnología "
+"Tesseract."
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:17
 msgid "Built-in QR code decoding and link following."
-msgstr ""
+msgstr "Decodificación de códigos QR y seguimiento de enlaces integrados."
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:18
 msgid "Support for multiple languages with on-demand model download."
-msgstr ""
+msgstr "Soporte para varios idiomas con descarga de modelos bajo demanda."
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:19
 msgid "Privacy-focused: no telemetry and no anonymous data collection."
 msgstr ""
+"Orientado a la privacidad: sin telemetría ni recopilación de datos anónimos."
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:20
 msgid ""
 "Modern GTK4 / Libadwaita interface following GNOME Human Interface "
 "Guidelines."
 msgstr ""
+"Interfaz moderna GTK4 / Libadwaita que sigue las directrices de interfaz "
+"humana de GNOME."
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:22
 msgid ""
@@ -151,96 +159,137 @@ msgid ""
 "to-speech feature powered by Google TTS. No user data or extracted text is "
 "ever transmitted externally."
 msgstr ""
+"El acceso a la red se utiliza exclusivamente para dos fines: la descarga "
+"bajo demanda de modelos de lenguaje OCR de Tesseract (obtenidos de GitHub) y "
+"la función opcional de conversión de texto a voz con tecnología de Google "
+"TTS. No se transmiten datos de usuario ni texto extraído a ninguna red "
+"externa."
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:32
 msgid "Main interface showing the text extraction screen (dark theme)"
 msgstr ""
+"Interfaz principal que muestra la pantalla de extracción de texto (tema "
+"oscuro)"
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:36
 msgid "Extracted text displayed after OCR recognition"
-msgstr ""
+msgstr "Texto extraído mostrado tras el reconocimiento OCR"
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:42
 msgid ""
 "Hotfix release for UI initialization issues and notification improvements."
 msgstr ""
+"Se ha publicado una actualización para solucionar problemas de "
+"inicialización de la interfaz de usuario y mejorar las notificaciones."
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:44
 msgid ""
 "Fixed missing Adw.init() call causing \"greyed out UI\" on some systems."
 msgstr ""
+"Se solucionó el problema que provocaba que la llamada a Adw.init() faltara y "
+"apareciera atenuada en la interfaz de usuario en algunos sistemas."
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:45
 msgid ""
 "Fixed GResource bundle loading to properly exit on failure instead of "
 "continuing with broken UI."
 msgstr ""
+"Se ha corregido la carga del paquete GResource para que finalice "
+"correctamente en caso de fallo, en lugar de continuar con una interfaz de "
+"usuario defectuosa."
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:46
 msgid ""
 "Fixed notification portal API to use proper GLib.Variant format (a{sv}) for "
 "XDG Portal compatibility."
 msgstr ""
+"Se corrigió el API del portal de notificaciones para que utilice el formato "
+"GLib.Variant adecuado (a{sv}) para la compatibilidad con XDG Portal."
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:47
 msgid ""
 "Fixed notification import consistency with absolute imports throughout main."
 "py."
 msgstr ""
+"Se corrigió la coherencia de la importación de notificaciones con "
+"importaciones absolutas en todo main.py."
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:48
 msgid ""
 "Fixed HTML escaping in release notes generation to prevent XSS "
 "vulnerabilities."
 msgstr ""
+"Se corrigió el escape de HTML en la generación de notas de la versión para "
+"prevenir vulnerabilidades XSS."
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:49
 msgid "Added CHANGELOG.md as source of truth for release notes."
 msgstr ""
+"Se ha agregado el archivo CHANGELOG.md como fuente principal de información "
+"para las notas de la versión."
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:50
 msgid "Added translate URL to metainfo for Weblate integration."
 msgstr ""
+"Se ha agregado la URL de traducción a la metainformación para la integración "
+"con Weblate."
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:56
 msgid ""
 "Production release with critical bug fixes, security improvements, and "
 "Flathub compliance."
 msgstr ""
+"Versión de producción con correcciones de errores críticos, mejoras de "
+"seguridad y cumplimiento con los estándares de Flathub."
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:58
 msgid ""
 "Fixed critical thread-safety issues and race conditions in language manager "
 "and screenshot service."
 msgstr ""
+"Se han corregido problemas críticos de seguridad de subprocesos y "
+"condiciones de carrera en el gestor de idiomas y el servicio de captura de "
+"pantalla."
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:59
 msgid ""
 "Fixed memory leaks in widget lifecycle management and GStreamer bus watch."
 msgstr ""
+"Se corrigieron fugas de memoria en la gestión del ciclo de vida de los "
+"widgets y en la monitorización del bus de GStreamer."
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:60
 msgid ""
 "Fixed all Flatpak manifest dependencies (requests, urllib3, certifi, "
 "hatchling, pyzbar)."
 msgstr ""
+"Se corrigieron todas las dependencias del manifiesto Flatpak (requests, "
+"urllib3, certifi, hatchling, pyzbar)."
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:61
 msgid "Fixed blueprint compiler output directory for Flatpak builds."
 msgstr ""
+"Se ha corregido el directorio de salida del compilador de planos para las "
+"compilaciones Flatpak."
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:62
 msgid "Fixed gresource bundle loading with correct UI file paths."
 msgstr ""
+"Se corrigió la carga del paquete gresource con las rutas de archivo de la "
+"interfaz de usuario correctas."
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:63
 msgid ""
 "Fixed filesystem permissions for Open Image and Drag &amp; Drop in sandbox."
 msgstr ""
+"Se corrigieron los permisos del sistema de archivos para «Abrir imagen» y «"
+"Arrastrar y soltar» en el entorno aislado."
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:64
 msgid "Fixed silent CLI mode to properly exit without opening UI window."
 msgstr ""
+"Se ha corregido el modo CLI silencioso para que salga correctamente sin "
+"abrir la ventana de la interfaz de usuario."
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:65
 msgid "Fixed CLI exit code to return 0 on success instead of 1."
