@@ -80,4 +80,6 @@ markers = [
 addopts = "-v --tb=short"
 
 [dependency-groups]
-dev = []
+dev = [
+    "ruff>=0.15.12",
+]
