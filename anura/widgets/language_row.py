@@ -47,7 +47,7 @@ class LanguageRow(Gtk.Overlay):
         self._item = item
         self.label.set_label(self._item.title)
 
-    def update_ui(self):
+    def update_ui(self) -> None:
         """
         Updates the visibility and sensitivity of control buttons
         based on the language installation status.
@@ -131,7 +131,7 @@ class LanguageRow(Gtk.Overlay):
         for idle_id in self._idle_ids:
             try:
                 GLib.source_remove(idle_id)
-            except Exception:
+            except (TypeError, RuntimeError):
                 pass
         self._idle_ids.clear()
 
@@ -139,14 +139,14 @@ class LanguageRow(Gtk.Overlay):
         if self._downloading_handler_id is not None:
             try:
                 language_manager.disconnect(self._downloading_handler_id)
-            except Exception:
+            except (TypeError, RuntimeError):
                 pass
             self._downloading_handler_id = None
 
         if self._downloaded_handler_id is not None:
             try:
                 language_manager.disconnect(self._downloaded_handler_id)
-            except Exception:
+            except (TypeError, RuntimeError):
                 pass
             self._downloaded_handler_id = None
 

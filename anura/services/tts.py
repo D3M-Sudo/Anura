@@ -201,7 +201,7 @@ class TTSService(GObject.GObject):
                 self._bus_watch_setup_in_progress = False
         return False  # Don't repeat
 
-    def on_gst_message(self, _bus, message: Gst.Message):
+    def on_gst_message(self, _bus, message: Gst.Message) -> None:
         """Handle GStreamer bus messages; clean up temp file on EOS."""
         if message.type == Gst.MessageType.EOS:
             logger.info("Anura TTS: Playback finished.")
@@ -216,7 +216,7 @@ class TTSService(GObject.GObject):
                     try:
                         os.unlink(filepath)
                         logger.debug("Anura TTS: Cleaned up temporary speech file")
-                    except Exception:
+                    except (OSError, GLib.Error):
                         logger.warning("Anura TTS: Failed to cleanup temporary speech file")
                 elif filepath:
                     logger.debug("Anura TTS: Cleanup skipped, file already removed")
