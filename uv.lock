@@ -4,7 +4,7 @@ requires-python = ">=3.12"
 
 [[package]]
 name = "anura"
-version = "0.1.4.1"
+version = "0.1.4.2"
 source = { virtual = "." }
 dependencies = [
     { name = "gtts" },

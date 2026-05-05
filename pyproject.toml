@@ -1,6 +1,6 @@
 [project]
 name = "anura"
-version = "0.1.4.1"
+version = "0.1.4.2"
 description = "GTK4/Libadwaita desktop app for OCR via Tesseract — fork of Frog OCR"
 requires-python = ">=3.12"
 license = { text = "MIT" }

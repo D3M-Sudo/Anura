@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.1.4.2] - 2026-05-05
+
 ### Fixed
 - Fixed `__slots__` conflict in ClipboardService - missing `_cancellable` in declaration causing AttributeError
 - Fixed ruff linting errors across codebase including import sorting and code style issues
@@ -19,6 +28,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Improved code quality with comprehensive type hints and cleanup
 - Implemented atomic cancellation for Clipboard and thread-safe signal emission for TTS GStreamer bus
 - Enhanced thread safety patterns across all services
+- Added comprehensive unit tests for core services
+- Resolved all remaining linting errors and line length issues
 
 ## [0.1.4.1] - 2026-05-02
 
