@@ -40,27 +40,33 @@ Anura has two categories of tests:
 ### Running Tests
 
 ```bash
+# Install dependencies in uv environment
+uv sync --dev
+
 # All pure-Python tests (no GTK required)
-pytest tests/ -v -m "not gtk"
+uv run pytest tests/ -v -m "not gtk"
 
 # Skip network-dependent tests
-pytest tests/ -v -m "not network"
+uv run pytest tests/ -v -m "not network"
 
 # Run only a specific file
-pytest tests/test_config.py -v
+uv run pytest tests/test_config.py -v
 
 # Run unit logic tests (business logic only)
-pytest tests/test_unit_logic.py -v
+uv run pytest tests/test_unit_logic.py -v
 
-# Run service-specific tests
-pytest tests/test_screenshot_service.py -v
-pytest tests/test_clipboard_service.py -v
-pytest tests/test_share_service.py -v
-pytest tests/test_tts_service.py -v
-pytest tests/test_notification_service.py -v
+# Run service-specific tests (requires system gi)
+uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" pytest tests/test_screenshot_service.py -v
+uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" pytest tests/test_clipboard_service.py -v
+uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" pytest tests/test_share_service.py -v
+uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" pytest tests/test_tts_service.py -v
+uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" pytest tests/test_notification_service.py -v
 
 # Run URI validator tests specifically
-pytest tests/test_uri_validator.py -v
+uv run pytest tests/test_uri_validator.py -v
+
+# Alternative: Use system Python for pure Python tests
+python3 -m pytest tests/test_config.py tests/test_language_manager.py tests/test_uri_validator.py -v
 ```
 
 ### Test Architecture

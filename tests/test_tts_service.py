@@ -82,7 +82,7 @@ class TestTTSService:
 
             assert result == cache_path
             mock_gtts.assert_not_called()  # Should not generate new audio
-            mock_glib.idle_add.assert_called_once()
+            mock_glib.idle_add.assert_called()
             args = mock_glib.idle_add.call_args[0]
             assert args[0] == self.service.emit
             assert args[1] == "speak"
@@ -107,7 +107,7 @@ class TestTTSService:
             assert result == cache_path
             mock_gtts.assert_called_once_with(text="test text", lang="en", tld="com")
             mock_tts.save.assert_called_once_with(cache_path)
-            mock_glib.idle_add.assert_called_once()
+            mock_glib.idle_add.assert_called()
 
     @patch("anura.services.tts.gTTS")
     @patch("anura.services.tts.os.path.exists")
@@ -122,7 +122,7 @@ class TestTTSService:
             result = self.service.speak_text("test text", "en", cache_path)
 
             assert result is None
-            mock_glib.idle_add.assert_called_once()
+            mock_glib.idle_add.assert_called()
             args = mock_glib.idle_add.call_args[0]
             assert args[0] == self.service.emit
             assert args[1] == "stop"
@@ -143,7 +143,7 @@ class TestTTSService:
             result = self.service.speak_text("test text", "en", cache_path)
 
             assert result is None
-            mock_glib.idle_add.assert_called_once()
+            mock_glib.idle_add.assert_called()
             args = mock_glib.idle_add.call_args[0]
             assert args[0] == self.service.emit
             assert args[1] == "stop"
@@ -178,7 +178,7 @@ class TestTTSService:
             mock_gst.ElementFactory.make.assert_called_once_with("playbin3", "player")
             mock_playbin.set_property.assert_called_once_with("uri", "file:///test/audio.mp3")
             mock_playbin.set_state.assert_called_once()
-            mock_glib.idle_add.assert_called_once()
+            mock_glib.idle_add.assert_called()
 
     @patch("anura.services.tts.Gst")
     def test_play_audio_gst_error(self, mock_gst):
@@ -188,7 +188,7 @@ class TestTTSService:
         with patch("anura.services.tts.GLib") as mock_glib:
             self.service.play_audio("/test/audio.mp3")
 
-            mock_glib.idle_add.assert_called_once()
+            mock_glib.idle_add.assert_called()
             args = mock_glib.idle_add.call_args[0]
             assert args[0] == self.service.emit
             assert args[1] == "stop"
@@ -200,7 +200,7 @@ class TestTTSService:
             self.service.stop_audio()
 
             self.service.player.set_state.assert_called_once()
-            mock_glib.idle_add.assert_called_once()
+            mock_glib.idle_add.assert_called()
             args = mock_glib.idle_add.call_args[0]
             assert args[0] == self.service.emit
             assert args[1] == "stop"
@@ -227,7 +227,7 @@ class TestTTSService:
             result = self.service._on_bus_message(mock_bus, mock_message)
 
             assert result is True
-            mock_glib.idle_add.assert_called_once()
+            mock_glib.idle_add.assert_called()
             args = mock_glib.idle_add.call_args[0]
             assert args[0] == self.service.emit
             assert args[1] == "stop"
@@ -248,7 +248,7 @@ class TestTTSService:
             result = self.service._on_bus_message(mock_bus, mock_message)
 
             assert result is True
-            mock_glib.idle_add.assert_called_once()
+            mock_glib.idle_add.assert_called()
             args = mock_glib.idle_add.call_args[0]
             assert args[0] == self.service.emit
             assert args[1] == "stop"

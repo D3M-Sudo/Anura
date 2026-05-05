@@ -106,7 +106,7 @@ class TestScreenshotService:
         img.save(test_file)
 
         with patch("pytesseract.image_to_string") as mock_ocr:
-            mock_ocr.side_effect = pytesseract.TesseractError("Test error")
+            mock_ocr.side_effect = pytesseract.TesseractError("Test error", "Test error")
 
             success, result, error = self.service.decode_image_sync("eng", str(test_file), False)
 
