@@ -24,7 +24,6 @@ class TestScreenshotService:
     def test_init(self):
         """Test service initialization."""
         assert self.service.cancelable is not None
-        assert self.service._cancelable_handler_id is not None
         assert self.service.portal is not None
 
     def test_decode_image_sync_ocr_success(self, tmp_path):
@@ -133,18 +132,6 @@ class TestScreenshotService:
             assert success is True
             # File should still exist since it's not a portal temp file
             assert test_file.exists()
-
-    def test_capture_cancelled(self):
-        """Test screenshot cancellation handling."""
-        mock_cancellable = Mock()
-
-        with patch("anura.services.screenshot_service.GLib") as mock_glib:
-            self.service.capture_cancelled(mock_cancellable)
-
-            mock_glib.idle_add.assert_called_once()
-            args = mock_glib.idle_add.call_args[0]
-            assert args[0] == self.service.emit
-            assert args[1] == "error"
 
     def test_decode_image_with_portal_file(self, tmp_path):
         """Test decoding with portal-generated temporary files."""

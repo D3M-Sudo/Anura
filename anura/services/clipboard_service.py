@@ -41,6 +41,8 @@ class ClipboardService(GObject.GObject):
     def __init__(self):
         super().__init__()
         self._cancellable = None
+        self._clipboard = None
+        self._clipboard_timeout_id = None
 
     def init(self) -> None:
         """

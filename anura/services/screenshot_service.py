@@ -32,18 +32,13 @@ class ScreenshotService(GObject.GObject):
         "decoded": (GObject.SIGNAL_RUN_FIRST, None, (str, bool)),
     }
 
-    __slots__ = ("_cancelable_handler_id", "_cancellable_lock", "cancelable", "portal")
+    __slots__ = ("_cancellable_lock", "cancelable", "portal")
 
     def __init__(self):
         GObject.GObject.__init__(self)
         self._cancellable_lock = threading.Lock()
         with self._cancellable_lock:
             self.cancelable: Gio.Cancellable = Gio.Cancellable.new()
-            # Create lambda wrapper to avoid line length issues
-            def _cancelled_handler(cancellable, user_data=None):
-                return self.capture_cancelled(cancellable, user_data)
-
-            self._cancelable_handler_id = self.cancelable.connect("cancelled", _cancelled_handler)
         self.portal = Xdp.Portal()
 
     def capture(self, lang: str, copy: bool = False) -> None:
@@ -51,18 +46,7 @@ class ScreenshotService(GObject.GObject):
         with self._cancellable_lock:
             # If previous request was cancelled, create fresh cancellable
             if self.cancelable.is_cancelled():
-                # Disconnect old handler before creating new cancellable
-                if self._cancelable_handler_id is not None:
-                    try:
-                        self.cancelable.disconnect(self._cancelable_handler_id)
-                    except (TypeError, RuntimeError):
-                        pass
                 self.cancelable = Gio.Cancellable.new()
-                # Create lambda wrapper to avoid line length issues
-                def _cancelled_handler(cancellable, user_data=None):
-                    return self.capture_cancelled(cancellable, user_data)
-
-                self._cancelable_handler_id = self.cancelable.connect("cancelled", _cancelled_handler)
             cancellable = self.cancelable
         # Release lock before async D-Bus call to prevent deadlock
         self.portal.take_screenshot(
@@ -193,41 +177,9 @@ class ScreenshotService(GObject.GObject):
         else:
             GLib.idle_add(self.emit, "error", error_message)
 
-    def capture_cancelled(self, cancellable: Gio.Cancellable, user_data=None) -> None:
-        """Handles the cancellation of the screenshot request."""
-        logger.info("Anura Screenshot: Capture cancelled by user.")
-        GLib.idle_add(self.emit, "error", _("Cancelled"))
-        # Disconnect old handler and reset cancellable for future use (with lock to prevent race condition)
-        with self._cancellable_lock:
-            # Clear handler ID first to prevent race with concurrent cancellation
-            old_handler_id = self._cancelable_handler_id
-            self._cancelable_handler_id = None
-            if old_handler_id is not None:
-                try:
-                    self.cancelable.disconnect(old_handler_id)
-                except (TypeError, RuntimeError):
-                    pass
-            self.cancelable = Gio.Cancellable.new()
-            # Create lambda wrapper to avoid line length issues
-            def _cancelled_handler(cancellable, user_data=None):
-                return self.capture_cancelled(cancellable, user_data)
-
-            self._cancelable_handler_id = self.cancelable.connect("cancelled", _cancelled_handler)
-
     def do_destroy(self) -> None:
-        """Clean up signal handlers and cancellable to prevent leaks."""
+        """Clean up cancellable to prevent leaks."""
         with self._cancellable_lock:
-            if self._cancelable_handler_id is not None:
-                try:
-                    self.cancelable.disconnect(self._cancelable_handler_id)
-                except (TypeError, RuntimeError):
-                    pass
-                self._cancelable_handler_id = None
             if not self.cancelable.is_cancelled():
                 self.cancelable.cancel()
             self.cancelable = Gio.Cancellable.new()
-            # Create lambda wrapper to avoid line length issues
-            def _cancelled_handler(cancellable, user_data=None):
-                return self.capture_cancelled(cancellable, user_data)
-
-            self._cancelable_handler_id = self.cancelable.connect("cancelled", _cancelled_handler)
