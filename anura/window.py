@@ -31,7 +31,10 @@ class AnuraWindow(Adw.ApplicationWindow):
     def __init__(self, backend: ScreenshotService, **kwargs):
         super().__init__(**kwargs)
 
-        self.settings = Gtk.Application.get_default().props.settings
+        app = Gtk.Application.get_default()
+        if app is None:
+            raise RuntimeError("Cannot get default application")
+        self.settings = app.settings
 
         # Defensive: validate language from settings, fallback to English if corrupted
         lang_code = self.settings.get_string("active-language")

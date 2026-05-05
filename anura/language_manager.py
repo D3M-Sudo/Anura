@@ -155,34 +155,39 @@ class LanguageManager(GObject.GObject):
         return LanguageItem(code=code, title=self._languages[code])
 
     def get_downloaded_codes(self, force: bool = False) -> list[str]:
-        """Returns the codes of all installed language models (user + system bundled)."""
+        """Returns codes of all installed language models (user + system bundled)."""
         with self._cache_lock:
             need_update = self._need_update_cache
             if need_update or force:
                 codes = set()
 
+                # Debug: Log paths being checked
+                logger.debug(f"Anura: Checking user tessdata directory: {TESSDATA_DIR}")
+                logger.debug(f"Anura: Checking system tessdata directory: {TESSDATA_SYSTEM_DIR}")
+
                 # User-downloaded models (~/.var/app/.../data/anura/tessdata/)
                 if os.path.exists(TESSDATA_DIR):
                     try:
-                        codes.update(
-                            os.path.splitext(f)[0]
-                            for f in os.listdir(TESSDATA_DIR)
-                            if f.endswith(".traineddata") and not f.startswith("osd")
-                        )
+                        user_files = [f for f in os.listdir(TESSDATA_DIR) if f.endswith(".traineddata") and not f.startswith("osd")]
+                        logger.debug(f"Anura: User tessdata files found: {user_files}")
+                        codes.update(os.path.splitext(f)[0] for f in user_files)
                     except OSError:
                         logger.warning("Anura: Error reading user tessdata directory")
+                else:
+                    logger.debug(f"Anura: User tessdata directory does not exist: {TESSDATA_DIR}")
 
                 # Bundled system models (/app/share/tessdata/ — eng, ita pre-installed)
                 if os.path.exists(TESSDATA_SYSTEM_DIR):
                     try:
-                        codes.update(
-                            os.path.splitext(f)[0]
-                            for f in os.listdir(TESSDATA_SYSTEM_DIR)
-                            if f.endswith(".traineddata") and not f.startswith("osd")
-                        )
+                        system_files = [f for f in os.listdir(TESSDATA_SYSTEM_DIR) if f.endswith(".traineddata") and not f.startswith("osd")]
+                        logger.debug(f"Anura: System tessdata files found: {system_files}")
+                        codes.update(os.path.splitext(f)[0] for f in system_files)
                     except OSError:
                         logger.warning("Anura: Error reading system tessdata directory")
+                else:
+                    logger.debug(f"Anura: System tessdata directory does not exist: {TESSDATA_SYSTEM_DIR}")
 
+                logger.debug(f"Anura: Total language codes found: {list(codes)}")
                 self._downloaded_codes = list(codes)
                 self._need_update_cache = False
             return sorted(self._downloaded_codes, key=lambda x: self.get_language(x))

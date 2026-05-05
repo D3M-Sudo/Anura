@@ -39,7 +39,7 @@ class ScreenshotService(GObject.GObject):
         self._cancellable_lock = threading.Lock()
         with self._cancellable_lock:
             self.cancelable: Gio.Cancellable = Gio.Cancellable.new()
-            self._cancelable_handler_id = self.cancelable.connect("cancelled", self.capture_cancelled)
+            self._cancelable_handler_id = self.cancelable.connect("cancelled", lambda cancellable, user_data=None: self.capture_cancelled(cancellable, user_data))
         self.portal = Xdp.Portal()
 
     def capture(self, lang: str, copy: bool = False) -> None:
@@ -54,7 +54,7 @@ class ScreenshotService(GObject.GObject):
                     except (TypeError, RuntimeError):
                         pass
                 self.cancelable = Gio.Cancellable.new()
-                self._cancelable_handler_id = self.cancelable.connect("cancelled", self.capture_cancelled)
+                self._cancelable_handler_id = self.cancelable.connect("cancelled", lambda cancellable, user_data=None: self.capture_cancelled(cancellable, user_data))
             cancellable = self.cancelable
         # Release lock before async D-Bus call to prevent deadlock
         self.portal.take_screenshot(
@@ -200,7 +200,7 @@ class ScreenshotService(GObject.GObject):
                 except Exception:
                     pass
             self.cancelable = Gio.Cancellable.new()
-            self._cancelable_handler_id = self.cancelable.connect("cancelled", self.capture_cancelled)
+            self._cancelable_handler_id = self.cancelable.connect("cancelled", lambda cancellable, user_data=None: self.capture_cancelled(cancellable, user_data))
 
     def do_destroy(self) -> None:
         """Clean up signal handlers and cancellable to prevent leaks."""
@@ -214,4 +214,4 @@ class ScreenshotService(GObject.GObject):
             if not self.cancelable.is_cancelled():
                 self.cancelable.cancel()
             self.cancelable = Gio.Cancellable.new()
-            self._cancelable_handler_id = self.cancelable.connect("cancelled", self.capture_cancelled)
+            self._cancelable_handler_id = self.cancelable.connect("cancelled", lambda cancellable, user_data=None: self.capture_cancelled(cancellable, user_data))
