@@ -136,7 +136,7 @@ class ScreenshotService(GObject.GObject):
         except (pytesseract.TesseractError, pytesseract.TesseractNotFoundError) as e:
             logger.error(f"Anura OCR Error: Tesseract failed: {e}")
             error_message = _("OCR engine failed to process image.")
-        except Exception as e:
+        except (Image.DecompressionBombError, Image.UnidentifiedImageError, Exception) as e:
             # Catch specific image/QR decoding errors (PIL, zbar) but NOT system exceptions
             # KeyboardInterrupt and SystemExit will propagate correctly
             if isinstance(e, (SystemExit, KeyboardInterrupt)):

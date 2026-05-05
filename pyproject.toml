@@ -1,9 +1,17 @@
 [project]
 name = "anura"
-version = "0.1.4.1"
+version = "0.1.4.2"
 description = "GTK4/Libadwaita desktop app for OCR via Tesseract — fork of Frog OCR"
 requires-python = ">=3.12"
 license = { text = "MIT" }
+dependencies = [
+    "gtts>=2.5.4",
+    "loguru>=0.7.3",
+    "pillow>=12.2.0",
+    "pytesseract>=0.3.13",
+    "pyzbar>=0.1.9",
+    "requests>=2.33.1",
+]
 
 [project.optional-dependencies]
 dev = [
@@ -11,6 +19,12 @@ dev = [
     "meson>=1.5.0",       # Build system (for local testing)
     "pytest>=8.0",        # Test framework
     "pytest-mock>=3.14",  # Mocking for GTK/GLib-dependent code
+    "pytesseract>=0.3.13", # OCR engine (for testing)
+    "Pillow>=12.2.0",      # Image processing (for testing)
+    "pyzbar>=0.1.9",      # QR code decoding (for testing)
+    "gtts>=2.5.4",         # Text-to-speech (for testing)
+    "loguru>=0.7.3",        # Logging (for testing)
+    "requests>=2.33.1",      # HTTP requests (for testing)
 ]
 
 # ─── Ruff ─────────────────────────────────────────────────────────────────────
@@ -70,3 +84,9 @@ markers = [
 ]
 # Skip GTK tests in CI unless DISPLAY or WAYLAND_DISPLAY is set
 addopts = "-v --tb=short"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+    "ruff>=0.15.12",
+]

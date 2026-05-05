@@ -50,7 +50,7 @@ class NotificationService:
             try:
                 self._portal = Xdp.Portal()
                 logger.debug("NotificationService: XDG Portal initialized")
-            except Exception as e:
+            except (ImportError, AttributeError, TypeError) as e:
                 logger.warning(f"NotificationService: Failed to initialize XDG Portal: {e}")
 
         # Initialize libnotify as fallback
@@ -59,7 +59,7 @@ class NotificationService:
                 Notify.init(app_id)
                 self.libnotify_initialized = True
                 logger.debug("NotificationService: libnotify fallback ready")
-            except Exception as e:
+            except (ImportError, AttributeError, TypeError) as e:
                 logger.warning(f"NotificationService: Failed to initialize libnotify: {e}")
 
         if not HAS_PORTAL and not self.libnotify_initialized:
@@ -131,7 +131,7 @@ class NotificationService:
             logger.debug(f"NotificationService: Portal notification sent: {title}")
             return True
 
-        except Exception as e:
+        except (GLib.Error, AttributeError, TypeError) as e:
             logger.warning(f"NotificationService: Portal notification failed: {e}")
             return False
 
@@ -142,7 +142,7 @@ class NotificationService:
             notification.show()
             logger.debug(f"NotificationService: libnotify notification sent: {title}")
             return True
-        except Exception as e:
+        except (ImportError, AttributeError, TypeError) as e:
             logger.warning(f"NotificationService: libnotify notification failed: {e}")
             return False
 

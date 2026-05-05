@@ -65,10 +65,10 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
             return True
         return text.lower() in proposal.title.lower()
 
-    def _on_language_downloaded(self, _sender, _lang_code: str):
+    def _on_language_downloaded(self, _sender: GObject.GObject, _lang_code: str) -> None:
         self.populate_model()
 
-    def _on_language_removed(self, _sender, _lang_code: str):
+    def _on_language_removed(self, _sender: GObject.GObject, _lang_code: str) -> None:
         self.populate_model()
 
     @Gtk.Template.Callback()

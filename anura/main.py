@@ -6,11 +6,18 @@ import sys
 from gi.repository import Adw, Gio, GLib, Gtk
 from loguru import logger
 
+from anura.config import APP_ID
+from anura.language_manager import language_manager
+from anura.services.clipboard_service import clipboard_service
 from anura.services.notification_service import (
     HAS_LIBNOTIFY,
     NotificationService,
     Notify,
 )
+from anura.services.screenshot_service import ScreenshotService
+from anura.services.settings import settings
+from anura.utils import cleanup_orphaned_resources
+from anura.window import AnuraWindow
 
 
 def _load_gresource_bundle() -> bool:
@@ -60,14 +67,6 @@ def _load_gresource_bundle() -> bool:
 if not _load_gresource_bundle():
     logger.critical("GResource bundle is required to run Anura. The application cannot start.")
     sys.exit(1)
-
-from anura.config import APP_ID  # noqa: E402
-from anura.language_manager import language_manager  # noqa: E402
-from anura.services.clipboard_service import clipboard_service  # noqa: E402
-from anura.services.screenshot_service import ScreenshotService  # noqa: E402
-from anura.services.settings import settings  # noqa: E402
-from anura.utils import cleanup_orphaned_resources  # noqa: E402
-from anura.window import AnuraWindow  # noqa: E402
 
 
 class AnuraApplication(Adw.Application):
@@ -148,14 +147,14 @@ class AnuraApplication(Adw.Application):
         if HAS_LIBNOTIFY and Notify is not None:
             try:
                 Notify.uninit()
-            except Exception:
-                pass
+            except (ImportError, AttributeError, TypeError) as e:
+                logger.debug(f"Failed to uninitialize libnotify: {e}")
 
         # Call clipboard_service cleanup (already imported at module level)
         try:
             clipboard_service.cancel_pending_operations()
-        except Exception:
-            pass
+        except (AttributeError, RuntimeError) as e:
+            logger.debug(f"Failed to cleanup clipboard service: {e}")
 
         Adw.Application.do_shutdown(self)
 

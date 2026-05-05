@@ -37,6 +37,25 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="0.1.4.2" type="stable" date="2026-05-05">
+      <description>
+        <p>Hardened thread safety, sanitized error logging, and optimized resource cleanup.</p>
+        <ul>
+          <li>Fixed `__slots__` conflict in ClipboardService - missing `_cancellable` in declaration causing AttributeError.</li>
+          <li>Fixed ruff linting errors across codebase including import sorting and code style issues.</li>
+          <li>Fixed concurrency issues in TTS and clipboard services against race conditions.</li>
+          <li>Fixed memory leaks and added structural robustness throughout application.</li>
+          <li>Fixed API contract, thread safety, and race condition issues in core services.</li>
+          <li>Fixed Flatpak manifest warnings by removing `_comment` properties.</li>
+          <li>Extracted URI validation to utils module and relaxed IP/localhost restrictions.</li>
+          <li>Improved code quality with comprehensive type hints and cleanup.</li>
+          <li>Implemented atomic cancellation for Clipboard and thread-safe signal emission for TTS GStreamer bus.</li>
+          <li>Enhanced thread safety patterns across all services.</li>
+          <li>Added comprehensive unit tests for core services.</li>
+          <li>Resolved all remaining linting errors and line length issues.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.4.1" type="stable" date="2026-05-02">
       <description>
         <p>Hotfix release for UI initialization issues and notification improvements.</p>

@@ -102,7 +102,7 @@ class LanguageManager(GObject.GObject):
         self._active_language = language
         self.notify("active_language")
 
-    def init_tessdata(self):
+    def init_tessdata(self) -> None:
         """
         Ensures the tessdata directory exists and logs its status at startup.
         Also cleans up orphaned temporary files from interrupted downloads.
@@ -203,7 +203,7 @@ class LanguageManager(GObject.GObject):
                 return code
         return "eng"
 
-    def download(self, code: str):
+    def download(self, code: str) -> None:
         """Starts the asynchronous download process."""
         with self._cache_lock:
             if code in self.loading_languages:
@@ -264,7 +264,7 @@ class LanguageManager(GObject.GObject):
 
                 shutil.move(tmp_path, final_path)  # atomic on same filesystem
                 return code
-            except Exception as e:
+            except (requests.RequestException, OSError) as e:
                 if tmp_path and os.path.exists(tmp_path):
                     os.unlink(tmp_path)
                 logger.warning(f"Anura: download failed from {url_base}: {e}")
@@ -272,7 +272,7 @@ class LanguageManager(GObject.GObject):
         logger.error(f"Anura: Failed to download model '{code}' from all sources.")
         return None
 
-    def download_done(self, requested_code: str, result_code: str | None):
+    def download_done(self, requested_code: str, result_code: str | None) -> None:
         """Callback when download completes.
 
         Args:
@@ -288,7 +288,7 @@ class LanguageManager(GObject.GObject):
         else:
             GLib.idle_add(self.emit, "download-failed", requested_code)
 
-    def remove_language(self, code: str):
+    def remove_language(self, code: str) -> None:
         """Removes the model file from the system."""
         path = os.path.join(TESSDATA_DIR, f"{code}.traineddata")
         if not os.path.exists(path):
