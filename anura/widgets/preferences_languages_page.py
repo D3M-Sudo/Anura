@@ -5,7 +5,7 @@
 
 from gettext import gettext as _
 
-from gi.repository import Adw, Gio, Gtk
+from gi.repository import Adw, Gio, GLib, Gtk
 
 from anura.config import RESOURCE_PREFIX
 from anura.language_manager import language_manager
@@ -63,7 +63,7 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
     def _on_connection_checked(self, monitor, result) -> None:
         try:
             reachable = monitor.can_reach_finish(result)
-        except Exception:
+        except (GLib.Error, OSError):
             reachable = False
 
         if not reachable:

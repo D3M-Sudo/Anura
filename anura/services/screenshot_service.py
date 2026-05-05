@@ -205,7 +205,7 @@ class ScreenshotService(GObject.GObject):
             if old_handler_id is not None:
                 try:
                     self.cancelable.disconnect(old_handler_id)
-                except Exception:
+                except (TypeError, RuntimeError):
                     pass
             self.cancelable = Gio.Cancellable.new()
             # Create lambda wrapper to avoid line length issues
