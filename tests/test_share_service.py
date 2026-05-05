@@ -119,7 +119,9 @@ class TestShareService:
     def test_share_text_blocked_url(self):
         """Test sharing text with blocked URL."""
         # Mock URL validation to return False
-        with patch.object(ShareService, "_validate_share_url", return_value=False), patch("anura.services.share_service.GLib"):
+        with patch.object(
+            ShareService, "_validate_share_url", return_value=False
+        ), patch("anura.services.share_service.GLib"):
             self.service.share_text("test text", "email")
 
             # Should not call launcher
@@ -148,7 +150,11 @@ class TestShareService:
 
     def test_share_mastodon_with_fallback_to_dialog(self):
         """Test Mastodon sharing fallback to instance dialog."""
-        with patch("anura.services.share_service.GLib"), patch.object(self.service, "_show_mastodon_instance_dialog") as mock_dialog:
+        with patch(
+            "anura.services.share_service.GLib"
+        ), patch.object(
+            self.service, "_show_mastodon_instance_dialog"
+        ) as mock_dialog:
             # Mock failed launch
             self.service.launcher.launch_finish.return_value = False
 
@@ -159,7 +165,11 @@ class TestShareService:
 
     def test_share_mastodon_with_fallback_launch_error(self):
         """Test Mastodon sharing with launch error."""
-        with patch("anura.services.share_service.GLib"), patch.object(self.service, "_show_mastodon_instance_dialog") as mock_dialog:
+        with patch(
+            "anura.services.share_service.GLib"
+        ), patch.object(
+            self.service, "_show_mastodon_instance_dialog"
+        ) as mock_dialog:
             # Mock launch exception
             self.service.launcher.launch.side_effect = Exception("Launch error")
 
@@ -184,7 +194,11 @@ class TestShareService:
 
     def test_show_mastodon_instance_dialog(self):
         """Test Mastodon instance dialog creation."""
-        with patch("anura.services.share_service.Adw") as mock_adw, patch("anura.services.share_service.Gio") as mock_gio, patch("anura.services.share_service.GLib"):
+        with patch(
+            "anura.services.share_service.Adw"
+        ) as mock_adw, patch(
+            "anura.services.share_service.Gio"
+        ) as mock_gio, patch("anura.services.share_service.GLib"):
             # Mock app and window
             mock_app = Mock()
             mock_window = Mock()
@@ -206,7 +220,13 @@ class TestShareService:
 
     def test_show_mastodon_instance_dialog_no_window(self):
         """Test Mastodon instance dialog without active window."""
-        with patch("anura.services.share_service.Adw") as mock_adw, patch("anura.services.share_service.Gio") as mock_gio, patch("anura.services.share_service.GLib") as mock_glib:
+        with patch(
+            "anura.services.share_service.Adw"
+        ) as mock_adw, patch(
+            "anura.services.share_service.Gio"
+        ) as mock_gio, patch(
+            "anura.services.share_service.GLib"
+        ) as mock_glib:
             # Mock no active window
             mock_app = Mock()
             mock_app.get_active_window.return_value = None

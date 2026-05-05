@@ -273,7 +273,9 @@ class TestTTSService:
 
     def test_get_cache_dir_creation(self):
         """Test cache directory creation when it doesn't exist."""
-        with patch("anura.services.tts.os.path.exists", return_value=False), patch("anura.services.tts.os.makedirs") as mock_makedirs:
+        with patch(
+            "anura.services.tts.os.path.exists", return_value=False
+        ), patch("anura.services.tts.os.makedirs") as mock_makedirs:
             cache_dir = self.service._get_cache_dir()
             mock_makedirs.assert_called_once()
             assert cache_dir.endswith("/anura/tts")
