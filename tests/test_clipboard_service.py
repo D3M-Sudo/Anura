@@ -3,8 +3,7 @@
 # Unit tests for ClipboardService
 # Tests clipboard read/write operations and error handling
 
-from unittest.mock import Mock, patch, AsyncMock
-import pytest
+from unittest.mock import Mock, patch
 
 from anura.services.clipboard_service import ClipboardService
 
@@ -57,7 +56,6 @@ class TestClipboardService:
 
     def test_read_text_success(self):
         """Test successful text reading from clipboard."""
-        test_text = "Clipboard content"
 
         # Mock the async read operation
         mock_future = Mock()

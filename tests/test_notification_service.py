@@ -5,7 +5,7 @@
 
 from unittest.mock import Mock, patch
 
-from anura.services.notification_service import NotificationService, HAS_LIBNOTIFY
+from anura.services.notification_service import HAS_LIBNOTIFY, NotificationService
 
 
 class TestNotificationService:

@@ -3,11 +3,10 @@
 # Unit tests for core business logic without GTK dependencies
 # Tests individual functions and classes directly
 
-import sys
 import os
 import re
+import sys
 from urllib.parse import quote
-from unittest.mock import Mock, patch
 
 # Add the project root to Python path to import modules directly
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -63,55 +62,46 @@ class TestTTSLogic:
 
     def test_language_mapping_english(self):
         """Test English language mapping."""
-        lang_code = "eng"
         expected = "en"
         assert expected == "en"
 
     def test_language_mapping_italian(self):
         """Test Italian language mapping."""
-        lang_code = "ita"
         expected = "it"
         assert expected == "it"
 
     def test_language_mapping_spanish(self):
         """Test Spanish language mapping."""
-        lang_code = "spa"
         expected = "es"
         assert expected == "es"
 
     def test_language_mapping_french(self):
         """Test French language mapping."""
-        lang_code = "fra"
         expected = "fr"
         assert expected == "fr"
 
     def test_language_mapping_german(self):
         """Test German language mapping."""
-        lang_code = "deu"
         expected = "de"
         assert expected == "de"
 
     def test_language_mapping_unknown(self):
         """Test unknown language mapping defaults to English."""
-        lang_code = "xyz"
         expected = "en"  # Should default to English
         assert expected == "en"
 
     def test_language_mapping_multilingual(self):
         """Test multilingual OCR codes use first language."""
-        lang_code = "eng+ita"
         expected = "en"  # Should use first language
         assert expected == "en"
 
     def test_language_mapping_empty(self):
         """Test empty language code defaults to English."""
-        lang_code = ""
         expected = "en"  # Should default to English
         assert expected == "en"
 
     def test_language_mapping_none(self):
         """Test None language code defaults to English."""
-        lang_code = None
         expected = "en"  # Should default to English
         assert expected == "en"
 

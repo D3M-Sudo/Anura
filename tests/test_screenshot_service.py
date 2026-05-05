@@ -5,6 +5,7 @@
 
 import os
 from unittest.mock import Mock, patch
+
 from PIL import Image
 import pytesseract
 
@@ -123,7 +124,7 @@ class TestScreenshotService:
         with patch("pytesseract.image_to_string") as mock_ocr:
             mock_ocr.return_value = "test text"
 
-            success, result, error = self.service.decode_image_sync(
+            success, _, _ = self.service.decode_image_sync(
                 "eng",
                 str(test_file),
                 True,  # remove_source=True
@@ -157,18 +158,17 @@ class TestScreenshotService:
 
             # Simulate portal file path
             portal_file = f"/tmp/.portal-{os.getpid()}-test.png"
-            with patch("os.path.exists", return_value=True):
-                with patch("os.remove") as mock_remove:
-                    success, result, error = self.service.decode_image_sync(
-                        "eng",
-                        portal_file,
-                        True,  # remove_source=True
-                    )
+            with patch("os.path.exists", return_value=True), patch("os.remove") as mock_remove:
+                success, result, _ = self.service.decode_image_sync(
+                    "eng",
+                    portal_file,
+                    True,  # remove_source=True
+                )
 
-                    assert success is True
-                    assert result == "portal text"
-                    # Portal temp file should be removed
-                    mock_remove.assert_called_once_with(portal_file)
+                assert success is True
+                assert result == "portal text"
+                # Portal temp file should be removed
+                mock_remove.assert_called_once_with(portal_file)
 
     def test_decode_image_empty_result(self, tmp_path):
         """Test handling of empty OCR/QR results."""

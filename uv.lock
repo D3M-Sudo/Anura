@@ -17,9 +17,15 @@ dependencies = [
 
 [package.optional-dependencies]
 dev = [
+    { name = "gtts" },
+    { name = "loguru" },
     { name = "meson" },
+    { name = "pillow" },
+    { name = "pytesseract" },
     { name = "pytest" },
     { name = "pytest-mock" },
+    { name = "pyzbar" },
+    { name = "requests" },
     { name = "ruff" },
 ]
 
@@ -32,14 +38,20 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "gtts", specifier = ">=2.5.4" },
+    { name = "gtts", marker = "extra == 'dev'", specifier = ">=2.5.4" },
     { name = "loguru", specifier = ">=0.7.3" },
+    { name = "loguru", marker = "extra == 'dev'", specifier = ">=0.7.3" },
     { name = "meson", marker = "extra == 'dev'", specifier = ">=1.5.0" },
     { name = "pillow", specifier = ">=12.2.0" },
+    { name = "pillow", marker = "extra == 'dev'", specifier = ">=12.2.0" },
     { name = "pytesseract", specifier = ">=0.3.13" },
+    { name = "pytesseract", marker = "extra == 'dev'", specifier = ">=0.3.13" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
     { name = "pytest-mock", marker = "extra == 'dev'", specifier = ">=3.14" },
     { name = "pyzbar", specifier = ">=0.1.9" },
+    { name = "pyzbar", marker = "extra == 'dev'", specifier = ">=0.1.9" },
     { name = "requests", specifier = ">=2.33.1" },
+    { name = "requests", marker = "extra == 'dev'", specifier = ">=2.33.1" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.15.0" },
 ]
 provides-extras = ["dev"]

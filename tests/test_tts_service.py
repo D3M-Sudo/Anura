@@ -3,10 +3,7 @@
 # Unit tests for TTSService
 # Tests language mapping, audio generation, and GStreamer integration
 
-import os
-import tempfile
-from unittest.mock import Mock, patch, MagicMock
-from pathlib import Path
+from unittest.mock import Mock, patch
 
 from anura.services.tts import TTSService
 
@@ -138,7 +135,7 @@ class TestTTSService:
         """Test handling of file save errors."""
         mock_exists.return_value = False
         mock_tts = Mock()
-        mock_tts.save.side_effect = IOError("Save error")
+        mock_tts.save.side_effect = OSError("Save error")
         mock_gtts.return_value = mock_tts
         cache_path = "/cache/test.mp3"
 
@@ -276,11 +273,10 @@ class TestTTSService:
 
     def test_get_cache_dir_creation(self):
         """Test cache directory creation when it doesn't exist."""
-        with patch("anura.services.tts.os.path.exists", return_value=False):
-            with patch("anura.services.tts.os.makedirs") as mock_makedirs:
-                cache_dir = self.service._get_cache_dir()
-                mock_makedirs.assert_called_once()
-                assert cache_dir.endswith("/anura/tts")
+        with patch("anura.services.tts.os.path.exists", return_value=False), patch("anura.services.tts.os.makedirs") as mock_makedirs:
+            cache_dir = self.service._get_cache_dir()
+            mock_makedirs.assert_called_once()
+            assert cache_dir.endswith("/anura/tts")
 
     def test_get_cache_path(self):
         """Test cache file path generation."""

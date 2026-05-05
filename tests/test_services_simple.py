@@ -3,8 +3,7 @@
 # Simple unit tests for core services without GTK dependencies
 # Tests business logic and utility functions
 
-import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 
 class TestShareServiceLogic:
@@ -188,7 +187,6 @@ class TestConfigLogic:
     def test_get_tesseract_config_valid_english(self):
         """Test Tesseract config generation for valid English."""
         from anura.config import get_tesseract_config
-        import os
 
         # Mock file exists
         with patch("os.path.exists", return_value=True):
@@ -210,8 +208,9 @@ class TestConfigLogic:
 
     def test_lang_code_pattern_valid(self):
         """Test language code validation pattern."""
-        from anura.config import LANG_CODE_PATTERN
         import re
+
+        from anura.config import LANG_CODE_PATTERN
 
         valid_codes = ["eng", "ita", "spa", "fra", "deu", "eng+ita", "chi_sim"]
 
@@ -220,8 +219,9 @@ class TestConfigLogic:
 
     def test_lang_code_pattern_invalid(self):
         """Test language code validation pattern for invalid codes."""
-        from anura.config import LANG_CODE_PATTERN
         import re
+
+        from anura.config import LANG_CODE_PATTERN
 
         invalid_codes = ["", "a", "toolongcode123456789", "invalid!@#", "a b"]
 
