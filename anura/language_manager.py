@@ -168,7 +168,10 @@ class LanguageManager(GObject.GObject):
                 # User-downloaded models (~/.var/app/.../data/anura/tessdata/)
                 if os.path.exists(TESSDATA_DIR):
                     try:
-                        user_files = [f for f in os.listdir(TESSDATA_DIR) if f.endswith(".traineddata") and not f.startswith("osd")]
+                        user_files = [
+                            f for f in os.listdir(TESSDATA_DIR)
+                            if f.endswith(".traineddata") and not f.startswith("osd")
+                        ]
                         logger.debug(f"Anura: User tessdata files found: {user_files}")
                         codes.update(os.path.splitext(f)[0] for f in user_files)
                     except OSError:
@@ -179,7 +182,10 @@ class LanguageManager(GObject.GObject):
                 # Bundled system models (/app/share/tessdata/ — eng, ita pre-installed)
                 if os.path.exists(TESSDATA_SYSTEM_DIR):
                     try:
-                        system_files = [f for f in os.listdir(TESSDATA_SYSTEM_DIR) if f.endswith(".traineddata") and not f.startswith("osd")]
+                        system_files = [
+                            f for f in os.listdir(TESSDATA_SYSTEM_DIR)
+                            if f.endswith(".traineddata") and not f.startswith("osd")
+                        ]
                         logger.debug(f"Anura: System tessdata files found: {system_files}")
                         codes.update(os.path.splitext(f)[0] for f in system_files)
                     except OSError:
