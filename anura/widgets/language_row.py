@@ -72,6 +72,8 @@ class LanguageRow(Gtk.Overlay):
         if not is_loading:
             self.revealer.set_reveal_child(False)
 
+        return False
+
     def update_progress(self, sender: GObject.GObject, code: str, progress: float) -> None:
         """Signal handler for download progress."""
         if self._item and code == self._item.code:
@@ -89,6 +91,8 @@ class LanguageRow(Gtk.Overlay):
 
             if progress >= 100:
                 self.revealer.set_reveal_child(False)
+
+        return False
 
     @Gtk.Template.Callback()
     def _on_download(self, _: Gtk.Button):
