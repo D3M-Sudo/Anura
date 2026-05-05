@@ -5,6 +5,7 @@
 <br/>
 
 # Anura
+Anura: Jumping from pixels to text in a single leap.
 
 **Intuitive text extraction for the Linux desktop.**  
 OCR · QR Decoding · Privacy-first · Native GTK4
