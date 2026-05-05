@@ -30,6 +30,15 @@ GSETTINGS_SCHEMA_DIR=builddir/data python3 -m anura.main
 
 ## Running Tests
 
+### Test Categories
+
+Anura has two categories of tests:
+
+1. **Unit Tests** - Pure Python logic without GTK dependencies
+2. **Integration Tests** - Require GTK/GLib environment
+
+### Running Tests
+
 ```bash
 # All pure-Python tests (no GTK required)
 pytest tests/ -v -m "not gtk"
@@ -40,8 +49,36 @@ pytest tests/ -v -m "not network"
 # Run only a specific file
 pytest tests/test_config.py -v
 
+# Run unit logic tests (business logic only)
+pytest tests/test_unit_logic.py -v
+
+# Run service-specific tests
+pytest tests/test_screenshot_service.py -v
+pytest tests/test_clipboard_service.py -v
+pytest tests/test_share_service.py -v
+pytest tests/test_tts_service.py -v
+pytest tests/test_notification_service.py -v
+
 # Run URI validator tests specifically
 pytest tests/test_uri_validator.py -v
+```
+
+### Test Architecture
+
+- **`tests/test_unit_logic.py`** - Business logic tests without GTK dependencies
+- **`tests/test_*_service.py`** - Service tests with mocked GTK dependencies  
+- **`tests/conftest.py`** - Shared fixtures and environment isolation
+- **GTK Tests** - Marked with `@pytest.mark.gtk` (require Flatpak environment)
+
+### Writing New Tests
+
+```bash
+# For unit logic (no GTK):
+# Create tests in test_unit_logic.py or new test_*.py files
+
+# For service tests:
+# Mock GTK dependencies with unittest.mock
+# See existing test_*.py files for examples
 ```
 
 ## Linting

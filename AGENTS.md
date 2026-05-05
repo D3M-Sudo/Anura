@@ -395,6 +395,80 @@ Release notes for `Adw.AboutDialog` are generated from `CHANGELOG.md` during Mes
 | `build-aux/generate_release_notes.py` | CHANGELOG.md parser → `_release_notes.py` |
 | `CHANGELOG.md` | Versioned changelog (source for release notes) |
 
+## Testing
+
+### Test Architecture
+
+Anura uses a comprehensive test suite with two main categories:
+
+1. **Unit Tests** (`tests/test_unit_logic.py`) - Pure Python business logic without GTK dependencies
+2. **Service Tests** (`tests/test_*_service.py`) - Service-specific tests with mocked GTK dependencies
+
+### Test Files
+
+| File | Purpose | Dependencies |
+|------|---------|--------------|
+| `tests/test_unit_logic.py` | Business logic validation (URL encoding, language mapping, validation) | Pure Python |
+| `tests/test_screenshot_service.py` | Screenshot capture, OCR, QR decoding | Mocked Xdp.Portal |
+| `tests/test_clipboard_service.py` | Clipboard read/write operations | Mocked Gdk.Clipboard |
+| `tests/test_share_service.py` | Social sharing providers, URL validation | Mocked Gtk.UriLauncher |
+| `tests/test_tts_service.py` | Text-to-speech, language mapping, GStreamer | Mocked GStreamer |
+| `tests/test_notification_service.py` | Notifications with XDG Portal/libnotify fallback | Mocked Xdp.Portal |
+| `tests/conftest.py` | Shared fixtures, environment isolation | Pure Python |
+
+### Running Tests
+
+```bash
+# All pure-Python tests (no GTK required)
+pytest tests/ -v -m "not gtk"
+
+# Unit logic tests only
+pytest tests/test_unit_logic.py -v
+
+# Service-specific tests
+pytest tests/test_screenshot_service.py -v
+pytest tests/test_clipboard_service.py -v
+pytest tests/test_share_service.py -v
+pytest tests/test_tts_service.py -v
+pytest tests/test_notification_service.py -v
+
+# GTK tests (require Flatpak environment)
+flatpak run --devel --command=bash com.github.d3msudo.anura
+python3 -m pytest tests/ -m "gtk" -v
+```
+
+### Test Patterns
+
+**Mocking GTK Dependencies:**
+```python
+def setup_method(self):
+    self.service = ScreenshotService()
+    self.service.portal = Mock()  # Avoid Xdp dependency
+```
+
+**Business Logic Testing:**
+```python
+def test_language_mapping(self):
+    service = TTSService()
+    result = service.get_effective_language("eng")
+    assert result == "en"
+```
+
+**Error Handling:**
+```python
+def test_service_error(self):
+    with patch.object(self.service.portal, 'send_notification', side_effect=Exception("Error")):
+        # Test graceful error handling
+        self.service.show_notification("Title", "Body")
+```
+
+### CI/CD Considerations
+
+- **Unit tests** run in standard CI (no system dependencies)
+- **GTK tests** require Flatpak runtime environment
+- **Environment isolation** via `conftest.py` fixtures
+- **Coverage** focuses on business logic and error paths
+
 ## For Cascade / AI Agents
 
 - Read this file BEFORE any operation on the codebase

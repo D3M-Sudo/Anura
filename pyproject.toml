@@ -19,6 +19,12 @@ dev = [
     "meson>=1.5.0",       # Build system (for local testing)
     "pytest>=8.0",        # Test framework
     "pytest-mock>=3.14",  # Mocking for GTK/GLib-dependent code
+    "pytesseract>=0.3.13", # OCR engine (for testing)
+    "Pillow>=12.2.0",      # Image processing (for testing)
+    "pyzbar>=0.1.9",      # QR code decoding (for testing)
+    "gtts>=2.5.4",         # Text-to-speech (for testing)
+    "loguru>=0.7.3",        # Logging (for testing)
+    "requests>=2.33.1",      # HTTP requests (for testing)
 ]
 
 # ─── Ruff ─────────────────────────────────────────────────────────────────────
@@ -81,5 +87,6 @@ addopts = "-v --tb=short"
 
 [dependency-groups]
 dev = [
+    "pytest>=9.0.3",
     "ruff>=0.15.12",
 ]
