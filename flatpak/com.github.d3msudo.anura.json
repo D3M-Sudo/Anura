@@ -4,6 +4,7 @@
     "runtime-version": "49",
     "sdk": "org.gnome.Sdk",
     "command": "anura",
+    "branch": "main",
 
     "finish-args": [
         "--share=network",
