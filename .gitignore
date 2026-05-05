@@ -63,3 +63,6 @@ coverage.xml
 
 # Test runner script (development utility)
 run_tests.py
+
+# AI testing reference (private)
+.TESTING.md

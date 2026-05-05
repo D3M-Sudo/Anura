@@ -58,7 +58,7 @@ class TestLangCodePattern:
         assert not self._match("e")
 
     def test_too_long(self):
-        assert not self._match("abcdefghi")  # 9 chars
+        assert not self._match("abcdefghijklmnopqrs")  # 19 chars, exceeds 18 char limit
 
     def test_shell_injection_semicolon(self):
         assert not self._match("eng;rm -rf /")
