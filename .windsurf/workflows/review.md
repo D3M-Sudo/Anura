@@ -28,6 +28,14 @@ For every file in anura/:
 - Verify each is wrapped in GLib.idle_add() if called from a non-main thread
 - Find ALL GTK/GObject widget modifications from secondary threads
 - Find ALL GLib.idle_add() calls and verify the callback returns GLib.SOURCE_REMOVE or False
+- Find every threading.Lock() — verify all acquisitions have matching releases
+- Find every GLib.timeout_add() — verify SOURCE_REMOVE is returned when done
+- Find every signal connection (connect()) — verify disconnect() exists in cleanup
+- Find every file open() without context manager (with statement)
+- Find every tempfile usage — verify tempfile + shutil.move pattern
+- Find every GStreamer pipeline — verify proper cleanup in finally/do_destroy
+- Find every threading.Lock() — verify all acquisitions have matching releases
+- Find every GLib.timeout_add() — verify SOURCE_REMOVE is returned when done
 
 ### Review 2 — Security Audit
 - grep -rn "subprocess\|shell=True\|eval\|exec(" anura/

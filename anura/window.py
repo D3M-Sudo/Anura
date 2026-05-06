@@ -7,12 +7,12 @@ import re
 from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk
 from loguru import logger
 
-from anura.config import APP_ID, LANG_CODE_PATTERN, RESOURCE_PREFIX
+from anura.config import APP_ID, RESOURCE_PREFIX
 from anura.gobject_worker import GObjectWorker
-from anura.language_manager import language_manager
-from anura.services.clipboard_service import clipboard_service
+from anura.language_manager import get_language_manager
+from anura.services.clipboard_service import get_clipboard_service
 from anura.services.screenshot_service import ScreenshotService
-from anura.services.share_service import share_service
+from anura.services.share_service import get_share_service
 from anura.utils import uri_validator
 from anura.widgets.extracted_page import ExtractedPage
 from anura.widgets.preferences_dialog import PreferencesDialog
@@ -38,14 +38,15 @@ class AnuraWindow(Adw.ApplicationWindow):
 
         # Defensive: validate language from settings, fallback to English if corrupted
         lang_code = self.settings.get_string("active-language")
-        item = language_manager.get_language_item(lang_code)
+        language_manager_instance = get_language_manager()
+        item = language_manager_instance.get_language_item(lang_code)
         if item is None:
-            item = language_manager.get_language_item("eng")
+            item = language_manager_instance.get_language_item("eng")
         if item is None:
             # Ultimate fallback - should never happen for built-in languages
             from anura.types.language_item import LanguageItem
             item = LanguageItem(code="eng", title="English")
-        language_manager.active_language = item
+        language_manager_instance.active_language = item
 
         self._setup_geometry()
         self._setup_controllers()
@@ -55,7 +56,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         self._screenshot_timeout_id: int | None = None
 
         # Use shared singleton instance
-        self.share_service = share_service
+        self.share_service = get_share_service()
         share_action = Gio.SimpleAction.new("share", GLib.VariantType.new("s"))
         share_action.connect("activate", self._on_share)
         self.add_action(share_action)
@@ -67,7 +68,8 @@ class AnuraWindow(Adw.ApplicationWindow):
         self._handler_go_back = self.extracted_page.connect("go-back", self.show_welcome_page)
         self._handler_clipboard = None
         try:
-            self._handler_clipboard = clipboard_service.connect(
+            clipboard_service_instance = get_clipboard_service()
+            self._handler_clipboard = clipboard_service_instance.connect(
                 "paste_from_clipboard",
                 self._on_paste_from_clipboard_texture
             )
@@ -85,16 +87,9 @@ class AnuraWindow(Adw.ApplicationWindow):
         self.split_view.add_controller(drop_target)
 
     def get_language(self) -> str:
-        active = self.settings.get_string("active-language")
-        extra = self.settings.get_string("extra-language")
-        combined = f"{active}+{extra}" if extra else active
-
-        # Validate combined language code against LANG_CODE_PATTERN
-        if not re.match(LANG_CODE_PATTERN, combined):
-            logger.warning(f"Anura: Invalid combined language code '{combined}', falling back to 'eng'")
-            return "eng"
-
-        return combined
+        """Get current language code from settings or language manager."""
+        language_manager_instance = get_language_manager()
+        return self.settings.get_string("active-language") or language_manager_instance.active_language.code
 
     def get_screenshot(self, copy: bool = False) -> None:
         self.extracted_page.listen_cancel()
@@ -139,7 +134,8 @@ class AnuraWindow(Adw.ApplicationWindow):
             self.extracted_page.extracted_text = text
 
             if self.settings.get_boolean("autocopy") or copy:
-                clipboard_service.set(text)
+                clipboard_service_instance = get_clipboard_service()
+                clipboard_service_instance.set(text)
                 self.show_toast(_("Text copied to clipboard"))
 
             # Extract URL from OCR text (not just validate entire text as URL)
@@ -336,16 +332,18 @@ class AnuraWindow(Adw.ApplicationWindow):
     def _do_copy_to_clipboard(self) -> None:
         text = self.extracted_page.extracted_text
         if text:
-            clipboard_service.set(text)
+            clipboard_service_instance = get_clipboard_service()
+            clipboard_service_instance.set(text)
             self.show_toast(_("Text copied to clipboard"))
         else:
             self.show_toast(_("No text to copy"))
 
-    def copy_to_clipboard_direct(self) -> None:
+    def _do_copy_to_clipboard_direct(self) -> None:
         """Direct copy method for internal use without action parameter."""
         text = self.extracted_page.extracted_text
         if text:
-            clipboard_service.set(text)
+            clipboard_service_instance = get_clipboard_service()
+            clipboard_service_instance.set(text)
             self.show_toast(_("Text copied to clipboard"))
         else:
             self.show_toast(_("No text to copy"))
@@ -353,7 +351,8 @@ class AnuraWindow(Adw.ApplicationWindow):
     def on_paste_from_clipboard(self, _action: Gio.SimpleAction) -> None:
         """Read image from clipboard and perform OCR."""
         self.welcome_page.spinner.set_visible(True)
-        clipboard_service.read_texture()
+        clipboard_service_instance = get_clipboard_service()
+        clipboard_service_instance.read_texture()
 
     def _on_paste_from_clipboard_texture(self, _service: GObject.GObject, texture: Gdk.Texture) -> None:
         self.welcome_page.spinner.set_visible(True)
@@ -375,7 +374,8 @@ class AnuraWindow(Adw.ApplicationWindow):
             self._screenshot_timeout_id = None
 
         # Cancel any pending clipboard operations before disconnecting handler
-        clipboard_service.cancel_pending_operations()
+        clipboard_service_instance = get_clipboard_service()
+        clipboard_service_instance.cancel_pending_operations()
 
         # Disconnect backend signal handlers
         if self.backend:
@@ -401,7 +401,8 @@ class AnuraWindow(Adw.ApplicationWindow):
             self._handler_go_back = None
         if self._handler_clipboard:
             try:
-                clipboard_service.disconnect(self._handler_clipboard)
+                clipboard_service_instance = get_clipboard_service()
+                clipboard_service_instance.disconnect(self._handler_clipboard)
             except (TypeError, RuntimeError):
                 pass
             self._handler_clipboard = None
@@ -411,7 +412,21 @@ class AnuraWindow(Adw.ApplicationWindow):
 
     def show_preferences(self) -> None:
         dialog = PreferencesDialog()
+
+        # Get service instances
+        language_manager_instance = get_language_manager()
+
         dialog.present(self)
+
+        # Connect to language manager signals
+        language_manager_instance.connect(
+            "downloaded",
+            lambda _mgr, code: GLib.idle_add(dialog.on_language_downloaded, code)
+        )
+        language_manager_instance.connect(
+            "download-failed",
+            lambda _mgr, code: GLib.idle_add(dialog.on_language_download_failed, code)
+        )
 
     def show_shortcuts(self) -> None:
         try:

@@ -11,6 +11,7 @@ from gi.repository import Adw, Gio, GLib, GObject, Gtk
 from loguru import logger
 
 from anura.utils import uri_validator
+from anura.utils.singleton import get_instance
 
 
 class ShareService(GObject.GObject):
@@ -243,5 +244,7 @@ class ShareService(GObject.GObject):
         return f"mailto:?subject={subject}&body={body}"
 
 
-# Singleton instance for global app access
-share_service = ShareService()
+# Thread-safe singleton instance for global app access
+def get_share_service() -> ShareService:
+    """Get thread-safe share service singleton."""
+    return get_instance(ShareService)

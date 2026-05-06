@@ -19,6 +19,7 @@ from anura.config import REQUEST_TIMEOUT, TESSDATA_BEST_URL, TESSDATA_DIR, TESSD
 from anura.gobject_worker import GObjectWorker
 from anura.types.download_state import DownloadState
 from anura.types.language_item import LanguageItem
+from anura.utils.singleton import get_instance
 
 
 class LanguageManager(GObject.GObject):
@@ -215,16 +216,19 @@ class LanguageManager(GObject.GObject):
         return "eng"
 
     def download(self, code: str) -> None:
-        """Starts the asynchronous download process."""
+        """Thread-safe asynchronous download process."""
         with self._cache_lock:
             if code in self.loading_languages:
                 return
             self.loading_languages[code] = DownloadState()
+
         GLib.idle_add(self.emit, "added", code)
+
         # Use a wrapper to ensure download_done knows which code was being downloaded
         # even when download_begin returns None on failure
         def download_done_wrapper(result_code: str | None) -> None:
             self.download_done(code, result_code)
+
         GObjectWorker.call(self.download_begin, (code,), download_done_wrapper)
 
     def download_begin(self, code: str) -> str | None:
@@ -284,7 +288,7 @@ class LanguageManager(GObject.GObject):
         return None
 
     def download_done(self, requested_code: str, result_code: str | None) -> None:
-        """Callback when download completes.
+        """Thread-safe callback when download completes.
 
         Args:
             requested_code: The language code that was requested for download
@@ -294,13 +298,14 @@ class LanguageManager(GObject.GObject):
             self._need_update_cache = True
             if requested_code in self.loading_languages:
                 self.loading_languages.pop(requested_code)
+
         if result_code:
             GLib.idle_add(self.emit, "downloaded", result_code)
         else:
             GLib.idle_add(self.emit, "download-failed", requested_code)
 
     def remove_language(self, code: str) -> None:
-        """Removes the model file from the system."""
+        """Thread-safe removal of model file from system."""
         path = os.path.join(TESSDATA_DIR, f"{code}.traineddata")
         if not os.path.exists(path):
             return
@@ -317,5 +322,7 @@ class LanguageManager(GObject.GObject):
             logger.error(f"Anura: OS error removing language '{code}': {e}")
 
 
-# Singleton instance
-language_manager = LanguageManager()
+# Thread-safe singleton instance for global app access
+def get_language_manager() -> LanguageManager:
+    """Get thread-safe language manager singleton."""
+    return get_instance(LanguageManager)

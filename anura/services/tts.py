@@ -14,6 +14,7 @@ from loguru import logger
 import requests
 
 from anura.services.settings import settings
+from anura.utils.singleton import get_instance
 
 
 class TTSService(GObject.GObject):
@@ -64,6 +65,7 @@ class TTSService(GObject.GObject):
     _bus_message_handler_id: int | None = None
     _cleanup_lock: threading.Lock = threading.Lock()
     _bus_watch_lock: threading.Lock = threading.Lock()
+    _state_lock: threading.Lock = threading.Lock()
 
     @classmethod
     def get_supported_gtts_languages(cls) -> dict:
@@ -81,7 +83,7 @@ class TTSService(GObject.GObject):
         """Map Tesseract language code to gTTS-compatible ISO 639-1 code."""
         if tess_code is None:
             return "en"  # Default to English
-        
+
         # Normalize to lowercase for case-insensitive matching
         tess_code = tess_code.lower()
 
@@ -124,16 +126,18 @@ class TTSService(GObject.GObject):
         return gtts.lang.tts_langs()
 
     def generate(self, text: str, lang: str = "en") -> str:
-        """Generates MP3. Raises exception on failure for errorback handling."""
+        """Thread-safe MP3 generation with proper state management."""
         # Input validation: avoid unnecessary gTTS calls for empty/whitespace text
         if not text or not text.strip():
             logger.debug("Anura TTS: Empty text provided, returning empty path")
             return ""
+
         timestamp = int(time.monotonic() * 1000)
         filepath = os.path.join(self._speech_dir, f"speech_{timestamp}.mp3")
 
         tts = gtts.gTTS(text, lang=lang, tld=self._tld)
         logger.info(f"Anura TTS: Generating speech for language: {lang}")
+
         try:
             tts.save(filepath)
         except (Exception, requests.RequestException, OSError) as e:
@@ -147,7 +151,10 @@ class TTSService(GObject.GObject):
 
         logger.debug("Anura TTS: Speech file saved to cache directory")
 
-        self._current_speech_file = filepath
+        # Thread-safe update of current speech file
+        with self._state_lock:
+            self._current_speech_file = filepath
+
         GLib.idle_add(self.emit, "speak", filepath)
         return filepath
 
@@ -182,7 +189,7 @@ class TTSService(GObject.GObject):
         self.player.set_state(Gst.State.PLAYING)
 
     def _setup_bus_watch(self) -> bool:
-        """Set up GStreamer bus signal watch on main thread."""
+        """Thread-safe GStreamer bus signal watch setup on main thread."""
         # Thread-safe guard against concurrent setup calls
         with self._bus_watch_lock:
             if self._bus_watch_setup_in_progress:
@@ -191,28 +198,31 @@ class TTSService(GObject.GObject):
             if self._bus_watch_active and self._bus_message_handler_id is not None:
                 return False
             self._bus_watch_setup_in_progress = True
+
         try:
-            if self._bus is not None:
-                # Double-check under lock to prevent race conditions
-                with self._bus_watch_lock:
-                    if not self._bus_watch_active:
-                        self._bus.add_signal_watch()
-                        self._bus_watch_active = True
-                        self._bus_message_handler_id = self._bus.connect("message", self.on_gst_message)
+            with self._bus_watch_lock:
+                if self._bus is not None and not self._bus_watch_active:
+                    # Double-check under lock to prevent race conditions
+                    self._bus.add_signal_watch()
+                    self._bus_watch_active = True
+                    self._bus_message_handler_id = self._bus.connect("message", self.on_gst_message)
+                    logger.debug("Anura TTS: Bus watch setup completed")
         finally:
             with self._bus_watch_lock:
                 self._bus_watch_setup_in_progress = False
+
         return False  # Don't repeat
 
     def on_gst_message(self, _bus: Gst.Bus, message: Gst.Message) -> None:
-        """Handle GStreamer bus messages; clean up temp file on EOS."""
+        """Thread-safe GStreamer bus message handling."""
         if message.type == Gst.MessageType.EOS:
             logger.info("Anura TTS: Playback finished.")
             with self._cleanup_lock:
                 self._cleanup_gst_resources()
-                # Cleanup temp file after playback - atomic file operations
-                filepath = self._current_speech_file
-                self._current_speech_file = None
+                # Thread-safe cleanup of temp file after playback
+                with self._state_lock:
+                    filepath = self._current_speech_file
+                    self._current_speech_file = None
 
                 # Atomic file cleanup: check existence and remove inside lock
                 if filepath and os.path.exists(filepath):
@@ -224,6 +234,7 @@ class TTSService(GObject.GObject):
                 elif filepath:
                     logger.debug("Anura TTS: Cleanup skipped, file already removed")
             GLib.idle_add(self.emit, "stop", True)
+
         elif message.type == Gst.MessageType.ERROR:
             err, _debug = message.parse_error()
             logger.error(f"Anura TTS Error: GStreamer playback error: {err}")
@@ -253,15 +264,16 @@ class TTSService(GObject.GObject):
             self.player = None
 
     def stop_speaking(self) -> None:
-        """Interrupts playback and cleans up temp file."""
+        """Thread-safe interruption of playback and cleanup."""
         with self._cleanup_lock:
             if self.player:
                 logger.info("Anura TTS: Stopping playback.")
                 self._cleanup_gst_resources()
 
-            # Capture and clear filepath atomically under lock
-            filepath = self._current_speech_file
-            self._current_speech_file = None
+            # Thread-safe capture and clear filepath
+            with self._state_lock:
+                filepath = self._current_speech_file
+                self._current_speech_file = None
 
             # Atomic file cleanup: check existence and remove inside lock
             if filepath and os.path.exists(filepath):
@@ -274,5 +286,7 @@ class TTSService(GObject.GObject):
                 logger.debug("Anura TTS: Cleanup skipped on stop, file already removed")
 
 
-# Singleton instance
-ttsservice = TTSService()
+# Thread-safe singleton instance for global app access
+def get_tts_service() -> TTSService:
+    """Get thread-safe TTS service singleton."""
+    return get_instance(TTSService)

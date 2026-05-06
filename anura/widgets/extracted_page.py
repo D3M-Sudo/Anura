@@ -8,13 +8,12 @@ from typing import ClassVar
 
 from gi.repository import Adw, GLib, GObject, Gtk
 from loguru import logger
-import requests
 
 from anura.config import RESOURCE_PREFIX
 from anura.gobject_worker import GObjectWorker
 from anura.services.settings import settings
-from anura.services.share_service import ShareService
-from anura.services.tts import TTSService, ttsservice
+from anura.services.share_service import get_share_service
+from anura.services.tts import get_tts_service
 from anura.widgets.share_row import ShareRow
 
 
@@ -42,13 +41,15 @@ class ExtractedPage(Adw.NavigationPage):
 
         self.settings = settings
 
-        for provider in ShareService.providers():
+        share_service_instance = get_share_service()
+        for provider in share_service_instance.providers():
             self.share_list_box.append(ShareRow(provider))
 
         # Initialize handler ID to ensure consistent state for do_destroy
         self._tts_stop_handler_id: int | None = None
         try:
-            self._tts_stop_handler_id = ttsservice.connect("stop", self._on_listen_end)
+            tts_service_instance = get_tts_service()
+            self._tts_stop_handler_id = tts_service_instance.connect("stop", self._on_listen_end)
         except (TypeError, RuntimeError) as e:
             logger.warning(f"Failed to connect TTS stop signal: {e}")
 
@@ -75,19 +76,24 @@ class ExtractedPage(Adw.NavigationPage):
         self.swap_controls(True)
         self._set_spinner_active(True)
 
-        ocr_lang = self.settings.get_string("active-language")
-        lang = ttsservice.get_effective_language(ocr_lang)
-
-        GObjectWorker.call(
-            ttsservice.generate,
-            (self.extracted_text, lang),
-            callback=self._on_generated,
-            errorback=self._on_generate_error,
-        )
+        def _on_generate(self: ExtractedPage) -> None:
+            """Generate TTS audio from extracted text."""
+            tts_service_instance = get_tts_service()
+            GObjectWorker.call(
+                tts_service_instance.generate,
+                (self.extracted_text, self.get_language()),
+                callback=self._on_generated,
+                errorback=self._on_generate_error,
+            )
 
     def _set_spinner_active(self, active: bool) -> None:
         """Switch Stack between button and spinner."""
         self.listen_stack.set_visible_child_name("spinner" if active else "button")
+
+    def _on_share(self, service: object, provider: str) -> None:
+        """Share extracted text via external service."""
+        share_service_instance = get_share_service()
+        share_service_instance.share(provider, self.extracted_text)
 
     def _on_generate_error(self, error: Exception, traceback_str: str | None = None) -> None:
         """Handle generation errors (called on main thread by GObjectWorker)."""
@@ -95,20 +101,18 @@ class ExtractedPage(Adw.NavigationPage):
         self.swap_controls(False)
 
         # Determine error message by type
-        if isinstance(error, requests.exceptions.ConnectionError):
+        if isinstance(error, Exception):
             msg = _("Network error. Please check your internet connection.")
-        elif isinstance(error, requests.exceptions.Timeout):
+        elif isinstance(error, TimeoutError):
             msg = _("Request timed out. Please try again.")
         else:
-            msg = _("Failed to generate speech.")
+            msg = _("Text-to-speech failed. Please try again.")
+        self.show_toast(msg)
 
-        # Show toast via parent window
-        window = self.get_root()
-        if window and hasattr(window, "show_toast"):
-            window.show_toast(msg)
-
-    def listen_cancel(self) -> None:
-        ttsservice.stop_speaking()
+    def _on_listen_stop(self) -> None:
+        """Stop TTS playback."""
+        tts_service_instance = get_tts_service()
+        tts_service_instance.stop_speaking()
         self.swap_controls(False)
 
     def _on_generated(self, filepath: str | None) -> None:
@@ -116,9 +120,18 @@ class ExtractedPage(Adw.NavigationPage):
         if not filepath:
             self.swap_controls(False)
             return
-        ttsservice.play(filepath)
+        tts_service_instance = get_tts_service()
+        tts_service_instance.play(filepath)
 
-    def _on_listen_end(self, service: TTSService, success: bool) -> None:
+    def _on_listen(self, service: object, filepath: str) -> None:
+        """Play TTS audio file."""
+        tts_service_instance = get_tts_service()
+        tts_service_instance.play(filepath)
+
+    def _on_listen_end(self, service: object, success: bool) -> None:
+        """Handle TTS playback completion."""
+        tts_service_instance = get_tts_service()
+        tts_service_instance.disconnect(self._handler_listen_end)
         self.emit("on-listen-stop")
         self._set_spinner_active(False)
         self.swap_controls(False)
@@ -133,9 +146,10 @@ class ExtractedPage(Adw.NavigationPage):
     def do_destroy(self) -> None:
         """Clean up signal handlers to prevent memory leaks."""
         # Check handler is not None AND service is valid before disconnecting
-        if self._tts_stop_handler_id is not None and ttsservice is not None:
+        if self._tts_stop_handler_id is not None:
+            tts_service_instance = get_tts_service()
             try:
-                ttsservice.disconnect(self._tts_stop_handler_id)
+                tts_service_instance.disconnect(self._tts_stop_handler_id)
             except (TypeError, RuntimeError, AttributeError):
                 pass  # Handler already disconnected or service disposed
             self._tts_stop_handler_id = None

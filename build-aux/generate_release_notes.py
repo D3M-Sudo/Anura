@@ -64,7 +64,7 @@ def parse_changelog(changelog_path: Path) -> dict:
     return releases
 
 
-def generate_release_notes_py(changelog_path: Path, output_path: Path, current_version: str):
+def generate_release_notes_py(changelog_path: Path, output_path: Path, current_version: str) -> None:
     """Generate the _release_notes.py file."""
     releases = parse_changelog(changelog_path)
 

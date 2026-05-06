@@ -1,4 +1,3 @@
-import datetime
 from gettext import gettext as _
 import os
 import sys
@@ -8,15 +7,15 @@ from gi.repository import Adw, Gio, GLib, Gtk
 from loguru import logger
 
 from anura.config import APP_ID
-from anura.language_manager import language_manager
-from anura.services.clipboard_service import clipboard_service
+from anura.language_manager import get_language_manager
+from anura.services.clipboard_service import get_clipboard_service
 from anura.services.notification_service import (
     HAS_LIBNOTIFY,
     NotificationService,
-    Notify,
 )
 from anura.services.screenshot_service import ScreenshotService
 from anura.services.settings import settings
+from anura.services.share_service import get_share_service
 from anura.utils import cleanup_orphaned_resources
 from anura.window import AnuraWindow
 
@@ -108,7 +107,6 @@ class AnuraApplication(Adw.Application):
             None,
         )
 
-        language_manager.init_tessdata()
         self.notification_service = NotificationService(APP_ID)
 
         # Track backend signal handler IDs for cleanup in do_shutdown
@@ -126,8 +124,12 @@ class AnuraApplication(Adw.Application):
         self._backend_decoded_handler_id = self.backend.connect("decoded", self.on_decoded)
         self._backend_error_handler_id = self.backend.connect("error", self.on_error)
 
-        # Initialize clipboard service on main thread to avoid race conditions
-        clipboard_service.init()
+        # Initialize services on main thread to avoid race conditions
+        language_manager_instance = get_language_manager()
+        language_manager_instance.init_tessdata()
+
+        clipboard_service_instance = get_clipboard_service()
+        clipboard_service_instance.init()
 
         self._setup_actions()
 
@@ -151,17 +153,21 @@ class AnuraApplication(Adw.Application):
                     pass
                 self._backend_error_handler_id = None
 
-        # Uninitialize libnotify to release resources
-        if HAS_LIBNOTIFY and Notify is not None:
+        # Clean up notification service
+        if hasattr(self, '_notification_service') and self._notification_service:
             try:
-                Notify.uninit()
+                if HAS_LIBNOTIFY:
+                    from gi.repository import Notify
+                    if Notify.is_initted():
+                        Notify.uninit()
             except (ImportError, AttributeError, TypeError) as e:
                 logger.debug(f"Failed to uninitialize libnotify: {e}")
 
         # Call clipboard_service cleanup (already imported at module level)
         try:
-            clipboard_service.cancel_pending_operations()
-        except (AttributeError, RuntimeError) as e:
+            clipboard_service_instance = get_clipboard_service()
+            clipboard_service_instance.cancel_pending_operations()
+        except (AttributeError, TypeError) as e:
             logger.debug(f"Failed to cleanup clipboard service: {e}")
 
         Adw.Application.do_shutdown(self)
@@ -179,6 +185,7 @@ class AnuraApplication(Adw.Application):
         self.create_action("preferences", self.on_preferences, ["<primary>comma"])
         self.create_action("about", self.on_about)
         self.create_action("github_star", self.on_github_star)
+        self.create_action("share_text", self.on_share_text)
 
     def do_activate(self) -> None:
         win = self.props.active_window
@@ -276,7 +283,8 @@ class AnuraApplication(Adw.Application):
             if success and text:
                 # Double-check interrupted before copying to minimize race window
                 if not interrupted.is_set():
-                    clipboard_service.set(text)
+                    clipboard_service_instance = get_clipboard_service()
+                    clipboard_service_instance.set(text)
                     logger.info("Anura: OCR completed successfully in silent mode.")
                     return 0
                 else:
@@ -329,7 +337,7 @@ class AnuraApplication(Adw.Application):
             application_name="Anura",
             application_icon=APP_ID,
             version=self.version,
-            copyright=f"© {datetime.date.today().year} D3M-Sudo & Anura Contributors",
+            copyright=" 2023 D3M-Sudo & Anura Contributors",
             website="https://github.com/d3msudo/anura",
             license_type=Gtk.License.MIT,
             developers=["Andrey Maksimov", "D3M-Sudo"],
@@ -361,10 +369,15 @@ class AnuraApplication(Adw.Application):
         if window:
             window.show_shortcuts()
 
-    def on_copy_to_clipboard(self, _action: object, _param: object) -> None:
-        window = self.get_active_window()
-        if window:
-            window.copy_to_clipboard_direct()
+    def on_copy_to_clipboard(self, _action: Gio.SimpleAction, text: str) -> None:
+        """Copy text to clipboard from action."""
+        if text:
+            clipboard_service_instance = get_clipboard_service()
+            clipboard_service_instance = get_clipboard_service()
+            clipboard_service_instance.set(text)
+            self.show_toast(_("Text copied to clipboard"))
+        else:
+            self.show_toast(_("No text to copy"))
 
     def get_screenshot(self, _action: object, _param: object) -> None:
         window = self.get_active_window()
@@ -381,10 +394,10 @@ class AnuraApplication(Adw.Application):
         if window:
             window.open_image()
 
-    def on_paste_from_clipboard(self, _action: object, _param: object) -> None:
-        window = self.get_active_window()
-        if window:
-            window.on_paste_from_clipboard(self)
+    def on_paste_from_clipboard(self, _action: Gio.SimpleAction) -> None:
+        """Read image from clipboard and perform OCR."""
+        clipboard_service_instance = get_clipboard_service()
+        clipboard_service_instance.read_texture()
 
     def on_decoded(self, _sender: object, text: str, copy: bool) -> None:
         if not text:
@@ -392,7 +405,8 @@ class AnuraApplication(Adw.Application):
             return
 
         if copy:
-            clipboard_service.set(text)
+            clipboard_service_instance = get_clipboard_service()
+            clipboard_service_instance.set(text)
             self.notification_service.show(title="Anura OCR", body=_("Text extracted and copied to clipboard."))
         else:
             logger.debug(f"Extracted: {text}")
@@ -415,6 +429,14 @@ class AnuraApplication(Adw.Application):
         window = self.get_active_window()
         if window:
             window.on_listen_cancel()
+
+    def on_share_text(self, _action: Gio.SimpleAction, text: str) -> None:
+        """Share text via external service."""
+        if text:
+            share_service_instance = get_share_service()
+            share_service_instance.share("email", text)
+        else:
+            self.show_toast(_("No text to share"))
 
     def create_action(self, name: str, callback: object, shortcuts: list[str] | None = None) -> None:
         action = Gio.SimpleAction.new(name, None)
