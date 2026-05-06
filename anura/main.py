@@ -378,10 +378,10 @@ class AnuraApplication(Adw.Application):
         if window:
             window.show_shortcuts()
 
-    def on_copy_to_clipboard(self, _action: Gio.SimpleAction, text: str) -> None:
+    def on_copy_to_clipboard(self, _action: Gio.SimpleAction, variant: GLib.Variant) -> None:
         """Copy text to clipboard from action."""
+        text = variant.get_string() if variant else ""
         if text:
-            clipboard_service_instance = get_clipboard_service()
             clipboard_service_instance = get_clipboard_service()
             clipboard_service_instance.set(text)
             self.show_toast(_("Text copied to clipboard"))
@@ -410,13 +410,19 @@ class AnuraApplication(Adw.Application):
 
     def on_decoded(self, _sender: object, text: str, copy: bool) -> None:
         if not text:
-            self.notification_service.show_notification(title="Anura OCR", body=_("No text found. Try to grab another region."))
+            self.notification_service.show_notification(
+                title="Anura OCR",
+                body=_("No text found. Try to grab another region.")
+            )
             return
 
         if copy:
             clipboard_service_instance = get_clipboard_service()
             clipboard_service_instance.set(text)
-            self.notification_service.show_notification(title="Anura OCR", body=_("Text extracted and copied to clipboard."))
+            self.notification_service.show_notification(
+                title="Anura OCR",
+                body=_("Text extracted and copied to clipboard.")
+            )
         else:
             logger.debug(f"Extracted: {text}")
 

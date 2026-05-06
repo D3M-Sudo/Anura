@@ -150,8 +150,8 @@ class TTSService(GObject.GObject):
             if os.path.exists(filepath):
                 try:
                     os.remove(filepath)
-                except OSError:
-                    pass
+                except OSError as e:
+                    logger.debug(f"Anura TTS: Failed to remove temporary speech file during cleanup: {e}")
             raise
 
         logger.debug("Anura TTS: Speech file saved to cache directory")
