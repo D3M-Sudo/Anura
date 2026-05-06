@@ -19,14 +19,19 @@ gi.require_version('GObject', '2.0')
 
 from gi.repository import GLib, GObject  # noqa: E402
 from loguru import logger  # noqa: E402
+import requests  # noqa: E402
 
-from anura.config import REQUEST_TIMEOUT, TESSDATA_BEST_URL, TESSDATA_DIR, TESSDATA_SYSTEM_DIR, TESSDATA_URL  # noqa: E402
+from anura.config import (  # noqa: E402
+    REQUEST_TIMEOUT,
+    TESSDATA_BEST_URL,
+    TESSDATA_DIR,
+    TESSDATA_SYSTEM_DIR,
+    TESSDATA_URL,
+)
 from anura.gobject_worker import GObjectWorker  # noqa: E402
 from anura.types.download_state import DownloadState  # noqa: E402
 from anura.types.language_item import LanguageItem  # noqa: E402
 from anura.utils.singleton import get_instance  # noqa: E402
-
-import requests  # noqa: E402
 
 
 class LanguageManager(GObject.GObject):
