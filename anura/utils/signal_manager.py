@@ -8,6 +8,11 @@
 from collections.abc import Callable
 from typing import Any
 
+import gi
+
+# Set GTK version requirements before imports
+gi.require_version('GObject', '2.0')
+
 from gi.repository import GObject
 from loguru import logger
 

@@ -4,6 +4,16 @@ from mimetypes import guess_type
 import os
 import re
 
+import gi
+
+# Set GTK version requirements before imports
+gi.require_version('Adw', '1')
+gi.require_version('Gdk', '4.0')
+gi.require_version('Gio', '2.0')
+gi.require_version('GLib', '2.0')
+gi.require_version('GObject', '2.0')
+gi.require_version('Gtk', '4.0')
+
 from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk
 from loguru import logger
 

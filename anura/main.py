@@ -2,7 +2,19 @@ from gettext import gettext as _
 import os
 import sys
 
+# Suppress a11y bus warnings in headless CI environments
+if not sys.stdin.isatty():
+    os.environ['NO_AT_BRIDGE'] = '1'
+
 import gi
+
+# Set GTK version requirements before imports
+gi.require_version('Gtk', '4.0')
+gi.require_version('Adw', '1')
+gi.require_version('Notify', '0.7')
+gi.require_version('Xdp', '1.0')
+gi.require_version('Gst', '1.0')
+
 from gi.repository import Adw, Gio, GLib, Gtk
 from loguru import logger
 
@@ -10,9 +22,10 @@ from loguru import logger
 logger.remove()  # Remove default handler
 logger.add(
     sys.stderr,
-    format="%(asctime)s | %(levelname)-8s | %(name)s:%(funcName)s:%(lineno)d - %(message)s",
+    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}:{function}:{line}</cyan> - <level>{message}</level>",
     level="DEBUG",
     colorize=True,
+    catch=True,
 )
 
 from anura.config import APP_ID
@@ -27,13 +40,6 @@ from anura.services.settings import settings
 from anura.services.share_service import get_share_service
 from anura.utils import cleanup_orphaned_resources
 from anura.window import AnuraWindow
-
-# Set GTK version requirements
-gi.require_version('Gtk', '4.0')
-gi.require_version('Adw', '1')
-gi.require_version('Notify', '0.7')
-gi.require_version('Xdp', '1.0')
-gi.require_version('Gst', '1.0')
 
 
 def _load_gresource_bundle() -> bool:

@@ -11,6 +11,11 @@ import logging
 import threading
 import traceback
 
+import gi
+
+# Set GTK version requirements before imports
+gi.require_version('GLib', '2.0')
+
 from gi.repository import GLib
 
 

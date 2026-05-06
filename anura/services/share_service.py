@@ -7,6 +7,15 @@ from gettext import gettext as _
 from typing import ClassVar
 from urllib.parse import quote
 
+import gi
+
+# Set GTK version requirements before imports
+gi.require_version('Adw', '1')
+gi.require_version('Gio', '2.0')
+gi.require_version('GLib', '2.0')
+gi.require_version('GObject', '2.0')
+gi.require_version('Gtk', '4.0')
+
 from gi.repository import Adw, Gio, GLib, GObject, Gtk
 from loguru import logger
 

@@ -6,6 +6,11 @@
 # Settings module - moved from anura/settings.py to anura/services/settings.py
 # to avoid ModuleNotFoundError in Flatpak sandbox.
 
+import gi
+
+# Set GTK version requirements before imports
+gi.require_version('Gio', '2.0')
+
 from gi.repository import Gio
 from loguru import logger
 

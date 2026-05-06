@@ -7,6 +7,14 @@ from gettext import gettext as _
 import threading
 from typing import ClassVar
 
+import gi
+
+# Set GTK version requirements before imports
+gi.require_version('Gdk', '4.0')
+gi.require_version('Gio', '2.0')
+gi.require_version('GLib', '2.0')
+gi.require_version('GObject', '2.0')
+
 from gi.repository import Gdk, Gio, GLib, GObject
 from loguru import logger
 

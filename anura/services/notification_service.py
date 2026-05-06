@@ -9,6 +9,13 @@ from itertools import count
 import time
 from typing import ClassVar
 
+import gi
+
+# Set GTK version requirements before imports
+gi.require_version('GLib', '2.0')
+gi.require_version('Notify', '0.7')
+gi.require_version('Xdp', '1.0')
+
 from loguru import logger
 
 try:

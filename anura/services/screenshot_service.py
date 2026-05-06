@@ -11,6 +11,14 @@ import time
 from typing import ClassVar
 from urllib.request import url2pathname
 
+import gi
+
+# Set GTK version requirements before imports
+gi.require_version('Gio', '2.0')
+gi.require_version('GLib', '2.0')
+gi.require_version('GObject', '2.0')
+gi.require_version('Xdp', '1.0')
+
 from gi.repository import Gio, GLib, GObject, Xdp
 from loguru import logger
 from PIL import Image
