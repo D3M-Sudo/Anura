@@ -16,11 +16,11 @@ gi.require_version('GLib', '2.0')
 gi.require_version('GObject', '2.0')
 gi.require_version('Gtk', '4.0')
 
-from gi.repository import Adw, Gio, GLib, GObject, Gtk
-from loguru import logger
+from gi.repository import Adw, Gio, GLib, GObject, Gtk  # noqa: E402
+from loguru import logger  # noqa: E402
 
-from anura.utils import uri_validator
-from anura.utils.singleton import get_instance
+from anura.utils import uri_validator  # noqa: E402
+from anura.utils.singleton import get_instance  # noqa: E402
 
 
 class ShareService(GObject.GObject):

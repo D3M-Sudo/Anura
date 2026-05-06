@@ -11,8 +11,8 @@ import gi
 # Set GTK version requirements before imports
 gi.require_version('Gio', '2.0')
 
-from gi.repository import Gio
-from loguru import logger
+from gi.repository import Gio  # noqa: E402
+from loguru import logger  # noqa: E402
 
 # Inline APP_ID to avoid circular import with config.py
 # This ensures settings can be imported independently

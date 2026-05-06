@@ -16,7 +16,7 @@ gi.require_version('GLib', '2.0')
 gi.require_version('Notify', '0.7')
 gi.require_version('Xdp', '1.0')
 
-from loguru import logger
+from loguru import logger  # noqa: E402
 
 try:
     from gi.repository import GLib
