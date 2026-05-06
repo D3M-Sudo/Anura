@@ -309,3 +309,6 @@ class TTSService(GObject.GObject):
 def get_tts_service() -> TTSService:
     """Get thread-safe TTS service singleton."""
     return get_instance(TTSService)
+
+# Global singleton instance for direct import
+ttsservice = get_tts_service()
