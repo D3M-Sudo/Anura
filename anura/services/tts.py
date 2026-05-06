@@ -261,7 +261,10 @@ class TTSService(GObject.GObject):
                         self._bus.disconnect(self._bus_message_handler_id)
                         logger.debug("Anura TTSService: Disconnected bus message handler")
                     else:
-                        logger.warning(f"Anura TTSService: Invalid handler ID type: {type(self._bus_message_handler_id)}")
+                        logger.warning(
+                            f"Anura TTSService: Invalid handler ID type: "
+                            f"{type(self._bus_message_handler_id)}"
+                        )
                 except (TypeError, RuntimeError):
                     pass  # Already disconnected or invalid
                 self._bus_message_handler_id = None

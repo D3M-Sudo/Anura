@@ -22,7 +22,12 @@ class GObjectWorker:
     """
 
     @staticmethod
-    def call(command: Callable, args: tuple = (), callback: Callable | None = None, errorback: Callable | None = None) -> None:
+    def call(
+        command: Callable,
+        args: tuple = (),
+        callback: Callable | None = None,
+        errorback: Callable | None = None
+    ) -> None:
         """
         Executes a command in a separate thread.
 

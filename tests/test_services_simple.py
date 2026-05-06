@@ -116,7 +116,7 @@ class TestShareServiceLogic:
 
 
 
-    
+
 
 class TestConfigLogic:
     """Test configuration logic without system dependencies."""

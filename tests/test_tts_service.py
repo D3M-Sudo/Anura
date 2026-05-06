@@ -3,10 +3,12 @@
 # Unit tests for TTSService
 # Tests language mapping, audio generation, and GStreamer integration
 
-import pytest
 from unittest.mock import Mock, patch
 
+import pytest
+
 from anura.services.tts import TTSService
+
 # Import Gst for message types
 try:
     from gi.repository import Gst
@@ -170,7 +172,7 @@ class TestTTSService:
         # Mock the player
         mock_player = Mock()
         self.service.player = mock_player
-        
+
         self.service.stop_speaking()
 
         mock_player.set_state.assert_called_once()
@@ -179,10 +181,11 @@ class TestTTSService:
     def test_setup_bus_watch(self):
         """Test GStreamer bus watch setup."""
         # Mock the bus and related objects
-        with patch.object(self.service, '_bus', Mock()) as mock_bus:
-            with patch.object(self.service, '_bus_message_handler_id', None):
+        with patch.object(self.service, '_bus', Mock()), patch.object(
+            self.service, '_bus_message_handler_id', None
+        ):
                 result = self.service._setup_bus_watch()
-                
+
                 # Should return False (don't repeat)
                 assert result is False
 
@@ -219,4 +222,4 @@ class TestTTSService:
 
         # Should handle other messages gracefully (no action needed)
 
-    
+

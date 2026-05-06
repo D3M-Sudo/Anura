@@ -4,11 +4,11 @@
 # Tests image validation, OCR processing, and QR decoding logic
 
 import os
-import pytest
 from unittest.mock import Mock, patch
 
 from PIL import Image
 import pytesseract
+import pytest
 
 from anura.services.screenshot_service import ScreenshotService
 

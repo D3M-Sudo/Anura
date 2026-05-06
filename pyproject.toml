@@ -64,6 +64,8 @@ force-sort-within-sections = true
 "anura/**/__init__.py" = ["F401"]
 # Allow broad exceptions in worker error handlers
 "anura/gobject_worker.py" = ["B"]
+# Allow module level imports not at top of file (intentional for logging setup)
+"anura/main.py" = ["E402"]
 
 [tool.ruff.format]
 quote-style = "double"

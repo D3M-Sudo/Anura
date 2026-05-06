@@ -3,8 +3,9 @@
 # Unit tests for ShareService
 # Tests URL validation, provider logic, and Mastodon fallback
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
 
 from anura.services.share_service import ShareService
 

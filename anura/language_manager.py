@@ -173,7 +173,10 @@ class LanguageManager(GObject.GObject):
                             f for f in os.listdir(TESSDATA_DIR)
                             if f.endswith(".traineddata") and not f.startswith("osd")
                         ]
-                        logger.info(f"Anura LanguageManager: User directory scanned, {len(user_files)} models found: {user_files}")
+                        logger.info(
+            f"Anura LanguageManager: User directory scanned, "
+            f"{len(user_files)} models found: {user_files}"
+        )
                         codes.update(os.path.splitext(f)[0] for f in user_files)
                     except OSError as e:
                         logger.exception(f"Anura LanguageManager: Error reading user tessdata directory: {e}")
@@ -187,12 +190,17 @@ class LanguageManager(GObject.GObject):
                             f for f in os.listdir(TESSDATA_SYSTEM_DIR)
                             if f.endswith(".traineddata") and not f.startswith("osd")
                         ]
-                        logger.info(f"Anura LanguageManager: System directory scanned, {len(system_files)} models found: {system_files}")
+                        logger.info(
+                            f"Anura LanguageManager: System directory scanned, "
+                            f"{len(system_files)} models found: {system_files}"
+                        )
                         codes.update(os.path.splitext(f)[0] for f in system_files)
                     except OSError as e:
                         logger.exception(f"Anura LanguageManager: Error reading system tessdata directory: {e}")
                 else:
-                    logger.debug(f"Anura LanguageManager: System tessdata directory does not exist: {TESSDATA_SYSTEM_DIR}")
+                    logger.debug(
+                        f"Anura LanguageManager: System tessdata directory does not exist: {TESSDATA_SYSTEM_DIR}"
+                    )
 
                 total_models = len(codes)
                 logger.info(f"Anura LanguageManager: Total language models discovered: {total_models} - {list(codes)}")
