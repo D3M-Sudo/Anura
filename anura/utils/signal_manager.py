@@ -13,7 +13,7 @@ import gi
 # Set GTK version requirements before imports
 gi.require_version('GObject', '2.0')
 
-from gi.repository import GObject
+from gi.repository import GObject  # noqa: E402
 from loguru import logger  # noqa: E402
 
 
