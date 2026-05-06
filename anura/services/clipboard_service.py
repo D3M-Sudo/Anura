@@ -182,7 +182,7 @@ class ClipboardService(GObject.GObject):
             if not hasattr(self, '_clipboard_timeout_id'):
                 logger.debug("Clipboard service not fully initialized, skipping cleanup")
                 return
-                
+
             if self._cancellable is not None and not self._cancellable.is_cancelled():
                 logger.debug("Anura Clipboard: Cancelling pending clipboard operation.")
                 self._cancellable.cancel()

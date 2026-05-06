@@ -7,6 +7,7 @@ from gettext import gettext as _
 import os
 import re
 import threading
+import time
 from typing import ClassVar
 from urllib.request import url2pathname
 
@@ -14,7 +15,6 @@ from gi.repository import Gio, GLib, GObject, Xdp
 from loguru import logger
 from PIL import Image
 import pytesseract
-import time
 from pyzbar.pyzbar import decode
 
 from anura.config import LANG_CODE_PATTERN, get_tesseract_config
@@ -115,7 +115,7 @@ class ScreenshotService(GObject.GObject):
             with Image.open(file) as img:
                 image_size = img.size  # (width, height)
                 logger.debug(f"Anura OCR: Processing image size: {image_size[0]}x{image_size[1]}")
-                
+
                 # Step 1: QR Code detection
                 qr_data = decode(img)
 

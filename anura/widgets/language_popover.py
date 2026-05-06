@@ -116,14 +116,14 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
     def populate_model(self) -> None:
         try:
             self.lang_list.remove_all()
-            
+
             downloaded_languages = language_manager.get_downloaded_languages(force=True)
             for lang in downloaded_languages:
                 code = language_manager.get_language_code(lang)
                 if code is None:  # Add defensive check
                     logger.warning(f"Failed to get language code for: {lang}")
                     continue
-                    
+
                 selected = (self.active_language == code)
                 self.lang_list.append(LanguageItem(code=code, title=lang, selected=selected))
 
@@ -135,7 +135,7 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
                     self.active_language = "eng"
                     self.settings.set_string('active-language', 'eng')
                     self.emit("language-changed", new_item)
-                    
+
         except Exception as e:
             logger.error(f"Failed to populate language model: {e}")
             # Ensure UI doesn't remain empty
