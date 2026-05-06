@@ -16,7 +16,7 @@ import gi
 # Set GTK version requirements before imports
 gi.require_version('GLib', '2.0')
 
-from gi.repository import GLib
+from gi.repository import GLib  # noqa: E402
 
 
 class GObjectWorker:

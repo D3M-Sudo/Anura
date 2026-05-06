@@ -19,13 +19,13 @@ gi.require_version('GLib', '2.0')
 gi.require_version('GObject', '2.0')
 gi.require_version('Xdp', '1.0')
 
-from gi.repository import Gio, GLib, GObject, Xdp
-from loguru import logger
-from PIL import Image
-import pytesseract
-from pyzbar.pyzbar import decode
+from gi.repository import Gio, GLib, GObject, Xdp  # noqa: E402
+from loguru import logger  # noqa: E402
+from PIL import Image  # noqa: E402
+import pytesseract  # noqa: E402
+from pyzbar.pyzbar import decode  # noqa: E402
 
-from anura.config import LANG_CODE_PATTERN, get_tesseract_config
+from anura.config import LANG_CODE_PATTERN, get_tesseract_config  # noqa: E402
 
 
 class ScreenshotService(GObject.GObject):

@@ -14,15 +14,15 @@ gi.require_version('GLib', '2.0')
 gi.require_version('GObject', '2.0')
 gi.require_version('Gtk', '4.0')
 
-from gi.repository import Adw, GLib, GObject, Gtk
-from loguru import logger
+from gi.repository import Adw, GLib, GObject, Gtk  # noqa: E402
+from loguru import logger  # noqa: E402
 
-from anura.config import RESOURCE_PREFIX
-from anura.gobject_worker import GObjectWorker
-from anura.services.settings import settings
-from anura.services.share_service import get_share_service
-from anura.services.tts import get_tts_service
-from anura.widgets.share_row import ShareRow
+from anura.config import RESOURCE_PREFIX  # noqa: E402
+from anura.gobject_worker import GObjectWorker  # noqa: E402
+from anura.services.settings import settings  # noqa: E402
+from anura.services.share_service import get_share_service  # noqa: E402
+from anura.services.tts import get_tts_service  # noqa: E402
+from anura.widgets.share_row import ShareRow  # noqa: E402
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/extracted_page.ui")

@@ -15,13 +15,13 @@ gi.require_version('GLib', '2.0')
 gi.require_version('GObject', '2.0')
 gi.require_version('Gst', '1.0')
 
-from gi.repository import GLib, GObject, Gst
-import gtts
-from loguru import logger
-import requests
+from gi.repository import GLib, GObject, Gst  # noqa: E402
+import gtts  # noqa: E402
+from loguru import logger  # noqa: E402
+import requests  # noqa: E402
 
-from anura.services.settings import settings
-from anura.utils.singleton import get_instance
+from anura.services.settings import settings  # noqa: E402
+from anura.utils.singleton import get_instance  # noqa: E402
 
 
 class TTSService(GObject.GObject):

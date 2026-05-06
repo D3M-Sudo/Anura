@@ -15,10 +15,10 @@ gi.require_version('Gio', '2.0')
 gi.require_version('GLib', '2.0')
 gi.require_version('GObject', '2.0')
 
-from gi.repository import Gdk, Gio, GLib, GObject
-from loguru import logger
+from gi.repository import Gdk, Gio, GLib, GObject  # noqa: E402
+from loguru import logger  # noqa: E402
 
-from anura.utils.singleton import get_instance
+from anura.utils.singleton import get_instance  # noqa: E402
 
 
 class ClipboardService(GObject.GObject):

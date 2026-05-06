@@ -14,19 +14,19 @@ gi.require_version('GLib', '2.0')
 gi.require_version('GObject', '2.0')
 gi.require_version('Gtk', '4.0')
 
-from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk
-from loguru import logger
+from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk  # noqa: E402
+from loguru import logger  # noqa: E402
 
-from anura.config import APP_ID, RESOURCE_PREFIX
-from anura.gobject_worker import GObjectWorker
-from anura.language_manager import get_language_manager
-from anura.services.clipboard_service import get_clipboard_service
-from anura.services.screenshot_service import ScreenshotService
-from anura.services.share_service import get_share_service
-from anura.utils import uri_validator
-from anura.widgets.extracted_page import ExtractedPage
-from anura.widgets.preferences_dialog import PreferencesDialog
-from anura.widgets.welcome_page import WelcomePage
+from anura.config import APP_ID, RESOURCE_PREFIX  # noqa: E402
+from anura.gobject_worker import GObjectWorker  # noqa: E402
+from anura.language_manager import get_language_manager  # noqa: E402
+from anura.services.clipboard_service import get_clipboard_service  # noqa: E402
+from anura.services.screenshot_service import ScreenshotService  # noqa: E402
+from anura.services.share_service import get_share_service  # noqa: E402
+from anura.utils import uri_validator  # noqa: E402
+from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
+from anura.widgets.preferences_dialog import PreferencesDialog  # noqa: E402
+from anura.widgets.welcome_page import WelcomePage  # noqa: E402
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/window.ui")
