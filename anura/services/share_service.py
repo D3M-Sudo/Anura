@@ -132,7 +132,7 @@ class ShareService(GObject.GObject):
 
         try:
             self.launcher.launch(parent=None, cancellable=None, callback=on_mastodon_result)
-        except (GLib.Error, TypeError, ValueError) as e:
+        except (GLib.Error, Exception) as e:
             logger.warning(f"Anura Share: Failed to launch web+mastodon:// scheme: {e}")
             self._show_mastodon_instance_dialog(encoded_text)
 
@@ -176,7 +176,7 @@ class ShareService(GObject.GObject):
                 logger.warning("Anura Share: No active window for Mastodon instance dialog")
                 GLib.idle_add(self.emit, "share", False)
                 dialog.destroy()
-        except (GLib.Error, AttributeError, TypeError) as e:
+        except (GLib.Error, Exception) as e:
             logger.error(f"Anura Share: Failed to show Mastodon instance dialog: {e}")
             GLib.idle_add(self.emit, "share", False)
 
@@ -189,7 +189,7 @@ class ShareService(GObject.GObject):
             try:
                 self.launcher.set_uri(share_url)
                 self.launcher.launch(parent=None, cancellable=None, callback=self._on_share)
-            except (GLib.Error, TypeError, ValueError) as e:
+            except (GLib.Error, Exception) as e:
                 logger.error(f"Anura Share: Failed to share via Mastodon instance {domain}: {e}")
                 GLib.idle_add(self.emit, "share", False)
 
@@ -208,28 +208,34 @@ class ShareService(GObject.GObject):
 
     @staticmethod
     def get_link_telegram(text: str) -> str:
-        return f"https://t.me/share/url?text={text}"
+        encoded_text = quote(text)
+        return f"https://t.me/share/url?text={encoded_text}"
 
     @staticmethod
     def get_link_reddit(text: str) -> str:
         # For short texts (< 100 char): use title + body for better visibility
         if len(text) < 100:
-            return f"https://www.reddit.com/submit?title={text}&selftext={text}"
+            encoded_title = quote(text)
+            encoded_text = quote(text)
+            return f"https://www.reddit.com/submit?title={encoded_title}&selftext={encoded_text}"
         else:
             # For long texts: use only body to avoid title truncation
-            return f"https://www.reddit.com/submit?selftext={text}"
+            encoded_text = quote(text)
+            return f"https://www.reddit.com/submit?selftext={encoded_text}"
 
     @staticmethod
     def get_link_mastodon(text: str) -> str:
         # Official web+mastodon:// scheme - primary method
-        return f"web+mastodon://share?text={text}"
+        encoded_text = quote(text)
+        return f"web+mastodon://share?text={encoded_text}"
 
     @staticmethod
     def get_link_x(text: str) -> str:
         """
         Twitter provider rebranded to X.com.
         """
-        return f"https://x.com/intent/tweet?text={text}"
+        encoded_text = quote(text)
+        return f"https://x.com/intent/tweet?text={encoded_text}"
 
     # NOTE: get_link_instagram removed — Instagram has no URL prefill API
     # If Instagram adds sharing URL support in the future, re-enable:
@@ -239,7 +245,7 @@ class ShareService(GObject.GObject):
 
     @staticmethod
     def get_link_email(text: str) -> str:
-        subject = quote(_("Extracted Text from Anura"))
+        subject = quote(_("Extracted Text"))
         body = quote(text)  # Properly encode body to prevent malformed mailto links
         return f"mailto:?subject={subject}&body={body}"
 

@@ -75,7 +75,7 @@ class TestScreenshotService:
         with patch("pytesseract.image_to_string") as mock_ocr:
             mock_ocr.return_value = ""
 
-            success, result, error = self.service.decode_image_sync("invalid_lang", str(test_file), False)
+            success, result, error = self.service.decode_image_sync("invalid@lang", str(test_file), False)
 
             assert success is False
             assert result == ""

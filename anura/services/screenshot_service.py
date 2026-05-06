@@ -97,7 +97,7 @@ class ScreenshotService(GObject.GObject):
         # Security: Validate language code before processing (same as decode_image)
         if not lang or not re.match(LANG_CODE_PATTERN, lang):
             logger.error(f"Anura: Invalid language code '{lang}' for OCR")
-            return (False, None, _("Invalid language code specified."))
+            return (False, "", _("Invalid language code specified."))
 
         # Rigor: Ensure source removal only for valid local file paths
         is_physical_file = isinstance(file, str) and os.path.exists(file)
@@ -157,9 +157,9 @@ class ScreenshotService(GObject.GObject):
         if extracted:
             return (True, extracted, None)
         elif error_message:
-            return (False, None, error_message)
+            return (False, "", error_message)
         else:
-            return (False, None, _("No text found."))
+            return (False, "", _("No text found."))
 
     def decode_image(
         self,
