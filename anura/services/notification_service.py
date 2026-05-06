@@ -39,7 +39,7 @@ class NotificationService:
     Fallback: libnotify (traditional, works on most systems)
     """
 
-    def __init__(self, app_id: str):
+    def __init__(self, app_id: str) -> None:
         self.app_id = app_id
         self.libnotify_initialized = False
         self._portal = None

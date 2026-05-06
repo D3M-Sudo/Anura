@@ -33,7 +33,7 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
     filter_list: Gtk.FilterListModel
     filter: Gtk.CustomFilter
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
         SignalManagerMixin.__init__(self)
 
@@ -46,18 +46,18 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
 
         self.bind_model()
 
-    def bind_model(self):
+    def bind_model(self) -> None:
         self.filter = Gtk.CustomFilter()
         self.filter.set_filter_func(self._on_language_filter)
         self.filter_list = Gtk.FilterListModel.new(self.lang_list, self.filter)
         self.list_view.bind_model(self.filter_list, LanguagePopoverRow)
 
     @GObject.Property(type=str)
-    def active_language(self):
+    def active_language(self) -> str:
         return self._active_language
 
     @active_language.setter
-    def active_language(self, lang_code: str):
+    def active_language(self, lang_code: str) -> None:
         self._active_language = lang_code
 
     def _on_language_filter(self, proposal: LanguageItem, text: str | None = None) -> bool:
@@ -72,14 +72,14 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
         self.populate_model()
 
     @Gtk.Template.Callback()
-    def _on_search_activate(self, entry: Gtk.SearchEntry):
+    def _on_search_activate(self, entry: Gtk.SearchEntry) -> None:
         if self.filter_list.get_n_items() > 0:
             first_row = self.list_view.get_row_at_index(0)
             if first_row:
                 self._on_language_activate(self.list_view, first_row)
 
     @Gtk.Template.Callback()
-    def _on_language_activate(self, _: Gtk.ListBox, row: LanguagePopoverRow):
+    def _on_language_activate(self, _: Gtk.ListBox, row: LanguagePopoverRow) -> None:
         item: LanguageItem = row.lang
         self.emit('language-changed', item)
         self.active_language = item.code
@@ -91,25 +91,25 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
         self.popdown()
 
     @Gtk.Template.Callback()
-    def _on_search_changed(self, entry: Gtk.SearchEntry):
+    def _on_search_changed(self, entry: Gtk.SearchEntry) -> None:
         query = entry.get_text().strip()
         self.filter.set_filter_func(self._on_language_filter, query)
         self.toggle_empty_state(not self.filter_list.get_n_items())
 
     @Gtk.Template.Callback()
-    def _on_stop_search(self, _entry: Gtk.SearchEntry):
+    def _on_stop_search(self, _entry: Gtk.SearchEntry) -> None:
         self.popdown()
 
     @Gtk.Template.Callback()
-    def _on_popover_show(self, _):
+    def _on_popover_show(self, _: object) -> None:
         self.populate_model()
 
     @Gtk.Template.Callback()
-    def _on_popover_closed(self, *_):
+    def _on_popover_closed(self, *_args: object) -> None:
         self.entry.set_text('')
 
     @Gtk.Template.Callback()
-    def _on_add_clicked(self, _: Gtk.Widget):
+    def _on_add_clicked(self, _: Gtk.Widget) -> None:
         self.activate_action('app.preferences')
         self.popdown()
 
@@ -137,7 +137,7 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
         else:
             self.views.set_visible_child_name('languages_page')
 
-    def do_destroy(self):
+    def do_destroy(self) -> None:
         """Clean up all tracked signal handlers to prevent memory leaks."""
         self.disconnect_all_signals()
         super().do_destroy()

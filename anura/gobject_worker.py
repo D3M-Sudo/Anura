@@ -22,7 +22,7 @@ class GObjectWorker:
     """
 
     @staticmethod
-    def call(command: Callable, args: tuple = (), callback: Callable | None = None, errorback: Callable | None = None):
+    def call(command: Callable, args: tuple = (), callback: Callable | None = None, errorback: Callable | None = None) -> None:
         """
         Executes a command in a separate thread.
 
@@ -32,7 +32,7 @@ class GObjectWorker:
             callback: Function to call on the main thread upon success.
             errorback: Function to call on the main thread upon failure.
         """
-        def run(data):
+        def run(data: tuple) -> None:
             cmd, cmd_args, cb, eb = data
             try:
                 # Execute the heavy task
@@ -62,7 +62,7 @@ class GObjectWorker:
         worker_thread.start()
 
     @staticmethod
-    def _default_errorback(error: Exception, traceback_str: str | None = None):
+    def _default_errorback(error: Exception, traceback_str: str | None = None) -> None:
         """
         Standardized error logging for worker thread failures.
         """

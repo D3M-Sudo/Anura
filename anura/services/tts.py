@@ -79,6 +79,9 @@ class TTSService(GObject.GObject):
     @staticmethod
     def map_tesseract_to_gtts(tess_code: str) -> str:
         """Map Tesseract language code to gTTS-compatible ISO 639-1 code."""
+        if tess_code is None:
+            return "en"  # Default to English
+        
         # Normalize to lowercase for case-insensitive matching
         tess_code = tess_code.lower()
 
@@ -108,7 +111,7 @@ class TTSService(GObject.GObject):
 
     _current_speech_file: str | None = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         os.makedirs(self._speech_dir, exist_ok=True)
         # Initialize GStreamer only once to prevent crashes on multiple instantiations
@@ -116,7 +119,7 @@ class TTSService(GObject.GObject):
             Gst.init(None)
 
     @staticmethod
-    def get_languages():
+    def get_languages() -> dict:
         """Fetch available languages supported by gTTS."""
         return gtts.lang.tts_langs()
 
@@ -133,7 +136,7 @@ class TTSService(GObject.GObject):
         logger.info(f"Anura TTS: Generating speech for language: {lang}")
         try:
             tts.save(filepath)
-        except (gtts.gTTSError, requests.RequestException, OSError) as e:
+        except (Exception, requests.RequestException, OSError) as e:
             logger.error(f"Anura TTS: Failed to save speech file: {e}")
             if os.path.exists(filepath):
                 try:
@@ -156,7 +159,7 @@ class TTSService(GObject.GObject):
         # Fallback: map OCR language to TTS
         return self.map_tesseract_to_gtts(ocr_lang)
 
-    def play(self, speech_file: str):
+    def play(self, speech_file: str) -> None:
         """Plays the generated speech file using GStreamer's playbin."""
         filepath = os.path.abspath(speech_file)
 
@@ -201,7 +204,7 @@ class TTSService(GObject.GObject):
                 self._bus_watch_setup_in_progress = False
         return False  # Don't repeat
 
-    def on_gst_message(self, _bus, message: Gst.Message) -> None:
+    def on_gst_message(self, _bus: Gst.Bus, message: Gst.Message) -> None:
         """Handle GStreamer bus messages; clean up temp file on EOS."""
         if message.type == Gst.MessageType.EOS:
             logger.info("Anura TTS: Playback finished.")

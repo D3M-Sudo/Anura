@@ -3,11 +3,13 @@
 # Unit tests for ShareService
 # Tests URL validation, provider logic, and Mastodon fallback
 
+import pytest
 from unittest.mock import Mock, patch
 
 from anura.services.share_service import ShareService
 
 
+@pytest.mark.gtk
 class TestShareService:
     """Test suite for ShareService core functionality."""
 
@@ -102,7 +104,7 @@ class TestShareService:
     def test_share_text_valid_provider(self):
         """Test sharing text with valid provider."""
         with patch("anura.services.share_service.GLib"):
-            self.service.share_text("test text", "email")
+            self.service.share("email", "test text")
 
             self.service.launcher.set_uri.assert_called_once()
             self.service.launcher.launch.assert_called_once()
@@ -110,7 +112,7 @@ class TestShareService:
     def test_share_text_invalid_provider(self):
         """Test sharing text with invalid provider."""
         with patch("anura.services.share_service.GLib"):
-            self.service.share_text("test text", "invalid_provider")
+            self.service.share("invalid_provider", "test text")
 
             # Should not call launcher
             self.service.launcher.set_uri.assert_not_called()
@@ -122,7 +124,7 @@ class TestShareService:
         with patch.object(
             ShareService, "_validate_share_url", return_value=False
         ), patch("anura.services.share_service.GLib"):
-            self.service.share_text("test text", "email")
+            self.service.share("email", "test text")
 
             # Should not call launcher
             self.service.launcher.set_uri.assert_not_called()
@@ -134,7 +136,7 @@ class TestShareService:
 
         with patch("anura.services.share_service.GLib"):
             # Should not raise exception
-            self.service.share_text("test text", "email")
+            self.service.share("email", "test text")
 
     def test_share_mastodon_with_fallback_success(self):
         """Test Mastodon sharing with successful official scheme."""

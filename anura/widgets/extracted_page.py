@@ -37,7 +37,7 @@ class ExtractedPage(Adw.NavigationPage):
     text_view: Gtk.TextView = Gtk.Template.Child()
     buffer: Gtk.TextBuffer = Gtk.Template.Child()
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
 
         self.settings = settings
@@ -65,13 +65,13 @@ class ExtractedPage(Adw.NavigationPage):
         )
 
     @extracted_text.setter
-    def extracted_text(self, text: str):
+    def extracted_text(self, text: str) -> None:
         try:
             self.buffer.set_text(text)
         except (GLib.Error, ValueError) as e:
             logger.error(f"Error setting extracted text: {e}")
 
-    def listen(self):
+    def listen(self) -> None:
         self.swap_controls(True)
         self._set_spinner_active(True)
 
@@ -107,18 +107,18 @@ class ExtractedPage(Adw.NavigationPage):
         if window and hasattr(window, "show_toast"):
             window.show_toast(msg)
 
-    def listen_cancel(self):
+    def listen_cancel(self) -> None:
         ttsservice.stop_speaking()
         self.swap_controls(False)
 
-    def _on_generated(self, filepath):
+    def _on_generated(self, filepath: str | None) -> None:
         self._set_spinner_active(False)
         if not filepath:
             self.swap_controls(False)
             return
         ttsservice.play(filepath)
 
-    def _on_listen_end(self, service: TTSService, success: bool):
+    def _on_listen_end(self, service: TTSService, success: bool) -> None:
         self.emit("on-listen-stop")
         self._set_spinner_active(False)
         self.swap_controls(False)

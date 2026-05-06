@@ -21,7 +21,7 @@ class LanguagePopoverRow(Gtk.ListBoxRow):
     title: Gtk.Label = Gtk.Template.Child()
     selection: Gtk.Image = Gtk.Template.Child()
 
-    def __init__(self, lang: LanguageItem):
+    def __init__(self, lang: LanguageItem) -> None:
         super().__init__()
         self.lang = lang
         self.title.set_label(self.lang.title)

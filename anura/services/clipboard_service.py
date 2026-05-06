@@ -38,7 +38,7 @@ class ClipboardService(GObject.GObject):
             self._clipboard = display.get_clipboard()
         return self._clipboard
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._cancellable = None
         self._clipboard = None

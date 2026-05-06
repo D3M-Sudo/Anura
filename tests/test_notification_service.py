@@ -13,17 +13,17 @@ class TestNotificationService:
 
     def setup_method(self):
         """Set up test fixtures."""
-        self.service = NotificationService()
+        self.service = NotificationService("com.github.d3msudo.anura.test")
 
     def test_init(self):
         """Test service initialization."""
-        assert self.service.portal is not None
-        assert hasattr(self.service, "has_libnotify")
-        assert isinstance(self.service.has_libnotify, bool)
+        assert self.service._portal is not None
+        assert hasattr(self.service, "libnotify_initialized")
+        assert isinstance(self.service.libnotify_initialized, bool)
 
     def test_show_notification_with_portal(self):
         """Test showing notification via XDG Portal."""
-        with patch.object(self.service.portal, "send_notification") as mock_send:
+        with patch.object(self.service._portal, "add_notification") as mock_send:
             self.service.show_notification("Test title", "Test body")
 
             mock_send.assert_called_once()
@@ -33,7 +33,7 @@ class TestNotificationService:
 
     def test_show_notification_with_portal_error(self):
         """Test fallback when XDG Portal fails."""
-        with patch.object(self.service.portal, "send_notification", side_effect=Exception("Portal error")):
+        with patch.object(self.service._portal, "add_notification", side_effect=Exception("Portal error")):
             if HAS_LIBNOTIFY:
                 with patch("anura.services.notification_service.Notify") as mock_notify:
                     mock_notification = Mock()
@@ -49,7 +49,7 @@ class TestNotificationService:
 
     def test_show_notification_empty_title(self):
         """Test showing notification with empty title."""
-        with patch.object(self.service.portal, "send_notification") as mock_send:
+        with patch.object(self.service._portal, "add_notification") as mock_send:
             self.service.show_notification("", "Test body")
 
             mock_send.assert_called_once()
@@ -59,7 +59,7 @@ class TestNotificationService:
 
     def test_show_notification_empty_body(self):
         """Test showing notification with empty body."""
-        with patch.object(self.service.portal, "send_notification") as mock_send:
+        with patch.object(self.service._portal, "add_notification") as mock_send:
             self.service.show_notification("Test title", "")
 
             mock_send.assert_called_once()
@@ -69,7 +69,7 @@ class TestNotificationService:
 
     def test_show_notification_none_values(self):
         """Test showing notification with None values."""
-        with patch.object(self.service.portal, "send_notification") as mock_send:
+        with patch.object(self.service._portal, "add_notification") as mock_send:
             self.service.show_notification(None, None)
 
             mock_send.assert_called_once()
@@ -82,7 +82,7 @@ class TestNotificationService:
         long_title = "A" * 200  # Very long title
         long_body = "B" * 500  # Very long body
 
-        with patch.object(self.service.portal, "send_notification") as mock_send:
+        with patch.object(self.service._portal, "add_notification") as mock_send:
             self.service.show_notification(long_title, long_body)
 
             mock_send.assert_called_once()
@@ -95,7 +95,7 @@ class TestNotificationService:
         unicode_title = "Título con ñ y áéíóú"
         unicode_body = "Cuerpo con emojis 🎉🔔 y caracteres especiales"
 
-        with patch.object(self.service.portal, "send_notification") as mock_send:
+        with patch.object(self.service._portal, "add_notification") as mock_send:
             self.service.show_notification(unicode_title, unicode_body)
 
             mock_send.assert_called_once()
@@ -106,48 +106,48 @@ class TestNotificationService:
     @patch("anura.services.notification_service.HAS_LIBNOTIFY", True)
     def test_libnotify_fallback_available(self):
         """Test libnotify fallback when available."""
-        service = NotificationService()
-        assert service.has_libnotify is True
+        service = NotificationService("com.github.d3msudo.anura.test")
+        assert service.libnotify_initialized is True
 
     @patch("anura.services.notification_service.HAS_LIBNOTIFY", False)
     def test_libnotify_fallback_unavailable(self):
         """Test libnotify fallback when unavailable."""
-        service = NotificationService()
-        assert service.has_libnotify is False
+        service = NotificationService("com.github.d3msudo.anura.test")
+        assert service.libnotify_initialized is False
 
     @patch("anura.services.notification_service.HAS_LIBNOTIFY", True)
-    def test_libnotify_fallback_direct_usage(self):
-        """Test direct libnotify usage."""
-        with patch("anura.services.notification_service.Notify") as mock_notify:
+    def test_libnotify_fallback_when_portal_fails(self):
+        """Test libnotify fallback when portal fails."""
+        with patch.object(self.service._portal, "add_notification", side_effect=Exception("Portal error")), \
+             patch("anura.services.notification_service.Notify") as mock_notify:
             mock_notification = Mock()
             mock_notify.Notification.return_value = mock_notification
 
-            service = NotificationService()
-            service.show_notification_via_libnotify("Title", "Body")
+            self.service.show_notification("Title", "Body")
 
             mock_notify.Notification.assert_called_once_with("Title", "Body")
             mock_notification.show.assert_called_once()
 
     @patch("anura.services.notification_service.HAS_LIBNOTIFY", True)
-    def test_libnotify_fallback_error(self):
+    def test_libnotify_fallback_error_handling(self):
         """Test libnotify fallback error handling."""
-        with patch("anura.services.notification_service.Notify") as mock_notify:
+        with patch.object(self.service._portal, "add_notification", side_effect=Exception("Portal error")), \
+             patch("anura.services.notification_service.Notify") as mock_notify:
             mock_notify.Notification.side_effect = Exception("Libnotify error")
 
-            service = NotificationService()
             # Should not raise exception
-            service.show_notification_via_libnotify("Title", "Body")
+            self.service.show_notification("Title", "Body")
 
     @patch("anura.services.notification_service.HAS_LIBNOTIFY", False)
-    def test_libnotify_fallback_unavailable_usage(self):
-        """Test libnotify usage when unavailable."""
-        service = NotificationService()
-        # Should not raise exception
-        service.show_notification_via_libnotify("Title", "Body")
+    def test_no_fallback_available(self):
+        """Test behavior when no notification backend is available."""
+        with patch.object(self.service._portal, "add_notification", side_effect=Exception("Portal error")):
+            # Should not raise exception even without libnotify
+            self.service.show_notification("Title", "Body")
 
     def test_portal_notification_with_priority(self):
         """Test portal notification with priority parameter."""
-        with patch.object(self.service.portal, "send_notification") as mock_send:
+        with patch.object(self.service._portal, "add_notification") as mock_send:
             self.service.show_notification("Title", "Body", priority="high")
 
             mock_send.assert_called_once()
@@ -157,7 +157,7 @@ class TestNotificationService:
 
     def test_portal_notification_error_handling(self):
         """Test portal notification error handling."""
-        with patch.object(self.service.portal, "send_notification") as mock_send:
+        with patch.object(self.service._portal, "add_notification") as mock_send:
             mock_send.side_effect = [Exception("First error"), None]
 
             # First call fails, should not raise exception
@@ -173,7 +173,7 @@ class TestNotificationService:
         special_title = "Test & < > \" ' \\ /"
         special_body = "Body with newlines\nand\ttabs"
 
-        with patch.object(self.service.portal, "send_notification") as mock_send:
+        with patch.object(self.service._portal, "add_notification") as mock_send:
             self.service.show_notification(special_title, special_body)
 
             mock_send.assert_called_once()
@@ -183,11 +183,11 @@ class TestNotificationService:
 
     def test_notification_service_singleton_behavior(self):
         """Test that service can be instantiated multiple times."""
-        service1 = NotificationService()
-        service2 = NotificationService()
+        service1 = NotificationService("com.github.d3msudo.anura.test")
+        service2 = NotificationService("com.github.d3msudo.anura.test")
 
         # Both should have portal instances
-        assert service1.portal is not None
-        assert service2.portal is not None
+        assert service1._portal is not None
+        assert service2._portal is not None
         # They should be different instances
         assert service1 is not service2

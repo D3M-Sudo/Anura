@@ -22,7 +22,7 @@ class Settings(Gio.Settings):
 
     __gtype_name__ = "AnuraSettings"
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: object) -> None:
         schema_source = Gio.SettingsSchemaSource.get_default()
         if schema_source and schema_source.lookup(APP_ID, True):
             super().__init__(schema_id=APP_ID, **kwargs)
@@ -48,7 +48,7 @@ class _LazySettings:
             self._instance = Settings()
         return self._instance
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> object:
         """Delegate all attribute access to the actual Settings instance."""
         return getattr(self._get_instance(), name)
 

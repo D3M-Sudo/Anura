@@ -39,7 +39,7 @@ class LanguageManager(GObject.GObject):
 
     _active_language: LanguageItem = LanguageItem(code="eng", title=_("English"))
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self.loading_languages: dict[str, DownloadState] = {}
@@ -98,7 +98,7 @@ class LanguageManager(GObject.GObject):
         return self._active_language
 
     @active_language.setter
-    def active_language(self, language: LanguageItem):
+    def active_language(self, language: LanguageItem) -> None:
         self._active_language = language
         self.notify("active_language")
 
@@ -223,7 +223,7 @@ class LanguageManager(GObject.GObject):
         GLib.idle_add(self.emit, "added", code)
         # Use a wrapper to ensure download_done knows which code was being downloaded
         # even when download_begin returns None on failure
-        def download_done_wrapper(result_code: str | None):
+        def download_done_wrapper(result_code: str | None) -> None:
             self.download_done(code, result_code)
         GObjectWorker.call(self.download_begin, (code,), download_done_wrapper)
 

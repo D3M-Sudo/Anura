@@ -18,6 +18,6 @@ class PreferencesDialog(Adw.PreferencesDialog):
     languages_page: PreferencesLanguagesPage = Gtk.Template.Child()
 
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
 

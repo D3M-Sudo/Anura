@@ -15,7 +15,7 @@ class ListMenuRow(Gtk.Label):
 
     _item: LanguageItem | None
 
-    def __init__(self, item: LanguageItem):
+    def __init__(self, item: LanguageItem) -> None:
         super().__init__()
 
         self.item = item
@@ -25,7 +25,7 @@ class ListMenuRow(Gtk.Label):
         return self._item
 
     @item.setter
-    def item(self, item: LanguageItem):
+    def item(self, item: LanguageItem) -> None:
         self._item = item
 
         self.set_label(item.title)

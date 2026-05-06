@@ -20,7 +20,7 @@ class ShareRow(Gtk.ListBoxRow):
 
     provider_name: str = 'email'
 
-    def __init__(self, provider_name: str):
+    def __init__(self, provider_name: str) -> None:
         super().__init__()
 
         self.provider_name = provider_name or 'email'
@@ -29,7 +29,7 @@ class ShareRow(Gtk.ListBoxRow):
         self.image.set_from_icon_name(f"share-{self.provider_name.lower()}-symbolic")
 
     @Gtk.Template.Callback()
-    def _on_released(self, *args):
+    def _on_released(self, *args: object) -> None:
         self.activate_action(
             "window.share", GLib.Variant.new_string(self.provider_name)
         )

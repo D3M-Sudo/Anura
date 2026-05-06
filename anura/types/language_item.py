@@ -18,7 +18,7 @@ class LanguageItem(GObject.GObject):
     code = GObject.Property(type=str)
     selected = GObject.Property(type=bool, default=False)
 
-    def __init__(self, code: str, title: str, selected: bool = False):
+    def __init__(self, code: str, title: str, selected: bool = False) -> None:
         """
         Initialize a new LanguageItem.
 
@@ -32,5 +32,5 @@ class LanguageItem(GObject.GObject):
         self.code = code
         self.selected = selected
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'<LanguageItem: {self.title} ({self.code}), selected={self.selected}>'

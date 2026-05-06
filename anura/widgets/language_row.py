@@ -24,7 +24,7 @@ class LanguageRow(Gtk.Overlay):
     _downloading_handler_id: int | None = None
     _downloaded_handler_id: int | None = None
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
 
         # Instance-level idle ID tracking to prevent cross-instance interference
@@ -43,7 +43,7 @@ class LanguageRow(Gtk.Overlay):
         return self._item
 
     @item.setter
-    def item(self, item: LanguageItem):
+    def item(self, item: LanguageItem) -> None:
         self._item = item
         self.label.set_label(self._item.title)
 
@@ -95,7 +95,7 @@ class LanguageRow(Gtk.Overlay):
         return False
 
     @Gtk.Template.Callback()
-    def _on_download(self, _: Gtk.Button):
+    def _on_download(self, _: Gtk.Button) -> None:
         """
         Triggered when the install button is clicked.
         """
@@ -106,7 +106,7 @@ class LanguageRow(Gtk.Overlay):
         self.update_ui()
 
     @Gtk.Template.Callback()
-    def _on_remove(self, _: Gtk.Button):
+    def _on_remove(self, _: Gtk.Button) -> None:
         """
         Triggered when the remove button is clicked.
         """
@@ -125,7 +125,7 @@ class LanguageRow(Gtk.Overlay):
             idle_id = GLib.idle_add(self.update_ui)
             self._idle_ids.append(idle_id)
 
-    def do_destroy(self):
+    def do_destroy(self) -> None:
         """Clean up signal handlers and pending idle_add callbacks to prevent memory leaks."""
         # Remove pending idle_add callbacks
         for idle_id in self._idle_ids:

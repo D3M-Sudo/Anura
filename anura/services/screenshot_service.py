@@ -34,7 +34,7 @@ class ScreenshotService(GObject.GObject):
 
     __slots__ = ("_cancellable_lock", "cancelable", "portal")
 
-    def __init__(self):
+    def __init__(self) -> None:
         GObject.GObject.__init__(self)
         self._cancellable_lock = threading.Lock()
         with self._cancellable_lock:
@@ -57,7 +57,7 @@ class ScreenshotService(GObject.GObject):
             [lang, copy],
         )
 
-    def take_screenshot_finish(self, source_object, res: Gio.Task, user_data):
+    def take_screenshot_finish(self, source_object: object, res: Gio.Task, user_data: tuple) -> None:
         """Callback triggered when the portal finishes the screenshot request."""
         if res.had_error():
             logger.error("Anura Screenshot: Portal failed to provide a screenshot.")

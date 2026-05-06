@@ -425,12 +425,21 @@ pytest tests/ -v -m "not gtk"
 # Unit logic tests only
 pytest tests/test_unit_logic.py -v
 
-# Service-specific tests
+# Setup GSettings schema for GTK tests (required once)
+mkdir -p builddir
+cp data/com.github.d3msudo.anura.gschema.xml builddir/
+glib-compile-schemas builddir/
+
+# Service-specific tests (requires system gi + GSettings)
+export GSETTINGS_SCHEMA_DIR="builddir"
 pytest tests/test_screenshot_service.py -v
 pytest tests/test_clipboard_service.py -v
 pytest tests/test_share_service.py -v
 pytest tests/test_tts_service.py -v
 pytest tests/test_notification_service.py -v
+
+# Or use automated setup script
+./setup-gschema.sh
 
 # GTK tests (require Flatpak environment)
 flatpak run --devel --command=bash com.github.d3msudo.anura
@@ -468,6 +477,35 @@ def test_service_error(self):
 - **GTK tests** require Flatpak runtime environment
 - **Environment isolation** via `conftest.py` fixtures
 - **Coverage** focuses on business logic and error paths
+
+### Common Testing Issues
+
+#### Error: `RuntimeError: GSettings schema 'com.github.d3msudo.anura' not found`
+**Cause**: GSettings schema not compiled or not in schema path
+**Fix**: 
+```bash
+mkdir -p builddir
+cp data/com.github.d3msudo.anura.gschema.xml builddir/
+glib-compile-schemas builddir/
+export GSETTINGS_SCHEMA_DIR="builddir"
+```
+
+#### Error: `ModuleNotFoundError: No module named 'gi'`
+**Cause**: Virtual environment doesn't have access to system packages
+**Fix**: Use PYTHONPATH and GI_TYPELIB_PATH:
+```bash
+uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" pytest tests/ -v
+```
+
+#### Complete GTK Test Setup
+```bash
+# One-time setup
+./setup-gschema.sh
+
+# Run tests
+export GSETTINGS_SCHEMA_DIR="builddir"
+uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" GSETTINGS_SCHEMA_DIR="builddir" pytest tests/ -v
+```
 
 ## For Cascade / AI Agents
 

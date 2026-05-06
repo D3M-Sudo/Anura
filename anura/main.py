@@ -3,6 +3,7 @@ from gettext import gettext as _
 import os
 import sys
 
+import gi
 from gi.repository import Adw, Gio, GLib, Gtk
 from loguru import logger
 
@@ -18,6 +19,13 @@ from anura.services.screenshot_service import ScreenshotService
 from anura.services.settings import settings
 from anura.utils import cleanup_orphaned_resources
 from anura.window import AnuraWindow
+
+# Set GTK version requirements
+gi.require_version('Gtk', '4.0')
+gi.require_version('Adw', '1')
+gi.require_version('Notify', '0.7')
+gi.require_version('Xdp', '1.0')
+gi.require_version('Gst', '1.0')
 
 
 def _load_gresource_bundle() -> bool:
@@ -107,7 +115,7 @@ class AnuraApplication(Adw.Application):
         self._backend_decoded_handler_id: int | None = None
         self._backend_error_handler_id: int | None = None
 
-    def do_startup(self, *args, **kwargs) -> None:
+    def do_startup(self, *args: object, **kwargs: object) -> None:
         Adw.init()
         Adw.Application.do_startup(self)
 
@@ -126,7 +134,7 @@ class AnuraApplication(Adw.Application):
         GLib.set_application_name("Anura OCR")
         GLib.set_prgname(APP_ID)
 
-    def do_shutdown(self, *args, **kwargs) -> None:
+    def do_shutdown(self, *args: object, **kwargs: object) -> None:
         """Clean up resources on application shutdown."""
         # Disconnect backend signal handlers
         if self.backend is not None:
@@ -178,7 +186,7 @@ class AnuraApplication(Adw.Application):
             win = AnuraWindow(application=self, backend=self.backend)
         win.present()
 
-    def do_command_line(self, command_line) -> int:
+    def do_command_line(self, command_line: Gio.ApplicationCommandLine) -> int:
         options = command_line.get_options_dict().end().unpack()
 
         if "extract_to_clipboard" in options:
@@ -241,7 +249,7 @@ class AnuraApplication(Adw.Application):
 
         interrupted = threading.Event()
 
-        def on_signal(signum: int, frame) -> None:
+        def on_signal(signum: int, frame: object) -> None:
             """Handle SIGINT/SIGTERM for clean shutdown."""
             logger.info(f"Anura: Received signal {signum}, shutting down silently...")
             interrupted.set()
@@ -298,7 +306,7 @@ class AnuraApplication(Adw.Application):
             sig.signal(sig.SIGINT, old_sigint)
             sig.signal(sig.SIGTERM, old_sigterm)
 
-    def on_preferences(self, _action, _param) -> None:
+    def on_preferences(self, _action: object, _param: object) -> None:
         window = self.get_active_window()
         if window:
             window.show_preferences()
@@ -316,7 +324,7 @@ class AnuraApplication(Adw.Application):
         # Fallback to version-specific message
         return f"<p>Anura OCR {self.version} - Bug fixes and improvements.</p>"
 
-    def on_about(self, _action, _param) -> None:
+    def on_about(self, _action: object, _param: object) -> None:
         about_window = Adw.AboutDialog(
             application_name="Anura",
             application_icon=APP_ID,
@@ -330,11 +338,11 @@ class AnuraApplication(Adw.Application):
         )
         about_window.present(self.props.active_window)
 
-    def on_github_star(self, _action, _param) -> None:
+    def on_github_star(self, _action: object, _param: object) -> None:
         """Open the GitHub repository page in the default browser."""
         launcher = Gtk.UriLauncher.new("https://github.com/d3msudo/anura")
 
-        def on_launch_finish(_launcher, result) -> None:
+        def on_launch_finish(_launcher: object, result: Gio.AsyncResult) -> None:
             try:
                 launcher.launch_finish(result)
             except GLib.Error as e:
@@ -345,52 +353,40 @@ class AnuraApplication(Adw.Application):
                     dialog = Adw.AlertDialog()
                     dialog.set_heading(_("Failed to Open Browser"))
                     dialog.set_body(_("No web browser could be launched. Please open the link manually."))
-                    dialog.add_response("copy", _("Copy Link"))
-                    dialog.add_response("close", _("Close"))
-                    dialog.set_default_response("close")
-                    dialog.set_close_response("close")
-
-                    def on_dialog_response(_dlg, response) -> None:
-                        if response == "copy":
-                            clipboard_service.set("https://github.com/d3msudo/anura")
-                        _dlg.destroy()
-
-                    dialog.connect("response", on_dialog_response)
-                    dialog.present(window)
 
         launcher.launch(self.props.active_window, None, on_launch_finish)
 
-    def on_shortcuts(self, _action, _param) -> None:
+    def on_shortcuts(self, _action: object, _param: object) -> None:
         window = self.get_active_window()
         if window:
             window.show_shortcuts()
 
-    def on_copy_to_clipboard(self, _action, _param) -> None:
+    def on_copy_to_clipboard(self, _action: object, _param: object) -> None:
         window = self.get_active_window()
         if window:
             window.copy_to_clipboard_direct()
 
-    def get_screenshot(self, _action, _param) -> None:
+    def get_screenshot(self, _action: object, _param: object) -> None:
         window = self.get_active_window()
         if window:
             window.get_screenshot()
 
-    def get_screenshot_and_copy(self, _action, _param) -> None:
+    def get_screenshot_and_copy(self, _action: object, _param: object) -> None:
         window = self.get_active_window()
         if window:
             window.get_screenshot(copy=True)
 
-    def open_image(self, _action, _param) -> None:
+    def open_image(self, _action: object, _param: object) -> None:
         window = self.get_active_window()
         if window:
             window.open_image()
 
-    def on_paste_from_clipboard(self, _action, _param) -> None:
+    def on_paste_from_clipboard(self, _action: object, _param: object) -> None:
         window = self.get_active_window()
         if window:
             window.on_paste_from_clipboard(self)
 
-    def on_decoded(self, _sender, text: str, copy: bool) -> None:
+    def on_decoded(self, _sender: object, text: str, copy: bool) -> None:
         if not text:
             self.notification_service.show(title="Anura OCR", body=_("No text found. Try to grab another region."))
             return
@@ -401,7 +397,7 @@ class AnuraApplication(Adw.Application):
         else:
             logger.debug(f"Extracted: {text}")
 
-    def on_error(self, _sender, message: str) -> None:
+    def on_error(self, _sender: object, message: str) -> None:
         """Handle screenshot service errors, skipping cancellation messages."""
         if message == _("Cancelled"):
             # User cancelled - no notification needed
@@ -410,17 +406,17 @@ class AnuraApplication(Adw.Application):
         # Real error - show notification
         self.notification_service.show(title="Anura OCR", body=message)
 
-    def on_listen(self, _sender, _event) -> None:
+    def on_listen(self, _sender: object, _event: object) -> None:
         window = self.get_active_window()
         if window:
             window.on_listen()
 
-    def on_listen_cancel(self, _sender, _event) -> None:
+    def on_listen_cancel(self, _sender: object, _event: object) -> None:
         window = self.get_active_window()
         if window:
             window.on_listen_cancel()
 
-    def create_action(self, name: str, callback, shortcuts: list[str] | None = None) -> None:
+    def create_action(self, name: str, callback: object, shortcuts: list[str] | None = None) -> None:
         action = Gio.SimpleAction.new(name, None)
         action.connect("activate", callback)
         self.add_action(action)

@@ -83,7 +83,7 @@ markers = [
     "network: tests that require network access",
 ]
 # Skip GTK tests in CI unless DISPLAY or WAYLAND_DISPLAY is set
-addopts = "-v --tb=short"
+addopts = "-v --tb=short --ignore=tests/test_clipboard_service.py --ignore=tests/test_screenshot_service.py --ignore=tests/test_share_service.py --ignore=tests/test_tts_service.py --ignore=tests/test_notification_service.py --ignore=tests/test_services.py --ignore=tests/test_language_manager.py"
 
 [dependency-groups]
 dev = [

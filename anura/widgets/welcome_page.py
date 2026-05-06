@@ -25,7 +25,7 @@ class WelcomePage(Adw.NavigationPage):
 
     _language_changed_handler_id: int | None = None
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
 
         self.settings = settings
@@ -37,11 +37,11 @@ class WelcomePage(Adw.NavigationPage):
             language_manager.get_language(current_lang_code)
         )
 
-    def _on_language_changed(self, _: LanguagePopover, language: LanguageItem):
+    def _on_language_changed(self, _: LanguagePopover, language: LanguageItem) -> None:
         self.lang_combo.set_label(language.title)
         self.settings.set_string("active-language", language.code)
 
-    def do_destroy(self):
+    def do_destroy(self) -> None:
         """Clean up signal handlers to prevent memory leaks."""
         if self._language_changed_handler_id is not None:
             with contextlib.suppress(Exception):

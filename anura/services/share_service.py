@@ -7,7 +7,7 @@ from gettext import gettext as _
 from typing import ClassVar
 from urllib.parse import quote
 
-from gi.repository import Adw, GLib, GObject, Gtk
+from gi.repository import Adw, Gio, GLib, GObject, Gtk
 from loguru import logger
 
 from anura.utils import uri_validator
@@ -22,7 +22,7 @@ class ShareService(GObject.GObject):
 
     __gsignals__: ClassVar[dict[str, tuple]] = {"share": (GObject.SIGNAL_RUN_LAST, None, (bool,))}
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.launcher = Gtk.UriLauncher()
 
@@ -102,7 +102,7 @@ class ShareService(GObject.GObject):
             except (ValueError, TypeError, AttributeError) as e:
                 logger.error(f"Anura Share Error: Failed to share via {provider}. Reason: {e}")
 
-    def _share_mastodon_with_fallback(self, encoded_text: str):
+    def _share_mastodon_with_fallback(self, encoded_text: str) -> None:
         """Share to Mastodon with official scheme and fallback to instance selection."""
         # Validate URL length before attempting
         web_url = f"https://mastodon.social/share?text={encoded_text}"
@@ -115,7 +115,7 @@ class ShareService(GObject.GObject):
         mastodon_url = f"web+mastodon://share?text={encoded_text}"
         self.launcher.set_uri(mastodon_url)
 
-        def on_mastodon_result(_, result):
+        def on_mastodon_result(_: object, result: Gio.AsyncResult) -> None:
             """Handle Mastodon share result with fallback."""
             try:
                 success = self.launcher.launch_finish(result)
@@ -136,7 +136,7 @@ class ShareService(GObject.GObject):
             self._show_mastodon_instance_dialog(encoded_text)
 
 
-    def _show_mastodon_instance_dialog(self, encoded_text: str):
+    def _show_mastodon_instance_dialog(self, encoded_text: str) -> None:
         """Show dialog to select Mastodon instance for fallback sharing."""
         instances = [
             ("mastodon.social", "Mastodon Official"),
@@ -179,7 +179,7 @@ class ShareService(GObject.GObject):
             logger.error(f"Anura Share: Failed to show Mastodon instance dialog: {e}")
             GLib.idle_add(self.emit, "share", False)
 
-    def _on_mastodon_instance_selected(self, dialog, response, encoded_text: str):
+    def _on_mastodon_instance_selected(self, dialog: Adw.MessageDialog, response: str, encoded_text: str) -> None:
         """Handle Mastodon instance selection."""
         if response.startswith("instance_"):
             domain = response.replace("instance_", "")
@@ -194,7 +194,7 @@ class ShareService(GObject.GObject):
 
         dialog.destroy()
 
-    def _on_share(self, _, result):
+    def _on_share(self, _: object, result: Gio.AsyncResult) -> None:
         """
         Async callback for URI launch completion.
         """
@@ -206,11 +206,11 @@ class ShareService(GObject.GObject):
             GLib.idle_add(self.emit, "share", False)
 
     @staticmethod
-    def get_link_telegram(text: str):
+    def get_link_telegram(text: str) -> str:
         return f"https://t.me/share/url?text={text}"
 
     @staticmethod
-    def get_link_reddit(text: str):
+    def get_link_reddit(text: str) -> str:
         # For short texts (< 100 char): use title + body for better visibility
         if len(text) < 100:
             return f"https://www.reddit.com/submit?title={text}&selftext={text}"
@@ -219,12 +219,12 @@ class ShareService(GObject.GObject):
             return f"https://www.reddit.com/submit?selftext={text}"
 
     @staticmethod
-    def get_link_mastodon(text: str):
+    def get_link_mastodon(text: str) -> str:
         # Official web+mastodon:// scheme - primary method
         return f"web+mastodon://share?text={text}"
 
     @staticmethod
-    def get_link_x(text: str):
+    def get_link_x(text: str) -> str:
         """
         Twitter provider rebranded to X.com.
         """
@@ -237,7 +237,7 @@ class ShareService(GObject.GObject):
     #     return None  # Not supported
 
     @staticmethod
-    def get_link_email(text: str):
+    def get_link_email(text: str) -> str:
         subject = quote(_("Extracted Text from Anura"))
         body = quote(text)  # Properly encode body to prevent malformed mailto links
         return f"mailto:?subject={subject}&body={body}"

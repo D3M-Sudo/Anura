@@ -133,10 +133,17 @@ ruff check --fix anura/
 
 # Run tests (no GTK required)
 pytest tests/ -m "not gtk" -v
+
+# Run GTK-dependent tests (requires setup)
+mkdir -p builddir
+cp data/com.github.d3msudo.anura.gschema.xml builddir/
+glib-compile-schemas builddir/
+export GSETTINGS_SCHEMA_DIR="builddir"
+pytest tests/test_clipboard_service.py tests/test_tts_service.py -v
 ```
 
-> **Note:** Tests marked `@pytest.mark.gtk` require the Flatpak runtime.  
-> Run them inside the sandbox: `flatpak run --devel --command=bash com.github.d3msudo.anura`
+> **Note:** Tests marked `@pytest.mark.gtk` require system GTK libraries and GSettings schema.  
+> See `.windsurf/rules/testing.md` for complete setup instructions.
 
 ---
 

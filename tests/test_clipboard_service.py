@@ -3,11 +3,13 @@
 # Unit tests for ClipboardService
 # Tests clipboard read/write operations and error handling
 
+import pytest
 from unittest.mock import Mock, patch
 
 from anura.services.clipboard_service import ClipboardService
 
 
+@pytest.mark.gtk
 class TestClipboardService:
     """Test suite for ClipboardService core functionality."""
 

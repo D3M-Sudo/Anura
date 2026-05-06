@@ -4,7 +4,7 @@ from mimetypes import guess_type
 import os
 import re
 
-from gi.repository import Adw, Gdk, Gio, GLib, Gtk
+from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk
 from loguru import logger
 
 from anura.config import APP_ID, LANG_CODE_PATTERN, RESOURCE_PREFIX
@@ -28,7 +28,7 @@ class AnuraWindow(Adw.ApplicationWindow):
     welcome_page: WelcomePage = Gtk.Template.Child()
     extracted_page: ExtractedPage = Gtk.Template.Child()
 
-    def __init__(self, backend: ScreenshotService, **kwargs):
+    def __init__(self, backend: ScreenshotService, **kwargs: object) -> None:
         super().__init__(**kwargs)
 
         app = Gtk.Application.get_default()
@@ -123,7 +123,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         logger.warning("Anura Screenshot: Portal timeout - window restored.")
         return False  # Don't repeat timeout
 
-    def on_shot_done(self, _sender, text: str, copy: bool) -> None:
+    def on_shot_done(self, _sender: GObject.GObject, text: str, copy: bool) -> None:
         # Cancel safety timeout if screenshot succeeded
         if self._screenshot_timeout_id is not None:
             GLib.source_remove(self._screenshot_timeout_id)
@@ -156,7 +156,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         except Exception as e:
             logger.error(f"Anura UI Error: {e}")
 
-    def on_shot_error(self, _sender, message: str) -> None:
+    def on_shot_error(self, _sender: GObject.GObject, message: str) -> None:
         # Cancel safety timeout if screenshot failed
         if self._screenshot_timeout_id is not None:
             GLib.source_remove(self._screenshot_timeout_id)
@@ -214,7 +214,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             logger.error(f"Error accessing file {file_path}: {e}")
             self.show_toast(_("Cannot access file: {path}").format(path=file_path))
 
-    def _on_open_image_result(self, dialog, result) -> None:
+    def _on_open_image_result(self, dialog: Gtk.FileDialog, result: Gio.AsyncResult) -> None:
         try:
             file = dialog.open_finish(result)
             if file:
@@ -223,7 +223,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         except Exception as e:
             logger.debug(f"File selection cancelled or failed: {e}")
 
-    def _on_file_contents_loaded(self, gfile, result) -> None:
+    def _on_file_contents_loaded(self, gfile: Gio.File, result: Gio.AsyncResult) -> None:
         try:
             ok, contents, _ = gfile.load_contents_finish(result)
             if ok:
@@ -270,7 +270,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             logger.error(f"Failed to load file contents: {e}")
             self.show_toast(_("Failed to load image file"))
 
-    def on_dnd_drop(self, __target, value: Gdk.FileList, __x, __y) -> bool:
+    def on_dnd_drop(self, __target: Gtk.DropTarget, value: Gdk.FileList, __x: int, __y: int) -> bool:
         files = value.get_files()
         if not files:
             return False
@@ -288,7 +288,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         )
         return True
 
-    def _on_dnd_query_info_done(self, gfile, result, item) -> None:
+    def _on_dnd_query_info_done(self, gfile: Gio.File, result: Gio.AsyncResult, item: Gio.FileInfo) -> None:
         try:
             info = gfile.query_info_finish(result)
             if not info:
@@ -306,7 +306,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             logger.error(f"DnD query_info failed: {e}")
             self.welcome_page.spinner.set_visible(False)
 
-    def _on_dnd_file_contents_loaded(self, gfile, result) -> None:
+    def _on_dnd_file_contents_loaded(self, gfile: Gio.File, result: Gio.AsyncResult) -> None:
         try:
             ok, contents, _ = gfile.load_contents_finish(result)
             if not ok:
@@ -329,7 +329,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             logger.error(f"Failed to load dropped file: {e}")
             self.show_toast(_("Failed to load dropped file"))
 
-    def on_copy_to_clipboard(self, _action) -> None:
+    def on_copy_to_clipboard(self, _action: Gio.SimpleAction) -> None:
         """Copy the current extracted text to the clipboard."""
         return self._do_copy_to_clipboard()
 
@@ -350,12 +350,12 @@ class AnuraWindow(Adw.ApplicationWindow):
         else:
             self.show_toast(_("No text to copy"))
 
-    def on_paste_from_clipboard(self, _action) -> None:
+    def on_paste_from_clipboard(self, _action: Gio.SimpleAction) -> None:
         """Read image from clipboard and perform OCR."""
         self.welcome_page.spinner.set_visible(True)
         clipboard_service.read_texture()
 
-    def _on_paste_from_clipboard_texture(self, _service, texture: Gdk.Texture) -> None:
+    def _on_paste_from_clipboard_texture(self, _service: GObject.GObject, texture: Gdk.Texture) -> None:
         self.welcome_page.spinner.set_visible(True)
         png_bytes = BytesIO(texture.save_to_png_bytes().get_data())
         GObjectWorker.call(self.backend.decode_image, (self.get_language(), png_bytes))
@@ -426,7 +426,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         except Exception as e:
             logger.error(f"An error occurred while loading shortcuts: {e}")
 
-    def show_welcome_page(self, *_) -> None:
+    def show_welcome_page(self, *_args: object) -> None:
         self.split_view.set_show_content(False)
         self.extracted_page.listen_cancel()
 
@@ -438,7 +438,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         """Stops any active TTS playback."""
         self.extracted_page.listen_cancel()
 
-    def _on_share(self, _action, variant: GLib.Variant) -> None:
+    def _on_share(self, _action: Gio.SimpleAction, variant: GLib.Variant) -> None:
         """Dispatch share action to the correct provider."""
         provider = variant.get_string()
         text = self.extracted_page.extracted_text
@@ -447,7 +447,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             return
         self.share_service.share(provider, text)
 
-    def show_toast(self, title: str, priority=Adw.ToastPriority.NORMAL) -> None:
+    def show_toast(self, title: str, priority: Adw.ToastPriority = Adw.ToastPriority.NORMAL) -> None:
         self.toast_overlay.add_toast(Adw.Toast(title=title, priority=priority))
 
     def _show_url_toast(self, url: str) -> None:

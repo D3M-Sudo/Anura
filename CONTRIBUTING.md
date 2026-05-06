@@ -55,18 +55,27 @@ uv run pytest tests/test_config.py -v
 # Run unit logic tests (business logic only)
 uv run pytest tests/test_unit_logic.py -v
 
-# Run service-specific tests (requires system gi)
-uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" pytest tests/test_screenshot_service.py -v
-uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" pytest tests/test_clipboard_service.py -v
-uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" pytest tests/test_share_service.py -v
-uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" pytest tests/test_tts_service.py -v
-uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" pytest tests/test_notification_service.py -v
+# Setup GSettings schema for GTK tests (required once)
+mkdir -p builddir
+cp data/com.github.d3msudo.anura.gschema.xml builddir/
+glib-compile-schemas builddir/
+
+# Run service-specific tests (requires system gi + GSettings)
+export GSETTINGS_SCHEMA_DIR="builddir"
+uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" GSETTINGS_SCHEMA_DIR="builddir" pytest tests/test_screenshot_service.py -v
+uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" GSETTINGS_SCHEMA_DIR="builddir" pytest tests/test_clipboard_service.py -v
+uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" GSETTINGS_SCHEMA_DIR="builddir" pytest tests/test_share_service.py -v
+uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" GSETTINGS_SCHEMA_DIR="builddir" pytest tests/test_tts_service.py -v
+uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" GSETTINGS_SCHEMA_DIR="builddir" pytest tests/test_notification_service.py -v
+
+# Or use the automated setup script
+./setup-gschema.sh
 
 # Run URI validator tests specifically
 uv run pytest tests/test_uri_validator.py -v
 
 # Alternative: Use system Python for pure Python tests
-python3 -m pytest tests/test_config.py tests/test_language_manager.py tests/test_uri_validator.py -v
+uv run python3 -m pytest tests/test_config.py tests/test_language_manager.py tests/test_uri_validator.py -v
 ```
 
 ### Test Architecture
