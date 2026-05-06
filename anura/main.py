@@ -6,6 +6,15 @@ import gi
 from gi.repository import Adw, Gio, GLib, Gtk
 from loguru import logger
 
+# Configure logging with professional format
+logger.remove()  # Remove default handler
+logger.add(
+    sys.stderr,
+    format="%(asctime)s | %(levelname)-8s | %(name)s:%(funcName)s:%(lineno)d - %(message)s",
+    level="DEBUG",
+    colorize=True,
+)
+
 from anura.config import APP_ID
 from anura.language_manager import get_language_manager
 from anura.services.clipboard_service import get_clipboard_service

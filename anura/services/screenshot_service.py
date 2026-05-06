@@ -14,6 +14,7 @@ from gi.repository import Gio, GLib, GObject, Xdp
 from loguru import logger
 from PIL import Image
 import pytesseract
+import time
 from pyzbar.pyzbar import decode
 
 from anura.config import LANG_CODE_PATTERN, get_tesseract_config
@@ -103,37 +104,45 @@ class ScreenshotService(GObject.GObject):
         if not is_physical_file:
             remove_source = False
 
-        logger.debug(f"Anura OCR: Decoding image synchronously with language: {lang}")
+        logger.debug(f"Anura OCR: Starting OCR task with language: {lang}")
+        start_time = time.time()
         extracted = None
         error_message = None
+        image_size = None
 
         try:
             # Image.open is polymorphic: handles both paths and byte streams
             with Image.open(file) as img:
+                image_size = img.size  # (width, height)
+                logger.debug(f"Anura OCR: Processing image size: {image_size[0]}x{image_size[1]}")
+                
                 # Step 1: QR Code detection
                 qr_data = decode(img)
 
                 if len(qr_data) > 0:
                     extracted = qr_data[0].data.decode("utf-8")
-                    logger.info("Anura OCR: QR code detected.")
+                    duration = time.time() - start_time
+                    logger.info(f"Anura OCR: QR code detected in {duration:.3f}s")
 
                 # Step 2: Tesseract OCR
                 else:
                     text = pytesseract.image_to_string(img, lang=lang, config=get_tesseract_config(lang))
                     extracted = text.strip()
+                    duration = time.time() - start_time
+                    logger.info(f"Anura OCR: Text extraction completed in {duration:.3f}s")
 
         except OSError as e:
-            logger.error(f"Anura OCR/QR File Error: {e}")
+            logger.exception(f"Anura OCR/QR File Error: {e}")
             error_message = _("Failed to read image file.")
         except (pytesseract.TesseractError, pytesseract.TesseractNotFoundError) as e:
-            logger.error(f"Anura OCR Error: Tesseract failed: {e}")
+            logger.exception(f"Anura OCR Error: Tesseract failed: {e}")
             error_message = _("OCR engine failed to process image.")
         except (Image.DecompressionBombError, Image.UnidentifiedImageError, Exception) as e:
             # Catch specific image/QR decoding errors (PIL, zbar) but NOT system exceptions
             # KeyboardInterrupt and SystemExit will propagate correctly
             if isinstance(e, (SystemExit, KeyboardInterrupt)):
                 raise
-            logger.error(f"Anura OCR/QR Error: {type(e).__name__}: {e}")
+            logger.exception(f"Anura OCR/QR Error: {type(e).__name__}: {e}")
             error_message = _("Failed to decode data.")
 
         finally:

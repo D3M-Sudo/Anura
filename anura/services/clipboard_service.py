@@ -49,10 +49,12 @@ class ClipboardService(GObject.GObject):
 
     def __init__(self) -> None:
         super().__init__()
+        logger.debug("Anura ClipboardService: Initializing clipboard service singleton")
         self._cancellable = None
         self._clipboard = None
         self._clipboard_timeout_id = None
         self._state_lock = threading.Lock()
+        logger.debug("Anura ClipboardService: Clipboard service initialization complete")
 
     def init(self) -> None:
         """
@@ -176,6 +178,11 @@ class ClipboardService(GObject.GObject):
     def cancel_pending_operations(self) -> None:
         """Thread-safe cancellation of pending clipboard read operations."""
         with self._state_lock:
+            # Add defensive check for partially initialized instances
+            if not hasattr(self, '_clipboard_timeout_id'):
+                logger.debug("Clipboard service not fully initialized, skipping cleanup")
+                return
+                
             if self._cancellable is not None and not self._cancellable.is_cancelled():
                 logger.debug("Anura Clipboard: Cancelling pending clipboard operation.")
                 self._cancellable.cancel()

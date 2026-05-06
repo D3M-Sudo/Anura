@@ -114,22 +114,32 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
         self.popdown()
 
     def populate_model(self) -> None:
-        self.lang_list.remove_all()
+        try:
+            self.lang_list.remove_all()
+            
+            downloaded_languages = language_manager.get_downloaded_languages(force=True)
+            for lang in downloaded_languages:
+                code = language_manager.get_language_code(lang)
+                if code is None:  # Add defensive check
+                    logger.warning(f"Failed to get language code for: {lang}")
+                    continue
+                    
+                selected = (self.active_language == code)
+                self.lang_list.append(LanguageItem(code=code, title=lang, selected=selected))
 
-        downloaded_languages = language_manager.get_downloaded_languages(force=True)
-        for lang in downloaded_languages:
-            code = language_manager.get_language_code(lang)
-            selected = (self.active_language == code)
-            self.lang_list.append(LanguageItem(code=code, title=lang, selected=selected))
-
-        # Fallback to English if current language was removed, emitting only on actual change
-        current_code = self.active_language
-        if current_code not in language_manager.get_downloaded_codes():
-            new_item = language_manager.get_language_item("eng")
-            if new_item and self.active_language != "eng":  # emit only if language actually changed
-                self.active_language = "eng"
-                self.settings.set_string('active-language', 'eng')
-                self.emit("language-changed", new_item)
+            # Fallback to English if current language was removed, emitting only on actual change
+            current_code = self.active_language
+            if current_code not in language_manager.get_downloaded_codes():
+                new_item = language_manager.get_language_item("eng")
+                if new_item and self.active_language != "eng":  # emit only if language actually changed
+                    self.active_language = "eng"
+                    self.settings.set_string('active-language', 'eng')
+                    self.emit("language-changed", new_item)
+                    
+        except Exception as e:
+            logger.error(f"Failed to populate language model: {e}")
+            # Ensure UI doesn't remain empty
+            self.toggle_empty_state(True)
 
     def toggle_empty_state(self, is_empty: bool = False) -> None:
         if is_empty:

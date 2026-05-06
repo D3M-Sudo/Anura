@@ -162,9 +162,9 @@ class LanguageManager(GObject.GObject):
             if need_update or force:
                 codes = set()
 
-                # Debug: Log paths being checked
-                logger.debug(f"Anura: Checking user tessdata directory: {TESSDATA_DIR}")
-                logger.debug(f"Anura: Checking system tessdata directory: {TESSDATA_SYSTEM_DIR}")
+                # Enhanced logging: Log paths being checked with directory status
+                logger.info(f"Anura LanguageManager: Scanning user tessdata directory: {TESSDATA_DIR}")
+                logger.info(f"Anura LanguageManager: Scanning system tessdata directory: {TESSDATA_SYSTEM_DIR}")
 
                 # User-downloaded models (~/.var/app/.../data/anura/tessdata/)
                 if os.path.exists(TESSDATA_DIR):
@@ -173,12 +173,12 @@ class LanguageManager(GObject.GObject):
                             f for f in os.listdir(TESSDATA_DIR)
                             if f.endswith(".traineddata") and not f.startswith("osd")
                         ]
-                        logger.debug(f"Anura: User tessdata files found: {user_files}")
+                        logger.info(f"Anura LanguageManager: User directory scanned, {len(user_files)} models found: {user_files}")
                         codes.update(os.path.splitext(f)[0] for f in user_files)
-                    except OSError:
-                        logger.warning("Anura: Error reading user tessdata directory")
+                    except OSError as e:
+                        logger.exception(f"Anura LanguageManager: Error reading user tessdata directory: {e}")
                 else:
-                    logger.debug(f"Anura: User tessdata directory does not exist: {TESSDATA_DIR}")
+                    logger.debug(f"Anura LanguageManager: User tessdata directory does not exist: {TESSDATA_DIR}")
 
                 # Bundled system models (/app/share/tessdata/ — eng, ita pre-installed)
                 if os.path.exists(TESSDATA_SYSTEM_DIR):
@@ -187,14 +187,15 @@ class LanguageManager(GObject.GObject):
                             f for f in os.listdir(TESSDATA_SYSTEM_DIR)
                             if f.endswith(".traineddata") and not f.startswith("osd")
                         ]
-                        logger.debug(f"Anura: System tessdata files found: {system_files}")
+                        logger.info(f"Anura LanguageManager: System directory scanned, {len(system_files)} models found: {system_files}")
                         codes.update(os.path.splitext(f)[0] for f in system_files)
-                    except OSError:
-                        logger.warning("Anura: Error reading system tessdata directory")
+                    except OSError as e:
+                        logger.exception(f"Anura LanguageManager: Error reading system tessdata directory: {e}")
                 else:
-                    logger.debug(f"Anura: System tessdata directory does not exist: {TESSDATA_SYSTEM_DIR}")
+                    logger.debug(f"Anura LanguageManager: System tessdata directory does not exist: {TESSDATA_SYSTEM_DIR}")
 
-                logger.debug(f"Anura: Total language codes found: {list(codes)}")
+                total_models = len(codes)
+                logger.info(f"Anura LanguageManager: Total language models discovered: {total_models} - {list(codes)}")
                 self._downloaded_codes = list(codes)
                 self._need_update_cache = False
             return sorted(self._downloaded_codes, key=lambda x: self.get_language(x))

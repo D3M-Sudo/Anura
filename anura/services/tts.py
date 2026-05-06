@@ -115,10 +115,15 @@ class TTSService(GObject.GObject):
 
     def __init__(self) -> None:
         super().__init__()
+        logger.debug("Anura TTSService: Initializing TTS service singleton")
         os.makedirs(self._speech_dir, exist_ok=True)
         # Initialize GStreamer only once to prevent crashes on multiple instantiations
         if not Gst.is_initialized():
+            logger.info("Anura TTSService: Initializing GStreamer pipeline")
             Gst.init(None)
+        else:
+            logger.debug("Anura TTSService: GStreamer already initialized")
+        logger.debug("Anura TTSService: TTS service initialization complete")
 
     @staticmethod
     def get_languages() -> dict:
@@ -180,12 +185,14 @@ class TTSService(GObject.GObject):
         # Read volume from settings and clamp to valid range
         volume = max(0.0, min(1.0, settings.get_double("tts-volume")))
         self.player.set_property("volume", volume)
+        logger.debug(f"Anura TTSService: Set volume to {volume:.2f}")
 
         self._bus = self.player.get_bus()
 
         # Thread-safety: schedule bus operations on main thread via idle_add
         GLib.idle_add(self._setup_bus_watch)
 
+        logger.info("Anura TTSService: Setting GStreamer state to PLAYING")
         self.player.set_state(Gst.State.PLAYING)
 
     def _setup_bus_watch(self) -> bool:
@@ -216,7 +223,7 @@ class TTSService(GObject.GObject):
     def on_gst_message(self, _bus: Gst.Bus, message: Gst.Message) -> None:
         """Thread-safe GStreamer bus message handling."""
         if message.type == Gst.MessageType.EOS:
-            logger.info("Anura TTS: Playback finished.")
+            logger.info("Anura TTSService: GStreamer state changed to EOS (End of Stream)")
             with self._cleanup_lock:
                 self._cleanup_gst_resources()
                 # Thread-safe cleanup of temp file after playback
@@ -245,10 +252,16 @@ class TTSService(GObject.GObject):
     def _cleanup_gst_resources(self) -> None:
         """Remove signal watcher and release player resources."""
         if self.player:
+            logger.debug("Anura TTSService: Starting GStreamer resource cleanup")
             # Explicitly disconnect the bus message handler
             if self._bus_message_handler_id is not None and self._bus is not None:
                 try:
-                    self._bus.disconnect(self._bus_message_handler_id)
+                    # Add type validation before disconnection
+                    if isinstance(self._bus_message_handler_id, int):
+                        self._bus.disconnect(self._bus_message_handler_id)
+                        logger.debug("Anura TTSService: Disconnected bus message handler")
+                    else:
+                        logger.warning(f"Anura TTSService: Invalid handler ID type: {type(self._bus_message_handler_id)}")
                 except (TypeError, RuntimeError):
                     pass  # Already disconnected or invalid
                 self._bus_message_handler_id = None
@@ -256,12 +269,15 @@ class TTSService(GObject.GObject):
             if self._bus_watch_active and self._bus:
                 try:
                     self._bus.remove_signal_watch()
+                    logger.debug("Anura TTSService: Removed signal watch")
                 except (GLib.Error, RuntimeError):
                     pass  # Already removed or invalid
                 self._bus_watch_active = False
                 self._bus = None
+            logger.info("Anura TTSService: Setting GStreamer state to NULL")
             self.player.set_state(Gst.State.NULL)
             self.player = None
+            logger.debug("Anura TTSService: GStreamer resource cleanup complete")
 
     def stop_speaking(self) -> None:
         """Thread-safe interruption of playback and cleanup."""
