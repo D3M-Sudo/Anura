@@ -79,7 +79,7 @@ class ScreenshotService(GObject.GObject):
             logger.warning("Anura Screenshot: Portal returned empty URI.")
             return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))
 
-        if uri.startswith("file://"):
+        if uri.startswith("file://") and len(uri) > len("file://"):
             filename = url2pathname(uri[len("file://") :])
         else:
             filename = GLib.Uri.unescape_string(uri)

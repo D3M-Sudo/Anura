@@ -248,6 +248,7 @@ class TTSService(GObject.GObject):
                 elif filepath:
                     logger.debug("Anura TTS: Cleanup skipped, file already removed")
             GLib.idle_add(self.emit, "stop", True)
+            return False  # Don't repeat timeout
 
         elif message.type == Gst.MessageType.ERROR:
             err, _debug = message.parse_error()
