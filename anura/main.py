@@ -414,7 +414,7 @@ class AnuraApplication(Adw.Application):
         window = self.get_active_window()
         if not window:
             return
-            
+
         if text:
             clipboard_service_instance = get_clipboard_service()
             clipboard_service_instance.set(text)
@@ -482,7 +482,7 @@ class AnuraApplication(Adw.Application):
         window = self.get_active_window()
         if not window:
             return
-            
+
         if text:
             share_service_instance = get_share_service()
             share_service_instance.share("email", text)
