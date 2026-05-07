@@ -117,6 +117,10 @@ class ExtractedPage(Adw.NavigationPage):
             msg = _("Text-to-speech failed. Please try again.")
         self.show_toast(msg)
 
+    def listen_cancel(self) -> None:
+        """Stop TTS playback (public method)."""
+        self._on_listen_stop()
+
     def _on_listen_stop(self) -> None:
         """Stop TTS playback."""
         tts_service_instance = get_tts_service()

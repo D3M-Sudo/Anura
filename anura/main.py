@@ -411,12 +411,16 @@ class AnuraApplication(Adw.Application):
     def on_copy_to_clipboard(self, _action: Gio.SimpleAction, variant: GLib.Variant) -> None:
         """Copy text to clipboard from action."""
         text = variant.get_string() if variant else ""
+        window = self.get_active_window()
+        if not window:
+            return
+            
         if text:
             clipboard_service_instance = get_clipboard_service()
             clipboard_service_instance.set(text)
-            self.show_toast(_("Text copied to clipboard"))
+            window.show_toast(_("Text copied to clipboard"))
         else:
-            self.show_toast(_("No text to copy"))
+            window.show_toast(_("No text to copy"))
 
     def get_screenshot(self, _action: object, _param: object) -> None:
         window = self.get_active_window()
@@ -475,11 +479,15 @@ class AnuraApplication(Adw.Application):
 
     def on_share_text(self, _action: Gio.SimpleAction, text: str) -> None:
         """Share text via external service."""
+        window = self.get_active_window()
+        if not window:
+            return
+            
         if text:
             share_service_instance = get_share_service()
             share_service_instance.share("email", text)
         else:
-            self.show_toast(_("No text to share"))
+            window.show_toast(_("No text to share"))
 
     def create_action(self, name: str, callback: object, shortcuts: list[str] | None = None) -> None:
         action = Gio.SimpleAction.new(name, None)
