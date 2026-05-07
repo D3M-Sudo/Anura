@@ -23,7 +23,7 @@ def cleanup_orphaned_resources() -> None:
     Only files older than 1 hour are removed to avoid conflicts with
     currently running operations.
     """
-    current_time = time.monotonic()
+    current_time = time.time()
     one_hour_ago = current_time - 3600  # 1 hour in seconds
 
     # Clean up TTS cache files

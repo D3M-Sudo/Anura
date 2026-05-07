@@ -59,7 +59,7 @@ flatpak install --user ~/Downloads/com.github.d3msudo.anura.flatpak
 | Tool | Version |
 |------|---------|
 | Meson | ≥ 1.5.0 |
-| Python | ≥ 3.11 |
+| Python | ≥ 3.12 |
 | GTK4 + Libadwaita | latest |
 | Tesseract OCR | ≥ 5.0 |
 | ZBar | any |

@@ -348,16 +348,6 @@ class AnuraWindow(Adw.ApplicationWindow):
         else:
             self.show_toast(_("No text to copy"))
 
-    def _do_copy_to_clipboard_direct(self) -> None:
-        """Direct copy method for internal use without action parameter."""
-        text = self.extracted_page.extracted_text
-        if text:
-            clipboard_service_instance = get_clipboard_service()
-            clipboard_service_instance.set(text)
-            self.show_toast(_("Text copied to clipboard"))
-        else:
-            self.show_toast(_("No text to copy"))
-
     def on_paste_from_clipboard(self, _action: Gio.SimpleAction) -> None:
         """Read image from clipboard and perform OCR."""
         self.welcome_page.spinner.set_visible(True)

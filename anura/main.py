@@ -434,8 +434,6 @@ class AnuraApplication(Adw.Application):
                 title="Anura OCR",
                 body=_("Text extracted and copied to clipboard.")
             )
-        else:
-            logger.debug(f"Extracted: {text}")
 
     def on_error(self, _sender: object, message: str) -> None:
         """Handle screenshot service errors, skipping cancellation messages."""
