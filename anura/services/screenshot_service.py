@@ -165,7 +165,12 @@ class ScreenshotService(GObject.GObject):
         """Determine if file is a physical file."""
         return isinstance(file, str) and os.path.exists(file)
 
-    def _process_image_decode(self, file: str | Image.Image | object, lang: str, start_time: float) -> tuple[str | None, str | None]:
+    def _process_image_decode(
+        self,
+        file: str | Image.Image | object,
+        lang: str,
+        start_time: float,
+    ) -> tuple[str | None, str | None]:
         """Process image for QR code detection and OCR."""
         extracted = None
         error_message = None
@@ -231,7 +236,12 @@ class ScreenshotService(GObject.GObject):
 
         return extracted, error_message
 
-    def _cleanup_temporary_file(self, file: str | Image.Image | object, is_physical_file: bool, remove_source: bool) -> None:
+    def _cleanup_temporary_file(
+        self,
+        file: str | Image.Image | object,
+        is_physical_file: bool,
+        remove_source: bool,
+    ) -> None:
         """Clean up temporary files if requested."""
         if remove_source and is_physical_file:
             try:
@@ -240,7 +250,11 @@ class ScreenshotService(GObject.GObject):
             except (OSError, PermissionError) as e:
                 logger.warning(f"Anura OCR: Could not delete {file}: {e}")
 
-    def _format_decode_result(self, extracted: str | None, error_message: str | None) -> tuple[bool, str | None, str | None]:
+    def _format_decode_result(
+        self,
+        extracted: str | None,
+        error_message: str | None,
+    ) -> tuple[bool, str | None, str | None]:
         """Format the final decode result."""
         if extracted:
             return (True, extracted, None)
