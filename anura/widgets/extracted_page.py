@@ -139,7 +139,7 @@ class ExtractedPage(Adw.NavigationPage):
     def _on_listen_end(self, service: object, success: bool) -> None:
         """Handle TTS playback completion."""
         tts_service_instance = get_tts_service()
-        tts_service_instance.disconnect(self._handler_listen_end)
+        tts_service_instance.disconnect(self._tts_stop_handler_id)
         self.emit("on-listen-stop")
         self._set_spinner_active(False)
         self.swap_controls(False)

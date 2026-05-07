@@ -111,6 +111,7 @@ menu primary_menu {
     item {
       label: _("Preferences");
       action: "app.preferences";
+      icon: "preferences-system-symbolic";
     }
   }
 
@@ -118,11 +119,19 @@ menu primary_menu {
     item {
       label: _("Keyboard Shortcuts");
       action: "app.shortcuts";
+      icon: "preferences-desktop-keyboard-shortcuts-symbolic";
     }
 
     item {
       label: _("About Anura");
       action: "app.about";
+      icon: "help-about-symbolic";
+    }
+
+    item {
+      label: _("Report an Issue");
+      action: "app.report_issue";
+      icon: "dialog-warning-symbolic";
     }
   }
 }

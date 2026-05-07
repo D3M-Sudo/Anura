@@ -205,6 +205,7 @@ class AnuraApplication(Adw.Application):
         self.create_action("preferences", self.on_preferences, ["<primary>comma"])
         self.create_action("about", self.on_about)
         self.create_action("github_star", self.on_github_star)
+        self.create_action("report_issue", self.on_report_issue)
         self.create_action("share_text", self.on_share_text)
 
     def do_activate(self) -> None:
@@ -358,7 +359,7 @@ class AnuraApplication(Adw.Application):
             application_icon=APP_ID,
             version=self.version,
             copyright=" 2023 D3M-Sudo & Anura Contributors",
-            website="https://github.com/d3msudo/anura",
+            website="https://github.com/D3M-Sudo/Anura",
             license_type=Gtk.License.MIT,
             developers=["Andrey Maksimov", "D3M-Sudo"],
             designers=["Andrey Maksimov"],
@@ -367,8 +368,26 @@ class AnuraApplication(Adw.Application):
         about_window.present(self.props.active_window)
 
     def on_github_star(self, _action: object, _param: object) -> None:
-        """Open the GitHub repository page in the default browser."""
-        launcher = Gtk.UriLauncher.new("https://github.com/d3msudo/anura")
+        """Open GitHub repository page in the default browser."""
+        launcher = Gtk.UriLauncher.new("https://github.com/D3M-Sudo/Anura")
+
+        def on_launch_finish(_launcher: object, result: Gio.AsyncResult) -> None:
+            try:
+                launcher.launch_finish(result)
+            except GLib.Error as e:
+                logger.error(f"Anura: Failed to open browser: {e.message}")
+                # Show error dialog to user using Adw.AlertDialog
+                window = self.props.active_window
+                if window:
+                    dialog = Adw.AlertDialog()
+                    dialog.set_heading(_("Failed to Open Browser"))
+                    dialog.set_body(_("No web browser could be launched. Please open the link manually."))
+
+        launcher.launch(self.props.active_window, None, on_launch_finish)
+
+    def on_report_issue(self, _action: object, _param: object) -> None:
+        """Open GitHub issues page in the default browser."""
+        launcher = Gtk.UriLauncher.new("https://github.com/D3M-Sudo/Anura/issues")
 
         def on_launch_finish(_launcher: object, result: Gio.AsyncResult) -> None:
             try:

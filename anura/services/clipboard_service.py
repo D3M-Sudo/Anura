@@ -231,7 +231,6 @@ class ClipboardService(GObject.GObject):
             # For text reading, we might emit a different signal or handle differently
             # For now, just log the success
             GLib.idle_add(logger.debug, f"Clipboard text read: {text[:50]}...")
-            return False  # Don't repeat callback
 
         except GLib.Error as e:
             # Check if operation was cancelled

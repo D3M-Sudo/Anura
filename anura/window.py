@@ -443,7 +443,7 @@ class AnuraWindow(Adw.ApplicationWindow):
 
     def show_welcome_page(self, *_args: object) -> None:
         self.split_view.set_show_content(False)
-        self.extracted_page.listen_cancel()
+        self.extracted_page._on_listen_stop()
 
     def on_listen(self) -> None:
         """Starts TTS playback for the currently extracted text."""
@@ -451,7 +451,7 @@ class AnuraWindow(Adw.ApplicationWindow):
 
     def on_listen_cancel(self) -> None:
         """Stops any active TTS playback."""
-        self.extracted_page.listen_cancel()
+        self.extracted_page._on_listen_stop()
 
     def _on_share(self, _action: Gio.SimpleAction, variant: GLib.Variant) -> None:
         """Dispatch share action to the correct provider."""
