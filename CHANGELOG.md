@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Screenshot safety timeout (30 seconds) to prevent window hiding on portal hang
 - Comprehensive test suite with 10 new test files covering core services and utilities
 - AGENTS.md documentation for AI assistant integration and development guidance
+- Code quality workflow command with systematic 5-phase audit and refactoring process
 - Pure-Python share_utils module with URL validation and provider link generation
 
 ### Changed
