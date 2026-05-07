@@ -144,8 +144,9 @@ jobs:
           # --help exits immediately with code 0 if app starts correctly
           # Environment variables to suppress harmless warnings in headless CI:
           # - NO_AT_BRIDGE=1: disables a11y bus warnings
+          # - GTK_A11Y=none: disables GTK accessibility entirely for headless mode
           # - LIBGL_ALWAYS_SOFTWARE=1: forces software rendering, suppresses DRI3 warnings
-          if ! dbus-run-session xvfb-run -a flatpak run --env=NO_AT_BRIDGE=1 --env=LIBGL_ALWAYS_SOFTWARE=1 com.github.d3msudo.anura --help; then
+          if ! dbus-run-session xvfb-run -a flatpak run --env=NO_AT_BRIDGE=1 --env=GTK_A11Y=none --env=LIBGL_ALWAYS_SOFTWARE=1 com.github.d3msudo.anura --help; then
             echo "✗ Smoke test failed - app failed to launch"
             exit 1
           fi

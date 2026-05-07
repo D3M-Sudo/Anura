@@ -312,6 +312,25 @@ class TTSService(GObject.GObject):
             elif filepath:
                 logger.debug("Anura TTS: Cleanup skipped on stop, file already removed")
 
+    def cleanup(self) -> None:
+        """Complete cleanup for application shutdown - prevents broken pipe errors."""
+        with self._cleanup_lock:
+            if self.player:
+                logger.debug("Anura TTS: Performing shutdown cleanup")
+                self._cleanup_gst_resources()
+
+            # Clean up any remaining temporary files
+            with self._state_lock:
+                filepath = self._current_speech_file
+                self._current_speech_file = None
+
+            if filepath and os.path.exists(filepath):
+                try:
+                    os.unlink(filepath)
+                    logger.debug("Anura TTS: Cleaned up temporary speech file on shutdown")
+                except (OSError, PermissionError):
+                    logger.debug("Anura TTS: Failed to cleanup temporary speech file on shutdown")
+
 
 # Thread-safe singleton instance for global app access
 def get_tts_service() -> TTSService:

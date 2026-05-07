@@ -19,6 +19,7 @@
         "--filesystem=xdg-config/com.github.d3msudo.anura:create",
         "--talk-name=org.freedesktop.portal.Desktop",
         "--talk-name=org.freedesktop.portal.Notifications",
+        "--talk-name=org.a11y.Bus",
         "--env=GSK_RENDERER=cairo",
         "--env=PATH=/app/bin:/usr/bin:/bin",
         "--env=TESSDATA_PREFIX=/app/share/tessdata",

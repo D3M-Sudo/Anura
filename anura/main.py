@@ -190,6 +190,14 @@ class AnuraApplication(Adw.Application):
         except (AttributeError, TypeError) as e:
             logger.debug(f"Failed to cleanup clipboard service: {e}")
 
+        # Clean up TTS service to prevent broken pipe errors
+        try:
+            from anura.services.tts import get_tts_service
+            tts_service = get_tts_service()
+            tts_service.cleanup()
+        except (ImportError, AttributeError, TypeError) as e:
+            logger.debug(f"Failed to cleanup TTS service: {e}")
+
         Adw.Application.do_shutdown(self)
 
     def _setup_actions(self) -> None:
