@@ -246,12 +246,6 @@ class ShareService(GObject.GObject):
         encoded_text = quote(text)
         return f"https://x.com/intent/tweet?text={encoded_text}"
 
-    # NOTE: get_link_instagram removed — Instagram has no URL prefill API
-    # If Instagram adds sharing URL support in the future, re-enable:
-    # @staticmethod
-    # def get_link_instagram(text: str):
-    #     return None  # Not supported
-
     @staticmethod
     def get_link_email(text: str) -> str:
         subject = quote(_("Extracted Text"))

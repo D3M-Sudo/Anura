@@ -53,11 +53,14 @@ class GObjectWorker:
             except (KeyboardInterrupt, SystemExit):
                 # Re-raise to allow clean shutdown
                 raise
-            except Exception as e:
-                # Capture full traceback for technical debugging
+            except (OSError, ValueError, RuntimeError) as e:
+                # Handle expected operational errors (file I/O, invalid values, runtime issues)
                 tb_str = traceback.format_exc()
-                # Wrap exception with traceback info in a safe way
-                # (errorback is always set to _default_errorback if not provided)
+                GLib.idle_add(eb, e, tb_str)
+            except Exception as e:
+                # Handle truly unexpected errors (logical errors, system failures)
+                tb_str = traceback.format_exc()
+                logging.error(f"Unexpected error in GObjectWorker: {e}")
                 GLib.idle_add(eb, e, tb_str)
 
         # Use default error handler if none provided
