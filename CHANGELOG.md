@@ -33,6 +33,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Image processing now validates file size (50MB limit) and uses os.lstat() for symlink protection
 - Clipboard service enhanced with atomic cancellation and timeout management
 - Screenshot service improved with performance timing and better error handling
+- Refactored complex application methods into smaller, focused helper functions for better maintainability
+- Improved code organization with single responsibility principle across main.py and screenshot_service.py
+- Enhanced error handling patterns with dedicated exception handling methods
+- Simplified image processing logic by separating QR detection and OCR extraction concerns
+- Reduced cyclomatic complexity from 12+ to ≤10 per method throughout codebase
+- Standardized code formatting with consistent double quotes and trailing commas in multi-line calls
 
 ### Fixed
 - Fixed time.monotonic() usage in cleanup.py by replacing with time.time() for file modification checks
@@ -45,6 +51,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fixed race conditions in service initialization through ThreadSafeSingleton implementation
 - Fixed clipboard timeout handling with atomic operations and proper cleanup
 - Fixed URL length validation in share service to prevent overflow attacks
+- Replaced try-except-pass patterns with contextlib.suppress() for cleaner error handling
+- Fixed inconsistent string quotes by standardizing to double quotes throughout codebase
+- Fixed missing docstrings for all public methods following PEP 257 conventions
+- Fixed trailing comma issues in multi-line function calls for better readability
+- Fixed import sorting and organization issues across all modules
+- Fixed code complexity by extracting complex methods into smaller, focused functions
+- Fixed threading import issues and type hint consistency in main.py
+- Fixed unused variable warnings and code quality issues
 
 
 ## [0.1.4.2] - 2026-05-05
