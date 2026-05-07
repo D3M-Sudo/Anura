@@ -2,6 +2,7 @@
 #
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
+import contextlib
 import ipaddress
 from urllib.parse import urlparse
 
@@ -56,11 +57,9 @@ def uri_validator(text: str) -> bool:
         # Unbracket IPv6 if bracketed
         if host.startswith('[') and host.endswith(']'):
             host = host[1:-1]
-        try:
+        with contextlib.suppress(ValueError):
             ipaddress.ip_address(host)
             return True
-        except ValueError:
-            pass
 
         # Reject single-word hostnames without dots (prevents "http://evil")
         return False

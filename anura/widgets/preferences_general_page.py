@@ -3,6 +3,7 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
+import contextlib
 from gettext import gettext as _
 
 from gi.repository import Adw, Gio, Gtk
@@ -77,10 +78,8 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
     def _on_language_changed(self, _sender: object, _code: str) -> None:
         """Refresh the extra-language combo when models are installed or removed."""
         # Disconnect old signal to avoid duplicate connections
-        try:
+        with contextlib.suppress(TypeError):
             self.extra_language_combo.disconnect_by_func(self._on_extra_language_changed)
-        except TypeError:
-            pass  # Handler not connected yet (first call)
         self._setup_extra_languages()
 
     def _setup_tts_volume(self) -> None:

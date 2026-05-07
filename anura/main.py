@@ -1,3 +1,4 @@
+import contextlib
 from gettext import gettext as _
 import os
 import sys
@@ -57,13 +58,11 @@ def _load_gresource_bundle() -> bool:
     """
     # Check if GResource is already registered (e.g., by anura.in launcher script)
     # This prevents double registration when running via the standard entry point
-    try:
+    with contextlib.suppress(GLib.Error):
         # Try to lookup a known resource - if found, bundle is already loaded
         Gio.resources_lookup_data("/com/github/d3msudo/anura/window.ui", Gio.ResourceLookupFlags.NONE)
         logger.debug("GResource bundle already registered (likely by anura.in)")
         return True
-    except GLib.Error:
-        pass  # Not registered yet, continue with loading
 
     # Determine possible paths for the gresource bundle
     # Priority: Flatpak -> system -> user -> relative
@@ -179,10 +178,8 @@ class AnuraApplication(Adw.Application):
     def _disconnect_signal_handler(self, handler_id: int | None) -> None:
         """Safely disconnect a signal handler."""
         if handler_id is not None:
-            try:
+            with contextlib.suppress(TypeError, RuntimeError):
                 self.backend.disconnect(handler_id)
-            except (TypeError, RuntimeError):
-                pass
 
     def _cleanup_notification_service(self) -> None:
         """Clean up notification service."""

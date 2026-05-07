@@ -3,6 +3,7 @@
 # Copyright 2022-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
+import contextlib
 import os
 import threading
 import time
@@ -261,28 +262,23 @@ class TTSService(GObject.GObject):
         """Remove signal watcher and release player resources."""
         if self.player:
             logger.debug("Anura TTSService: Starting GStreamer resource cleanup")
-            # Explicitly disconnect the bus message handler
-            if self._bus_message_handler_id is not None and self._bus is not None:
-                try:
-                    # Add type validation before disconnection
-                    if isinstance(self._bus_message_handler_id, int):
-                        self._bus.disconnect(self._bus_message_handler_id)
-                        logger.debug("Anura TTSService: Disconnected bus message handler")
-                    else:
-                        logger.warning(
-                            f"Anura TTSService: Invalid handler ID type: "
-                            f"{type(self._bus_message_handler_id)}",
-                        )
-                except (TypeError, RuntimeError):
-                    pass  # Already disconnected or invalid
+
+            # Disconnect bus message handler if connected
+            if self._bus_message_handler_id is not None:
+                if isinstance(self._bus_message_handler_id, int):
+                    self._bus.disconnect(self._bus_message_handler_id)
+                    logger.debug("Anura TTSService: Disconnected bus message handler")
+                else:
+                    logger.warning(
+                        f"Anura TTSService: Invalid handler ID type: "
+                        f"{type(self._bus_message_handler_id)}",
+                    )
                 self._bus_message_handler_id = None
 
             if self._bus_watch_active and self._bus:
-                try:
+                with contextlib.suppress(GLib.Error, RuntimeError):
                     self._bus.remove_signal_watch()
                     logger.debug("Anura TTSService: Removed signal watch")
-                except (GLib.Error, RuntimeError):
-                    pass  # Already removed or invalid
                 self._bus_watch_active = False
                 self._bus = None
             logger.info("Anura TTSService: Setting GStreamer state to NULL")
