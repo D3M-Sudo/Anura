@@ -18,12 +18,12 @@ class ShareRow(Gtk.ListBoxRow):
     image: Gtk.Image = Gtk.Template.Child()
     label: Gtk.Label = Gtk.Template.Child()
 
-    provider_name: str = 'email'
+    provider_name: str = "email"
 
     def __init__(self, provider_name: str) -> None:
         super().__init__()
 
-        self.provider_name = provider_name or 'email'
+        self.provider_name = provider_name or "email"
         self.box.set_tooltip_text(_("Share via {name}").format(name=provider_name.capitalize()))
         self.label.set_label(provider_name.capitalize())
         self.image.set_from_icon_name(f"share-{self.provider_name.lower()}-symbolic")
@@ -31,6 +31,7 @@ class ShareRow(Gtk.ListBoxRow):
     @Gtk.Template.Callback()
     def _on_released(self, *args: object) -> None:
         self.activate_action(
-            "window.share", GLib.Variant.new_string(self.provider_name)
+            "window.share",
+            GLib.Variant.new_string(self.provider_name),
         )
 

@@ -115,7 +115,12 @@ class AnuraApplication(Adw.Application):
         )
 
         self.add_main_option(
-            "file", ord("f"), GLib.OptionFlags.NONE, GLib.OptionArg.FILENAME, _("Process image file for OCR"), None
+            "file",
+            ord("f"),
+            GLib.OptionFlags.NONE,
+            GLib.OptionArg.FILENAME,
+            _("Process image file for OCR"),
+            None,
         )
 
         self.add_main_option(
@@ -301,7 +306,9 @@ class AnuraApplication(Adw.Application):
 
             # Use synchronous decode for silent mode - no signals, no main loop needed
             success, text, error_message = self.backend.decode_image_sync(
-                self.settings.get_string("active-language"), file_path, remove_source=False
+                self.settings.get_string("active-language"),
+                file_path,
+                remove_source=False,
             )
 
             # Check if interrupted during processing
@@ -454,7 +461,7 @@ class AnuraApplication(Adw.Application):
         if not text:
             self.notification_service.show_notification(
                 title="Anura OCR",
-                body=_("No text found. Try to grab another region.")
+                body=_("No text found. Try to grab another region."),
             )
             return
 
@@ -463,13 +470,13 @@ class AnuraApplication(Adw.Application):
             clipboard_service_instance.set(text)
             self.notification_service.show_notification(
                 title="Anura OCR",
-                body=_("Text extracted and copied to clipboard.")
+                body=_("Text extracted and copied to clipboard."),
             )
         else:
             # Text extracted but not copied - show notification
             self.notification_service.show_notification(
                 title="Anura OCR",
-                body=_("Text extracted successfully.")
+                body=_("Text extracted successfully."),
             )
 
     def on_error(self, _sender: object, message: str) -> None:

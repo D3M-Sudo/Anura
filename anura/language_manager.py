@@ -3,6 +3,7 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
+import contextlib
 from gettext import gettext as _
 import os
 import shutil
@@ -125,13 +126,11 @@ class LanguageManager(GObject.GObject):
             if not os.path.exists(TESSDATA_DIR):
                 logger.warning(
                     "Anura: tessdata directory not found. "
-                    "It will be created on first language download."
+                    "It will be created on first language download.",
                 )
-                try:
-                    os.makedirs(TESSDATA_DIR, exist_ok=True)
-                except FileExistsError:
+                with contextlib.suppress(FileExistsError):
                     # Another thread created it between check and makedirs
-                    pass
+                    os.makedirs(TESSDATA_DIR, exist_ok=True)
 
         # Clean up orphaned temp files from crashed/interrupted downloads
         try:
@@ -155,7 +154,7 @@ class LanguageManager(GObject.GObject):
         installed = self.get_downloaded_codes(force=True)
         logger.info(
             f"Anura: tessdata directory ready. "
-            f"{len(installed)} language model(s) installed: {installed or ['none']}"
+            f"{len(installed)} language model(s) installed: {installed or ['none']}",
         )
 
     def get_language(self, code: str) -> str:
@@ -187,7 +186,7 @@ class LanguageManager(GObject.GObject):
                         ]
                         logger.info(
             f"Anura LanguageManager: User directory scanned, "
-            f"{len(user_files)} models found: {user_files}"
+            f"{len(user_files)} models found: {user_files}",
         )
                         codes.update(os.path.splitext(f)[0] for f in user_files)
                     except OSError as e:
@@ -204,14 +203,14 @@ class LanguageManager(GObject.GObject):
                         ]
                         logger.info(
                             f"Anura LanguageManager: System directory scanned, "
-                            f"{len(system_files)} models found: {system_files}"
+                            f"{len(system_files)} models found: {system_files}",
                         )
                         codes.update(os.path.splitext(f)[0] for f in system_files)
                     except OSError as e:
                         logger.exception(f"Anura LanguageManager: Error reading system tessdata directory: {e}")
                 else:
                     logger.debug(
-                        f"Anura LanguageManager: System tessdata directory does not exist: {TESSDATA_SYSTEM_DIR}"
+                        f"Anura LanguageManager: System tessdata directory does not exist: {TESSDATA_SYSTEM_DIR}",
                     )
 
                 total_models = len(codes)
@@ -262,7 +261,9 @@ class LanguageManager(GObject.GObject):
             try:
                 url = url_base + tessfile
                 with tempfile.NamedTemporaryFile(
-                    dir=TESSDATA_DIR, suffix=".tmp", delete=False
+                    dir=TESSDATA_DIR,
+                    suffix=".tmp",
+                    delete=False,
                 ) as tmp:
                     tmp_path = tmp.name
 

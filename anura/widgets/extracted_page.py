@@ -3,6 +3,7 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
+import contextlib
 from gettext import gettext as _
 from typing import ClassVar
 
@@ -62,11 +63,13 @@ class ExtractedPage(Adw.NavigationPage):
             logger.warning(f"Failed to connect TTS stop signal: {e}")
 
     def do_hiding(self) -> None:
+        """Handle widget hiding event."""
         self.buffer.set_text("")
         self.emit("go-back", 1)
 
     @GObject.Property(type=str)
     def extracted_text(self) -> str:
+        """Get the extracted text from the buffer."""
         return self.buffer.get_text(
             start=self.buffer.get_start_iter(),
             end=self.buffer.get_end_iter(),
@@ -81,6 +84,7 @@ class ExtractedPage(Adw.NavigationPage):
             logger.error(f"Error setting extracted text: {e}")
 
     def listen(self) -> None:
+        """Start TTS playback for the extracted text."""
         self.swap_controls(True)
         self._set_spinner_active(True)
 
@@ -160,9 +164,8 @@ class ExtractedPage(Adw.NavigationPage):
         # Check handler is not None AND service is valid before disconnecting
         if self._tts_stop_handler_id is not None:
             tts_service_instance = get_tts_service()
-            try:
+            with contextlib.suppress(TypeError, RuntimeError, AttributeError):
+                # Handler already disconnected or service disposed
                 tts_service_instance.disconnect(self._tts_stop_handler_id)
-            except (TypeError, RuntimeError, AttributeError):
-                pass  # Handler already disconnected or service disposed
             self._tts_stop_handler_id = None
         super().do_destroy()

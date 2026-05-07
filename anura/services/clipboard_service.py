@@ -112,7 +112,7 @@ class ClipboardService(GObject.GObject):
             self._clipboard_timeout_id = GLib.timeout_add_seconds(
                 self.CLIPBOARD_TIMEOUT_SECONDS,
                 self._on_clipboard_timeout,
-                None
+                None,
             )
 
         logger.debug(f"Anura Clipboard: Text copied: {text[:50]}...")
@@ -177,7 +177,7 @@ class ClipboardService(GObject.GObject):
             self._clipboard_timeout_id = GLib.timeout_add_seconds(
                 self.CLIPBOARD_TIMEOUT_SECONDS,
                 self._on_clipboard_timeout,
-                cancellable
+                cancellable,
             )
 
         self.clipboard.read_texture_async(cancellable=cancellable, callback=self._on_read_texture)
@@ -205,7 +205,7 @@ class ClipboardService(GObject.GObject):
             self._clipboard_timeout_id = GLib.timeout_add_seconds(
                 self.CLIPBOARD_TIMEOUT_SECONDS,
                 self._on_clipboard_timeout,
-                cancellable
+                cancellable,
             )
 
         self.clipboard.read_text_async(cancellable=cancellable, callback=self._on_text_read)

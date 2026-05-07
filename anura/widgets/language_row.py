@@ -2,6 +2,7 @@
 #
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
+import contextlib
 
 from gi.repository import GLib, GObject, Gtk
 
@@ -40,6 +41,7 @@ class LanguageRow(Gtk.Overlay):
 
     @GObject.Property(type=GObject.TYPE_PYOBJECT)
     def item(self) -> LanguageItem | None:
+        """Get the language item."""
         return self._item
 
     @item.setter
@@ -129,25 +131,19 @@ class LanguageRow(Gtk.Overlay):
         """Clean up signal handlers and pending idle_add callbacks to prevent memory leaks."""
         # Remove pending idle_add callbacks
         for idle_id in self._idle_ids:
-            try:
+            with contextlib.suppress(TypeError, RuntimeError):
                 GLib.source_remove(idle_id)
-            except (TypeError, RuntimeError):
-                pass
         self._idle_ids.clear()
 
         # Disconnect signal handlers
         if self._downloading_handler_id is not None:
-            try:
+            with contextlib.suppress(TypeError, RuntimeError):
                 language_manager.disconnect(self._downloading_handler_id)
-            except (TypeError, RuntimeError):
-                pass
             self._downloading_handler_id = None
 
         if self._downloaded_handler_id is not None:
-            try:
+            with contextlib.suppress(TypeError, RuntimeError):
                 language_manager.disconnect(self._downloaded_handler_id)
-            except (TypeError, RuntimeError):
-                pass
             self._downloaded_handler_id = None
 
         super().do_destroy()

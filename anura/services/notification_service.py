@@ -135,7 +135,7 @@ class NotificationService:
                 "body": GLib.Variant("s", body),
                 "priority": GLib.Variant("s", priority),
                 # Icon: (sv) tuple with themed icon name and string array
-                "icon": GLib.Variant("(sv)", ("themed", GLib.Variant("as", [self.app_id])))
+                "icon": GLib.Variant("(sv)", ("themed", GLib.Variant("as", [self.app_id]))),
             })
 
             # Generate unique ID for this notification (timestamp + monotonic counter)
@@ -148,7 +148,7 @@ class NotificationService:
                 Xdp.NotificationFlags.NONE,
                 None,  # cancellable
                 None,  # callback
-                None   # data
+                None,  # data
             )
             logger.debug(f"NotificationService: Portal notification sent: {title}")
             return True

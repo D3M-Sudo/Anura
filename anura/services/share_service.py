@@ -152,7 +152,7 @@ class ShareService(GObject.GObject):
             ("mastodon.social", "Mastodon Official"),
             ("mastodon.online", "Mastodon Online"),
             ("fosstodon.org", "Fosstodon - Open Source"),
-            ("hachyderm.io", "Hachyderm - Tech Community")
+            ("hachyderm.io", "Hachyderm - Tech Community"),
         ]
 
         # Create selection dialog

@@ -31,7 +31,7 @@ class GObjectWorker:
         command: Callable,
         args: tuple = (),
         callback: Callable | None = None,
-        errorback: Callable | None = None
+        errorback: Callable | None = None,
     ) -> None:
         """
         Executes a command in a separate thread.

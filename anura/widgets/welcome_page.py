@@ -30,11 +30,11 @@ class WelcomePage(Adw.NavigationPage):
 
         self.settings = settings
 
-        self._language_changed_handler_id = self.language_popover.connect('language-changed', self._on_language_changed)
+        self._language_changed_handler_id = self.language_popover.connect("language-changed", self._on_language_changed)
 
         current_lang_code = self.settings.get_string("active-language")
         self.lang_combo.set_label(
-            language_manager.get_language(current_lang_code)
+            language_manager.get_language(current_lang_code),
         )
 
     def _on_language_changed(self, _: LanguagePopover, language: LanguageItem) -> None:

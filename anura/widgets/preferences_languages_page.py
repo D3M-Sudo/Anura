@@ -17,7 +17,7 @@ from anura.widgets.language_row import LanguageRow
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/preferences_languages.ui")
 class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
-    __gtype_name__ = 'PreferencesLanguagesPage'
+    __gtype_name__ = "PreferencesLanguagesPage"
 
     banner: Adw.Banner = Gtk.Template.Child()
     views: Gtk.Stack = Gtk.Template.Child()
@@ -41,14 +41,14 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
                 self.list_store.append(item)
 
         # Signals for dynamic model updates (tracked for automatic cleanup)
-        self.connect_tracked(language_manager, 'added', self.on_language_added)
-        self.connect_tracked(language_manager, 'downloaded', self.on_language_added)
-        self.connect_tracked(language_manager, 'removed', self.on_language_removed)
+        self.connect_tracked(language_manager, "added", self.on_language_added)
+        self.connect_tracked(language_manager, "downloaded", self.on_language_added)
+        self.connect_tracked(language_manager, "removed", self.on_language_removed)
 
         # UI signal connections (tracked for automatic cleanup)
-        self.connect_tracked(self.language_search_entry, 'search-changed', self.on_language_search)
-        self.connect_tracked(self.language_search_entry, 'stop-search', self.on_language_search_stop)
-        self.connect_tracked(self.search_bar, 'notify::search-mode-enabled', self.on_search_mode_enabled)
+        self.connect_tracked(self.language_search_entry, "search-changed", self.on_language_search)
+        self.connect_tracked(self.language_search_entry, "stop-search", self.on_language_search_stop)
+        self.connect_tracked(self.search_bar, "notify::search-mode-enabled", self.on_search_mode_enabled)
 
         self.load_languages()
         self.activate_filter()
@@ -103,6 +103,7 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
             self.search_bar.set_search_mode(False)
 
     def load_languages(self) -> None:
+        """Load all available languages into the list store."""
         self.list_store.remove_all()
         existing_codes = set()
         for lang_code in language_manager.get_available_codes():
@@ -113,36 +114,44 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
 
     @property
     def is_search_mode(self) -> bool:
+        """Check if search mode is currently active."""
         return self.search_bar.get_search_mode()
 
     def activate_filter(self, search_text: str | None = None) -> None:
+        """Activate search filter with the given text."""
         _filter = Gtk.CustomFilter.new(PreferencesLanguagesPage.filter_func, search_text)
         self.model.set_filter(_filter)
         self.toggle_empty_state(not self.model.get_n_items())
 
     def deactivate_filter(self) -> None:
+        """Deactivate search filter and show all items."""
         self.model.set_filter(None)
 
     def on_language_search(self, entry: Gtk.SearchEntry, _user_data: object = None) -> None:
+        """Handle language search text changes."""
         self.activate_filter(entry.get_text())
 
     def on_language_search_stop(self, entry: Gtk.SearchEntry) -> None:
-        entry.set_text('')
+        """Handle language search stop event."""
+        entry.set_text("")
         self.search_bar.set_search_mode(False)
         self.revealer.set_reveal_child(True)
         self.activate_filter()
 
     def on_search_mode_enabled(self, _searchbar: object, _enabled: bool) -> None:
+        """Handle search mode enabled/disabled event."""
         if not self.search_bar.get_search_mode():
             self.activate_filter()
 
     @staticmethod
     def filter_func(item: object, user_data: str) -> bool:
+        """Filter function for language search."""
         if user_data:
             return user_data.lower() in item.title.lower()
         return item.code in language_manager.get_downloaded_codes()
 
     def on_language_added(self, _sender: object, code: str | None = None) -> None:
+        """Handle language added event."""
         # Idempotent: only add if not already in the list
         if code is not None:
             existing_codes = {item.code for item in self.list_store}
@@ -154,11 +163,13 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
             self.activate_filter()
 
     def on_language_removed(self, _sender: object, _code: str) -> None:
+        """Handle language removed event."""
         if not self.search_bar.get_search_mode():
             self.activate_filter()
 
     def toggle_empty_state(self, is_empty: bool = False) -> None:
-        state = 'empty_state' if is_empty else 'languages_state'
+        """Toggle between empty and languages state views."""
+        state = "empty_state" if is_empty else "languages_state"
         self.views.set_visible_child_name(state)
 
     def do_destroy(self) -> None:

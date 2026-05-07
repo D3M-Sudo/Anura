@@ -13,7 +13,7 @@ from anura.types.language_item import LanguageItem
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/language_popover_row.ui")
 class LanguagePopoverRow(Gtk.ListBoxRow):
-    __gtype_name__ = 'LanguagePopoverRow'
+    __gtype_name__ = "LanguagePopoverRow"
 
     lang: LanguageItem
 
@@ -27,9 +27,9 @@ class LanguagePopoverRow(Gtk.ListBoxRow):
         self.title.set_label(self.lang.title)
 
         self.lang.bind_property(
-            'selected',
+            "selected",
             self.selection,
-            'visible',
-            GObject.BindingFlags.SYNC_CREATE
+            "visible",
+            GObject.BindingFlags.SYNC_CREATE,
         )
 

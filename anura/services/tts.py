@@ -271,7 +271,7 @@ class TTSService(GObject.GObject):
                     else:
                         logger.warning(
                             f"Anura TTSService: Invalid handler ID type: "
-                            f"{type(self._bus_message_handler_id)}"
+                            f"{type(self._bus_message_handler_id)}",
                         )
                 except (TypeError, RuntimeError):
                     pass  # Already disconnected or invalid

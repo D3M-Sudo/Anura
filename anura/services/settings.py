@@ -34,7 +34,7 @@ class Settings(Gio.Settings):
         else:
             logger.error(
                 f"GSettings schema '{APP_ID}' not found. "
-                "Make sure glib-compile-schemas has been run."
+                "Make sure glib-compile-schemas has been run.",
             )
             raise RuntimeError(f"GSettings schema '{APP_ID}' not found.")
 

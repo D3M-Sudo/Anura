@@ -47,6 +47,7 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
         self.bind_model()
 
     def bind_model(self) -> None:
+        """Bind the language model to the filter."""
         self.filter = Gtk.CustomFilter()
         self.filter.set_filter_func(self._on_language_filter)
         self.filter_list = Gtk.FilterListModel.new(self.lang_list, self.filter)
@@ -54,6 +55,7 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
 
     @GObject.Property(type=str)
     def active_language(self) -> str:
+        """Get the currently active language."""
         return self._active_language
 
     @active_language.setter
@@ -106,14 +108,15 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
 
     @Gtk.Template.Callback()
     def _on_popover_closed(self, *_args: object) -> None:
-        self.entry.set_text('')
+        self.entry.set_text("")
 
     @Gtk.Template.Callback()
     def _on_add_clicked(self, _: Gtk.Widget) -> None:
-        self.activate_action('app.preferences')
+        self.activate_action("app.preferences")
         self.popdown()
 
     def populate_model(self) -> None:
+        """Populate the language model with available languages."""
         try:
             self.lang_list.remove_all()
 
@@ -133,7 +136,7 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
                 new_item = language_manager.get_language_item("eng")
                 if new_item and self.active_language != "eng":  # emit only if language actually changed
                     self.active_language = "eng"
-                    self.settings.set_string('active-language', 'eng')
+                    self.settings.set_string("active-language", "eng")
                     self.emit("language-changed", new_item)
 
         except Exception as e:
@@ -142,10 +145,11 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
             self.toggle_empty_state(True)
 
     def toggle_empty_state(self, is_empty: bool = False) -> None:
+        """Toggle between empty and languages state views."""
         if is_empty:
-            self.views.set_visible_child_name('empty_page')
+            self.views.set_visible_child_name("empty_page")
         else:
-            self.views.set_visible_child_name('languages_page')
+            self.views.set_visible_child_name("languages_page")
 
     def do_destroy(self) -> None:
         """Clean up all tracked signal handlers to prevent memory leaks."""

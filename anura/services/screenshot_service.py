@@ -96,7 +96,7 @@ class ScreenshotService(GObject.GObject):
                 logger.error(f"Anura Screenshot: Portal error details: {error}")
             except GLib.Error as e:
                 logger.warning(
-                    f"Anura Screenshot: Fallimento durante la propagazione dell'errore Portal (Flatpak/D-Bus): {e}"
+                    f"Anura Screenshot: Fallimento durante la propagazione dell'errore Portal (Flatpak/D-Bus): {e}",
                 )
             except AttributeError as e:
                 logger.warning(f"Anura Screenshot: Portal result missing propagate_error method: {e}")

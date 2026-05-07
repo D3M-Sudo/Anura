@@ -11,7 +11,7 @@ from anura.types.language_item import LanguageItem
 
 
 class ListMenuRow(Gtk.Label):
-    __gtype_name__ = 'ListMenuRow'
+    __gtype_name__ = "ListMenuRow"
 
     _item: LanguageItem | None
 
@@ -22,6 +22,7 @@ class ListMenuRow(Gtk.Label):
 
     @GObject.Property(type=GObject.TYPE_PYOBJECT)
     def item(self) -> LanguageItem:
+        """Get the language item."""
         return self._item
 
     @item.setter

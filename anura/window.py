@@ -1,3 +1,4 @@
+import contextlib
 from gettext import gettext as _
 from io import BytesIO
 from mimetypes import guess_type
@@ -7,12 +8,12 @@ import re
 import gi
 
 # Set GTK version requirements before imports
-gi.require_version('Adw', '1')
-gi.require_version('Gdk', '4.0')
-gi.require_version('Gio', '2.0')
-gi.require_version('GLib', '2.0')
-gi.require_version('GObject', '2.0')
-gi.require_version('Gtk', '4.0')
+gi.require_version("Adw", "1")
+gi.require_version("Gdk", "4.0")
+gi.require_version("Gio", "2.0")
+gi.require_version("GLib", "2.0")
+gi.require_version("GObject", "2.0")
+gi.require_version("Gtk", "4.0")
 
 from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk  # noqa: E402
 from loguru import logger  # noqa: E402
@@ -81,7 +82,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             clipboard_service_instance = get_clipboard_service()
             self._handler_clipboard = clipboard_service_instance.connect(
                 "paste_from_clipboard",
-                self._on_paste_from_clipboard_texture
+                self._on_paste_from_clipboard_texture,
             )
         except RuntimeError as e:
             logger.warning(f"Clipboard service unavailable: {e}")
@@ -102,6 +103,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         return self.settings.get_string("active-language") or language_manager_instance.active_language.code
 
     def get_screenshot(self, copy: bool = False) -> None:
+        """Capture screenshot and process it for OCR."""
         self.extracted_page.swap_controls(True)
         lang = self.get_language()
         self.hide()
@@ -111,7 +113,7 @@ class AnuraWindow(Adw.ApplicationWindow):
 
         try:
             self.backend.capture(lang, copy)
-        except Exception as e:
+        except (GLib.Error, RuntimeError, OSError) as e:
             # Clean up timeout and restore window on error
             if self._screenshot_timeout_id is not None:
                 GLib.source_remove(self._screenshot_timeout_id)
@@ -121,7 +123,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             self.show_toast(_("Failed to capture screenshot"))
 
     def _on_screenshot_timeout(self) -> bool:
-        """Callback triggered when screenshot portal times out."""
+        """Handle screenshot portal timeout."""
         self._screenshot_timeout_id = None
         self.present()
         self.show_toast(_("Screenshot service did not respond."))
@@ -129,6 +131,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         return False  # Don't repeat timeout
 
     def on_shot_done(self, _sender: GObject.GObject, text: str, copy: bool) -> None:
+        """Handle successful screenshot capture and OCR processing."""
         # Cancel safety timeout if screenshot succeeded
         if self._screenshot_timeout_id is not None:
             GLib.source_remove(self._screenshot_timeout_id)
@@ -159,10 +162,11 @@ class AnuraWindow(Adw.ApplicationWindow):
 
             self.split_view.set_show_content(True)
 
-        except Exception as e:
+        except (GLib.Error, RuntimeError, AttributeError) as e:
             logger.error(f"Anura UI Error: {e}")
 
     def on_shot_error(self, _sender: GObject.GObject, message: str) -> None:
+        """Handle screenshot capture errors."""
         # Cancel safety timeout if screenshot failed
         if self._screenshot_timeout_id is not None:
             GLib.source_remove(self._screenshot_timeout_id)
@@ -174,6 +178,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             self.show_toast(message)
 
     def open_image(self) -> None:
+        """Open file dialog to select an image for OCR processing."""
         dialog = Gtk.FileDialog()
         dialog.set_title(_("Choose an image for extraction"))
 
@@ -200,8 +205,9 @@ class AnuraWindow(Adw.ApplicationWindow):
             if file_size > self.MAX_IMAGE_SIZE_BYTES:
                 self.show_toast(
                     _("Image too large: {size}MB (max {max}MB)").format(
-                        size=round(file_size / (1024 * 1024), 1), max=self.MAX_IMAGE_SIZE_MB
-                    )
+                        size=round(file_size / (1024 * 1024), 1),
+                        max=self.MAX_IMAGE_SIZE_MB,
+                    ),
                 )
                 return
 
@@ -226,7 +232,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             if file:
                 self.welcome_page.spinner.set_visible(True)
                 file.load_contents_async(None, self._on_file_contents_loaded)
-        except Exception as e:
+        except (GLib.Error, RuntimeError, OSError) as e:
             logger.debug(f"File selection cancelled or failed: {e}")
 
     def _on_file_contents_loaded(self, gfile: Gio.File, result: Gio.AsyncResult) -> None:
@@ -238,8 +244,9 @@ class AnuraWindow(Adw.ApplicationWindow):
                 if file_size > self.MAX_IMAGE_SIZE_BYTES:
                     self.show_toast(
                         _("Image too large: {size}MB (max {max}MB)").format(
-                            size=round(file_size / (1024 * 1024), 1), max=self.MAX_IMAGE_SIZE_MB
-                        )
+                            size=round(file_size / (1024 * 1024), 1),
+                            max=self.MAX_IMAGE_SIZE_MB,
+                        ),
                     )
                     return
 
@@ -250,7 +257,10 @@ class AnuraWindow(Adw.ApplicationWindow):
                     # Try to create a pixbuf to validate the image
                     GdkPixbuf.Pixbuf.new_from_stream_at_scale(
                         Gio.MemoryInputStream.new_from_bytes(GLib.Bytes.new(contents)),
-                        -1, -1, False, None
+                        -1,
+                        -1,
+                        False,
+                        None,
                     )
                 except GLib.Error as e:
                     if e.matches(GdkPixbuf.pixbuf_error_quark(), GdkPixbuf.PixbufError.CORRUPT_IMAGE):
@@ -265,18 +275,19 @@ class AnuraWindow(Adw.ApplicationWindow):
                         logger.error(f"Anura: Image validation error: {e.message}")
                         self.show_toast(_("Failed to validate image file"))
                         return
-                except Exception as e:
+                except (ValueError, RuntimeError) as e:
                     logger.error(f"Anura: Unexpected image validation error: {e}")
                     self.show_toast(_("Failed to validate image file"))
                     return
 
                 stream = BytesIO(contents)
                 GObjectWorker.call(self.backend.decode_image, (self.get_language(), stream))
-        except Exception as e:
+        except (OSError, ValueError, RuntimeError) as e:
             logger.error(f"Failed to load file contents: {e}")
             self.show_toast(_("Failed to load image file"))
 
     def on_dnd_drop(self, __target: Gtk.DropTarget, value: Gdk.FileList, __x: int, __y: int) -> bool:
+        """Handle drag-and-drop file operations."""
         files = value.get_files()
         if not files:
             return False
@@ -308,7 +319,7 @@ class AnuraWindow(Adw.ApplicationWindow):
                 return
 
             item.load_contents_async(None, self._on_dnd_file_contents_loaded)
-        except Exception as e:
+        except (GLib.Error, OSError, RuntimeError) as e:
             logger.error(f"DnD query_info failed: {e}")
             self.welcome_page.spinner.set_visible(False)
 
@@ -324,14 +335,15 @@ class AnuraWindow(Adw.ApplicationWindow):
             if file_size > self.MAX_IMAGE_SIZE_BYTES:
                 self.show_toast(
                     _("Image too large: {size}MB (max {max}MB)").format(
-                        size=round(file_size / (1024 * 1024), 1), max=self.MAX_IMAGE_SIZE_MB
-                    )
+                        size=round(file_size / (1024 * 1024), 1),
+                        max=self.MAX_IMAGE_SIZE_MB,
+                    ),
                 )
                 return
 
             stream = BytesIO(contents)
             GObjectWorker.call(self.backend.decode_image, (self.get_language(), stream))
-        except Exception as e:
+        except (OSError, ValueError, RuntimeError) as e:
             logger.error(f"Failed to load dropped file: {e}")
             self.show_toast(_("Failed to load dropped file"))
 
@@ -360,6 +372,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         GObjectWorker.call(self.backend.decode_image, (self.get_language(), png_bytes))
 
     def do_close_request(self) -> bool:
+        """Handle window close request and save window state."""
         width = self.get_width()
         height = self.get_height()
         self.settings.set_int("window-width", width)
@@ -380,37 +393,31 @@ class AnuraWindow(Adw.ApplicationWindow):
         # Disconnect backend signal handlers
         if self.backend:
             if self._handler_decoded:
-                try:
+                with contextlib.suppress(TypeError, RuntimeError):
+                    # Handler already disconnected or object disposed
                     self.backend.disconnect(self._handler_decoded)
-                except (TypeError, RuntimeError):
-                    pass  # Handler already disconnected or object disposed
                 self._handler_decoded = None
             if self._handler_error:
-                try:
+                with contextlib.suppress(TypeError, RuntimeError):
                     self.backend.disconnect(self._handler_error)
-                except (TypeError, RuntimeError):
-                    pass
                 self._handler_error = None
 
         # Disconnect widget signal handlers
         if self._handler_go_back:
-            try:
+            with contextlib.suppress(TypeError, RuntimeError):
                 self.extracted_page.disconnect(self._handler_go_back)
-            except (TypeError, RuntimeError):
-                pass
             self._handler_go_back = None
         if self._handler_clipboard:
-            try:
+            with contextlib.suppress(TypeError, RuntimeError):
                 clipboard_service_instance = get_clipboard_service()
                 clipboard_service_instance.disconnect(self._handler_clipboard)
-            except (TypeError, RuntimeError):
-                pass
             self._handler_clipboard = None
 
         # Chain up to parent class
         super().do_destroy()
 
     def show_preferences(self) -> None:
+        """Show the preferences dialog for application settings."""
         dialog = PreferencesDialog()
 
         # Get service instances
@@ -421,14 +428,15 @@ class AnuraWindow(Adw.ApplicationWindow):
         # Connect to language manager signals
         language_manager_instance.connect(
             "downloaded",
-            lambda _mgr, code: GLib.idle_add(dialog.on_language_downloaded, code)
+            lambda _mgr, code: GLib.idle_add(dialog.on_language_downloaded, code),
         )
         language_manager_instance.connect(
             "download-failed",
-            lambda _mgr, code: GLib.idle_add(dialog.on_language_download_failed, code)
+            lambda _mgr, code: GLib.idle_add(dialog.on_language_download_failed, code),
         )
 
     def show_shortcuts(self) -> None:
+        """Show the keyboard shortcuts window."""
         try:
             builder = Gtk.Builder.new_from_resource(f"{RESOURCE_PREFIX}/shortcuts.ui")
             shortcuts_window = builder.get_object("shortcuts")
@@ -438,19 +446,20 @@ class AnuraWindow(Adw.ApplicationWindow):
                 shortcuts_window.present()
             else:
                 logger.error("Failed to locate 'shortcuts' object in the UI resource.")
-        except Exception as e:
+        except (GLib.Error, OSError, RuntimeError) as e:
             logger.error(f"An error occurred while loading shortcuts: {e}")
 
     def show_welcome_page(self, *_args: object) -> None:
+        """Show the welcome page and hide the extracted content."""
         self.split_view.set_show_content(False)
         self.extracted_page._on_listen_stop()
 
     def on_listen(self) -> None:
-        """Starts TTS playback for the currently extracted text."""
+        """Start TTS playback for the currently extracted text."""
         self.extracted_page.listen()
 
     def on_listen_cancel(self) -> None:
-        """Stops any active TTS playback."""
+        """Stop any active TTS playback."""
         self.extracted_page._on_listen_stop()
 
     def _on_share(self, _action: Gio.SimpleAction, variant: GLib.Variant) -> None:
@@ -463,6 +472,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         self.share_service.share(provider, text)
 
     def show_toast(self, title: str, priority: Adw.ToastPriority = Adw.ToastPriority.NORMAL) -> None:
+        """Show a toast notification to the user."""
         self.toast_overlay.add_toast(Adw.Toast(title=title, priority=priority))
 
     def _show_url_toast(self, url: str) -> None:
@@ -491,8 +501,8 @@ class AnuraWindow(Adw.ApplicationWindow):
     MAX_URL_LENGTH = 2048
 
     def extract_url_from_text(self, text: str) -> str | None:
-        """
-        Extract the first valid URL from OCR text using regex.
+        """Extract the first valid URL from OCR text using regex.
+
         Returns the URL if found and valid, None otherwise.
         """
         # Null check to prevent errors with None input
@@ -503,7 +513,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         url_pattern = re.compile(r'https?://[^\s<>"{}|\\^`\[\]]*')
         match = url_pattern.search(text)
         if match:
-            url = match.group(0).rstrip('.,;:)')
+            url = match.group(0).rstrip(".,;:")
             # Length check to prevent issues with extremely long URLs
             if len(url) > self.MAX_URL_LENGTH:
                 logger.warning(f"Anura: URL too long ({len(url)} chars), ignoring.")

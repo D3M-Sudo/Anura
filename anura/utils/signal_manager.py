@@ -43,7 +43,10 @@ class SignalManagerMixin:
         self._signal_connections: dict[Any, list[int]] = {}
 
     def connect_tracked(
-        self, emitter: GObject.Object, signal_name: str, callback: Callable
+        self,
+        emitter: GObject.Object,
+        signal_name: str,
+        callback: Callable,
     ) -> int:
         """
         Connect to a signal and track the handler ID for automatic cleanup.
@@ -64,7 +67,7 @@ class SignalManagerMixin:
 
         logger.debug(
             f"SignalManagerMixin: Connected {signal_name} on {type(emitter).__name__}, "
-            f"handler_id={handler_id}"
+            f"handler_id={handler_id}",
         )
         return handler_id
 
@@ -88,14 +91,14 @@ class SignalManagerMixin:
                 except (TypeError, RuntimeError, AttributeError) as e:
                     logger.debug(
                         f"SignalManagerMixin: Could not disconnect handler {handler_id} "
-                        f"from {type(emitter).__name__}: {e}"
+                        f"from {type(emitter).__name__}: {e}",
                     )
                     failed_count += 1
 
         if disconnected_count > 0 or failed_count > 0:
             logger.debug(
                 f"SignalManagerMixin: Disconnected {disconnected_count} signals "
-                f"({failed_count} failed)"
+                f"({failed_count} failed)",
             )
 
         self._signal_connections.clear()

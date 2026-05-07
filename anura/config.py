@@ -15,7 +15,7 @@ RESOURCE_PREFIX = "/com/github/d3msudo/anura"
 # Language code validation pattern (ISO 639-2, 2-18 alphanumeric chars with plus and underscore)
 # Plus character allows multi-language OCR codes like "eng+ita"
 # Underscore allowed for Tesseract codes like "chi_sim" (Chinese Simplified)
-LANG_CODE_PATTERN = r'^[a-zA-Z0-9+_]{2,18}$'
+LANG_CODE_PATTERN = r"^[a-zA-Z0-9+_]{2,18}$"
 
 # XDG Base Directory specification compliance
 XDG_DATA_HOME = os.getenv("XDG_DATA_HOME", os.path.expanduser("~/.local/share"))
