@@ -360,7 +360,7 @@ class AnuraApplication(Adw.Application):
             version=self.version,
             copyright=" 2023 D3M-Sudo & Anura Contributors",
             website="https://github.com/D3M-Sudo/Anura",
-            license_type=Gtk.License.MIT,
+            license_type=Gtk.License.MIT_X11,
             developers=["Andrey Maksimov", "D3M-Sudo"],
             designers=["Andrey Maksimov"],
             release_notes=self._get_release_notes(),
@@ -437,7 +437,7 @@ class AnuraApplication(Adw.Application):
         if window:
             window.open_image()
 
-    def on_paste_from_clipboard(self, _action: Gio.SimpleAction) -> None:
+    def on_paste_from_clipboard(self, _action: Gio.SimpleAction, _param: object) -> None:
         """Read image from clipboard and perform OCR."""
         clipboard_service_instance = get_clipboard_service()
         clipboard_service_instance.read_texture()

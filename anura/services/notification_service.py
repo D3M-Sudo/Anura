@@ -141,18 +141,14 @@ class NotificationService:
             # Generate unique ID for this notification (timestamp + monotonic counter)
             notification_id = f"{self.app_id}-{int(time.time())}-{next(self._notification_id_counter)}"
 
-            # Show notification via portal using simplified interface expected by tests
-            # Tests expect title and body as keyword arguments
+            # Show notification via portal using correct XDG Portal API
             self._portal.add_notification(
-                title=title,
-                body=body,
-                priority=priority,
-                id=notification_id,
-                notification=notification,
-                flags=Xdp.NotificationFlags.NONE,
-                cancellable=None,  # cancellable
-                callback=None,  # callback
-                data=None   # data
+                notification_id,
+                notification,
+                Xdp.NotificationFlags.NONE,
+                None,  # cancellable
+                None,  # callback
+                None   # data
             )
             logger.debug(f"NotificationService: Portal notification sent: {title}")
             return True
@@ -164,7 +160,7 @@ class NotificationService:
     def _show_libnotify_notification(self, title: str, body: str) -> bool:
         """Show notification via traditional libnotify."""
         try:
-            notification = Notify.Notification(title, body)
+            notification = Notify.Notification.new(title, body, self.app_id)
             notification.show()
             logger.debug(f"NotificationService: libnotify notification sent: {title}")
             return True

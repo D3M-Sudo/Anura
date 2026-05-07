@@ -90,10 +90,20 @@ class ScreenshotService(GObject.GObject):
         """Callback triggered when the portal finishes the screenshot request."""
         if res.had_error():
             logger.error("Anura Screenshot: Portal failed to provide a screenshot.")
+            # Try to get more detailed error information
+            try:
+                error = res.propagate_error()
+                logger.error(f"Anura Screenshot: Portal error details: {error}")
+            except Exception:
+                pass
             return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))
 
         lang, copy = user_data
-        uri = self.portal.take_screenshot_finish(res)
+        try:
+            uri = self.portal.take_screenshot_finish(res)
+        except Exception as e:
+            logger.error(f"Anura Screenshot: Exception getting screenshot URI: {e}")
+            return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))
 
         if not uri:
             logger.warning("Anura Screenshot: Portal returned empty URI.")
