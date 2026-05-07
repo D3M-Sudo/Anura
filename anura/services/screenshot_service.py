@@ -28,6 +28,23 @@ from pyzbar.pyzbar import decode  # noqa: E402
 from anura.config import LANG_CODE_PATTERN, get_tesseract_config  # noqa: E402
 
 
+def _is_flatpak_environment() -> bool:
+    """Detect if running in Flatpak sandbox."""
+    return os.path.exists('/.flatpak-info')
+
+
+def _configure_tesseract_path() -> None:
+    """Configure Tesseract command path for Flatpak environment."""
+    if _is_flatpak_environment() and os.path.exists('/app/bin/tesseract'):
+        # Force Tesseract to use Flatpak path
+        os.environ['TESSERACT_CMD'] = '/app/bin/tesseract'
+        logger.info("Anura OCR: Using Flatpak Tesseract at /app/bin/tesseract")
+    else:
+        # Use system Tesseract from PATH
+        os.environ.pop('TESSERACT_CMD', None)
+        logger.debug("Anura OCR: Using system Tesseract from PATH")
+
+
 class ScreenshotService(GObject.GObject):
     """
     Service responsible for capturing screenshots via XDG Portals
@@ -49,6 +66,9 @@ class ScreenshotService(GObject.GObject):
         with self._cancellable_lock:
             self.cancelable: Gio.Cancellable = Gio.Cancellable.new()
         self.portal = Xdp.Portal()
+
+        # Configure Tesseract path for Flatpak environment
+        _configure_tesseract_path()
 
     def capture(self, lang: str, copy: bool = False) -> None:
         """Requests a screenshot from the system portal."""

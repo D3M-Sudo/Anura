@@ -102,7 +102,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         return self.settings.get_string("active-language") or language_manager_instance.active_language.code
 
     def get_screenshot(self, copy: bool = False) -> None:
-        self.extracted_page.listen_cancel()
+        self.extracted_page.swap_controls(True)
         lang = self.get_language()
         self.hide()
 
