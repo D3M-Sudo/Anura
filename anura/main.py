@@ -200,7 +200,7 @@ class AnuraApplication(Adw.Application):
         self.create_action("paste_from_clipboard", self.on_paste_from_clipboard, ["<primary>v"])
         self.create_action("listen", self.on_listen, ["<primary>l"])
         self.create_action("listen_cancel", self.on_listen_cancel, ["<primary><shift>l"])
-        self.create_action("shortcuts", self.on_shortcuts, ["<primary>question"])
+        self.create_action("shortcuts", self.on_shortcuts, ["<primary>question", "<primary>slash"])
         self.create_action("quit", lambda *_: self.quit(), ["<primary>q", "<primary>w"])
         self.create_action("preferences", self.on_preferences, ["<primary>comma"])
         self.create_action("about", self.on_about)
@@ -437,7 +437,7 @@ class AnuraApplication(Adw.Application):
         if window:
             window.open_image()
 
-    def on_paste_from_clipboard(self, _action: Gio.SimpleAction, _param: object) -> None:
+    def on_paste_from_clipboard(self, _action: Gio.SimpleAction) -> None:
         """Read image from clipboard and perform OCR."""
         clipboard_service_instance = get_clipboard_service()
         clipboard_service_instance.read_texture()
@@ -493,8 +493,10 @@ class AnuraApplication(Adw.Application):
         action = Gio.SimpleAction.new(name, None)
         action.connect("activate", callback)
         self.add_action(action)
+        logger.debug(f"Anura: Registered action 'app.{name}'")
         if shortcuts:
             self.set_accels_for_action(f"app.{name}", shortcuts)
+            logger.debug(f"Anura: Set accelerators for 'app.{name}': {shortcuts}")
 
 
 def main(version: str) -> int:
