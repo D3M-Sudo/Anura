@@ -67,7 +67,7 @@ jobs:
           flatpak-builder --show-manifest flatpak/com.github.d3msudo.anura.json > /dev/null
           echo "✓ Manifest validation passed"
 
-      # 2. BUILD (senza test unitari - il progetto non ha pytest)
+      # 2. BUILD (con test unitari pytest eseguiti nel step precedente)
       - name: Build Anura Flatpak
         uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:

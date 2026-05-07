@@ -7,10 +7,44 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- SignalManagerMixin for centralized signal tracking and automatic cleanup to prevent memory leaks
+- ThreadSafeSingleton class with double-checked locking pattern for thread-safe service initialization
+- Thread-safe GObjectWorker utility for background operations with proper GLib.idle_add integration
+- cleanup_orphaned_resources() function for automatic cleanup of old TTS cache and temporary files
+- DownloadState dataclass for tracking OCR model download progress
+- LanguageItem GObject type for language list management with Gio.ListStore integration
+- Keyboard shortcuts: Ctrl+? and Ctrl+/ for displaying shortcuts window
+- Keyboard shortcut: Ctrl+V for paste from clipboard functionality
+- Automatic URL extraction from OCR text with optional auto-opening via autolinks setting
+- Screenshot safety timeout (30 seconds) to prevent window hiding on portal hang
+- Comprehensive test suite with 10 new test files covering core services and utilities
+- AGENTS.md documentation for AI assistant integration and development guidance
+- Pure-Python share_utils module with URL validation and provider link generation
 
 ### Changed
+- Settings service moved to services/ with lazy initialization pattern for CLI-only operation
+- Share service extracted pure-Python utilities to share_utils.py for better testability
+- Reddit URL encoding improved with title/body separation for short vs long texts
+- Mastodon sharing enhanced with web+mastodon:// scheme and instance selection fallback
+- Updated Python version requirement from 3.11 to 3.12 in project documentation
+- CI workflow updated to include pytest step before Flatpak build
+- pytest configuration updated with proper ignore patterns for GTK-dependent tests
+- All services now use ThreadSafeSingleton pattern for thread-safe initialization
+- Image processing now validates file size (50MB limit) and uses os.lstat() for symlink protection
+- Clipboard service enhanced with atomic cancellation and timeout management
+- Screenshot service improved with performance timing and better error handling
 
 ### Fixed
+- Fixed time.monotonic() usage in cleanup.py by replacing with time.time() for file modification checks
+- Removed OCR text logging in main.py to protect user privacy and prevent sensitive data exposure
+- Fixed empty copy=False branch in on_decoded() by adding proper notification for non-copy operations
+- Fixed test_keyboard_shortcuts.py by adding @pytest.mark.gtk markers to prevent GTK import errors
+- Updated obsolete CI comment to reflect current pytest integration
+- Fixed memory leaks through proper signal disconnection using SignalManagerMixin
+- Fixed symlink bypass vulnerability by using os.lstat() instead of os.stat() for file size validation
+- Fixed race conditions in service initialization through ThreadSafeSingleton implementation
+- Fixed clipboard timeout handling with atomic operations and proper cleanup
+- Fixed URL length validation in share service to prevent overflow attacks
 
 
 ## [0.1.4.2] - 2026-05-05

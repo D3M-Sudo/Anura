@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 class TestKeyboardShortcuts:
     """Test keyboard shortcuts setup and action registration."""
 
+    @pytest.mark.gtk
     def test_shortcuts_action_setup_method_exists(self):
         """Test that _setup_actions method contains expected shortcuts."""
         try:
@@ -30,6 +31,7 @@ class TestKeyboardShortcuts:
         except ImportError as e:
             pytest.skip(f"Cannot import main module: {e}")
 
+    @pytest.mark.gtk
     def test_shortcuts_source_code_contains_fixes(self):
         """Test that the source code contains the keyboard shortcut fixes."""
         try:
@@ -45,6 +47,7 @@ class TestKeyboardShortcuts:
         except ImportError as e:
             pytest.skip(f"Cannot import main module: {e}")
 
+    @pytest.mark.gtk
     def test_paste_action_signature_fixed(self):
         """Test that on_paste_from_clipboard has correct signature."""
         try:
@@ -86,10 +89,10 @@ class TestKeyboardShortcuts:
         assert 'Display Shortcuts (alternative)' in content, "Missing alternative shortcut description"
 
 
+@pytest.mark.gtk
 class TestShortcutsIntegration:
     """Integration tests for keyboard shortcuts (require full environment)."""
 
-    @pytest.mark.gtk
     def test_full_shortcuts_registration(self):
         """Test full shortcuts registration (requires GTK environment)."""
         try:

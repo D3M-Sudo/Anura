@@ -465,6 +465,12 @@ class AnuraApplication(Adw.Application):
                 title="Anura OCR",
                 body=_("Text extracted and copied to clipboard.")
             )
+        else:
+            # Text extracted but not copied - show notification
+            self.notification_service.show_notification(
+                title="Anura OCR",
+                body=_("Text extracted successfully.")
+            )
 
     def on_error(self, _sender: object, message: str) -> None:
         """Handle screenshot service errors, skipping cancellation messages."""
