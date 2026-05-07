@@ -138,66 +138,110 @@ class ScreenshotService(GObject.GObject):
                    - text: The extracted text or QR code content (None if failed or no text)
                    - error_message: Error description if failed, None otherwise
         """
-        # Security: Validate language code before processing (same as decode_image)
+        validation_result = self._validate_decode_inputs(lang)
+        if not validation_result[0]:
+            return validation_result
+
+        is_physical_file = self._determine_file_type(file, remove_source)
+        start_time = time.time()
+
+        try:
+            extracted, error_message = self._process_image_decode(file, lang, start_time)
+        except Exception as e:
+            extracted, error_message = self._handle_decode_exception(e)
+        finally:
+            self._cleanup_temporary_file(file, is_physical_file, remove_source)
+
+        return self._format_decode_result(extracted, error_message)
+
+    def _validate_decode_inputs(self, lang: str) -> tuple[bool, str | None, str | None]:
+        """Validate language code for OCR processing."""
         if not lang or not re.match(LANG_CODE_PATTERN, lang):
             logger.error(f"Anura: Invalid language code '{lang}' for OCR")
             return (False, "", _("Invalid language code specified."))
+        return (True, None, None)
 
-        # Rigor: Ensure source removal only for valid local file paths
-        is_physical_file = isinstance(file, str) and os.path.exists(file)
-        if not is_physical_file:
-            remove_source = False
+    def _determine_file_type(self, file: str | Image.Image | object, _remove_source: bool) -> bool:
+        """Determine if file is a physical file."""
+        return isinstance(file, str) and os.path.exists(file)
 
-        logger.debug(f"Anura OCR: Starting OCR task with language: {lang}")
-        start_time = time.time()
+    def _process_image_decode(self, file: str | Image.Image | object, lang: str, start_time: float) -> tuple[str | None, str | None]:
+        """Process image for QR code detection and OCR."""
         extracted = None
         error_message = None
-        image_size = None
 
+        with Image.open(file) as img:
+            image_size = img.size
+            logger.debug(f"Anura OCR: Processing image size: {image_size[0]}x{image_size[1]}")
+
+            # Try QR code detection first
+            extracted = self._try_qr_detection(img, start_time)
+
+            # If no QR code found, try OCR
+            if extracted is None:
+                extracted = self._try_ocr_extraction(img, lang, start_time)
+
+        return extracted, error_message
+
+    def _try_qr_detection(self, img: Image.Image, start_time: float) -> str | None:
+        """Try to detect and decode QR codes from image."""
         try:
-            # Image.open is polymorphic: handles both paths and byte streams
-            with Image.open(file) as img:
-                image_size = img.size  # (width, height)
-                logger.debug(f"Anura OCR: Processing image size: {image_size[0]}x{image_size[1]}")
+            qr_data = decode(img)
+            if len(qr_data) > 0:
+                extracted = qr_data[0].data.decode("utf-8")
+                duration = time.time() - start_time
+                logger.info(f"Anura OCR: QR code detected in {duration:.3f}s")
+                return extracted
+        except Exception as e:
+            logger.debug(f"Anura OCR: QR detection failed: {e}")
+        return None
 
-                # Step 1: QR Code detection
-                qr_data = decode(img)
+    def _try_ocr_extraction(self, img: Image.Image, lang: str, start_time: float) -> str | None:
+        """Try to extract text using Tesseract OCR."""
+        try:
+            text = pytesseract.image_to_string(img, lang=lang, config=get_tesseract_config(lang))
+            extracted = text.strip()
+            duration = time.time() - start_time
+            logger.info(f"Anura OCR: Text extraction completed in {duration:.3f}s")
+            return extracted
+        except Exception as e:
+            logger.debug(f"Anura OCR: OCR extraction failed: {e}")
+            return None
 
-                if len(qr_data) > 0:
-                    extracted = qr_data[0].data.decode("utf-8")
-                    duration = time.time() - start_time
-                    logger.info(f"Anura OCR: QR code detected in {duration:.3f}s")
+    def _handle_decode_exception(self, e: Exception) -> tuple[str | None, str | None]:
+        """Handle exceptions during image decoding."""
+        extracted = None
+        error_message = None
 
-                # Step 2: Tesseract OCR
-                else:
-                    text = pytesseract.image_to_string(img, lang=lang, config=get_tesseract_config(lang))
-                    extracted = text.strip()
-                    duration = time.time() - start_time
-                    logger.info(f"Anura OCR: Text extraction completed in {duration:.3f}s")
-
-        except OSError as e:
+        if isinstance(e, OSError):
             logger.exception(f"Anura OCR/QR File Error: {e}")
             error_message = _("Failed to read image file.")
-        except (pytesseract.TesseractError, pytesseract.TesseractNotFoundError) as e:
+        elif isinstance(e, (pytesseract.TesseractError, pytesseract.TesseractNotFoundError)):
             logger.exception(f"Anura OCR Error: Tesseract failed: {e}")
             error_message = _("OCR engine failed to process image.")
-        except (Image.DecompressionBombError, Image.UnidentifiedImageError, Exception) as e:
-            # Catch specific image/QR decoding errors (PIL, zbar) but NOT system exceptions
-            # KeyboardInterrupt and SystemExit will propagate correctly
-            if isinstance(e, (SystemExit, KeyboardInterrupt)):
-                raise
+        elif isinstance(e, (Image.DecompressionBombError, Image.UnidentifiedImageError)):
+            logger.exception(f"Anura OCR/QR Error: {type(e).__name__}: {e}")
+            error_message = _("Failed to decode data.")
+        elif isinstance(e, (SystemExit, KeyboardInterrupt)):
+            # Let system exceptions propagate
+            raise
+        else:
             logger.exception(f"Anura OCR/QR Error: {type(e).__name__}: {e}")
             error_message = _("Failed to decode data.")
 
-        finally:
-            # Cleanup: Delete temporary portal files if requested
-            if remove_source and is_physical_file:
-                try:
-                    os.unlink(file)
-                    logger.debug(f"Anura OCR: Cleaned up temporary file: {file}")
-                except (OSError, PermissionError) as e:
-                    logger.warning(f"Anura OCR: Could not delete {file}: {e}")
+        return extracted, error_message
 
+    def _cleanup_temporary_file(self, file: str | Image.Image | object, is_physical_file: bool, remove_source: bool) -> None:
+        """Clean up temporary files if requested."""
+        if remove_source and is_physical_file:
+            try:
+                os.unlink(file)
+                logger.debug(f"Anura OCR: Cleaned up temporary file: {file}")
+            except (OSError, PermissionError) as e:
+                logger.warning(f"Anura OCR: Could not delete {file}: {e}")
+
+    def _format_decode_result(self, extracted: str | None, error_message: str | None) -> tuple[bool, str | None, str | None]:
+        """Format the final decode result."""
         if extracted:
             return (True, extracted, None)
         elif error_message:

@@ -1,6 +1,7 @@
 from gettext import gettext as _
 import os
 import sys
+import threading
 
 # Suppress a11y bus warnings in headless CI environments
 if not sys.stdin.isatty():
@@ -163,22 +164,28 @@ class AnuraApplication(Adw.Application):
 
     def do_shutdown(self, *args: object, **kwargs: object) -> None:
         """Clean up resources on application shutdown."""
-        # Disconnect backend signal handlers
-        if self.backend is not None:
-            if self._backend_decoded_handler_id is not None:
-                try:
-                    self.backend.disconnect(self._backend_decoded_handler_id)
-                except (TypeError, RuntimeError):
-                    pass
-                self._backend_decoded_handler_id = None
-            if self._backend_error_handler_id is not None:
-                try:
-                    self.backend.disconnect(self._backend_error_handler_id)
-                except (TypeError, RuntimeError):
-                    pass
-                self._backend_error_handler_id = None
+        self._cleanup_backend_signals()
+        self._cleanup_notification_service()
+        self._cleanup_clipboard_service()
+        self._cleanup_tts_service()
+        Adw.Application.do_shutdown(self)
 
-        # Clean up notification service
+    def _cleanup_backend_signals(self) -> None:
+        """Clean up backend signal handlers."""
+        if self.backend is not None:
+            self._disconnect_signal_handler(self._backend_decoded_handler_id)
+            self._disconnect_signal_handler(self._backend_error_handler_id)
+
+    def _disconnect_signal_handler(self, handler_id: int | None) -> None:
+        """Safely disconnect a signal handler."""
+        if handler_id is not None:
+            try:
+                self.backend.disconnect(handler_id)
+            except (TypeError, RuntimeError):
+                pass
+
+    def _cleanup_notification_service(self) -> None:
+        """Clean up notification service."""
         if hasattr(self, '_notification_service') and self._notification_service:
             try:
                 if HAS_LIBNOTIFY:
@@ -188,22 +195,22 @@ class AnuraApplication(Adw.Application):
             except (ImportError, AttributeError, TypeError) as e:
                 logger.debug(f"Failed to uninitialize libnotify: {e}")
 
-        # Call clipboard_service cleanup (already imported at module level)
+    def _cleanup_clipboard_service(self) -> None:
+        """Clean up clipboard service."""
         try:
             clipboard_service_instance = get_clipboard_service()
             clipboard_service_instance.cancel_pending_operations()
         except (AttributeError, TypeError) as e:
             logger.debug(f"Failed to cleanup clipboard service: {e}")
 
-        # Clean up TTS service to prevent broken pipe errors
+    def _cleanup_tts_service(self) -> None:
+        """Clean up TTS service to prevent broken pipe errors."""
         try:
             from anura.services.tts import get_tts_service
             tts_service = get_tts_service()
             tts_service.cleanup()
         except (ImportError, AttributeError, TypeError) as e:
             logger.debug(f"Failed to cleanup TTS service: {e}")
-
-        Adw.Application.do_shutdown(self)
 
     def _setup_actions(self) -> None:
         self.create_action("get_screenshot", self.get_screenshot, ["<primary>g"])
@@ -228,55 +235,83 @@ class AnuraApplication(Adw.Application):
         win.present()
 
     def do_command_line(self, command_line: Gio.ApplicationCommandLine) -> int:
+        """Handle command line arguments and execute appropriate actions."""
         options = command_line.get_options_dict().end().unpack()
 
         if "extract_to_clipboard" in options:
-            logger.info("Anura: CLI Extraction triggered.")
-            self.backend.capture(self.settings.get_string("active-language"), copy=True)
-            return 0
+            return self._handle_extract_to_clipboard()
 
         if "file" in options:
-            file_path = options["file"]
-            logger.info(f"Anura: CLI file processing: {file_path}")
+            return self._handle_file_option(options["file"], "silent" in options)
 
-            # Try direct access first (for files in xdg-download)
-            try:
-                if os.path.exists(file_path) and os.access(file_path, os.R_OK):
-                    # File accessible directly
-                    if "silent" in options:
-                        return self._run_silent_mode(file_path)
-                    else:
-                        # UI mode: activate app and tell window to process the file
-                        self.activate()
-                        win = self.props.active_window
-                        if win:
-                            win.process_file(file_path)
-                        return 0
-                else:
-                    # File not accessible in sandbox
-                    if "silent" in options:
-                        logger.error(f"File not accessible in sandbox: {file_path}")
-                        logger.error("Use files from ~/Downloads or run without --silent for file picker")
-                        return 1
-                    else:
-                        # Fallback to file picker for GUI mode
-                        logger.info("File not directly accessible, opening file picker")
-                        self.activate()
-                        win = self.props.active_window
-                        if win:
-                            win.open_image()
-                        return 0
-            except (OSError, PermissionError) as e:
-                logger.error(f"Error accessing file {file_path}: {e}")
-                if "silent" in options:
-                    return 1
-                else:
-                    self.activate()
-                    win = self.props.active_window
-                    if win:
-                        win.open_image()
-                    return 0
+        return self._handle_default_mode()
 
+    def _handle_extract_to_clipboard(self) -> int:
+        """Handle extract to clipboard command line option."""
+        logger.info("Anura: CLI Extraction triggered.")
+        self.backend.capture(self.settings.get_string("active-language"), copy=True)
+        return 0
+
+    def _handle_file_option(self, file_path: str, is_silent: bool) -> int:
+        """Handle file processing command line option."""
+        logger.info(f"Anura: CLI file processing: {file_path}")
+
+        try:
+            if self._is_file_accessible(file_path):
+                return self._process_accessible_file(file_path, is_silent)
+            else:
+                return self._handle_inaccessible_file(file_path, is_silent)
+        except (OSError, PermissionError) as e:
+            return self._handle_file_access_error(file_path, e, is_silent)
+
+    def _is_file_accessible(self, file_path: str) -> bool:
+        """Check if file is accessible for reading."""
+        return os.path.exists(file_path) and os.access(file_path, os.R_OK)
+
+    def _process_accessible_file(self, file_path: str, is_silent: bool) -> int:
+        """Process an accessible file."""
+        if is_silent:
+            return self._run_silent_mode(file_path)
+        else:
+            self._activate_window_and_process_file(file_path)
+            return 0
+
+    def _handle_inaccessible_file(self, file_path: str, is_silent: bool) -> int:
+        """Handle files not accessible in sandbox."""
+        if is_silent:
+            logger.error(f"File not accessible in sandbox: {file_path}")
+            logger.error("Use files from ~/Downloads or run without --silent for file picker")
+            return 1
+        else:
+            logger.info("File not directly accessible, opening file picker")
+            self._activate_window_and_open_image()
+            return 0
+
+    def _handle_file_access_error(self, file_path: str, error: Exception, is_silent: bool) -> int:
+        """Handle file access errors."""
+        logger.error(f"Error accessing file {file_path}: {error}")
+        if is_silent:
+            return 1
+        else:
+            self._activate_window_and_open_image()
+            return 0
+
+    def _activate_window_and_process_file(self, file_path: str) -> None:
+        """Activate window and process the specified file."""
+        self.activate()
+        win = self.props.active_window
+        if win:
+            win.process_file(file_path)
+
+    def _activate_window_and_open_image(self) -> None:
+        """Activate window and open image file picker."""
+        self.activate()
+        win = self.props.active_window
+        if win:
+            win.open_image()
+
+    def _handle_default_mode(self) -> int:
+        """Handle default application mode (no specific options)."""
         self.activate()
         win = self.props.active_window
         if win:
@@ -285,10 +320,19 @@ class AnuraApplication(Adw.Application):
 
     def _run_silent_mode(self, file_path: str) -> int:
         """Run OCR in silent mode without UI, return exit code."""
-        import signal as sig
         import threading
 
         interrupted = threading.Event()
+        signal_handlers = self._setup_signal_handlers(interrupted)
+
+        try:
+            return self._execute_silent_ocr(file_path, interrupted)
+        finally:
+            self._restore_signal_handlers(signal_handlers)
+
+    def _setup_signal_handlers(self, interrupted: threading.Event) -> dict[str, object]:
+        """Setup signal handlers for clean shutdown."""
+        import signal as sig
 
         def on_signal(signum: int, frame: object) -> None:
             """Handle SIGINT/SIGTERM for clean shutdown."""
@@ -297,58 +341,69 @@ class AnuraApplication(Adw.Application):
 
         old_sigint = sig.signal(sig.SIGINT, on_signal)
         old_sigterm = sig.signal(sig.SIGTERM, on_signal)
+        return {"sigint": old_sigint, "sigterm": old_sigterm}
 
+    def _restore_signal_handlers(self, signal_handlers: dict[str, object]) -> None:
+        """Restore original signal handlers."""
+        import signal as sig
+        sig.signal(sig.SIGINT, signal_handlers["sigint"])
+        sig.signal(sig.SIGTERM, signal_handlers["sigterm"])
+
+    def _execute_silent_ocr(self, file_path: str, interrupted: threading.Event) -> int:
+        """Execute OCR in silent mode with interruption handling."""
+        # Check if interrupted before starting
+        if interrupted.is_set():
+            logger.info("Anura: Silent mode interrupted by user.")
+            return 130
+
+        success, text, error_message = self._decode_image_synchronously(file_path)
+
+        # Check if interrupted during processing
+        if interrupted.is_set():
+            logger.info("Anura: Silent mode interrupted by user.")
+            return 130
+
+        if success and text:
+            return self._handle_ocr_result(text, interrupted)
+        else:
+            logger.error(f"Anura: Silent mode failed: {error_message}")
+            return 1
+
+    def _decode_image_synchronously(self, file_path: str) -> tuple[bool, str | None, str | None]:
+        """Decode image synchronously for silent mode."""
         try:
-            # Check if interrupted before starting
-            if interrupted.is_set():
-                logger.info("Anura: Silent mode interrupted by user.")
-                return 130
-
-            # Use synchronous decode for silent mode - no signals, no main loop needed
-            success, text, error_message = self.backend.decode_image_sync(
+            return self.backend.decode_image_sync(
                 self.settings.get_string("active-language"),
                 file_path,
                 remove_source=False,
             )
-
-            # Check if interrupted during processing
-            if interrupted.is_set():
-                logger.info("Anura: Silent mode interrupted by user.")
-                return 130  # Standard exit code for SIGINT
-
-            if success and text:
-                # Double-check interrupted before copying to minimize race window
-                if not interrupted.is_set():
-                    clipboard_service_instance = get_clipboard_service()
-                    clipboard_service_instance.set(text)
-                    logger.info("Anura: OCR completed successfully in silent mode.")
-                    return 0
-                else:
-                    logger.info("Anura: Silent mode interrupted by user (post-OCR).")
-                    return 130
-            else:
-                logger.error(f"Anura: Silent mode failed: {error_message}")
-                return 1
-
         except FileNotFoundError as e:
             logger.error(f"Anura: Silent mode - file not found: {e}")
-            return 2
+            return False, None, str(e)
         except PermissionError as e:
             logger.error(f"Anura: Silent mode - permission denied: {e}")
-            return 3
+            return False, None, str(e)
         except OSError as e:
             logger.error(f"Anura: Silent mode - file system error: {e}")
-            return 4
+            return False, None, str(e)
         except ImportError as e:
             logger.error(f"Anura: Silent mode - missing dependency: {e}")
-            return 5
+            return False, None, str(e)
         except Exception as e:
             logger.error(f"Anura: Silent mode unexpected error: {e}")
-            return 1
-        finally:
-            # Restore original signal handlers
-            sig.signal(sig.SIGINT, old_sigint)
-            sig.signal(sig.SIGTERM, old_sigterm)
+            return False, None, str(e)
+
+    def _handle_ocr_result(self, text: str, interrupted: threading.Event) -> int:
+        """Handle successful OCR result in silent mode."""
+        # Double-check interrupted before copying to minimize race window
+        if not interrupted.is_set():
+            clipboard_service_instance = get_clipboard_service()
+            clipboard_service_instance.set(text)
+            logger.info("Anura: OCR completed successfully in silent mode.")
+            return 0
+        else:
+            logger.info("Anura: Silent mode interrupted by user (post-OCR).")
+            return 130
 
     def on_preferences(self, _action: object, _param: object) -> None:
         window = self.get_active_window()
