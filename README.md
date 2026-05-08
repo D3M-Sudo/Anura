@@ -1,6 +1,4 @@
-<p align="center">
-  <h1>Anura</h1>
-</p>
+<h1 align="center">Anura</h1>
 
 <p align="center">
   Jumping from pixels to text in a single leap
