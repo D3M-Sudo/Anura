@@ -1,9 +1,15 @@
-# Anura
+<p align="center">
+  <h1>Anura</h1>
+</p>
 
-Jumping from pixels to text in a single leap
+<p align="center">
+  Jumping from pixels to text in a single leap
+</p>
 
-**Intuitive text extraction for the Linux desktop.**  
-OCR · QR Decoding · Privacy-first · Native GTK4
+<p align="center">
+  <strong>Intuitive text extraction for the Linux desktop.</strong><br>
+  OCR · QR Decoding · Privacy-first · Native GTK4
+</p>
 
 <p align="center">
   <img src="data/screenshots/anura-window-dark.png" alt="Anura Screenshot" width="800" />
