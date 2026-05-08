@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: anura\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-05 20:35+0200\n"
+"POT-Creation-Date: 2026-05-09 01:31+0200\n"
 "PO-Revision-Date: 2022-08-25 04:16+0000\n"
 "Last-Translator: Ibrahim Muhammad <ebraheem010@gmail.com>\n"
 "Language-Team: Arabic <https://hosted.weblate.org/projects/anura/default/ar/"
@@ -444,19 +444,23 @@ msgstr ""
 msgid "Preferences"
 msgstr ""
 
-#: ../data/ui/extracted_page.blp:119 ../data/ui/welcome_page.blp:117
+#: ../data/ui/extracted_page.blp:120 ../data/ui/welcome_page.blp:117
 msgid "Keyboard Shortcuts"
 msgstr ""
 
-#: ../data/ui/extracted_page.blp:124 ../data/ui/welcome_page.blp:122
+#: ../data/ui/extracted_page.blp:126 ../data/ui/welcome_page.blp:122
 msgid "About Anura"
 msgstr ""
 
 #: ../data/ui/extracted_page.blp:132
+msgid "Report an Issue"
+msgstr ""
+
+#: ../data/ui/extracted_page.blp:141
 msgid "Open image"
 msgstr ""
 
-#: ../data/ui/extracted_page.blp:133
+#: ../data/ui/extracted_page.blp:142
 msgid "Paste from clipboard"
 msgstr ""
 
@@ -616,6 +620,16 @@ msgctxt "shortcut window"
 msgid "Display Shortcuts"
 msgstr ""
 
+#: ../data/ui/shortcuts.blp:60
+msgctxt "shortcut window"
+msgid "Display Shortcuts (alternative)"
+msgstr ""
+
+#: ../data/ui/shortcuts.blp:65
+msgctxt "shortcut window"
+msgid "Display Shortcuts (universal)"
+msgstr ""
+
 #: ../data/ui/welcome_page.blp:5 ../data/ui/window.blp:20
 msgid "Welcome"
 msgstr ""
@@ -672,703 +686,705 @@ msgstr ""
 msgid "⭐ Star on GitHub"
 msgstr ""
 
-#: ../data/ui/window.blp:26
+#: ../data/ui/window.blp:26 ../anura/services/share_service.py:252
 msgid "Extracted Text"
 msgstr ""
 
-#: ../anura/language_manager.py:40 ../anura/language_manager.py:60
+#: ../anura/language_manager.py:59 ../anura/language_manager.py:95
 msgid "English"
 msgstr ""
 
-#: ../anura/language_manager.py:52
+#: ../anura/language_manager.py:71
 msgid "Afrikaans"
 msgstr ""
 
-#: ../anura/language_manager.py:52
+#: ../anura/language_manager.py:72
 msgid "Amharic"
 msgstr ""
 
-#: ../anura/language_manager.py:52
+#: ../anura/language_manager.py:73
 msgid "Arabic"
 msgstr ""
 
-#: ../anura/language_manager.py:53
+#: ../anura/language_manager.py:74
 msgid "Assamese"
 msgstr ""
 
-#: ../anura/language_manager.py:53
+#: ../anura/language_manager.py:75
 msgid "Azerbaijani"
 msgstr ""
 
-#: ../anura/language_manager.py:53
+#: ../anura/language_manager.py:76
 msgid "Azerbaijani - Cyrillic"
 msgstr ""
 
-#: ../anura/language_manager.py:54
+#: ../anura/language_manager.py:77
 msgid "Belarusian"
 msgstr ""
 
-#: ../anura/language_manager.py:54
+#: ../anura/language_manager.py:78
 msgid "Bengali"
 msgstr ""
 
-#: ../anura/language_manager.py:54
+#: ../anura/language_manager.py:79
 msgid "Tibetan"
 msgstr ""
 
-#: ../anura/language_manager.py:55
+#: ../anura/language_manager.py:80
 msgid "Bosnian"
 msgstr ""
 
-#: ../anura/language_manager.py:55
+#: ../anura/language_manager.py:81
 msgid "Breton"
 msgstr ""
 
-#: ../anura/language_manager.py:55
+#: ../anura/language_manager.py:82
 msgid "Bulgarian"
 msgstr ""
 
-#: ../anura/language_manager.py:56
+#: ../anura/language_manager.py:83
 msgid "Catalan"
 msgstr ""
 
-#: ../anura/language_manager.py:56
+#: ../anura/language_manager.py:84
 msgid "Cebuano"
 msgstr ""
 
-#: ../anura/language_manager.py:56
+#: ../anura/language_manager.py:85
 msgid "Czech"
 msgstr ""
 
-#: ../anura/language_manager.py:57
+#: ../anura/language_manager.py:86
 msgid "Chinese - Simplified"
 msgstr ""
 
-#: ../anura/language_manager.py:57
+#: ../anura/language_manager.py:87
 msgid "Chinese - Traditional"
 msgstr ""
 
-#: ../anura/language_manager.py:58
+#: ../anura/language_manager.py:88
 msgid "Cherokee"
 msgstr ""
 
-#: ../anura/language_manager.py:58
+#: ../anura/language_manager.py:89
 msgid "Corsican"
 msgstr ""
 
-#: ../anura/language_manager.py:58
+#: ../anura/language_manager.py:90
 msgid "Welsh"
 msgstr ""
 
-#: ../anura/language_manager.py:59
+#: ../anura/language_manager.py:91
 msgid "Danish"
 msgstr ""
 
-#: ../anura/language_manager.py:59
+#: ../anura/language_manager.py:92
 msgid "German"
 msgstr ""
 
-#: ../anura/language_manager.py:59
+#: ../anura/language_manager.py:93
 msgid "Dzongkha"
 msgstr ""
 
-#: ../anura/language_manager.py:60
+#: ../anura/language_manager.py:94
 msgid "Greek"
 msgstr ""
 
-#: ../anura/language_manager.py:60
+#: ../anura/language_manager.py:96
 msgid "English, Middle"
 msgstr ""
 
-#: ../anura/language_manager.py:61
+#: ../anura/language_manager.py:97
 msgid "Esperanto"
 msgstr ""
 
-#: ../anura/language_manager.py:61
+#: ../anura/language_manager.py:98
 msgid "Math / Equation Detection"
 msgstr ""
 
-#: ../anura/language_manager.py:62
+#: ../anura/language_manager.py:99
 msgid "Estonian"
 msgstr ""
 
-#: ../anura/language_manager.py:62
+#: ../anura/language_manager.py:100
 msgid "Basque"
 msgstr ""
 
-#: ../anura/language_manager.py:62
+#: ../anura/language_manager.py:101
 msgid "Faroese"
 msgstr ""
 
-#: ../anura/language_manager.py:63
+#: ../anura/language_manager.py:102
 msgid "Persian"
 msgstr ""
 
-#: ../anura/language_manager.py:63
+#: ../anura/language_manager.py:103
 msgid "Filipino"
 msgstr ""
 
-#: ../anura/language_manager.py:63
+#: ../anura/language_manager.py:104
 msgid "Finnish"
 msgstr ""
 
-#: ../anura/language_manager.py:64
+#: ../anura/language_manager.py:105
 msgid "French"
 msgstr ""
 
-#: ../anura/language_manager.py:64
+#: ../anura/language_manager.py:106
 msgid "German - Fraktur"
 msgstr ""
 
-#: ../anura/language_manager.py:64
+#: ../anura/language_manager.py:107
 msgid "French, Middle"
 msgstr ""
 
-#: ../anura/language_manager.py:65
+#: ../anura/language_manager.py:108
 msgid "Western Frisian"
 msgstr ""
 
-#: ../anura/language_manager.py:65
+#: ../anura/language_manager.py:109
 msgid "Scottish Gaelic"
 msgstr ""
 
-#: ../anura/language_manager.py:65
+#: ../anura/language_manager.py:110
 msgid "Irish"
 msgstr ""
 
-#: ../anura/language_manager.py:66
+#: ../anura/language_manager.py:111
 msgid "Galician"
 msgstr ""
 
-#: ../anura/language_manager.py:66
+#: ../anura/language_manager.py:112
 msgid "Greek, Ancient"
 msgstr ""
 
-#: ../anura/language_manager.py:66
+#: ../anura/language_manager.py:113
 msgid "Gujarati"
 msgstr ""
 
-#: ../anura/language_manager.py:67
+#: ../anura/language_manager.py:114
 msgid "Haitian"
 msgstr ""
 
-#: ../anura/language_manager.py:67
+#: ../anura/language_manager.py:115
 msgid "Hebrew"
 msgstr ""
 
-#: ../anura/language_manager.py:67
+#: ../anura/language_manager.py:116
 msgid "Hindi"
 msgstr ""
 
-#: ../anura/language_manager.py:68
+#: ../anura/language_manager.py:117
 msgid "Croatian"
 msgstr ""
 
-#: ../anura/language_manager.py:68
+#: ../anura/language_manager.py:118
 msgid "Hungarian"
 msgstr ""
 
-#: ../anura/language_manager.py:68
+#: ../anura/language_manager.py:119
 msgid "Armenian"
 msgstr ""
 
-#: ../anura/language_manager.py:69
+#: ../anura/language_manager.py:120
 msgid "Inuktitut"
 msgstr ""
 
-#: ../anura/language_manager.py:69
+#: ../anura/language_manager.py:121
 msgid "Indonesian"
 msgstr ""
 
-#: ../anura/language_manager.py:69
+#: ../anura/language_manager.py:122
 msgid "Icelandic"
 msgstr ""
 
-#: ../anura/language_manager.py:70
+#: ../anura/language_manager.py:123
 msgid "Italian"
 msgstr ""
 
-#: ../anura/language_manager.py:70
+#: ../anura/language_manager.py:124
 msgid "Italian - Old"
 msgstr ""
 
-#: ../anura/language_manager.py:70
+#: ../anura/language_manager.py:125
 msgid "Javanese"
 msgstr ""
 
-#: ../anura/language_manager.py:71
+#: ../anura/language_manager.py:126
 msgid "Japanese"
 msgstr ""
 
-#: ../anura/language_manager.py:71
+#: ../anura/language_manager.py:127
 msgid "Japanese (vertical)"
 msgstr ""
 
-#: ../anura/language_manager.py:72
+#: ../anura/language_manager.py:128
 msgid "Kannada"
 msgstr ""
 
-#: ../anura/language_manager.py:72
+#: ../anura/language_manager.py:129
 msgid "Georgian"
 msgstr ""
 
-#: ../anura/language_manager.py:72
+#: ../anura/language_manager.py:130
 msgid "Georgian - Old"
 msgstr ""
 
-#: ../anura/language_manager.py:73
+#: ../anura/language_manager.py:131
 msgid "Kazakh"
 msgstr ""
 
-#: ../anura/language_manager.py:73
+#: ../anura/language_manager.py:132
 msgid "Central Khmer"
 msgstr ""
 
-#: ../anura/language_manager.py:73
+#: ../anura/language_manager.py:133
 msgid "Kirghiz"
 msgstr ""
 
-#: ../anura/language_manager.py:74
+#: ../anura/language_manager.py:134
 msgid "Kurmanji"
 msgstr ""
 
-#: ../anura/language_manager.py:74
+#: ../anura/language_manager.py:135
 msgid "Korean"
 msgstr ""
 
-#: ../anura/language_manager.py:74
+#: ../anura/language_manager.py:136
 msgid "Korean (vertical)"
 msgstr ""
 
-#: ../anura/language_manager.py:75
+#: ../anura/language_manager.py:137
 msgid "Lao"
 msgstr ""
 
-#: ../anura/language_manager.py:75
+#: ../anura/language_manager.py:138
 msgid "Latin"
 msgstr ""
 
-#: ../anura/language_manager.py:75
+#: ../anura/language_manager.py:139
 msgid "Latvian"
 msgstr ""
 
-#: ../anura/language_manager.py:76
+#: ../anura/language_manager.py:140
 msgid "Lithuanian"
 msgstr ""
 
-#: ../anura/language_manager.py:76
+#: ../anura/language_manager.py:141
 msgid "Luxembourgish"
 msgstr ""
 
-#: ../anura/language_manager.py:76
+#: ../anura/language_manager.py:142
 msgid "Malayalam"
 msgstr ""
 
-#: ../anura/language_manager.py:77
+#: ../anura/language_manager.py:143
 msgid "Marathi"
 msgstr ""
 
-#: ../anura/language_manager.py:77
+#: ../anura/language_manager.py:144
 msgid "Macedonian"
 msgstr ""
 
-#: ../anura/language_manager.py:77
+#: ../anura/language_manager.py:145
 msgid "Maltese"
 msgstr ""
 
-#: ../anura/language_manager.py:78
+#: ../anura/language_manager.py:146
 msgid "Mongolian"
 msgstr ""
 
-#: ../anura/language_manager.py:78
+#: ../anura/language_manager.py:147
 msgid "Maori"
 msgstr ""
 
-#: ../anura/language_manager.py:78
+#: ../anura/language_manager.py:148
 msgid "Malay"
 msgstr ""
 
-#: ../anura/language_manager.py:79
+#: ../anura/language_manager.py:149
 msgid "Burmese"
 msgstr ""
 
-#: ../anura/language_manager.py:79
+#: ../anura/language_manager.py:150
 msgid "Nepali"
 msgstr ""
 
-#: ../anura/language_manager.py:79
+#: ../anura/language_manager.py:151
 msgid "Dutch"
 msgstr ""
 
-#: ../anura/language_manager.py:80
+#: ../anura/language_manager.py:152
 msgid "Norwegian"
 msgstr ""
 
-#: ../anura/language_manager.py:80
+#: ../anura/language_manager.py:153
 msgid "Occitan"
 msgstr ""
 
-#: ../anura/language_manager.py:80
+#: ../anura/language_manager.py:154
 msgid "Oriya"
 msgstr ""
 
-#: ../anura/language_manager.py:81
+#: ../anura/language_manager.py:155
 msgid "OSD Module"
 msgstr ""
 
-#: ../anura/language_manager.py:81
+#: ../anura/language_manager.py:156
 msgid "Panjabi"
 msgstr ""
 
-#: ../anura/language_manager.py:81
+#: ../anura/language_manager.py:157
 msgid "Polish"
 msgstr ""
 
-#: ../anura/language_manager.py:82
+#: ../anura/language_manager.py:158
 msgid "Portuguese"
 msgstr ""
 
-#: ../anura/language_manager.py:82
+#: ../anura/language_manager.py:159
 msgid "Pushto"
 msgstr ""
 
-#: ../anura/language_manager.py:82
+#: ../anura/language_manager.py:160
 msgid "Quechua"
 msgstr ""
 
-#: ../anura/language_manager.py:83
+#: ../anura/language_manager.py:161
 msgid "Romanian"
 msgstr ""
 
-#: ../anura/language_manager.py:83
+#: ../anura/language_manager.py:162
 msgid "Russian"
 msgstr ""
 
-#: ../anura/language_manager.py:83
+#: ../anura/language_manager.py:163
 msgid "Sanskrit"
 msgstr ""
 
-#: ../anura/language_manager.py:84
+#: ../anura/language_manager.py:164
 msgid "Sinhala"
 msgstr ""
 
-#: ../anura/language_manager.py:84
+#: ../anura/language_manager.py:165
 msgid "Slovak"
 msgstr ""
 
-#: ../anura/language_manager.py:84
+#: ../anura/language_manager.py:166
 msgid "Slovenian"
 msgstr ""
 
-#: ../anura/language_manager.py:85
+#: ../anura/language_manager.py:167
 msgid "Sindhi"
 msgstr ""
 
-#: ../anura/language_manager.py:85
+#: ../anura/language_manager.py:168
 msgid "Spanish"
 msgstr ""
 
-#: ../anura/language_manager.py:85
+#: ../anura/language_manager.py:169
 msgid "Spanish - Old"
 msgstr ""
 
-#: ../anura/language_manager.py:86
+#: ../anura/language_manager.py:170
 msgid "Albanian"
 msgstr ""
 
-#: ../anura/language_manager.py:86
+#: ../anura/language_manager.py:171
 msgid "Serbian"
 msgstr ""
 
-#: ../anura/language_manager.py:86
+#: ../anura/language_manager.py:172
 msgid "Serbian - Latin"
 msgstr ""
 
-#: ../anura/language_manager.py:87
+#: ../anura/language_manager.py:173
 msgid "Sundanese"
 msgstr ""
 
-#: ../anura/language_manager.py:87
+#: ../anura/language_manager.py:174
 msgid "Swahili"
 msgstr ""
 
-#: ../anura/language_manager.py:87
+#: ../anura/language_manager.py:175
 msgid "Swedish"
 msgstr ""
 
-#: ../anura/language_manager.py:88
+#: ../anura/language_manager.py:176
 msgid "Syriac"
 msgstr ""
 
-#: ../anura/language_manager.py:88
+#: ../anura/language_manager.py:177
 msgid "Tamil"
 msgstr ""
 
-#: ../anura/language_manager.py:88
+#: ../anura/language_manager.py:178
 msgid "Tatar"
 msgstr ""
 
-#: ../anura/language_manager.py:89
+#: ../anura/language_manager.py:179
 msgid "Telugu"
 msgstr ""
 
-#: ../anura/language_manager.py:89
+#: ../anura/language_manager.py:180
 msgid "Tajik"
 msgstr ""
 
-#: ../anura/language_manager.py:89
+#: ../anura/language_manager.py:181
 msgid "Thai"
 msgstr ""
 
-#: ../anura/language_manager.py:90
+#: ../anura/language_manager.py:182
 msgid "Tigrinya"
 msgstr ""
 
-#: ../anura/language_manager.py:90
+#: ../anura/language_manager.py:183
 msgid "Tonga"
 msgstr ""
 
-#: ../anura/language_manager.py:90
+#: ../anura/language_manager.py:184
 msgid "Turkish"
 msgstr ""
 
-#: ../anura/language_manager.py:91
+#: ../anura/language_manager.py:185
 msgid "Uighur"
 msgstr ""
 
-#: ../anura/language_manager.py:91
+#: ../anura/language_manager.py:186
 msgid "Ukrainian"
 msgstr ""
 
-#: ../anura/language_manager.py:91
+#: ../anura/language_manager.py:187
 msgid "Urdu"
 msgstr ""
 
-#: ../anura/language_manager.py:92
+#: ../anura/language_manager.py:188
 msgid "Uzbek"
 msgstr ""
 
-#: ../anura/language_manager.py:92
+#: ../anura/language_manager.py:189
 msgid "Uzbek - Cyrillic"
 msgstr ""
 
-#: ../anura/language_manager.py:92
+#: ../anura/language_manager.py:190
 msgid "Vietnamese"
 msgstr ""
 
-#: ../anura/language_manager.py:93
+#: ../anura/language_manager.py:191
 msgid "Yiddish"
 msgstr ""
 
-#: ../anura/language_manager.py:93
+#: ../anura/language_manager.py:192
 msgid "Yoruba"
 msgstr ""
 
-#: ../anura/main.py:86
+#: ../anura/main.py:113
 msgid "Extract directly into the clipboard"
 msgstr ""
 
-#: ../anura/main.py:91
+#: ../anura/main.py:122
 msgid "Process image file for OCR"
 msgstr ""
 
-#: ../anura/main.py:99
+#: ../anura/main.py:131
 msgid "Run OCR without UI (copy result to clipboard)"
 msgstr ""
 
-#: ../anura/main.py:346
+#: ../anura/main.py:459 ../anura/main.py:477
 msgid "Failed to Open Browser"
 msgstr ""
 
-#: ../anura/main.py:347
+#: ../anura/main.py:460 ../anura/main.py:478
 msgid "No web browser could be launched. Please open the link manually."
 msgstr ""
 
-#: ../anura/main.py:348
-msgid "Copy Link"
-msgstr ""
-
-#: ../anura/main.py:349
-msgid "Close"
-msgstr ""
-
-#: ../anura/main.py:395
-msgid "No text found. Try to grab another region."
-msgstr ""
-
-#: ../anura/main.py:400
-msgid "Text extracted and copied to clipboard."
-msgstr ""
-
-#: ../anura/main.py:406 ../anura/services/screenshot_service.py:191
-msgid "Cancelled"
-msgstr ""
-
-#: ../anura/window.py:113
-msgid "Failed to capture screenshot"
-msgstr ""
-
-#: ../anura/window.py:119
-msgid "Screenshot service did not respond."
-msgstr ""
-
-#: ../anura/window.py:140 ../anura/window.py:337 ../anura/window.py:346
+#: ../anura/main.py:497 ../anura/window.py:153 ../anura/window.py:362
 msgid "Text copied to clipboard"
 msgstr ""
 
-#: ../anura/window.py:147
+#: ../anura/main.py:499 ../anura/window.py:364
+msgid "No text to copy"
+msgstr ""
+
+#: ../anura/main.py:525
+msgid "No text found. Try to grab another region."
+msgstr ""
+
+#: ../anura/main.py:534
+msgid "Text extracted and copied to clipboard."
+msgstr ""
+
+#: ../anura/main.py:540
+msgid "Text extracted successfully."
+msgstr ""
+
+#: ../anura/main.py:545
+msgid "Cancelled"
+msgstr ""
+
+#: ../anura/main.py:572
+msgid "No text to share"
+msgstr ""
+
+#: ../anura/window.py:124
+msgid "Failed to capture screenshot"
+msgstr ""
+
+#: ../anura/window.py:130
+msgid "Screenshot service did not respond."
+msgstr ""
+
+#: ../anura/window.py:160
 msgid "URL opened automatically"
 msgstr ""
 
-#: ../anura/window.py:169
+#: ../anura/window.py:185
 msgid "Choose an image for extraction"
 msgstr ""
 
-#: ../anura/window.py:172
+#: ../anura/window.py:188
 msgid "Images"
 msgstr ""
 
-#: ../anura/window.py:193 ../anura/window.py:231 ../anura/window.py:317
+#: ../anura/window.py:209 ../anura/window.py:248 ../anura/window.py:340
 #, python-brace-format
 msgid "Image too large: {size}MB (max {max}MB)"
 msgstr ""
 
-#: ../anura/window.py:201
+#: ../anura/window.py:218
 #, python-brace-format
 msgid "Unsupported file format: {path}"
 msgstr ""
 
-#: ../anura/window.py:207
+#: ../anura/window.py:224
 #, python-brace-format
 msgid "File not found: {path}"
 msgstr ""
 
-#: ../anura/window.py:209
+#: ../anura/window.py:226
 #, python-brace-format
 msgid "Permission denied: {path}"
 msgstr ""
 
-#: ../anura/window.py:212
+#: ../anura/window.py:229
 #, python-brace-format
 msgid "Cannot access file: {path}"
 msgstr ""
 
-#: ../anura/window.py:249
+#: ../anura/window.py:271
 msgid "Corrupt or unsupported image file"
 msgstr ""
 
-#: ../anura/window.py:253
+#: ../anura/window.py:275
 msgid "Unsupported image format"
 msgstr ""
 
-#: ../anura/window.py:257 ../anura/window.py:261
+#: ../anura/window.py:279 ../anura/window.py:283
 msgid "Failed to validate image file"
 msgstr ""
 
-#: ../anura/window.py:268
+#: ../anura/window.py:290
 msgid "Failed to load image file"
 msgstr ""
 
-#: ../anura/window.py:298
+#: ../anura/window.py:321
 msgid "Unsupported file format."
 msgstr ""
 
-#: ../anura/window.py:310 ../anura/window.py:327
+#: ../anura/window.py:333 ../anura/window.py:351
 msgid "Failed to load dropped file"
 msgstr ""
 
-#: ../anura/window.py:339 ../anura/window.py:348
-msgid "No text to copy"
-msgstr ""
-
-#: ../anura/window.py:443
+#: ../anura/window.py:473
 msgid "No text to share."
 msgstr ""
 
-#: ../anura/window.py:452
+#: ../anura/window.py:483
 msgid "Text contains a link"
 msgstr ""
 
-#: ../anura/window.py:453
+#: ../anura/window.py:484
 msgid "Open"
 msgstr ""
 
-#: ../anura/window.py:463
+#: ../anura/window.py:494
 msgid "Invalid URL blocked for security"
 msgstr ""
 
-#: ../anura/services/clipboard_service.py:93
-#: ../anura/services/clipboard_service.py:97
+#: ../anura/services/clipboard_service.py:147
+#: ../anura/services/clipboard_service.py:151
 msgid "No image in clipboard"
 msgstr ""
 
+#: ../anura/services/clipboard_service.py:242
+#: ../anura/services/clipboard_service.py:246
+msgid "No text in clipboard"
+msgstr ""
+
 #. Emit error signal so UI can show user feedback
-#: ../anura/services/clipboard_service.py:146
+#: ../anura/services/clipboard_service.py:277
 msgid "Clipboard read operation timed out."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:72
-#: ../anura/services/screenshot_service.py:79
+#: ../anura/services/screenshot_service.py:108
+#: ../anura/services/screenshot_service.py:115
+#: ../anura/services/screenshot_service.py:119
 msgid "Can't take a screenshot."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:107
-#: ../anura/services/screenshot_service.py:178
+#: ../anura/services/screenshot_service.py:164
+#: ../anura/services/screenshot_service.py:284
 msgid "Invalid language code specified."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:135
+#: ../anura/services/screenshot_service.py:226
 msgid "Failed to read image file."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:138
+#: ../anura/services/screenshot_service.py:229
 msgid "OCR engine failed to process image."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:145
+#: ../anura/services/screenshot_service.py:232
+#: ../anura/services/screenshot_service.py:238
 msgid "Failed to decode data."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:161
+#: ../anura/services/screenshot_service.py:267
 msgid "No text found."
 msgstr ""
 
-#: ../anura/services/share_service.py:150
+#: ../anura/services/share_service.py:160
 msgid "Select Mastodon Instance"
 msgstr ""
 
-#: ../anura/services/share_service.py:151
+#: ../anura/services/share_service.py:161
 msgid "Choose your Mastodon instance to share the extracted text:"
 msgstr ""
 
-#: ../anura/services/share_service.py:157
+#: ../anura/services/share_service.py:167
 msgid "Cancel"
 msgstr ""
 
-#: ../anura/services/share_service.py:241
-#, fuzzy
-msgid "Extracted Text from Anura"
-msgstr "استخراج النصوص من أي مكان، حتى رموز QR"
-
-#: ../anura/widgets/extracted_page.py:99
+#: ../anura/widgets/extracted_page.py:117
 msgid "Network error. Please check your internet connection."
 msgstr ""
 
-#: ../anura/widgets/extracted_page.py:101
+#: ../anura/widgets/extracted_page.py:119
 msgid "Request timed out. Please try again."
 msgstr ""
 
-#: ../anura/widgets/extracted_page.py:103
-msgid "Failed to generate speech."
+#: ../anura/widgets/extracted_page.py:121
+msgid "Text-to-speech failed. Please try again."
 msgstr ""
 
-#: ../anura/widgets/preferences_general_page.py:100
+#: ../anura/widgets/preferences_general_page.py:105
 #, python-brace-format
 msgid "TTS playback volume level: {percentage:.0f}%"
 msgstr ""
 
 #. Create list: "Auto (follow OCR)" + all supported languages
-#: ../anura/widgets/preferences_general_page.py:115
+#: ../anura/widgets/preferences_general_page.py:120
 msgid "Auto (follow OCR language)"
 msgstr ""
 
@@ -1380,3 +1396,7 @@ msgstr ""
 #, python-brace-format
 msgid "Share via {name}"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Extracted Text from Anura"
+#~ msgstr "استخراج النصوص من أي مكان، حتى رموز QR"

@@ -12,8 +12,10 @@ data/com.github.d3msudo.anura.desktop.in
 data/com.github.d3msudo.anura.metainfo.xml.in
 data/ui/extracted_page.blp
 data/ui/language_popover.blp
+data/ui/language_row.blp
 data/ui/preferences_dialog.blp
 data/ui/preferences_general.blp
 data/ui/preferences_languages.blp
+data/ui/shortcuts.blp
 data/ui/welcome_page.blp
 data/ui/window.blp
