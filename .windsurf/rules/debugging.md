@@ -1,5 +1,5 @@
 ---
-trigger: on_bug
+trigger: on_bug, /debug
 ---
 
 # Anura OCR Debugging

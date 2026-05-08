@@ -426,17 +426,34 @@ class AnuraWindow(Adw.ApplicationWindow):
         # Get service instances
         language_manager_instance = get_language_manager()
 
-        dialog.present(self)
+        # Track signal handler IDs for cleanup
+        signal_handlers = []
 
-        # Connect to language manager signals
-        language_manager_instance.connect(
+        def on_dialog_close(*args: object) -> None:
+            """Clean up signal connections when dialog is closed."""
+            for handler_id in signal_handlers:
+                try:
+                    language_manager_instance.disconnect(handler_id)
+                except (TypeError, RuntimeError):
+                    pass  # Handler already disconnected or invalid
+
+        # Connect to language manager signals and track handler IDs
+        downloaded_handler = language_manager_instance.connect(
             "downloaded",
             lambda _mgr, code: GLib.idle_add(dialog.on_language_downloaded, code),
         )
-        language_manager_instance.connect(
+        signal_handlers.append(downloaded_handler)
+
+        failed_handler = language_manager_instance.connect(
             "download-failed",
             lambda _mgr, code: GLib.idle_add(dialog.on_language_download_failed, code),
         )
+        signal_handlers.append(failed_handler)
+
+        # Connect cleanup to dialog close signal
+        dialog.connect("close-request", on_dialog_close)
+
+        dialog.present(self)
 
     def show_shortcuts(self) -> None:
         """Show the keyboard shortcuts window."""

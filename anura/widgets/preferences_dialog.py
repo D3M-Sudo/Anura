@@ -33,3 +33,13 @@ class PreferencesDialog(Adw.PreferencesDialog):
         # Could show error notification or update UI state
         # For now, just ensure UI remains responsive
         pass
+
+    def do_destroy(self) -> None:
+        """Clean up child pages when dialog is destroyed."""
+        # Ensure child pages clean up their signal connections
+        if hasattr(self.general_page, "disconnect_all_signals"):
+            self.general_page.disconnect_all_signals()
+        if hasattr(self.languages_page, "disconnect_all_signals"):
+            self.languages_page.disconnect_all_signals()
+
+        super().do_destroy()
