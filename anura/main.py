@@ -220,7 +220,11 @@ class AnuraApplication(Adw.Application):
         self.create_action("listen", self.on_listen, ["<primary>l"])
         self.create_action("listen_cancel", self.on_listen_cancel, ["<primary><shift>l"])
         self.create_action("shortcuts", self.on_shortcuts, ["<primary>question", "<primary>slash", "<primary>h"])
-        self.create_action("quit", lambda *_: (logger.debug("Anura: Quit action triggered") or self.quit()), ["<primary>q", "<primary>w"])
+        self.create_action(
+            "quit",
+            lambda *_: (logger.debug("Anura: Quit action triggered") or self.quit()),
+            ["<primary>q", "<primary>w"]
+        )
         self.create_action("preferences", self.on_preferences, ["<primary>comma"])
         self.create_action("about", self.on_about)
         self.create_action("github_star", self.on_github_star)
