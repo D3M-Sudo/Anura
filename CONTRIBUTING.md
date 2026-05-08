@@ -37,7 +37,7 @@ Anura has two categories of tests:
 1. **Unit Tests** - Pure Python logic without GTK dependencies
 2. **Integration Tests** - Require GTK/GLib environment
 
-### Running Tests
+### Test Commands
 
 ```bash
 # Install dependencies in uv environment
