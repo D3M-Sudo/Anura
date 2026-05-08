@@ -1,23 +1,16 @@
-<div align="center">
-
-<img src="data/screenshots/anura-window-dark.png" alt="Anura — Extract text from anywhere" width="420"/>
-
-<br/>
-
 # Anura
+
 Jumping from pixels to text in a single leap
 
 **Intuitive text extraction for the Linux desktop.**  
 OCR · QR Decoding · Privacy-first · Native GTK4
 
-<br/>
+![Anura Screenshot](data/screenshots/anura-window-dark.png)
 
 [![Latest Release](https://img.shields.io/github/v/release/D3M-Sudo/Anura?color=4A90D9&logo=github&label=release&style=flat-square)](https://github.com/D3M-Sudo/Anura/releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Translation status](https://img.shields.io/badge/translations-Weblate-orange?style=flat-square)](https://hosted.weblate.org/engage/anura/)
 [![Flatpak](https://img.shields.io/badge/distribution-Flatpak-4A90D9?style=flat-square&logo=flatpak)](https://github.com/D3M-Sudo/Anura/releases/latest)
-
-</div>
 
 ---
 
@@ -30,7 +23,7 @@ It also decodes **QR codes** in a single click, with full system integration on 
 ## Features
 
 | | |
-|---|---|
+| --- | --- |
 | 📷 **Instant OCR** | Select a screen region — text is copied automatically |
 | 🔲 **QR Code Decoding** | Recognizes links and data from QR codes |
 | 🌍 **Multi-language** | Supports 100+ Tesseract language models |
@@ -57,7 +50,7 @@ flatpak install --user ~/Downloads/com.github.d3msudo.anura.flatpak
 ### Prerequisites
 
 | Tool | Version |
-|------|---------|
+| ---- | ------- |
 | Meson | ≥ 1.5.0 |
 | Python | ≥ 3.12 |
 | GTK4 + Libadwaita | latest |
@@ -66,12 +59,14 @@ flatpak install --user ~/Downloads/com.github.d3msudo.anura.flatpak
 | Blueprint Compiler | ≥ 0.16.0 |
 
 **Fedora:**
+
 ```bash
 sudo dnf install meson python3-gobject gtk4-devel libadwaita-devel \
     tesseract zbar-devel blueprint-compiler
 ```
 
 **Ubuntu / Linux Mint / Debian:**
+
 ```bash
 sudo apt install meson python3-gi python3-gi-cairo gir1.2-gtk-4.0 \
     gir1.2-adw-1 tesseract-ocr libzbar0 blueprint-compiler
@@ -182,8 +177,4 @@ Released under the **MIT** license. See [`LICENSE`](LICENSE) for details.
 
 ---
 
-<div align="center">
-
 *Fork of [Frog](https://github.com/freehck/frog) by Andrey Maksimov — adapted and maintained for the Anura ecosystem.*
-
-</div>

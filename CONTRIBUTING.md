@@ -127,7 +127,7 @@ ruff format anura/
 ## Files You Must NOT Edit Directly
 
 | File | Reason |
-|------|--------|
+| ---- | ------- |
 | `anura/_release_notes.py` | Generated at build time by Meson from CHANGELOG.md |
 | `data/ui/*.ui` | Compiled from `.blp` by blueprint-compiler — edit `.blp` instead |
 | `po/*.po` | Maintained by translators — use `./generate_pot.sh` to update |
