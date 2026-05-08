@@ -5,12 +5,24 @@ Jumping from pixels to text in a single leap
 **Intuitive text extraction for the Linux desktop.**  
 OCR · QR Decoding · Privacy-first · Native GTK4
 
-![Anura Screenshot](data/screenshots/anura-window-dark.png)
+<p align="center">
+  <img src="data/screenshots/anura-window-dark.png" alt="Anura Screenshot" width="800" />
+</p>
 
-[![Latest Release](https://img.shields.io/github/v/release/D3M-Sudo/Anura?color=4A90D9&logo=github&label=release&style=flat-square)](https://github.com/D3M-Sudo/Anura/releases/latest)
-[![License: MIT](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
-[![Translation status](https://img.shields.io/badge/translations-Weblate-orange?style=flat-square)](https://hosted.weblate.org/engage/anura/)
-[![Flatpak](https://img.shields.io/badge/distribution-Flatpak-4A90D9?style=flat-square&logo=flatpak)](https://github.com/D3M-Sudo/Anura/releases/latest)
+<p align="center">
+  <a href="https://github.com/D3M-Sudo/Anura/releases/latest">
+    <img src="https://img.shields.io/github/v/release/D3M-Sudo/Anura?color=4A90D9&logo=github&label=release&style=flat-square" alt="Latest Release" />
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-22c55e?style=flat-square" alt="License: MIT" />
+  </a>
+  <a href="https://hosted.weblate.org/engage/anura/">
+    <img src="https://img.shields.io/badge/translations-Weblate-orange?style=flat-square" alt="Translation status" />
+  </a>
+  <a href="https://github.com/D3M-Sudo/Anura/releases/latest">
+    <img src="https://img.shields.io/badge/distribution-Flatpak-4A90D9?style=flat-square&logo=flatpak" alt="Flatpak" />
+  </a>
+</p>
 
 ---
 
