@@ -22,6 +22,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - AGENTS.md documentation for AI assistant integration and development guidance
 - Code quality workflow command with systematic 5-phase audit and refactoring process
 - Pure-Python share_utils module with URL validation and provider link generation
+- Universal shortcuts shortcut and improved language handling
+- Translation updates for new language row and shortcuts UI files
 
 ### Changed
 
@@ -63,6 +65,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fixed code complexity by extracting complex methods into smaller, focused functions
 - Fixed threading import issues and type hint consistency in main.py
 - Fixed unused variable warnings and code quality issues
+- Fixed DBus errors and broken pipe warnings in CI smoke test
+- Fixed ruff E501 line length violations in screenshot_service.py
+- Fixed markdown linting issues in documentation files
+- Fixed Weblate graph display by converting from broken markdown to proper HTML
+- Fixed README.md layout issues with title centering and screenshot alignment
+- Fixed whitespace issues in clipboard and share functions to comply with ruff W293 rule
 
 ## [0.1.4.2] - 2026-05-05
 
