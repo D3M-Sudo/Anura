@@ -164,7 +164,9 @@ pytest tests/test_clipboard_service.py tests/test_tts_service.py -v
 
 Anura is translated via [Weblate](https://hosted.weblate.org/engage/anura/). Contributions in any language are welcome.
 
-[![Translation status](https://hosted.weblate.org/widgets/anura/-/horizontal-auto.svg)](https://hosted.weblate.org/engage/anura/)
+<p align="center">
+  [![Translation status](https://hosted.weblate.org/widgets/anura/-/horizontal-auto.svg)](https://hosted.weblate.org/engage/anura/)
+</p>
 
 **For maintainers** — after changing translatable strings, from the `po/` directory:
 
