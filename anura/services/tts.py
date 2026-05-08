@@ -189,6 +189,8 @@ class TTSService(GObject.GObject):
             Gst.init(None)
         else:
             logger.debug("Anura TTSService: GStreamer already initialized")
+        # Initialize player slot to prevent AttributeError before play() is called
+        self.player = None
         logger.debug("Anura TTSService: TTS service initialization complete")
 
     @staticmethod

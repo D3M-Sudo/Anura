@@ -43,6 +43,11 @@ class LanguageManager(GObject.GObject):
 
     __gtype_name__ = "LanguageManager"
 
+    # Mapping for language codes that have different filenames in tessdata repository
+    _TESSDATA_FILENAME_MAPPING: ClassVar[dict[str, str]] = {
+        "frk": "deu_frak",  # German Fraktur is stored as deu_frak.traineddata
+    }
+
     __gsignals__: ClassVar[dict[str, tuple]] = {
         "added": (GObject.SIGNAL_RUN_FIRST, None, (str,)),
         "downloading": (GObject.SIGNAL_RUN_FIRST, None, (str, int)),
@@ -333,8 +338,10 @@ class LanguageManager(GObject.GObject):
 
     def download_begin(self, code: str) -> str | None:
         """Performs the physical download of the .traineddata file atomically."""
-        tessfile = f"{code}.traineddata"
-        final_path = os.path.join(TESSDATA_DIR, tessfile)
+        # Use filename mapping for language codes with different filenames
+        filename_code = self._TESSDATA_FILENAME_MAPPING.get(code, code)
+        tessfile = f"{filename_code}.traineddata"
+        final_path = os.path.join(TESSDATA_DIR, f"{code}.traineddata")  # Always save with original code
         tmp_path = None
 
         for url_base in (TESSDATA_BEST_URL, TESSDATA_URL):

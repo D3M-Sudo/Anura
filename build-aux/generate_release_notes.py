@@ -50,7 +50,7 @@ def parse_changelog(changelog_path: Path) -> dict:
             html_parts = []
             for section_name, items in sections.items():
                 if items:
-                    html_parts.append(f"<b>{html.escape(section_name)}</b>")
+                    html_parts.append(f"<p><em>{html.escape(section_name)}</em></p>")
                     html_items = "".join(f"<li>{item}</li>" for item in items)
                     html_parts.append(f"<ul>{html_items}</ul>")
             html_output = "".join(html_parts)

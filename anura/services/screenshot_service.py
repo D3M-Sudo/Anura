@@ -87,19 +87,22 @@ class ScreenshotService(GObject.GObject):
         )
 
     def take_screenshot_finish(self, source_object: object, res: Gio.Task, user_data: tuple) -> None:
-        """Callback triggered when the portal finishes the screenshot request."""
+        """Callback triggered when portal finishes screenshot request."""
         if res.had_error():
             logger.error("Anura Screenshot: Portal failed to provide a screenshot.")
             # Try to get more detailed error information
             try:
-                error = res.propagate_error()
-                logger.error(f"Anura Screenshot: Portal error details: {error}")
+                # Gio.Task doesn't expose propagate_error() in Python bindings
+                # Check if error details are available through get_error()
+                error = res.get_error()
+                if error:
+                    logger.error(f"Anura Screenshot: Portal error details: {error.message}")
+                else:
+                    logger.error("Anura Screenshot: Portal failed without specific error details")
             except GLib.Error as e:
                 logger.warning(
-                    f"Anura Screenshot: Failed to propagate Portal error (Flatpak/D-Bus): {e}",
+                    f"Anura Screenshot: Failed to get Portal error details (Flatpak/D-Bus): {e}",
                 )
-            except AttributeError as e:
-                logger.warning(f"Anura Screenshot: Portal result missing propagate_error method: {e}")
             except Exception as e:
                 logger.error(f"Anura Screenshot: Unexpected error handling Portal error: {e}")
             return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))

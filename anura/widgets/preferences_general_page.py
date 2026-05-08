@@ -56,6 +56,12 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
         self.extra_language_combo.set_model(Gtk.StringList.new(downloaded_langs))
 
         current_extra = self.settings.get_string("extra-language")
+
+        # Guard against empty/unset extra-language
+        if not current_extra:
+            # No extra language configured - leave combo at default (index 0)
+            return
+
         current_name = language_manager.get_language(current_extra)
 
         try:

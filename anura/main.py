@@ -219,8 +219,8 @@ class AnuraApplication(Adw.Application):
         self.create_action("paste_from_clipboard", self.on_paste_from_clipboard, ["<primary>v"])
         self.create_action("listen", self.on_listen, ["<primary>l"])
         self.create_action("listen_cancel", self.on_listen_cancel, ["<primary><shift>l"])
-        self.create_action("shortcuts", self.on_shortcuts, ["<primary>question", "<primary>slash"])
-        self.create_action("quit", lambda *_: self.quit(), ["<primary>q", "<primary>w"])
+        self.create_action("shortcuts", self.on_shortcuts, ["<primary>question", "<primary>slash", "<primary>h"])
+        self.create_action("quit", lambda *_: (logger.debug("Anura: Quit action triggered") or self.quit()), ["<primary>q", "<primary>w"])
         self.create_action("preferences", self.on_preferences, ["<primary>comma"])
         self.create_action("about", self.on_about)
         self.create_action("github_star", self.on_github_star)
@@ -406,6 +406,7 @@ class AnuraApplication(Adw.Application):
             return 130
 
     def on_preferences(self, _action: object, _param: object) -> None:
+        logger.debug("Anura: Preferences action triggered")
         window = self.get_active_window()
         if window:
             window.show_preferences()
@@ -416,7 +417,7 @@ class AnuraApplication(Adw.Application):
             from anura._release_notes import get_release_notes
 
             notes = get_release_notes()
-            return f"<p>Anura OCR {self.version}</p>{notes}"
+            return notes
         except Exception as e:
             logger.debug(f"Could not load release notes: {e}")
 
@@ -428,12 +429,17 @@ class AnuraApplication(Adw.Application):
             application_name="Anura",
             application_icon=APP_ID,
             version=self.version,
-            copyright="© 2026 D3M-Sudo & Anura Contributors",
+            copyright="© 2026 D3M-Sudo &amp; Anura Contributors",
             website="https://github.com/D3M-Sudo/Anura",
             license_type=Gtk.License.MIT_X11,
             developers=["Andrey Maksimov", "D3M-Sudo"],
             designers=["Andrey Maksimov"],
             release_notes=self._get_release_notes(),
+            legal_notes=(
+                "© 2026 D3M-Sudo &amp; Anura Contributors\n"
+                "This application is released under the MIT License.\n"
+                "See the LICENSE file or visit the GitHub repository for details."
+            ),
         )
         about_window.present(self.props.active_window)
 
@@ -507,7 +513,7 @@ class AnuraApplication(Adw.Application):
         if window:
             window.open_image()
 
-    def on_paste_from_clipboard(self, _action: Gio.SimpleAction) -> None:
+    def on_paste_from_clipboard(self, _action: Gio.SimpleAction, _param: object) -> None:
         """Read image from clipboard and perform OCR."""
         clipboard_service_instance = get_clipboard_service()
         clipboard_service_instance.read_texture()

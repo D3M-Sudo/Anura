@@ -161,7 +161,8 @@ class AnuraWindow(Adw.ApplicationWindow):
                 else:
                     self._show_url_toast(extracted_url)
 
-            self.split_view.set_show_content(True)
+            # Defer navigation to ExtractedPage until window is properly mapped
+            GLib.idle_add(self._navigate_to_extracted_page)
 
         except (GLib.Error, RuntimeError, AttributeError) as e:
             logger.error(f"Anura UI Error: {e}")

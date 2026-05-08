@@ -84,12 +84,14 @@ class TestKeyboardShortcuts:
         with open(ui_file) as f:
             content = f.read()
 
-        # Check for both shortcuts
+        # Check for all shortcuts
         assert '<ctrl>question' in content, "Missing <ctrl>question shortcut"
         assert '<ctrl>slash' in content, "Missing <ctrl>slash shortcut"
+        assert '<ctrl>h' in content, "Missing <ctrl>h shortcut"
 
-        # Check for the alternative shortcut description
+        # Check for the shortcut descriptions
         assert 'Display Shortcuts (alternative)' in content, "Missing alternative shortcut description"
+        assert 'Display Shortcuts (universal)' in content, "Missing universal shortcut description"
 
 
 @pytest.mark.gtk
