@@ -19,6 +19,7 @@ class TestKeyboardShortcuts:
     @pytest.mark.gtk
     def test_shortcuts_action_setup_method_exists(self):
         """Test that _setup_actions method contains expected shortcuts."""
+        pytest.importorskip('anura.main')
         try:
             # Import without executing GTK-dependent code
             import anura.main
@@ -34,6 +35,7 @@ class TestKeyboardShortcuts:
     @pytest.mark.gtk
     def test_shortcuts_source_code_contains_fixes(self):
         """Test that the source code contains the keyboard shortcut fixes."""
+        pytest.importorskip('anura.main')
         try:
             import anura.main
 
@@ -50,6 +52,7 @@ class TestKeyboardShortcuts:
     @pytest.mark.gtk
     def test_paste_action_signature_fixed(self):
         """Test that on_paste_from_clipboard has correct signature."""
+        pytest.importorskip('anura.main')
         try:
             import inspect
 

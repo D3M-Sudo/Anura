@@ -12,6 +12,7 @@ class DownloadState:
     Data structure to track the progress of OCR model downloads.
     Used by LanguageManager to communicate with the UI.
     """
+
     total: int = 0
     progress: int = 0
 

@@ -11,7 +11,7 @@ from typing import Any
 import gi
 
 # Set GTK version requirements before imports
-gi.require_version('GObject', '2.0')
+gi.require_version("GObject", "2.0")
 
 from gi.repository import GObject  # noqa: E402
 from loguru import logger  # noqa: E402
@@ -66,8 +66,7 @@ class SignalManagerMixin:
         self._signal_connections[emitter].append(handler_id)
 
         logger.debug(
-            f"SignalManagerMixin: Connected {signal_name} on {type(emitter).__name__}, "
-            f"handler_id={handler_id}",
+            f"SignalManagerMixin: Connected {signal_name} on {type(emitter).__name__}, handler_id={handler_id}",
         )
         return handler_id
 
@@ -97,8 +96,7 @@ class SignalManagerMixin:
 
         if disconnected_count > 0 or failed_count > 0:
             logger.debug(
-                f"SignalManagerMixin: Disconnected {disconnected_count} signals "
-                f"({failed_count} failed)",
+                f"SignalManagerMixin: Disconnected {disconnected_count} signals ({failed_count} failed)",
             )
 
         self._signal_connections.clear()

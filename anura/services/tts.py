@@ -12,9 +12,9 @@ from typing import ClassVar
 import gi
 
 # Set GTK version requirements before imports
-gi.require_version('GLib', '2.0')
-gi.require_version('GObject', '2.0')
-gi.require_version('Gst', '1.0')
+gi.require_version("GLib", "2.0")
+gi.require_version("GObject", "2.0")
+gi.require_version("Gst", "1.0")
 
 from gi.repository import GLib, GObject, Gst  # noqa: E402
 import gtts  # noqa: E402
@@ -44,26 +44,84 @@ class TTSService(GObject.GObject):
 
     # Mapping Tesseract 3-letter → gTTS 2-letter ISO 639-1
     LANG_MAP: ClassVar[dict[str, str]] = {
-        "eng": "en", "ita": "it", "fra": "fr", "deu": "de", "spa": "es",
-        "por": "pt", "rus": "ru", "chi_sim": "zh-CN", "chi_tra": "zh-TW",
-        "jpn": "ja", "kor": "ko", "ara": "ar", "hin": "hi", "tha": "th",
-        "vie": "vi", "tur": "tr", "pol": "pl", "nld": "nl", "ces": "cs",
-        "slk": "sk", "hun": "hu", "ron": "ro", "swe": "sv", "dan": "da",
-        "nor": "no", "fin": "fi", "ell": "el", "heb": "he", "ind": "id",
-        "ukr": "uk", "srp": "sr", "hrv": "hr", "slv": "sl", "bul": "bg",
-        "lit": "lt", "lav": "lv", "est": "et", "mkd": "mk", "cat": "ca",
-        "eus": "eu", "glg": "gl", "hye": "hy", "kat": "ka", "aze": "az",
-        "ben": "bn", "tam": "ta", "tel": "te", "mal": "ml", "kan": "kn",
-        "ori": "or", "pan": "pa", "guj": "gu", "mar": "mr", "nep": "ne",
-        "sin": "si", "urd": "ur", "uzb": "uz", "kaz": "kk", "kir": "ky",
-        "tgk": "tg", "lao": "lo", "mya": "my", "khm": "km",
+        "eng": "en",
+        "ita": "it",
+        "fra": "fr",
+        "deu": "de",
+        "spa": "es",
+        "por": "pt",
+        "rus": "ru",
+        "chi_sim": "zh-CN",
+        "chi_tra": "zh-TW",
+        "jpn": "ja",
+        "kor": "ko",
+        "ara": "ar",
+        "hin": "hi",
+        "tha": "th",
+        "vie": "vi",
+        "tur": "tr",
+        "pol": "pl",
+        "nld": "nl",
+        "ces": "cs",
+        "slk": "sk",
+        "hun": "hu",
+        "ron": "ro",
+        "swe": "sv",
+        "dan": "da",
+        "nor": "no",
+        "fin": "fi",
+        "ell": "el",
+        "heb": "he",
+        "ind": "id",
+        "ukr": "uk",
+        "srp": "sr",
+        "hrv": "hr",
+        "slv": "sl",
+        "bul": "bg",
+        "lit": "lt",
+        "lav": "lv",
+        "est": "et",
+        "mkd": "mk",
+        "cat": "ca",
+        "eus": "eu",
+        "glg": "gl",
+        "hye": "hy",
+        "kat": "ka",
+        "aze": "az",
+        "ben": "bn",
+        "tam": "ta",
+        "tel": "te",
+        "mal": "ml",
+        "kan": "kn",
+        "ori": "or",
+        "pan": "pa",
+        "guj": "gu",
+        "mar": "mr",
+        "nep": "ne",
+        "sin": "si",
+        "urd": "ur",
+        "uzb": "uz",
+        "kaz": "kk",
+        "kir": "ky",
+        "tgk": "tg",
+        "lao": "lo",
+        "mya": "my",
+        "khm": "km",
         # Historical/specialty variants (fallback to modern equivalent)
-        "lat": "la", "grc": "el",  # Ancient Greek → Modern Greek
-        "enm": "en", "frm": "fr",  # Middle English/French → Modern
+        "lat": "la",
+        "grc": "el",  # Ancient Greek → Modern Greek
+        "enm": "en",
+        "frm": "fr",  # Middle English/French → Modern
         # Vertical/special variants
-        "jpn_vert": "ja", "kor_vert": "ko", "chi_sim_vert": "zh-CN",
-        "chi_tra_vert": "zh-TW", "ita_old": "it", "eng_old": "en",
-        "fra_old": "fr", "deu_old": "de", "spa_old": "es",
+        "jpn_vert": "ja",
+        "kor_vert": "ko",
+        "chi_sim_vert": "zh-CN",
+        "chi_tra_vert": "zh-TW",
+        "ita_old": "it",
+        "eng_old": "en",
+        "fra_old": "fr",
+        "deu_old": "de",
+        "spa_old": "es",
     }
 
     _gtts_languages: dict | None = None
@@ -270,8 +328,7 @@ class TTSService(GObject.GObject):
                     logger.debug("Anura TTSService: Disconnected bus message handler")
                 else:
                     logger.warning(
-                        f"Anura TTSService: Invalid handler ID type: "
-                        f"{type(self._bus_message_handler_id)}",
+                        f"Anura TTSService: Invalid handler ID type: {type(self._bus_message_handler_id)}",
                     )
                 self._bus_message_handler_id = None
 
@@ -332,6 +389,7 @@ class TTSService(GObject.GObject):
 def get_tts_service() -> TTSService:
     """Get thread-safe TTS service singleton."""
     return get_instance(TTSService)
+
 
 # Global singleton instance for direct import
 ttsservice = get_tts_service()

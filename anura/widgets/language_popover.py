@@ -21,7 +21,7 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
     __gtype_name__ = "LanguagePopover"
 
     __gsignals__: ClassVar[dict[str, tuple]] = {
-        'language-changed': (GObject.SIGNAL_RUN_LAST, None, (LanguageItem,)),
+        "language-changed": (GObject.SIGNAL_RUN_LAST, None, (LanguageItem,)),
     }
 
     views: Gtk.Stack = Gtk.Template.Child()
@@ -42,7 +42,7 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
         self.connect_tracked(language_manager, "downloaded", self._on_language_downloaded)
         self.connect_tracked(language_manager, "removed", self._on_language_removed)
 
-        self._active_language = self.settings.get_string('active-language')
+        self._active_language = self.settings.get_string("active-language")
 
         self.bind_model()
 
@@ -83,12 +83,11 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
     @Gtk.Template.Callback()
     def _on_language_activate(self, _: Gtk.ListBox, row: LanguagePopoverRow) -> None:
         item: LanguageItem = row.lang
-        self.emit('language-changed', item)
+        self.emit("language-changed", item)
         self.active_language = item.code
         language_manager.active_language = item
 
-
-        self.settings.set_string('active-language', item.code)
+        self.settings.set_string("active-language", item.code)
         logger.debug(f"Anura: OCR language changed to '{item.code}'")
         self.popdown()
 
@@ -127,7 +126,7 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
                     logger.warning(f"Failed to get language code for: {lang}")
                     continue
 
-                selected = (self.active_language == code)
+                selected = self.active_language == code
                 self.lang_list.append(LanguageItem(code=code, title=lang, selected=selected))
 
             # Fallback to English if current language was removed, emitting only on actual change

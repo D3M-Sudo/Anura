@@ -12,9 +12,9 @@ from typing import ClassVar
 import gi
 
 # Set GTK version requirements before imports
-gi.require_version('GLib', '2.0')
-gi.require_version('Notify', '0.7')
-gi.require_version('Xdp', '1.0')
+gi.require_version("GLib", "2.0")
+gi.require_version("Notify", "0.7")
+gi.require_version("Xdp", "1.0")
 
 from loguru import logger  # noqa: E402
 
@@ -25,6 +25,7 @@ except ImportError:
 
 try:
     from gi.repository import Notify
+
     HAS_LIBNOTIFY = True
 except ImportError:
     HAS_LIBNOTIFY = False
@@ -32,6 +33,7 @@ except ImportError:
 
 try:
     from gi.repository import Xdp
+
     HAS_PORTAL = True
 except ImportError:
     HAS_PORTAL = False
@@ -127,16 +129,18 @@ class NotificationService:
             logger.warning("NotificationService: XDG Portal not available")
             return False
         try:
-
             # Prepare notification as GLib.Variant according to XDG Portal spec
             # Schema: a{sv} (dictionary of string -> variant)
-            notification = GLib.Variant("a{sv}", {
-                "title": GLib.Variant("s", title),
-                "body": GLib.Variant("s", body),
-                "priority": GLib.Variant("s", priority),
-                # Icon: (sv) tuple with themed icon name and string array
-                "icon": GLib.Variant("(sv)", ("themed", GLib.Variant("as", [self.app_id]))),
-            })
+            notification = GLib.Variant(
+                "a{sv}",
+                {
+                    "title": GLib.Variant("s", title),
+                    "body": GLib.Variant("s", body),
+                    "priority": GLib.Variant("s", priority),
+                    # Icon: (sv) tuple with themed icon name and string array
+                    "icon": GLib.Variant("(sv)", ("themed", GLib.Variant("as", [self.app_id]))),
+                },
+            )
 
             # Generate unique ID for this notification (timestamp + monotonic counter)
             notification_id = f"{self.app_id}-{int(time.time())}-{next(self._notification_id_counter)}"

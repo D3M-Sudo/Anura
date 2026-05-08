@@ -34,4 +34,3 @@ class ShareRow(Gtk.ListBoxRow):
             "window.share",
             GLib.Variant.new_string(self.provider_name),
         )
-

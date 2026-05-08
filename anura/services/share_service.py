@@ -10,11 +10,11 @@ from urllib.parse import quote
 import gi
 
 # Set GTK version requirements before imports
-gi.require_version('Adw', '1')
-gi.require_version('Gio', '2.0')
-gi.require_version('GLib', '2.0')
-gi.require_version('GObject', '2.0')
-gi.require_version('Gtk', '4.0')
+gi.require_version("Adw", "1")
+gi.require_version("Gio", "2.0")
+gi.require_version("GLib", "2.0")
+gi.require_version("GObject", "2.0")
+gi.require_version("Gtk", "4.0")
 
 from gi.repository import Adw, Gio, GLib, GObject, Gtk  # noqa: E402
 from loguru import logger  # noqa: E402
@@ -28,6 +28,7 @@ class ShareService(GObject.GObject):
     Service responsible for sharing extracted text to external providers.
     Designed for Anura to handle web-based and protocol-based URI launching.
     """
+
     __gtype_name__ = "ShareService"
 
     __gsignals__: ClassVar[dict[str, tuple]] = {"share": (GObject.SIGNAL_RUN_LAST, None, (bool,))}
@@ -88,7 +89,7 @@ class ShareService(GObject.GObject):
             try:
                 # Encode the text content, but preserve URL structure characters
                 # The handler functions are responsible for proper URL construction
-                encoded_text = quote(text, safe='')
+                encoded_text = quote(text, safe="")
 
                 # Special handling for Mastodon with fallback
                 if provider == "mastodon":
@@ -145,7 +146,6 @@ class ShareService(GObject.GObject):
             logger.warning(f"Anura Share: Failed to launch web+mastodon:// scheme: {e}")
             self._show_mastodon_instance_dialog(encoded_text)
 
-
     def _show_mastodon_instance_dialog(self, encoded_text: str) -> None:
         """Show dialog to select Mastodon instance for fallback sharing."""
         instances = [
@@ -175,6 +175,7 @@ class ShareService(GObject.GObject):
         try:
             # Try to get the active window from the application
             from gi.repository import Gio
+
             app = Gio.Application.get_default()
             parent_window = app.get_active_window() if app else None
             if parent_window:

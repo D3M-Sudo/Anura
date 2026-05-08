@@ -21,8 +21,12 @@ def validate_share_url(url: str) -> bool:
         return False
 
     # Basic URL structure validation
-    if not (url.startswith('http://') or url.startswith('https://') or
-            url.startswith('web+mastodon://') or url.startswith('mailto:')):
+    if not (
+        url.startswith("http://")
+        or url.startswith("https://")
+        or url.startswith("web+mastodon://")
+        or url.startswith("mailto:")
+    ):
         return False
 
     # Length check to prevent overflow attacks
@@ -30,7 +34,7 @@ def validate_share_url(url: str) -> bool:
         return False
 
     # Check for potentially dangerous characters
-    dangerous_chars = ['<', '>', '"', "'", '&', '\n', '\r', '\t']
+    dangerous_chars = ["<", ">", '"', "'", "&", "\n", "\r", "\t"]
     return not any(char in url for char in dangerous_chars)
 
 
@@ -42,11 +46,11 @@ def get_providers() -> list[str]:
         List of provider names
     """
     return [
-        'email',
-        'reddit',
-        'telegram',
-        'x',
-        'mastodon',
+        "email",
+        "reddit",
+        "telegram",
+        "x",
+        "mastodon",
     ]
 
 

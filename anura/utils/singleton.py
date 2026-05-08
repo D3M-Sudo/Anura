@@ -8,7 +8,8 @@
 import threading
 from typing import Any, ClassVar, TypeVar
 
-T = TypeVar('T')
+T = TypeVar("T")
+
 
 class ThreadSafeSingleton:
     """

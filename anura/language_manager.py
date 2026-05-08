@@ -15,8 +15,8 @@ from typing import ClassVar
 import gi
 
 # Set GTK version requirements before imports
-gi.require_version('GLib', '2.0')
-gi.require_version('GObject', '2.0')
+gi.require_version("GLib", "2.0")
+gi.require_version("GObject", "2.0")
 
 from gi.repository import GLib, GObject  # noqa: E402
 from loguru import logger  # noqa: E402
@@ -63,48 +63,128 @@ class LanguageManager(GObject.GObject):
 
         # Full ISO 639-2 mapping (Tesseract compatible)
         self._languages = {
-            "afr": _("Afrikaans"), "amh": _("Amharic"), "ara": _("Arabic"),
-            "asm": _("Assamese"), "aze": _("Azerbaijani"), "aze_cyrl": _("Azerbaijani - Cyrillic"),
-            "bel": _("Belarusian"), "ben": _("Bengali"), "bod": _("Tibetan"),
-            "bos": _("Bosnian"), "bre": _("Breton"), "bul": _("Bulgarian"),
-            "cat": _("Catalan"), "ceb": _("Cebuano"), "ces": _("Czech"),
-            "chi_sim": _("Chinese - Simplified"), "chi_tra": _("Chinese - Traditional"),
-            "chr": _("Cherokee"), "cos": _("Corsican"), "cym": _("Welsh"),
-            "dan": _("Danish"), "deu": _("German"), "dzo": _("Dzongkha"),
-            "ell": _("Greek"), "eng": _("English"), "enm": _("English, Middle"),
-            "epo": _("Esperanto"), "equ": _("Math / Equation Detection"),
-            "est": _("Estonian"), "eus": _("Basque"), "fao": _("Faroese"),
-            "fas": _("Persian"), "fil": _("Filipino"), "fin": _("Finnish"),
-            "fra": _("French"), "frk": _("German - Fraktur"), "frm": _("French, Middle"),
-            "fry": _("Western Frisian"), "gla": _("Scottish Gaelic"), "gle": _("Irish"),
-            "glg": _("Galician"), "grc": _("Greek, Ancient"), "guj": _("Gujarati"),
-            "hat": _("Haitian"), "heb": _("Hebrew"), "hin": _("Hindi"),
-            "hrv": _("Croatian"), "hun": _("Hungarian"), "hye": _("Armenian"),
-            "iku": _("Inuktitut"), "ind": _("Indonesian"), "isl": _("Icelandic"),
-            "ita": _("Italian"), "ita_old": _("Italian - Old"), "jav": _("Javanese"),
-            "jpn": _("Japanese"), "jpn_vert": _("Japanese (vertical)"),
-            "kan": _("Kannada"), "kat": _("Georgian"), "kat_old": _("Georgian - Old"),
-            "kaz": _("Kazakh"), "khm": _("Central Khmer"), "kir": _("Kirghiz"),
-            "kmr": _("Kurmanji"), "kor": _("Korean"), "kor_vert": _("Korean (vertical)"),
-            "lao": _("Lao"), "lat": _("Latin"), "lav": _("Latvian"),
-            "lit": _("Lithuanian"), "ltz": _("Luxembourgish"), "mal": _("Malayalam"),
-            "mar": _("Marathi"), "mkd": _("Macedonian"), "mlt": _("Maltese"),
-            "mon": _("Mongolian"), "mri": _("Maori"), "msa": _("Malay"),
-            "mya": _("Burmese"), "nep": _("Nepali"), "nld": _("Dutch"),
-            "nor": _("Norwegian"), "oci": _("Occitan"), "ori": _("Oriya"),
-            "osd": _("OSD Module"), "pan": _("Panjabi"), "pol": _("Polish"),
-            "por": _("Portuguese"), "pus": _("Pushto"), "que": _("Quechua"),
-            "ron": _("Romanian"), "rus": _("Russian"), "san": _("Sanskrit"),
-            "sin": _("Sinhala"), "slk": _("Slovak"), "slv": _("Slovenian"),
-            "snd": _("Sindhi"), "spa": _("Spanish"), "spa_old": _("Spanish - Old"),
-            "sqi": _("Albanian"), "srp": _("Serbian"), "srp_latn": _("Serbian - Latin"),
-            "sun": _("Sundanese"), "swa": _("Swahili"), "swe": _("Swedish"),
-            "syr": _("Syriac"), "tam": _("Tamil"), "tat": _("Tatar"),
-            "tel": _("Telugu"), "tgk": _("Tajik"), "tha": _("Thai"),
-            "tir": _("Tigrinya"), "ton": _("Tonga"), "tur": _("Turkish"),
-            "uig": _("Uighur"), "ukr": _("Ukrainian"), "urd": _("Urdu"),
-            "uzb": _("Uzbek"), "uzb_cyrl": _("Uzbek - Cyrillic"), "vie": _("Vietnamese"),
-            "yid": _("Yiddish"), "yor": _("Yoruba"),
+            "afr": _("Afrikaans"),
+            "amh": _("Amharic"),
+            "ara": _("Arabic"),
+            "asm": _("Assamese"),
+            "aze": _("Azerbaijani"),
+            "aze_cyrl": _("Azerbaijani - Cyrillic"),
+            "bel": _("Belarusian"),
+            "ben": _("Bengali"),
+            "bod": _("Tibetan"),
+            "bos": _("Bosnian"),
+            "bre": _("Breton"),
+            "bul": _("Bulgarian"),
+            "cat": _("Catalan"),
+            "ceb": _("Cebuano"),
+            "ces": _("Czech"),
+            "chi_sim": _("Chinese - Simplified"),
+            "chi_tra": _("Chinese - Traditional"),
+            "chr": _("Cherokee"),
+            "cos": _("Corsican"),
+            "cym": _("Welsh"),
+            "dan": _("Danish"),
+            "deu": _("German"),
+            "dzo": _("Dzongkha"),
+            "ell": _("Greek"),
+            "eng": _("English"),
+            "enm": _("English, Middle"),
+            "epo": _("Esperanto"),
+            "equ": _("Math / Equation Detection"),
+            "est": _("Estonian"),
+            "eus": _("Basque"),
+            "fao": _("Faroese"),
+            "fas": _("Persian"),
+            "fil": _("Filipino"),
+            "fin": _("Finnish"),
+            "fra": _("French"),
+            "frk": _("German - Fraktur"),
+            "frm": _("French, Middle"),
+            "fry": _("Western Frisian"),
+            "gla": _("Scottish Gaelic"),
+            "gle": _("Irish"),
+            "glg": _("Galician"),
+            "grc": _("Greek, Ancient"),
+            "guj": _("Gujarati"),
+            "hat": _("Haitian"),
+            "heb": _("Hebrew"),
+            "hin": _("Hindi"),
+            "hrv": _("Croatian"),
+            "hun": _("Hungarian"),
+            "hye": _("Armenian"),
+            "iku": _("Inuktitut"),
+            "ind": _("Indonesian"),
+            "isl": _("Icelandic"),
+            "ita": _("Italian"),
+            "ita_old": _("Italian - Old"),
+            "jav": _("Javanese"),
+            "jpn": _("Japanese"),
+            "jpn_vert": _("Japanese (vertical)"),
+            "kan": _("Kannada"),
+            "kat": _("Georgian"),
+            "kat_old": _("Georgian - Old"),
+            "kaz": _("Kazakh"),
+            "khm": _("Central Khmer"),
+            "kir": _("Kirghiz"),
+            "kmr": _("Kurmanji"),
+            "kor": _("Korean"),
+            "kor_vert": _("Korean (vertical)"),
+            "lao": _("Lao"),
+            "lat": _("Latin"),
+            "lav": _("Latvian"),
+            "lit": _("Lithuanian"),
+            "ltz": _("Luxembourgish"),
+            "mal": _("Malayalam"),
+            "mar": _("Marathi"),
+            "mkd": _("Macedonian"),
+            "mlt": _("Maltese"),
+            "mon": _("Mongolian"),
+            "mri": _("Maori"),
+            "msa": _("Malay"),
+            "mya": _("Burmese"),
+            "nep": _("Nepali"),
+            "nld": _("Dutch"),
+            "nor": _("Norwegian"),
+            "oci": _("Occitan"),
+            "ori": _("Oriya"),
+            "osd": _("OSD Module"),
+            "pan": _("Panjabi"),
+            "pol": _("Polish"),
+            "por": _("Portuguese"),
+            "pus": _("Pushto"),
+            "que": _("Quechua"),
+            "ron": _("Romanian"),
+            "rus": _("Russian"),
+            "san": _("Sanskrit"),
+            "sin": _("Sinhala"),
+            "slk": _("Slovak"),
+            "slv": _("Slovenian"),
+            "snd": _("Sindhi"),
+            "spa": _("Spanish"),
+            "spa_old": _("Spanish - Old"),
+            "sqi": _("Albanian"),
+            "srp": _("Serbian"),
+            "srp_latn": _("Serbian - Latin"),
+            "sun": _("Sundanese"),
+            "swa": _("Swahili"),
+            "swe": _("Swedish"),
+            "syr": _("Syriac"),
+            "tam": _("Tamil"),
+            "tat": _("Tatar"),
+            "tel": _("Telugu"),
+            "tgk": _("Tajik"),
+            "tha": _("Thai"),
+            "tir": _("Tigrinya"),
+            "ton": _("Tonga"),
+            "tur": _("Turkish"),
+            "uig": _("Uighur"),
+            "ukr": _("Ukrainian"),
+            "urd": _("Urdu"),
+            "uzb": _("Uzbek"),
+            "uzb_cyrl": _("Uzbek - Cyrillic"),
+            "vie": _("Vietnamese"),
+            "yid": _("Yiddish"),
+            "yor": _("Yoruba"),
         }
 
     @GObject.Property(type=GObject.TYPE_PYOBJECT)
@@ -125,8 +205,7 @@ class LanguageManager(GObject.GObject):
         with self._cache_lock:
             if not os.path.exists(TESSDATA_DIR):
                 logger.warning(
-                    "Anura: tessdata directory not found. "
-                    "It will be created on first language download.",
+                    "Anura: tessdata directory not found. It will be created on first language download.",
                 )
                 with contextlib.suppress(FileExistsError):
                     # Another thread created it between check and makedirs
@@ -138,7 +217,7 @@ class LanguageManager(GObject.GObject):
             if not os.access(TESSDATA_DIR, os.R_OK | os.X_OK):
                 logger.warning("Anura: Cannot read tessdata directory for cleanup")
             else:
-                temp_files = [f for f in os.listdir(TESSDATA_DIR) if f.endswith('.tmp')]
+                temp_files = [f for f in os.listdir(TESSDATA_DIR) if f.endswith(".tmp")]
                 for temp_file in temp_files:
                     temp_path = os.path.join(TESSDATA_DIR, temp_file)
                     try:
@@ -153,8 +232,7 @@ class LanguageManager(GObject.GObject):
 
         installed = self.get_downloaded_codes(force=True)
         logger.info(
-            f"Anura: tessdata directory ready. "
-            f"{len(installed)} language model(s) installed: {installed or ['none']}",
+            f"Anura: tessdata directory ready. {len(installed)} language model(s) installed: {installed or ['none']}",
         )
 
     def get_language(self, code: str) -> str:
@@ -181,13 +259,14 @@ class LanguageManager(GObject.GObject):
                 if os.path.exists(TESSDATA_DIR):
                     try:
                         user_files = [
-                            f for f in os.listdir(TESSDATA_DIR)
+                            f
+                            for f in os.listdir(TESSDATA_DIR)
                             if f.endswith(".traineddata") and not f.startswith("osd")
                         ]
                         logger.info(
-            f"Anura LanguageManager: User directory scanned, "
-            f"{len(user_files)} models found: {user_files}",
-        )
+                            f"Anura LanguageManager: User directory scanned, "
+                            f"{len(user_files)} models found: {user_files}",
+                        )
                         codes.update(os.path.splitext(f)[0] for f in user_files)
                     except OSError as e:
                         logger.exception(f"Anura LanguageManager: Error reading user tessdata directory: {e}")
@@ -198,7 +277,8 @@ class LanguageManager(GObject.GObject):
                 if os.path.exists(TESSDATA_SYSTEM_DIR):
                     try:
                         system_files = [
-                            f for f in os.listdir(TESSDATA_SYSTEM_DIR)
+                            f
+                            for f in os.listdir(TESSDATA_SYSTEM_DIR)
                             if f.endswith(".traineddata") and not f.startswith("osd")
                         ]
                         logger.info(
@@ -271,7 +351,7 @@ class LanguageManager(GObject.GObject):
                 response = requests.get(url, timeout=REQUEST_TIMEOUT, stream=True)
                 response.raise_for_status()
 
-                total_size = int(response.headers.get('content-length', 0))
+                total_size = int(response.headers.get("content-length", 0))
                 downloaded = 0
 
                 # Throttle progress updates to prevent main loop saturation
@@ -279,7 +359,7 @@ class LanguageManager(GObject.GObject):
                 last_progress_time = time.monotonic()
                 last_progress_value = 0
 
-                with open(tmp_path, 'wb') as f:
+                with open(tmp_path, "wb") as f:
                     for chunk in response.iter_content(chunk_size=8192):
                         if chunk:
                             f.write(chunk)
@@ -348,6 +428,7 @@ class LanguageManager(GObject.GObject):
 def get_language_manager() -> LanguageManager:
     """Get thread-safe language manager singleton."""
     return get_instance(LanguageManager)
+
 
 # Global singleton instance for direct import
 language_manager = get_language_manager()

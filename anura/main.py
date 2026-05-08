@@ -6,16 +6,16 @@ import threading
 
 # Suppress a11y bus warnings in headless CI environments
 if not sys.stdin.isatty():
-    os.environ['NO_AT_BRIDGE'] = '1'
+    os.environ["NO_AT_BRIDGE"] = "1"
 
 import gi
 
 # Set GTK version requirements before imports
-gi.require_version('Gtk', '4.0')
-gi.require_version('Adw', '1')
-gi.require_version('Notify', '0.7')
-gi.require_version('Xdp', '1.0')
-gi.require_version('Gst', '1.0')
+gi.require_version("Gtk", "4.0")
+gi.require_version("Adw", "1")
+gi.require_version("Notify", "0.7")
+gi.require_version("Xdp", "1.0")
+gi.require_version("Gst", "1.0")
 
 from gi.repository import Adw, Gio, GLib, Gtk
 from loguru import logger
@@ -183,10 +183,11 @@ class AnuraApplication(Adw.Application):
 
     def _cleanup_notification_service(self) -> None:
         """Clean up notification service."""
-        if hasattr(self, '_notification_service') and self._notification_service:
+        if hasattr(self, "_notification_service") and self._notification_service:
             try:
                 if HAS_LIBNOTIFY:
                     from gi.repository import Notify
+
                     if Notify.is_initted():
                         Notify.uninit()
             except (ImportError, AttributeError, TypeError) as e:
@@ -204,6 +205,7 @@ class AnuraApplication(Adw.Application):
         """Clean up TTS service to prevent broken pipe errors."""
         try:
             from anura.services.tts import get_tts_service
+
             tts_service = get_tts_service()
             tts_service.cleanup()
         except (ImportError, AttributeError, TypeError) as e:
@@ -343,6 +345,7 @@ class AnuraApplication(Adw.Application):
     def _restore_signal_handlers(self, signal_handlers: dict[str, object]) -> None:
         """Restore original signal handlers."""
         import signal as sig
+
         sig.signal(sig.SIGINT, signal_handlers["sigint"])
         sig.signal(sig.SIGTERM, signal_handlers["sigterm"])
 
@@ -425,7 +428,7 @@ class AnuraApplication(Adw.Application):
             application_name="Anura",
             application_icon=APP_ID,
             version=self.version,
-            copyright=" 2023 D3M-Sudo & Anura Contributors",
+            copyright="© 2026 D3M-Sudo & Anura Contributors",
             website="https://github.com/D3M-Sudo/Anura",
             license_type=Gtk.License.MIT_X11,
             developers=["Andrey Maksimov", "D3M-Sudo"],

@@ -8,7 +8,7 @@ Anura OCR is a GTK4/Libadwaita desktop application for GNOME that extracts text 
 
 **Key Facts:**
 
-- Python 3.11+ required
+- Python 3.12+ required
 - GTK4 + Libadwaita + Blueprint Compiler for declarative UI
 - OCR via `pytesseract` (Tesseract 5.x wrapper)
 - QR code via `pyzbar` + `zbar`
@@ -21,7 +21,7 @@ Anura OCR is a GTK4/Libadwaita desktop application for GNOME that extracts text 
 
 ## Repository Structure
 
-```
+```text
 anura/
 ├── anura/                      Python application source
 │   ├── main.py                 AnuraApplication (Adw.Application) + CLI + AboutDialog
@@ -180,9 +180,8 @@ pip install -e ".[dev]"
 # Or specifically meson for local build testing
 pip install "meson>=1.5.0"
 # Automatically installs ninja if needed
-```
 
-**Typical venv packages for testing:**
+# Typical venv packages for testing:
 - `meson` — Build system
 - `ninja` — Build tool (meson dependency)
 - `ruff` — Linter
@@ -219,6 +218,7 @@ project('anura',
 ```
 
 Release notes generation from CHANGELOG.md:
+
 ```meson
 custom_target('release_notes',
   input: ['CHANGELOG.md', 'build-aux/generate_release_notes.py'],
@@ -228,6 +228,7 @@ custom_target('release_notes',
 ```
 
 **Build commands with venv:**
+
 ```bash
 .venv/bin/meson setup builddir
 .venv/bin/meson compile -C builddir
@@ -311,6 +312,7 @@ msg = ngettext("{n} file processed", "{n} files processed", count).format(n=coun
 ```
 
 **Do NOT translate:**
+
 - Logger messages (`logger.debug/info/warning/error`)
 - Developer exceptions
 - GSettings keys, CSS class names, D-Bus paths, technical identifiers
@@ -449,6 +451,7 @@ python3 -m pytest tests/ -m "gtk" -v
 ### Test Patterns
 
 **Mocking GTK Dependencies:**
+
 ```python
 def setup_method(self):
     self.service = ScreenshotService()
@@ -456,6 +459,7 @@ def setup_method(self):
 ```
 
 **Business Logic Testing:**
+
 ```python
 def test_language_mapping(self):
     service = TTSService()
@@ -464,6 +468,7 @@ def test_language_mapping(self):
 ```
 
 **Error Handling:**
+
 ```python
 def test_service_error(self):
     with patch.object(self.service.portal, 'send_notification', side_effect=Exception("Error")):
@@ -481,8 +486,10 @@ def test_service_error(self):
 ### Common Testing Issues
 
 #### Error: `RuntimeError: GSettings schema 'com.github.d3msudo.anura' not found`
+
 **Cause**: GSettings schema not compiled or not in schema path
-**Fix**: 
+**Fix**:
+
 ```bash
 mkdir -p builddir
 cp data/com.github.d3msudo.anura.gschema.xml builddir/
@@ -491,13 +498,16 @@ export GSETTINGS_SCHEMA_DIR="builddir"
 ```
 
 #### Error: `ModuleNotFoundError: No module named 'gi'`
+
 **Cause**: Virtual environment doesn't have access to system packages
 **Fix**: Use PYTHONPATH and GI_TYPELIB_PATH:
+
 ```bash
 uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" pytest tests/ -v
 ```
 
 #### Complete GTK Test Setup
+
 ```bash
 # One-time setup
 ./setup-gschema.sh

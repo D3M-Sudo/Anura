@@ -45,10 +45,10 @@ def _get_tessdata_system_dir() -> str:
     # Priority 2: Dynamic scan of candidate directories
     # Scan in order of preference - first existing directory wins
     candidate_dirs = [
-        "/app/share/tessdata",           # Flatpak
+        "/app/share/tessdata",  # Flatpak
         "/usr/share/tesseract-ocr/tessdata",  # Debian/Ubuntu, Arch, Fedora
-        "/usr/share/tesseract/tessdata",      # Alternative layout
-        "/usr/share/tessdata",               # Alternative system path
+        "/usr/share/tesseract/tessdata",  # Alternative layout
+        "/usr/share/tessdata",  # Alternative system path
     ]
 
     for path in candidate_dirs:

@@ -17,7 +17,6 @@ class PreferencesDialog(Adw.PreferencesDialog):
     general_page: PreferencesGeneralPage = Gtk.Template.Child()
     languages_page: PreferencesLanguagesPage = Gtk.Template.Child()
 
-
     def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
 
@@ -34,4 +33,3 @@ class PreferencesDialog(Adw.PreferencesDialog):
         # Could show error notification or update UI state
         # For now, just ensure UI remains responsive
         pass
-

@@ -56,6 +56,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         if item is None:
             # Ultimate fallback - should never happen for built-in languages
             from anura.types.language_item import LanguageItem
+
             item = LanguageItem(code="eng", title="English")
         language_manager_instance.active_language = item
 
@@ -253,6 +254,7 @@ class AnuraWindow(Adw.ApplicationWindow):
                 # Validate image format before passing to OCR
                 try:
                     from gi.repository import GdkPixbuf
+
                     stream = BytesIO(contents)
                     # Try to create a pixbuf to validate the image
                     GdkPixbuf.Pixbuf.new_from_stream_at_scale(
@@ -492,10 +494,6 @@ class AnuraWindow(Adw.ApplicationWindow):
             return
         launcher = Gtk.UriLauncher.new(url)
         launcher.launch(self, None, None)
-
-    def uri_validator(self, text: str) -> bool:
-        """Delegate to centralized uri_validator from anura.utils."""
-        return uri_validator(text)
 
     # Maximum URL length to prevent issues with extremely long OCR results
     MAX_URL_LENGTH = 2048

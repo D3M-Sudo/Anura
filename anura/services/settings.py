@@ -9,7 +9,7 @@
 import gi
 
 # Set GTK version requirements before imports
-gi.require_version('Gio', '2.0')
+gi.require_version("Gio", "2.0")
 
 from gi.repository import Gio  # noqa: E402
 from loguru import logger  # noqa: E402
@@ -33,8 +33,7 @@ class Settings(Gio.Settings):
             super().__init__(schema_id=APP_ID, **kwargs)
         else:
             logger.error(
-                f"GSettings schema '{APP_ID}' not found. "
-                "Make sure glib-compile-schemas has been run.",
+                f"GSettings schema '{APP_ID}' not found. Make sure glib-compile-schemas has been run.",
             )
             raise RuntimeError(f"GSettings schema '{APP_ID}' not found.")
 

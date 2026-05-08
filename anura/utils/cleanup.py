@@ -48,7 +48,7 @@ def _cleanup_tts_cache(cutoff_time: float) -> None:
 
         cleaned_count = 0
         for filename in os.listdir(tts_cache_dir):
-            if filename.endswith('.mp3'):
+            if filename.endswith(".mp3"):
                 file_path = os.path.join(tts_cache_dir, filename)
                 try:
                     # Check file age to avoid deleting recent files
@@ -79,7 +79,7 @@ def _cleanup_tessdata_temp_files(cutoff_time: float) -> None:
 
         cleaned_count = 0
         for filename in os.listdir(TESSDATA_DIR):
-            if filename.endswith('.tmp'):
+            if filename.endswith(".tmp"):
                 file_path = os.path.join(TESSDATA_DIR, filename)
                 try:
                     # Check file age to avoid deleting active downloads
@@ -114,7 +114,7 @@ def get_cache_info() -> dict[str, int]:
 
         if os.path.exists(tts_cache_dir):
             for filename in os.listdir(tts_cache_dir):
-                if filename.endswith('.mp3'):
+                if filename.endswith(".mp3"):
                     file_path = os.path.join(tts_cache_dir, filename)
                     cache_info["tts_files"] += 1
                     cache_info["tts_size_bytes"] += os.path.getsize(file_path)
@@ -122,7 +122,7 @@ def get_cache_info() -> dict[str, int]:
         # Temp files info
         if os.path.exists(TESSDATA_DIR):
             for filename in os.listdir(TESSDATA_DIR):
-                if filename.endswith('.tmp'):
+                if filename.endswith(".tmp"):
                     cache_info["temp_files"] += 1
 
     except OSError as e:

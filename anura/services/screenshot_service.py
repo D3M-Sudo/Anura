@@ -14,10 +14,10 @@ from urllib.request import url2pathname
 import gi
 
 # Set GTK version requirements before imports
-gi.require_version('Gio', '2.0')
-gi.require_version('GLib', '2.0')
-gi.require_version('GObject', '2.0')
-gi.require_version('Xdp', '1.0')
+gi.require_version("Gio", "2.0")
+gi.require_version("GLib", "2.0")
+gi.require_version("GObject", "2.0")
+gi.require_version("Xdp", "1.0")
 
 from gi.repository import Gio, GLib, GObject, Xdp  # noqa: E402
 from loguru import logger  # noqa: E402
@@ -30,18 +30,18 @@ from anura.config import LANG_CODE_PATTERN, get_tesseract_config  # noqa: E402
 
 def _is_flatpak_environment() -> bool:
     """Detect if running in Flatpak sandbox."""
-    return os.path.exists('/.flatpak-info')
+    return os.path.exists("/.flatpak-info")
 
 
 def _configure_tesseract_path() -> None:
     """Configure Tesseract command path for Flatpak environment."""
-    if _is_flatpak_environment() and os.path.exists('/app/bin/tesseract'):
+    if _is_flatpak_environment() and os.path.exists("/app/bin/tesseract"):
         # Force Tesseract to use Flatpak path
-        os.environ['TESSERACT_CMD'] = '/app/bin/tesseract'
+        os.environ["TESSERACT_CMD"] = "/app/bin/tesseract"
         logger.info("Anura OCR: Using Flatpak Tesseract at /app/bin/tesseract")
     else:
         # Use system Tesseract from PATH
-        os.environ.pop('TESSERACT_CMD', None)
+        os.environ.pop("TESSERACT_CMD", None)
         logger.debug("Anura OCR: Using system Tesseract from PATH")
 
 
@@ -96,12 +96,12 @@ class ScreenshotService(GObject.GObject):
                 logger.error(f"Anura Screenshot: Portal error details: {error}")
             except GLib.Error as e:
                 logger.warning(
-                    f"Anura Screenshot: Fallimento durante la propagazione dell'errore Portal (Flatpak/D-Bus): {e}",
+                    f"Anura Screenshot: Failed to propagate Portal error (Flatpak/D-Bus): {e}",
                 )
             except AttributeError as e:
                 logger.warning(f"Anura Screenshot: Portal result missing propagate_error method: {e}")
             except Exception as e:
-                logger.error(f"Anura Screenshot: Errore imprevisto durante gestione errore Portal: {e}")
+                logger.error(f"Anura Screenshot: Unexpected error handling Portal error: {e}")
             return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))
 
         lang, copy = user_data

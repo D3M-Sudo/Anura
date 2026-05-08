@@ -14,7 +14,7 @@ import traceback
 import gi
 
 # Set GTK version requirements before imports
-gi.require_version('GLib', '2.0')
+gi.require_version("GLib", "2.0")
 
 from gi.repository import GLib  # noqa: E402
 
@@ -42,6 +42,7 @@ class GObjectWorker:
             callback: Function to call on the main thread upon success.
             errorback: Function to call on the main thread upon failure.
         """
+
         def run(data: tuple) -> None:
             cmd, cmd_args, cb, eb = data
             try:
@@ -79,6 +80,6 @@ class GObjectWorker:
         """
         Standardized error logging for worker thread failures.
         """
-        tb = traceback_str or getattr(error, '__traceback__', None)
+        tb = traceback_str or getattr(error, "__traceback__", None)
         if tb:
             logging.error("Anura Worker Error: Unhandled exception in background thread:\n%s", tb)

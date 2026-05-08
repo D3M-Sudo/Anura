@@ -32,4 +32,3 @@ class LanguagePopoverRow(Gtk.ListBoxRow):
             "visible",
             GObject.BindingFlags.SYNC_CREATE,
         )
-

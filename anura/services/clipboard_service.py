@@ -10,10 +10,10 @@ from typing import ClassVar
 import gi
 
 # Set GTK version requirements before imports
-gi.require_version('Gdk', '4.0')
-gi.require_version('Gio', '2.0')
-gi.require_version('GLib', '2.0')
-gi.require_version('GObject', '2.0')
+gi.require_version("Gdk", "4.0")
+gi.require_version("Gio", "2.0")
+gi.require_version("GLib", "2.0")
+gi.require_version("GObject", "2.0")
 
 from gi.repository import Gdk, Gio, GLib, GObject  # noqa: E402
 from loguru import logger  # noqa: E402
@@ -282,7 +282,7 @@ class ClipboardService(GObject.GObject):
         """Thread-safe cancellation of pending clipboard read operations."""
         with self._state_lock:
             # Add defensive check for partially initialized instances
-            if not hasattr(self, '_clipboard_timeout_id'):
+            if not hasattr(self, "_clipboard_timeout_id"):
                 logger.debug("Clipboard service not fully initialized, skipping cleanup")
                 return
 
