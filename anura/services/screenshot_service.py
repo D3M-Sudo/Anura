@@ -95,30 +95,19 @@ class ScreenshotService(GObject.GObject):
 
     def take_screenshot_finish(self, source_object: object, res: Gio.Task, user_data: tuple) -> None:
         """Callback triggered when portal finishes screenshot request."""
-        if res.had_error():
-            logger.error("Anura Screenshot: Portal failed to provide a screenshot.")
-            # Try to get more detailed error information
-            try:
-                # Gio.Task doesn't expose propagate_error() in Python bindings
-                # Check if error details are available through get_error()
-                error = res.get_error()
-                if error:
-                    logger.error(f"Anura Screenshot: Portal error details: {error.message}")
-                else:
-                    logger.error("Anura Screenshot: Portal failed without specific error details")
-            except GLib.Error as e:
-                logger.warning(
-                    f"Anura Screenshot: Failed to get Portal error details (Flatpak/D-Bus): {e}",
-                )
-            except Exception as e:
-                logger.error(f"Anura Screenshot: Unexpected error handling Portal error: {e}")
-            return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))
-
         lang, copy = user_data
         try:
             uri = self.portal.take_screenshot_finish(res)
+        except GLib.Error as e:
+            # User cancellation (Esc / dismissed Portal dialog) is a normal
+            # outcome — don't surface a noisy error notification for it.
+            if e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED):
+                logger.debug("Anura Screenshot: Portal request cancelled by user.")
+                return None
+            logger.error(f"Anura Screenshot: Portal failed to provide a screenshot: {e.message}")
+            return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))
         except Exception as e:
-            logger.error(f"Anura Screenshot: Exception getting screenshot URI: {e}")
+            logger.error(f"Anura Screenshot: Unexpected error finishing screenshot: {e}")
             return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))
 
         if not uri:

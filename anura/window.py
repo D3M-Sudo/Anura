@@ -471,8 +471,9 @@ class AnuraWindow(Adw.ApplicationWindow):
         )
         signal_handlers.append(failed_handler)
 
-        # Connect cleanup to dialog close signal
-        dialog.connect("close-request", on_dialog_close)
+        # Connect cleanup to dialog close signal.
+        # Adw.PreferencesDialog → Adw.Dialog: emits "closed", not "close-request".
+        dialog.connect("closed", on_dialog_close)
 
         dialog.present(self)
 
