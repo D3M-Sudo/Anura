@@ -117,7 +117,11 @@ def get_cache_info() -> dict[str, int]:
                 if filename.endswith(".mp3"):
                     file_path = os.path.join(tts_cache_dir, filename)
                     cache_info["tts_files"] += 1
-                    cache_info["tts_size_bytes"] += os.path.getsize(file_path)
+                    try:
+                        cache_info["tts_size_bytes"] += os.path.getsize(file_path)
+                    except (OSError, FileNotFoundError):
+                        # File might have been deleted between listdir and getsize
+                        pass
 
         # Temp files info
         if os.path.exists(TESSDATA_DIR):

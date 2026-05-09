@@ -177,7 +177,7 @@ class AnuraApplication(Adw.Application):
 
     def _disconnect_signal_handler(self, handler_id: int | None) -> None:
         """Safely disconnect a signal handler."""
-        if handler_id is not None:
+        if handler_id is not None and self.backend is not None:
             with contextlib.suppress(TypeError, RuntimeError):
                 self.backend.disconnect(handler_id)
 
@@ -221,9 +221,7 @@ class AnuraApplication(Adw.Application):
         self.create_action("listen_cancel", self.on_listen_cancel, ["<primary><shift>l"])
         self.create_action("shortcuts", self.on_shortcuts, ["<primary>question", "<primary>slash", "<primary>h"])
         self.create_action(
-            "quit",
-            lambda *_: (logger.debug("Anura: Quit action triggered") or self.quit()),
-            ["<primary>q", "<primary>w"]
+            "quit", lambda *_: logger.debug("Anura: Quit action triggered") or self.quit(), ["<primary>q", "<primary>w"]
         )
         self.create_action("preferences", self.on_preferences, ["<primary>comma"])
         self.create_action("about", self.on_about)
@@ -329,8 +327,13 @@ class AnuraApplication(Adw.Application):
         signal_handlers = self._setup_signal_handlers(interrupted)
 
         try:
-            return self._execute_silent_ocr(file_path, interrupted)
-        finally:
+            return self._execute_silent_ocr_with_context(file_path, interrupted)
+        except Exception:
+            # Ensure signal handlers are restored even if OCR fails
+            self._restore_signal_handlers(signal_handlers)
+            raise
+        else:
+            # Normal path - also restore handlers
             self._restore_signal_handlers(signal_handlers)
 
     def _setup_signal_handlers(self, interrupted: threading.Event) -> dict[str, object]:
@@ -353,25 +356,80 @@ class AnuraApplication(Adw.Application):
         sig.signal(sig.SIGINT, signal_handlers["sigint"])
         sig.signal(sig.SIGTERM, signal_handlers["sigterm"])
 
-    def _execute_silent_ocr(self, file_path: str, interrupted: threading.Event) -> int:
-        """Execute OCR in silent mode with interruption handling."""
-        # Check if interrupted before starting
+    def _execute_silent_ocr_with_context(self, file_path: str, interrupted: threading.Event) -> int:
+        """Execute OCR in silent mode with proper GLib context management."""
+        # Create custom context and loop
+        ctx = GLib.MainContext.new()
+        loop = GLib.MainLoop.new(ctx, False)
+
+        # Store sources for proper cleanup
+        sources = []
+
+        # Attach interruption checker to custom context
+        def check_interrupted():
+            if interrupted.is_set():
+                loop.quit()
+                return False  # Stop checking
+            return True  # Continue checking
+
+        check_source = GLib.timeout_source_new(100)  # 100ms
+        check_source.set_callback(check_interrupted)
+        check_source.attach(ctx)
+        sources.append(check_source)
+
+        # Schedule OCR on custom context
+        def do_ocr():
+            if interrupted.is_set():
+                loop.quit()
+                return False  # Don't repeat
+
+            try:
+                success, text, error_message = self._decode_image_synchronously(file_path)
+
+                if interrupted.is_set():
+                    loop.quit()
+                    return False
+
+                if success and text:
+                    clipboard_service_instance = get_clipboard_service()
+                    clipboard_service_instance.set(text)
+                    logger.info("Anura: OCR completed successfully in silent mode.")
+                    loop.quit()
+                else:
+                    logger.error(f"Anura: Silent mode failed: {error_message}")
+                    loop.quit()
+            except Exception as e:
+                logger.error(f"Anura: Silent mode unexpected error: {e}")
+                loop.quit()
+            return False  # Don't repeat
+
+        idle_source = GLib.idle_source_new()
+        idle_source.set_callback(do_ocr)
+        idle_source.attach(ctx)
+        sources.append(idle_source)
+
+        # Run the loop with timeout to prevent infinite hangs
+        timeout_source = GLib.timeout_source_new_seconds(60)  # 60 second timeout
+        timeout_source.set_callback(lambda: (loop.quit(), False)[1])
+        timeout_source.attach(ctx)
+        sources.append(timeout_source)
+
+        # Push context and run loop
+        ctx.push()
+        try:
+            loop.run()
+        finally:
+            ctx.pop()
+            # Clean up all sources to prevent resource leaks
+            for source in sources:
+                source.destroy()
+
+        # Check final interruption state
         if interrupted.is_set():
             logger.info("Anura: Silent mode interrupted by user.")
             return 130
 
-        success, text, error_message = self._decode_image_synchronously(file_path)
-
-        # Check if interrupted during processing
-        if interrupted.is_set():
-            logger.info("Anura: Silent mode interrupted by user.")
-            return 130
-
-        if success and text:
-            return self._handle_ocr_result(text, interrupted)
-        else:
-            logger.error(f"Anura: Silent mode failed: {error_message}")
-            return 1
+        return 0
 
     def _decode_image_synchronously(self, file_path: str) -> tuple[bool, str | None, str | None]:
         """Decode image synchronously for silent mode."""
@@ -381,33 +439,26 @@ class AnuraApplication(Adw.Application):
                 file_path,
                 remove_source=False,
             )
-        except FileNotFoundError as e:
-            logger.error(f"Anura: Silent mode - file not found: {e}")
-            return False, None, str(e)
-        except PermissionError as e:
-            logger.error(f"Anura: Silent mode - permission denied: {e}")
-            return False, None, str(e)
+        except FileNotFoundError:
+            error_msg = f"File not found: {file_path}"
+            logger.error(f"Anura: Silent mode - {error_msg}")
+            return False, None, error_msg
+        except PermissionError:
+            error_msg = f"Permission denied accessing file: {file_path}"
+            logger.error(f"Anura: Silent mode - {error_msg}")
+            return False, None, error_msg
         except OSError as e:
-            logger.error(f"Anura: Silent mode - file system error: {e}")
-            return False, None, str(e)
+            error_msg = f"File system error accessing {file_path}: {e}"
+            logger.error(f"Anura: Silent mode - {error_msg}")
+            return False, None, error_msg
         except ImportError as e:
-            logger.error(f"Anura: Silent mode - missing dependency: {e}")
-            return False, None, str(e)
+            error_msg = f"Missing dependency for OCR: {e}"
+            logger.error(f"Anura: Silent mode - {error_msg}")
+            return False, None, error_msg
         except Exception as e:
-            logger.error(f"Anura: Silent mode unexpected error: {e}")
-            return False, None, str(e)
-
-    def _handle_ocr_result(self, text: str, interrupted: threading.Event) -> int:
-        """Handle successful OCR result in silent mode."""
-        # Double-check interrupted before copying to minimize race window
-        if not interrupted.is_set():
-            clipboard_service_instance = get_clipboard_service()
-            clipboard_service_instance.set(text)
-            logger.info("Anura: OCR completed successfully in silent mode.")
-            return 0
-        else:
-            logger.info("Anura: Silent mode interrupted by user (post-OCR).")
-            return 130
+            error_msg = f"Unexpected error processing {file_path}: {e}"
+            logger.error(f"Anura: Silent mode - {error_msg}")
+            return False, None, error_msg
 
     def on_preferences(self, _action: object, _param: object) -> None:
         logger.debug("Anura: Preferences action triggered")

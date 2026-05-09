@@ -9,7 +9,11 @@ import sys
 
 def parse_changelog(changelog_path: Path) -> dict:
     """Parse CHANGELOG.md and return a dict of version -> html notes."""
-    content = changelog_path.read_text()
+    try:
+        content = changelog_path.read_text()
+    except (FileNotFoundError, PermissionError, OSError) as e:
+        print(f"Error reading changelog file {changelog_path}: {e}", file=sys.stderr)
+        return {}
 
     # Pattern to match version sections (supports 3 or 4 component versions like 0.1.4 or 0.1.4.1)
     # Uses atomic-like grouping and limited repetition to prevent catastrophic backtracking
@@ -97,7 +101,11 @@ def generate_release_notes_py(changelog_path: Path, output_path: Path, current_v
         ]
     )
 
-    output_path.write_text("\n".join(lines))
+    try:
+        output_path.write_text("\n".join(lines))
+    except (PermissionError, OSError) as e:
+        print(f"Error writing output file {output_path}: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 def validate_version(version: str) -> bool:

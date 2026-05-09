@@ -18,7 +18,7 @@ from anura.widgets.language_popover import LanguagePopover
 class WelcomePage(Adw.NavigationPage):
     __gtype_name__ = "WelcomePage"
 
-    spinner: Adw.Spinner = Gtk.Template.Child()
+    spinner: Gtk.Spinner = Gtk.Template.Child()
     welcome: Adw.StatusPage = Gtk.Template.Child()
     lang_combo: Gtk.MenuButton = Gtk.Template.Child()
     language_popover: LanguagePopover = Gtk.Template.Child()

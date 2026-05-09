@@ -21,7 +21,7 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
     __gtype_name__ = "LanguagePopover"
 
     __gsignals__: ClassVar[dict[str, tuple]] = {
-        "language-changed": (GObject.SIGNAL_RUN_LAST, None, (LanguageItem,)),
+        "language-changed": (GObject.SignalFlags.RUN_LAST, None, (LanguageItem,)),
     }
 
     views: Gtk.Stack = Gtk.Template.Child()

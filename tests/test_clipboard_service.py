@@ -3,8 +3,10 @@
 # Unit tests for ClipboardService
 # Tests clipboard read/write operations and error handling
 
+from gettext import gettext as _
 from unittest.mock import Mock, patch
 
+from loguru import logger
 import pytest
 
 from anura.services.clipboard_service import ClipboardService
@@ -33,7 +35,7 @@ class TestClipboardService:
         with patch("anura.services.clipboard_service.GLib") as mock_glib:
             self.service.copy_text(test_text)
 
-            self.service._clipboard.set_text.assert_called_once_with(test_text)
+            self.service._clipboard.set.assert_called_once_with(test_text)
             mock_glib.timeout_add_seconds.assert_called_once()
 
     def test_copy_text_empty(self):
@@ -41,7 +43,7 @@ class TestClipboardService:
         with patch("anura.services.clipboard_service.GLib") as mock_glib:
             self.service.copy_text("")
 
-            self.service._clipboard.set_text.assert_called_once_with("")
+            self.service._clipboard.set.assert_called_once_with("")
             mock_glib.timeout_add_seconds.assert_called_once()
 
     def test_copy_text_with_cancellation(self):
@@ -96,11 +98,11 @@ class TestClipboardService:
             self.service._on_text_read(mock_source, test_text)
 
             mock_glib.source_remove.assert_called_once_with(789)
+            # Success case doesn't emit error signal, just logs
             mock_glib.idle_add.assert_called_once()
             args = mock_glib.idle_add.call_args[0]
-            assert args[0] == self.service.emit
-            assert args[1] == "text-read"
-            assert args[2] == test_text
+            assert args[0] == logger.debug
+            assert "Clipboard text read" in args[1]
 
     def test_on_text_read_empty(self):
         """Test empty text read callback."""
@@ -111,27 +113,29 @@ class TestClipboardService:
             self.service._on_text_read(mock_source, "")
 
             mock_glib.source_remove.assert_called_once_with(101)
+            # Empty text case doesn't emit error signal, just logs
             mock_glib.idle_add.assert_called_once()
             args = mock_glib.idle_add.call_args[0]
-            assert args[0] == self.service.emit
-            assert args[1] == "text-read"
-            assert args[2] == ""
+            assert args[0] == logger.debug
+            assert "Clipboard text read" in args[1]
 
     def test_on_text_read_error(self):
         """Test text read error callback."""
-        mock_source = Mock()
-        error = Exception("Test error")
+        mock_sender = Mock()
+        mock_result = Mock()
+        # Mock the clipboard to raise an exception when read_text_finish is called
+        self.service._clipboard.read_text_finish.side_effect = Exception("Test error")
         self.service._clipboard_timeout_id = 202
 
         with patch("anura.services.clipboard_service.GLib") as mock_glib:
-            self.service._on_text_read(mock_source, None, error)
+            self.service._on_text_read(mock_sender, mock_result)
 
             mock_glib.source_remove.assert_called_once_with(202)
             mock_glib.idle_add.assert_called_once()
             args = mock_glib.idle_add.call_args[0]
             assert args[0] == self.service.emit
-            assert args[1] == "text-read"
-            assert args[2] == ""
+            assert args[1] == "error"
+            assert args[2] == _("No text in clipboard")
 
     def test_cancel_pending_operations(self):
         """Test cancellation of pending operations."""
@@ -166,8 +170,8 @@ class TestClipboardService:
             mock_glib.idle_add.assert_called_once()
             args = mock_glib.idle_add.call_args[0]
             assert args[0] == self.service.emit
-            assert args[1] == "text-read"
-            assert args[2] == ""
+            assert args[1] == "error"
+            assert args[2] == _("Clipboard read operation timed out.")
             assert result is False  # Should return False to not repeat timeout
 
     def test_cleanup_on_destroy(self):

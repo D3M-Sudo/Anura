@@ -79,9 +79,10 @@ class AnuraWindow(Adw.ApplicationWindow):
 
         self._handler_go_back = self.extracted_page.connect("go-back", self.show_welcome_page)
         self._handler_clipboard = None
+        self._clipboard_service = None
         try:
-            clipboard_service_instance = get_clipboard_service()
-            self._handler_clipboard = clipboard_service_instance.connect(
+            self._clipboard_service = get_clipboard_service()
+            self._handler_clipboard = self._clipboard_service.connect(
                 "paste_from_clipboard",
                 self._on_paste_from_clipboard_texture,
             )
@@ -153,13 +154,17 @@ class AnuraWindow(Adw.ApplicationWindow):
                 self.show_toast(_("Text copied to clipboard"))
 
             # Extract URL from OCR text (not just validate entire text as URL)
-            extracted_url = self.extract_url_from_text(text)
-            if extracted_url:
-                if self.settings.get_boolean("autolinks"):
-                    self._launch_uri(extracted_url)
-                    self.show_toast(_("URL opened automatically"))
-                else:
-                    self._show_url_toast(extracted_url)
+            try:
+                extracted_url = self.extract_url_from_text(text)
+                if extracted_url:
+                    if self.settings.get_boolean("autolinks"):
+                        self._launch_uri(extracted_url)
+                        self.show_toast(_("URL opened automatically"))
+                    else:
+                        self._show_url_toast(extracted_url)
+            except Exception as e:
+                logger.error(f"Anura: Error extracting/launching URL: {e}")
+                # Continue without URL functionality - don't crash the entire OCR flow
 
             # Defer navigation to ExtractedPage until window is properly mapped
             GLib.idle_add(self._navigate_to_extracted_page)
@@ -236,6 +241,8 @@ class AnuraWindow(Adw.ApplicationWindow):
                 file.load_contents_async(None, self._on_file_contents_loaded)
         except (GLib.Error, RuntimeError, OSError) as e:
             logger.debug(f"File selection cancelled or failed: {e}")
+            # Ensure spinner is hidden on error to prevent UI inconsistency
+            self.welcome_page.spinner.set_visible(False)
 
     def _on_file_contents_loaded(self, gfile: Gio.File, result: Gio.AsyncResult) -> None:
         try:
@@ -410,10 +417,9 @@ class AnuraWindow(Adw.ApplicationWindow):
             with contextlib.suppress(TypeError, RuntimeError):
                 self.extracted_page.disconnect(self._handler_go_back)
             self._handler_go_back = None
-        if self._handler_clipboard:
+        if self._handler_clipboard and self._clipboard_service:
             with contextlib.suppress(TypeError, RuntimeError):
-                clipboard_service_instance = get_clipboard_service()
-                clipboard_service_instance.disconnect(self._handler_clipboard)
+                self._clipboard_service.disconnect(self._handler_clipboard)
             self._handler_clipboard = None
 
         # Chain up to parent class
@@ -456,18 +462,13 @@ class AnuraWindow(Adw.ApplicationWindow):
         dialog.present(self)
 
     def show_shortcuts(self) -> None:
-        """Show the keyboard shortcuts window."""
+        """Show the keyboard shortcuts overlay."""
         try:
-            builder = Gtk.Builder.new_from_resource(f"{RESOURCE_PREFIX}/shortcuts.ui")
-            shortcuts_window = builder.get_object("shortcuts")
+            from anura.widgets.shortcuts_overlay import show_shortcuts_overlay
 
-            if shortcuts_window:
-                shortcuts_window.set_transient_for(self)
-                shortcuts_window.present()
-            else:
-                logger.error("Failed to locate 'shortcuts' object in the UI resource.")
-        except (GLib.Error, OSError, RuntimeError) as e:
-            logger.error(f"An error occurred while loading shortcuts: {e}")
+            show_shortcuts_overlay(self)
+        except (ImportError, RuntimeError) as e:
+            logger.error(f"Failed to show shortcuts overlay: {e}")
 
     def _navigate_to_extracted_page(self) -> bool:
         """Navigate to the extracted text page after OCR."""

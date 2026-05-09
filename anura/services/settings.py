@@ -6,6 +6,8 @@
 # Settings module - moved from anura/settings.py to anura/services/settings.py
 # to avoid ModuleNotFoundError in Flatpak sandbox.
 
+import threading
+
 import gi
 
 # Set GTK version requirements before imports
@@ -46,10 +48,14 @@ class _LazySettings:
     """
 
     _instance: Settings | None = None
+    _lock = threading.Lock()
 
     def _get_instance(self) -> Settings:
         if self._instance is None:
-            self._instance = Settings()
+            with self._lock:
+                # Double-checked locking pattern
+                if self._instance is None:
+                    self._instance = Settings()
         return self._instance
 
     def __getattr__(self, name: str) -> object:

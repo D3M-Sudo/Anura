@@ -34,49 +34,82 @@ GSETTINGS_SCHEMA_DIR=builddir/data python3 -m anura.main
 
 Anura has two categories of tests:
 
-1. **Unit Tests** - Pure Python logic without GTK dependencies
-2. **Integration Tests** - Require GTK/GLib environment
+1. **Unit Tests** - Pure Python logic without GTK dependencies (38 tests)
+2. **Integration Tests** - Require GTK/GLib environment (61 tests)
 
-### Test Commands
+### 🚀 QUICK START - Daily Development
 
 ```bash
-# Install dependencies in uv environment
+# 1. Install dev dependencies (once)
 uv sync --dev
 
-# All pure-Python tests (no GTK required)
-uv run pytest tests/ -v -m "not gtk"
+# 2. Run unit tests (ALWAYS use this for daily development)
+uv run pytest tests/ -m "not gtk" -v
+# Expected: 38 passed, 61 deselected ✅
+```
+
+### 📋 COMPLETE TEST COMMANDS
+
+#### **Unit Tests (No GTK Required)**
+```bash
+# All unit tests (recommended for daily development)
+uv run pytest tests/ -m "not gtk" -v
 
 # Skip network-dependent tests
-uv run pytest tests/ -v -m "not network"
+uv run pytest tests/ -m "not gtk" -m "not network" -v
 
-# Run only a specific file
+# Run specific unit test files
 uv run pytest tests/test_config.py -v
+uv run pytest tests/test_cleanup.py -v
+uv run pytest tests/test_uri_validator.py -v
 
-# Run unit logic tests (business logic only)
+# Run business logic tests only
 uv run pytest tests/test_unit_logic.py -v
+```
 
-# Setup GSettings schema for GTK tests (required once)
-mkdir -p builddir
-cp data/com.github.d3msudo.anura.gschema.xml builddir/
-glib-compile-schemas builddir/
+#### **GTK Tests (Two Methods Available)**
 
-# Run service-specific tests (requires system gi + GSettings)
+**Method A: Flatpak Sandbox (Recommended)**
+```bash
+# Enter Flatpak development environment
+flatpak run --devel --command=bash com.github.d3msudo.anura
+
+# Inside sandbox, run GTK tests
+python3 -m pytest tests/ -m "gtk" -v
+```
+
+**Method B: Host System (Requires Setup)**
+```bash
+# 1. Install system dependencies
+sudo apt install python3-gi gir1.2-gtk-4.0 gir1.2-adw-1
+
+# 2. Setup GSettings schema (once)
+./setup-gschema.sh
+
+# 3. Run individual GTK service tests
 export GSETTINGS_SCHEMA_DIR="builddir"
 uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" GSETTINGS_SCHEMA_DIR="builddir" pytest tests/test_screenshot_service.py -v
 uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" GSETTINGS_SCHEMA_DIR="builddir" pytest tests/test_clipboard_service.py -v
 uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" GSETTINGS_SCHEMA_DIR="builddir" pytest tests/test_share_service.py -v
 uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" GSETTINGS_SCHEMA_DIR="builddir" pytest tests/test_tts_service.py -v
 uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" GSETTINGS_SCHEMA_DIR="builddir" pytest tests/test_notification_service.py -v
-
-# Or use the automated setup script
-./setup-gschema.sh
-
-# Run URI validator tests specifically
-uv run pytest tests/test_uri_validator.py -v
-
-# Alternative: Use system Python for pure Python tests
-uv run python3 -m pytest tests/test_config.py tests/test_language_manager.py tests/test_uri_validator.py -v
 ```
+
+### ⚠️ IMPORTANT - WHAT NOT TO DO
+
+```bash
+# ❌ NEVER run this - it will fail!
+uv run pytest tests/ -v
+# Result: 9 failed, 85 passed, 2 skipped, 3 errors
+```
+
+### 📊 Expected Results
+
+| Command | Expected Result | Use Case |
+|---------|----------------|----------|
+| `uv run pytest tests/ -m "not gtk" -v` | `38 passed, 61 deselected` | Daily development |
+| `python3 -m pytest tests/ -m "gtk" -v` (in Flatpak) | `61 passed, 38 deselected` | Full GTK testing |
+| `uv run pytest tests/ -v` | `9 failed, 85 passed, 2 skipped, 3 errors` | ❌ Never use |
 
 ### Test Architecture
 

@@ -1,0 +1,51 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $ShortcutsOverlay : Adw.Window {
+  title: _("Keyboard Shortcuts");
+  modal: true;
+  resizable: false;
+  default-width: 600;
+  default-height: 500;
+
+  [child]
+  Adw.ToolbarView {
+    [top]
+    Adw.HeaderBar {
+      [title]
+      Adw.WindowTitle {
+        title: _("Keyboard Shortcuts");
+      }
+
+      [end]
+      Gtk.Button close_button {
+        label: _("Close");
+        icon-name: "window-close-symbolic";
+      }
+    }
+
+    [content]
+    Gtk.Box {
+      orientation: vertical;
+      spacing: 12;
+      margin-top: 12;
+      margin-bottom: 12;
+      margin-start: 12;
+      margin-end: 12;
+
+      Gtk.SearchEntry search_entry {
+        placeholder-text: _("Search shortcuts...");
+      }
+
+      Gtk.ScrolledWindow {
+        vexpand: true;
+        hscrollbar-policy: never;
+        vscrollbar-policy: automatic;
+
+        child: Gtk.ListBox shortcuts_list {
+          selection-mode: none;
+        };
+      }
+    }
+  }
+}

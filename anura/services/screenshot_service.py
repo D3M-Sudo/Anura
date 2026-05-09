@@ -26,6 +26,7 @@ import pytesseract  # noqa: E402
 from pyzbar.pyzbar import decode  # noqa: E402
 
 from anura.config import LANG_CODE_PATTERN, get_tesseract_config  # noqa: E402
+from anura.utils.text_preprocessor import get_text_preprocessor  # noqa: E402
 
 
 def _is_flatpak_environment() -> bool:
@@ -54,11 +55,11 @@ class ScreenshotService(GObject.GObject):
     __gtype_name__ = "ScreenshotService"
 
     __gsignals__: ClassVar[dict[str, tuple]] = {
-        "error": (GObject.SIGNAL_RUN_LAST, None, (str,)),
-        "decoded": (GObject.SIGNAL_RUN_FIRST, None, (str, bool)),
+        "error": (GObject.SignalFlags.RUN_LAST, None, (str,)),
+        "decoded": (GObject.SignalFlags.RUN_FIRST, None, (str, bool)),
     }
 
-    __slots__ = ("_cancellable_lock", "cancelable", "portal")
+    __slots__ = ("_active_cancellable", "_cancellable_lock", "cancelable", "portal")
 
     def __init__(self) -> None:
         GObject.GObject.__init__(self)
@@ -66,18 +67,24 @@ class ScreenshotService(GObject.GObject):
         with self._cancellable_lock:
             self.cancelable: Gio.Cancellable = Gio.Cancellable.new()
         self.portal = Xdp.Portal()
+        self._active_cancellable = None
 
         # Configure Tesseract path for Flatpak environment
         _configure_tesseract_path()
 
     def capture(self, lang: str, copy: bool = False) -> None:
         """Requests a screenshot from the system portal."""
+        # Make cancellable check and replacement atomic
         with self._cancellable_lock:
             # If previous request was cancelled, create fresh cancellable
             if self.cancelable.is_cancelled():
                 self.cancelable = Gio.Cancellable.new()
             cancellable = self.cancelable
-        # Release lock before async D-Bus call to prevent deadlock
+            # Store reference for callback to prevent race condition
+            self._active_cancellable = cancellable
+
+        # Call portal outside lock but with captured cancellable reference
+        # This prevents deadlock while maintaining thread safety
         self.portal.take_screenshot(
             None,
             Xdp.ScreenshotFlags.INTERACTIVE,
@@ -118,10 +125,19 @@ class ScreenshotService(GObject.GObject):
             logger.warning("Anura Screenshot: Portal returned empty URI.")
             return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))
 
-        if uri.startswith("file://") and len(uri) > len("file://"):
-            filename = url2pathname(uri[len("file://") :])
-        else:
-            filename = GLib.Uri.unescape_string(uri)
+        try:
+            if uri.startswith("file://") and len(uri) > len("file://"):
+                filename = url2pathname(uri[len("file://") :])
+            else:
+                filename = GLib.Uri.unescape_string(uri)
+        except (ValueError, GLib.Error) as e:
+            logger.error(f"Anura Screenshot: Failed to parse URI '{uri}': {e}")
+            return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))
+
+        # Validate the extracted filename before processing
+        if not filename or not os.path.exists(filename):
+            logger.error(f"Anura Screenshot: Invalid or non-existent file path: {filename}")
+            return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))
 
         self.decode_image(lang, filename, copy, True)
 
@@ -205,13 +221,26 @@ class ScreenshotService(GObject.GObject):
         return None
 
     def _try_ocr_extraction(self, img: Image.Image, lang: str, start_time: float) -> str | None:
-        """Try to extract text using Tesseract OCR."""
+        """Try to extract text using Tesseract OCR with preprocessing."""
         try:
-            text = pytesseract.image_to_string(img, lang=lang, config=get_tesseract_config(lang))
-            extracted = text.strip()
+            # Apply image enhancement preprocessing
+            preprocessor = get_text_preprocessor()
+            enhanced_img = preprocessor.enhance_image(img)
+
+            # Extract text with Tesseract
+            raw_text = pytesseract.image_to_string(enhanced_img, lang=lang, config=get_tesseract_config(lang))
+
+            # Clean and normalize the extracted text
+            cleaned_text = preprocessor.clean_extracted_text(raw_text.strip())
+
             duration = time.time() - start_time
             logger.info(f"Anura OCR: Text extraction completed in {duration:.3f}s")
-            return extracted
+
+            # Log if preprocessing improved results
+            if cleaned_text != raw_text.strip():
+                logger.debug("Anura OCR: Text preprocessing improved OCR results")
+
+            return cleaned_text
         except Exception as e:
             logger.debug(f"Anura OCR: OCR extraction failed: {e}")
             return None
@@ -293,7 +322,9 @@ class ScreenshotService(GObject.GObject):
 
     def do_destroy(self) -> None:
         """Clean up cancellable to prevent leaks."""
+        # Clean up cancellable
         with self._cancellable_lock:
-            if not self.cancelable.is_cancelled():
-                self.cancelable.cancel()
-            self.cancelable = Gio.Cancellable.new()
+            if self.cancelable is not None:
+                if not self.cancelable.is_cancelled():
+                    self.cancelable.cancel()
+                self.cancelable = None

@@ -17,6 +17,7 @@ gi.require_version("Gtk", "4.0")
 
 from gi.repository import Adw, GLib, GObject, Gtk  # noqa: E402
 from loguru import logger  # noqa: E402
+import requests  # noqa: E402
 
 from anura.config import RESOURCE_PREFIX  # noqa: E402
 from anura.gobject_worker import GObjectWorker  # noqa: E402
@@ -31,9 +32,9 @@ class ExtractedPage(Adw.NavigationPage):
     __gtype_name__ = "ExtractedPage"
 
     __gsignals__: ClassVar[dict[str, tuple]] = {
-        "go-back": (GObject.SIGNAL_RUN_LAST, None, (int,)),
-        "on-listen-start": (GObject.SIGNAL_RUN_LAST, None, ()),
-        "on-listen-stop": (GObject.SIGNAL_RUN_LAST, None, ()),
+        "go-back": (GObject.SignalFlags.RUN_LAST, None, (int,)),
+        "on-listen-start": (GObject.SignalFlags.RUN_LAST, None, ()),
+        "on-listen-stop": (GObject.SignalFlags.RUN_LAST, None, ()),
     }
 
     share_list_box: Gtk.ListBox = Gtk.Template.Child()
@@ -54,11 +55,12 @@ class ExtractedPage(Adw.NavigationPage):
         for provider in share_service_instance.providers():
             self.share_list_box.append(ShareRow(provider))
 
-        # Initialize handler ID to ensure consistent state for do_destroy
+        # Initialize handler ID and store service instance reference for cleanup
         self._tts_stop_handler_id: int | None = None
+        self._tts_service = None
         try:
-            tts_service_instance = get_tts_service()
-            self._tts_stop_handler_id = tts_service_instance.connect("stop", self._on_listen_end)
+            self._tts_service = get_tts_service()
+            self._tts_stop_handler_id = self._tts_service.connect("stop", self._on_listen_end)
         except (TypeError, RuntimeError) as e:
             logger.warning(f"Failed to connect TTS stop signal: {e}")
 
@@ -88,15 +90,13 @@ class ExtractedPage(Adw.NavigationPage):
         self.swap_controls(True)
         self._set_spinner_active(True)
 
-        def _on_generate(self: ExtractedPage) -> None:
-            """Generate TTS audio from extracted text."""
-            tts_service_instance = get_tts_service()
-            GObjectWorker.call(
-                tts_service_instance.generate,
-                (self.extracted_text, self.get_language()),
-                callback=self._on_generated,
-                errorback=self._on_generate_error,
-            )
+        tts_service_instance = get_tts_service()
+        GObjectWorker.call(
+            tts_service_instance.generate,
+            (self.extracted_text, self.get_language()),
+            callback=self._on_generated,
+            errorback=self._on_generate_error,
+        )
 
     def _set_spinner_active(self, active: bool) -> None:
         """Switch Stack between button and spinner."""
@@ -112,11 +112,11 @@ class ExtractedPage(Adw.NavigationPage):
         self._set_spinner_active(False)
         self.swap_controls(False)
 
-        # Determine error message by type
-        if isinstance(error, Exception):
-            msg = _("Network error. Please check your internet connection.")
-        elif isinstance(error, TimeoutError):
+        # Determine error message by type - check specific exceptions first
+        if isinstance(error, TimeoutError):
             msg = _("Request timed out. Please try again.")
+        elif isinstance(error, (requests.RequestException, OSError)):
+            msg = _("Network error. Please check your internet connection.")
         else:
             msg = _("Text-to-speech failed. Please try again.")
         self.show_toast(msg)
@@ -146,8 +146,7 @@ class ExtractedPage(Adw.NavigationPage):
 
     def _on_listen_end(self, service: object, success: bool) -> None:
         """Handle TTS playback completion."""
-        tts_service_instance = get_tts_service()
-        tts_service_instance.disconnect(self._tts_stop_handler_id)
+        # Don't disconnect the signal handler - it should persist for multiple TTS operations
         self.emit("on-listen-stop")
         self._set_spinner_active(False)
         self.swap_controls(False)
@@ -162,10 +161,9 @@ class ExtractedPage(Adw.NavigationPage):
     def do_destroy(self) -> None:
         """Clean up signal handlers to prevent memory leaks."""
         # Check handler is not None AND service is valid before disconnecting
-        if self._tts_stop_handler_id is not None:
-            tts_service_instance = get_tts_service()
+        if self._tts_stop_handler_id is not None and self._tts_service is not None:
             with contextlib.suppress(TypeError, RuntimeError, AttributeError):
                 # Handler already disconnected or service disposed
-                tts_service_instance.disconnect(self._tts_stop_handler_id)
+                self._tts_service.disconnect(self._tts_stop_handler_id)
             self._tts_stop_handler_id = None
         super().do_destroy()

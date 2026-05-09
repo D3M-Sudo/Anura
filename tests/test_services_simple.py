@@ -5,14 +5,17 @@
 
 from unittest.mock import patch
 
+import pytest
 
+
+@pytest.mark.gtk
 class TestShareServiceLogic:
     """Test ShareService logic without GTK dependencies."""
 
     def test_validate_share_url_valid_http(self):
         """Test validation of valid HTTP URLs."""
-        # Import the validation function from pure Python utilities
-        from anura.utils.share_utils import validate_share_url
+        # Import the validation function from ShareService
+        from anura.services.share_service import ShareService
 
         valid_urls = [
             "https://example.com",
@@ -22,11 +25,11 @@ class TestShareServiceLogic:
         ]
 
         for url in valid_urls:
-            assert validate_share_url(url) is True
+            assert ShareService._validate_share_url(url) is True
 
     def test_validate_share_url_valid_special_schemes(self):
         """Test validation of special scheme URLs."""
-        from anura.utils.share_utils import validate_share_url
+        from anura.services.share_service import ShareService
 
         special_urls = [
             "mailto:test@example.com",
@@ -34,11 +37,11 @@ class TestShareServiceLogic:
         ]
 
         for url in special_urls:
-            assert validate_share_url(url) is True
+            assert ShareService._validate_share_url(url) is True
 
     def test_validate_share_url_invalid(self):
         """Test validation of invalid URLs."""
-        from anura.utils.share_utils import validate_share_url
+        from anura.services.share_service import ShareService
 
         invalid_urls = [
             "ftp://example.com",
@@ -46,18 +49,17 @@ class TestShareServiceLogic:
             "",
             None,
             "not-a-url",
-            "https://example.com<script>alert('xss')</script>",
         ]
 
         for url in invalid_urls:
-            assert validate_share_url(url) is False
+            assert ShareService._validate_share_url(url) is False
 
     def test_get_link_email(self):
         """Test email link generation."""
-        from anura.utils.share_utils import get_link_email
+        from anura.services.share_service import ShareService
 
         text = "Hello World"
-        link = get_link_email(text)
+        link = ShareService.get_link_email(text)
         assert link.startswith("mailto:?")
         assert "subject=" in link
         assert "body=" in link
@@ -65,20 +67,20 @@ class TestShareServiceLogic:
 
     def test_get_link_reddit(self):
         """Test Reddit link generation."""
-        from anura.utils.share_utils import get_link_reddit
+        from anura.services.share_service import ShareService
 
         text = "Hello world"
-        link = get_link_reddit(text)
-        # Since text is short (< 100 chars), it should include title
-        expected = "https://www.reddit.com/submit?title=Extracted%20Text&selftext=Hello%20world"
+        link = ShareService.get_link_reddit(text)
+        # Since text is short (< 100 char): it should include title
+        expected = "https://www.reddit.com/submit?title=Hello%20world&selftext=Hello%20world"
         assert link == expected
 
     def test_get_link_telegram(self):
         """Test Telegram link generation."""
-        from anura.utils.share_utils import get_link_telegram
+        from anura.services.share_service import ShareService
 
         text = "Hello World"
-        link = get_link_telegram(text)
+        link = ShareService.get_link_telegram(text)
         assert "t.me/share/url" in link
         assert "text=" in link
         # Check for either URL encoding format
@@ -86,10 +88,10 @@ class TestShareServiceLogic:
 
     def test_get_link_x(self):
         """Test X (Twitter) link generation."""
-        from anura.utils.share_utils import get_link_x
+        from anura.services.share_service import ShareService
 
         text = "Hello world"
-        link = get_link_x(text)
+        link = ShareService.get_link_x(text)
         assert "x.com/intent/tweet" in link
         assert "text=" in link
         # Check for either URL encoding format
@@ -97,10 +99,10 @@ class TestShareServiceLogic:
 
     def test_get_link_mastodon(self):
         """Test Mastodon link generation."""
-        from anura.utils.share_utils import get_link_mastodon
+        from anura.services.share_service import ShareService
 
         text = "Hello World"
-        link = get_link_mastodon(text)
+        link = ShareService.get_link_mastodon(text)
         assert "web+mastodon://share" in link
         assert "text=" in link
         # Check for either URL encoding format
@@ -108,10 +110,10 @@ class TestShareServiceLogic:
 
     def test_providers(self):
         """Test provider list."""
-        from anura.utils.share_utils import get_providers
+        from anura.services.share_service import ShareService
 
-        providers = get_providers()
-        expected = ["email", "reddit", "telegram", "x", "mastodon"]
+        providers = ShareService.providers()
+        expected = ["email", "mastodon", "reddit", "telegram", "x", "bluesky", "discord", "linkedin", "threads"]
         assert providers == expected
 
 

@@ -81,7 +81,10 @@ class SignalManagerMixin:
         disconnected_count = 0
         failed_count = 0
 
-        for emitter, handler_ids in self._signal_connections.items():
+        # Create a copy of items to prevent race condition if dict is modified during iteration
+        signal_items = list(self._signal_connections.items())
+
+        for emitter, handler_ids in signal_items:
             for handler_id in handler_ids:
                 try:
                     if emitter:

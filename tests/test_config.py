@@ -8,7 +8,6 @@ import re
 import pytest
 
 
-@pytest.mark.gtk
 class TestLangCodePattern:
     """Tests for LANG_CODE_PATTERN — the security boundary before Tesseract."""
 
@@ -80,7 +79,6 @@ class TestLangCodePattern:
         assert not self._match("eng.exe")
 
 
-@pytest.mark.gtk
 class TestGetTesseractConfig:
     """Tests for get_tesseract_config() path resolution logic."""
 

@@ -53,7 +53,7 @@ blueprint_files = [
   'ui/preferences_dialog.blp',
   'ui/preferences_general.blp',
   'ui/preferences_languages.blp',
-  'ui/shortcuts.blp',
+  'ui/shortcuts_overlay.blp',
   'ui/window.blp',
   'ui/language_popover.blp',
   'ui/language_popover_row.blp',

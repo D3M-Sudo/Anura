@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Test keyboard shortcuts functionality using pytest framework.
-Tests action registration and accelerator mapping without requiring full GTK environment.
+Tests action registration and accelerator mapping with proper GTK environment setup.
 """
 
 import os
@@ -13,11 +13,28 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
+@pytest.fixture
+def setup_gtk_environment():
+    """Setup GTK environment with GResource for GTK tests."""
+    import gi
+    gi.require_version('Gtk', '4.0')
+    gi.require_version('Gio', '2.0')
+    from gi.repository import Gio, GLib
+
+    # Load GResource as documented in testing.md
+    gresource_path = os.path.join(os.path.dirname(__file__), '..', 'builddir', 'data', 'com.github.d3msudo.anura.gresource')
+    if os.path.exists(gresource_path):
+        with open(gresource_path, 'rb') as f:
+            data = f.read()
+            resource = Gio.Resource.new_from_data(GLib.Bytes.new(data))
+            resource._register()
+
+
 class TestKeyboardShortcuts:
     """Test keyboard shortcuts setup and action registration."""
 
     @pytest.mark.gtk
-    def test_shortcuts_action_setup_method_exists(self):
+    def test_shortcuts_action_setup_method_exists(self, setup_gtk_environment):
         """Test that _setup_actions method contains expected shortcuts."""
         pytest.importorskip('anura.main')
         try:
@@ -33,7 +50,7 @@ class TestKeyboardShortcuts:
             pytest.skip(f"Cannot import main module: {e}")
 
     @pytest.mark.gtk
-    def test_shortcuts_source_code_contains_fixes(self):
+    def test_shortcuts_source_code_contains_fixes(self, setup_gtk_environment):
         """Test that the source code contains the keyboard shortcut fixes."""
         pytest.importorskip('anura.main')
         try:
@@ -50,7 +67,7 @@ class TestKeyboardShortcuts:
             pytest.skip(f"Cannot import main module: {e}")
 
     @pytest.mark.gtk
-    def test_paste_action_signature_fixed(self):
+    def test_paste_action_signature_fixed(self, setup_gtk_environment):
         """Test that on_paste_from_clipboard has correct signature."""
         pytest.importorskip('anura.main')
         try:
@@ -74,9 +91,29 @@ class TestKeyboardShortcuts:
         except ImportError as e:
             pytest.skip(f"Cannot import main module: {e}")
 
-    def test_ui_shortcuts_file_updated(self):
-        """Test that shortcuts UI file contains both shortcuts."""
-        ui_file = os.path.join(os.path.dirname(__file__), '..', 'data', 'ui', 'shortcuts.blp')
+    @pytest.mark.gtk
+    def test_shortcuts_overlay_exists(self):
+        """Test that the new shortcuts overlay system exists."""
+        try:
+            # Test that the ShortcutsOverlay class can be imported
+            from anura.widgets.shortcuts_overlay import ShortcutsOverlay, show_shortcuts_overlay
+
+            # Check class exists
+            assert ShortcutsOverlay is not None
+            assert show_shortcuts_overlay is not None
+            assert callable(show_shortcuts_overlay)
+
+            # Check class has expected methods
+            assert hasattr(ShortcutsOverlay, '__init__')
+            assert callable(ShortcutsOverlay)
+
+        except ImportError as e:
+            pytest.skip(f"Cannot import ShortcutsOverlay: {e}")
+
+    @pytest.mark.gtk
+    def test_shortcuts_overlay_ui_exists(self):
+        """Test that shortcuts overlay UI file exists."""
+        ui_file = os.path.join(os.path.dirname(__file__), '..', 'data', 'ui', 'shortcuts_overlay.blp')
 
         if not os.path.exists(ui_file):
             pytest.skip(f"UI file not found: {ui_file}")
@@ -84,14 +121,11 @@ class TestKeyboardShortcuts:
         with open(ui_file) as f:
             content = f.read()
 
-        # Check for all shortcuts
-        assert '<ctrl>question' in content, "Missing <ctrl>question shortcut"
-        assert '<ctrl>slash' in content, "Missing <ctrl>slash shortcut"
-        assert '<ctrl>h' in content, "Missing <ctrl>h shortcut"
-
-        # Check for the shortcut descriptions
-        assert 'Display Shortcuts (alternative)' in content, "Missing alternative shortcut description"
-        assert 'Display Shortcuts (universal)' in content, "Missing universal shortcut description"
+        # Check for UI structure
+        assert 'ShortcutsOverlay' in content, "Missing ShortcutsOverlay template"
+        assert 'search_entry' in content, "Missing search_entry widget"
+        assert 'shortcuts_list' in content, "Missing shortcuts_list widget"
+        assert 'close_button' in content, "Missing close_button widget"
 
 
 @pytest.mark.gtk

@@ -6,6 +6,7 @@
 import contextlib
 from gettext import gettext as _
 import os
+import re
 import shutil
 import tempfile
 import threading
@@ -49,11 +50,11 @@ class LanguageManager(GObject.GObject):
     }
 
     __gsignals__: ClassVar[dict[str, tuple]] = {
-        "added": (GObject.SIGNAL_RUN_FIRST, None, (str,)),
-        "downloading": (GObject.SIGNAL_RUN_FIRST, None, (str, int)),
-        "downloaded": (GObject.SIGNAL_RUN_FIRST, None, (str,)),
-        "download-failed": (GObject.SIGNAL_RUN_FIRST, None, (str,)),
-        "removed": (GObject.SIGNAL_RUN_FIRST, None, (str,)),
+        "added": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
+        "downloading": (GObject.SignalFlags.RUN_FIRST, None, (str, int)),
+        "downloaded": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
+        "download-failed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
+        "removed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
     }
 
     _active_language: LanguageItem = LanguageItem(code="eng", title=_("English"))
@@ -340,10 +341,15 @@ class LanguageManager(GObject.GObject):
         """Performs the physical download of the .traineddata file atomically."""
         # Use filename mapping for language codes with different filenames
         filename_code = self._TESSDATA_FILENAME_MAPPING.get(code, code)
+
+        # Validate filename is safe to prevent path traversal attacks
+        if not re.match(r"^[a-zA-Z0-9_-]+$", filename_code):
+            logger.error(f"Anura: Unsafe language code '{code}' -> '{filename_code}'")
+            return None
+
         tessfile = f"{filename_code}.traineddata"
         final_path = os.path.join(TESSDATA_DIR, f"{code}.traineddata")  # Always save with original code
         tmp_path = None
-
         for url_base in (TESSDATA_BEST_URL, TESSDATA_URL):
             try:
                 url = url_base + tessfile
@@ -354,44 +360,59 @@ class LanguageManager(GObject.GObject):
                 ) as tmp:
                     tmp_path = tmp.name
 
-                # Use requests with timeout instead of urlretrieve
-                response = requests.get(url, timeout=REQUEST_TIMEOUT, stream=True)
-                response.raise_for_status()
+                try:
+                    # Use requests with timeout instead of urlretrieve
+                    response = requests.get(url, timeout=REQUEST_TIMEOUT, stream=True)
+                    response.raise_for_status()
 
-                total_size = int(response.headers.get("content-length", 0))
-                downloaded = 0
+                    total_size = int(response.headers.get("content-length", 0))
+                    downloaded = 0
 
-                # Throttle progress updates to prevent main loop saturation
-                # Max 10 updates per second (every 100ms)
-                last_progress_time = time.monotonic()
-                last_progress_value = 0
+                    # Throttle progress updates to prevent main loop saturation
+                    # Max 10 updates per second (every 100ms)
+                    last_progress_time = time.monotonic()
+                    last_progress_value = 0
 
-                with open(tmp_path, "wb") as f:
-                    for chunk in response.iter_content(chunk_size=8192):
-                        if chunk:
-                            f.write(chunk)
-                            downloaded += len(chunk)
+                    with open(tmp_path, "wb") as f:
+                        for chunk in response.iter_content(chunk_size=8192):
+                            if chunk:
+                                f.write(chunk)
+                                downloaded += len(chunk)
 
-                            # Throttle progress updates (max 10/sec)
-                            now = time.monotonic()
-                            if now - last_progress_time >= 0.1:  # 100ms throttle
-                                if total_size > 0:
-                                    progress = int(downloaded * 100 / total_size)
-                                    # Only emit if progress actually changed
-                                    if progress != last_progress_value:
-                                        GLib.idle_add(self.emit, "downloading", code, min(progress, 100))
-                                        last_progress_value = progress
-                                else:
-                                    # No content-length header, emit indeterminate progress
-                                    GLib.idle_add(self.emit, "downloading", code, -1)
-                                last_progress_time = now
+                                # Throttle progress updates (max 10/sec)
+                                now = time.monotonic()
+                                if now - last_progress_time >= 0.1:  # 100ms throttle
+                                    if total_size > 0:
+                                        progress = int(downloaded * 100 / total_size)
+                                        # Only emit if progress actually changed
+                                        if progress != last_progress_value:
+                                            GLib.idle_add(self.emit, "downloading", code, min(progress, 100))
+                                            last_progress_value = progress
+                                    else:
+                                        # No content-length header, emit indeterminate progress
+                                        GLib.idle_add(self.emit, "downloading", code, -1)
+                                    last_progress_time = now
 
-                shutil.move(tmp_path, final_path)  # atomic on same filesystem
-                return code
+                    # Use copy+delete for cross-filesystem compatibility
+                    try:
+                        shutil.copy2(tmp_path, final_path)
+                        return code
+                    except (OSError, shutil.Error) as e:
+                        logger.error(f"Anura: Failed to install language file: {e}")
+                        return None
+
+                finally:
+                    # Ensure temporary file is always cleaned up
+                    if tmp_path and os.path.exists(tmp_path):
+                        try:
+                            os.unlink(tmp_path)
+                            tmp_path = None
+                        except OSError:
+                            logger.warning(f"Anura: Failed to clean up temporary file: {tmp_path}")
+
             except (requests.RequestException, OSError) as e:
-                if tmp_path and os.path.exists(tmp_path):
-                    os.unlink(tmp_path)
                 logger.warning(f"Anura: download failed from {url_base}: {e}")
+                # tmp_path will be cleaned up by the finally block above
 
         logger.error(f"Anura: Failed to download model '{code}' from all sources.")
         return None

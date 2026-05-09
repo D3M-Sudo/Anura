@@ -34,8 +34,8 @@ class TTSService(GObject.GObject):
     __gtype_name__ = "TTSService"
 
     __gsignals__: ClassVar[dict[str, tuple]] = {
-        "speak": (GObject.SIGNAL_RUN_LAST, None, (str,)),
-        "stop": (GObject.SIGNAL_RUN_LAST, None, (bool,)),
+        "speak": (GObject.SignalFlags.RUN_LAST, None, (str,)),
+        "stop": (GObject.SignalFlags.RUN_LAST, None, (bool,)),
     }
 
     __slots__ = ("player",)
@@ -213,7 +213,10 @@ class TTSService(GObject.GObject):
 
         try:
             tts.save(filepath)
-        except (Exception, requests.RequestException, OSError) as e:
+        except (SystemExit, KeyboardInterrupt):
+            # Re-raise system exceptions that should terminate the application
+            raise
+        except (requests.RequestException, OSError) as e:
             logger.error(f"Anura TTS: Failed to save speech file: {e}")
             if os.path.exists(filepath):
                 try:
@@ -246,6 +249,7 @@ class TTSService(GObject.GObject):
         self.player = Gst.ElementFactory.make("playbin3", "player")
         if not self.player:
             logger.error("Anura TTS Error: Failed to create GStreamer playbin.")
+            GLib.idle_add(self.emit, "stop", False)
             return
 
         self.player.set_property("uri", f"file://{filepath}")
@@ -272,18 +276,17 @@ class TTSService(GObject.GObject):
             # Check if bus watch is already active to prevent duplicates
             if self._bus_watch_active and self._bus_message_handler_id is not None:
                 return False
+
             self._bus_watch_setup_in_progress = True
 
-        try:
-            with self._bus_watch_lock:
+            try:
                 if self._bus is not None and not self._bus_watch_active:
-                    # Double-check under lock to prevent race conditions
+                    # Setup bus watch within the same lock to prevent race conditions
                     self._bus.add_signal_watch()
                     self._bus_watch_active = True
                     self._bus_message_handler_id = self._bus.connect("message", self.on_gst_message)
                     logger.debug("Anura TTS: Bus watch setup completed")
-        finally:
-            with self._bus_watch_lock:
+            finally:
                 self._bus_watch_setup_in_progress = False
 
         return False  # Don't repeat
@@ -316,6 +319,11 @@ class TTSService(GObject.GObject):
             logger.error(f"Anura TTS Error: GStreamer playback error: {err}")
             with self._cleanup_lock:
                 self._cleanup_gst_resources()
+                # Ensure bus watch is cleaned up on error
+                if self._bus_watch_active and self._bus:
+                    with contextlib.suppress(GLib.Error, RuntimeError):
+                        self._bus.remove_signal_watch()
+                        self._bus_watch_active = False
             GLib.idle_add(self.emit, "stop", False)
 
     def _cleanup_gst_resources(self) -> None:
@@ -325,13 +333,9 @@ class TTSService(GObject.GObject):
 
             # Disconnect bus message handler if connected
             if self._bus_message_handler_id is not None:
-                if isinstance(self._bus_message_handler_id, int):
+                if self._bus and self._bus_message_handler_id is not None:
                     self._bus.disconnect(self._bus_message_handler_id)
                     logger.debug("Anura TTSService: Disconnected bus message handler")
-                else:
-                    logger.warning(
-                        f"Anura TTSService: Invalid handler ID type: {type(self._bus_message_handler_id)}",
-                    )
                 self._bus_message_handler_id = None
 
             if self._bus_watch_active and self._bus:

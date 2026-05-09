@@ -49,7 +49,7 @@ template $ExtractedPage : Adw.NavigationPage {
 
         StackPage {
           name: "spinner";
-          child: Adw.Spinner listen_spinner {
+          child: Gtk.Spinner listen_spinner {
           };
         }
       }
@@ -71,6 +71,7 @@ template $ExtractedPage : Adw.NavigationPage {
 
       [end]
       MenuButton share_button {
+        action-name: "win.share";
         icon-name: "emblem-shared-symbolic";
         tooltip-text: C_("Extracted screen", "Share To");
         popover: Popover {
@@ -139,5 +140,5 @@ menu primary_menu {
 
 menu grab_menu {
     item (_("Open image"), "app.open_image", "folder-open-symbolic")
-    item (_("Paste from clipboard"), "app.paste_from_clipboard", "folder-open-symbolic")
+    item (_("Paste from clipboard"), "app.paste_from_clipboard", "edit-paste-symbolic")
 }

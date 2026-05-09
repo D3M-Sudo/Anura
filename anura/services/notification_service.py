@@ -53,6 +53,7 @@ class NotificationService:
         self.libnotify_initialized = False
         self._portal = None
         self._notification_id_counter = count()  # Monotonic counter for unique IDs
+        self._active_notifications: set[str] = set()  # Track active notification IDs
 
         # Initialize XDP portal once for reuse
         if HAS_PORTAL:
@@ -145,6 +146,9 @@ class NotificationService:
             # Generate unique ID for this notification (timestamp + monotonic counter)
             notification_id = f"{self.app_id}-{int(time.time())}-{next(self._notification_id_counter)}"
 
+            # Track notification ID for potential cleanup
+            self._active_notifications.add(notification_id)
+
             # Show notification via portal using correct XDG Portal API
             self._portal.add_notification(
                 notification_id,
@@ -175,6 +179,16 @@ class NotificationService:
     def is_available(self) -> bool:
         """Check if any notification backend is available."""
         return HAS_PORTAL or self.libnotify_initialized
+
+    def cleanup_notifications(self) -> None:
+        """Clean up tracking of active notifications.
+
+        Note: XDG Portal doesn't provide a way to cancel notifications,
+        but this cleanup helps prevent memory leaks from tracking.
+        """
+        if self._active_notifications:
+            logger.debug(f"NotificationService: Cleaning up {len(self._active_notifications)} tracked notifications")
+            self._active_notifications.clear()
 
     def get_backend_info(self) -> str:
         """Get information about the active notification backend."""
