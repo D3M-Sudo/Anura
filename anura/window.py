@@ -539,6 +539,6 @@ class AnuraWindow(Adw.ApplicationWindow):
             if len(url) > self.MAX_URL_LENGTH:
                 logger.warning(f"Anura: URL too long ({len(url)} chars), ignoring.")
                 return None
-            if self.uri_validator(url):
+            if uri_validator(url):
                 return url
         return None

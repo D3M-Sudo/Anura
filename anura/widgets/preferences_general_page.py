@@ -55,6 +55,9 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
 
         self.extra_language_combo.set_model(Gtk.StringList.new(downloaded_langs))
 
+        # Connect the signal ALWAYS, regardless of current extra language setting
+        self.connect_tracked(self.extra_language_combo, "notify::selected-item", self._on_extra_language_changed)
+
         current_extra = self.settings.get_string("extra-language")
 
         # Guard against empty/unset extra-language
@@ -69,8 +72,6 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
             self.extra_language_combo.set_selected(index)
         except ValueError:
             logger.warning(f"Anura: Extra language '{current_name}' not found among installed models.")
-
-        self.connect_tracked(self.extra_language_combo, "notify::selected-item", self._on_extra_language_changed)
 
     def _on_extra_language_changed(self, combo_row: Adw.ComboRow, _param: object) -> None:
         selected_item = combo_row.get_selected_item()

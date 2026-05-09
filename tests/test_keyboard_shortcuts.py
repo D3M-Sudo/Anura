@@ -65,11 +65,11 @@ class TestKeyboardShortcuts:
             sig = inspect.signature(method)
             params = list(sig.parameters.keys())
 
-            # Should only take 'self' and '_action' (2 params total)
-            assert len(params) == 2, f"Expected 2 parameters, got {len(params)}: {params}"
+            # Should take 'self', '_action', and '_param' (3 params total)
+            assert len(params) == 3, f"Expected 3 parameters, got {len(params)}: {params}"
             assert 'self' in params, "Missing 'self' parameter"
             assert '_action' in params, "Missing '_action' parameter"
-            assert '_param' not in params, "Found unexpected '_param' parameter"
+            assert '_param' in params, "Missing '_param' parameter"
 
         except ImportError as e:
             pytest.skip(f"Cannot import main module: {e}")

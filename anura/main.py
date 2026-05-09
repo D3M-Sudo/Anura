@@ -183,7 +183,7 @@ class AnuraApplication(Adw.Application):
 
     def _cleanup_notification_service(self) -> None:
         """Clean up notification service."""
-        if hasattr(self, "_notification_service") and self._notification_service:
+        if hasattr(self, "notification_service") and self.notification_service:
             try:
                 if HAS_LIBNOTIFY:
                     from gi.repository import Notify
@@ -462,6 +462,8 @@ class AnuraApplication(Adw.Application):
                     dialog = Adw.AlertDialog()
                     dialog.set_heading(_("Failed to Open Browser"))
                     dialog.set_body(_("No web browser could be launched. Please open the link manually."))
+                    dialog.add_response("ok", _("OK"))
+                    dialog.present(window)
 
         launcher.launch(self.props.active_window, None, on_launch_finish)
 
@@ -480,6 +482,8 @@ class AnuraApplication(Adw.Application):
                     dialog = Adw.AlertDialog()
                     dialog.set_heading(_("Failed to Open Browser"))
                     dialog.set_body(_("No web browser could be launched. Please open the link manually."))
+                    dialog.add_response("ok", _("OK"))
+                    dialog.present(window)
 
         launcher.launch(self.props.active_window, None, on_launch_finish)
 
