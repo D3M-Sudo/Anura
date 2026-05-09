@@ -24,7 +24,7 @@ from anura.language_manager import get_language_manager  # noqa: E402
 from anura.services.clipboard_service import get_clipboard_service  # noqa: E402
 from anura.services.screenshot_service import ScreenshotService  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
-from anura.utils import uri_validator  # noqa: E402
+from anura.utils import detect_portal_advice, uri_validator  # noqa: E402
 from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
 from anura.widgets.preferences_dialog import PreferencesDialog  # noqa: E402
 from anura.widgets.welcome_page import WelcomePage  # noqa: E402
@@ -198,7 +198,13 @@ class AnuraWindow(Adw.ApplicationWindow):
         pattern (host's xdg-desktop-portal backend missing or broken). The
         toast emitted via "error" disappears in seconds; this banner stays
         visible until the user dismisses it or installs a backend.
+
+        The banner title is replaced at runtime with desktop-aware advice
+        (the Blueprint's static title is only a fallback used before the
+        first failure).
         """
+        advice = detect_portal_advice()
+        self.portal_banner.set_title(advice.short_message)
         self.portal_banner.set_revealed(True)
 
     def _on_portal_banner_dismissed(self, _banner: Adw.Banner) -> None:

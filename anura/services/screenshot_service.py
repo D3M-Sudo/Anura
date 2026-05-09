@@ -26,6 +26,7 @@ import pytesseract  # noqa: E402
 from pyzbar.pyzbar import decode  # noqa: E402
 
 from anura.config import LANG_CODE_PATTERN, get_tesseract_config  # noqa: E402
+from anura.utils.portal_advice import detect_portal_advice  # noqa: E402
 from anura.utils.text_preprocessor import get_text_preprocessor  # noqa: E402
 
 
@@ -137,12 +138,11 @@ class ScreenshotService(GObject.GObject):
                 and (e.message or "").strip().lower() == "screenshot failed"
             )
             if is_generic_backend_failure:
-                user_message = _(
-                    "Screenshot failed. Your desktop session does not appear to expose a "
-                    "working screenshot portal. Install xdg-desktop-portal-gtk (or the "
-                    "backend matching your desktop, e.g. xdg-desktop-portal-gnome / -kde) "
-                    "and re-login.",
-                )
+                # Surface advice that matches the user's actual desktop.
+                # Hard-coding "install xdg-desktop-portal-gtk" misled
+                # LXQt/Xfce/MATE users on Ubuntu 24.04+ (the gtk portal
+                # backend lost the Screenshot interface upstream).
+                user_message = detect_portal_advice().long_message
                 # On a generic backend failure, dump host environment context
                 # (desktop, session type, display server, Flatpak state) once
                 # per process so support logs include enough information to

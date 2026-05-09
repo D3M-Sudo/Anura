@@ -61,17 +61,34 @@ flatpak install --user ~/Downloads/com.github.d3msudo.anura.flatpak
 
 ### Runtime requirements
 
-Anura captures screenshots through the **XDG Desktop Portal**. The portal frontend is shipped with `xdg-desktop-portal` (typically already installed), but it needs a *backend* matching your desktop session. **GNOME and KDE ship one by default**, but other desktops (notably **LXQt**) do not — Anura cannot bundle a portal backend inside the Flatpak because it must run on the host with access to the compositor.
+Anura captures screenshots through the **XDG Desktop Portal**. The portal frontend is shipped with `xdg-desktop-portal` (typically already installed), but it needs a *backend* matching your desktop session. **GNOME and KDE ship one by default**, but other desktops (notably **LXQt, Xfce, MATE, Cinnamon**) do not — Anura cannot bundle a portal backend inside the Flatpak because it must run on the host with access to the compositor.
+
+> **Heads up — Ubuntu 24.04+:** the `xdg-desktop-portal-gtk` backend no longer implements the `Screenshot` interface. Installing `-gtk` alone will *not* fix screenshots on LXQt / Xfce / MATE / Cinnamon. Use `-gnome` or `-kde` instead, as listed below.
 
 | Desktop session | Install command (Debian/Ubuntu family) |
 | --- | --- |
-| GNOME / Ubuntu Desktop | already installed (`xdg-desktop-portal-gnome` or `-gtk`) |
+| GNOME / Ubuntu Desktop | already installed (`xdg-desktop-portal-gnome`) |
 | KDE Plasma / Kubuntu | already installed (`xdg-desktop-portal-kde`) |
-| **LXQt / Lubuntu** | `sudo apt install xdg-desktop-portal-gtk` |
-| Xfce / MATE / Cinnamon | `sudo apt install xdg-desktop-portal-gtk` |
-| wlroots (Sway, Hyprland, …) | `sudo apt install xdg-desktop-portal-wlr` |
+| **LXQt / Lubuntu** | `sudo apt install xdg-desktop-portal-kde` + see _LXQt extra step_ below |
+| Xfce / MATE / Cinnamon / Budgie | `sudo apt install xdg-desktop-portal-gnome` (or `-kde`) |
+| wlroots (Sway, Hyprland, river, Niri) | `sudo apt install xdg-desktop-portal-wlr` |
 
-After installing, **log out and back in** so the portal D-Bus service reloads. If the screenshot still fails, capture an `anura_debug.log` and the `domain=…, code=…` line will narrow down the cause.
+#### LXQt extra step
+
+On LXQt the only `.portal` registered for the LXQt session is `lxqt.portal`, which exposes `FileChooser` only. Even after installing `xdg-desktop-portal-kde`, the portal still needs to be told to delegate the `Screenshot` interface to the KDE backend:
+
+```bash
+mkdir -p ~/.config/xdg-desktop-portal
+cat > ~/.config/xdg-desktop-portal/lxqt-portals.conf <<'EOF'
+[preferred]
+default=lxqt
+org.freedesktop.impl.portal.Screenshot=kde
+org.freedesktop.impl.portal.ScreenCast=kde
+EOF
+systemctl --user restart xdg-desktop-portal.service
+```
+
+After installing (and on LXQt, applying the override above), **log out and back in** so the portal D-Bus service reloads. If the screenshot still fails, capture an `anura_debug.log` (the `Anura Screenshot diagnostics: …` line will report the desktop / session type Anura saw) and a parallel `journalctl --user -t xdg-desktop-portal* -t xdg-desktop-portal-kde -t xdg-desktop-portal-gnome -t xdg-desktop-portal-wlr` capture during the failure.
 
 ---
 
