@@ -292,7 +292,12 @@ class TTSService(GObject.GObject):
         return False  # Don't repeat
 
     def on_gst_message(self, _bus: Gst.Bus, message: Gst.Message) -> None:
-        """Thread-safe GStreamer bus message handling."""
+        """Thread-safe GStreamer bus message handling.
+
+        This is a Gst.Bus "message" signal callback, not a GLib timeout, so
+        the return value is ignored — don't return False/True for "don't
+        repeat".
+        """
         if message.type == Gst.MessageType.EOS:
             logger.info("Anura TTSService: GStreamer state changed to EOS (End of Stream)")
             with self._cleanup_lock:
@@ -312,7 +317,7 @@ class TTSService(GObject.GObject):
                 elif filepath:
                     logger.debug("Anura TTS: Cleanup skipped, file already removed")
             GLib.idle_add(self.emit, "stop", True)
-            return False  # Don't repeat timeout
+            return
 
         elif message.type == Gst.MessageType.ERROR:
             err, _debug = message.parse_error()
