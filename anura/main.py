@@ -495,7 +495,7 @@ class AnuraApplication(Adw.Application):
             website="https://github.com/D3M-Sudo/Anura",
             license_type=Gtk.License.MIT_X11,
             developers=["Andrey Maksimov", "D3M-Sudo"],
-            designers=["Andrey Maksimov"],
+            designers=["D3M-Sudo"],
             release_notes=self._get_release_notes(),
         )
         about_window.present(self.props.active_window)

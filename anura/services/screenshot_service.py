@@ -64,7 +64,13 @@ class ScreenshotService(GObject.GObject):
         "portal-backend-missing": (GObject.SignalFlags.RUN_FIRST, None, ()),
     }
 
-    __slots__ = ("_active_cancellable", "_cancellable_lock", "cancelable", "portal")
+    __slots__ = (
+        "_active_cancellable",
+        "_cancellable_lock",
+        "_env_diagnostics_logged",
+        "cancelable",
+        "portal",
+    )
 
     def __init__(self) -> None:
         GObject.GObject.__init__(self)
@@ -73,6 +79,7 @@ class ScreenshotService(GObject.GObject):
             self.cancelable: Gio.Cancellable = Gio.Cancellable.new()
         self.portal = Xdp.Portal()
         self._active_cancellable = None
+        self._env_diagnostics_logged = False
 
         # Configure Tesseract path for Flatpak environment
         _configure_tesseract_path()
@@ -136,6 +143,13 @@ class ScreenshotService(GObject.GObject):
                     "backend matching your desktop, e.g. xdg-desktop-portal-gnome / -kde) "
                     "and re-login.",
                 )
+                # On a generic backend failure, dump host environment context
+                # (desktop, session type, display server, Flatpak state) once
+                # per process so support logs include enough information to
+                # tell apart "backend missing" from "backend installed but
+                # broken in this session" (e.g. VirtualBox guest, Wayland
+                # without screencast, etc.).
+                self._log_portal_environment()
                 # Also fire a dedicated signal so the window can reveal a
                 # persistent banner with the install hint. The toast above
                 # disappears in seconds; the banner stays until dismissed.
@@ -166,6 +180,39 @@ class ScreenshotService(GObject.GObject):
             return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))
 
         self.decode_image(lang, filename, copy, True)
+
+    # Environment variables surfaced when the portal screenshot fails. These
+    # tell us which desktop/session backend should be answering the portal
+    # request, which is the single most useful piece of triage data when a
+    # screenshot fails with a generic libportal error.
+    _PORTAL_DIAGNOSTIC_ENV_KEYS = (
+        "XDG_CURRENT_DESKTOP",
+        "XDG_SESSION_TYPE",
+        "XDG_SESSION_DESKTOP",
+        "DESKTOP_SESSION",
+        "GDMSESSION",
+        "WAYLAND_DISPLAY",
+        "DISPLAY",
+        "FLATPAK_ID",
+        "container",
+    )
+
+    def _log_portal_environment(self) -> None:
+        """Dump host environment context once on portal failure.
+
+        Captures the XDG/Flatpak environment variables that determine which
+        xdg-desktop-portal backend handles the request. Logged at most once
+        per process so repeated failures don't flood the log.
+        """
+        if self._env_diagnostics_logged:
+            return
+        self._env_diagnostics_logged = True
+
+        snapshot = ", ".join(f"{key}={os.environ.get(key) or '<unset>'}" for key in self._PORTAL_DIAGNOSTIC_ENV_KEYS)
+        in_flatpak = _is_flatpak_environment()
+        logger.info(
+            f"Anura Screenshot diagnostics: in_flatpak={in_flatpak}, {snapshot}",
+        )
 
     def decode_image_sync(
         self,

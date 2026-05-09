@@ -31,6 +31,6 @@ class ShareRow(Gtk.ListBoxRow):
     @Gtk.Template.Callback()
     def _on_released(self, *args: object) -> None:
         self.activate_action(
-            "window.share",
+            "win.share",
             GLib.Variant.new_string(self.provider_name),
         )
