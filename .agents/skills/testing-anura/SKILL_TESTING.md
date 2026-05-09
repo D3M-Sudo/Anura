@@ -43,6 +43,85 @@ uv run env \
 1. Run gi-touching test code via `subprocess.run(["/usr/bin/python3", "-c", probe, ...])` from inside the harness — system python3 is 3.10 and has working `gi` natively. This is the fast path for runtime probes that don't need any project Python deps.
 2. `uv pip install pygobject` to compile a 3.12-compatible PyGObject into the venv — but this needs `pkg-config`, `libcairo2-dev`, `libgirepository1.0-dev` apt packages first; usually not worth it.
 
+## System-py3 GTK harness recipe (use when the test must construct real GTK widgets)
+
+For bugs that require *actual* GTK semantics — e.g. action dispatch, signal connection, template binding — stand up a small one-shot harness on `/usr/bin/python3`. This is what to do when AST-level reasoning isn't enough and a Flatpak GUI run isn't possible.
+
+**One-time apt deps (idempotent on the Devin env):**
+
+```bash
+sudo apt-get install -y \
+  gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-xdp-1.0 \
+  libgirepository1.0-dev libzbar0 tesseract-ocr
+sudo ldconfig            # so pyzbar's ctypes loader sees libzbar.so.0
+```
+
+**System-py3 user-site project deps** (so `/usr/bin/python3` can `import anura.services.*` without crashing on third-party imports):
+
+```bash
+/usr/bin/python3 -m pip install --user \
+  loguru pytesseract pillow pyzbar requests gtts
+```
+
+**Run the harness** with `DISPLAY=:0` so `Adw.ApplicationWindow.present()` doesn't crash the X bridge:
+
+```bash
+DISPLAY=:0 /usr/bin/python3 /tmp/harness.py
+```
+
+Proven harness shape for action-dispatch / wiring bugs (verified against PR #29 ShareRow bug):
+
+```python
+import gi
+gi.require_version("Gtk", "4.0")
+gi.require_version("Adw", "1")
+from gi.repository import Adw, Gio, GLib, Gtk
+
+calls = []
+def on_share(_a, p): calls.append(p.get_string())
+
+app = Adw.Application(application_id="com.example.AnuraTest")
+
+def on_activate(_app):
+    win = Adw.ApplicationWindow(application=app)
+    a = Gio.SimpleAction.new("share", GLib.VariantType.new("s"))
+    a.connect("activate", on_share)
+    win.add_action(a)
+    row = Gtk.ListBoxRow(); box = Gtk.ListBox(); box.append(row)
+    win.set_content(box); win.present()
+    print("win.share   :", row.activate_action("win.share",    GLib.Variant.new_string("X")))
+    print("window.share:", row.activate_action("window.share", GLib.Variant.new_string("X")))
+    print("calls       :", calls)
+    GLib.idle_add(app.quit)
+
+app.connect("activate", on_activate)
+app.run([])
+```
+
+For service methods that don't need GTK at all but are gated behind a heavy `__init__` (e.g. `ScreenshotService._log_portal_environment()` depends only on `os.environ` + loguru, but `__init__` brings up GSettings), bypass `__init__` entirely with `__new__` + manual slot init:
+
+```python
+from unittest.mock import patch
+from loguru import logger
+from anura.services import screenshot_service as ss_mod
+
+svc = ss_mod.ScreenshotService.__new__(ss_mod.ScreenshotService)
+svc._env_diagnostics_logged = False
+
+captured = []
+sink = logger.add(lambda m: captured.append(m.record["message"]), level="INFO")
+try:
+    with patch.dict("anura.services.screenshot_service.os.environ",
+                    {"XDG_CURRENT_DESKTOP": "GNOME", ...}, clear=False), \
+         patch.object(ss_mod, "_is_flatpak_environment", return_value=True):
+        svc._log_portal_environment()
+        svc._log_portal_environment()  # must be no-op (one-shot)
+finally:
+    logger.remove(sink)
+```
+
+This is the canonical pattern for service-method-in-isolation tests in this repo.
+
 ## When you can't run the gtk-marked tests (common)
 
 If any of these are true, a *live* GUI pass on this VM is not realistic:
@@ -139,6 +218,7 @@ When a PR adds new files to `data/com.github.d3msudo.anura.gresource.xml`, the s
 
 ## Things that bite
 
+- **`win.` prefix vs `window.` prefix on `Adw.ApplicationWindow`.** Actions added via `Adw.ApplicationWindow.add_action()` (inherited from `Gio.ActionMap` via `Gtk.ApplicationWindow`) are exposed as `win.<name>`, **never** `window.<name>`. Calling `widget.activate_action("window.share", ...)` returns `False` and the handler never runs — with **no log line, no warning, no error**. This was the Bug #2 shape on PR #29 (every share-popover row was a silent no-op). General rule: when a click "does nothing" and there's nothing in the debug log, the first thing to check is whether the action prefix matches the registrar (`win.` for windows, `app.` for `Gio.Application`-level actions, `<custom>.` only with `widget.insert_action_group(...)`).
 - `Gtk.MenuButton` does **not** implement `Gtk.Actionable`. `action-name: "win.share";` on a `MenuButton` will fail to compile against a current blueprint-compiler. If you see that on a `MenuButton`, remove it and let the inner widget (e.g. `ShareRow` / `Gtk.Button`) carry the action instead.
 - `Adw.Window` exposes a `content` property, not a raw `child` slot. Use `[content]`, not `[child]`. Same for `Adw.ApplicationWindow`.
 - A `try: return ... except: ... else: ...` block has an **unreachable** `else` because the `return` exits the `try` without falling through. Use `finally` for cleanup that must run on every exit including `return`.
@@ -146,15 +226,4 @@ When a PR adds new files to `data/com.github.d3msudo.anura.gresource.xml`, the s
 - `pytest.mark.gtk` tests that look like "unit tests" still need PyGObject — collection alone imports the module under test.
 - Don't try to install `python3-pytesseract` from apt; it's not packaged. Install via `uv add pytesseract` for the project, or skip the harness if you don't need it.
 - `glib-compile-resources` is in **`libglib2.0-dev-bin`**, not `libglib2.0-bin`. The latter ships only the runtime CLI helpers (`gresource`, `gio`, `gsettings`). Forgetting this wastes a debug cycle.
-- `Adw.AboutDialog` does **not** expose `legal_notice` as a GObject property. Passing it as a kwarg to the constructor raises `TypeError: gobject 'AdwAboutDialog' doesn't support property 'legal_notice'` and the dialog never opens. Convey license info via `copyright` + `license_type=Gtk.License.MIT_X11` instead.
-- Window-level `Gtk.EventControllerKey` for shortcut keys must use `Gtk.PropagationPhase.CAPTURE` if there's a `Gtk.SearchEntry` inside the window. The SearchEntry's built-in handler consumes Escape via `stop-search` returning TRUE, so a default-phase BUBBLE controller never sees the keypress. Set the phase **before** `connect("key-pressed", …)`.
-- `Adw.HeaderBar` already provides the standard window-close X. Adding an explicit `Gtk.Button { icon-name: "window-close-symbolic"; }` to `[end]` rendered as a duplicate X. Trust HeaderBar's standard control unless you have a specific reason.
-- `swap_controls(True)` on `ExtractedPage` is the **TTS-playback** state (hides Listen, shows Cancel-listening). Don't call it as a generic "disable controls during async work" shortcut — if no one resets it on success/error completion, the user lands back on the page with the wrong button visible.
-
-## Reporting
-
-If the GUI pass is replaced by AST + static + CI, say so explicitly in the report. Quote the CI check status (5/5 green names) on the latest commit — that's the real GUI build evidence. Don't claim a desktop pass when there wasn't one.
-
-## Devin Secrets Needed
-
-None. The repo is public and tests are all local. CI on github.com works with the default `gh` auth.
+- After installing `libzbar0`, run `sudo ldconfig` once — `pyzbar.zbar_library.load()` uses ctypes / `find_library` and a missing ldconfig refresh produces `ImportError: Unable to find zbar shared library` even though the file is right there in `/usr/lib/x86_64-linux-gnu/libzbar.so.0`.
