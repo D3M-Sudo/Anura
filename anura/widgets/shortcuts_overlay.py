@@ -16,7 +16,7 @@ gi.require_version("Gdk", "4.0")
 gi.require_version("GLib", "2.0")
 gi.require_version("GObject", "2.0")
 gi.require_version("Gtk", "4.0")
-from gi.repository import Adw, Gdk, GObject, Gtk  # noqa: E402
+from gi.repository import Adw, Gdk, GLib, GObject, Gtk  # noqa: E402
 
 from anura.config import RESOURCE_PREFIX  # noqa: E402
 
@@ -48,37 +48,41 @@ class ShortcutsOverlay(Adw.Window):
         self.add_css_class("anura-card")
 
     def _setup_shortcuts_data(self) -> None:
-        """Define all keyboard shortcuts with descriptions."""
+        """Define all keyboard shortcuts with descriptions.
+
+        Note: ``key`` strings must follow Gtk.accelerator_parse() format
+        (e.g. ``<Control>g``) so Gtk.ShortcutLabel can render them.
+        """
         self.shortcuts_data = [
             # Screenshot & OCR
             {
                 "category": _("Screenshot & OCR"),
                 "shortcuts": [
-                    {"key": "Ctrl + G", "description": _("Take screenshot")},
-                    {"key": "Ctrl + Shift + G", "description": _("Take screenshot and copy to clipboard")},
-                    {"key": "Ctrl + O", "description": _("Open image file")},
-                    {"key": "Ctrl + V", "description": _("Paste image from clipboard")},
+                    {"key": "<Control>g", "description": _("Take screenshot")},
+                    {"key": "<Control><Shift>g", "description": _("Take screenshot and copy to clipboard")},
+                    {"key": "<Control>o", "description": _("Open image file")},
+                    {"key": "<Control>v", "description": _("Paste image from clipboard")},
                 ],
             },
             # Text Operations
             {
                 "category": _("Text Operations"),
                 "shortcuts": [
-                    {"key": "Ctrl + C", "description": _("Copy text to clipboard")},
-                    {"key": "Ctrl + L", "description": _("Listen to text (TTS)")},
-                    {"key": "Ctrl + Shift + L", "description": _("Stop text-to-speech")},
+                    {"key": "<Control>c", "description": _("Copy text to clipboard")},
+                    {"key": "<Control>l", "description": _("Listen to text (TTS)")},
+                    {"key": "<Control><Shift>l", "description": _("Stop text-to-speech")},
                 ],
             },
             # Application
             {
                 "category": _("Application"),
                 "shortcuts": [
-                    {"key": "Ctrl + ,", "description": _("Open preferences")},
-                    {"key": "Ctrl + ?", "description": _("Show keyboard shortcuts")},
-                    {"key": "Ctrl + H", "description": _("Show keyboard shortcuts")},
-                    {"key": "Ctrl + /", "description": _("Show keyboard shortcuts")},
-                    {"key": "Ctrl + Q", "description": _("Quit application")},
-                    {"key": "Ctrl + W", "description": _("Quit application")},
+                    {"key": "<Control>comma", "description": _("Open preferences")},
+                    {"key": "<Control>question", "description": _("Show keyboard shortcuts")},
+                    {"key": "<Control>h", "description": _("Show keyboard shortcuts")},
+                    {"key": "<Control>slash", "description": _("Show keyboard shortcuts")},
+                    {"key": "<Control>q", "description": _("Quit application")},
+                    {"key": "<Control>w", "description": _("Quit application")},
                 ],
             },
             # Navigation
@@ -87,14 +91,14 @@ class ShortcutsOverlay(Adw.Window):
                 "shortcuts": [
                     {"key": "Escape", "description": _("Close dialog/go back")},
                     {"key": "Tab", "description": _("Navigate between widgets")},
-                    {"key": "Shift + Tab", "description": _("Navigate backwards")},
+                    {"key": "<Shift>Tab", "description": _("Navigate backwards")},
                 ],
             },
             # Advanced
             {
                 "category": _("Advanced"),
                 "shortcuts": [
-                    {"key": "Ctrl + Shift + O", "description": _("Open image file (advanced)")},
+                    {"key": "<Control><Shift>o", "description": _("Open image file (advanced)")},
                     {"key": "F1", "description": _("Show help")},
                     {"key": "F10", "description": _("Open application menu")},
                 ],
@@ -113,7 +117,9 @@ class ShortcutsOverlay(Adw.Window):
 
         for category_data in self.shortcuts_data:
             group = Adw.PreferencesGroup()
-            group.set_title(category_data["category"])
+            # Adw.PreferencesGroup titles are parsed as Pango markup, so any
+            # literal ``&`` (e.g. "Screenshot & OCR") must be escaped.
+            group.set_title(GLib.markup_escape_text(category_data["category"]))
             rows: list[Adw.ActionRow] = []
 
             for shortcut in category_data["shortcuts"]:

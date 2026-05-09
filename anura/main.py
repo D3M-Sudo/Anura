@@ -176,7 +176,7 @@ class AnuraApplication(Adw.Application):
 
     def _disconnect_signal_handler(self, handler_id: int | None) -> None:
         """Safely disconnect a signal handler."""
-        if handler_id is not None and hasattr(self, 'backend') and self.backend is not None:
+        if handler_id is not None and hasattr(self, "backend") and self.backend is not None:
             with contextlib.suppress(TypeError, RuntimeError, AttributeError):
                 self.backend.disconnect(handler_id)
 
@@ -484,7 +484,7 @@ class AnuraApplication(Adw.Application):
             developers=["Andrey Maksimov", "D3M-Sudo"],
             designers=["Andrey Maksimov"],
             release_notes=self._get_release_notes(),
-            legal_notes=(
+            legal_notice=(
                 "© 2026 D3M-Sudo &amp; Anura Contributors\n"
                 "This application is released under the MIT License.\n"
                 "See the LICENSE file or visit the GitHub repository for details."
@@ -537,19 +537,33 @@ class AnuraApplication(Adw.Application):
         if window:
             window.show_shortcuts()
 
-    def on_copy_to_clipboard(self, _action: Gio.SimpleAction, variant: GLib.Variant) -> None:
-        """Copy text to clipboard from action."""
-        text = variant.get_string() if variant else ""
+    def on_copy_to_clipboard(self, _action: Gio.SimpleAction, variant: GLib.Variant | None) -> None:
+        """Copy text to clipboard from action.
+
+        The action is registered without a parameter type, so when triggered by
+        the toolbar button or the Ctrl+C accelerator the variant is None. In
+        that case fall back to the currently extracted text on the active
+        window so the toolbar Copy button and shortcut actually copy something.
+        """
         window = self.get_active_window()
         if not window:
             return
+
+        text = ""
+        if variant is not None:
+            try:
+                text = variant.get_string()
+            except (TypeError, AttributeError):
+                text = ""
 
         if text:
             clipboard_service_instance = get_clipboard_service()
             clipboard_service_instance.set(text)
             window.show_toast(_("Text copied to clipboard"))
-        else:
-            window.show_toast(_("No text to copy"))
+            return
+
+        # No explicit text passed via the action — copy whatever the window has.
+        window._do_copy_to_clipboard()
 
     def get_screenshot(self, _action: object, _param: object) -> None:
         window = self.get_active_window()

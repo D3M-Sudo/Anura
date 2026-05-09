@@ -3,7 +3,10 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
+from collections.abc import Callable
 from gettext import gettext as _
+from io import BytesIO
+import os
 import threading
 from typing import ClassVar
 
@@ -17,8 +20,18 @@ gi.require_version("GObject", "2.0")
 
 from gi.repository import Gdk, Gio, GLib, GObject  # noqa: E402
 from loguru import logger  # noqa: E402
+from PIL import Image  # noqa: E402
 
 from anura.utils.singleton import get_instance  # noqa: E402
+
+# When the clipboard advertises a file URI list (e.g. user copied a PNG from
+# Nautilus), reading the URI list and loading the file via PIL is much more
+# reliable than ``read_texture_async`` — the latter happily picks unsupported
+# MIME types like ``image/x-xpixmap`` and then fails the entire paste.
+_CLIPBOARD_TEXT_URI_LIST = "text/uri-list"
+
+# Stream chunk size when slurping clipboard streams.
+_CLIPBOARD_STREAM_CHUNK = 16 * 1024
 
 
 class ClipboardService(GObject.GObject):
@@ -162,6 +175,11 @@ class ClipboardService(GObject.GObject):
     def read_texture(self) -> None:
         """
         Thread-safe asynchronous texture reading with 10-second timeout.
+
+        Tries to read a file URI list first (e.g. user copied a PNG file in
+        their file manager) and falls back to the in-memory texture path for
+        sources that put pixel data directly on the clipboard (GIMP,
+        screenshot tools, browsers, etc.).
         """
         with self._state_lock:
             # Cancel any previous timeout to prevent accumulation
@@ -185,7 +203,173 @@ class ClipboardService(GObject.GObject):
                 cancellable,
             )
 
+        if _CLIPBOARD_TEXT_URI_LIST in self._available_clipboard_mimes():
+            self.clipboard.read_async(
+                [_CLIPBOARD_TEXT_URI_LIST],
+                GLib.PRIORITY_DEFAULT,
+                cancellable,
+                self._on_read_uri_list,
+            )
+            return
+
         self.clipboard.read_texture_async(cancellable=cancellable, callback=self._on_read_texture)
+
+    def _available_clipboard_mimes(self) -> list[str]:
+        """Return MIME types currently advertised by the clipboard (best effort)."""
+        try:
+            formats = self.clipboard.get_formats()
+        except Exception as e:
+            logger.debug(f"Anura Clipboard: get_formats() failed: {e}")
+            return []
+        if formats is None:
+            return []
+        try:
+            return list(formats.get_mime_types() or [])
+        except Exception as e:
+            logger.debug(f"Anura Clipboard: get_mime_types() failed: {e}")
+            return []
+
+    def _clear_active_timeout(self) -> None:
+        """Atomically remove the in-flight read timeout, if any."""
+        with self._state_lock:
+            timeout_id = self._clipboard_timeout_id
+            self._clipboard_timeout_id = None
+            if timeout_id and timeout_id > 0:
+                GLib.source_remove(timeout_id)
+
+    def _on_read_uri_list(self, _sender: GObject.GObject, result: Gio.AsyncResult) -> None:
+        """Callback for ``text/uri-list`` clipboard reads (file paths)."""
+        self._clear_active_timeout()
+
+        try:
+            stream, _mime = self.clipboard.read_finish(result)
+            if stream is None:
+                raise ValueError("No URI list stream from clipboard.")
+        except GLib.Error as e:
+            if e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED):
+                logger.debug("Anura Clipboard: URI list read cancelled.")
+                return
+            logger.warning(
+                f"Anura Clipboard: URI list read failed ({e.message}); falling back to texture.",
+            )
+            self._fallback_to_texture_read()
+            return
+        except (ValueError, RuntimeError) as e:
+            logger.warning(f"Anura Clipboard: URI list read returned no stream ({e}); falling back.")
+            self._fallback_to_texture_read()
+            return
+
+        cancellable = self._cancellable
+        self._read_stream_to_bytes(
+            stream,
+            cancellable,
+            lambda data: self._on_uri_list_bytes(data),
+        )
+
+    def _fallback_to_texture_read(self) -> None:
+        """Rearm the read state and ask GDK for a texture directly."""
+        with self._state_lock:
+            if self._cancellable is None or self._cancellable.is_cancelled():
+                self._cancellable = Gio.Cancellable()
+            cancellable = self._cancellable
+            self._clipboard_timeout_id = GLib.timeout_add_seconds(
+                self.CLIPBOARD_TIMEOUT_SECONDS,
+                self._on_clipboard_timeout,
+                cancellable,
+            )
+        self.clipboard.read_texture_async(cancellable=cancellable, callback=self._on_read_texture)
+
+    def _read_stream_to_bytes(
+        self,
+        stream: Gio.InputStream,
+        cancellable: Gio.Cancellable | None,
+        on_done: Callable[[bytes], None],
+    ) -> None:
+        """Read a Gio.InputStream fully and invoke ``on_done(bytes)``."""
+        chunks: list[bytes] = []
+
+        def _on_chunk(_stream: Gio.InputStream, res: Gio.AsyncResult) -> None:
+            try:
+                gbytes = stream.read_bytes_finish(res)
+            except GLib.Error as e:
+                if e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED):
+                    logger.debug("Anura Clipboard: stream read cancelled.")
+                    return
+                logger.error(f"Anura Clipboard: stream read failed: {e.message}")
+                GLib.idle_add(self.emit, "error", _("No image in clipboard"))
+                return
+            data = gbytes.get_data() if gbytes is not None else b""
+            if not data:
+                on_done(b"".join(chunks))
+                return
+            chunks.append(bytes(data))
+            stream.read_bytes_async(
+                _CLIPBOARD_STREAM_CHUNK,
+                GLib.PRIORITY_DEFAULT,
+                cancellable,
+                _on_chunk,
+            )
+
+        stream.read_bytes_async(
+            _CLIPBOARD_STREAM_CHUNK,
+            GLib.PRIORITY_DEFAULT,
+            cancellable,
+            _on_chunk,
+        )
+
+    def _on_uri_list_bytes(self, data: bytes) -> None:
+        """Decode a text/uri-list payload and load the first image file URI."""
+        if not data:
+            logger.debug("Anura Clipboard: URI list payload is empty.")
+            GLib.idle_add(self.emit, "error", _("No image in clipboard"))
+            return
+
+        text = data.decode("utf-8", errors="replace")
+        # RFC 2483: lines are CRLF separated; lines starting with '#' are comments.
+        uris = [line.strip() for line in text.splitlines() if line.strip() and not line.lstrip().startswith("#")]
+        file_uri = next((u for u in uris if u.startswith("file://")), None)
+        if not file_uri:
+            logger.debug(f"Anura Clipboard: no file:// URI in list (entries={uris[:3]!r}).")
+            GLib.idle_add(self.emit, "error", _("No image in clipboard"))
+            return
+
+        try:
+            path, _hostname = GLib.filename_from_uri(file_uri)
+        except GLib.Error as e:
+            logger.warning(f"Anura Clipboard: bad file URI {file_uri!r}: {e.message}")
+            GLib.idle_add(self.emit, "error", _("No image in clipboard"))
+            return
+
+        if not path or not os.path.exists(path):
+            logger.warning(f"Anura Clipboard: file does not exist: {path!r}")
+            GLib.idle_add(self.emit, "error", _("No image in clipboard"))
+            return
+
+        self._emit_texture_from_file(path)
+
+    def _emit_texture_from_file(self, path: str) -> None:
+        """Decode an image file with PIL → re-encode to PNG → Gdk.Texture."""
+        try:
+            with Image.open(path) as img:
+                img.load()
+                out = img if img.mode in ("RGB", "RGBA", "L") else img.convert("RGBA")
+                buf = BytesIO()
+                out.save(buf, format="PNG")
+                png_bytes = buf.getvalue()
+        except (OSError, ValueError, Image.UnidentifiedImageError) as e:
+            logger.warning(f"Anura Clipboard: PIL failed to decode {path!r}: {e}")
+            GLib.idle_add(self.emit, "error", _("No image in clipboard"))
+            return
+
+        try:
+            texture = Gdk.Texture.new_from_bytes(GLib.Bytes.new(png_bytes))
+        except GLib.Error as e:
+            logger.warning(f"Anura Clipboard: Gdk.Texture.new_from_bytes failed: {e.message}")
+            GLib.idle_add(self.emit, "error", _("No image in clipboard"))
+            return
+
+        logger.info(f"Anura Clipboard: loaded image from clipboard file URI ({path}).")
+        GLib.idle_add(self.emit, "paste_from_clipboard", texture)
 
     def read_text(self) -> None:
         """

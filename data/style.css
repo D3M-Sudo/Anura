@@ -150,7 +150,7 @@
 @keyframes toastSlideIn {
     from {
         opacity: 0;
-        transform: translateY(-100%);
+        transform: translateY(-40px);
     }
     to {
         opacity: 1;
@@ -165,7 +165,7 @@
     }
     to {
         opacity: 0;
-        transform: translateY(-100%);
+        transform: translateY(-40px);
     }
 }
 
@@ -201,10 +201,6 @@
 }
 
 /* Screenshot button pulse effect */
-.screenshot-btn {
-    position: relative;
-}
-
 .screenshot-btn.ready {
     animation: readyPulse 2s infinite;
 }
