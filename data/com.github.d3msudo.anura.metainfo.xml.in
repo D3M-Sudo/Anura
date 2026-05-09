@@ -37,6 +37,25 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="0.1.4.3" type="stable" date="2026-05-09">
+      <description>
+        <p>Advanced OCR preprocessing and modern keyboard shortcuts overlay.</p>
+        <ul>
+          <li>Added advanced TextPreprocessor utility with intelligent image enhancement and OCR text cleanup.</li>
+          <li>Added smart text preprocessing including common OCR error correction, whitespace normalization, and punctuation fixing.</li>
+          <li>Added structured data extraction from OCR text (emails, URLs, phone numbers, dates).</li>
+          <li>Added adaptive image enhancement based on brightness/contrast analysis for better OCR accuracy.</li>
+          <li>Added modern ShortcutsOverlay widget with live search and categorized keyboard shortcuts.</li>
+          <li>Added enhanced keyboard shortcuts overlay with search functionality and elegant Adw.Window-based interface.</li>
+          <li>Fixed notification service cleanup by removing incorrect underscore reference.</li>
+          <li>Fixed URI validator function call in window.py for proper URL validation.</li>
+          <li>Fixed dialog response handling for browser launch failures with proper error management.</li>
+          <li>Fixed extra language combo signal connection to ensure it's always connected regardless of settings.</li>
+          <li>Fixed modal property removal from shortcuts window for better user experience.</li>
+          <li>Fixed keyboard shortcuts test to match correct method signature with _param parameter.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.4.2" type="stable" date="2026-05-05">
       <description>
         <p>Hardened thread safety, sanitized error logging, and optimized resource cleanup.</p>
