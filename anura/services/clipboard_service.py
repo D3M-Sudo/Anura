@@ -287,7 +287,7 @@ class ClipboardService(GObject.GObject):
         """Thread-safe cancellation of pending clipboard read operations."""
         with self._state_lock:
             # Add defensive check for partially initialized instances
-            if not hasattr(self, "_clipboard_timeout_id"):
+            if not hasattr(self, "_clipboard_timeout_id") or self._clipboard_timeout_id is None:
                 logger.debug("Clipboard service not fully initialized, skipping cleanup")
                 return
 
@@ -296,7 +296,7 @@ class ClipboardService(GObject.GObject):
                 self._cancellable.cancel()
                 self._cancellable = None
 
-            if self._clipboard_timeout_id and self._clipboard_timeout_id > 0:
+            if self._clipboard_timeout_id > 0:
                 GLib.source_remove(self._clipboard_timeout_id)
                 self._clipboard_timeout_id = None
 

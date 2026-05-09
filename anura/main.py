@@ -176,8 +176,8 @@ class AnuraApplication(Adw.Application):
 
     def _disconnect_signal_handler(self, handler_id: int | None) -> None:
         """Safely disconnect a signal handler."""
-        if handler_id is not None and self.backend is not None:
-            with contextlib.suppress(TypeError, RuntimeError):
+        if handler_id is not None and hasattr(self, 'backend') and self.backend is not None:
+            with contextlib.suppress(TypeError, RuntimeError, AttributeError):
                 self.backend.disconnect(handler_id)
 
     def _cleanup_notification_service(self) -> None:

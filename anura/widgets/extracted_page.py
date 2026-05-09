@@ -91,6 +91,11 @@ class ExtractedPage(Adw.NavigationPage):
         self._set_spinner_active(True)
 
         tts_service_instance = get_tts_service()
+        # Store reference for cleanup if not already stored
+        if self._tts_service is None:
+            self._tts_service = tts_service_instance
+            self._tts_stop_handler_id = self._tts_service.connect("stop", self._on_listen_end)
+
         GObjectWorker.call(
             tts_service_instance.generate,
             (self.extracted_text, self.get_language()),

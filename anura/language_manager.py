@@ -429,10 +429,11 @@ class LanguageManager(GObject.GObject):
             if requested_code in self.loading_languages:
                 self.loading_languages.pop(requested_code)
 
-        if result_code:
-            GLib.idle_add(self.emit, "downloaded", result_code)
-        else:
-            GLib.idle_add(self.emit, "download-failed", requested_code)
+            # Emit signals while holding lock to ensure consistency
+            if result_code:
+                GLib.idle_add(self.emit, "downloaded", result_code)
+            else:
+                GLib.idle_add(self.emit, "download-failed", requested_code)
 
     def remove_language(self, code: str) -> None:
         """Thread-safe removal of model file from system."""
