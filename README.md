@@ -59,6 +59,20 @@ Download the `.flatpak` bundle from the [Releases](https://github.com/D3M-Sudo/A
 flatpak install --user ~/Downloads/com.github.d3msudo.anura.flatpak
 ```
 
+### Runtime requirements
+
+Anura captures screenshots through the **XDG Desktop Portal**. The portal frontend is shipped with `xdg-desktop-portal` (typically already installed), but it needs a *backend* matching your desktop session. **GNOME and KDE ship one by default**, but other desktops (notably **LXQt**) do not — Anura cannot bundle a portal backend inside the Flatpak because it must run on the host with access to the compositor.
+
+| Desktop session | Install command (Debian/Ubuntu family) |
+| --- | --- |
+| GNOME / Ubuntu Desktop | already installed (`xdg-desktop-portal-gnome` or `-gtk`) |
+| KDE Plasma / Kubuntu | already installed (`xdg-desktop-portal-kde`) |
+| **LXQt / Lubuntu** | `sudo apt install xdg-desktop-portal-gtk` |
+| Xfce / MATE / Cinnamon | `sudo apt install xdg-desktop-portal-gtk` |
+| wlroots (Sway, Hyprland, …) | `sudo apt install xdg-desktop-portal-wlr` |
+
+After installing, **log out and back in** so the portal D-Bus service reloads. If the screenshot still fails, capture an `anura_debug.log` and the `domain=…, code=…` line will narrow down the cause.
+
 ---
 
 ## Building from Source

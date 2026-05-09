@@ -57,6 +57,11 @@ class ScreenshotService(GObject.GObject):
     __gsignals__: ClassVar[dict[str, tuple]] = {
         "error": (GObject.SignalFlags.RUN_LAST, None, (str,)),
         "decoded": (GObject.SignalFlags.RUN_FIRST, None, (str, bool)),
+        # Emitted when the host's xdg-desktop-portal screenshot backend is
+        # missing/broken (libportal generic-failure pattern). Consumers
+        # typically use this to reveal a persistent install hint banner;
+        # the user-facing toast is still emitted via "error".
+        "portal-backend-missing": (GObject.SignalFlags.RUN_FIRST, None, ()),
     }
 
     __slots__ = ("_active_cancellable", "_cancellable_lock", "cancelable", "portal")
@@ -131,6 +136,10 @@ class ScreenshotService(GObject.GObject):
                     "backend matching your desktop, e.g. xdg-desktop-portal-gnome / -kde) "
                     "and re-login.",
                 )
+                # Also fire a dedicated signal so the window can reveal a
+                # persistent banner with the install hint. The toast above
+                # disappears in seconds; the banner stays until dismissed.
+                GLib.idle_add(self.emit, "portal-backend-missing")
             else:
                 user_message = _("Screenshot failed: {reason}").format(reason=e.message)
             return GLib.idle_add(self.emit, "error", user_message)
