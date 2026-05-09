@@ -38,6 +38,11 @@ uv run env \
 
 `builddir/` is produced by `meson setup builddir`. If meson is not available, you cannot generate the gschema either — skip this and use the AST trick below.
 
+**Caveat (uv venv vs apt python3-gi ABI):** the `uv run env PYTHONPATH=...` recipe only works if the uv venv Python *matches* the system Python that apt's `python3-gi` was built for. On current Devin Ubuntu jammy VMs the project's uv venv is **Python 3.12** but apt's `python3-gi` only ships `_gi.cpython-310-x86_64-linux-gnu.so` (3.10). In that case the import fails with `ImportError: cannot import name '_gi' from partially initialized module 'gi'`. Two ways out:
+
+1. Run gi-touching test code via `subprocess.run(["/usr/bin/python3", "-c", probe, ...])` from inside the harness — system python3 is 3.10 and has working `gi` natively. This is the fast path for runtime probes that don't need any project Python deps.
+2. `uv pip install pygobject` to compile a 3.12-compatible PyGObject into the venv — but this needs `pkg-config`, `libcairo2-dev`, `libgirepository1.0-dev` apt packages first; usually not worth it.
+
 ## When you can't run the gtk-marked tests (common)
 
 If any of these are true, a *live* GUI pass on this VM is not realistic:
@@ -92,6 +97,46 @@ stub._restore_signal_handlers = types.MethodType(ns["_restore_signal_handlers"],
    - Any `EventControllerKey`-based shortcut handler is constructed AND added with `self.add_controller(...)`. A handler defined but never attached is the BUG-6 shape.
 4. **For spinner / async error-handling regressions (BUG-9 shape), trace every `return` and `except` inside the relevant `_on_*_loaded` / async-callback method** and verify a `self.welcome_page.spinner.set_visible(False)` (or equivalent) precedes each. The success path is fine because `on_shot_done` / `on_shot_error` hide the spinner later — only error early-returns are at risk.
 
+## Verifying gresource-bundled icons (e.g. share-*-symbolic.svg) outside Meson
+
+When a PR adds new files to `data/com.github.d3msudo.anura.gresource.xml`, the strongest *non-Meson* test is to actually compile the bundle and look up each new path through `Gio.resources_lookup_data`. Two pitfalls:
+
+1. `glib-compile-resources` is **not** in `libglib2.0-bin` (only `gresource`, `gio`, `gsettings` are). Install `libglib2.0-dev-bin`:
+
+   ```bash
+   sudo apt-get install -y libglib2.0-dev-bin
+   ```
+
+2. The full `data/com.github.d3msudo.anura.gresource.xml` references Meson-generated `.ui` files (compiled from `.blp` at build time) which are **absent from the source tree**, so compiling the manifest verbatim fails with `Failed to locate "window.ui" in any source directory.`. Build a **subset manifest** on the fly that includes only the files that actually exist on disk:
+
+   ```python
+   import xml.etree.ElementTree as ET, subprocess
+   tree = ET.parse("data/com.github.d3msudo.anura.gresource.xml")
+   svg_only = [(f.text, f.attrib) for f in tree.getroot().findall(".//file") if f.text.endswith(".svg")]
+   prefix = tree.getroot().find("gresource").attrib["prefix"]
+   with open("/tmp/svg_only.gresource.xml", "w") as fh:
+       fh.write(f'<?xml version="1.0" encoding="UTF-8"?><gresources>'
+                f'<gresource prefix="{prefix}">')
+       for t, _ in svg_only:
+           fh.write(f"<file>{t}</file>")
+       fh.write("</gresource></gresources>")
+   subprocess.run(["glib-compile-resources", "/tmp/svg_only.gresource.xml",
+                   "--target=/tmp/anura.gresource", "--sourcedir=data"], check=True)
+   ```
+
+   Then load + look up via `/usr/bin/python3` (see ABI caveat above):
+
+   ```python
+   import gi; gi.require_version("Gio", "2.0")
+   from gi.repository import Gio
+   res = Gio.Resource.load("/tmp/anura.gresource")
+   Gio.resources_register(res)
+   payload = Gio.resources_lookup_data("/com/github/d3msudo/anura/icons/scalable/actions/share-bluesky-symbolic.svg",
+                                       Gio.ResourceLookupFlags.NONE)
+   # Older PyGObject returns Bytes directly; newer returns (Bytes, flags). Handle both.
+   data = bytes((payload[0] if isinstance(payload, tuple) else payload).get_data())
+   ```
+
 ## Things that bite
 
 - `Gtk.MenuButton` does **not** implement `Gtk.Actionable`. `action-name: "win.share";` on a `MenuButton` will fail to compile against a current blueprint-compiler. If you see that on a `MenuButton`, remove it and let the inner widget (e.g. `ShareRow` / `Gtk.Button`) carry the action instead.
@@ -100,6 +145,11 @@ stub._restore_signal_handlers = types.MethodType(ns["_restore_signal_handlers"],
 - `quote(text)` is not idempotent. Encoding twice turns `Hello world` into `Hello%2520world`. If a function is meant to be a URL builder, it should accept *raw* text and call `quote` exactly once.
 - `pytest.mark.gtk` tests that look like "unit tests" still need PyGObject — collection alone imports the module under test.
 - Don't try to install `python3-pytesseract` from apt; it's not packaged. Install via `uv add pytesseract` for the project, or skip the harness if you don't need it.
+- `glib-compile-resources` is in **`libglib2.0-dev-bin`**, not `libglib2.0-bin`. The latter ships only the runtime CLI helpers (`gresource`, `gio`, `gsettings`). Forgetting this wastes a debug cycle.
+- `Adw.AboutDialog` does **not** expose `legal_notice` as a GObject property. Passing it as a kwarg to the constructor raises `TypeError: gobject 'AdwAboutDialog' doesn't support property 'legal_notice'` and the dialog never opens. Convey license info via `copyright` + `license_type=Gtk.License.MIT_X11` instead.
+- Window-level `Gtk.EventControllerKey` for shortcut keys must use `Gtk.PropagationPhase.CAPTURE` if there's a `Gtk.SearchEntry` inside the window. The SearchEntry's built-in handler consumes Escape via `stop-search` returning TRUE, so a default-phase BUBBLE controller never sees the keypress. Set the phase **before** `connect("key-pressed", …)`.
+- `Adw.HeaderBar` already provides the standard window-close X. Adding an explicit `Gtk.Button { icon-name: "window-close-symbolic"; }` to `[end]` rendered as a duplicate X. Trust HeaderBar's standard control unless you have a specific reason.
+- `swap_controls(True)` on `ExtractedPage` is the **TTS-playback** state (hides Listen, shows Cancel-listening). Don't call it as a generic "disable controls during async work" shortcut — if no one resets it on success/error completion, the user lands back on the page with the wrong button visible.
 
 ## Reporting
 
