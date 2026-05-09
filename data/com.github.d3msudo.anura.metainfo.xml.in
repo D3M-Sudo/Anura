@@ -25,6 +25,16 @@
       the optional text-to-speech feature powered by Google TTS. No user
       data or extracted text is ever transmitted externally.
     </p>
+    <p>
+      Screenshot capture uses the XDG Desktop Portal interface, which
+      requires a portal backend to be installed on the host. GNOME and KDE
+      typically ship one by default (xdg-desktop-portal-gnome /
+      xdg-desktop-portal-kde). On other desktops you may need to install
+      a backend explicitly: xdg-desktop-portal-gtk on LXQt / Xfce / MATE,
+      xdg-desktop-portal-wlr on wlroots-based compositors. Without a
+      backend the system cannot grant Anura access to the screen and the
+      "Take a screenshot" action will fail.
+    </p>
   </description>
   <screenshots>
     <screenshot type="default">

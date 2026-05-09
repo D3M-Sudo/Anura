@@ -38,6 +38,7 @@ class AnuraWindow(Adw.ApplicationWindow):
     split_view: Adw.NavigationSplitView = Gtk.Template.Child()
     welcome_page: WelcomePage = Gtk.Template.Child()
     extracted_page: ExtractedPage = Gtk.Template.Child()
+    portal_banner: Adw.Banner = Gtk.Template.Child()
 
     def __init__(self, backend: ScreenshotService, **kwargs: object) -> None:
         super().__init__(**kwargs)
@@ -76,6 +77,13 @@ class AnuraWindow(Adw.ApplicationWindow):
         self.backend = backend
         self._handler_decoded = self.backend.connect("decoded", self.on_shot_done)
         self._handler_error = self.backend.connect("error", self.on_shot_error)
+        self._handler_portal_missing = self.backend.connect(
+            "portal-backend-missing",
+            self._on_portal_backend_missing,
+        )
+        # Banner's "button-clicked" fires when the user dismisses; hide until
+        # the next backend failure re-reveals it.
+        self.portal_banner.connect("button-clicked", self._on_portal_banner_dismissed)
 
         self._handler_go_back = self.extracted_page.connect("go-back", self.show_welcome_page)
         self._handler_clipboard = None
@@ -182,6 +190,24 @@ class AnuraWindow(Adw.ApplicationWindow):
         self.welcome_page.spinner.set_visible(False)
         if message:
             self.show_toast(message)
+
+    def _on_portal_backend_missing(self, _sender: GObject.GObject) -> None:
+        """Reveal the persistent install hint banner.
+
+        Fires when ScreenshotService detects the libportal generic-failure
+        pattern (host's xdg-desktop-portal backend missing or broken). The
+        toast emitted via "error" disappears in seconds; this banner stays
+        visible until the user dismisses it or installs a backend.
+        """
+        self.portal_banner.set_revealed(True)
+
+    def _on_portal_banner_dismissed(self, _banner: Adw.Banner) -> None:
+        """Hide the banner when the user clicks Dismiss.
+
+        It will reappear automatically the next time a screenshot fails with
+        the same generic-failure pattern.
+        """
+        self.portal_banner.set_revealed(False)
 
     def open_image(self) -> None:
         """Open file dialog to select an image for OCR processing."""
@@ -425,6 +451,10 @@ class AnuraWindow(Adw.ApplicationWindow):
                 with contextlib.suppress(TypeError, RuntimeError):
                     self.backend.disconnect(self._handler_error)
                 self._handler_error = None
+            if self._handler_portal_missing:
+                with contextlib.suppress(TypeError, RuntimeError):
+                    self.backend.disconnect(self._handler_portal_missing)
+                self._handler_portal_missing = None
 
         # Disconnect widget signal handlers
         if self._handler_go_back:

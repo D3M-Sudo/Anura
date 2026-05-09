@@ -114,12 +114,81 @@ def test_screenshot_service_detects_generic_backend_failure() -> None:
     )
 
 
+# ---------------------------------------------------------------------------
+# Persistent install-hint banner: ScreenshotService now also emits a
+# "portal-backend-missing" signal when the libportal generic-failure pattern
+# is detected, and AnuraWindow reveals an Adw.Banner from window.blp on
+# receiving it. This pair-of-tests is the static guard for that wiring.
+# ---------------------------------------------------------------------------
+
+
+def test_screenshot_service_declares_portal_backend_missing_signal() -> None:
+    _tree, text = _load_module_source("services/screenshot_service.py")
+    assert '"portal-backend-missing"' in text, (
+        "ScreenshotService.__gsignals__ must declare the 'portal-backend-missing' "
+        "signal so consumers can react to a missing host portal backend."
+    )
+    # And the signal must be emitted in the generic-backend-failure branch.
+    assert 'self.emit, "portal-backend-missing"' in text, (
+        "ScreenshotService must emit 'portal-backend-missing' (via GLib.idle_add) "
+        "when it detects the libportal generic-failure pattern."
+    )
+
+
+def test_window_wires_portal_banner_and_signal_handler() -> None:
+    text = (PROJECT_ROOT / "anura" / "window.py").read_text()
+    assert "portal_banner: Adw.Banner = Gtk.Template.Child()" in text, (
+        "AnuraWindow must declare portal_banner as a Gtk.Template.Child mapping "
+        "to the Adw.Banner in window.blp."
+    )
+    assert '"portal-backend-missing"' in text, (
+        "AnuraWindow must connect to the new ScreenshotService signal."
+    )
+    assert "set_revealed(True)" in text and "set_revealed(False)" in text, (
+        "AnuraWindow must reveal the banner on the signal and hide it when "
+        "the user dismisses it."
+    )
+
+
+def test_window_blp_contains_adw_banner() -> None:
+    blp = (PROJECT_ROOT / "data" / "ui" / "window.blp").read_text()
+    assert "Adw.Banner portal_banner" in blp, (
+        "window.blp must declare an Adw.Banner with id 'portal_banner' so the "
+        "Python template binding has a target."
+    )
+    # Banner must start hidden — only revealed when a screenshot fails with
+    # the libportal generic-failure pattern.
+    assert "revealed: false" in blp, "Banner must be hidden by default."
+
+
+def test_metainfo_documents_portal_requirement() -> None:
+    metainfo = (
+        PROJECT_ROOT / "data" / "com.github.d3msudo.anura.metainfo.xml.in"
+    ).read_text()
+    assert "xdg-desktop-portal" in metainfo, (
+        "metainfo.xml.in must document the portal backend requirement so "
+        "Flathub users see it before installing."
+    )
+
+
+def test_readme_documents_runtime_requirements() -> None:
+    readme = (PROJECT_ROOT / "README.md").read_text()
+    assert "Runtime requirements" in readme, (
+        "README must contain a 'Runtime requirements' section explaining "
+        "the xdg-desktop-portal backend dependency."
+    )
+    assert "xdg-desktop-portal-gtk" in readme, (
+        "README must mention xdg-desktop-portal-gtk explicitly for LXQt users."
+    )
+
+
 @pytest.mark.parametrize(
     "rel_path",
     [
         "widgets/extracted_page.py",
         "main.py",
         "services/screenshot_service.py",
+        "window.py",
     ],
 )
 def test_modules_parse_cleanly(rel_path: str) -> None:
