@@ -128,7 +128,6 @@ class TestKeyboardShortcuts:
         assert 'ShortcutsOverlay' in content, "Missing ShortcutsOverlay template"
         assert 'search_entry' in content, "Missing search_entry widget"
         assert 'shortcuts_list' in content, "Missing shortcuts_list widget"
-        assert 'close_button' in content, "Missing close_button widget"
 
 
 @pytest.mark.gtk

@@ -31,7 +31,6 @@ class ShortcutsOverlay(Adw.Window):
         "closed": (GObject.SignalFlags.RUN_LAST, None, ()),
     }
 
-    close_button: Gtk.Button = Gtk.Template.Child()
     search_entry: Gtk.SearchEntry = Gtk.Template.Child()
     shortcuts_list: Gtk.ListBox = Gtk.Template.Child()
 
@@ -138,21 +137,18 @@ class ShortcutsOverlay(Adw.Window):
             self._groups.append((group, rows))
 
     def _connect_signals(self) -> None:
-        """Connect signals for search, close button, and window events."""
-        self.close_button.connect("clicked", self._on_close_clicked)
-
+        """Connect signals for search and window events."""
         self.search_entry.connect("search-changed", self._on_search_changed)
 
         self.connect("close-request", self._on_close_request)
 
-        # GTK4 uses event controllers for key handling.
+        # Use CAPTURE phase so Escape closes the window even when focus is in
+        # the SearchEntry (which would otherwise consume the key event via its
+        # built-in stop-search handling).
         key_controller = Gtk.EventControllerKey()
+        key_controller.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
         key_controller.connect("key-pressed", self._on_key_pressed)
         self.add_controller(key_controller)
-
-    def _on_close_clicked(self, _button: Gtk.Button) -> None:
-        """Close the overlay when the header-bar close button is clicked."""
-        self.close()
 
     def _on_search_changed(self, entry: Gtk.SearchEntry) -> None:
         """Handle search entry changes."""

@@ -104,8 +104,19 @@ class ScreenshotService(GObject.GObject):
             if e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED):
                 logger.debug("Anura Screenshot: Portal request cancelled by user.")
                 return None
-            logger.error(f"Anura Screenshot: Portal failed to provide a screenshot: {e.message}")
-            return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))
+            # Log full error context (domain + code + message) to help diagnose
+            # portal backend issues (e.g. missing xdg-desktop-portal-gtk on
+            # non-GNOME desktops, where the request is rejected with a generic
+            # "Screenshot failed" message).
+            logger.error(
+                "Anura Screenshot: Portal failed to provide a screenshot "
+                f"(domain={e.domain}, code={e.code}): {e.message}",
+            )
+            return GLib.idle_add(
+                self.emit,
+                "error",
+                _("Screenshot failed: {reason}").format(reason=e.message),
+            )
         except Exception as e:
             logger.error(f"Anura Screenshot: Unexpected error finishing screenshot: {e}")
             return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))

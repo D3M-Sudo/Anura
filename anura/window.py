@@ -106,7 +106,6 @@ class AnuraWindow(Adw.ApplicationWindow):
 
     def get_screenshot(self, copy: bool = False) -> None:
         """Capture screenshot and process it for OCR."""
-        self.extracted_page.swap_controls(True)
         lang = self.get_language()
         self.hide()
 

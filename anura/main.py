@@ -484,11 +484,6 @@ class AnuraApplication(Adw.Application):
             developers=["Andrey Maksimov", "D3M-Sudo"],
             designers=["Andrey Maksimov"],
             release_notes=self._get_release_notes(),
-            legal_notice=(
-                "© 2026 D3M-Sudo &amp; Anura Contributors\n"
-                "This application is released under the MIT License.\n"
-                "See the LICENSE file or visit the GitHub repository for details."
-            ),
         )
         about_window.present(self.props.active_window)
 
