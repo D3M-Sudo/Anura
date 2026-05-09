@@ -469,6 +469,11 @@ class AnuraWindow(Adw.ApplicationWindow):
         except (GLib.Error, OSError, RuntimeError) as e:
             logger.error(f"An error occurred while loading shortcuts: {e}")
 
+    def _navigate_to_extracted_page(self) -> bool:
+        """Navigate to the extracted text page after OCR."""
+        self.split_view.set_show_content(True)
+        return GLib.SOURCE_REMOVE
+
     def show_welcome_page(self, *_args: object) -> None:
         """Show the welcome page and hide the extracted content."""
         self.split_view.set_show_content(False)
