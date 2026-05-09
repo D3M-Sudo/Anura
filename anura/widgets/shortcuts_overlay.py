@@ -103,9 +103,18 @@ class ShortcutsOverlay(Adw.Window):
 
     def _populate_shortcuts_list(self) -> None:
         """Populate the shortcuts list with categorized shortcuts."""
+        # Track (group, [rows]) pairs explicitly. Iterating a Gtk.ListBox in
+        # GTK4 yields the auto-generated Gtk.ListBoxRow wrappers (not the
+        # PreferencesGroup we appended), and iterating an Adw.PreferencesGroup
+        # yields its internal Gtk.Box — so isinstance() checks against
+        # Adw.PreferencesGroup / Adw.ActionRow during iteration always fail
+        # and the search filter would silently do nothing without this.
+        self._groups: list[tuple[Adw.PreferencesGroup, list[Adw.ActionRow]]] = []
+
         for category_data in self.shortcuts_data:
             group = Adw.PreferencesGroup()
             group.set_title(category_data["category"])
+            rows: list[Adw.ActionRow] = []
 
             for shortcut in category_data["shortcuts"]:
                 row = Adw.ActionRow()
@@ -117,8 +126,10 @@ class ShortcutsOverlay(Adw.Window):
 
                 row.add_suffix(shortcut_label)
                 group.add(row)
+                rows.append(row)
 
             self.shortcuts_list.append(group)
+            self._groups.append((group, rows))
 
     def _connect_signals(self) -> None:
         """Connect signals for search, close button, and window events."""
@@ -141,19 +152,17 @@ class ShortcutsOverlay(Adw.Window):
         """Handle search entry changes."""
         query = entry.get_text().lower()
 
-        for row in self.shortcuts_list:
-            if isinstance(row, Adw.PreferencesGroup):
-                visible_count = 0
-                for child_row in row:
-                    if isinstance(child_row, Adw.ActionRow):
-                        title = child_row.get_title().lower()
-                        if query in title:
-                            child_row.set_visible(True)
-                            visible_count += 1
-                        else:
-                            child_row.set_visible(False)
+        for group, rows in self._groups:
+            visible_count = 0
+            for child_row in rows:
+                title = child_row.get_title().lower()
+                if not query or query in title:
+                    child_row.set_visible(True)
+                    visible_count += 1
+                else:
+                    child_row.set_visible(False)
 
-                row.set_visible(visible_count > 0)
+            group.set_visible(visible_count > 0)
 
     def _on_close_request(self, _window: Gtk.Window) -> bool:
         """Handle window close request."""
