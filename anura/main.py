@@ -44,7 +44,6 @@ from anura.services.notification_service import (
 )
 from anura.services.screenshot_service import ScreenshotService
 from anura.services.settings import settings
-from anura.services.share_service import get_share_service
 from anura.utils import cleanup_orphaned_resources
 from anura.window import AnuraWindow
 
@@ -227,7 +226,6 @@ class AnuraApplication(Adw.Application):
         self.create_action("about", self.on_about)
         self.create_action("github_star", self.on_github_star)
         self.create_action("report_issue", self.on_report_issue)
-        self.create_action("share_text", self.on_share_text)
 
     def do_activate(self) -> None:
         win = self.props.active_window
@@ -328,12 +326,8 @@ class AnuraApplication(Adw.Application):
 
         try:
             return self._execute_silent_ocr_with_context(file_path, interrupted)
-        except Exception:
-            # Ensure signal handlers are restored even if OCR fails
-            self._restore_signal_handlers(signal_handlers)
-            raise
-        else:
-            # Normal path - also restore handlers
+        finally:
+            # Always restore handlers on every exit path (including return).
             self._restore_signal_handlers(signal_handlers)
 
     def _setup_signal_handlers(self, interrupted: threading.Event) -> dict[str, object]:
@@ -617,18 +611,6 @@ class AnuraApplication(Adw.Application):
         window = self.get_active_window()
         if window:
             window.on_listen_cancel()
-
-    def on_share_text(self, _action: Gio.SimpleAction, text: str) -> None:
-        """Share text via external service."""
-        window = self.get_active_window()
-        if not window:
-            return
-
-        if text:
-            share_service_instance = get_share_service()
-            share_service_instance.share("email", text)
-        else:
-            window.show_toast(_("No text to share"))
 
     def create_action(self, name: str, callback: object, shortcuts: list[str] | None = None) -> None:
         action = Gio.SimpleAction.new(name, None)

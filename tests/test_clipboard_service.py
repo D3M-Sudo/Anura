@@ -35,7 +35,7 @@ class TestClipboardService:
         with patch("anura.services.clipboard_service.GLib") as mock_glib:
             self.service.copy_text(test_text)
 
-            self.service._clipboard.set.assert_called_once_with(test_text)
+            self.service._clipboard.set_text.assert_called_once_with(test_text)
             mock_glib.timeout_add_seconds.assert_called_once()
 
     def test_copy_text_empty(self):
@@ -43,7 +43,7 @@ class TestClipboardService:
         with patch("anura.services.clipboard_service.GLib") as mock_glib:
             self.service.copy_text("")
 
-            self.service._clipboard.set.assert_called_once_with("")
+            self.service._clipboard.set_text.assert_called_once_with("")
             mock_glib.timeout_add_seconds.assert_called_once()
 
     def test_copy_text_with_cancellation(self):
@@ -164,7 +164,8 @@ class TestClipboardService:
         self.service._cancellable = mock_cancellable
 
         with patch("anura.services.clipboard_service.GLib") as mock_glib:
-            result = self.service._on_clipboard_timeout()
+            # _on_clipboard_timeout(cancellable) requires the cancellable arg.
+            result = self.service._on_clipboard_timeout(mock_cancellable)
 
             mock_cancellable.cancel.assert_called_once()
             mock_glib.idle_add.assert_called_once()

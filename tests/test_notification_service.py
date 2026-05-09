@@ -27,9 +27,11 @@ class TestNotificationService:
             self.service.show_notification("Test title", "Test body")
 
             mock_send.assert_called_once()
-            call_args = mock_send.call_args[1]
-            assert call_args["title"] == "Test title"
-            assert call_args["body"] == "Test body"
+            pos_args = mock_send.call_args[0]
+            assert pos_args[0].startswith("com.github.d3msudo.anura")
+            notification = pos_args[1].unpack()
+            assert notification["title"] == "Test title"
+            assert notification["body"] == "Test body"
 
     def test_show_notification_with_portal_error(self):
         """Test fallback when XDG Portal fails."""
@@ -53,9 +55,9 @@ class TestNotificationService:
             self.service.show_notification("", "Test body")
 
             mock_send.assert_called_once()
-            call_args = mock_send.call_args[1]
-            assert call_args["title"] == ""
-            assert call_args["body"] == "Test body"
+            notification = mock_send.call_args[0][1].unpack()
+            assert notification["title"] == ""
+            assert notification["body"] == "Test body"
 
     def test_show_notification_empty_body(self):
         """Test showing notification with empty body."""
@@ -63,9 +65,9 @@ class TestNotificationService:
             self.service.show_notification("Test title", "")
 
             mock_send.assert_called_once()
-            call_args = mock_send.call_args[1]
-            assert call_args["title"] == "Test title"
-            assert call_args["body"] == ""
+            notification = mock_send.call_args[0][1].unpack()
+            assert notification["title"] == "Test title"
+            assert notification["body"] == ""
 
     def test_show_notification_none_values(self):
         """Test showing notification with None values."""
@@ -73,9 +75,9 @@ class TestNotificationService:
             self.service.show_notification(None, None)
 
             mock_send.assert_called_once()
-            call_args = mock_send.call_args[1]
-            assert call_args["title"] == ""
-            assert call_args["body"] == ""
+            notification = mock_send.call_args[0][1].unpack()
+            assert notification["title"] == ""
+            assert notification["body"] == ""
 
     def test_show_notification_long_content(self):
         """Test showing notification with long content."""
@@ -86,9 +88,9 @@ class TestNotificationService:
             self.service.show_notification(long_title, long_body)
 
             mock_send.assert_called_once()
-            call_args = mock_send.call_args[1]
-            assert call_args["title"] == long_title
-            assert call_args["body"] == long_body
+            notification = mock_send.call_args[0][1].unpack()
+            assert notification["title"] == long_title
+            assert notification["body"] == long_body
 
     def test_show_notification_unicode_content(self):
         """Test showing notification with unicode content."""
@@ -99,9 +101,9 @@ class TestNotificationService:
             self.service.show_notification(unicode_title, unicode_body)
 
             mock_send.assert_called_once()
-            call_args = mock_send.call_args[1]
-            assert call_args["title"] == unicode_title
-            assert call_args["body"] == unicode_body
+            notification = mock_send.call_args[0][1].unpack()
+            assert notification["title"] == unicode_title
+            assert notification["body"] == unicode_body
 
     @patch("anura.services.notification_service.HAS_LIBNOTIFY", True)
     def test_libnotify_fallback_available(self):

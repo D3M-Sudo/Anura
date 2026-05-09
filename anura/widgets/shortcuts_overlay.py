@@ -184,6 +184,11 @@ class ShortcutsOverlay(Adw.Window):
         # Window events
         self.connect("close-request", self._on_close_request)
 
+        # Escape key to close (GTK4 uses event controllers, not direct key-press signals)
+        key_controller = Gtk.EventControllerKey()
+        key_controller.connect("key-pressed", self._on_key_pressed)
+        self.add_controller(key_controller)
+
     def _on_search_changed(self, entry: Gtk.SearchEntry) -> None:
         """Handle search entry changes."""
         query = entry.get_text().lower()
@@ -209,13 +214,17 @@ class ShortcutsOverlay(Adw.Window):
         self.emit("closed")
         return False
 
-    def _on_key_press(self, window: Gtk.Window, event: Gdk.Event) -> bool:
-        """Handle key press events."""
-        # Close on Escape
-        if event.get_keyval() == Gdk.KEY_Escape:
+    def _on_key_pressed(
+        self,
+        _controller: Gtk.EventControllerKey,
+        keyval: int,
+        _keycode: int,
+        _state: Gdk.ModifierType,
+    ) -> bool:
+        """Handle key press events from the EventControllerKey."""
+        if keyval == Gdk.KEY_Escape:
             self.close()
             return True
-
         return False
 
 
