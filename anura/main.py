@@ -1,5 +1,6 @@
 import contextlib
 from gettext import gettext as _
+import html
 import os
 import sys
 import threading
@@ -461,17 +462,29 @@ class AnuraApplication(Adw.Application):
             window.show_preferences()
 
     def _get_release_notes(self) -> str:
-        """Get release notes from generated _release_notes module."""
+        """Get release notes from generated _release_notes module.
+
+        Adw.AboutDialog parses the value as AppStream/Pango markup and rejects
+        bare text (libxml: "The document must start with an element"). Wrap any
+        non-element-leading content in <p> as a safety net so the Novità window
+        always opens, even with stale or empty release notes.
+        """
+        notes: str | None = None
         try:
             from anura._release_notes import get_release_notes
 
             notes = get_release_notes()
-            return notes
         except Exception as e:
             logger.debug(f"Could not load release notes: {e}")
 
-        # Fallback to version-specific message
-        return f"<p>Anura OCR {self.version} - Bug fixes and improvements.</p>"
+        if not notes or not notes.strip():
+            notes = _("Bug fixes and improvements.")
+
+        stripped = notes.lstrip()
+        if not stripped.startswith("<"):
+            # Bare text — wrap so libxml accepts it as a valid document
+            notes = f"<p>{html.escape(notes)}</p>"
+        return notes
 
     def on_about(self, _action: object, _param: object) -> None:
         about_window = Adw.AboutDialog(

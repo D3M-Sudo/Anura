@@ -16,10 +16,12 @@ def parse_changelog(changelog_path: Path) -> dict:
         return {}
 
     # Pattern to match version sections (supports 3 or 4 component versions like 0.1.4 or 0.1.4.1)
-    # Uses atomic-like grouping and limited repetition to prevent catastrophic backtracking
+    # Content uses ".*?" with DOTALL so it can include sub-sections like "### Added"
+    # whose lines start with "#"; the lookahead anchors the section end at the next
+    # version header (or end of file) instead of stopping at the first "#".
     version_pattern = (
         r"^## \[(?P<version>\d{1,4}\.\d{1,4}\.\d{1,4}(?:\.\d{1,4})?)\] - (?P<date>\d{4}-\d{2}-\d{2})\n+"
-        r"(?P<content>[^#]*?)(?=^## \[|\Z)"
+        r"(?P<content>.*?)(?=^## \[|\Z)"
     )
 
     releases = {}
