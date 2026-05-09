@@ -21,5 +21,9 @@
         <file>icons/scalable/actions/share-reddit-symbolic.svg</file>
         <file>icons/scalable/actions/share-email-symbolic.svg</file>
         <file>icons/scalable/actions/share-x-symbolic.svg</file>
+        <file>icons/scalable/actions/share-bluesky-symbolic.svg</file>
+        <file>icons/scalable/actions/share-discord-symbolic.svg</file>
+        <file>icons/scalable/actions/share-linkedin-symbolic.svg</file>
+        <file>icons/scalable/actions/share-threads-symbolic.svg</file>
     </gresource>
 </gresources>
