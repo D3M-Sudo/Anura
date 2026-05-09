@@ -22,7 +22,10 @@ def setup_gtk_environment():
     from gi.repository import Gio, GLib
 
     # Load GResource as documented in testing.md
-    gresource_path = os.path.join(os.path.dirname(__file__), '..', 'builddir', 'data', 'com.github.d3msudo.anura.gresource')
+    gresource_path = os.path.join(
+        os.path.dirname(__file__), '..', 'builddir', 'data',
+        'com.github.d3msudo.anura.gresource'
+    )
     if os.path.exists(gresource_path):
         with open(gresource_path, 'rb') as f:
             data = f.read()

@@ -18,7 +18,9 @@
 #   Method B (Host System): Requires setup
 #     ./setup-gschema.sh
 #     export GSETTINGS_SCHEMA_DIR="builddir"
-#     uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" GSETTINGS_SCHEMA_DIR="builddir" pytest tests/ -m "gtk" -v
+#     uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" \
+#         GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" \
+#         GSETTINGS_SCHEMA_DIR="builddir" pytest tests/ -m "gtk" -v
 #
 # ❌ NEVER USE THIS COMMAND:
 #   uv run pytest tests/ -v
