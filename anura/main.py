@@ -360,7 +360,7 @@ class AnuraApplication(Adw.Application):
         sources = []
 
         # Attach interruption checker to custom context
-        def check_interrupted():
+        def check_interrupted() -> bool:
             if interrupted.is_set():
                 loop.quit()
                 return False  # Stop checking
@@ -372,7 +372,7 @@ class AnuraApplication(Adw.Application):
         sources.append(check_source)
 
         # Schedule OCR on custom context
-        def do_ocr():
+        def do_ocr() -> bool:
             if interrupted.is_set():
                 loop.quit()
                 return False  # Don't repeat

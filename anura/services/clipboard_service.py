@@ -127,7 +127,7 @@ class ClipboardService(GObject.GObject):
 
         try:
             # Marshal GTK operations to main thread
-            def process_result():
+            def process_result() -> None:
                 try:
                     texture = self.clipboard.read_texture_finish(result)
                     if not texture:
