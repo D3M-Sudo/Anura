@@ -5,11 +5,13 @@
 
 from gettext import gettext as _
 import os
+from pathlib import Path
 import re
 import threading
 import time
 from typing import ClassVar
 from urllib.request import url2pathname
+import uuid
 
 import gi
 
@@ -26,6 +28,12 @@ import pytesseract  # noqa: E402
 from pyzbar.pyzbar import decode  # noqa: E402
 
 from anura.config import LANG_CODE_PATTERN, get_tesseract_config  # noqa: E402
+from anura.services.host_screenshot_fallback import (  # noqa: E402
+    build_detection_argv,
+    build_screenshot_argv,
+    find_tool_by_name,
+    parse_detection_output,
+)
 from anura.utils.text_preprocessor import get_text_preprocessor  # noqa: E402
 
 
@@ -137,12 +145,6 @@ class ScreenshotService(GObject.GObject):
                 and (e.message or "").strip().lower() == "screenshot failed"
             )
             if is_generic_backend_failure:
-                user_message = _(
-                    "Screenshot failed. Your desktop session does not appear to expose a "
-                    "working screenshot portal. Install xdg-desktop-portal-gtk (or the "
-                    "backend matching your desktop, e.g. xdg-desktop-portal-gnome / -kde) "
-                    "and re-login.",
-                )
                 # On a generic backend failure, dump host environment context
                 # (desktop, session type, display server, Flatpak state) once
                 # per process so support logs include enough information to
@@ -150,12 +152,13 @@ class ScreenshotService(GObject.GObject):
                 # broken in this session" (e.g. VirtualBox guest, Wayland
                 # without screencast, etc.).
                 self._log_portal_environment()
-                # Also fire a dedicated signal so the window can reveal a
-                # persistent banner with the install hint. The toast above
-                # disappears in seconds; the banner stays until dismissed.
-                GLib.idle_add(self.emit, "portal-backend-missing")
-            else:
-                user_message = _("Screenshot failed: {reason}").format(reason=e.message)
+                # Before surfacing the failure to the user, try a host-side
+                # fallback (gnome-screenshot / xfce4-screenshooter / scrot /
+                # ...). This rescues users on LXQt / Xfce / Openbox where the
+                # portal is present but no backend exposes Screenshot.
+                self._try_host_screenshot_fallback(lang, copy)
+                return None
+            user_message = _("Screenshot failed: {reason}").format(reason=e.message)
             return GLib.idle_add(self.emit, "error", user_message)
         except Exception as e:
             logger.error(f"Anura Screenshot: Unexpected error finishing screenshot: {e}")
@@ -213,6 +216,162 @@ class ScreenshotService(GObject.GObject):
         logger.info(
             f"Anura Screenshot diagnostics: in_flatpak={in_flatpak}, {snapshot}",
         )
+
+    def _emit_portal_failure(self) -> None:
+        """Emit the user-facing failure UI for a missing portal backend.
+
+        Centralised so both ``take_screenshot_finish`` (when the host
+        fallback is unavailable) and ``_on_host_capture_complete`` (when
+        the host fallback runs out of options) can call it consistently.
+        """
+        user_message = _(
+            "Screenshot failed. Your desktop session does not appear to expose a "
+            "working screenshot portal. Install xdg-desktop-portal-gtk (or the "
+            "backend matching your desktop, e.g. xdg-desktop-portal-gnome / -kde) "
+            "and re-login.",
+        )
+        GLib.idle_add(self.emit, "portal-backend-missing")
+        GLib.idle_add(self.emit, "error", user_message)
+
+    def _try_host_screenshot_fallback(self, lang: str, copy: bool) -> None:
+        """Attempt to capture a screenshot via a host-side CLI tool.
+
+        Triggered after ``xdg-desktop-portal`` returns the libportal generic
+        ``Screenshot failed`` (no backend exposes the Screenshot interface
+        for the active session). Tries ``flatpak-spawn --host`` to invoke
+        a host-installed screenshot tool (gnome-screenshot, xfce4-screenshooter,
+        scrot, …). On success the captured PNG is fed into the same OCR
+        pipeline as portal screenshots; on failure ``_emit_portal_failure``
+        surfaces the original error.
+
+        Only runs in a Flatpak sandbox — outside Flatpak there is no
+        ``flatpak-spawn`` and the portal failure is genuinely terminal.
+        """
+        if not _is_flatpak_environment():
+            self._emit_portal_failure()
+            return
+        try:
+            argv = build_detection_argv()
+            proc = Gio.Subprocess.new(
+                argv,
+                Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_SILENCE,
+            )
+        except GLib.Error as e:
+            logger.warning(f"Anura Screenshot: cannot spawn flatpak-spawn for host fallback: {e.message}")
+            self._emit_portal_failure()
+            return
+        proc.communicate_utf8_async(
+            None,
+            self.cancelable,
+            self._on_host_detection_complete,
+            (lang, copy),
+        )
+
+    def _on_host_detection_complete(
+        self,
+        proc: Gio.Subprocess,
+        res: Gio.AsyncResult,
+        user_data: tuple,
+    ) -> None:
+        """Handle the result of the host-tool detection probe.
+
+        On success, picks a tool from the probe's stdout and proceeds to
+        the capture step. On failure, falls back to the original portal
+        error UI.
+        """
+        lang, copy = user_data
+        try:
+            success, stdout, _stderr = proc.communicate_utf8_finish(res)
+        except GLib.Error as e:
+            logger.info(f"Anura Screenshot: host fallback detection failed: {e.message}")
+            self._emit_portal_failure()
+            return
+
+        exit_status = proc.get_exit_status() if proc.get_if_exited() else -1
+        if not success or exit_status != 0:
+            logger.info(
+                f"Anura Screenshot: no host-side screenshot tool found (exit={exit_status}). "
+                "Surface the original portal error.",
+            )
+            self._emit_portal_failure()
+            return
+
+        tool_name = parse_detection_output(stdout or "")
+        if tool_name is None:
+            self._emit_portal_failure()
+            return
+        tool = find_tool_by_name(tool_name)
+        if tool is None:
+            self._emit_portal_failure()
+            return
+
+        # Pick a host-addressable temp path inside ~/Downloads (already mapped
+        # via --filesystem=xdg-download, so the same path string is valid both
+        # in the sandbox and on the host).
+        downloads_dir = Path.home() / "Downloads"
+        try:
+            downloads_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            logger.warning(f"Anura Screenshot: cannot prepare host fallback output dir: {e}")
+            self._emit_portal_failure()
+            return
+        output_path = str(downloads_dir / f".anura-shot-{uuid.uuid4().hex}.png")
+
+        logger.info(f"Anura Screenshot: portal failed, falling back to host '{tool_name}'.")
+        try:
+            argv = build_screenshot_argv(tool, output_path)
+            capture_proc = Gio.Subprocess.new(argv, Gio.SubprocessFlags.STDERR_SILENCE)
+        except GLib.Error as e:
+            logger.warning(f"Anura Screenshot: cannot spawn host screenshot tool: {e.message}")
+            self._emit_portal_failure()
+            return
+        capture_proc.wait_async(
+            self.cancelable,
+            self._on_host_capture_complete,
+            (lang, copy, output_path),
+        )
+
+    def _on_host_capture_complete(
+        self,
+        proc: Gio.Subprocess,
+        res: Gio.AsyncResult,
+        user_data: tuple,
+    ) -> None:
+        """Handle the result of the host-side screenshot capture.
+
+        Feeds the captured PNG into the OCR pipeline on success
+        (``decode_image`` with ``remove_source=True`` cleans up the temp
+        file). On failure or user-cancellation, emits the original portal
+        error.
+        """
+        lang, copy, output_path = user_data
+        try:
+            proc.wait_finish(res)
+        except GLib.Error as e:
+            logger.info(f"Anura Screenshot: host capture wait failed: {e.message}")
+            self._emit_portal_failure()
+            return
+
+        exit_status = proc.get_exit_status() if proc.get_if_exited() else -1
+        if exit_status != 0:
+            # User pressed Esc / closed the host tool's selection dialog.
+            logger.debug(f"Anura Screenshot: host tool exited non-zero ({exit_status}); user likely cancelled.")
+            # Best-effort cleanup: tool may still have created an empty file.
+            try:
+                if os.path.exists(output_path):
+                    os.unlink(output_path)
+            except OSError:
+                pass
+            self._emit_portal_failure()
+            return
+
+        if not os.path.exists(output_path) or os.path.getsize(output_path) == 0:
+            logger.warning(f"Anura Screenshot: host tool exited 0 but produced no output at {output_path}.")
+            self._emit_portal_failure()
+            return
+
+        # Same OCR path as a successful portal screenshot.
+        self.decode_image(lang, output_path, copy, True)
 
     def decode_image_sync(
         self,
