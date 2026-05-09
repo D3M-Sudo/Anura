@@ -246,7 +246,11 @@ class AnuraWindow(Adw.ApplicationWindow):
 
     def _on_file_contents_loaded(self, gfile: Gio.File, result: Gio.AsyncResult) -> None:
         try:
-            ok, contents, _ = gfile.load_contents_finish(result)
+            # NOTE: do not unpack the etag into `_` — that rebinds the
+            # module-level gettext alias for the rest of this function and
+            # causes every later `_("…")` call (toast messages on the error
+            # paths below) to raise `TypeError: 'bytes' object is not callable`.
+            ok, contents, _etag = gfile.load_contents_finish(result)
             if ok:
                 # Validate file size before processing (same check as DnD)
                 file_size = len(contents)
@@ -264,7 +268,6 @@ class AnuraWindow(Adw.ApplicationWindow):
                 try:
                     from gi.repository import GdkPixbuf
 
-                    stream = BytesIO(contents)
                     # Try to create a pixbuf to validate the image
                     GdkPixbuf.Pixbuf.new_from_stream_at_scale(
                         Gio.MemoryInputStream.new_from_bytes(GLib.Bytes.new(contents)),
@@ -342,7 +345,9 @@ class AnuraWindow(Adw.ApplicationWindow):
 
     def _on_dnd_file_contents_loaded(self, gfile: Gio.File, result: Gio.AsyncResult) -> None:
         try:
-            ok, contents, _ = gfile.load_contents_finish(result)
+            # See comment in _on_file_contents_loaded: do not unpack the etag
+            # into `_`, it would shadow the gettext alias used in error paths.
+            ok, contents, _etag = gfile.load_contents_finish(result)
             if not ok:
                 self.welcome_page.spinner.set_visible(False)
                 self.show_toast(_("Failed to load dropped file"))
