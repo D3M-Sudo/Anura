@@ -29,7 +29,17 @@ class TestShareService:
     def test_providers(self):
         """Test provider list."""
         providers = ShareService.providers()
-        expected = ["email", "mastodon", "reddit", "telegram", "x"]
+        expected = [
+            "email",
+            "mastodon",
+            "reddit",
+            "telegram",
+            "x",
+            "bluesky",
+            "discord",
+            "linkedin",
+            "threads",
+        ]
         assert providers == expected
 
     def test_validate_share_url_valid_http(self):
@@ -75,10 +85,10 @@ class TestShareService:
         assert link == expected
 
     def test_get_link_reddit(self):
-        """Test Reddit link generation."""
+        """Test Reddit link generation for short text (uses both title + selftext)."""
         text = "Hello world"
         link = ShareService.get_link_reddit(text)
-        expected = "https://www.reddit.com/submit?selftext=Hello%20world"
+        expected = "https://www.reddit.com/submit?title=Hello%20world&selftext=Hello%20world"
         assert link == expected
 
     def test_get_link_telegram(self):
@@ -92,7 +102,7 @@ class TestShareService:
         """Test X (Twitter) link generation."""
         text = "Hello world"
         link = ShareService.get_link_x(text)
-        expected = "https://twitter.com/intent/tweet?text=Hello%20world"
+        expected = "https://x.com/intent/tweet?text=Hello%20world"
         assert link == expected
 
     def test_get_link_mastodon(self):

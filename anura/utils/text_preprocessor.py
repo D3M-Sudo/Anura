@@ -16,27 +16,6 @@ class TextPreprocessor:
     """Advanced text preprocessing for OCR accuracy improvement."""
 
     def __init__(self) -> None:
-        self._common_ocr_errors = {
-            "l": "1",
-            "I": "1",
-            "O": "0",
-            "o": "0",
-            "S": "5",
-            "s": "5",
-            "G": "6",
-            "B": "8",
-            "Z": "2",
-            "z": "2",
-            "rn": "m",
-            "cl": "d",
-            "vv": "w",
-            "—": "-",
-            "'": "'",
-            "©": "(c)",
-            "®": "(r)",
-            "™": "(tm)",
-        }
-
         self._whitespace_patterns = [
             (r"\s+", " "),  # Multiple spaces to single
             (r"\n\s*\n\s*\n+", "\n\n"),  # Multiple newlines to double
@@ -126,9 +105,6 @@ class TextPreprocessor:
 
         cleaned = text
 
-        # Fix common OCR errors
-        cleaned = self._fix_common_ocr_errors(cleaned)
-
         # Normalize whitespace
         cleaned = self._normalize_whitespace(cleaned)
 
@@ -142,32 +118,6 @@ class TextPreprocessor:
         cleaned = self._remove_artifacts(cleaned)
 
         return cleaned.strip()
-
-    def _fix_common_ocr_errors(self, text: str) -> str:
-        """Fix common OCR character misinterpretations."""
-        fixed = text
-
-        # Apply character-level fixes
-        for wrong, right in self._common_ocr_errors.items():
-            fixed = fixed.replace(wrong, right)
-
-        # Fix common word patterns
-        word_patterns = {
-            r"\b1l\b": "ll",
-            r"\b0n\b": "on",
-            r"\bT0\b": "TO",
-            r"\bW0RD\b": "WORD",
-            r"\bD0N\b": "DON",
-            r"\bY0U\b": "YOU",
-            r"\bTH3\b": "THE",
-            r"\bW3\b": "WE",
-            r"\bC0M\b": "COM",
-        }
-
-        for pattern, replacement in word_patterns.items():
-            fixed = re.sub(pattern, replacement, fixed, flags=re.IGNORECASE)
-
-        return fixed
 
     def _normalize_whitespace(self, text: str) -> str:
         """Normalize whitespace in text."""

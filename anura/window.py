@@ -251,6 +251,7 @@ class AnuraWindow(Adw.ApplicationWindow):
                 # Validate file size before processing (same check as DnD)
                 file_size = len(contents)
                 if file_size > self.MAX_IMAGE_SIZE_BYTES:
+                    self.welcome_page.spinner.set_visible(False)
                     self.show_toast(
                         _("Image too large: {size}MB (max {max}MB)").format(
                             size=round(file_size / (1024 * 1024), 1),
@@ -273,6 +274,7 @@ class AnuraWindow(Adw.ApplicationWindow):
                         None,
                     )
                 except GLib.Error as e:
+                    self.welcome_page.spinner.set_visible(False)
                     if e.matches(GdkPixbuf.pixbuf_error_quark(), GdkPixbuf.PixbufError.CORRUPT_IMAGE):
                         logger.error(f"Anura: Corrupt image file: {e.message}")
                         self.show_toast(_("Corrupt or unsupported image file"))
@@ -286,13 +288,18 @@ class AnuraWindow(Adw.ApplicationWindow):
                         self.show_toast(_("Failed to validate image file"))
                         return
                 except (ValueError, RuntimeError) as e:
+                    self.welcome_page.spinner.set_visible(False)
                     logger.error(f"Anura: Unexpected image validation error: {e}")
                     self.show_toast(_("Failed to validate image file"))
                     return
 
                 stream = BytesIO(contents)
                 GObjectWorker.call(self.backend.decode_image, (self.get_language(), stream))
+            else:
+                self.welcome_page.spinner.set_visible(False)
+                self.show_toast(_("Failed to load image file"))
         except (OSError, ValueError, RuntimeError) as e:
+            self.welcome_page.spinner.set_visible(False)
             logger.error(f"Failed to load file contents: {e}")
             self.show_toast(_("Failed to load image file"))
 
@@ -337,12 +344,14 @@ class AnuraWindow(Adw.ApplicationWindow):
         try:
             ok, contents, _ = gfile.load_contents_finish(result)
             if not ok:
+                self.welcome_page.spinner.set_visible(False)
                 self.show_toast(_("Failed to load dropped file"))
                 return
 
             # Validate file size
             file_size = len(contents)
             if file_size > self.MAX_IMAGE_SIZE_BYTES:
+                self.welcome_page.spinner.set_visible(False)
                 self.show_toast(
                     _("Image too large: {size}MB (max {max}MB)").format(
                         size=round(file_size / (1024 * 1024), 1),
@@ -354,6 +363,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             stream = BytesIO(contents)
             GObjectWorker.call(self.backend.decode_image, (self.get_language(), stream))
         except (OSError, ValueError, RuntimeError) as e:
+            self.welcome_page.spinner.set_visible(False)
             logger.error(f"Failed to load dropped file: {e}")
             self.show_toast(_("Failed to load dropped file"))
 

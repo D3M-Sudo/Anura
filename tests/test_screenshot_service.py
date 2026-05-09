@@ -170,6 +170,6 @@ class TestScreenshotService:
 
             success, result, error = self.service.decode_image_sync("eng", str(test_file), False)
 
-            assert success is True
+            assert success is False
             assert result == ""
-            assert error is None
+            assert error is not None

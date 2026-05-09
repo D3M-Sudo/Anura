@@ -91,15 +91,11 @@ class ShareService(GObject.GObject):
 
         if handler:
             try:
-                # Encode the text content, but preserve URL structure characters
-                # The handler functions are responsible for proper URL construction
-                encoded_text = quote(text, safe="")
-
-                # Special handling for Mastodon with fallback
+                # Each get_link_* handler URL-encodes the text itself, so pass raw text through.
                 if provider == "mastodon":
-                    return self._share_mastodon_with_fallback(encoded_text)
+                    return self._share_mastodon_with_fallback(text)
 
-                share_link: str = handler(encoded_text)
+                share_link: str = handler(text)
 
                 # Validate URL length before attempting to launch
                 if len(share_link) > self.MAX_URL_LENGTH:
@@ -117,8 +113,9 @@ class ShareService(GObject.GObject):
             except (ValueError, TypeError, AttributeError) as e:
                 logger.error(f"Anura Share Error: Failed to share via {provider}. Reason: {e}")
 
-    def _share_mastodon_with_fallback(self, encoded_text: str) -> None:
+    def _share_mastodon_with_fallback(self, text: str) -> None:
         """Share to Mastodon with official scheme and fallback to instance selection."""
+        encoded_text = quote(text, safe="")
         # Validate URL length before attempting
         web_url = f"https://mastodon.social/share?text={encoded_text}"
         if len(web_url) > self.MAX_URL_LENGTH:
