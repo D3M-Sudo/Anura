@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
 ## [0.1.4.3] - 2026-05-09
 
 ### Added
@@ -23,8 +25,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fixed extra language combo signal connection to ensure it's always connected regardless of settings
 - Fixed modal property removal from shortcuts window for better user experience
 - Fixed keyboard shortcuts test to match correct method signature with _param parameter
-
-## [Unreleased]
 
 ## [0.1.4.2] - 2026-05-05
 
