@@ -4,73 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [0.1.4.3] - 2026-05-09
 
 ### Added
 
-- SignalManagerMixin for centralized signal tracking and automatic cleanup to prevent memory leaks
-- ThreadSafeSingleton class with double-checked locking pattern for thread-safe service initialization
-- Thread-safe GObjectWorker utility for background operations with proper GLib.idle_add integration
-- cleanup_orphaned_resources() function for automatic cleanup of old TTS cache and temporary files
-- DownloadState dataclass for tracking OCR model download progress
-- LanguageItem GObject type for language list management with Gio.ListStore integration
-- Keyboard shortcuts: Ctrl+? and Ctrl+/ for displaying shortcuts window
-- Keyboard shortcut: Ctrl+V for paste from clipboard functionality
-- Automatic URL extraction from OCR text with optional auto-opening via autolinks setting
-- Screenshot safety timeout (30 seconds) to prevent window hiding on portal hang
-- Comprehensive test suite with 10 new test files covering core services and utilities
-- AGENTS.md documentation for AI assistant integration and development guidance
-- Code quality workflow command with systematic 5-phase audit and refactoring process
-- Pure-Python share_utils module with URL validation and provider link generation
-- Universal shortcuts shortcut and improved language handling
-- Translation updates for new language row and shortcuts UI files
-
-### Changed
-
-- Settings service moved to services/ with lazy initialization pattern for CLI-only operation
-- Share service extracted pure-Python utilities to share_utils.py for better testability
-- Reddit URL encoding improved with title/body separation for short vs long texts
-- Mastodon sharing enhanced with web+mastodon:// scheme and instance selection fallback
-- Updated Python version requirement from 3.11 to 3.12 in project documentation
-- CI workflow updated to include pytest step before Flatpak build
-- pytest configuration updated with proper ignore patterns for GTK-dependent tests
-- All services now use ThreadSafeSingleton pattern for thread-safe initialization
-- Image processing now validates file size (50MB limit) and uses os.lstat() for symlink protection
-- Clipboard service enhanced with atomic cancellation and timeout management
-- Screenshot service improved with performance timing and better error handling
-- Refactored complex application methods into smaller, focused helper functions for better maintainability
-- Improved code organization with single responsibility principle across main.py and screenshot_service.py
-- Enhanced error handling patterns with dedicated exception handling methods
-- Simplified image processing logic by separating QR detection and OCR extraction concerns
-- Reduced cyclomatic complexity from 12+ to ≤10 per method throughout codebase
-- Standardized code formatting with consistent double quotes and trailing commas in multi-line calls
+- Advanced TextPreprocessor utility with intelligent image enhancement and OCR text cleanup
+- Smart text preprocessing including common OCR error correction, whitespace normalization, and punctuation fixing
+- Structured data extraction from OCR text (emails, URLs, phone numbers, dates)
+- Adaptive image enhancement based on brightness/contrast analysis for better OCR accuracy
+- Modern ShortcutsOverlay widget with live search and categorized keyboard shortcuts
+- Enhanced keyboard shortcuts overlay with search functionality and elegant Adw.Window-based interface
 
 ### Fixed
 
-- Fixed time.monotonic() usage in cleanup.py by replacing with time.time() for file modification checks
-- Removed OCR text logging in main.py to protect user privacy and prevent sensitive data exposure
-- Fixed empty copy=False branch in on_decoded() by adding proper notification for non-copy operations
-- Fixed test_keyboard_shortcuts.py by adding @pytest.mark.gtk markers to prevent GTK import errors
-- Updated obsolete CI comment to reflect current pytest integration
-- Fixed memory leaks through proper signal disconnection using SignalManagerMixin
-- Fixed symlink bypass vulnerability by using os.lstat() instead of os.stat() for file size validation
-- Fixed race conditions in service initialization through ThreadSafeSingleton implementation
-- Fixed clipboard timeout handling with atomic operations and proper cleanup
-- Fixed URL length validation in share service to prevent overflow attacks
-- Replaced try-except-pass patterns with contextlib.suppress() for cleaner error handling
-- Fixed inconsistent string quotes by standardizing to double quotes throughout codebase
-- Fixed missing docstrings for all public methods following PEP 257 conventions
-- Fixed trailing comma issues in multi-line function calls for better readability
-- Fixed import sorting and organization issues across all modules
-- Fixed code complexity by extracting complex methods into smaller, focused functions
-- Fixed threading import issues and type hint consistency in main.py
-- Fixed unused variable warnings and code quality issues
-- Fixed DBus errors and broken pipe warnings in CI smoke test
-- Fixed ruff E501 line length violations in screenshot_service.py
-- Fixed markdown linting issues in documentation files
-- Fixed Weblate graph display by converting from broken markdown to proper HTML
-- Fixed README.md layout issues with title centering and screenshot alignment
-- Fixed whitespace issues in clipboard and share functions to comply with ruff W293 rule
+- Fixed notification service cleanup by removing incorrect underscore reference
+- Fixed URI validator function call in window.py for proper URL validation
+- Fixed dialog response handling for browser launch failures with proper error management
+- Fixed extra language combo signal connection to ensure it's always connected regardless of settings
+- Fixed modal property removal from shortcuts window for better user experience
+- Fixed keyboard shortcuts test to match correct method signature with _param parameter
+
+## [Unreleased]
 
 ## [0.1.4.2] - 2026-05-05
 
