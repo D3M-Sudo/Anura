@@ -112,11 +112,28 @@ class ScreenshotService(GObject.GObject):
                 "Anura Screenshot: Portal failed to provide a screenshot "
                 f"(domain={e.domain}, code={e.code}): {e.message}",
             )
-            return GLib.idle_add(
-                self.emit,
-                "error",
-                _("Screenshot failed: {reason}").format(reason=e.message),
+            # Detect the libportal generic-failure pattern: G_IO_ERROR_FAILED
+            # (code 0) with the literal "Screenshot failed" string. libportal
+            # raises this when the host's xdg-desktop-portal backend rejects
+            # the request without a useful reason — typically because no
+            # screenshot-capable backend (xdg-desktop-portal-gtk /
+            # xdg-desktop-portal-gnome / -kde) is installed for the active
+            # desktop session, or the backend itself failed (e.g. lack of
+            # DRI3 in a VirtualBox guest). Tell the user where to look.
+            is_generic_backend_failure = (
+                e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.FAILED)
+                and (e.message or "").strip().lower() == "screenshot failed"
             )
+            if is_generic_backend_failure:
+                user_message = _(
+                    "Screenshot failed. Your desktop session does not appear to expose a "
+                    "working screenshot portal. Install xdg-desktop-portal-gtk (or the "
+                    "backend matching your desktop, e.g. xdg-desktop-portal-gnome / -kde) "
+                    "and re-login.",
+                )
+            else:
+                user_message = _("Screenshot failed: {reason}").format(reason=e.message)
+            return GLib.idle_add(self.emit, "error", user_message)
         except Exception as e:
             logger.error(f"Anura Screenshot: Unexpected error finishing screenshot: {e}")
             return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))

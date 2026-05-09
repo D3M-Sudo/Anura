@@ -96,9 +96,17 @@ class ExtractedPage(Adw.NavigationPage):
             self._tts_service = tts_service_instance
             self._tts_stop_handler_id = self._tts_service.connect("stop", self._on_listen_end)
 
+        # Resolve TTS language: explicit user preference (tts-language) wins,
+        # otherwise map the OCR language (Tesseract 3-letter, e.g. "ita") to
+        # the gTTS code (ISO 639-1, e.g. "it"). Fetch the OCR language from
+        # GSettings directly so this widget doesn't depend on an accessor on
+        # its parent window.
+        ocr_lang = self.settings.get_string("active-language")
+        tts_lang = tts_service_instance.get_effective_language(ocr_lang)
+
         GObjectWorker.call(
             tts_service_instance.generate,
-            (self.extracted_text, self.get_language()),
+            (self.extracted_text, tts_lang),
             callback=self._on_generated,
             errorback=self._on_generate_error,
         )
