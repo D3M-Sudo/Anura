@@ -63,13 +63,16 @@ flatpak install --user ~/Downloads/com.github.d3msudo.anura.flatpak
 
 Anura captures screenshots through the **XDG Desktop Portal**. The portal frontend is shipped with `xdg-desktop-portal` (typically already installed), but it needs a *backend* matching your desktop session. **GNOME and KDE ship one by default**, but other desktops (notably **LXQt**) do not — Anura cannot bundle a portal backend inside the Flatpak because it must run on the host with access to the compositor.
 
-| Desktop session | Install command (Debian/Ubuntu family) |
-| --- | --- |
-| GNOME / Ubuntu Desktop | already installed (`xdg-desktop-portal-gnome` or `-gtk`) |
-| KDE Plasma / Kubuntu | already installed (`xdg-desktop-portal-kde`) |
-| **LXQt / Lubuntu** | `sudo apt install xdg-desktop-portal-gtk` |
-| Xfce / MATE / Cinnamon | `sudo apt install xdg-desktop-portal-gtk` |
-| wlroots (Sway, Hyprland, …) | `sudo apt install xdg-desktop-portal-wlr` |
+| Desktop session | Install command (Ubuntu 24.04+) | Notes |
+| --- | --- | --- |
+| GNOME / Ubuntu Desktop | already installed | Uses `xdg-desktop-portal-gnome` or `-gtk` |
+| KDE Plasma / Kubuntu | already installed | Uses `xdg-desktop-portal-kde` |
+| **LXQt / Lubuntu** | `sudo apt install xdg-desktop-portal-kde` | Also create `~/.config/xdg-desktop-portal/lxqt-portals.conf` |
+| Xfce | `sudo apt install xdg-desktop-portal-gnome` | Or `-kde`; `-gtk` no longer provides Screenshot |
+| MATE | `sudo apt install xdg-desktop-portal-gnome` | Or `-kde` |
+| Cinnamon | `sudo apt install xdg-desktop-portal-gnome` | Or `-kde` |
+| Budgie | `sudo apt install xdg-desktop-portal-gnome` | Or `-kde` |
+| wlroots (Sway, Hyprland, river, Niri) | `sudo apt install xdg-desktop-portal-wlr` | May need `xdg-desktop-portal` ≥ 1.15 |
 
 After installing, **log out and back in** so the portal D-Bus service reloads. If the screenshot still fails, capture an `anura_debug.log` and the `domain=…, code=…` line will narrow down the cause.
 

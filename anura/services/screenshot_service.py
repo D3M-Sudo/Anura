@@ -34,6 +34,7 @@ from anura.services.host_screenshot_fallback import (  # noqa: E402
     find_tool_by_name,
     parse_detection_output,
 )
+from anura.utils.portal_advice import detect_portal_advice  # noqa: E402
 from anura.utils.text_preprocessor import get_text_preprocessor  # noqa: E402
 
 
@@ -223,13 +224,10 @@ class ScreenshotService(GObject.GObject):
         Centralised so both ``take_screenshot_finish`` (when the host
         fallback is unavailable) and ``_on_host_capture_complete`` (when
         the host fallback runs out of options) can call it consistently.
+        Uses desktop-aware advice based on XDG_CURRENT_DESKTOP.
         """
-        user_message = _(
-            "Screenshot failed. Your desktop session does not appear to expose a "
-            "working screenshot portal. Install xdg-desktop-portal-gtk (or the "
-            "backend matching your desktop, e.g. xdg-desktop-portal-gnome / -kde) "
-            "and re-login.",
-        )
+        advice = detect_portal_advice()
+        user_message = advice.long_message
         GLib.idle_add(self.emit, "portal-backend-missing")
         GLib.idle_add(self.emit, "error", user_message)
 

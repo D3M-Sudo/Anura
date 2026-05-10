@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: anura\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-09 03:15+0200\n"
+"POT-Creation-Date: 2026-05-10 14:21+0200\n"
 "PO-Revision-Date: 2024-02-02 19:01+0000\n"
 "Last-Translator: Sabri Ünal <libreajans@gmail.com>\n"
 "Language-Team: Turkish <https://hosted.weblate.org/projects/anura/default/tr/"
@@ -149,265 +149,351 @@ msgid ""
 "ever transmitted externally."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:32
-msgid "Main interface showing the text extraction screen (dark theme)"
-msgstr ""
-
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:36
-msgid "Extracted text displayed after OCR recognition"
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:28
+msgid ""
+"Screenshot capture uses the XDG Desktop Portal interface, which requires a "
+"portal backend to be installed on the host. GNOME and KDE typically ship one "
+"by default (xdg-desktop-portal-gnome / xdg-desktop-portal-kde). On other "
+"desktops you may need to install a backend explicitly: xdg-desktop-portal-"
+"gtk on LXQt / Xfce / MATE, xdg-desktop-portal-wlr on wlroots-based "
+"compositors. Without a backend the system cannot grant Anura access to the "
+"screen and the \"Take a screenshot\" action will fail."
 msgstr ""
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:42
+msgid "Main interface showing the text extraction screen (dark theme)"
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:46
+msgid "Extracted text displayed after OCR recognition"
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:52
+msgid "Advanced OCR preprocessing and modern keyboard shortcuts overlay."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:54
+msgid ""
+"Added advanced TextPreprocessor utility with intelligent image enhancement "
+"and OCR text cleanup."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:55
+msgid ""
+"Added smart text preprocessing including common OCR error correction, "
+"whitespace normalization, and punctuation fixing."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:56
+msgid ""
+"Added structured data extraction from OCR text (emails, URLs, phone numbers, "
+"dates)."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:57
+msgid ""
+"Added adaptive image enhancement based on brightness/contrast analysis for "
+"better OCR accuracy."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:58
+msgid ""
+"Added modern ShortcutsOverlay widget with live search and categorized "
+"keyboard shortcuts."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:59
+msgid ""
+"Added enhanced keyboard shortcuts overlay with search functionality and "
+"elegant Adw.Window-based interface."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:60
+msgid ""
+"Fixed notification service cleanup by removing incorrect underscore "
+"reference."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:61
+msgid ""
+"Fixed URI validator function call in window.py for proper URL validation."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:62
+msgid ""
+"Fixed dialog response handling for browser launch failures with proper error "
+"management."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:63
+msgid ""
+"Fixed extra language combo signal connection to ensure it's always connected "
+"regardless of settings."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:64
+msgid ""
+"Fixed modal property removal from shortcuts window for better user "
+"experience."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:65
+msgid ""
+"Fixed keyboard shortcuts test to match correct method signature with _param "
+"parameter."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:71
 msgid ""
 "Hardened thread safety, sanitized error logging, and optimized resource "
 "cleanup."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:44
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:73
 msgid ""
 "Fixed `__slots__` conflict in ClipboardService - missing `_cancellable` in "
 "declaration causing AttributeError."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:45
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:74
 msgid ""
 "Fixed ruff linting errors across codebase including import sorting and code "
 "style issues."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:46
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:75
 msgid ""
 "Fixed concurrency issues in TTS and clipboard services against race "
 "conditions."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:47
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:76
 msgid ""
 "Fixed memory leaks and added structural robustness throughout application."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:48
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:77
 msgid ""
 "Fixed API contract, thread safety, and race condition issues in core "
 "services."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:49
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:78
 msgid "Fixed Flatpak manifest warnings by removing `_comment` properties."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:50
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:79
 msgid ""
 "Extracted URI validation to utils module and relaxed IP/localhost "
 "restrictions."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:51
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:80
 msgid "Improved code quality with comprehensive type hints and cleanup."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:52
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:81
 msgid ""
 "Implemented atomic cancellation for Clipboard and thread-safe signal "
 "emission for TTS GStreamer bus."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:53
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:82
 msgid "Enhanced thread safety patterns across all services."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:54
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:83
 msgid "Added comprehensive unit tests for core services."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:55
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:84
 msgid "Resolved all remaining linting errors and line length issues."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:61
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:90
 msgid ""
 "Hotfix release for UI initialization issues and notification improvements."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:63
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:92
 msgid ""
 "Fixed missing Adw.init() call causing \"greyed out UI\" on some systems."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:64
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:93
 msgid ""
 "Fixed GResource bundle loading to properly exit on failure instead of "
 "continuing with broken UI."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:65
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:94
 msgid ""
 "Fixed notification portal API to use proper GLib.Variant format (a{sv}) for "
 "XDG Portal compatibility."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:66
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:95
 msgid ""
 "Fixed notification import consistency with absolute imports throughout main."
 "py."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:67
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:96
 msgid ""
 "Fixed HTML escaping in release notes generation to prevent XSS "
 "vulnerabilities."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:68
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:97
 msgid "Added CHANGELOG.md as source of truth for release notes."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:69
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:98
 msgid "Added translate URL to metainfo for Weblate integration."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:75
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:104
 msgid ""
 "Production release with critical bug fixes, security improvements, and "
 "Flathub compliance."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:77
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:106
 msgid ""
 "Fixed critical thread-safety issues and race conditions in language manager "
 "and screenshot service."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:78
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:107
 msgid ""
 "Fixed memory leaks in widget lifecycle management and GStreamer bus watch."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:79
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:108
 msgid ""
 "Fixed all Flatpak manifest dependencies (requests, urllib3, certifi, "
 "hatchling, pyzbar)."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:80
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:109
 msgid "Fixed blueprint compiler output directory for Flatpak builds."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:81
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:110
 msgid "Fixed gresource bundle loading with correct UI file paths."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:82
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:111
 msgid ""
 "Fixed filesystem permissions for Open Image and Drag &amp; Drop in sandbox."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:83
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:112
 msgid "Fixed silent CLI mode to properly exit without opening UI window."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:84
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:113
 msgid "Fixed CLI exit code to return 0 on success instead of 1."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:85
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:114
 msgid ""
 "Fixed code quality issues: lint errors, import sorting, gettext shadowing."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:86
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:115
 msgid "Fixed Telegram share URL to send text as message instead of URL."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:87
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:116
 msgid "Updated OARS content rating for Flathub compliance."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:88
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:117
 msgid "Improved CI/CD workflow with smoke tests and build verification."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:89
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:118
 msgid "Updated tessdata-fast to pinned commit SHA for reproducible builds."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:95
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:124
 msgid "Bug fixes and stability improvements."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:97
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:126
 msgid "Fixed import error in screenshot service (tessdata_config casing)."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:98
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:127
 msgid "Fixed missing init_tessdata() method in LanguageManager."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:99
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:128
 msgid ""
 "Fixed settings module path mismatch (moved to anura/services/settings.py)."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:100
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:129
 msgid ""
 "Fixed blueprint-compiler GIRepository compatibility with GNOME Platform 49."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:101
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:130
 msgid "Improved TTS cache file location (XDG_CACHE_HOME)."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:107
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:136
 msgid "Initial release of Anura (fork of Frog)."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:109
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:138
 msgid "Complete rebranding to Anura."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:110
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:139
 msgid "Removed all telemetry and PostHog tracking for total privacy."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:111
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:140
 msgid "Optimized sharing service: added X (formerly Twitter) and Instagram."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:112
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:141
 msgid "Updated dependencies for modern Linux distributions."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:118
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:147
 msgid "D3M-Sudo"
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:131
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:160
 msgid "OCR"
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:132
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:161
 msgid "text"
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:133
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:162
 #, fuzzy
 msgid "extraction"
 msgstr "Metin Çıkarma"
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:134
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:163
 #, fuzzy
 msgid "screenshot"
 msgstr "Ekran görüntüsü al"
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:135
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:164
 msgid "QR"
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:136
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:165
 msgid "scanner"
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:137
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:166
 msgid "tesseract"
 msgstr ""
 
@@ -445,9 +531,8 @@ msgstr ""
 msgid "Preferences"
 msgstr "Tercihler"
 
-#. Configure window properties
-#: ../data/ui/extracted_page.blp:120 ../data/ui/welcome_page.blp:117
-#: ../anura/widgets/shortcuts_overlay.py:43
+#: ../data/ui/extracted_page.blp:120 ../data/ui/shortcuts_overlay.blp:5
+#: ../data/ui/shortcuts_overlay.blp:17 ../data/ui/welcome_page.blp:117
 msgid "Keyboard Shortcuts"
 msgstr "Klavye Kısayolları"
 
@@ -572,7 +657,11 @@ msgstr "Kurulu diller"
 msgid "Add language"
 msgstr "Dil Ekle"
 
-#: ../data/ui/welcome_page.blp:5 ../data/ui/window.blp:20
+#: ../data/ui/shortcuts_overlay.blp:30
+msgid "Search shortcuts..."
+msgstr ""
+
+#: ../data/ui/welcome_page.blp:5 ../data/ui/window.blp:30
 msgid "Welcome"
 msgstr ""
 
@@ -627,7 +716,17 @@ msgstr ""
 msgid "⭐ Star on GitHub"
 msgstr "⭐ GitHub'da Yıldız"
 
-#: ../data/ui/window.blp:26 ../anura/services/share_service.py:274
+#: ../data/ui/window.blp:19
+msgid ""
+"Screenshot portal unavailable. Install xdg-desktop-portal-gtk (or the "
+"backend matching your desktop) and re-login."
+msgstr ""
+
+#: ../data/ui/window.blp:20
+msgid "Dismiss"
+msgstr ""
+
+#: ../data/ui/window.blp:36 ../anura/services/share_service.py:277
 msgid "Extracted Text"
 msgstr ""
 
@@ -1144,207 +1243,219 @@ msgstr ""
 msgid "Run OCR without UI (copy result to clipboard)"
 msgstr ""
 
-#: ../anura/main.py:502 ../anura/main.py:522
+#: ../anura/main.py:481
+msgid "Bug fixes and improvements."
+msgstr ""
+
+#: ../anura/main.py:516 ../anura/main.py:536
 msgid "Failed to Open Browser"
 msgstr ""
 
-#: ../anura/main.py:503 ../anura/main.py:523
+#: ../anura/main.py:517 ../anura/main.py:537
 msgid "No web browser could be launched. Please open the link manually."
 msgstr ""
 
-#: ../anura/main.py:504 ../anura/main.py:524
+#: ../anura/main.py:518 ../anura/main.py:538
 msgid "OK"
 msgstr ""
 
-#: ../anura/main.py:544 ../anura/window.py:154 ../anura/window.py:363
+#: ../anura/main.py:570 ../anura/window.py:162 ../anura/window.py:413
 msgid "Text copied to clipboard"
 msgstr "Metin panoya kopyalandı"
 
-#: ../anura/main.py:546 ../anura/window.py:365
-#, fuzzy
-msgid "No text to copy"
-msgstr "Sonuç Bulunamadı"
-
-#: ../anura/main.py:572
+#: ../anura/main.py:600
 msgid "No text found. Try to grab another region."
 msgstr "Metin bulunamadı. Başka bir bölge yakalamayı deneyin."
 
-#: ../anura/main.py:581
+#: ../anura/main.py:609
 #, fuzzy
 msgid "Text extracted and copied to clipboard."
 msgstr "Metin ayıkla ve panoya kopyala"
 
-#: ../anura/main.py:587
+#: ../anura/main.py:615
 msgid "Text extracted successfully."
 msgstr ""
 
-#: ../anura/main.py:592
+#: ../anura/main.py:620
 msgid "Cancelled"
 msgstr ""
 
-#: ../anura/main.py:619
-msgid "No text to share"
-msgstr ""
-
-#: ../anura/window.py:125
+#: ../anura/window.py:133
 #, fuzzy
 msgid "Failed to capture screenshot"
 msgstr "Ekran görüntüsü al"
 
-#: ../anura/window.py:131
+#: ../anura/window.py:139
 msgid "Screenshot service did not respond."
 msgstr ""
 
-#: ../anura/window.py:161
+#: ../anura/window.py:170
 msgid "URL opened automatically"
 msgstr ""
 
-#: ../anura/window.py:186
+#: ../anura/window.py:219
 #, fuzzy
 msgid "Choose an image for extraction"
 msgstr "Metin ayıklamak için görüntüyü aç"
 
-#: ../anura/window.py:189
+#: ../anura/window.py:222
 #, fuzzy
 msgid "Images"
 msgstr "Görüntü Aç"
 
-#: ../anura/window.py:210 ../anura/window.py:249 ../anura/window.py:341
+#: ../anura/window.py:243 ../anura/window.py:289 ../anura/window.py:390
 #, python-brace-format
 msgid "Image too large: {size}MB (max {max}MB)"
 msgstr ""
 
-#: ../anura/window.py:219
+#: ../anura/window.py:252
 #, python-brace-format
 msgid "Unsupported file format: {path}"
 msgstr ""
 
-#: ../anura/window.py:225
+#: ../anura/window.py:258
 #, python-brace-format
 msgid "File not found: {path}"
 msgstr ""
 
-#: ../anura/window.py:227
+#: ../anura/window.py:260
 #, python-brace-format
 msgid "Permission denied: {path}"
 msgstr ""
 
-#: ../anura/window.py:230
+#: ../anura/window.py:263
 #, python-brace-format
 msgid "Cannot access file: {path}"
 msgstr ""
 
-#: ../anura/window.py:272
+#: ../anura/window.py:312
 msgid "Corrupt or unsupported image file"
 msgstr ""
 
-#: ../anura/window.py:276
+#: ../anura/window.py:316
 msgid "Unsupported image format"
 msgstr ""
 
-#: ../anura/window.py:280 ../anura/window.py:284
+#: ../anura/window.py:320 ../anura/window.py:325
 msgid "Failed to validate image file"
 msgstr ""
 
-#: ../anura/window.py:291
+#: ../anura/window.py:332 ../anura/window.py:336
 msgid "Failed to load image file"
 msgstr ""
 
-#: ../anura/window.py:322
+#: ../anura/window.py:367
 msgid "Unsupported file format."
 msgstr ""
 
-#: ../anura/window.py:334 ../anura/window.py:352
+#: ../anura/window.py:382 ../anura/window.py:402
 msgid "Failed to load dropped file"
 msgstr ""
 
-#: ../anura/window.py:489
+#: ../anura/window.py:415
+#, fuzzy
+msgid "No text to copy"
+msgstr "Sonuç Bulunamadı"
+
+#: ../anura/window.py:545
 msgid "No text to share."
 msgstr ""
 
-#: ../anura/window.py:499
+#: ../anura/window.py:555
 msgid "Text contains a link"
 msgstr ""
 
-#: ../anura/window.py:500
+#: ../anura/window.py:556
 msgid "Open"
 msgstr "Aç"
 
-#: ../anura/window.py:510
+#: ../anura/window.py:566
 msgid "Invalid URL blocked for security"
 msgstr ""
 
-#: ../anura/services/clipboard_service.py:145
-#: ../anura/services/clipboard_service.py:149
-#: ../anura/services/clipboard_service.py:160
+#: ../anura/services/clipboard_service.py:158
+#: ../anura/services/clipboard_service.py:162
+#: ../anura/services/clipboard_service.py:173
+#: ../anura/services/clipboard_service.py:299
+#: ../anura/services/clipboard_service.py:324
+#: ../anura/services/clipboard_service.py:333
+#: ../anura/services/clipboard_service.py:340
+#: ../anura/services/clipboard_service.py:345
+#: ../anura/services/clipboard_service.py:361
+#: ../anura/services/clipboard_service.py:368
 msgid "No image in clipboard"
 msgstr "Panoda görüntü yok"
 
-#: ../anura/services/clipboard_service.py:247
-#: ../anura/services/clipboard_service.py:251
+#: ../anura/services/clipboard_service.py:431
+#: ../anura/services/clipboard_service.py:435
 msgid "No text in clipboard"
 msgstr ""
 
 #. Emit error signal so UI can show user feedback
-#: ../anura/services/clipboard_service.py:280
+#: ../anura/services/clipboard_service.py:466
 msgid "Clipboard read operation timed out."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:113
-#: ../anura/services/screenshot_service.py:120
-#: ../anura/services/screenshot_service.py:124
-#: ../anura/services/screenshot_service.py:134
+#: ../anura/services/screenshot_service.py:162
+#, python-brace-format
+msgid "Screenshot failed: {reason}"
+msgstr ""
+
+#: ../anura/services/screenshot_service.py:166
+#: ../anura/services/screenshot_service.py:170
+#: ../anura/services/screenshot_service.py:179
+#: ../anura/services/screenshot_service.py:184
 msgid "Can't take a screenshot."
 msgstr "Ekran görüntüsü alınamadı."
 
-#: ../anura/services/screenshot_service.py:174
-#: ../anura/services/screenshot_service.py:307
+#: ../anura/services/screenshot_service.py:410
+#: ../anura/services/screenshot_service.py:543
 msgid "Invalid language code specified."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:249
+#: ../anura/services/screenshot_service.py:485
 msgid "Failed to read image file."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:252
+#: ../anura/services/screenshot_service.py:488
 msgid "OCR engine failed to process image."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:255
-#: ../anura/services/screenshot_service.py:261
+#: ../anura/services/screenshot_service.py:491
+#: ../anura/services/screenshot_service.py:497
 msgid "Failed to decode data."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:290
+#: ../anura/services/screenshot_service.py:526
 #, fuzzy
 msgid "No text found."
 msgstr "Sonuç Bulunamadı"
 
-#: ../anura/services/share_service.py:164
+#: ../anura/services/share_service.py:165
 msgid "Select Mastodon Instance"
 msgstr ""
 
-#: ../anura/services/share_service.py:165
+#: ../anura/services/share_service.py:166
 msgid "Choose your Mastodon instance to share the extracted text:"
 msgstr ""
 
-#: ../anura/services/share_service.py:171
+#: ../anura/services/share_service.py:172
 msgid "Cancel"
 msgstr ""
 
-#: ../anura/services/share_service.py:196
+#: ../anura/services/share_service.py:199
 msgid "Cannot show dialog without active window"
 msgstr ""
 
-#: ../anura/widgets/extracted_page.py:118
+#: ../anura/widgets/extracted_page.py:130
 msgid "Request timed out. Please try again."
 msgstr ""
 
-#: ../anura/widgets/extracted_page.py:120
+#: ../anura/widgets/extracted_page.py:132
 msgid "Network error. Please check your internet connection."
 msgstr ""
 
-#: ../anura/widgets/extracted_page.py:122
+#: ../anura/widgets/extracted_page.py:134
 msgid "Text-to-speech failed. Please try again."
 msgstr ""
 
@@ -1367,90 +1478,90 @@ msgstr ""
 msgid "Share via {name}"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:62
+#: ../anura/widgets/shortcuts_overlay.py:58
 msgid "Screenshot & OCR"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:64
+#: ../anura/widgets/shortcuts_overlay.py:60
 msgid "Take screenshot"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:65
+#: ../anura/widgets/shortcuts_overlay.py:61
 msgid "Take screenshot and copy to clipboard"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:66
+#: ../anura/widgets/shortcuts_overlay.py:62
 msgid "Open image file"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:67
+#: ../anura/widgets/shortcuts_overlay.py:63
 msgid "Paste image from clipboard"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:72
+#: ../anura/widgets/shortcuts_overlay.py:68
 msgid "Text Operations"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:74
+#: ../anura/widgets/shortcuts_overlay.py:70
 msgid "Copy text to clipboard"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:75
+#: ../anura/widgets/shortcuts_overlay.py:71
 msgid "Listen to text (TTS)"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:76
+#: ../anura/widgets/shortcuts_overlay.py:72
 msgid "Stop text-to-speech"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:81
+#: ../anura/widgets/shortcuts_overlay.py:77
 msgid "Application"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:83
+#: ../anura/widgets/shortcuts_overlay.py:79
 msgid "Open preferences"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:84
-#: ../anura/widgets/shortcuts_overlay.py:85
-#: ../anura/widgets/shortcuts_overlay.py:86
+#: ../anura/widgets/shortcuts_overlay.py:80
+#: ../anura/widgets/shortcuts_overlay.py:81
+#: ../anura/widgets/shortcuts_overlay.py:82
 msgid "Show keyboard shortcuts"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:87
-#: ../anura/widgets/shortcuts_overlay.py:88
+#: ../anura/widgets/shortcuts_overlay.py:83
+#: ../anura/widgets/shortcuts_overlay.py:84
 msgid "Quit application"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:93
+#: ../anura/widgets/shortcuts_overlay.py:89
 msgid "Navigation"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:95
+#: ../anura/widgets/shortcuts_overlay.py:91
 msgid "Close dialog/go back"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:96
+#: ../anura/widgets/shortcuts_overlay.py:92
 msgid "Navigate between widgets"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:97
+#: ../anura/widgets/shortcuts_overlay.py:93
 msgid "Navigate backwards"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:102
+#: ../anura/widgets/shortcuts_overlay.py:98
 msgid "Advanced"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:104
+#: ../anura/widgets/shortcuts_overlay.py:100
 msgid "Open image file (advanced)"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:105
+#: ../anura/widgets/shortcuts_overlay.py:101
 msgid "Show help"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:106
+#: ../anura/widgets/shortcuts_overlay.py:102
 msgid "Open application menu"
 msgstr ""
 

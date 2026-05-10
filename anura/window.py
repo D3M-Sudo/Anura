@@ -25,6 +25,7 @@ from anura.services.clipboard_service import get_clipboard_service  # noqa: E402
 from anura.services.screenshot_service import ScreenshotService  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
 from anura.utils import uri_validator  # noqa: E402
+from anura.utils.portal_advice import detect_portal_advice  # noqa: E402
 from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
 from anura.widgets.preferences_dialog import PreferencesDialog  # noqa: E402
 from anura.widgets.welcome_page import WelcomePage  # noqa: E402
@@ -192,13 +193,16 @@ class AnuraWindow(Adw.ApplicationWindow):
             self.show_toast(message)
 
     def _on_portal_backend_missing(self, _sender: GObject.GObject) -> None:
-        """Reveal the persistent install hint banner.
+        """Reveal the persistent install hint banner with desktop-aware message.
 
         Fires when ScreenshotService detects the libportal generic-failure
         pattern (host's xdg-desktop-portal backend missing or broken). The
         toast emitted via "error" disappears in seconds; this banner stays
         visible until the user dismisses it or installs a backend.
+        Uses detect_portal_advice to show desktop-specific install instructions.
         """
+        advice = detect_portal_advice()
+        self.portal_banner.set_title(advice.short_message)
         self.portal_banner.set_revealed(True)
 
     def _on_portal_banner_dismissed(self, _banner: Adw.Banner) -> None:
