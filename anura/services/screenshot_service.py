@@ -303,17 +303,20 @@ class ScreenshotService(GObject.GObject):
             self._emit_portal_failure()
             return
 
-        # Pick a host-addressable temp path inside ~/Downloads (already mapped
-        # via --filesystem=xdg-download, so the same path string is valid both
-        # in the sandbox and on the host).
-        downloads_dir = Path.home() / "Downloads"
+        # Pick a host-addressable temp path inside ~/Anura screenshots.
+        # This directory is created on the host via flatpak-spawn --host.
+        output_dir = Path.home() / "Anura screenshots"
+        output_path = str(output_dir / f"anura-shot-{uuid.uuid4().hex}.png")
+
+        # Create the directory on the host - works regardless of localization.
         try:
-            downloads_dir.mkdir(parents=True, exist_ok=True)
-        except OSError as e:
-            logger.warning(f"Anura Screenshot: cannot prepare host fallback output dir: {e}")
+            mkdir_argv = ["flatpak-spawn", "--host", "mkdir", "-p", str(output_dir)]
+            mkdir_proc = Gio.Subprocess.new(mkdir_argv, Gio.SubprocessFlags.STDERR_SILENCE)
+            mkdir_proc.wait_sync(None)  # Synchronous - fast operation
+        except GLib.Error as e:
+            logger.warning(f"Anura Screenshot: cannot create host output dir: {e.message}")
             self._emit_portal_failure()
             return
-        output_path = str(downloads_dir / f".anura-shot-{uuid.uuid4().hex}.png")
 
         logger.info(f"Anura Screenshot: portal failed, falling back to host '{tool_name}'.")
         # Log environment for debugging display issues
