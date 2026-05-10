@@ -73,6 +73,37 @@ Anura captures screenshots through the **XDG Desktop Portal**. The portal fronte
 
 After installing, **log out and back in** so the portal D-Bus service reloads. If the screenshot still fails, capture an `anura_debug.log` and the `domain=…, code=…` line will narrow down the cause.
 
+#### Host screenshot fallback (Flatpak only)
+
+Some desktop sessions ship a portal frontend but no backend that exposes the
+`Screenshot` interface for the active session — most notably **LXQt / Xfce /
+Openbox on Ubuntu 24.04+**, where `xdg-desktop-portal-gtk` 1.15.x removed
+Screenshot upstream and `xdg-desktop-portal-kde` 5.27.x only registers it
+when KWin is the window manager.
+
+When the portal returns the libportal generic `Screenshot failed` error,
+Anura's Flatpak transparently falls back to a host-side screenshot CLI via
+`flatpak-spawn --host`. To enable that path, install **at least one** of
+the following tools on the host:
+
+```bash
+# Recommended — GTK-based UI, works on every X11 desktop:
+sudo apt install gnome-screenshot
+
+# Optional fallback — tiny, CLI-driven (~200 KB):
+sudo apt install scrot
+```
+
+Anura tries them in this order: `gnome-screenshot` →
+`xfce4-screenshooter` → `spectacle` → `scrot` → `maim` → ImageMagick
+`import`. The first installed tool runs its native region-selection UI,
+writes a PNG into `~/Downloads/.anura-shot-<uuid>.png`, and Anura OCRs the
+result and deletes the temp file. If no tool is installed, Anura surfaces
+the original portal-failure banner so you know what to install.
+
+Outside the Flatpak (e.g. when running from source), the host fallback is
+not used; the portal is the only path.
+
 ---
 
 ## Building from Source
