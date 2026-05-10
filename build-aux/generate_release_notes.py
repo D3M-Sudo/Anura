@@ -55,9 +55,14 @@ def parse_changelog(changelog_path: Path) -> dict:
             # Build HTML with sections
             html_parts = []
             total_items = 0
+            any_truncated = False
 
             for section_name, items in sections.items():
                 if items:
+                    # Check if this section will be truncated
+                    if len(items) > 5:
+                        any_truncated = True
+
                     # Limit to 5 items per section
                     limited_items = items[:5]
                     total_items += len(limited_items)
@@ -66,8 +71,8 @@ def parse_changelog(changelog_path: Path) -> dict:
                     html_items = "".join(f"<li>{item}</li>" for item in limited_items)
                     html_parts.append(f"<ul>{html_items}</ul>")
 
-            # Add GitHub link if there are more than 15 total items
-            if total_items > 15:
+            # Add GitHub link with hybrid logic: sections truncated OR total > 12
+            if any_truncated or total_items > 12:
                 github_link = (
                     '<p><a href="https://github.com/D3M-Sudo/Anura/blob/main/CHANGELOG.md">'
                     "Vedi changelog completo</a></p>"
