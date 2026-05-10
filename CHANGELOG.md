@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-## [0.1.4.3] - 2026-05-10
+## [0.1.4.3] - 2026-05-10 {version-0.1.4.3}
 
 ### Added
 
@@ -21,6 +21,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Persistent install-hint banner when screenshot portal backend is missing
 - Desktop-aware portal advice messages with environment-specific guidance
 - Enhanced diagnostic logging for host screenshot operations
+- Comprehensive drag-and-drop functionality with visual feedback and proper lifecycle management
+- Complete drag-and-drop event handlers (enter, leave, motion, drop) with CSS styling for hover states
+- Enhanced AboutDialog with complete legal information for Flathub compliance
+- Full copyright and MIT license text for transparency
+- Open source dependencies attribution in legal information
+- Complete legal information ensuring Flathub compliance requirements
 
 ### Fixed
 
@@ -42,8 +48,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Enhanced screenshot service with host fallback capabilities
 - Improved error handling and logging throughout the application
 - Better portal environment diagnostics and user guidance
+- Updated release notes generation logic with hybrid GitHub link display
+- Lower threshold for GitHub link from 15 to 12 items for better UX
+- Enhanced drag-and-drop drop target attachment to welcome page widget
+- Improved release notes generation with tracking for truncated sections
 
-## [0.1.4.2] - 2026-05-05
+## [0.1.4.2] - 2026-05-05 {version-0.1.4.2}
 
 ### Fixed
 
@@ -63,7 +73,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Added comprehensive unit tests for core services
 - Resolved all remaining linting errors and line length issues
 
-## [0.1.4.1] - 2026-05-02
+## [0.1.4.1] - 2026-05-02 {version-0.1.4.1}
 
 ### Fixed
 
@@ -78,7 +88,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Added CHANGELOG.md as source of truth for release notes
 - Added translate URL to metainfo for Weblate integration
 
-## [0.1.4] - 2026-05-01
+## [0.1.4] - 2026-05-01 {version-0.1.4}
 
 ### Fixed
 
@@ -99,7 +109,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Improved CI/CD workflow with smoke tests and build verification
 - Updated tessdata-fast to pinned commit SHA for reproducible builds
 
-## [0.1.3] - 2026-04-25
+## [0.1.3] - 2026-04-25 {version-0.1.3}
 
 ### Fixed
 
@@ -112,7 +122,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Improved TTS cache file location (XDG_CACHE_HOME)
 
-## [0.1.0] - 2026-04-23
+## [0.1.0] - 2026-04-23 {version-0.1.0}
 
 ### Added
 

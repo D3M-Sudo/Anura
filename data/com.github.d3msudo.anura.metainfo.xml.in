@@ -35,6 +35,14 @@
       backend the system cannot grant Anura access to the screen and the
       "Take a screenshot" action will fail.
     </p>
+    <p>
+      When the portal backend is unavailable or fails, Anura automatically
+      falls back to host-side screenshot tools via flatpak-spawn. To enable
+      this fallback, install at least one screenshot tool on the host system:
+      gnome-screenshot (recommended), xfce4-screenshooter, spectacle, scrot,
+      maim, or ImageMagick import. Anura tries them in order and uses the
+      first available tool.
+    </p>
   </description>
   <screenshots>
     <screenshot type="default">
@@ -62,6 +70,12 @@
           <li>Added persistent install-hint banner when screenshot portal backend is missing.</li>
           <li>Added desktop-aware portal advice messages with environment-specific guidance.</li>
           <li>Added enhanced diagnostic logging for host screenshot operations.</li>
+          <li>Added comprehensive drag-and-drop functionality with visual feedback and proper lifecycle management.</li>
+          <li>Added complete drag-and-drop event handlers (enter, leave, motion, drop) with CSS styling for hover states.</li>
+          <li>Added enhanced AboutDialog with complete legal information for Flathub compliance.</li>
+          <li>Added full copyright and MIT license text for transparency.</li>
+          <li>Added open source dependencies attribution in legal information.</li>
+          <li>Added complete legal information ensuring Flathub compliance requirements.</li>
           <li>Fixed notification service cleanup by removing incorrect underscore reference.</li>
           <li>Fixed URI validator function call in window.py for proper URL validation.</li>
           <li>Fixed dialog response handling for browser launch failures with proper error management.</li>
@@ -74,6 +88,10 @@
           <li>Fixed host screenshot file existence check with retry loop.</li>
           <li>Fixed designer credit and share-row action prefix corrections.</li>
           <li>Fixed incomplete URL substring sanitization (security fix).</li>
+          <li>Updated release notes generation logic with hybrid GitHub link display.</li>
+          <li>Lower threshold for GitHub link from 15 to 12 items for better UX.</li>
+          <li>Enhanced drag-and-drop drop target attachment to welcome page widget.</li>
+          <li>Improved release notes generation with tracking for truncated sections.</li>
         </ul>
       </description>
     </release>
