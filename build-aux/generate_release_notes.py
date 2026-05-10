@@ -70,7 +70,7 @@ def parse_changelog(changelog_path: Path) -> dict:
             if total_items > 15:
                 github_link = (
                     '<p><a href="https://github.com/D3M-Sudo/Anura/blob/main/CHANGELOG.md">'
-                    'Vedi changelog completo</a></p>'
+                    "Vedi changelog completo</a></p>"
                 )
                 html_parts.append(github_link)
 
