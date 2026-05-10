@@ -21,7 +21,8 @@ def parse_changelog(changelog_path: Path) -> dict:
     # version header (or end of file) instead of stopping at the first "#".
     # Also handles optional {version-x.y.z} suffix at end of version line
     version_pattern = (
-        r"^## \[(?P<version>\d{1,4}\.\d{1,4}\.\d{1,4}(?:\.\d{1,4})?)\] - (?P<date>\d{4}-\d{2}-\d{2})(?:\s+\{version-[^}]+\})?\n+"
+        r"^## \[(?P<version>\d{1,4}\.\d{1,4}\.\d{1,4}(?:\.\d{1,4})?)\] - "
+        r"(?P<date>\d{4}-\d{2}-\d{2})(?:\s+\{version-[^}]+\})?\n+"
         r"(?P<content>.*?)(?=^## \[|\Z)"
     )
 
