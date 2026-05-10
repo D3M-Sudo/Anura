@@ -312,7 +312,7 @@ class ScreenshotService(GObject.GObject):
         try:
             mkdir_argv = ["flatpak-spawn", "--host", "mkdir", "-p", str(output_dir)]
             mkdir_proc = Gio.Subprocess.new(mkdir_argv, Gio.SubprocessFlags.STDERR_SILENCE)
-            mkdir_proc.wait_sync(None)  # Synchronous - fast operation
+            mkdir_proc.wait(None)  # Synchronous - fast operation
         except GLib.Error as e:
             logger.warning(f"Anura Screenshot: cannot create host output dir: {e.message}")
             self._emit_portal_failure()
