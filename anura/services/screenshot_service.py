@@ -316,6 +316,11 @@ class ScreenshotService(GObject.GObject):
         output_path = str(downloads_dir / f".anura-shot-{uuid.uuid4().hex}.png")
 
         logger.info(f"Anura Screenshot: portal failed, falling back to host '{tool_name}'.")
+        # Log environment for debugging display issues
+        env_vars = ["DISPLAY", "WAYLAND_DISPLAY", "XDG_SESSION_TYPE", "XDG_CURRENT_DESKTOP"]
+        env_snapshot = ", ".join(f"{k}={os.environ.get(k) or '<unset>'}" for k in env_vars)
+        logger.debug(f"Anura Screenshot: host fallback env: {env_snapshot}")
+
         try:
             argv = build_screenshot_argv(tool, output_path)
             logger.debug(f"Anura Screenshot: host fallback argv: {argv}")
