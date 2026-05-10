@@ -19,8 +19,9 @@ def parse_changelog(changelog_path: Path) -> dict:
     # Content uses ".*?" with DOTALL so it can include sub-sections like "### Added"
     # whose lines start with "#"; the lookahead anchors the section end at the next
     # version header (or end of file) instead of stopping at the first "#".
+    # Also handles optional {version-x.y.z} suffix at end of version line
     version_pattern = (
-        r"^## \[(?P<version>\d{1,4}\.\d{1,4}\.\d{1,4}(?:\.\d{1,4})?)\] - (?P<date>\d{4}-\d{2}-\d{2})\n+"
+        r"^## \[(?P<version>\d{1,4}\.\d{1,4}\.\d{1,4}(?:\.\d{1,4})?)\] - (?P<date>\d{4}-\d{2}-\d{2})(?:\s+\{version-[^}]+\})?\n+"
         r"(?P<content>.*?)(?=^## \[|\Z)"
     )
 
