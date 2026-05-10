@@ -68,7 +68,11 @@ def parse_changelog(changelog_path: Path) -> dict:
 
             # Add GitHub link if there are more than 15 total items
             if total_items > 15:
-                html_parts.append('<p><a href="https://github.com/D3M-Sudo/Anura/blob/main/CHANGELOG.md">Vedi changelog completo</a></p>')
+                github_link = (
+                    '<p><a href="https://github.com/D3M-Sudo/Anura/blob/main/CHANGELOG.md">'
+                    'Vedi changelog completo</a></p>'
+                )
+                html_parts.append(github_link)
 
             html_output = "".join(html_parts)
         else:
