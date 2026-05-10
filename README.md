@@ -109,6 +109,44 @@ not used; the portal is the only path.
 
 ---
 
+## Troubleshooting
+
+### Debug Logging
+
+Anura supports configurable logging levels via the `ANURA_LOG_LEVEL` environment variable:
+
+```bash
+# Default level (INFO)
+ANURA_LOG_LEVEL=INFO flatpak run com.github.d3msudo.anura
+
+# Verbose debugging
+ANURA_LOG_LEVEL=DEBUG flatpak run com.github.d3msudo.anura
+
+# Trace level (most detailed)
+ANURA_LOG_LEVEL=TRACE flatpak run com.github.d3msudo.anura
+```
+
+Valid levels: `TRACE`, `DEBUG`, `INFO` (default), `WARNING`, `ERROR`, `CRITICAL`
+
+### Common Issues
+
+**Screenshot fails with "No portal backend found"**
+- Install the appropriate portal backend for your desktop (see table above)
+- Log out and back in to reload portal services
+- If still failing, install host screenshot tools (gnome-screenshot or scrot)
+
+**Language models not downloading**
+- Check network connection
+- Verify `~/.var/app/com.github.d3msudo.anura/data/anura/tessdata/` exists
+- Set `ANURA_LOG_LEVEL=DEBUG` for detailed download logs
+
+**Text extraction shows no results**
+- Ensure the image contains readable text
+- Try different language settings
+- Check if the image resolution is too low
+
+---
+
 ## Building from Source
 
 ### Prerequisites

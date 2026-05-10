@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-## [0.1.4.3] - 2026-05-09
+## [0.1.4.3] - 2026-05-10
 
 ### Added
 
@@ -16,6 +16,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Adaptive image enhancement based on brightness/contrast analysis for better OCR accuracy
 - Modern ShortcutsOverlay widget with live search and categorized keyboard shortcuts
 - Enhanced keyboard shortcuts overlay with search functionality and elegant Adw.Window-based interface
+- Configurable logging level via `ANURA_LOG_LEVEL` environment variable for debugging
+- Host screenshot fallback system using `flatpak-spawn --host` for missing portal backends
+- Persistent install-hint banner when screenshot portal backend is missing
+- Desktop-aware portal advice messages with environment-specific guidance
+- Enhanced diagnostic logging for host screenshot operations
 
 ### Fixed
 
@@ -25,6 +30,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fixed extra language combo signal connection to ensure it's always connected regardless of settings
 - Fixed modal property removal from shortcuts window for better user experience
 - Fixed keyboard shortcuts test to match correct method signature with _param parameter
+- Fixed five UI/runtime bugs from Flatpak debug log
+- Fixed three additional bugs (release notes parse, TTS AttributeError, screenshot diagnostic)
+- Fixed Gio.Subprocess.wait() method usage instead of wait_sync()
+- Fixed host screenshot file existence check with retry loop
+- Fixed designer credit and share-row action prefix corrections
+- Fixed incomplete URL substring sanitization (security fix)
+
+### Changed
+
+- Enhanced screenshot service with host fallback capabilities
+- Improved error handling and logging throughout the application
+- Better portal environment diagnostics and user guidance
 
 ## [0.1.4.2] - 2026-05-05
 

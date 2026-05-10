@@ -47,9 +47,9 @@
     </screenshot>
   </screenshots>
   <releases>
-    <release version="0.1.4.3" type="stable" date="2026-05-09">
+    <release version="0.1.4.3" type="stable" date="2026-05-10">
       <description>
-        <p>Advanced OCR preprocessing and modern keyboard shortcuts overlay.</p>
+        <p>Enhanced OCR preprocessing, modern keyboard shortcuts overlay, and robust screenshot fallback system.</p>
         <ul>
           <li>Added advanced TextPreprocessor utility with intelligent image enhancement and OCR text cleanup.</li>
           <li>Added smart text preprocessing including common OCR error correction, whitespace normalization, and punctuation fixing.</li>
@@ -57,12 +57,23 @@
           <li>Added adaptive image enhancement based on brightness/contrast analysis for better OCR accuracy.</li>
           <li>Added modern ShortcutsOverlay widget with live search and categorized keyboard shortcuts.</li>
           <li>Added enhanced keyboard shortcuts overlay with search functionality and elegant Adw.Window-based interface.</li>
+          <li>Added configurable logging level via ANURA_LOG_LEVEL environment variable for debugging.</li>
+          <li>Added host screenshot fallback system using flatpak-spawn --host for missing portal backends.</li>
+          <li>Added persistent install-hint banner when screenshot portal backend is missing.</li>
+          <li>Added desktop-aware portal advice messages with environment-specific guidance.</li>
+          <li>Added enhanced diagnostic logging for host screenshot operations.</li>
           <li>Fixed notification service cleanup by removing incorrect underscore reference.</li>
           <li>Fixed URI validator function call in window.py for proper URL validation.</li>
           <li>Fixed dialog response handling for browser launch failures with proper error management.</li>
           <li>Fixed extra language combo signal connection to ensure it's always connected regardless of settings.</li>
           <li>Fixed modal property removal from shortcuts window for better user experience.</li>
           <li>Fixed keyboard shortcuts test to match correct method signature with _param parameter.</li>
+          <li>Fixed five UI/runtime bugs from Flatpak debug log.</li>
+          <li>Fixed three additional bugs (release notes parse, TTS AttributeError, screenshot diagnostic).</li>
+          <li>Fixed Gio.Subprocess.wait() method usage instead of wait_sync().</li>
+          <li>Fixed host screenshot file existence check with retry loop.</li>
+          <li>Fixed designer credit and share-row action prefix corrections.</li>
+          <li>Fixed incomplete URL substring sanitization (security fix).</li>
         </ul>
       </description>
     </release>
