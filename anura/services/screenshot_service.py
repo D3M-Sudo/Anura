@@ -363,8 +363,22 @@ class ScreenshotService(GObject.GObject):
             return
 
         exit_status = proc.get_exit_status() if proc.get_if_exited() else -1
-        file_exists = os.path.exists(output_path)
-        file_size = os.path.getsize(output_path) if file_exists else 0
+
+        # Retry loop for file existence check - handles race condition where
+        # the filesystem hasn't flushed the file yet after process exit.
+        file_exists = False
+        file_size = 0
+        max_retries = 10
+        retry_delay_ms = 100
+
+        for attempt in range(max_retries):
+            file_exists = os.path.exists(output_path)
+            if file_exists:
+                file_size = os.path.getsize(output_path)
+                if file_size > 0:
+                    break
+            if attempt < max_retries - 1:
+                time.sleep(retry_delay_ms / 1000.0)
 
         if exit_status != 0:
             # User pressed Esc / closed the host tool's selection dialog.
@@ -383,7 +397,7 @@ class ScreenshotService(GObject.GObject):
 
         if not file_exists or file_size == 0:
             logger.warning(
-                f"Anura Screenshot: host tool exited 0 but produced no output. "
+                f"Anura Screenshot: host tool exited 0 but produced no output after {max_retries} retries. "
                 f"path={output_path}, exists={file_exists}, size={file_size}"
             )
             self._emit_portal_failure()
