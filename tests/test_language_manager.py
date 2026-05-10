@@ -15,6 +15,7 @@ class TestLanguageManager:
     def language_manager(self):
         """Provide LanguageManager singleton for tests."""
         from anura.language_manager import language_manager
+
         return language_manager
 
     def test_get_language_returns_name(self, language_manager):
@@ -63,6 +64,7 @@ class TestLanguageManager:
 
         # Monkeypatch TESSDATA_DIR
         from anura import language_manager as lm_module
+
         monkeypatch.setattr(lm_module, "TESSDATA_DIR", str(fake_tessdata))
         monkeypatch.setattr(lm_module, "TESSDATA_SYSTEM_DIR", str(fake_tessdata))
 
@@ -86,6 +88,7 @@ class TestLanguageManager:
 
         # Monkeypatch directories
         from anura import language_manager as lm_module
+
         monkeypatch.setattr(lm_module, "TESSDATA_DIR", str(user_dir))
         monkeypatch.setattr(lm_module, "TESSDATA_SYSTEM_DIR", str(system_dir))
 
@@ -104,6 +107,7 @@ class TestLanguageManagerInitTessdata:
     def setup(self, tmp_path, monkeypatch):
         """Set up test environment and provide language_manager."""
         from anura.language_manager import get_language_manager
+
         self.language_manager = get_language_manager()
         self.tmp_path = tmp_path
         self.monkeypatch = monkeypatch
@@ -128,6 +132,7 @@ class TestLanguageManagerInitTessdata:
     def test_init_tessdata_handles_existing_directory(self):
         """init_tessdata() handles existing tessdata directory gracefully."""
         import anura.language_manager as lm_module
+
         fake_tessdata = self.tmp_path / "existing" / "tessdata"
         fake_tessdata.mkdir(parents=True)
 
@@ -142,6 +147,7 @@ class TestLanguageManagerInitTessdata:
     def test_init_tessdata_cleans_orphaned_temp_files(self):
         """init_tessdata() cleans up orphaned .tmp files."""
         import anura.language_manager as lm_module
+
         fake_tessdata = self.tmp_path / "cleanup_test" / "tessdata"
         fake_tessdata.mkdir(parents=True)
 
@@ -165,6 +171,7 @@ class TestLanguageManagerInitTessdata:
         from unittest.mock import patch
 
         import anura.language_manager as lm_module
+
         fake_tessdata = self.tmp_path / "restricted" / "tessdata"
         fake_tessdata.mkdir(parents=True)
 
@@ -181,11 +188,13 @@ class TestLanguageManagerInitTessdata:
     def test_init_tessdata_thread_safety(self):
         """init_tessdata() is thread-safe with lock protection."""
         import anura.language_manager as lm_module
+
         fake_tessdata = self.tmp_path / "thread_safe" / "tessdata"
         self.monkeypatch.setattr(lm_module, "TESSDATA_DIR", str(fake_tessdata))
 
         # Call init_tessdata multiple times concurrently
         import threading
+
         threads = []
         exceptions = []
 

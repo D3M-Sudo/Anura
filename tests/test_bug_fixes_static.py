@@ -59,9 +59,7 @@ def test_extracted_page_listen_uses_tts_effective_language() -> None:
         "ExtractedPage.listen() must call get_effective_language() to resolve "
         "the TTS language code from the OCR setting."
     )
-    assert "active-language" in text, (
-        "ExtractedPage.listen() must read the OCR language from GSettings."
-    )
+    assert "active-language" in text, "ExtractedPage.listen() must read the OCR language from GSettings."
 
 
 # ---------------------------------------------------------------------------
@@ -77,9 +75,7 @@ def test_get_release_notes_wraps_bare_text() -> None:
         "_get_release_notes must check that returned markup starts with '<' to "
         "avoid the libxml 'document must start with an element' error."
     )
-    assert "html.escape" in text, (
-        "Bare text fallback must be HTML-escaped before wrapping in <p>."
-    )
+    assert "html.escape" in text, "Bare text fallback must be HTML-escaped before wrapping in <p>."
 
 
 # ---------------------------------------------------------------------------
@@ -109,8 +105,7 @@ def test_screenshot_service_detects_generic_backend_failure() -> None:
         "message to recognise the generic backend-rejection case."
     )
     assert "xdg-desktop-portal" in text, (
-        "User-facing message must guide the user to install a working "
-        "xdg-desktop-portal backend.",
+        "User-facing message must guide the user to install a working xdg-desktop-portal backend.",
     )
 
 
@@ -138,23 +133,18 @@ def test_screenshot_service_declares_portal_backend_missing_signal() -> None:
 def test_window_wires_portal_banner_and_signal_handler() -> None:
     text = (PROJECT_ROOT / "anura" / "window.py").read_text()
     assert "portal_banner: Adw.Banner = Gtk.Template.Child()" in text, (
-        "AnuraWindow must declare portal_banner as a Gtk.Template.Child mapping "
-        "to the Adw.Banner in window.blp."
+        "AnuraWindow must declare portal_banner as a Gtk.Template.Child mapping to the Adw.Banner in window.blp."
     )
-    assert '"portal-backend-missing"' in text, (
-        "AnuraWindow must connect to the new ScreenshotService signal."
-    )
+    assert '"portal-backend-missing"' in text, "AnuraWindow must connect to the new ScreenshotService signal."
     assert "set_revealed(True)" in text and "set_revealed(False)" in text, (
-        "AnuraWindow must reveal the banner on the signal and hide it when "
-        "the user dismisses it."
+        "AnuraWindow must reveal the banner on the signal and hide it when the user dismisses it."
     )
 
 
 def test_window_blp_contains_adw_banner() -> None:
     blp = (PROJECT_ROOT / "data" / "ui" / "window.blp").read_text()
     assert "Adw.Banner portal_banner" in blp, (
-        "window.blp must declare an Adw.Banner with id 'portal_banner' so the "
-        "Python template binding has a target."
+        "window.blp must declare an Adw.Banner with id 'portal_banner' so the Python template binding has a target."
     )
     # Banner must start hidden — only revealed when a screenshot fails with
     # the libportal generic-failure pattern.
@@ -162,24 +152,18 @@ def test_window_blp_contains_adw_banner() -> None:
 
 
 def test_metainfo_documents_portal_requirement() -> None:
-    metainfo = (
-        PROJECT_ROOT / "data" / "com.github.d3msudo.anura.metainfo.xml.in"
-    ).read_text()
+    metainfo = (PROJECT_ROOT / "data" / "com.github.d3msudo.anura.metainfo.xml.in").read_text()
     assert "xdg-desktop-portal" in metainfo, (
-        "metainfo.xml.in must document the portal backend requirement so "
-        "Flathub users see it before installing."
+        "metainfo.xml.in must document the portal backend requirement so Flathub users see it before installing."
     )
 
 
 def test_readme_documents_runtime_requirements() -> None:
     readme = (PROJECT_ROOT / "README.md").read_text()
     assert "Runtime requirements" in readme, (
-        "README must contain a 'Runtime requirements' section explaining "
-        "the xdg-desktop-portal backend dependency."
+        "README must contain a 'Runtime requirements' section explaining the xdg-desktop-portal backend dependency."
     )
-    assert "xdg-desktop-portal-gtk" in readme, (
-        "README must mention xdg-desktop-portal-gtk explicitly for LXQt users."
-    )
+    assert "xdg-desktop-portal-gtk" in readme, "README must mention xdg-desktop-portal-gtk explicitly for LXQt users."
 
 
 @pytest.mark.parametrize(

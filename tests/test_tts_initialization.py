@@ -12,8 +12,8 @@ from anura.services.tts import TTSService
 class TestTTSServiceInitialization:
     """Test TTSService initialization and safe method access before play()."""
 
-    @patch('anura.services.tts.Gst')
-    @patch('anura.services.tts.logger')
+    @patch("anura.services.tts.Gst")
+    @patch("anura.services.tts.logger")
     def test_player_slot_initialized(self, mock_logger, mock_gst):
         """Test that self.player is properly initialized to None in __init__."""
         # Mock GStreamer to avoid actual initialization
@@ -25,8 +25,8 @@ class TestTTSServiceInitialization:
         # Verify player slot is initialized to None
         assert tts_service.player is None
 
-    @patch('anura.services.tts.Gst')
-    @patch('anura.services.tts.logger')
+    @patch("anura.services.tts.Gst")
+    @patch("anura.services.tts.logger")
     def test_stop_speaking_before_play(self, mock_logger, mock_gst):
         """Test that stop_speaking() can be called before play() without AttributeError."""
         # Mock GStreamer to avoid actual initialization
@@ -41,8 +41,8 @@ class TestTTSServiceInitialization:
         # Verify cleanup was attempted (player was None, so no cleanup occurred)
         assert tts_service.player is None
 
-    @patch('anura.services.tts.Gst')
-    @patch('anura.services.tts.logger')
+    @patch("anura.services.tts.Gst")
+    @patch("anura.services.tts.logger")
     def test_cleanup_before_play(self, mock_logger, mock_gst):
         """Test that cleanup() can be called before play() without AttributeError."""
         # Mock GStreamer to avoid actual initialization
@@ -57,8 +57,8 @@ class TestTTSServiceInitialization:
         # Verify cleanup was attempted (player was None, so no cleanup occurred)
         assert tts_service.player is None
 
-    @patch('anura.services.tts.Gst')
-    @patch('anura.services.tts.logger')
+    @patch("anura.services.tts.Gst")
+    @patch("anura.services.tts.logger")
     def test_multiple_stop_calls_before_play(self, mock_logger, mock_gst):
         """Test that multiple stop_speaking() calls before play() are safe."""
         # Mock GStreamer to avoid actual initialization
@@ -75,8 +75,8 @@ class TestTTSServiceInitialization:
         # Verify player remains None
         assert tts_service.player is None
 
-    @patch('anura.services.tts.Gst')
-    @patch('anura.services.tts.logger')
+    @patch("anura.services.tts.Gst")
+    @patch("anura.services.tts.logger")
     def test_multiple_cleanup_calls_before_play(self, mock_logger, mock_gst):
         """Test that multiple cleanup() calls before play() are safe."""
         # Mock GStreamer to avoid actual initialization
@@ -93,8 +93,8 @@ class TestTTSServiceInitialization:
         # Verify player remains None
         assert tts_service.player is None
 
-    @patch('anura.services.tts.Gst')
-    @patch('anura.services.tts.logger')
+    @patch("anura.services.tts.Gst")
+    @patch("anura.services.tts.logger")
     def test_mixed_calls_before_play(self, mock_logger, mock_gst):
         """Test that mixed stop_speaking() and cleanup() calls before play() are safe."""
         # Mock GStreamer to avoid actual initialization

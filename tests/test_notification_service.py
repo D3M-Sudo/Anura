@@ -120,8 +120,10 @@ class TestNotificationService:
     @patch("anura.services.notification_service.HAS_LIBNOTIFY", True)
     def test_libnotify_fallback_when_portal_fails(self):
         """Test libnotify fallback when portal fails."""
-        with patch.object(self.service._portal, "add_notification", side_effect=Exception("Portal error")), \
-             patch("anura.services.notification_service.Notify") as mock_notify:
+        with (
+            patch.object(self.service._portal, "add_notification", side_effect=Exception("Portal error")),
+            patch("anura.services.notification_service.Notify") as mock_notify,
+        ):
             mock_notification = Mock()
             mock_notify.Notification.return_value = mock_notification
 
@@ -133,8 +135,10 @@ class TestNotificationService:
     @patch("anura.services.notification_service.HAS_LIBNOTIFY", True)
     def test_libnotify_fallback_error_handling(self):
         """Test libnotify fallback error handling."""
-        with patch.object(self.service._portal, "add_notification", side_effect=Exception("Portal error")), \
-             patch("anura.services.notification_service.Notify") as mock_notify:
+        with (
+            patch.object(self.service._portal, "add_notification", side_effect=Exception("Portal error")),
+            patch("anura.services.notification_service.Notify") as mock_notify,
+        ):
             mock_notify.Notification.side_effect = Exception("Libnotify error")
 
             # Should not raise exception

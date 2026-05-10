@@ -64,9 +64,7 @@ def test_parse_changelog_output_starts_with_xml_element(sample_changelog: Path) 
     triggers the libxml error 'The document must start with an element'."""
     releases = parse_changelog(sample_changelog)
     notes = releases["0.1.4.3"]
-    assert notes.lstrip().startswith("<"), (
-        f"Notes must begin with an XML element, got: {notes[:60]!r}"
-    )
+    assert notes.lstrip().startswith("<"), f"Notes must begin with an XML element, got: {notes[:60]!r}"
 
 
 def test_parse_changelog_includes_subsection_items(sample_changelog: Path) -> None:
@@ -88,6 +86,4 @@ def test_parse_real_changelog_has_current_version() -> None:
     assert releases, "Real changelog must produce at least one parsed release"
     # Every parsed entry must be Pango-friendly
     for version, html_str in releases.items():
-        assert html_str.lstrip().startswith("<"), (
-            f"Release {version} produced bare text: {html_str[:60]!r}"
-        )
+        assert html_str.lstrip().startswith("<"), f"Release {version} produced bare text: {html_str[:60]!r}"

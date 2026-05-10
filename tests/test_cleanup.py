@@ -44,9 +44,10 @@ class TestCleanupOrphanedResources:
             os.utime(old_tmp, (old_time, old_time))
 
             # Mock environment variables and config
-            with patch.dict(os.environ, {"XDG_CACHE_HOME": temp_dir}), \
-                 patch("anura.utils.cleanup.TESSDATA_DIR", tessdata_dir):
-
+            with (
+                patch.dict(os.environ, {"XDG_CACHE_HOME": temp_dir}),
+                patch("anura.utils.cleanup.TESSDATA_DIR", tessdata_dir),
+            ):
                 cleanup_orphaned_resources()
 
                 # Files should be removed
@@ -78,9 +79,10 @@ class TestCleanupOrphanedResources:
             os.utime(recent_tmp, (recent_time, recent_time))
 
             # Mock environment variables and config
-            with patch.dict(os.environ, {"XDG_CACHE_HOME": temp_dir}), \
-                 patch("anura.utils.cleanup.TESSDATA_DIR", tessdata_dir):
-
+            with (
+                patch.dict(os.environ, {"XDG_CACHE_HOME": temp_dir}),
+                patch("anura.utils.cleanup.TESSDATA_DIR", tessdata_dir),
+            ):
                 cleanup_orphaned_resources()
 
                 # Files should be preserved
@@ -89,9 +91,10 @@ class TestCleanupOrphanedResources:
 
     def test_cleanup_missing_directories_no_crash(self):
         """Test that missing directories don't cause crashes."""
-        with patch.dict(os.environ, {"XDG_CACHE_HOME": "/nonexistent/cache"}), \
-             patch("anura.utils.cleanup.TESSDATA_DIR", "/nonexistent/tessdata"):
-
+        with (
+            patch.dict(os.environ, {"XDG_CACHE_HOME": "/nonexistent/cache"}),
+            patch("anura.utils.cleanup.TESSDATA_DIR", "/nonexistent/tessdata"),
+        ):
             # Should not raise any exceptions
             cleanup_orphaned_resources()
 
@@ -118,9 +121,10 @@ class TestCleanupOrphanedResources:
             os.utime(wrong_tess, (old_time, old_time))
 
             # Mock environment variables and config
-            with patch.dict(os.environ, {"XDG_CACHE_HOME": temp_dir}), \
-                 patch("anura.utils.cleanup.TESSDATA_DIR", tessdata_dir):
-
+            with (
+                patch.dict(os.environ, {"XDG_CACHE_HOME": temp_dir}),
+                patch("anura.utils.cleanup.TESSDATA_DIR", tessdata_dir),
+            ):
                 cleanup_orphaned_resources()
 
                 # Wrong extension files should be preserved
@@ -142,10 +146,11 @@ class TestCleanupOrphanedResources:
             os.utime(test_file, (old_time, old_time))
 
             # Mock os.remove to raise PermissionError
-            with patch.dict(os.environ, {"XDG_CACHE_HOME": temp_dir}), \
-                 patch("anura.utils.cleanup.TESSDATA_DIR", "/tmp"), \
-                 patch("os.remove", side_effect=PermissionError("Permission denied")):
-
+            with (
+                patch.dict(os.environ, {"XDG_CACHE_HOME": temp_dir}),
+                patch("anura.utils.cleanup.TESSDATA_DIR", "/tmp"),
+                patch("os.remove", side_effect=PermissionError("Permission denied")),
+            ):
                 # Should not raise exception
                 cleanup_orphaned_resources()
 
@@ -167,10 +172,12 @@ class TestTTSCacheCleanup:
                     f.write(f"content {i}")
                 os.utime(old_file, (old_time, old_time))
 
-            with patch.dict(os.environ, {"XDG_CACHE_HOME": temp_dir}), \
-                 patch("anura.utils.cleanup.logger") as mock_logger:
-                    _cleanup_tts_cache(time.time() - 3600)  # 1 hour ago
-                    mock_logger.info.assert_called_once_with("Anura Cleanup: Removed 3 old TTS cache files")
+            with (
+                patch.dict(os.environ, {"XDG_CACHE_HOME": temp_dir}),
+                patch("anura.utils.cleanup.logger") as mock_logger,
+            ):
+                _cleanup_tts_cache(time.time() - 3600)  # 1 hour ago
+                mock_logger.info.assert_called_once_with("Anura Cleanup: Removed 3 old TTS cache files")
 
 
 class TestTessdataCleanup:
@@ -187,10 +194,12 @@ class TestTessdataCleanup:
                     f.write(f"temp content {i}")
                 os.utime(old_file, (old_time, old_time))
 
-            with patch("anura.utils.cleanup.TESSDATA_DIR", tessdata_dir), \
-                 patch("anura.utils.cleanup.logger") as mock_logger:
-                    _cleanup_tessdata_temp_files(time.time() - 3600)  # 1 hour ago
-                    mock_logger.info.assert_called_once_with("Anura Cleanup: Removed 2 orphaned temporary files")
+            with (
+                patch("anura.utils.cleanup.TESSDATA_DIR", tessdata_dir),
+                patch("anura.utils.cleanup.logger") as mock_logger,
+            ):
+                _cleanup_tessdata_temp_files(time.time() - 3600)  # 1 hour ago
+                mock_logger.info.assert_called_once_with("Anura Cleanup: Removed 2 orphaned temporary files")
 
 
 class TestGetCacheInfo:
@@ -217,9 +226,10 @@ class TestGetCacheInfo:
             with open(os.path.join(tts_cache_dir, "ignore.txt"), "w") as f:
                 f.write("ignore")
 
-            with patch.dict(os.environ, {"XDG_CACHE_HOME": temp_dir}), \
-                 patch("anura.utils.cleanup.TESSDATA_DIR", tessdata_dir):
-
+            with (
+                patch.dict(os.environ, {"XDG_CACHE_HOME": temp_dir}),
+                patch("anura.utils.cleanup.TESSDATA_DIR", tessdata_dir),
+            ):
                 info = get_cache_info()
                 assert info["tts_files"] == 1
                 assert info["tts_size_bytes"] == 100
@@ -227,9 +237,10 @@ class TestGetCacheInfo:
 
     def test_get_cache_info_missing_directories(self):
         """Test get_cache_info handles missing directories gracefully."""
-        with patch.dict(os.environ, {"XDG_CACHE_HOME": "/nonexistent/cache"}), \
-             patch("anura.utils.cleanup.TESSDATA_DIR", "/nonexistent/tessdata"):
-
+        with (
+            patch.dict(os.environ, {"XDG_CACHE_HOME": "/nonexistent/cache"}),
+            patch("anura.utils.cleanup.TESSDATA_DIR", "/nonexistent/tessdata"),
+        ):
             info = get_cache_info()
             assert info == {"tts_files": 0, "tts_size_bytes": 0, "temp_files": 0}
 

@@ -10,24 +10,24 @@ import sys
 import pytest
 
 # Add the anura module to the path (from tests/ directory)
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 
 @pytest.fixture
 def setup_gtk_environment():
     """Setup GTK environment with GResource for GTK tests."""
     import gi
-    gi.require_version('Gtk', '4.0')
-    gi.require_version('Gio', '2.0')
+
+    gi.require_version("Gtk", "4.0")
+    gi.require_version("Gio", "2.0")
     from gi.repository import Gio, GLib
 
     # Load GResource as documented in testing.md
     gresource_path = os.path.join(
-        os.path.dirname(__file__), '..', 'builddir', 'data',
-        'com.github.d3msudo.anura.gresource'
+        os.path.dirname(__file__), "..", "builddir", "data", "com.github.d3msudo.anura.gresource"
     )
     if os.path.exists(gresource_path):
-        with open(gresource_path, 'rb') as f:
+        with open(gresource_path, "rb") as f:
             data = f.read()
             resource = Gio.Resource.new_from_data(GLib.Bytes.new(data))
             resource._register()
@@ -39,14 +39,15 @@ class TestKeyboardShortcuts:
     @pytest.mark.gtk
     def test_shortcuts_action_setup_method_exists(self, setup_gtk_environment):
         """Test that _setup_actions method contains expected shortcuts."""
-        pytest.importorskip('anura.main')
+        pytest.importorskip("anura.main")
         try:
             # Import without executing GTK-dependent code
             import anura.main
+
             _ = anura.main.AnuraApplication._setup_actions.__doc__
 
             # Check method exists
-            assert hasattr(anura.main.AnuraApplication, '_setup_actions')
+            assert hasattr(anura.main.AnuraApplication, "_setup_actions")
             assert callable(anura.main.AnuraApplication._setup_actions)
 
         except ImportError as e:
@@ -55,7 +56,7 @@ class TestKeyboardShortcuts:
     @pytest.mark.gtk
     def test_shortcuts_source_code_contains_fixes(self, setup_gtk_environment):
         """Test that the source code contains the keyboard shortcut fixes."""
-        pytest.importorskip('anura.main')
+        pytest.importorskip("anura.main")
         try:
             import anura.main
 
@@ -64,7 +65,7 @@ class TestKeyboardShortcuts:
 
             # This is a basic check - in real scenarios we'd read the file
             # For now, we check the method exists and has proper signature
-            assert hasattr(anura.main.AnuraApplication, '_setup_actions')
+            assert hasattr(anura.main.AnuraApplication, "_setup_actions")
 
         except ImportError as e:
             pytest.skip(f"Cannot import main module: {e}")
@@ -72,7 +73,7 @@ class TestKeyboardShortcuts:
     @pytest.mark.gtk
     def test_paste_action_signature_fixed(self, setup_gtk_environment):
         """Test that on_paste_from_clipboard has correct signature."""
-        pytest.importorskip('anura.main')
+        pytest.importorskip("anura.main")
         try:
             import inspect
 
@@ -87,9 +88,9 @@ class TestKeyboardShortcuts:
 
             # Should take 'self', '_action', and '_param' (3 params total)
             assert len(params) == 3, f"Expected 3 parameters, got {len(params)}: {params}"
-            assert 'self' in params, "Missing 'self' parameter"
-            assert '_action' in params, "Missing '_action' parameter"
-            assert '_param' in params, "Missing '_param' parameter"
+            assert "self" in params, "Missing 'self' parameter"
+            assert "_action" in params, "Missing '_action' parameter"
+            assert "_param" in params, "Missing '_param' parameter"
 
         except ImportError as e:
             pytest.skip(f"Cannot import main module: {e}")
@@ -107,7 +108,7 @@ class TestKeyboardShortcuts:
             assert callable(show_shortcuts_overlay)
 
             # Check class has expected methods
-            assert hasattr(ShortcutsOverlay, '__init__')
+            assert hasattr(ShortcutsOverlay, "__init__")
             assert callable(ShortcutsOverlay)
 
         except ImportError as e:
@@ -116,7 +117,7 @@ class TestKeyboardShortcuts:
     @pytest.mark.gtk
     def test_shortcuts_overlay_ui_exists(self):
         """Test that shortcuts overlay UI file exists."""
-        ui_file = os.path.join(os.path.dirname(__file__), '..', 'data', 'ui', 'shortcuts_overlay.blp')
+        ui_file = os.path.join(os.path.dirname(__file__), "..", "data", "ui", "shortcuts_overlay.blp")
 
         if not os.path.exists(ui_file):
             pytest.skip(f"UI file not found: {ui_file}")
@@ -125,9 +126,9 @@ class TestKeyboardShortcuts:
             content = f.read()
 
         # Check for UI structure
-        assert 'ShortcutsOverlay' in content, "Missing ShortcutsOverlay template"
-        assert 'search_entry' in content, "Missing search_entry widget"
-        assert 'shortcuts_list' in content, "Missing shortcuts_list widget"
+        assert "ShortcutsOverlay" in content, "Missing ShortcutsOverlay template"
+        assert "search_entry" in content, "Missing search_entry widget"
+        assert "shortcuts_list" in content, "Missing shortcuts_list widget"
 
 
 @pytest.mark.gtk

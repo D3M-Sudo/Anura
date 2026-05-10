@@ -117,9 +117,6 @@ class TestShareServiceLogic:
         assert providers == expected
 
 
-
-
-
 class TestConfigLogic:
     """Test configuration logic without system dependencies."""
 

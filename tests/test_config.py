@@ -14,6 +14,7 @@ class TestLangCodePattern:
     @pytest.fixture(autouse=True)
     def import_pattern(self):
         from anura.config import LANG_CODE_PATTERN
+
         self.pattern = LANG_CODE_PATTERN
 
     def _match(self, code: str) -> bool:
@@ -93,6 +94,7 @@ class TestGetTesseractConfig:
 
         monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
         import anura.config as cfg
+
         monkeypatch.setattr(cfg, "TESSDATA_DIR", str(user_dir))
         monkeypatch.setattr(cfg, "TESSDATA_SYSTEM_DIR", str(system_dir))
 
@@ -108,6 +110,7 @@ class TestGetTesseractConfig:
         (system_dir / "eng.traineddata").write_bytes(b"fake")
 
         import anura.config as cfg
+
         monkeypatch.setattr(cfg, "TESSDATA_DIR", str(user_dir))
         monkeypatch.setattr(cfg, "TESSDATA_SYSTEM_DIR", str(system_dir))
 
@@ -117,6 +120,7 @@ class TestGetTesseractConfig:
     def test_invalid_lang_code_defaults_to_eng(self, tmp_path, monkeypatch):
         """Invalid lang_code is rejected and falls back to 'eng'."""
         import anura.config as cfg
+
         monkeypatch.setattr(cfg, "TESSDATA_DIR", str(tmp_path))
         monkeypatch.setattr(cfg, "TESSDATA_SYSTEM_DIR", str(tmp_path))
 
@@ -129,6 +133,7 @@ class TestGetTesseractConfig:
     def test_config_contains_psm_and_oem(self, tmp_path, monkeypatch):
         """Config string always contains Tesseract mode flags."""
         import anura.config as cfg
+
         monkeypatch.setattr(cfg, "TESSDATA_DIR", str(tmp_path))
         monkeypatch.setattr(cfg, "TESSDATA_SYSTEM_DIR", str(tmp_path))
 

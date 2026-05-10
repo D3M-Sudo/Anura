@@ -181,13 +181,11 @@ class TestTTSService:
     def test_setup_bus_watch(self):
         """Test GStreamer bus watch setup."""
         # Mock the bus and related objects
-        with patch.object(self.service, '_bus', Mock()), patch.object(
-            self.service, '_bus_message_handler_id', None
-        ):
-                result = self.service._setup_bus_watch()
+        with patch.object(self.service, "_bus", Mock()), patch.object(self.service, "_bus_message_handler_id", None):
+            result = self.service._setup_bus_watch()
 
-                # Should return False (don't repeat)
-                assert result is False
+            # Should return False (don't repeat)
+            assert result is False
 
     def test_on_bus_message_error(self):
         """Test handling of GStreamer error messages."""
@@ -207,7 +205,7 @@ class TestTTSService:
         mock_message.type = Gst.MessageType.EOS
 
         # Test on_gst_message method
-        with patch.object(self.service, '_current_speech_file', '/test/file.mp3'):
+        with patch.object(self.service, "_current_speech_file", "/test/file.mp3"):
             self.service.on_gst_message(Mock(), mock_message)
 
         # Should handle EOS gracefully
@@ -221,5 +219,3 @@ class TestTTSService:
         self.service.on_gst_message(Mock(), mock_message)
 
         # Should handle other messages gracefully (no action needed)
-
-

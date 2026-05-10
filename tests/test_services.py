@@ -4,8 +4,6 @@
 # No GTK/GLib required — pure Python only with mocks
 
 
-
-
 class TestLanguageManagerBasics:
     """Basic tests for LanguageManager without filesystem dependencies."""
 
