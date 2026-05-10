@@ -10,6 +10,11 @@ from loguru import logger
 
 # Core Application Identity
 APP_ID = "com.github.d3msudo.anura"
+
+# Logging configuration — override via ANURA_LOG_LEVEL env var
+_LOG_LEVEL = os.environ.get("ANURA_LOG_LEVEL", "INFO").upper()
+_VALID_LOG_LEVELS = {"TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
+LOG_LEVEL: str = _LOG_LEVEL if _LOG_LEVEL in _VALID_LOG_LEVELS else "INFO"
 RESOURCE_PREFIX = "/com/github/d3msudo/anura"
 
 # Language code validation pattern (ISO 639-2, 2-18 alphanumeric chars with plus and underscore)

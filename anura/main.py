@@ -21,7 +21,10 @@ gi.require_version("Gst", "1.0")
 from gi.repository import Adw, Gio, GLib, Gtk
 from loguru import logger
 
+from anura.config import APP_ID, LOG_LEVEL
+
 # Configure logging with professional format
+# Production default is INFO; override via ANURA_LOG_LEVEL env var for debugging
 logger.remove()  # Remove default handler
 logger.add(
     sys.stderr,
@@ -31,12 +34,10 @@ logger.add(
         "<cyan>{name}:{function}:{line}</cyan> - "
         "<level>{message}</level>"
     ),
-    level="DEBUG",
+    level=LOG_LEVEL,
     colorize=True,
     catch=True,
 )
-
-from anura.config import APP_ID
 from anura.language_manager import get_language_manager
 from anura.services.clipboard_service import get_clipboard_service
 from anura.services.notification_service import (
@@ -254,7 +255,7 @@ class AnuraApplication(Adw.Application):
 
     def _handle_file_option(self, file_path: str, is_silent: bool) -> int:
         """Handle file processing command line option."""
-        logger.info(f"Anura: CLI file processing: {file_path}")
+        logger.debug(f"Anura: CLI file processing: {file_path}")
 
         try:
             if self._is_file_accessible(file_path):

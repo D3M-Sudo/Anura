@@ -214,7 +214,7 @@ class ScreenshotService(GObject.GObject):
 
         snapshot = ", ".join(f"{key}={os.environ.get(key) or '<unset>'}" for key in self._PORTAL_DIAGNOSTIC_ENV_KEYS)
         in_flatpak = _is_flatpak_environment()
-        logger.info(
+        logger.debug(
             f"Anura Screenshot diagnostics: in_flatpak={in_flatpak}, {snapshot}",
         )
 
@@ -281,13 +281,13 @@ class ScreenshotService(GObject.GObject):
         try:
             success, stdout, _stderr = proc.communicate_utf8_finish(res)
         except GLib.Error as e:
-            logger.info(f"Anura Screenshot: host fallback detection failed: {e.message}")
+            logger.debug(f"Anura Screenshot: host fallback detection failed: {e.message}")
             self._emit_portal_failure()
             return
 
         exit_status = proc.get_exit_status() if proc.get_if_exited() else -1
         if not success or exit_status != 0:
-            logger.info(
+            logger.debug(
                 f"Anura Screenshot: no host-side screenshot tool found (exit={exit_status}). "
                 "Surface the original portal error.",
             )
@@ -358,7 +358,7 @@ class ScreenshotService(GObject.GObject):
         try:
             proc.wait_finish(res)
         except GLib.Error as e:
-            logger.info(f"Anura Screenshot: host capture wait failed: {e.message}")
+            logger.debug(f"Anura Screenshot: host capture wait failed: {e.message}")
             self._emit_portal_failure()
             return
 

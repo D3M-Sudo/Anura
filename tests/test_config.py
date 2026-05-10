@@ -135,3 +135,52 @@ class TestGetTesseractConfig:
         result = cfg.get_tesseract_config("eng")
         assert "--psm 3" in result
         assert "--oem 1" in result
+
+
+class TestLogLevel:
+    """Tests for LOG_LEVEL resolution from ANURA_LOG_LEVEL environment variable."""
+
+    @pytest.fixture(autouse=True)
+    def clean_config_module(self, monkeypatch):
+        """Ensure anura.config is reloaded fresh for each test."""
+        import sys
+
+        monkeypatch.delenv("ANURA_LOG_LEVEL", raising=False)
+        # Remove cached module so reload picks up env changes
+        sys.modules.pop("anura.config", None)
+        # Also remove anura package cache to force clean import
+        sys.modules.pop("anura", None)
+
+    def test_default_log_level_is_info(self, monkeypatch):
+        """Without ANURA_LOG_LEVEL, LOG_LEVEL defaults to INFO."""
+        monkeypatch.delenv("ANURA_LOG_LEVEL", raising=False)
+        import anura.config as cfg
+
+        assert cfg.LOG_LEVEL == "INFO"
+
+    def test_debug_override(self, monkeypatch):
+        """ANURA_LOG_LEVEL=DEBUG sets LOG_LEVEL to DEBUG."""
+        import sys
+
+        monkeypatch.setenv("ANURA_LOG_LEVEL", "DEBUG")
+        # Must reload after env change
+        if "anura.config" in sys.modules:
+            del sys.modules["anura.config"]
+        if "anura" in sys.modules:
+            del sys.modules["anura"]
+        import anura.config as cfg
+
+        assert cfg.LOG_LEVEL == "DEBUG"
+
+    def test_invalid_fallback_to_info(self, monkeypatch):
+        """Invalid ANURA_LOG_LEVEL falls back to INFO."""
+        import sys
+
+        monkeypatch.setenv("ANURA_LOG_LEVEL", "VERBOSE")
+        if "anura.config" in sys.modules:
+            del sys.modules["anura.config"]
+        if "anura" in sys.modules:
+            del sys.modules["anura"]
+        import anura.config as cfg
+
+        assert cfg.LOG_LEVEL == "INFO"

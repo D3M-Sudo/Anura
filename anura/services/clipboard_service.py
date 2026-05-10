@@ -368,7 +368,7 @@ class ClipboardService(GObject.GObject):
             GLib.idle_add(self.emit, "error", _("No image in clipboard"))
             return
 
-        logger.info(f"Anura Clipboard: loaded image from clipboard file URI ({path}).")
+        logger.debug(f"Anura Clipboard: loaded image from clipboard file URI ({path}).")
         GLib.idle_add(self.emit, "paste_from_clipboard", texture)
 
     def read_text(self) -> None:

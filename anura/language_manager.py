@@ -258,8 +258,8 @@ class LanguageManager(GObject.GObject):
                 codes = set()
 
                 # Enhanced logging: Log paths being checked with directory status
-                logger.info(f"Anura LanguageManager: Scanning user tessdata directory: {TESSDATA_DIR}")
-                logger.info(f"Anura LanguageManager: Scanning system tessdata directory: {TESSDATA_SYSTEM_DIR}")
+                logger.debug(f"Anura LanguageManager: Scanning user tessdata directory: {TESSDATA_DIR}")
+                logger.debug(f"Anura LanguageManager: Scanning system tessdata directory: {TESSDATA_SYSTEM_DIR}")
 
                 # User-downloaded models (~/.var/app/.../data/anura/tessdata/)
                 if os.path.exists(TESSDATA_DIR):
@@ -269,7 +269,7 @@ class LanguageManager(GObject.GObject):
                             for f in os.listdir(TESSDATA_DIR)
                             if f.endswith(".traineddata") and not f.startswith("osd")
                         ]
-                        logger.info(
+                        logger.debug(
                             f"Anura LanguageManager: User directory scanned, "
                             f"{len(user_files)} models found: {user_files}",
                         )
@@ -287,7 +287,7 @@ class LanguageManager(GObject.GObject):
                             for f in os.listdir(TESSDATA_SYSTEM_DIR)
                             if f.endswith(".traineddata") and not f.startswith("osd")
                         ]
-                        logger.info(
+                        logger.debug(
                             f"Anura LanguageManager: System directory scanned, "
                             f"{len(system_files)} models found: {system_files}",
                         )
