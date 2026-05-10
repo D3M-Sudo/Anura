@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: anura\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-10 14:21+0200\n"
+"POT-Creation-Date: 2026-05-10 19:46+0200\n"
 "PO-Revision-Date: 2024-07-09 22:09+0000\n"
 "Last-Translator: Filipe Motta <luiz_filipe_motta@hotmail.com>\n"
 "Language-Team: Portuguese (Brazil) <https://hosted.weblate.org/projects/"
@@ -178,7 +178,9 @@ msgid "Extracted text displayed after OCR recognition"
 msgstr ""
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:52
-msgid "Advanced OCR preprocessing and modern keyboard shortcuts overlay."
+msgid ""
+"Enhanced OCR preprocessing, modern keyboard shortcuts overlay, and robust "
+"screenshot fallback system."
 msgstr ""
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:54
@@ -219,290 +221,344 @@ msgstr ""
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:60
 msgid ""
-"Fixed notification service cleanup by removing incorrect underscore "
-"reference."
+"Added configurable logging level via ANURA_LOG_LEVEL environment variable "
+"for debugging."
 msgstr ""
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:61
 msgid ""
-"Fixed URI validator function call in window.py for proper URL validation."
+"Added host screenshot fallback system using flatpak-spawn --host for missing "
+"portal backends."
 msgstr ""
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:62
+msgid ""
+"Added persistent install-hint banner when screenshot portal backend is "
+"missing."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:63
+msgid ""
+"Added desktop-aware portal advice messages with environment-specific "
+"guidance."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:64
+msgid "Added enhanced diagnostic logging for host screenshot operations."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:65
+msgid ""
+"Fixed notification service cleanup by removing incorrect underscore "
+"reference."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:66
+msgid ""
+"Fixed URI validator function call in window.py for proper URL validation."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:67
 msgid ""
 "Fixed dialog response handling for browser launch failures with proper error "
 "management."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:63
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:68
 msgid ""
 "Fixed extra language combo signal connection to ensure it's always connected "
 "regardless of settings."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:64
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:69
 msgid ""
 "Fixed modal property removal from shortcuts window for better user "
 "experience."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:65
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:70
 msgid ""
 "Fixed keyboard shortcuts test to match correct method signature with _param "
 "parameter."
 msgstr ""
 
 #: ../data/com.github.d3msudo.anura.metainfo.xml.in:71
+msgid "Fixed five UI/runtime bugs from Flatpak debug log."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:72
+msgid ""
+"Fixed three additional bugs (release notes parse, TTS AttributeError, "
+"screenshot diagnostic)."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:73
+msgid "Fixed Gio.Subprocess.wait() method usage instead of wait_sync()."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:74
+msgid "Fixed host screenshot file existence check with retry loop."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:75
+msgid "Fixed designer credit and share-row action prefix corrections."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:76
+msgid "Fixed incomplete URL substring sanitization (security fix)."
+msgstr ""
+
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:82
 msgid ""
 "Hardened thread safety, sanitized error logging, and optimized resource "
 "cleanup."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:73
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:84
 msgid ""
 "Fixed `__slots__` conflict in ClipboardService - missing `_cancellable` in "
 "declaration causing AttributeError."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:74
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:85
 msgid ""
 "Fixed ruff linting errors across codebase including import sorting and code "
 "style issues."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:75
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:86
 msgid ""
 "Fixed concurrency issues in TTS and clipboard services against race "
 "conditions."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:76
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:87
 msgid ""
 "Fixed memory leaks and added structural robustness throughout application."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:77
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:88
 msgid ""
 "Fixed API contract, thread safety, and race condition issues in core "
 "services."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:78
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:89
 msgid "Fixed Flatpak manifest warnings by removing `_comment` properties."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:79
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:90
 msgid ""
 "Extracted URI validation to utils module and relaxed IP/localhost "
 "restrictions."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:80
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:91
 msgid "Improved code quality with comprehensive type hints and cleanup."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:81
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:92
 msgid ""
 "Implemented atomic cancellation for Clipboard and thread-safe signal "
 "emission for TTS GStreamer bus."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:82
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:93
 msgid "Enhanced thread safety patterns across all services."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:83
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:94
 msgid "Added comprehensive unit tests for core services."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:84
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:95
 msgid "Resolved all remaining linting errors and line length issues."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:90
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:101
 msgid ""
 "Hotfix release for UI initialization issues and notification improvements."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:92
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:103
 msgid ""
 "Fixed missing Adw.init() call causing \"greyed out UI\" on some systems."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:93
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:104
 msgid ""
 "Fixed GResource bundle loading to properly exit on failure instead of "
 "continuing with broken UI."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:94
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:105
 msgid ""
 "Fixed notification portal API to use proper GLib.Variant format (a{sv}) for "
 "XDG Portal compatibility."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:95
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:106
 msgid ""
 "Fixed notification import consistency with absolute imports throughout main."
 "py."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:96
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:107
 msgid ""
 "Fixed HTML escaping in release notes generation to prevent XSS "
 "vulnerabilities."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:97
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:108
 msgid "Added CHANGELOG.md as source of truth for release notes."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:98
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:109
 msgid "Added translate URL to metainfo for Weblate integration."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:104
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:115
 msgid ""
 "Production release with critical bug fixes, security improvements, and "
 "Flathub compliance."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:106
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:117
 msgid ""
 "Fixed critical thread-safety issues and race conditions in language manager "
 "and screenshot service."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:107
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:118
 msgid ""
 "Fixed memory leaks in widget lifecycle management and GStreamer bus watch."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:108
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:119
 msgid ""
 "Fixed all Flatpak manifest dependencies (requests, urllib3, certifi, "
 "hatchling, pyzbar)."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:109
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:120
 msgid "Fixed blueprint compiler output directory for Flatpak builds."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:110
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:121
 msgid "Fixed gresource bundle loading with correct UI file paths."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:111
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:122
 msgid ""
 "Fixed filesystem permissions for Open Image and Drag &amp; Drop in sandbox."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:112
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:123
 msgid "Fixed silent CLI mode to properly exit without opening UI window."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:113
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:124
 msgid "Fixed CLI exit code to return 0 on success instead of 1."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:114
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:125
 msgid ""
 "Fixed code quality issues: lint errors, import sorting, gettext shadowing."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:115
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:126
 msgid "Fixed Telegram share URL to send text as message instead of URL."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:116
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:127
 msgid "Updated OARS content rating for Flathub compliance."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:117
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:128
 msgid "Improved CI/CD workflow with smoke tests and build verification."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:118
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:129
 msgid "Updated tessdata-fast to pinned commit SHA for reproducible builds."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:124
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:135
 msgid "Bug fixes and stability improvements."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:126
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:137
 msgid "Fixed import error in screenshot service (tessdata_config casing)."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:127
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:138
 msgid "Fixed missing init_tessdata() method in LanguageManager."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:128
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:139
 msgid ""
 "Fixed settings module path mismatch (moved to anura/services/settings.py)."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:129
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:140
 msgid ""
 "Fixed blueprint-compiler GIRepository compatibility with GNOME Platform 49."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:130
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:141
 msgid "Improved TTS cache file location (XDG_CACHE_HOME)."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:136
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:147
 msgid "Initial release of Anura (fork of Frog)."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:138
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:149
 msgid "Complete rebranding to Anura."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:139
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:150
 msgid "Removed all telemetry and PostHog tracking for total privacy."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:140
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:151
 msgid "Optimized sharing service: added X (formerly Twitter) and Instagram."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:141
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:152
 msgid "Updated dependencies for modern Linux distributions."
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:147
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:158
 msgid "D3M-Sudo"
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:160
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:171
 msgid "OCR"
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:161
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:172
 msgid "text"
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:162
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:173
 #, fuzzy
 msgid "extraction"
 msgstr "Extração de texto"
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:163
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:174
 #, fuzzy
 msgid "screenshot"
 msgstr "Tirar uma captura de tela"
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:164
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:175
 msgid "QR"
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:165
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:176
 msgid "scanner"
 msgstr ""
 
-#: ../data/com.github.d3msudo.anura.metainfo.xml.in:166
+#: ../data/com.github.d3msudo.anura.metainfo.xml.in:177
 msgid "tesseract"
 msgstr ""
 
@@ -1241,52 +1297,52 @@ msgstr "Iídiche"
 msgid "Yoruba"
 msgstr "Iorubá"
 
-#: ../anura/main.py:113
+#: ../anura/main.py:114
 msgid "Extract directly into the clipboard"
 msgstr "Extrair diretamente para a área de transferência"
 
-#: ../anura/main.py:122
+#: ../anura/main.py:123
 msgid "Process image file for OCR"
 msgstr ""
 
-#: ../anura/main.py:131
+#: ../anura/main.py:132
 msgid "Run OCR without UI (copy result to clipboard)"
 msgstr ""
 
-#: ../anura/main.py:481
+#: ../anura/main.py:482
 msgid "Bug fixes and improvements."
 msgstr ""
 
-#: ../anura/main.py:516 ../anura/main.py:536
+#: ../anura/main.py:517 ../anura/main.py:537
 msgid "Failed to Open Browser"
 msgstr ""
 
-#: ../anura/main.py:517 ../anura/main.py:537
+#: ../anura/main.py:518 ../anura/main.py:538
 msgid "No web browser could be launched. Please open the link manually."
 msgstr ""
 
-#: ../anura/main.py:518 ../anura/main.py:538
+#: ../anura/main.py:519 ../anura/main.py:539
 msgid "OK"
 msgstr ""
 
-#: ../anura/main.py:570 ../anura/window.py:162 ../anura/window.py:413
+#: ../anura/main.py:571 ../anura/window.py:162 ../anura/window.py:413
 msgid "Text copied to clipboard"
 msgstr "Texto copiado para a área de transferência"
 
-#: ../anura/main.py:600
+#: ../anura/main.py:601
 msgid "No text found. Try to grab another region."
 msgstr "Nenhum texto encontrado. Tente selecionar outra região."
 
-#: ../anura/main.py:609
+#: ../anura/main.py:610
 #, fuzzy
 msgid "Text extracted and copied to clipboard."
 msgstr "Extrair texto e copiar para a área de transferência"
 
-#: ../anura/main.py:615
+#: ../anura/main.py:616
 msgid "Text extracted successfully."
 msgstr ""
 
-#: ../anura/main.py:620
+#: ../anura/main.py:621
 msgid "Cancelled"
 msgstr ""
 
@@ -1418,25 +1474,25 @@ msgstr ""
 msgid "Can't take a screenshot."
 msgstr "Não foi possível capturar a tela."
 
-#: ../anura/services/screenshot_service.py:410
-#: ../anura/services/screenshot_service.py:543
+#: ../anura/services/screenshot_service.py:445
+#: ../anura/services/screenshot_service.py:578
 msgid "Invalid language code specified."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:485
+#: ../anura/services/screenshot_service.py:520
 msgid "Failed to read image file."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:488
+#: ../anura/services/screenshot_service.py:523
 msgid "OCR engine failed to process image."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:491
-#: ../anura/services/screenshot_service.py:497
+#: ../anura/services/screenshot_service.py:526
+#: ../anura/services/screenshot_service.py:532
 msgid "Failed to decode data."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:526
+#: ../anura/services/screenshot_service.py:561
 #, fuzzy
 msgid "No text found."
 msgstr "Nenhum resultado encontrado"
