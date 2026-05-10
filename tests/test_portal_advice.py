@@ -7,6 +7,8 @@
 
 from __future__ import annotations
 
+from urllib.parse import urlparse
+
 import pytest
 
 from anura.utils.portal_advice import PortalAdvice, detect_portal_advice
@@ -211,7 +213,9 @@ def test_docs_url_always_present() -> None:
     for desktop in ["LXQt", "KDE", "GNOME", "sway", "XFCE", "MATE", "", "UnknownWM"]:
         advice = _advice_for(desktop)
         assert advice.docs_url is not None
-        assert "github.com" in advice.docs_url
+        host = urlparse(advice.docs_url).hostname
+        assert host is not None
+        assert host == "github.com" or host.endswith(".github.com")
 
 
 def test_short_message_never_empty() -> None:
