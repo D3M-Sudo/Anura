@@ -54,11 +54,22 @@ def parse_changelog(changelog_path: Path) -> dict:
         if sections:
             # Build HTML with sections
             html_parts = []
+            total_items = 0
+
             for section_name, items in sections.items():
                 if items:
+                    # Limit to 5 items per section
+                    limited_items = items[:5]
+                    total_items += len(limited_items)
+
                     html_parts.append(f"<p><em>{html.escape(section_name)}</em></p>")
-                    html_items = "".join(f"<li>{item}</li>" for item in items)
+                    html_items = "".join(f"<li>{item}</li>" for item in limited_items)
                     html_parts.append(f"<ul>{html_items}</ul>")
+
+            # Add GitHub link if there are more than 15 total items
+            if total_items > 15:
+                html_parts.append('<p><a href="https://github.com/D3M-Sudo/Anura/blob/main/CHANGELOG.md">Vedi changelog completo</a></p>')
+
             html_output = "".join(html_parts)
         else:
             html_output = "<p>No changes listed.</p>"
