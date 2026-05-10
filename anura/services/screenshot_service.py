@@ -318,7 +318,11 @@ class ScreenshotService(GObject.GObject):
         logger.info(f"Anura Screenshot: portal failed, falling back to host '{tool_name}'.")
         try:
             argv = build_screenshot_argv(tool, output_path)
-            capture_proc = Gio.Subprocess.new(argv, Gio.SubprocessFlags.STDERR_SILENCE)
+            logger.debug(f"Anura Screenshot: host fallback argv: {argv}")
+            capture_proc = Gio.Subprocess.new(
+                argv,
+                Gio.SubprocessFlags.STDERR_PIPE | Gio.SubprocessFlags.STDOUT_PIPE,
+            )
         except GLib.Error as e:
             logger.warning(f"Anura Screenshot: cannot spawn host screenshot tool: {e.message}")
             self._emit_portal_failure()
@@ -351,20 +355,29 @@ class ScreenshotService(GObject.GObject):
             return
 
         exit_status = proc.get_exit_status() if proc.get_if_exited() else -1
+        file_exists = os.path.exists(output_path)
+        file_size = os.path.getsize(output_path) if file_exists else 0
+
         if exit_status != 0:
             # User pressed Esc / closed the host tool's selection dialog.
-            logger.debug(f"Anura Screenshot: host tool exited non-zero ({exit_status}); user likely cancelled.")
+            logger.info(
+                f"Anura Screenshot: host tool exited non-zero ({exit_status}); "
+                f"user likely cancelled. file_exists={file_exists}, file_size={file_size}"
+            )
             # Best-effort cleanup: tool may still have created an empty file.
-            try:
-                if os.path.exists(output_path):
+            if file_exists:
+                try:
                     os.unlink(output_path)
-            except OSError:
-                pass
+                except OSError as e:
+                    logger.debug(f"Anura Screenshot: cleanup failed: {e}")
             self._emit_portal_failure()
             return
 
-        if not os.path.exists(output_path) or os.path.getsize(output_path) == 0:
-            logger.warning(f"Anura Screenshot: host tool exited 0 but produced no output at {output_path}.")
+        if not file_exists or file_size == 0:
+            logger.warning(
+                f"Anura Screenshot: host tool exited 0 but produced no output. "
+                f"path={output_path}, exists={file_exists}, size={file_size}"
+            )
             self._emit_portal_failure()
             return
 
