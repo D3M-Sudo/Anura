@@ -213,3 +213,11 @@
         box-shadow: 0 0 0 8px alpha(@accent_color, 0);
     }
 }
+
+/* Drag and drop visual feedback */
+.drag-hover {
+    background: alpha(@accent_color, 0.1);
+    border: 2px dashed @accent_color;
+    border-radius: 12px;
+    transition: all 200ms ease;
+}

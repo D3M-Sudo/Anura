@@ -104,9 +104,18 @@ class AnuraWindow(Adw.ApplicationWindow):
         self.set_default_size(width, height)
 
     def _setup_controllers(self) -> None:
+        # Create drop target with proper configuration
         drop_target = Gtk.DropTarget.new(type=Gdk.FileList, actions=Gdk.DragAction.COPY)
+
+        # Connect all necessary signals for proper lifecycle management
+        drop_target.connect("enter", self.on_dnd_enter)
+        drop_target.connect("leave", self.on_dnd_leave)
+        drop_target.connect("motion", self.on_dnd_motion)
         drop_target.connect("drop", self.on_dnd_drop)
-        self.split_view.add_controller(drop_target)
+
+        # Attach to the welcome page's status page instead of split view
+        # This prevents conflicts with content area and provides better UX
+        self.welcome_page.welcome.add_controller(drop_target)
 
     def get_language(self) -> str:
         """Get current language code from settings or language manager."""
@@ -335,24 +344,58 @@ class AnuraWindow(Adw.ApplicationWindow):
             logger.error(f"Failed to load file contents: {e}")
             self.show_toast(_("Failed to load image file"))
 
-    def on_dnd_drop(self, __target: Gtk.DropTarget, value: Gdk.FileList, __x: int, __y: int) -> bool:
-        """Handle drag-and-drop file operations."""
+    def on_dnd_enter(self, drop_target: Gtk.DropTarget, x: float, y: float) -> Gdk.DragAction:
+        """Handle drag enter event - provide visual feedback."""
+        # Validate we can accept the drop
+        if drop_target.get_current_drop() is None:
+            return Gdk.DragAction(0)  # Reject
+
+        # Show visual feedback
+        self.welcome_page.welcome.add_css_class("drag-hover")
+        return Gdk.DragAction.COPY
+
+    def on_dnd_leave(self, drop_target: Gtk.DropTarget) -> None:
+        """Handle drag leave event - clean up visual feedback."""
+        self.welcome_page.welcome.remove_css_class("drag-hover")
+
+    def on_dnd_motion(self, drop_target: Gtk.DropTarget, x: float, y: float) -> Gdk.DragAction:
+        """Handle drag motion - continue accepting or reject."""
+        if drop_target.get_current_drop() is None:
+            return Gdk.DragAction(0)  # Reject
+        return Gdk.DragAction.COPY
+
+    def on_dnd_drop(self, drop_target: Gtk.DropTarget, value: Gdk.FileList, x: float, y: float) -> bool:
+        """Enhanced drag-and-drop handler with proper error handling."""
+        # Clean up visual feedback
+        self.welcome_page.welcome.remove_css_class("drag-hover")
+
+        # Validate drop data
+        if not value or not isinstance(value, Gdk.FileList):
+            return False
+
         files = value.get_files()
         if not files:
             return False
 
+        # Process the first file
         item = files[0]
 
-        self.welcome_page.spinner.set_visible(True)
-        item.query_info_async(
-            "standard::content-type",
-            Gio.FileQueryInfoFlags.NONE,
-            GLib.PRIORITY_DEFAULT,
-            None,
-            self._on_dnd_query_info_done,
-            item,
-        )
-        return True
+        try:
+            self.welcome_page.spinner.set_visible(True)
+            item.query_info_async(
+                "standard::content-type",
+                Gio.FileQueryInfoFlags.NONE,
+                GLib.PRIORITY_DEFAULT,
+                None,
+                self._on_dnd_query_info_done,
+                item,
+            )
+            return True
+        except (GLib.Error, OSError, RuntimeError) as e:
+            logger.error(f"DnD failed to start file query: {e}")
+            self.welcome_page.spinner.set_visible(False)
+            self.show_toast(_("Failed to load image file"))
+            return False
 
     def _on_dnd_query_info_done(self, gfile: Gio.File, result: Gio.AsyncResult, item: Gio.FileInfo) -> None:
         try:

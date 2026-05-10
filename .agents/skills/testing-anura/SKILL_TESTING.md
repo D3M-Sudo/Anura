@@ -227,3 +227,80 @@ When a PR adds new files to `data/com.github.d3msudo.anura.gresource.xml`, the s
 - Don't try to install `python3-pytesseract` from apt; it's not packaged. Install via `uv add pytesseract` for the project, or skip the harness if you don't need it.
 - `glib-compile-resources` is in **`libglib2.0-dev-bin`**, not `libglib2.0-bin`. The latter ships only the runtime CLI helpers (`gresource`, `gio`, `gsettings`). Forgetting this wastes a debug cycle.
 - After installing `libzbar0`, run `sudo ldconfig` once — `pyzbar.zbar_library.load()` uses ctypes / `find_library` and a missing ldconfig refresh produces `ImportError: Unable to find zbar shared library` even though the file is right there in `/usr/lib/x86_64-linux-gnu/libzbar.so.0`.
+
+## Testing Drag-and-Drop Functionality
+
+### GTK Drop Target Testing
+
+When testing drag-and-drop functionality in Anura, follow this workflow:
+
+#### 1. Build Project First
+```bash
+# Always build before testing UI components
+PATH=$PWD/.venv/bin:$PATH .venv/bin/meson setup builddir --reconfigure
+PATH=$PWD/.venv/bin:$PATH .venv/bin/meson compile -C builddir
+```
+
+#### 2. Register GTK Resources
+```python
+import gi
+gi.require_version('Gtk', '4.0')
+gi.require_version('Adw', '1')
+gi.require_version('Gio', '2.0')
+from gi.repository import Gio, Gtk, Adw, Gdk, GLib
+
+# Register the resource file before importing Anura modules
+resource = Gio.Resource.load('builddir/data/com.github.d3msudo.anura.gresource')
+resource._register()
+```
+
+#### 3. Test Drop Target Implementation
+```python
+# Test that all drag-and-drop methods exist
+from anura.window import AnuraWindow
+required_methods = ['on_dnd_enter', 'on_dnd_leave', 'on_dnd_motion', 'on_dnd_drop']
+
+for method in required_methods:
+    assert method in dir(AnuraWindow), f"Missing method: {method}"
+```
+
+#### 4. Common Drag-and-Drop Issues
+
+**GTK Assertion Errors:**
+- **Problem**: `gtk_drop_target_handle_event: assertion 'self->drop == gdk_dnd_event_get_drop (event)' failed`
+- **Root Cause**: Drop target attached to wrong widget (e.g., `split_view` instead of specific widget)
+- **Fix**: Attach drop target to `welcome_page.welcome` instead of `split_view`
+
+**Drop Target Lifecycle:**
+- **Problem**: Missing event handlers cause state mismatches
+- **Solution**: Implement all four handlers: `enter`, `leave`, `motion`, `drop`
+- **Pattern**: Always add visual feedback in `enter`, cleanup in `leave`/`drop`
+
+#### 5. CSS for Drag Feedback
+```css
+.drag-hover {
+    background: alpha(@accent_color, 0.1);
+    border: 2px dashed @accent_color;
+    border-radius: 12px;
+    transition: all 200ms ease;
+}
+```
+
+#### 6. Testing Workflow
+1. **Build project** (meson compile)
+2. **Register resources** (Gio.Resource.load)
+3. **Test method existence** (dir() check)
+4. **Verify drop target attachment** (welcome_page.welcome.add_controller)
+5. **Test CSS syntax** (GTK theme variables with @ prefix)
+
+#### 7. Debugging Tips
+- **Use proper PYTHONPATH**: `PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH"`
+- **Set GSETTINGS_SCHEMA_DIR**: `GSETTINGS_SCHEMA_DIR="builddir"`
+- **Check resource registration**: Ensure `.gresource` file is loaded before importing modules
+- **GTK CSS syntax**: Use `@variable` syntax for theme variables, not standard CSS variables
+
+#### 8. Common Pitfalls
+- **Wrong widget target**: Don't attach drop targets to container widgets that span multiple navigation contexts
+- **Missing cleanup**: Always remove CSS classes in `leave` and `drop` handlers
+- **Thread safety**: Never modify GTK widgets from background threads (use `GLib.idle_add`)
+- **Resource timing**: Register resources before importing any Anura modules that use `@Gtk.Template`

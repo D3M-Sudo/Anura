@@ -177,5 +177,55 @@ uv run pytest tests/test_config.py tests/test_language_manager.py tests/test_uri
 uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" pytest tests/test_screenshot_service.py tests/test_clipboard_service.py tests/test_share_service.py tests/test_tts_service.py tests/test_notification_service.py -v
 ```
 
+## Testing UI Components (Drag-and-Drop, Windows, etc.)
+
+### Build Requirements
+Always build the project before testing UI components:
+```bash
+# Setup build environment with ninja from venv
+PATH=$PWD/.venv/bin:$PATH .venv/bin/meson setup builddir --reconfigure
+PATH=$PWD/.venv/bin:$PATH .venv/bin/meson compile -C builddir
+```
+
+### Resource Registration
+GTK templates require resource registration:
+```python
+import gi
+gi.require_version('Gtk', '4.0')
+gi.require_version('Adw', '1')
+gi.require_version('Gio', '2.0')
+from gi.repository import Gio, Gtk, Adw, Gdk, GLib
+
+# Register resources BEFORE importing Anura modules
+resource = Gio.Resource.load('builddir/data/com.github.d3msudo.anura.gresource')
+resource._register()
+```
+
+### Testing Drag-and-Drop
+```python
+# Test window import with resources
+import sys
+sys.path.insert(0, '.')
+from anura.window import AnuraWindow
+
+# Verify drag-and-drop methods exist
+required_methods = ['on_dnd_enter', 'on_dnd_leave', 'on_dnd_motion', 'on_dnd_drop']
+for method in required_methods:
+    assert method in dir(AnuraWindow), f"Missing method: {method}"
+```
+
+### Environment Variables
+```bash
+# Required for GTK tests
+export PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH"
+export GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0"
+export GSETTINGS_SCHEMA_DIR="builddir"
+```
+
+### Common Issues
+- **GTK assertion errors**: Usually wrong drop target widget attachment
+- **Resource not found**: Build project first, register resources before imports
+- **CSS syntax errors**: GTK uses `@variable` syntax, not standard CSS variables
+
 ---
 Generated for Anura OCR — GTK4/Libadwaita + Python + Meson + Flatpak
