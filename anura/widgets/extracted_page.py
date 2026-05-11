@@ -122,13 +122,8 @@ class ExtractedPage(Adw.NavigationPage):
 
     def _on_share(self, service: object, provider: str) -> None:
         """Share extracted text via external service."""
-        self._share_service.share(provider, self.extracted_text)
-
-    def _on_share_finished(self, _service: object, _success: bool) -> None:
-        """Handle share completion - close the popover."""
-        popover = self.share_button.get_popover()
-        if popover:
-            popover.popdown()
+        share_service_instance = get_share_service()
+        share_service_instance.share(provider, self.extracted_text)
 
     def _on_share_finished(self, _service: object, _success: bool) -> None:
         """Handle share completion - close the popover."""

@@ -5,7 +5,7 @@
 
 import contextlib
 
-from gi.repository import Adw, Gdk, GLib, Gtk
+from gi.repository import Adw, Gdk, Gtk
 
 from anura.config import RESOURCE_PREFIX
 from anura.language_manager import language_manager
