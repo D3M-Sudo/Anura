@@ -75,14 +75,17 @@ class WelcomePage(Adw.NavigationPage):
         if not files:
             return False
 
-        # Emit a custom signal or call a method on the parent window
-        # For now, let's assume the window will handle the actual processing
-        # via a proxy method if we can get a reference to it.
+        # Resolve window reference before scheduling async work
         window = self.get_root()
-        if window and hasattr(window, "process_gfile"):
-            window.process_gfile(files[0])
-            return True
-        return False
+        if not (window and hasattr(window, "process_gfile")):
+            return False
+
+        # Defer processing to next iteration of the main loop to avoid
+        # Gtk-CRITICAL deadlock in the drag-and-drop signal handler.
+        from gi.repository import GLib
+
+        GLib.idle_add(window.process_gfile, files[0])
+        return True
 
     def _on_language_changed(self, _: LanguagePopover, language: LanguageItem) -> None:
         self.lang_combo.set_label(language.title)

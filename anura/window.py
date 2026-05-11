@@ -109,7 +109,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         # to ensure better isolation and resolve potential race conditions.
         pass
 
-    def process_gfile(self, gfile: Gio.File) -> None:
+    def process_gfile(self, gfile: Gio.File) -> bool:
         """Public method to process a GFile (used by WelcomePage D&D)."""
         try:
             self.welcome_page.spinner.set_visible(True)
@@ -125,6 +125,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             logger.error(f"Failed to start file query: {e}")
             self.welcome_page.spinner.set_visible(False)
             self.show_toast(_("Failed to load image file"))
+        return GLib.SOURCE_REMOVE
 
     def get_language(self) -> str:
         """Get current language code from settings or language manager."""
@@ -236,13 +237,26 @@ class AnuraWindow(Adw.ApplicationWindow):
         dialog = Gtk.FileDialog()
         dialog.set_title(_("Choose an image for extraction"))
 
-        img_filter = Gtk.FileFilter()
-        img_filter.set_name(_("Images"))
-        img_filter.add_pixbuf_formats()
+        # Primary filter: All supported image formats
+        all_img_filter = Gtk.FileFilter()
+        all_img_filter.set_name(_("All supported images"))
+        all_img_filter.add_pixbuf_formats()
+
+        # Secondary filter: Specific common formats
+        png_filter = Gtk.FileFilter()
+        png_filter.set_name(_("PNG images"))
+        png_filter.add_mime_type("image/png")
+
+        jpg_filter = Gtk.FileFilter()
+        jpg_filter.set_name(_("JPEG images"))
+        jpg_filter.add_mime_type("image/jpeg")
 
         filters = Gio.ListStore.new(Gtk.FileFilter)
-        filters.append(img_filter)
+        filters.append(all_img_filter)
+        filters.append(png_filter)
+        filters.append(jpg_filter)
         dialog.set_filters(filters)
+        dialog.set_default_filter(all_img_filter)
 
         dialog.open(self, None, self._on_open_image_result)
 
