@@ -515,7 +515,7 @@ class AnuraApplication(Adw.Application):
         ),
             developers=["Andrey Maksimov (Frog OCR)", "D3M-Sudo (Anura)"],
             designers=["D3M-Sudo"],
-            legal_info="Uses Tesseract OCR, GTK4, Libadwaita, and other open source libraries.",
+            legal="Uses Tesseract OCR, GTK4, Libadwaita, and other open source libraries.",
             release_notes=self._get_release_notes(),
         )
         about_window.present(self.props.active_window)
