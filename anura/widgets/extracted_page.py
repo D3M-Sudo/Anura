@@ -43,6 +43,7 @@ class ExtractedPage(Adw.NavigationPage):
     listen_stack: Gtk.Stack = Gtk.Template.Child()
     listen_btn: Gtk.Button = Gtk.Template.Child()
     listen_cancel_btn: Gtk.Button = Gtk.Template.Child()
+    share_button: Gtk.MenuButton = Gtk.Template.Child()
     text_view: Gtk.TextView = Gtk.Template.Child()
     buffer: Gtk.TextBuffer = Gtk.Template.Child()
 
@@ -51,13 +52,17 @@ class ExtractedPage(Adw.NavigationPage):
 
         self.settings = settings
 
-        share_service_instance = get_share_service()
-        for provider in share_service_instance.providers():
+        self._share_service = get_share_service()
+        for provider in self._share_service.providers():
             self.share_list_box.append(ShareRow(provider))
 
         # Initialize handler ID and store service instance reference for cleanup
         self._tts_stop_handler_id: int | None = None
         self._tts_service = None
+
+        # Connect to share signal to automatically popdown the menu
+        self._share_handler_id = self._share_service.connect("share", self._on_share_finished)
+
         try:
             self._tts_service = get_tts_service()
             self._tts_stop_handler_id = self._tts_service.connect("stop", self._on_listen_end)
@@ -120,6 +125,12 @@ class ExtractedPage(Adw.NavigationPage):
         share_service_instance = get_share_service()
         share_service_instance.share(provider, self.extracted_text)
 
+    def _on_share_finished(self, _service: object, _success: bool) -> None:
+        """Handle share completion - close the popover."""
+        popover = self.share_button.get_popover()
+        if popover:
+            popover.popdown()
+
     def _on_generate_error(self, error: Exception, traceback_str: str | None = None) -> None:
         """Handle generation errors (called on main thread by GObjectWorker)."""
         self._set_spinner_active(False)
@@ -168,11 +179,17 @@ class ExtractedPage(Adw.NavigationPage):
         """Enable or disable interactive controls during TTS playback."""
         self.grab_btn.set_sensitive(not state)
         self.text_copy_btn.set_sensitive(not state)
-        self.listen_btn.set_visible(not state)
-        self.listen_cancel_btn.set_visible(state)
+        self.listen_stack.set_visible_child_name("cancel" if state else "button")
 
     def do_destroy(self) -> None:
         """Clean up signal handlers to prevent memory leaks."""
+        # Disconnect share signal handler
+        if hasattr(self, "_share_handler_id") and self._share_handler_id is not None:
+            if hasattr(self, "_share_service") and self._share_service is not None:
+                with contextlib.suppress(TypeError, RuntimeError, AttributeError):
+                    self._share_service.disconnect(self._share_handler_id)
+            self._share_handler_id = None
+
         # Check handler is not None AND service is valid before disconnecting
         if self._tts_stop_handler_id is not None and self._tts_service is not None:
             with contextlib.suppress(TypeError, RuntimeError, AttributeError):
