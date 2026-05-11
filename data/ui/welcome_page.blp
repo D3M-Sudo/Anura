@@ -100,7 +100,7 @@ template $WelcomePage : Adw.NavigationPage {
               child: Box {
                 halign: center;
                 spacing: 6;
-                Image { icon-name: "document-import-symbolic"; }
+                Image { icon-name: "folder-drag-accept-symbolic"; }
                 Label {
                   label: _("Drop Image");
                   use-underline: true;
@@ -112,10 +112,16 @@ template $WelcomePage : Adw.NavigationPage {
               visible: false;
               margin-top: 12;
               height-request: 80;
+              halign: fill;
+              valign: center;
               styles ["card"]
 
               Label {
                 label: _("Drop image file here");
+                halign: center;
+                valign: center;
+                hexpand: true;
+                vexpand: true;
                 styles ["dim-label"]
               }
             }
