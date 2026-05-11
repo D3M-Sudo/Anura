@@ -130,6 +130,12 @@ class ExtractedPage(Adw.NavigationPage):
         if popover:
             popover.popdown()
 
+    def _on_share_finished(self, _service: object, _success: bool) -> None:
+        """Handle share completion - close the popover."""
+        popover = self.share_button.get_popover()
+        if popover:
+            popover.popdown()
+
     def _on_generate_error(self, error: Exception, traceback_str: str | None = None) -> None:
         """Handle generation errors (called on main thread by GObjectWorker)."""
         self._set_spinner_active(False)

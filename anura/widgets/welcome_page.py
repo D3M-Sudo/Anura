@@ -82,6 +82,8 @@ class WelcomePage(Adw.NavigationPage):
 
         # Defer processing to next iteration of the main loop to avoid
         # Gtk-CRITICAL deadlock in the drag-and-drop signal handler.
+        from gi.repository import GLib
+
         GLib.idle_add(window.process_gfile, files[0])
         return True
 
