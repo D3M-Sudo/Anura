@@ -5,7 +5,7 @@
 
 import contextlib
 
-from gi.repository import Adw, Gtk
+from gi.repository import Adw, Gdk, Gtk
 
 from anura.config import RESOURCE_PREFIX
 from anura.language_manager import language_manager
@@ -22,6 +22,8 @@ class WelcomePage(Adw.NavigationPage):
     welcome: Adw.StatusPage = Gtk.Template.Child()
     lang_combo: Gtk.MenuButton = Gtk.Template.Child()
     language_popover: LanguagePopover = Gtk.Template.Child()
+    drop_button: Gtk.Button = Gtk.Template.Child()
+    drop_area: Gtk.Box = Gtk.Template.Child()
 
     _language_changed_handler_id: int | None = None
 
@@ -36,6 +38,51 @@ class WelcomePage(Adw.NavigationPage):
         self.lang_combo.set_label(
             language_manager.get_language(current_lang_code),
         )
+
+        self.drop_button.connect("clicked", self._on_drop_button_clicked)
+        self._setup_drop_target()
+
+    def _setup_drop_target(self) -> None:
+        """Configure the drop target for the dedicated drop area."""
+        drop_target = Gtk.DropTarget.new(type=Gdk.FileList, actions=Gdk.DragAction.COPY)
+        drop_target.connect("enter", self._on_dnd_enter)
+        drop_target.connect("leave", self._on_dnd_leave)
+        drop_target.connect("drop", self._on_dnd_drop)
+        self.drop_area.add_controller(drop_target)
+
+    def _on_drop_button_clicked(self, _: Gtk.Button) -> None:
+        """Toggle the visibility of the dedicated drop area."""
+        is_visible = self.drop_area.get_visible()
+        self.drop_area.set_visible(not is_visible)
+        if not is_visible:
+            self.drop_button.add_css_class("suggested-action")
+        else:
+            self.drop_button.remove_css_class("suggested-action")
+
+    def _on_dnd_enter(self, _target: Gtk.DropTarget, _x: float, _y: float) -> Gdk.DragAction:
+        self.drop_area.add_css_class("drag-hover")
+        return Gdk.DragAction.COPY
+
+    def _on_dnd_leave(self, _target: Gtk.DropTarget) -> None:
+        self.drop_area.remove_css_class("drag-hover")
+
+    def _on_dnd_drop(self, _target: Gtk.DropTarget, value: Gdk.FileList, _x: float, _y: float) -> bool:
+        self.drop_area.remove_css_class("drag-hover")
+        if not value or not isinstance(value, Gdk.FileList):
+            return False
+
+        files = value.get_files()
+        if not files:
+            return False
+
+        # Emit a custom signal or call a method on the parent window
+        # For now, let's assume the window will handle the actual processing
+        # via a proxy method if we can get a reference to it.
+        window = self.get_root()
+        if window and hasattr(window, "process_gfile"):
+            window.process_gfile(files[0])
+            return True
+        return False
 
     def _on_language_changed(self, _: LanguagePopover, language: LanguageItem) -> None:
         self.lang_combo.set_label(language.title)
