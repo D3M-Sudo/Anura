@@ -173,7 +173,8 @@ class ExtractedPage(Adw.NavigationPage):
     def _on_paused(self, _service: object, is_paused: bool) -> None:
         """Handle TTS pause/resume signal."""
         if self.listen_pause_btn:
-            self.listen_pause_btn.set_icon_name("media-playback-start-symbolic" if is_paused else "media-playback-pause-symbolic")
+            icon = "media-playback-start-symbolic" if is_paused else "media-playback-pause-symbolic"
+            self.listen_pause_btn.set_icon_name(icon)
 
     def _on_generated(self, filepath: str | None) -> None:
         if not filepath:
