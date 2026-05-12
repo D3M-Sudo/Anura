@@ -524,17 +524,25 @@ class AnuraApplication(Adw.Application):
             designers=["D3M-Sudo"],
             release_notes=self._get_release_notes(),
         )
-        about_window.add_legal_section(
-            _("Acknowledgements"),
-            "© 2022-2025 Andrey Maksimov",
-            Gtk.License.MIT_X11,
-            _(
-                "Anura is a fork of Frog OCR. This software uses Tesseract OCR, Leptonica, "
-                "GTK4, Libadwaita, gTTS, Pillow, PyZBar, and other open source components."
-            ),
-        )
-        about_window.add_link(_("Changelog"), "https://github.com/D3M-Sudo/Anura/blob/main/CHANGELOG.md")
+
+        # Present the dialog first, then add legal section to prevent widget lifecycle warnings
         about_window.present(window)
+
+        # Defer legal section addition to after dialog is fully realized
+        def add_legal_sections():
+            about_window.add_legal_section(
+                _("Acknowledgements"),
+                "© 2022-2025 Andrey Maksimov",
+                Gtk.License.MIT_X11,
+                _(
+                    "Anura is a fork of Frog OCR. This software uses Tesseract OCR, Leptonica, "
+                    "GTK4, Libadwaita, gTTS, Pillow, PyZBar, and other open source components."
+                ),
+            )
+            about_window.add_link(_("Changelog"), "https://github.com/D3M-Sudo/Anura/blob/main/CHANGELOG.md")
+            return False
+
+        GLib.idle_add(add_legal_sections)
 
     def on_github_star(self, _action: object, _param: object) -> None:
         """Open GitHub repository page in the default browser."""

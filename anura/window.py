@@ -174,6 +174,8 @@ class AnuraWindow(Adw.ApplicationWindow):
 
         self.present()
         self.welcome_page.spinner.set_visible(False)
+        # Clean up DnD processing state if active
+        self.welcome_page.reset_drop_area_state()
 
         if not text:
             return

@@ -237,23 +237,12 @@ class ExtractedPage(Adw.NavigationPage):
             self.swap_controls(False)
             return
 
-        # X11 Constraint: Keep spinner active until GStreamer reaches PLAYING state
-        # The spinner will be deactivated when we receive the "speak" signal
-        # indicating the pipeline is ready
+        # Deactivate spinner immediately when generation is complete
+        self._set_spinner_active(False)
+        # Show pause/stop controls
+        self.swap_controls(True)
+        # Start playback
         tts_service_instance = get_tts_service()
-
-        # Connect temporarily to the "speak" signal to know when GStreamer is ready
-        def on_pipeline_ready(service, audio_file):
-            # Deactivate spinner only when GStreamer pipeline reaches PLAYING state
-            self._set_spinner_active(False)
-            # Transition to playing controls
-            self.swap_controls(True)
-            # Disconnect this temporary handler
-            service.disconnect(temp_handler_id)
-
-        temp_handler_id = tts_service_instance.connect("speak", on_pipeline_ready)
-
-        # Start playback - this will trigger the "speak" signal when ready
         tts_service_instance.play(filepath)
 
     def _on_listen(self, service: object, filepath: str) -> None:
