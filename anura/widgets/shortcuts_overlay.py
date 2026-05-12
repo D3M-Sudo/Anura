@@ -180,6 +180,10 @@ class ShortcutsOverlay(Adw.Window):
     ) -> bool:
         """Handle key press events from the EventControllerKey."""
         if keyval == Gdk.KEY_Escape:
+            if self.search_entry.get_text():
+                self.search_entry.set_text("")
+                self.search_entry.emit("search-changed")
+                return True
             self.close()
             return True
         return False

@@ -74,11 +74,10 @@ def parse_changelog(changelog_path: Path) -> dict:
                     html_parts.append(f"<ul>{html_items}</ul>")
 
             # Add GitHub link with hybrid logic: sections truncated OR total > 12
+            # NOTE: Adw.AboutDialog's release notes use a restricted markup that
+            # does not support <a> tags with 'href'.
             if any_truncated or total_items > 12:
-                github_link = (
-                    '<p><a href="https://github.com/D3M-Sudo/Anura/blob/main/CHANGELOG.md">'
-                    "Vedi changelog completo</a></p>"
-                )
+                github_link = "<p>Vedi changelog completo su GitHub: https://github.com/D3M-Sudo/Anura/blob/main/CHANGELOG.md</p>"
                 html_parts.append(github_link)
 
             html_output = "".join(html_parts)

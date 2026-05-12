@@ -519,7 +519,10 @@ class AnuraApplication(Adw.Application):
         )
         about_window.add_legal_section(
             _("Acknowledgements"),
-            "Uses Tesseract OCR, GTK4, Libadwaita, and other open source libraries."
+            "© 2022-2025 Andrey Maksimov",
+            Gtk.License.MIT_X11,
+            _("Anura is a fork of Frog OCR. This software uses Tesseract OCR, Leptonica, "
+              "GTK4, Libadwaita, gTTS, Pillow, PyZBar, and other open source components.")
         )
         about_window.present(self.props.active_window)
 
