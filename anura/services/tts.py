@@ -36,6 +36,7 @@ class TTSService(GObject.GObject):
     __gsignals__: ClassVar[dict[str, tuple]] = {
         "speak": (GObject.SignalFlags.RUN_LAST, None, (str,)),
         "stop": (GObject.SignalFlags.RUN_LAST, None, (bool,)),
+        "paused": (GObject.SignalFlags.RUN_LAST, None, (bool,)),
     }
 
     __slots__ = ("player",)
@@ -246,6 +247,13 @@ class TTSService(GObject.GObject):
         """Plays the generated speech file using GStreamer's playbin."""
         filepath = os.path.abspath(speech_file)
 
+        # If already playing or paused, don't recreate player
+        if self.player:
+            _, state, _ = self.player.get_state(0)
+            if state == Gst.State.PAUSED:
+                self.resume()
+                return
+
         self.player = Gst.ElementFactory.make("playbin3", "player")
         if not self.player:
             logger.error("Anura TTS Error: Failed to create GStreamer playbin.")
@@ -375,6 +383,38 @@ class TTSService(GObject.GObject):
                     logger.warning("Anura TTS: Failed to cleanup temporary speech file on stop")
             elif filepath:
                 logger.debug("Anura TTS: Cleanup skipped on stop, file already removed")
+
+    def pause(self) -> None:
+        """Pauses the GStreamer player."""
+        if self.player:
+            logger.info("Anura TTSService: Setting GStreamer state to PAUSED")
+            self.player.set_state(Gst.State.PAUSED)
+            GLib.idle_add(self.emit, "paused", True)
+
+    def resume(self) -> None:
+        """Resumes the GStreamer player."""
+        if self.player:
+            logger.info("Anura TTSService: Setting GStreamer state to PLAYING (resume)")
+            self.player.set_state(Gst.State.PLAYING)
+            GLib.idle_add(self.emit, "paused", False)
+
+    def is_playing(self) -> bool:
+        """Returns True if the GStreamer player is in the PLAYING state."""
+        if not self.player:
+            return False
+        _, state, _ = self.player.get_state(0)
+        return state == Gst.State.PLAYING
+
+    def toggle_pause(self) -> None:
+        """Toggles between paused and playing states."""
+        if not self.player:
+            return
+
+        _, state, _ = self.player.get_state(0)
+        if state == Gst.State.PLAYING:
+            self.pause()
+        elif state == Gst.State.PAUSED:
+            self.resume()
 
     def cleanup(self) -> None:
         """Complete cleanup for application shutdown - prevents broken pipe errors."""

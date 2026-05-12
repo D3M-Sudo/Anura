@@ -43,6 +43,7 @@ class ExtractedPage(Adw.NavigationPage):
     listen_stack: Gtk.Stack = Gtk.Template.Child()
     listen_btn: Gtk.Button = Gtk.Template.Child()
     listen_cancel_btn: Gtk.Button = Gtk.Template.Child()
+    listen_pause_btn: Gtk.Button = Gtk.Template.Child()
     share_button: Gtk.MenuButton = Gtk.Template.Child()
     text_view: Gtk.TextView = Gtk.Template.Child()
     buffer: Gtk.TextBuffer = Gtk.Template.Child()
@@ -58,6 +59,7 @@ class ExtractedPage(Adw.NavigationPage):
 
         # Initialize handler ID and store service instance reference for cleanup
         self._tts_stop_handler_id: int | None = None
+        self._tts_paused_handler_id: int | None = None
         self._tts_service = None
 
         # Connect to share signal to automatically popdown the menu
@@ -66,6 +68,7 @@ class ExtractedPage(Adw.NavigationPage):
         try:
             self._tts_service = get_tts_service()
             self._tts_stop_handler_id = self._tts_service.connect("stop", self._on_listen_end)
+            self._tts_paused_handler_id = self._tts_service.connect("paused", self._on_paused)
         except (TypeError, RuntimeError) as e:
             logger.warning(f"Failed to connect TTS stop signal: {e}")
 
@@ -92,14 +95,21 @@ class ExtractedPage(Adw.NavigationPage):
 
     def listen(self) -> None:
         """Start TTS playback for the extracted text."""
+        tts_service_instance = get_tts_service()
+
+        # If already paused, resume instead of starting over
+        if self._tts_service and self.listen_stack.get_visible_child_name() == "pause":
+            self.listen_pause()
+            return
+
         self.swap_controls(True)
         self._set_spinner_active(True)
 
-        tts_service_instance = get_tts_service()
         # Store reference for cleanup if not already stored
         if self._tts_service is None:
             self._tts_service = tts_service_instance
             self._tts_stop_handler_id = self._tts_service.connect("stop", self._on_listen_end)
+            self._tts_paused_handler_id = self._tts_service.connect("paused", self._on_paused)
 
         # Resolve TTS language: explicit user preference (tts-language) wins,
         # otherwise map the OCR language (Tesseract 3-letter, e.g. "ita") to
@@ -155,14 +165,25 @@ class ExtractedPage(Adw.NavigationPage):
         tts_service_instance.stop_speaking()
         self.swap_controls(False)
 
+    def listen_pause(self) -> None:
+        """Pause/Resume TTS playback."""
+        tts_service_instance = get_tts_service()
+        tts_service_instance.toggle_pause()
+
+    def _on_paused(self, _service: object, is_paused: bool) -> None:
+        """Handle TTS pause/resume signal."""
+        if self.listen_pause_btn:
+            icon = "media-playback-start-symbolic" if is_paused else "media-playback-pause-symbolic"
+            self.listen_pause_btn.set_icon_name(icon)
+
     def _on_generated(self, filepath: str | None) -> None:
-        self._set_spinner_active(False)
         if not filepath:
+            self._set_spinner_active(False)
             self.swap_controls(False)
             return
 
-        # Ensure the cancel button is visible while playing
-        self.listen_stack.set_visible_child_name("cancel")
+        # Transition directly to pause state (which shows Pause and Stop buttons)
+        self.listen_stack.set_visible_child_name("pause")
         tts_service_instance = get_tts_service()
         tts_service_instance.play(filepath)
 
@@ -178,11 +199,15 @@ class ExtractedPage(Adw.NavigationPage):
         self._set_spinner_active(False)
         self.swap_controls(False)
 
+        # Reset pause button icon
+        if self.listen_pause_btn:
+            self.listen_pause_btn.set_icon_name("media-playback-pause-symbolic")
+
     def swap_controls(self, state: bool = False) -> None:
         """Enable or disable interactive controls during TTS playback."""
         self.grab_btn.set_sensitive(not state)
         self.text_copy_btn.set_sensitive(not state)
-        self.listen_stack.set_visible_child_name("cancel" if state else "button")
+        self.listen_stack.set_visible_child_name("pause" if state else "button")
 
     def do_destroy(self) -> None:
         """Clean up signal handlers to prevent memory leaks."""
@@ -194,9 +219,13 @@ class ExtractedPage(Adw.NavigationPage):
             self._share_handler_id = None
 
         # Check handler is not None AND service is valid before disconnecting
-        if self._tts_stop_handler_id is not None and self._tts_service is not None:
-            with contextlib.suppress(TypeError, RuntimeError, AttributeError):
-                # Handler already disconnected or service disposed
-                self._tts_service.disconnect(self._tts_stop_handler_id)
-            self._tts_stop_handler_id = None
+        if self._tts_service is not None:
+            if self._tts_stop_handler_id is not None:
+                with contextlib.suppress(TypeError, RuntimeError, AttributeError):
+                    self._tts_service.disconnect(self._tts_stop_handler_id)
+                self._tts_stop_handler_id = None
+            if self._tts_paused_handler_id is not None:
+                with contextlib.suppress(TypeError, RuntimeError, AttributeError):
+                    self._tts_service.disconnect(self._tts_paused_handler_id)
+                self._tts_paused_handler_id = None
         super().do_destroy()
