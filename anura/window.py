@@ -84,7 +84,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         )
         # Banner's "button-clicked" fires when the user dismisses; hide until
         # the next backend failure re-reveals it.
-        self.portal_banner.connect("button-clicked", self._on_portal_banner_dismissed)
+        self._handler_portal_banner = self.portal_banner.connect("button-clicked", self._on_portal_banner_dismissed)
 
         self._handler_go_back = self.extracted_page.connect("go-back", self.show_welcome_page)
         self._handler_clipboard = None
@@ -515,6 +515,10 @@ class AnuraWindow(Adw.ApplicationWindow):
             with contextlib.suppress(TypeError, RuntimeError):
                 self.extracted_page.disconnect(self._handler_go_back)
             self._handler_go_back = None
+        if self._handler_portal_banner:
+            with contextlib.suppress(TypeError, RuntimeError):
+                self.portal_banner.disconnect(self._handler_portal_banner)
+            self._handler_portal_banner = None
         if self._handler_clipboard and self._clipboard_service:
             with contextlib.suppress(TypeError, RuntimeError):
                 self._clipboard_service.disconnect(self._handler_clipboard)

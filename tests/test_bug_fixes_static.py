@@ -166,6 +166,64 @@ def test_readme_documents_runtime_requirements() -> None:
     assert "xdg-desktop-portal-gtk" in readme, "README must mention xdg-desktop-portal-gtk explicitly for LXQt users."
 
 
+# ---------------------------------------------------------------------------
+# Bug D: ExtractedPage share service signal handler must be disconnected in
+# do_dispose to prevent memory leak
+# ---------------------------------------------------------------------------
+
+
+def test_extracted_page_disconnects_share_service_signal() -> None:
+    """ExtractedPage.do_dispose must disconnect the share service signal handler."""
+    text = (ANURA_PKG / "widgets" / "extracted_page.py").read_text()
+    # Check that do_dispose contains disconnect for share service
+    assert "self._share_service.disconnect(self._share_handler_id)" in text, (
+        "ExtractedPage.do_dispose must disconnect the share service signal handler "
+        "(_share_handler_id) to prevent memory leaks."
+    )
+
+
+def test_extracted_page_tracks_share_handler_id() -> None:
+    """ExtractedPage must track the share service handler ID for cleanup."""
+    text = (ANURA_PKG / "widgets" / "extracted_page.py").read_text()
+    assert "_share_handler_id" in text, (
+        "ExtractedPage must track the share service signal handler ID "
+        "(_share_handler_id) for cleanup in do_dispose."
+    )
+    assert "_share_handler_id = self._share_service.connect" in text, (
+        "ExtractedPage must store the share service connect() return value "
+        "in _share_handler_id."
+    )
+
+
+# ---------------------------------------------------------------------------
+# Bug E: AnuraWindow portal_banner signal handler must be disconnected in
+# do_destroy to prevent memory leak
+# ---------------------------------------------------------------------------
+
+
+def test_window_disconnects_portal_banner_signal() -> None:
+    """AnuraWindow.do_destroy must disconnect the portal_banner signal handler."""
+    text = (ANURA_PKG / "window.py").read_text()
+    # Check that do_destroy contains disconnect for portal_banner
+    assert "self.portal_banner.disconnect(self._handler_portal_banner)" in text, (
+        "AnuraWindow.do_destroy must disconnect the portal_banner signal handler "
+        "(_handler_portal_banner) to prevent memory leaks."
+    )
+
+
+def test_window_tracks_portal_banner_handler_id() -> None:
+    """AnuraWindow must track the portal_banner handler ID for cleanup."""
+    text = (ANURA_PKG / "window.py").read_text()
+    assert "_handler_portal_banner" in text, (
+        "AnuraWindow must track the portal_banner signal handler ID "
+        "(_handler_portal_banner) for cleanup in do_destroy."
+    )
+    assert "_handler_portal_banner = self.portal_banner.connect" in text, (
+        "AnuraWindow must store the portal_banner connect() return value "
+        "in _handler_portal_banner."
+    )
+
+
 @pytest.mark.parametrize(
     "rel_path",
     [
