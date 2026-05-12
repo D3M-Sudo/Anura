@@ -94,7 +94,7 @@ class ExtractedPage(Adw.NavigationPage):
         Gtk.Widget.do_unmap(self)
 
     def do_dispose(self) -> None:
-        """Handle widget disposal - clean up TTS resources."""
+        """Handle widget disposal - clean up TTS and share resources."""
         # X11 Constraint: Ensure TTS is stopped and resources are cleaned up
         if self._tts_service:
             try:
@@ -108,6 +108,15 @@ class ExtractedPage(Adw.NavigationPage):
                     self._tts_paused_handler_id = None
             except Exception as e:
                 logger.warning(f"Failed to cleanup TTS during dispose: {e}")
+
+        # Disconnect share service signal handler
+        if self._share_service and self._share_handler_id:
+            try:
+                self._share_service.disconnect(self._share_handler_id)
+                self._share_handler_id = None
+            except (TypeError, RuntimeError) as e:
+                logger.warning(f"Failed to cleanup share service during dispose: {e}")
+
         super().do_dispose()
 
     @GObject.Property(type=str)
