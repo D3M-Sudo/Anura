@@ -24,6 +24,7 @@ class WelcomePage(Adw.NavigationPage):
     language_popover: LanguagePopover = Gtk.Template.Child()
     drop_button: Gtk.Button = Gtk.Template.Child()
     drop_area: Gtk.Box = Gtk.Template.Child()
+    drop_area_label: Gtk.Label = Gtk.Template.Child()
 
     _language_changed_handler_id: int | None = None
 
@@ -44,11 +45,12 @@ class WelcomePage(Adw.NavigationPage):
 
     def _setup_drop_target(self) -> None:
         """Configure the drop target for the dedicated drop area."""
-        drop_target = Gtk.DropTarget.new(type=Gdk.FileList, actions=Gdk.DragAction.COPY)
-        drop_target.connect("enter", self._on_dnd_enter)
-        drop_target.connect("leave", self._on_dnd_leave)
-        drop_target.connect("drop", self._on_dnd_drop)
-        self.drop_area.add_controller(drop_target)
+        # Use a persistent controller to avoid Gtk-CRITICAL assertions on X11/Lubuntu
+        self._drop_target = Gtk.DropTarget.new(type=Gdk.FileList, actions=Gdk.DragAction.COPY)
+        self._drop_target.connect("enter", self._on_dnd_enter)
+        self._drop_target.connect("leave", self._on_dnd_leave)
+        self._drop_target.connect("drop", self._on_dnd_drop)
+        self.drop_area.add_controller(self._drop_target)
 
     def _on_drop_button_clicked(self, _: Gtk.Button) -> None:
         """Toggle the visibility of the dedicated drop area."""
@@ -66,46 +68,85 @@ class WelcomePage(Adw.NavigationPage):
     def _on_dnd_leave(self, _target: Gtk.DropTarget) -> None:
         self.drop_area.remove_css_class("drag-hover")
 
-    def _on_dnd_drop(self, _target: Gtk.DropTarget, value: Gdk.FileList, _x: float, _y: float) -> bool:
+    def _on_dnd_drop(self, target: Gtk.DropTarget, value: Gdk.FileList, _x: float, _y: float, drop: Gdk.Drop) -> bool:
         from loguru import logger
 
         self.drop_area.remove_css_class("drag-hover")
 
-        if not value:
-            logger.debug("DnD: Drop value is None")
-            return False
+        # X11 Constraint: Always finish the drop transaction immediately to prevent cursor hang
+        drop_success = False
 
-        if not isinstance(value, Gdk.FileList):
-            logger.debug(f"DnD: Drop value has unexpected type: {type(value)}")
-            return False
+        try:
+            if not value:
+                logger.debug("DnD: Drop value is None")
+                drop.finish(0, False)
+                return False
 
-        files = value.get_files()
-        if not files:
-            logger.debug("DnD: Drop file list is empty")
-            return False
+            if not isinstance(value, Gdk.FileList):
+                logger.debug(f"DnD: Drop value has unexpected type: {type(value)}")
+                drop.finish(0, False)
+                return False
 
-        # Resolve window reference before scheduling async work
-        window = self.get_root()
-        if not (window and hasattr(window, "process_gfile")):
-            logger.debug(f"DnD: Root window not found or missing process_gfile (root={window})")
-            return False
+            files = value.get_files()
+            if not files:
+                logger.debug("DnD: Drop file list is empty")
+                drop.finish(0, False)
+                return False
 
-        # Defer processing to next iteration of the main loop to avoid
-        # Gtk-CRITICAL deadlock in the drag-and-drop signal handler.
-        from gi.repository import GLib
+            # Resolve window reference before scheduling async work
+            window = self.get_root()
+            if not window:
+                logger.error(f"DnD: Root window is None (self={self}, get_root() returned None)")
+                drop.finish(0, False)
+                return False
 
-        logger.debug(f"DnD: Scheduling process_gfile for {files[0].get_path()}")
-        GLib.idle_add(window.process_gfile, files[0])
-        GLib.idle_add(self._reset_drop_target, _target)
-        return True
+            if not hasattr(window, "process_gfile"):
+                logger.error(f"DnD: Root window {window} missing process_gfile method")
+                drop.finish(0, False)
+                return False
 
-    def _reset_drop_target(self, target: Gtk.DropTarget) -> bool:
-        """Reset the drop target to clear its state."""
-        from gi.repository import GLib
+            logger.debug(f"DnD: Root window validated: {window}, has process_gfile: {hasattr(window, 'process_gfile')}")
 
-        self.drop_area.remove_controller(target)
-        self._setup_drop_target()
-        return GLib.SOURCE_REMOVE
+            # Defer processing to next iteration of the main loop to avoid
+            # Gtk-CRITICAL deadlock in the drag-and-drop signal handler.
+            from gi.repository import GLib
+
+            logger.debug(f"DnD: Scheduling process_gfile for {files[0].get_path()}")
+            # Schedule the file processing
+            GLib.idle_add(window.process_gfile, files[0])
+            drop_success = True
+
+        except Exception as e:
+            logger.error(f"DnD: Error during drop processing: {e}")
+            drop_success = False
+        finally:
+            # X11 Constraint: Always finish the drop transaction immediately
+            drop.finish(Gdk.DragAction.COPY if drop_success else 0, drop_success)
+
+        # Add processing state to show file is being processed (OCR takes several seconds)
+        if drop_success:
+            self._set_drop_area_processing_state(True)
+
+        return drop_success
+
+    def _set_drop_area_processing_state(self, processing: bool) -> None:
+        """Set the drop area visual state to indicate processing (OCR in progress)."""
+        if processing:
+            self.drop_area.add_css_class("drag-processing")
+            if self.drop_area_label:
+                from gettext import gettext as _
+                self.drop_area_label.set_label(_("Processing..."))
+        else:
+            self.drop_area.remove_css_class("drag-processing")
+            if self.drop_area_label:
+                from gettext import gettext as _
+                self.drop_area_label.set_label(_("Drop image file here"))
+
+    def reset_drop_area_state(self) -> None:
+        """Reset the drop area to its initial state (called after OCR completes)."""
+        self._set_drop_area_processing_state(False)
+        self.drop_area.set_visible(False)
+        self.drop_button.remove_css_class("suggested-action")
 
     def _on_language_changed(self, _: LanguagePopover, language: LanguageItem) -> None:
         self.lang_combo.set_label(language.title)

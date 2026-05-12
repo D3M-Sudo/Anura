@@ -170,7 +170,7 @@ class ClipboardService(GObject.GObject):
         except Exception as e:
             # Handle unexpected errors in the callback setup itself
             logger.error(f"Anura Clipboard: Unexpected error in callback setup: {e}")
-            GLib.idle_add(self.emit, "error", _("No image in clipboard"))
+            GLib.idle_add(lambda: self.emit("error", _("No image in clipboard")))
 
     def read_texture(self) -> None:
         """
@@ -296,7 +296,7 @@ class ClipboardService(GObject.GObject):
                     logger.debug("Anura Clipboard: stream read cancelled.")
                     return
                 logger.error(f"Anura Clipboard: stream read failed: {e.message}")
-                GLib.idle_add(self.emit, "error", _("No image in clipboard"))
+                GLib.idle_add(lambda: self.emit("error", _("No image in clipboard")))
                 return
             data = gbytes.get_data() if gbytes is not None else b""
             if not data:
@@ -321,7 +321,7 @@ class ClipboardService(GObject.GObject):
         """Decode a text/uri-list payload and load the first image file URI."""
         if not data:
             logger.debug("Anura Clipboard: URI list payload is empty.")
-            GLib.idle_add(self.emit, "error", _("No image in clipboard"))
+            GLib.idle_add(lambda: self.emit("error", _("No image in clipboard")))
             return
 
         text = data.decode("utf-8", errors="replace")
@@ -330,19 +330,19 @@ class ClipboardService(GObject.GObject):
         file_uri = next((u for u in uris if u.startswith("file://")), None)
         if not file_uri:
             logger.debug(f"Anura Clipboard: no file:// URI in list (entries={uris[:3]!r}).")
-            GLib.idle_add(self.emit, "error", _("No image in clipboard"))
+            GLib.idle_add(lambda: self.emit("error", _("No image in clipboard")))
             return
 
         try:
             path, _hostname = GLib.filename_from_uri(file_uri)
         except GLib.Error as e:
             logger.warning(f"Anura Clipboard: bad file URI {file_uri!r}: {e.message}")
-            GLib.idle_add(self.emit, "error", _("No image in clipboard"))
+            GLib.idle_add(lambda: self.emit("error", _("No image in clipboard")))
             return
 
         if not path or not os.path.exists(path):
             logger.warning(f"Anura Clipboard: file does not exist: {path!r}")
-            GLib.idle_add(self.emit, "error", _("No image in clipboard"))
+            GLib.idle_add(lambda: self.emit("error", _("No image in clipboard")))
             return
 
         self._emit_texture_from_file(path)
@@ -358,18 +358,18 @@ class ClipboardService(GObject.GObject):
                 png_bytes = buf.getvalue()
         except (OSError, ValueError, Image.UnidentifiedImageError) as e:
             logger.warning(f"Anura Clipboard: PIL failed to decode {path!r}: {e}")
-            GLib.idle_add(self.emit, "error", _("No image in clipboard"))
+            GLib.idle_add(lambda: self.emit("error", _("No image in clipboard")))
             return
 
         try:
             texture = Gdk.Texture.new_from_bytes(GLib.Bytes.new(png_bytes))
         except GLib.Error as e:
             logger.warning(f"Anura Clipboard: Gdk.Texture.new_from_bytes failed: {e.message}")
-            GLib.idle_add(self.emit, "error", _("No image in clipboard"))
+            GLib.idle_add(lambda: self.emit("error", _("No image in clipboard")))
             return
 
         logger.debug(f"Anura Clipboard: loaded image from clipboard file URI ({path}).")
-        GLib.idle_add(self.emit, "paste_from_clipboard", texture)
+        GLib.idle_add(lambda: self.emit("paste_from_clipboard", texture))
 
     def read_text(self) -> None:
         """
@@ -428,11 +428,11 @@ class ClipboardService(GObject.GObject):
                 return
             # Other errors - log and emit error signal
             logger.error(f"Anura Clipboard Error: {e}")
-            GLib.idle_add(self.emit, "error", _("No text in clipboard"))
+            GLib.idle_add(lambda: self.emit("error", _("No text in clipboard")))
         except (ValueError, RuntimeError) as e:
             # Technical rigor: log error for X11/Wayland clipboard synchronization issues
             logger.error(f"Anura Clipboard Error: {e}")
-            GLib.idle_add(self.emit, "error", _("No text in clipboard"))
+            GLib.idle_add(lambda: self.emit("error", _("No text in clipboard")))
         finally:
             # Clean up cancellable regardless of outcome
             with self._state_lock:
@@ -463,7 +463,7 @@ class ClipboardService(GObject.GObject):
             logger.warning("Anura Clipboard: Read operation timed out after 10s, cancelling.")
             active_cancellable.cancel()
             # Emit error signal so UI can show user feedback
-            GLib.idle_add(self.emit, "error", _("Clipboard read operation timed out."))
+            GLib.idle_add(lambda: self.emit("error", _("Clipboard read operation timed out.")))
 
         return False  # Don't repeat timeout
 

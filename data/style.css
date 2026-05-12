@@ -222,6 +222,13 @@
     transition: all 200ms ease;
 }
 
+.drag-processing {
+    background: alpha(@warning_color, 0.15);
+    border: 2px dashed @warning_color;
+    border-radius: 12px;
+    transition: all 200ms ease;
+}
+
 #drop_area {
     border: 2px dashed alpha(@theme_fg_color, 0.3);
     border-radius: 12px;
@@ -231,4 +238,9 @@
 #drop_area.drag-hover {
     border-color: @accent_color;
     background: alpha(@accent_color, 0.15);
+}
+
+#drop_area.drag-processing {
+    border-color: @warning_color;
+    background: alpha(@warning_color, 0.15);
 }

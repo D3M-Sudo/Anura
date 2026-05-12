@@ -44,6 +44,7 @@ class ExtractedPage(Adw.NavigationPage):
     listen_btn: Gtk.Button = Gtk.Template.Child()
     listen_cancel_btn: Gtk.Button = Gtk.Template.Child()
     listen_pause_btn: Gtk.Button = Gtk.Template.Child()
+    listen_spinner: Gtk.Spinner = Gtk.Template.Child()
     share_button: Gtk.MenuButton = Gtk.Template.Child()
     text_view: Gtk.TextView = Gtk.Template.Child()
     buffer: Gtk.TextBuffer = Gtk.Template.Child()
@@ -53,7 +54,8 @@ class ExtractedPage(Adw.NavigationPage):
         self.settings = settings
         self._share_service = None
         self._share_handler_id = None
-        self._tts_service = None
+        # X11 Constraint: Ensure TTS service is properly initialized before any signal connections
+        self._tts_service = get_tts_service()
         self._tts_stop_handler_id = None
         self._tts_paused_handler_id = None
 
@@ -80,6 +82,33 @@ class ExtractedPage(Adw.NavigationPage):
         """Handle widget hiding event."""
         self.buffer.set_text("")
         self.emit("go-back", 1)
+
+    def do_unmap(self) -> None:
+        """Handle widget unmapping - stop TTS playback when widget is no longer visible."""
+        # X11 Constraint: Stop TTS immediately when widget is unmapped to prevent zombie audio
+        if self._tts_service:
+            try:
+                self._tts_service.stop_speaking()
+            except Exception as e:
+                logger.warning(f"Failed to stop TTS during unmap: {e}")
+        Gtk.Widget.do_unmap(self)
+
+    def do_dispose(self) -> None:
+        """Handle widget disposal - clean up TTS resources."""
+        # X11 Constraint: Ensure TTS is stopped and resources are cleaned up
+        if self._tts_service:
+            try:
+                self._tts_service.stop_speaking()
+                # Disconnect signal handlers
+                if self._tts_stop_handler_id:
+                    self._tts_service.disconnect(self._tts_stop_handler_id)
+                    self._tts_stop_handler_id = None
+                if self._tts_paused_handler_id:
+                    self._tts_service.disconnect(self._tts_paused_handler_id)
+                    self._tts_paused_handler_id = None
+            except Exception as e:
+                logger.warning(f"Failed to cleanup TTS during dispose: {e}")
+        super().do_dispose()
 
     @GObject.Property(type=str)
     def extracted_text(self) -> str:
@@ -111,7 +140,9 @@ class ExtractedPage(Adw.NavigationPage):
             self.listen_pause()
             return
 
-        self.swap_controls(True)
+        # X11 Constraint: Set UI to generating state (Spinner) immediately and keep it active
+        # during entire generate phase until GStreamer reaches PLAYING state
+        self.swap_controls(False)  # Disable other controls
         self._set_spinner_active(True)
 
         # Store reference for cleanup if not already stored
@@ -139,8 +170,19 @@ class ExtractedPage(Adw.NavigationPage):
         )
 
     def _set_spinner_active(self, active: bool) -> None:
-        """Switch Stack between button and spinner."""
-        self.listen_stack.set_visible_child_name("spinner" if active else "button")
+        """X11 Constraint: Switch Stack between button and spinner with fixed dimensions."""
+        if active:
+            # Ensure spinner has fixed dimensions to prevent UI shifting
+            if self.listen_stack:
+                self.listen_stack.set_visible_child_name("spinner")
+            # Explicitly start the spinner animation
+            if self.listen_spinner:
+                self.listen_spinner.start()
+        else:
+            # Stop spinner animation before switching
+            if self.listen_spinner:
+                self.listen_spinner.stop()
+            # Note: Don't set stack here - let swap_controls handle it to avoid conflicts
 
     def _on_share(self, service: object, provider: str) -> None:
         """Share extracted text via external service."""
@@ -155,6 +197,7 @@ class ExtractedPage(Adw.NavigationPage):
 
     def _on_generate_error(self, error: Exception, traceback_str: str | None = None) -> None:
         """Handle generation errors (called on main thread by GObjectWorker)."""
+        # X11 Constraint: Ensure spinner is properly deactivated on error
         self._set_spinner_active(False)
         self.swap_controls(False)
 
@@ -194,8 +237,11 @@ class ExtractedPage(Adw.NavigationPage):
             self.swap_controls(False)
             return
 
-        # Transition directly to pause state (which shows Pause and Stop buttons)
-        self.listen_stack.set_visible_child_name("pause")
+        # Deactivate spinner immediately when generation is complete
+        self._set_spinner_active(False)
+        # Show pause/stop controls
+        self.swap_controls(True)
+        # Start playback
         tts_service_instance = get_tts_service()
         tts_service_instance.play(filepath)
 
@@ -217,9 +263,19 @@ class ExtractedPage(Adw.NavigationPage):
 
     def swap_controls(self, state: bool = False) -> None:
         """Enable or disable interactive controls during TTS playback."""
-        self.grab_btn.set_sensitive(not state)
-        self.text_copy_btn.set_sensitive(not state)
-        self.listen_stack.set_visible_child_name("pause" if state else "button")
+        if self.grab_btn:
+            self.grab_btn.set_sensitive(not state)
+        if self.text_copy_btn:
+            self.text_copy_btn.set_sensitive(not state)
+        if self.listen_stack:
+            # Unified stack management: handle both pause/play and spinner states
+            if state:
+                self.listen_stack.set_visible_child_name("pause")
+            else:
+                # Check if spinner is active before switching to button
+                current_child = self.listen_stack.get_visible_child_name()
+                if current_child != "spinner":
+                    self.listen_stack.set_visible_child_name("button")
 
     def do_destroy(self) -> None:
         """Clean up signal handlers to prevent memory leaks."""
