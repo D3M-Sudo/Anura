@@ -88,12 +88,17 @@ class AnuraWindow(Adw.ApplicationWindow):
 
         self._handler_go_back = self.extracted_page.connect("go-back", self.show_welcome_page)
         self._handler_clipboard = None
+        self._handler_clipboard_error = None
         self._clipboard_service = None
         try:
             self._clipboard_service = get_clipboard_service()
             self._handler_clipboard = self._clipboard_service.connect(
                 "paste_from_clipboard",
                 self._on_paste_from_clipboard_texture,
+            )
+            self._handler_clipboard_error = self._clipboard_service.connect(
+                "error",
+                self._on_clipboard_error,
             )
         except RuntimeError as e:
             logger.warning(f"Clipboard service unavailable: {e}")
@@ -104,18 +109,29 @@ class AnuraWindow(Adw.ApplicationWindow):
         self.set_default_size(width, height)
 
     def _setup_controllers(self) -> None:
-        # Create drop target with proper configuration
-        drop_target = Gtk.DropTarget.new(type=Gdk.FileList, actions=Gdk.DragAction.COPY)
+        """Centralized event controller setup."""
+        # Note: Drag and drop is now handled within the WelcomePage widget
+        # to ensure better isolation and resolve potential race conditions.
+        pass
 
-        # Connect all necessary signals for proper lifecycle management
-        drop_target.connect("enter", self.on_dnd_enter)
-        drop_target.connect("leave", self.on_dnd_leave)
-        drop_target.connect("motion", self.on_dnd_motion)
-        drop_target.connect("drop", self.on_dnd_drop)
-
-        # Attach to the welcome page's status page instead of split view
-        # This prevents conflicts with content area and provides better UX
-        self.welcome_page.welcome.add_controller(drop_target)
+    def process_gfile(self, gfile: Gio.File) -> bool:
+        """Public method to process a GFile (used by WelcomePage D&D)."""
+        logger.debug(f"DnD: process_gfile started for {gfile.get_path()}")
+        try:
+            self.welcome_page.spinner.set_visible(True)
+            gfile.query_info_async(
+                "standard::content-type",
+                Gio.FileQueryInfoFlags.NONE,
+                GLib.PRIORITY_DEFAULT,
+                None,
+                self._on_dnd_query_info_done,
+                gfile,
+            )
+        except (GLib.Error, OSError, RuntimeError) as e:
+            logger.error(f"DnD: Failed to start file query: {e}")
+            self.welcome_page.spinner.set_visible(False)
+            self.show_toast(_("Failed to load image file"))
+        return GLib.SOURCE_REMOVE
 
     def get_language(self) -> str:
         """Get current language code from settings or language manager."""
@@ -227,13 +243,32 @@ class AnuraWindow(Adw.ApplicationWindow):
         dialog = Gtk.FileDialog()
         dialog.set_title(_("Choose an image for extraction"))
 
-        img_filter = Gtk.FileFilter()
-        img_filter.set_name(_("Images"))
-        img_filter.add_pixbuf_formats()
+        # Primary filter: All supported image formats
+        all_img_filter = Gtk.FileFilter()
+        all_img_filter.set_name(_("All supported images"))
+        all_img_filter.add_mime_type("image/png")
+        all_img_filter.add_mime_type("image/jpeg")
+        all_img_filter.add_mime_type("image/webp")
+        all_img_filter.add_mime_type("image/avif")
+        all_img_filter.add_mime_type("image/tiff")
+        all_img_filter.add_mime_type("image/bmp")
+        all_img_filter.add_mime_type("image/gif")
+
+        # Secondary filter: Specific common formats
+        png_filter = Gtk.FileFilter()
+        png_filter.set_name(_("PNG images"))
+        png_filter.add_mime_type("image/png")
+
+        jpg_filter = Gtk.FileFilter()
+        jpg_filter.set_name(_("JPEG images"))
+        jpg_filter.add_mime_type("image/jpeg")
 
         filters = Gio.ListStore.new(Gtk.FileFilter)
-        filters.append(img_filter)
+        filters.append(all_img_filter)
+        filters.append(png_filter)
+        filters.append(jpg_filter)
         dialog.set_filters(filters)
+        dialog.set_default_filter(all_img_filter)
 
         dialog.open(self, None, self._on_open_image_result)
 
@@ -344,63 +379,12 @@ class AnuraWindow(Adw.ApplicationWindow):
             logger.error(f"Failed to load file contents: {e}")
             self.show_toast(_("Failed to load image file"))
 
-    def on_dnd_enter(self, drop_target: Gtk.DropTarget, x: float, y: float) -> Gdk.DragAction:
-        """Handle drag enter event - provide visual feedback."""
-        # Validate we can accept the drop
-        if drop_target.get_current_drop() is None:
-            return Gdk.DragAction(0)  # Reject
-
-        # Show visual feedback
-        self.welcome_page.welcome.add_css_class("drag-hover")
-        return Gdk.DragAction.COPY
-
-    def on_dnd_leave(self, drop_target: Gtk.DropTarget) -> None:
-        """Handle drag leave event - clean up visual feedback."""
-        self.welcome_page.welcome.remove_css_class("drag-hover")
-
-    def on_dnd_motion(self, drop_target: Gtk.DropTarget, x: float, y: float) -> Gdk.DragAction:
-        """Handle drag motion - continue accepting or reject."""
-        if drop_target.get_current_drop() is None:
-            return Gdk.DragAction(0)  # Reject
-        return Gdk.DragAction.COPY
-
-    def on_dnd_drop(self, drop_target: Gtk.DropTarget, value: Gdk.FileList, x: float, y: float) -> bool:
-        """Enhanced drag-and-drop handler with proper error handling."""
-        # Clean up visual feedback
-        self.welcome_page.welcome.remove_css_class("drag-hover")
-
-        # Validate drop data
-        if not value or not isinstance(value, Gdk.FileList):
-            return False
-
-        files = value.get_files()
-        if not files:
-            return False
-
-        # Process the first file
-        item = files[0]
-
-        try:
-            self.welcome_page.spinner.set_visible(True)
-            item.query_info_async(
-                "standard::content-type",
-                Gio.FileQueryInfoFlags.NONE,
-                GLib.PRIORITY_DEFAULT,
-                None,
-                self._on_dnd_query_info_done,
-                item,
-            )
-            return True
-        except (GLib.Error, OSError, RuntimeError) as e:
-            logger.error(f"DnD failed to start file query: {e}")
-            self.welcome_page.spinner.set_visible(False)
-            self.show_toast(_("Failed to load image file"))
-            return False
-
-    def _on_dnd_query_info_done(self, gfile: Gio.File, result: Gio.AsyncResult, item: Gio.FileInfo) -> None:
+    def _on_dnd_query_info_done(self, gfile: Gio.File, result: Gio.AsyncResult, item: object) -> None:
+        logger.debug(f"DnD: query_info_done gfile={gfile}, item={item}")
         try:
             info = gfile.query_info_finish(result)
             if not info:
+                logger.error("DnD: query_info_finish returned None")
                 self.welcome_page.spinner.set_visible(False)
                 return
 
@@ -421,6 +405,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             # into `_`, it would shadow the gettext alias used in error paths.
             ok, contents, _etag = gfile.load_contents_finish(result)
             if not ok:
+                logger.error(f"DnD: Failed to load dropped file contents for {gfile.get_path()}")
                 self.welcome_page.spinner.set_visible(False)
                 self.show_toast(_("Failed to load dropped file"))
                 return
@@ -468,6 +453,12 @@ class AnuraWindow(Adw.ApplicationWindow):
         png_bytes = BytesIO(texture.save_to_png_bytes().get_data())
         GObjectWorker.call(self.backend.decode_image, (self.get_language(), png_bytes))
 
+    def _on_clipboard_error(self, _service: GObject.GObject, message: str) -> None:
+        """Handle clipboard service errors."""
+        self.welcome_page.spinner.set_visible(False)
+        if message:
+            self.show_toast(message)
+
     def do_close_request(self) -> bool:
         """Handle window close request and save window state."""
         width = self.get_width()
@@ -512,6 +503,10 @@ class AnuraWindow(Adw.ApplicationWindow):
             with contextlib.suppress(TypeError, RuntimeError):
                 self._clipboard_service.disconnect(self._handler_clipboard)
             self._handler_clipboard = None
+        if self._handler_clipboard_error and self._clipboard_service:
+            with contextlib.suppress(TypeError, RuntimeError):
+                self._clipboard_service.disconnect(self._handler_clipboard_error)
+            self._handler_clipboard_error = None
 
         # Chain up to parent class
         super().do_destroy()

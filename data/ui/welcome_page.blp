@@ -93,10 +93,37 @@ template $WelcomePage : Adw.NavigationPage {
               };
             }
 
-            Label {
-              margin-top: 8;
-              label: _("...or drop image here");
-              styles ["dim-label"]
+            Button drop_button {
+              tooltip-text: C_("Welcome screen", "Drop image here");
+              styles ["pill"]
+
+              child: Box {
+                halign: center;
+                spacing: 6;
+                Image { icon-name: "folder-drag-accept-symbolic"; }
+                Label {
+                  label: _("Drop Image");
+                  use-underline: true;
+                }
+              };
+            }
+
+            Box drop_area {
+              visible: false;
+              margin-top: 12;
+              height-request: 80;
+              halign: fill;
+              valign: center;
+              styles ["card"]
+
+              Label {
+                label: _("Drop image file here");
+                halign: center;
+                valign: center;
+                hexpand: true;
+                vexpand: true;
+                styles ["dim-label"]
+              }
             }
           };
         }

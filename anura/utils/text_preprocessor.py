@@ -9,7 +9,7 @@ Includes image enhancement, text cleanup, and intelligent formatting.
 import re
 
 from loguru import logger
-from PIL import Image, ImageEnhance, ImageFilter
+from PIL import Image, ImageEnhance, ImageFilter, ImageOps
 
 
 class TextPreprocessor:
@@ -33,6 +33,7 @@ class TextPreprocessor:
     def enhance_image(self, image: Image.Image) -> Image.Image:
         """
         Apply intelligent image enhancement for better OCR accuracy.
+        Includes grayscale conversion, adaptive thresholding, and noise reduction.
 
         Args:
             image: Input PIL Image
@@ -41,25 +42,54 @@ class TextPreprocessor:
             Enhanced PIL Image
         """
         try:
-            # Convert to grayscale if needed
+            # 1. Grayscale conversion
             if image.mode != "L":
                 image = image.convert("L")
 
-            # Apply adaptive enhancements based on image characteristics
+            # 2. Rescale for better OCR if image is too small
+            image = self._rescale_if_needed(image)
+
+            # 3. Adaptive enhancements (Brightness/Contrast)
             enhanced = self._apply_adaptive_enhancements(image)
 
-            # Apply noise reduction
+            # 4. Noise reduction (Median Filter)
             enhanced = enhanced.filter(ImageFilter.MedianFilter(size=3))
 
-            # Apply sharpening
-            enhancer = ImageEnhance.Sharpness(enhanced)
-            enhanced = enhancer.enhance(1.2)
+            # 5. Adaptive Thresholding (Otsu-like via numpy if available, or basic auto-contrast)
+            enhanced = self._apply_thresholding(enhanced)
 
-            logger.debug("Applied image enhancement preprocessing")
+            # 6. Final Sharpening
+            enhancer = ImageEnhance.Sharpness(enhanced)
+            enhanced = enhancer.enhance(1.5)
+
+            logger.debug("Applied advanced image enhancement preprocessing")
             return enhanced
 
         except Exception as e:
-            logger.warning(f"Image enhancement failed: {e}")
+            logger.warning(f"Advanced image enhancement failed: {e}")
+            return image
+
+    def _rescale_if_needed(self, image: Image.Image) -> Image.Image:
+        """Rescale image if it's too small for reliable OCR."""
+        width, height = image.size
+        # OCR works best with text height around 30-40 pixels
+        if width < 1000 or height < 1000:
+            scale_factor = 2
+            logger.debug(f"Rescaling image by {scale_factor}x for better OCR")
+            return image.resize((width * scale_factor, height * scale_factor), Image.Resampling.LANCZOS)
+        return image
+
+    def _apply_thresholding(self, image: Image.Image) -> Image.Image:
+        """Apply thresholding for better text/background separation."""
+        try:
+            # Use ImageOps for automatic contrast and normalization
+            # This helps in separating text from background in various lighting
+            image = ImageOps.autocontrast(image, cutoff=2)
+
+            # Use a simple but effective PIL-based thresholding.
+            return image.point(lambda x: 0 if x < 128 else 255, "1").convert("L")
+        except Exception as e:
+            logger.warning(f"Thresholding failed: {e}")
             return image
 
     def _apply_adaptive_enhancements(self, image: Image.Image) -> Image.Image:

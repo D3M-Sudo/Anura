@@ -15,9 +15,6 @@
         "--device=dri",
         "--filesystem=xdg-download",
         "--filesystem=~/Anura screenshots:create",
-        "--filesystem=xdg-run/dconf",
-        "--filesystem=~/.config/dconf:ro",
-        "--filesystem=xdg-config/com.github.d3msudo.anura:create",
         "--talk-name=org.freedesktop.portal.Desktop",
         "--talk-name=org.freedesktop.portal.Notifications",
         "--talk-name=org.freedesktop.Flatpak",
@@ -67,9 +64,11 @@
             "config-opts": [
                 "--disable-static",
                 "--disable-graphics",
-                "--enable-legacy"
+                "--enable-legacy",
+                "--disable-opencl",
+                "--disable-curl"
             ],
-            "cleanup": [ "/include", "/lib/pkgconfig", "*.la" ],
+            "cleanup": [ "/include", "/lib/pkgconfig", "*.la", "/share/man", "/share/doc" ],
             "sources": [
                 {
                     "type": "git",

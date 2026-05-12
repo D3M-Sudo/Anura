@@ -106,13 +106,17 @@ class ScreenshotService(GObject.GObject):
 
         # Call portal outside lock but with captured cancellable reference
         # This prevents deadlock while maintaining thread safety
-        self.portal.take_screenshot(
-            None,
-            Xdp.ScreenshotFlags.INTERACTIVE,
-            cancellable,
-            self.take_screenshot_finish,
-            [lang, copy],
-        )
+        try:
+            self.portal.take_screenshot(
+                None,
+                Xdp.ScreenshotFlags.INTERACTIVE,
+                cancellable,
+                self.take_screenshot_finish,
+                [lang, copy],
+            )
+        except Exception as e:
+            logger.error(f"Anura Screenshot: Portal take_screenshot call failed: {e}")
+            GLib.idle_add(self.emit, "error", _("Failed to initiate screenshot capture."))
 
     def take_screenshot_finish(self, source_object: object, res: Gio.Task, user_data: tuple) -> None:
         """Callback triggered when portal finishes screenshot request."""
@@ -166,8 +170,9 @@ class ScreenshotService(GObject.GObject):
             return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))
 
         if not uri:
-            logger.warning("Anura Screenshot: Portal returned empty URI.")
-            return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))
+            # Some portals return success but empty URI if the user dismissed a custom UI
+            logger.warning("Anura Screenshot: Portal returned empty URI - treating as cancellation.")
+            return None
 
         try:
             if uri.startswith("file://") and len(uri) > len("file://"):
