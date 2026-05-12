@@ -59,6 +59,10 @@ template $ExtractedPage : Adw.NavigationPage {
         StackPage {
           name: "spinner";
           child: Gtk.Spinner listen_spinner {
+            width-request: 34;
+            height-request: 34;
+            halign: center;
+            valign: center;
           };
         }
 
@@ -67,11 +71,10 @@ template $ExtractedPage : Adw.NavigationPage {
           child: Box {
             styles ["linked"]
 
-            Button {
+            Button listen_pause_btn {
               action-name: "app.listen_pause";
               tooltip-text: C_("Extracted screen", "Pause/Resume listening");
               icon-name: "media-playback-pause-symbolic";
-              name: "listen_pause_btn";
             }
 
             Button {

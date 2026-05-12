@@ -44,11 +44,12 @@ class WelcomePage(Adw.NavigationPage):
 
     def _setup_drop_target(self) -> None:
         """Configure the drop target for the dedicated drop area."""
-        drop_target = Gtk.DropTarget.new(type=Gdk.FileList, actions=Gdk.DragAction.COPY)
-        drop_target.connect("enter", self._on_dnd_enter)
-        drop_target.connect("leave", self._on_dnd_leave)
-        drop_target.connect("drop", self._on_dnd_drop)
-        self.drop_area.add_controller(drop_target)
+        # Use a persistent controller to avoid Gtk-CRITICAL assertions on X11/Lubuntu
+        self._drop_target = Gtk.DropTarget.new(type=Gdk.FileList, actions=Gdk.DragAction.COPY)
+        self._drop_target.connect("enter", self._on_dnd_enter)
+        self._drop_target.connect("leave", self._on_dnd_leave)
+        self._drop_target.connect("drop", self._on_dnd_drop)
+        self.drop_area.add_controller(self._drop_target)
 
     def _on_drop_button_clicked(self, _: Gtk.Button) -> None:
         """Toggle the visibility of the dedicated drop area."""
@@ -68,6 +69,7 @@ class WelcomePage(Adw.NavigationPage):
 
     def _on_dnd_drop(self, _target: Gtk.DropTarget, value: Gdk.FileList, _x: float, _y: float) -> bool:
         from loguru import logger
+
         self.drop_area.remove_css_class("drag-hover")
 
         if not value:
@@ -94,9 +96,12 @@ class WelcomePage(Adw.NavigationPage):
         from gi.repository import GLib
 
         logger.debug(f"DnD: Scheduling process_gfile for {files[0].get_path()}")
+        # Schedule the file processing
         GLib.idle_add(window.process_gfile, files[0])
-        self.drop_area.remove_controller(_target)
-        self._setup_drop_target()
+
+        # Return True to signal GTK that the drop is accepted and finished.
+        # This allows GTK to clean up GdkDrop correctly and prevents the "forbidden" icon
+        # on subsequent drops. Persistent controller means we don't remove/re-add it.
         return True
 
     def _on_language_changed(self, _: LanguagePopover, language: LanguageItem) -> None:

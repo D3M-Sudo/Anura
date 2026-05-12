@@ -49,28 +49,32 @@ class ExtractedPage(Adw.NavigationPage):
     buffer: Gtk.TextBuffer = Gtk.Template.Child()
 
     def __init__(self, **kwargs: object) -> None:
+        # Pre-initialize attributes to avoid AttributeError during failed template init
+        self.settings = settings
+        self._share_service = None
+        self._share_handler_id = None
+        self._tts_service = None
+        self._tts_stop_handler_id = None
+        self._tts_paused_handler_id = None
+
         super().__init__(**kwargs)
 
-        self.settings = settings
-
-        self._share_service = get_share_service()
-        for provider in self._share_service.providers():
-            self.share_list_box.append(ShareRow(provider))
-
-        # Initialize handler ID and store service instance reference for cleanup
-        self._tts_stop_handler_id: int | None = None
-        self._tts_paused_handler_id: int | None = None
-        self._tts_service = None
-
-        # Connect to share signal to automatically popdown the menu
-        self._share_handler_id = self._share_service.connect("share", self._on_share_finished)
+        # Defensive check: ensure critical template components are loaded
+        if not self.share_list_box:
+            logger.error("ExtractedPage: share_list_box not found in template")
+        else:
+            self._share_service = get_share_service()
+            for provider in self._share_service.providers():
+                self.share_list_box.append(ShareRow(provider))
+            # Connect to share signal to automatically popdown the menu
+            self._share_handler_id = self._share_service.connect("share", self._on_share_finished)
 
         try:
             self._tts_service = get_tts_service()
             self._tts_stop_handler_id = self._tts_service.connect("stop", self._on_listen_end)
             self._tts_paused_handler_id = self._tts_service.connect("paused", self._on_paused)
-        except (TypeError, RuntimeError) as e:
-            logger.warning(f"Failed to connect TTS stop signal: {e}")
+        except (TypeError, RuntimeError, AttributeError) as e:
+            logger.warning(f"Failed to connect TTS services: {e}")
 
     def do_hiding(self) -> None:
         """Handle widget hiding event."""
@@ -97,19 +101,28 @@ class ExtractedPage(Adw.NavigationPage):
         """Start TTS playback for the extracted text."""
         tts_service_instance = get_tts_service()
 
+        # Defensive check: ensure critical template components are loaded
+        if not self.listen_stack:
+            logger.error("ExtractedPage: listen_stack not found in template")
+            return
+
         # If already paused, resume instead of starting over
         if self._tts_service and self.listen_stack.get_visible_child_name() == "pause":
             self.listen_pause()
             return
 
-        self.swap_controls(True)
+        # Set UI to generating state (Spinner)
+        self.swap_controls(False)  # Disable other controls
         self._set_spinner_active(True)
 
         # Store reference for cleanup if not already stored
         if self._tts_service is None:
             self._tts_service = tts_service_instance
-            self._tts_stop_handler_id = self._tts_service.connect("stop", self._on_listen_end)
-            self._tts_paused_handler_id = self._tts_service.connect("paused", self._on_paused)
+            try:
+                self._tts_stop_handler_id = self._tts_service.connect("stop", self._on_listen_end)
+                self._tts_paused_handler_id = self._tts_service.connect("paused", self._on_paused)
+            except (TypeError, RuntimeError, AttributeError) as e:
+                logger.warning(f"Failed to connect TTS signals during listen: {e}")
 
         # Resolve TTS language: explicit user preference (tts-language) wins,
         # otherwise map the OCR language (Tesseract 3-letter, e.g. "ita") to
@@ -182,8 +195,8 @@ class ExtractedPage(Adw.NavigationPage):
             self.swap_controls(False)
             return
 
-        # Transition directly to pause state (which shows Pause and Stop buttons)
-        self.listen_stack.set_visible_child_name("pause")
+        # Transition from generating (Spinner) to playing (Pause/Stop Buttons)
+        self.swap_controls(True)
         tts_service_instance = get_tts_service()
         tts_service_instance.play(filepath)
 
@@ -205,9 +218,12 @@ class ExtractedPage(Adw.NavigationPage):
 
     def swap_controls(self, state: bool = False) -> None:
         """Enable or disable interactive controls during TTS playback."""
-        self.grab_btn.set_sensitive(not state)
-        self.text_copy_btn.set_sensitive(not state)
-        self.listen_stack.set_visible_child_name("pause" if state else "button")
+        if self.grab_btn:
+            self.grab_btn.set_sensitive(not state)
+        if self.text_copy_btn:
+            self.text_copy_btn.set_sensitive(not state)
+        if self.listen_stack:
+            self.listen_stack.set_visible_child_name("pause" if state else "button")
 
     def do_destroy(self) -> None:
         """Clean up signal handlers to prevent memory leaks."""

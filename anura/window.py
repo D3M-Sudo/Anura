@@ -515,6 +515,7 @@ class AnuraWindow(Adw.ApplicationWindow):
 
     def show_preferences(self) -> None:
         """Show the preferences dialog for application settings."""
+        self.set_focus(None)
         dialog = PreferencesDialog()
 
         # Get service instances
@@ -552,6 +553,7 @@ class AnuraWindow(Adw.ApplicationWindow):
 
     def show_shortcuts(self) -> None:
         """Show the keyboard shortcuts overlay."""
+        self.set_focus(None)
         try:
             from anura.widgets.shortcuts_overlay import show_shortcuts_overlay
 
