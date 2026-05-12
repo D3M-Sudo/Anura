@@ -57,14 +57,9 @@ def parse_changelog(changelog_path: Path) -> dict:
             # Build HTML with sections
             html_parts = []
             total_items = 0
-            any_truncated = False
 
             for section_name, items in sections.items():
                 if items:
-                    # Check if this section will be truncated
-                    if len(items) > 5:
-                        any_truncated = True
-
                     # Limit to 5 items per section
                     limited_items = items[:5]
                     total_items += len(limited_items)
@@ -73,12 +68,9 @@ def parse_changelog(changelog_path: Path) -> dict:
                     html_items = "".join(f"<li>{item}</li>" for item in limited_items)
                     html_parts.append(f"<ul>{html_items}</ul>")
 
-            # Add GitHub link with hybrid logic: sections truncated OR total > 12
             # NOTE: Adw.AboutDialog's release notes use a restricted markup that
             # does not support <a> tags with 'href'.
-            if any_truncated or total_items > 12:
-                github_link = "<p>Vedi changelog completo su GitHub: https://github.com/D3M-Sudo/Anura/blob/main/CHANGELOG.md</p>"
-                html_parts.append(github_link)
+            # Link is now handled via official add_link() in on_about().
 
             html_output = "".join(html_parts)
         else:

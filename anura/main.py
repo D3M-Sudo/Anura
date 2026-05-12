@@ -219,6 +219,7 @@ class AnuraApplication(Adw.Application):
         self.create_action("open_image", self.open_image, ["<primary>o"])
         self.create_action("paste_from_clipboard", self.on_paste_from_clipboard, ["<primary>v"])
         self.create_action("listen", self.on_listen, ["<primary>l"])
+        self.create_action("listen_pause", self.on_listen_pause, ["<primary><alt>l"])
         self.create_action("listen_cancel", self.on_listen_cancel, ["<primary><shift>l"])
         self.create_action("shortcuts", self.on_shortcuts, ["<primary>question", "<primary>slash", "<primary>h"])
         self.create_action(
@@ -524,6 +525,7 @@ class AnuraApplication(Adw.Application):
             _("Anura is a fork of Frog OCR. This software uses Tesseract OCR, Leptonica, "
               "GTK4, Libadwaita, gTTS, Pillow, PyZBar, and other open source components.")
         )
+        about_window.add_link(_("Changelog"), "https://github.com/D3M-Sudo/Anura/blob/main/CHANGELOG.md")
         about_window.present(self.props.active_window)
 
     def on_github_star(self, _action: object, _param: object) -> None:
@@ -659,6 +661,11 @@ class AnuraApplication(Adw.Application):
         window = self.get_active_window()
         if window:
             window.on_listen_cancel()
+
+    def on_listen_pause(self, _sender: object, _event: object) -> None:
+        window = self.get_active_window()
+        if window:
+            window.on_listen_pause()
 
     def create_action(self, name: str, callback: object, shortcuts: list[str] | None = None) -> None:
         action = Gio.SimpleAction.new(name, None)

@@ -374,7 +374,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             else:
                 self.welcome_page.spinner.set_visible(False)
                 self.show_toast(_("Failed to load image file"))
-        except (OSError, ValueError, RuntimeError) as e:
+        except (GLib.Error, OSError, ValueError, RuntimeError) as e:
             self.welcome_page.spinner.set_visible(False)
             logger.error(f"Failed to load file contents: {e}")
             self.show_toast(_("Failed to load image file"))
@@ -395,11 +395,12 @@ class AnuraWindow(Adw.ApplicationWindow):
                 return
 
             item.load_contents_async(None, self._on_dnd_file_contents_loaded)
-        except (GLib.Error, OSError, RuntimeError) as e:
+        except (GLib.Error, OSError, ValueError, RuntimeError) as e:
             logger.error(f"DnD query_info failed: {e}")
             self.welcome_page.spinner.set_visible(False)
 
     def _on_dnd_file_contents_loaded(self, gfile: Gio.File, result: Gio.AsyncResult) -> None:
+        logger.debug(f"DnD: _on_dnd_file_contents_loaded called for {gfile.get_path()}")
         try:
             # See comment in _on_file_contents_loaded: do not unpack the etag
             # into `_`, it would shadow the gettext alias used in error paths.
@@ -423,8 +424,9 @@ class AnuraWindow(Adw.ApplicationWindow):
                 return
 
             stream = BytesIO(contents)
+            logger.debug("DnD: Reached GObjectWorker.call in _on_dnd_file_contents_loaded")
             GObjectWorker.call(self.backend.decode_image, (self.get_language(), stream))
-        except (OSError, ValueError, RuntimeError) as e:
+        except (GLib.Error, OSError, ValueError, RuntimeError) as e:
             self.welcome_page.spinner.set_visible(False)
             logger.error(f"Failed to load dropped file: {e}")
             self.show_toast(_("Failed to load dropped file"))
@@ -574,6 +576,10 @@ class AnuraWindow(Adw.ApplicationWindow):
     def on_listen_cancel(self) -> None:
         """Stop any active TTS playback."""
         self.extracted_page._on_listen_stop()
+
+    def on_listen_pause(self) -> None:
+        """Pause/Resume any active TTS playback."""
+        self.extracted_page.listen_pause()
 
     def _on_share(self, _action: Gio.SimpleAction, variant: GLib.Variant) -> None:
         """Dispatch share action to the correct provider."""

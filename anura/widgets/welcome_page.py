@@ -95,6 +95,8 @@ class WelcomePage(Adw.NavigationPage):
 
         logger.debug(f"DnD: Scheduling process_gfile for {files[0].get_path()}")
         GLib.idle_add(window.process_gfile, files[0])
+        self.drop_area.remove_controller(_target)
+        self._setup_drop_target()
         return True
 
     def _on_language_changed(self, _: LanguagePopover, language: LanguageItem) -> None:
