@@ -133,6 +133,7 @@ class TTSService(GObject.GObject):
     _cleanup_lock: threading.Lock = threading.Lock()
     _bus_watch_lock: threading.Lock = threading.Lock()
     _state_lock: threading.Lock = threading.Lock()
+    _init_lock: threading.Lock = threading.Lock()
 
     @classmethod
     def get_supported_gtts_languages(cls) -> dict:
@@ -185,11 +186,12 @@ class TTSService(GObject.GObject):
         logger.debug("Anura TTSService: Initializing TTS service singleton")
         os.makedirs(self._speech_dir, exist_ok=True)
         # Initialize GStreamer only once to prevent crashes on multiple instantiations
-        if not Gst.is_initialized():
-            logger.info("Anura TTSService: Initializing GStreamer pipeline")
-            Gst.init(None)
-        else:
-            logger.debug("Anura TTSService: GStreamer already initialized")
+        with TTSService._init_lock:
+            if not Gst.is_initialized():
+                logger.info("Anura TTSService: Initializing GStreamer pipeline")
+                Gst.init(None)
+            else:
+                logger.debug("Anura TTSService: GStreamer already initialized")
         # Initialize player slot to prevent AttributeError before play() is called
         self.player = None
         logger.debug("Anura TTSService: TTS service initialization complete")

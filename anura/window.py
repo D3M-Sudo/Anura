@@ -612,7 +612,15 @@ class AnuraWindow(Adw.ApplicationWindow):
             self.show_toast(_("Invalid URL blocked for security"))
             return
         launcher = Gtk.UriLauncher.new(url)
-        launcher.launch(self, None, None)
+
+        def on_launch_finish(_launcher: object, result: Gio.AsyncResult) -> None:
+            try:
+                launcher.launch_finish(result)
+            except GLib.Error as e:
+                logger.error(f"Anura: Failed to launch URI: {e.message}")
+                self.show_toast(_("Failed to open link"))
+
+        launcher.launch(self, None, on_launch_finish)
 
     # Maximum URL length to prevent issues with extremely long OCR results
     MAX_URL_LENGTH = 2048
