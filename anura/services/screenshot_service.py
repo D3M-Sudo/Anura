@@ -313,22 +313,48 @@ class ScreenshotService(GObject.GObject):
         output_dir = Path.home() / "Anura screenshots"
         output_path = str(output_dir / f"anura-shot-{uuid.uuid4().hex}.png")
 
-        # Create the directory on the host - works regardless of localization.
-        try:
-            mkdir_argv = ["flatpak-spawn", "--host", "mkdir", "-p", str(output_dir)]
-            mkdir_proc = Gio.Subprocess.new(mkdir_argv, Gio.SubprocessFlags.STDERR_SILENCE)
-            mkdir_proc.wait(None)  # Synchronous - fast operation
-        except GLib.Error as e:
-            logger.warning(f"Anura Screenshot: cannot create host output dir: {e.message}")
-            self._emit_portal_failure()
-            return
-
         logger.info(f"Anura Screenshot: portal failed, falling back to host '{tool_name}'.")
         # Log environment for debugging display issues
         env_vars = ["DISPLAY", "WAYLAND_DISPLAY", "XDG_SESSION_TYPE", "XDG_CURRENT_DESKTOP"]
         env_snapshot = ", ".join(f"{k}={os.environ.get(k) or '<unset>'}" for k in env_vars)
         logger.debug(f"Anura Screenshot: host fallback env: {env_snapshot}")
 
+        # Create the directory on the host asynchronously to avoid blocking main thread
+        mkdir_argv = ["flatpak-spawn", "--host", "mkdir", "-p", str(output_dir)]
+        try:
+            mkdir_proc = Gio.Subprocess.new(mkdir_argv, Gio.SubprocessFlags.STDERR_SILENCE)
+            mkdir_proc.wait_async(
+                self.cancelable,
+                self._on_mkdir_complete,
+                (lang, copy, output_path, tool),
+            )
+        except GLib.Error as e:
+            logger.warning(f"Anura Screenshot: cannot spawn host mkdir: {e.message}")
+            self._emit_portal_failure()
+            return
+
+    def _on_mkdir_complete(
+        self,
+        proc: Gio.Subprocess,
+        res: Gio.AsyncResult,
+        user_data: tuple,
+    ) -> None:
+        """Handle mkdir completion and proceed with screenshot capture."""
+        lang, copy, output_path, tool = user_data
+        try:
+            proc.wait_finish(res)
+        except GLib.Error as e:
+            logger.warning(f"Anura Screenshot: mkdir failed: {e.message}")
+            self._emit_portal_failure()
+            return
+
+        exit_status = proc.get_exit_status() if proc.get_if_exited() else -1
+        if exit_status != 0:
+            logger.warning(f"Anura Screenshot: mkdir failed with exit code {exit_status}")
+            self._emit_portal_failure()
+            return
+
+        # Now proceed with screenshot capture
         try:
             argv = build_screenshot_argv(tool, output_path)
             logger.debug(f"Anura Screenshot: host fallback argv: {argv}")

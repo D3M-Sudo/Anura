@@ -227,7 +227,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             self._screenshot_timeout_id = None
 
         self.present()
-        self.welcome_page.hide_spinner()
+        self.welcome_page.reset_drop_area_state()
         if message:
             self.show_toast(message)
 

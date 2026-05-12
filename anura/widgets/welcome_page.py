@@ -4,12 +4,14 @@
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
 import contextlib
+from io import BytesIO
 from mimetypes import guess_type
 
-from gi.repository import Adw, Gdk, Gtk
+from gi.repository import Adw, Gdk, Gio, Gtk
 from loguru import logger
 
 from anura.config import RESOURCE_PREFIX
+from anura.gobject_worker import GObjectWorker
 from anura.language_manager import language_manager
 from anura.services.settings import settings
 from anura.types.language_item import LanguageItem
@@ -84,6 +86,16 @@ class WelcomePage(Adw.NavigationPage):
 
             item = files[0]
             file_path = item.get_path()
+
+            # Portal file transfer: get_path() is None, load asynchronously
+            if file_path is None:
+                logger.debug("DnD: Portal file transfer detected, loading asynchronously")
+                self._set_drop_area_processing_state(True)
+                self.show_spinner()
+                item.load_contents_async(None, self._on_portal_file_loaded)
+                return True
+
+            # Normal path with local file
             (mimetype, _encoding) = guess_type(file_path)
             logger.debug(f"Dropped item ({mimetype}): {file_path}")
 
@@ -117,6 +129,91 @@ class WelcomePage(Adw.NavigationPage):
             return False
 
         return True
+
+    def _on_portal_file_loaded(self, gfile: Gio.File, result: Gio.AsyncResult) -> None:
+        """Callback for files arriving via portal file transfer (get_path() == None)."""
+        from gettext import gettext as _
+
+        try:
+            ok, contents, _etag = gfile.load_contents_finish(result)
+            if not ok:
+                logger.error("DnD: Portal file transfer failed")
+                self._set_drop_area_processing_state(False)
+                self.hide_spinner()
+                return
+
+            # Validate image format using magic bytes
+            if not self._is_valid_image(contents):
+                logger.debug("DnD: Invalid image format from portal transfer")
+                self._set_drop_area_processing_state(False)
+                self.hide_spinner()
+                window = self.get_root()
+                if window and hasattr(window, "show_toast"):
+                    window.show_toast(_("Only images can be processed that way."))
+                return
+
+            # Resolve window reference for remaining checks
+            window = self.get_root()
+
+            # Validate file size using window's limit
+            if window and hasattr(window, "MAX_IMAGE_SIZE_BYTES") and len(contents) > window.MAX_IMAGE_SIZE_BYTES:
+                self._set_drop_area_processing_state(False)
+                self.hide_spinner()
+                if hasattr(window, "show_toast"):
+                    window.show_toast(
+                        _("Image too large: {size}MB (max {max}MB)").format(
+                            size=round(len(contents) / (1024 * 1024), 1),
+                            max=window.MAX_IMAGE_SIZE_MB,
+                        ),
+                    )
+                return
+
+            # Pass bytes directly to backend
+            if window and hasattr(window, "backend"):
+                stream = BytesIO(contents)
+                lang = window.get_language()
+                GObjectWorker.call(
+                    window.backend.decode_image,
+                    (lang, stream),
+                    errorback=self._handle_decode_error
+                )
+            else:
+                logger.error("DnD: Window missing backend attribute")
+                self._set_drop_area_processing_state(False)
+                self.hide_spinner()
+
+        except Exception as e:
+            logger.error(f"DnD: Portal file transfer error: {e}")
+            self._set_drop_area_processing_state(False)
+            self.hide_spinner()
+
+    def _handle_decode_error(self, error: Exception) -> None:
+        """Handle decode errors from portal file transfer."""
+        from gettext import gettext as _
+
+        logger.error(f"DnD: Decode error: {error}")
+        self._set_drop_area_processing_state(False)
+        self.hide_spinner()
+        window = self.get_root()
+        if window and hasattr(window, "show_toast"):
+            window.show_toast(_("Failed to process image"))
+
+    @staticmethod
+    def _is_valid_image(data: bytes) -> bool:
+        """Validate image format using magic bytes."""
+        if len(data) < 4:
+            return False
+        # PNG
+        if data[:8] == b'\x89PNG\r\n\x1a\n':
+            return True
+        # JPEG
+        if data[:3] == b'\xff\xd8\xff':
+            return True
+        # GIF
+        if data[:4] == b'GIF8':
+            return True
+        # WEBP
+        return data[:4] == b'RIFF' and data[8:12] == b'WEBP'
 
     def _set_drop_area_processing_state(self, processing: bool) -> None:
         """Set the drop area visual state to indicate processing (OCR in progress)."""
@@ -158,4 +255,8 @@ class WelcomePage(Adw.NavigationPage):
             with contextlib.suppress(Exception):
                 self.language_popover.disconnect(self._language_changed_handler_id)
             self._language_changed_handler_id = None
+        # Clean up drop target controller
+        if hasattr(self, "_drop_target") and self._drop_target:
+            self.drop_area.remove_controller(self._drop_target)
+            self._drop_target = None
         super().do_destroy()

@@ -3,7 +3,6 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
-import contextlib
 from gettext import gettext as _
 from typing import ClassVar
 
@@ -288,21 +287,5 @@ class ExtractedPage(Adw.NavigationPage):
 
     def do_destroy(self) -> None:
         """Clean up signal handlers to prevent memory leaks."""
-        # Disconnect share signal handler
-        if hasattr(self, "_share_handler_id") and self._share_handler_id is not None:
-            if hasattr(self, "_share_service") and self._share_service is not None:
-                with contextlib.suppress(TypeError, RuntimeError, AttributeError):
-                    self._share_service.disconnect(self._share_handler_id)
-            self._share_handler_id = None
-
-        # Check handler is not None AND service is valid before disconnecting
-        if self._tts_service is not None:
-            if self._tts_stop_handler_id is not None:
-                with contextlib.suppress(TypeError, RuntimeError, AttributeError):
-                    self._tts_service.disconnect(self._tts_stop_handler_id)
-                self._tts_stop_handler_id = None
-            if self._tts_paused_handler_id is not None:
-                with contextlib.suppress(TypeError, RuntimeError, AttributeError):
-                    self._tts_service.disconnect(self._tts_paused_handler_id)
-                self._tts_paused_handler_id = None
+        # do_dispose() already handles TTS and share service cleanup
         super().do_destroy()
