@@ -105,7 +105,7 @@ class WelcomePage(Adw.NavigationPage):
 
             # Set processing state before starting OCR
             self._set_drop_area_processing_state(True)
-            self.spinner.set_visible(True)
+            self.show_spinner()
 
             # Process synchronously following Frog's pattern
             window.process_dnd_file_sync(file_path)
@@ -113,7 +113,7 @@ class WelcomePage(Adw.NavigationPage):
         except Exception as e:
             logger.error(f"DnD: Error during drop processing: {e}")
             self._set_drop_area_processing_state(False)
-            self.spinner.set_visible(False)
+            self.hide_spinner()
             return False
 
         return True
@@ -134,8 +134,19 @@ class WelcomePage(Adw.NavigationPage):
     def reset_drop_area_state(self) -> None:
         """Reset the drop area to its initial state (called after OCR completes)."""
         self._set_drop_area_processing_state(False)
+        self.hide_spinner()
         self.drop_area.set_visible(False)
         self.drop_button.remove_css_class("suggested-action")
+
+    def hide_spinner(self) -> None:
+        """Stop and hide the spinner."""
+        self.spinner.stop()
+        self.spinner.set_visible(False)
+
+    def show_spinner(self) -> None:
+        """Start and show the spinner."""
+        self.spinner.set_visible(True)
+        self.spinner.start()
 
     def _on_language_changed(self, _: LanguagePopover, language: LanguageItem) -> None:
         self.lang_combo.set_label(language.title)

@@ -122,7 +122,6 @@ class AnuraWindow(Adw.ApplicationWindow):
             # Validate file size
             file_size = os.path.getsize(file_path)
             if file_size > self.MAX_IMAGE_SIZE_BYTES:
-                self.welcome_page.spinner.set_visible(False)
                 self.welcome_page.reset_drop_area_state()
                 self.show_toast(
                     _("Image too large: {size}MB (max {max}MB)").format(
@@ -138,7 +137,6 @@ class AnuraWindow(Adw.ApplicationWindow):
 
         except (OSError, RuntimeError) as e:
             logger.error(f"DnD: Failed to process dropped file: {e}")
-            self.welcome_page.spinner.set_visible(False)
             self.welcome_page.reset_drop_area_state()
             self.show_toast(_("Failed to load dropped file"))
 
@@ -188,8 +186,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             self._screenshot_timeout_id = None
 
         self.present()
-        self.welcome_page.spinner.set_visible(False)
-        # Clean up DnD processing state if active
+        # Clean up DnD processing state and spinner
         self.welcome_page.reset_drop_area_state()
 
         if not text:
@@ -230,7 +227,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             self._screenshot_timeout_id = None
 
         self.present()
-        self.welcome_page.spinner.set_visible(False)
+        self.welcome_page.hide_spinner()
         if message:
             self.show_toast(message)
 
@@ -313,7 +310,7 @@ class AnuraWindow(Adw.ApplicationWindow):
                 self.show_toast(_("Unsupported file format: {path}").format(path=file_path))
                 return
 
-            self.welcome_page.spinner.set_visible(True)
+            self.welcome_page.show_spinner()
             GObjectWorker.call(self.backend.decode_image, (self.get_language(), file_path))
         except FileNotFoundError:
             self.show_toast(_("File not found: {path}").format(path=file_path))
@@ -327,12 +324,12 @@ class AnuraWindow(Adw.ApplicationWindow):
         try:
             file = dialog.open_finish(result)
             if file:
-                self.welcome_page.spinner.set_visible(True)
+                self.welcome_page.show_spinner()
                 file.load_contents_async(None, self._on_file_contents_loaded)
         except (GLib.Error, RuntimeError, OSError) as e:
             logger.debug(f"File selection cancelled or failed: {e}")
             # Ensure spinner is hidden on error to prevent UI inconsistency
-            self.welcome_page.spinner.set_visible(False)
+            self.welcome_page.hide_spinner()
 
     def _on_file_contents_loaded(self, gfile: Gio.File, result: Gio.AsyncResult) -> None:
         try:
@@ -463,12 +460,12 @@ class AnuraWindow(Adw.ApplicationWindow):
 
     def on_paste_from_clipboard(self, _action: Gio.SimpleAction) -> None:
         """Read image from clipboard and perform OCR."""
-        self.welcome_page.spinner.set_visible(True)
+        self.welcome_page.show_spinner()
         clipboard_service_instance = get_clipboard_service()
         clipboard_service_instance.read_texture()
 
     def _on_paste_from_clipboard_texture(self, _service: GObject.GObject, texture: Gdk.Texture) -> None:
-        self.welcome_page.spinner.set_visible(True)
+        self.welcome_page.show_spinner()
         png_bytes = BytesIO(texture.save_to_png_bytes().get_data())
         GObjectWorker.call(self.backend.decode_image, (self.get_language(), png_bytes))
 
