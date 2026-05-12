@@ -114,23 +114,38 @@ class AnuraWindow(Adw.ApplicationWindow):
         # to ensure better isolation and resolve potential race conditions.
         pass
 
-    def process_gfile(self, gfile: Gio.File) -> bool:
-        """Public method to process a GFile (used by WelcomePage D&D)."""
-        logger.debug(f"DnD: process_gfile started for {gfile.get_path()}")
+    def process_dnd_file_sync(self, file_path: str) -> None:
+        """Process a dropped file synchronously following Frog's simple pattern."""
+        logger.debug(f"DnD: Processing dropped file: {file_path}")
+
         try:
-            self.welcome_page.spinner.set_visible(True)
-            gfile.query_info_async(
-                "standard::content-type",
-                Gio.FileQueryInfoFlags.NONE,
-                GLib.PRIORITY_DEFAULT,
-                None,
-                self._on_dnd_query_info_done,
-                gfile,
-            )
-        except (GLib.Error, OSError, RuntimeError) as e:
-            logger.error(f"DnD: Failed to start file query: {e}")
+            # Validate file size
+            file_size = os.path.getsize(file_path)
+            if file_size > self.MAX_IMAGE_SIZE_BYTES:
+                self.welcome_page.spinner.set_visible(False)
+                self.welcome_page.reset_drop_area_state()
+                self.show_toast(
+                    _("Image too large: {size}MB (max {max}MB)").format(
+                        size=round(file_size / (1024 * 1024), 1),
+                        max=self.MAX_IMAGE_SIZE_MB,
+                    ),
+                )
+                return
+
+            # Process image following Frog's pattern - pass path directly to decode_image
+            lang = self.get_language()
+            GObjectWorker.call(self.backend.decode_image, (lang, file_path))
+
+        except (OSError, RuntimeError) as e:
+            logger.error(f"DnD: Failed to process dropped file: {e}")
             self.welcome_page.spinner.set_visible(False)
-            self.show_toast(_("Failed to load image file"))
+            self.welcome_page.reset_drop_area_state()
+            self.show_toast(_("Failed to load dropped file"))
+
+    def process_gfile(self, gfile: Gio.File) -> bool:
+        """Legacy method - kept for compatibility but deprecated."""
+        logger.warning("DnD: process_gfile called, use process_dnd_file_sync instead")
+        self.process_dnd_file_sync(gfile.get_path())
         return GLib.SOURCE_REMOVE
 
     def get_language(self) -> str:

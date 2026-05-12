@@ -4,8 +4,10 @@
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
 import contextlib
+from mimetypes import guess_type
 
 from gi.repository import Adw, Gdk, Gtk
+from loguru import logger
 
 from anura.config import RESOURCE_PREFIX
 from anura.language_manager import language_manager
@@ -69,65 +71,52 @@ class WelcomePage(Adw.NavigationPage):
         self.drop_area.remove_css_class("drag-hover")
 
     def _on_dnd_drop(self, target: Gtk.DropTarget, value: Gdk.FileList, _x: float, _y: float, drop: Gdk.Drop) -> bool:
-        from loguru import logger
+        """Handle drop event following Frog's simple sync pattern."""
+        from gettext import gettext as _
 
         self.drop_area.remove_css_class("drag-hover")
 
-        # X11 Constraint: Always finish the drop transaction immediately to prevent cursor hang
-        drop_success = False
-
         try:
-            if not value:
-                logger.debug("DnD: Drop value is None")
-                drop.finish(0, False)
-                return False
-
-            if not isinstance(value, Gdk.FileList):
-                logger.debug(f"DnD: Drop value has unexpected type: {type(value)}")
-                drop.finish(0, False)
-                return False
-
             files = value.get_files()
             if not files:
                 logger.debug("DnD: Drop file list is empty")
-                drop.finish(0, False)
                 return False
 
-            # Resolve window reference before scheduling async work
+            item = files[0]
+            file_path = item.get_path()
+            (mimetype, _encoding) = guess_type(file_path)
+            logger.debug(f"Dropped item ({mimetype}): {file_path}")
+
+            if not mimetype or not mimetype.startswith("image"):
+                window = self.get_root()
+                if window and hasattr(window, "show_toast"):
+                    window.show_toast(_("Only images can be processed that way."))
+                return False
+
+            # Resolve window reference
             window = self.get_root()
             if not window:
-                logger.error(f"DnD: Root window is None (self={self}, get_root() returned None)")
-                drop.finish(0, False)
+                logger.error("DnD: Root window is None")
                 return False
 
-            if not hasattr(window, "process_gfile"):
-                logger.error(f"DnD: Root window {window} missing process_gfile method")
-                drop.finish(0, False)
+            if not hasattr(window, "process_dnd_file_sync"):
+                logger.error(f"DnD: Root window {window} missing process_dnd_file_sync method")
                 return False
 
-            logger.debug(f"DnD: Root window validated: {window}, has process_gfile: {hasattr(window, 'process_gfile')}")
+            # Set processing state before starting OCR
+            self._set_drop_area_processing_state(True)
+            self.spinner.set_visible(True)
 
-            # Defer processing to next iteration of the main loop to avoid
-            # Gtk-CRITICAL deadlock in the drag-and-drop signal handler.
-            from gi.repository import GLib
-
-            logger.debug(f"DnD: Scheduling process_gfile for {files[0].get_path()}")
-            # Schedule the file processing
-            GLib.idle_add(window.process_gfile, files[0])
-            drop_success = True
+            # Process synchronously following Frog's pattern
+            window.process_dnd_file_sync(file_path)
 
         except Exception as e:
             logger.error(f"DnD: Error during drop processing: {e}")
-            drop_success = False
-        finally:
-            # X11 Constraint: Always finish the drop transaction immediately
-            drop.finish(Gdk.DragAction.COPY if drop_success else 0, drop_success)
+            self._set_drop_area_processing_state(False)
+            self.spinner.set_visible(False)
+            return False
 
-        # Add processing state to show file is being processed (OCR takes several seconds)
-        if drop_success:
-            self._set_drop_area_processing_state(True)
-
-        return drop_success
+        return True
 
     def _set_drop_area_processing_state(self, processing: bool) -> None:
         """Set the drop area visual state to indicate processing (OCR in progress)."""
