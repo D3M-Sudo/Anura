@@ -67,39 +67,56 @@ class WelcomePage(Adw.NavigationPage):
     def _on_dnd_leave(self, _target: Gtk.DropTarget) -> None:
         self.drop_area.remove_css_class("drag-hover")
 
-    def _on_dnd_drop(self, _target: Gtk.DropTarget, value: Gdk.FileList, _x: float, _y: float) -> bool:
+    def _on_dnd_drop(self, target: Gtk.DropTarget, value: Gdk.FileList, _x: float, _y: float, drop: Gdk.Drop) -> bool:
         from loguru import logger
 
         self.drop_area.remove_css_class("drag-hover")
 
-        if not value:
-            logger.debug("DnD: Drop value is None")
-            return False
+        # X11 Constraint: Always finish the drop transaction immediately to prevent cursor hang
+        drop_success = False
 
-        if not isinstance(value, Gdk.FileList):
-            logger.debug(f"DnD: Drop value has unexpected type: {type(value)}")
-            return False
+        try:
+            if not value:
+                logger.debug("DnD: Drop value is None")
+                drop.finish(0, False)
+                return False
 
-        files = value.get_files()
-        if not files:
-            logger.debug("DnD: Drop file list is empty")
-            return False
+            if not isinstance(value, Gdk.FileList):
+                logger.debug(f"DnD: Drop value has unexpected type: {type(value)}")
+                drop.finish(0, False)
+                return False
 
-        # Resolve window reference before scheduling async work
-        window = self.get_root()
-        if not (window and hasattr(window, "process_gfile")):
-            logger.debug(f"DnD: Root window not found or missing process_gfile (root={window})")
-            return False
+            files = value.get_files()
+            if not files:
+                logger.debug("DnD: Drop file list is empty")
+                drop.finish(0, False)
+                return False
 
-        # Defer processing to next iteration of the main loop to avoid
-        # Gtk-CRITICAL deadlock in the drag-and-drop signal handler.
-        from gi.repository import GLib
+            # Resolve window reference before scheduling async work
+            window = self.get_root()
+            if not (window and hasattr(window, "process_gfile")):
+                logger.debug(f"DnD: Root window not found or missing process_gfile (root={window})")
+                drop.finish(0, False)
+                return False
 
-        logger.debug(f"DnD: Scheduling process_gfile for {files[0].get_path()}")
-        # Schedule the file processing
-        GLib.idle_add(window.process_gfile, files[0])
-        GLib.idle_add(self._reset_drop_target, _target)
-        return True
+            # Defer processing to next iteration of the main loop to avoid
+            # Gtk-CRITICAL deadlock in the drag-and-drop signal handler.
+            from gi.repository import GLib
+
+            logger.debug(f"DnD: Scheduling process_gfile for {files[0].get_path()}")
+            # Schedule the file processing
+            GLib.idle_add(window.process_gfile, files[0])
+            GLib.idle_add(self._reset_drop_target, target)
+            drop_success = True
+
+        except Exception as e:
+            logger.error(f"DnD: Error during drop processing: {e}")
+            drop_success = False
+        finally:
+            # X11 Constraint: Always finish the drop transaction immediately
+            drop.finish(Gdk.DragAction.COPY if drop_success else 0, drop_success)
+
+        return drop_success
 
     def _reset_drop_target(self, target: Gtk.DropTarget) -> bool:
         """Reset the drop target to clear its state."""
