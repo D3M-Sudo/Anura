@@ -91,7 +91,7 @@ class ExtractedPage(Adw.NavigationPage):
                 self._tts_service.stop_speaking()
             except Exception as e:
                 logger.warning(f"Failed to stop TTS during unmap: {e}")
-        super().do_unmap()
+        Gtk.Widget.do_unmap(self)
 
     def do_dispose(self) -> None:
         """Handle widget disposal - clean up TTS resources."""
@@ -173,7 +173,8 @@ class ExtractedPage(Adw.NavigationPage):
         """X11 Constraint: Switch Stack between button and spinner with fixed dimensions."""
         if active:
             # Ensure spinner has fixed dimensions to prevent UI shifting
-            self.listen_stack.set_visible_child_name("spinner")
+            if self.listen_stack:
+                self.listen_stack.set_visible_child_name("spinner")
             # Explicitly start the spinner animation
             if self.listen_spinner:
                 self.listen_spinner.start()
@@ -181,7 +182,7 @@ class ExtractedPage(Adw.NavigationPage):
             # Stop spinner animation before switching
             if self.listen_spinner:
                 self.listen_spinner.stop()
-            self.listen_stack.set_visible_child_name("button")
+            # Note: Don't set stack here - let swap_controls handle it to avoid conflicts
 
     def _on_share(self, service: object, provider: str) -> None:
         """Share extracted text via external service."""
@@ -278,7 +279,14 @@ class ExtractedPage(Adw.NavigationPage):
         if self.text_copy_btn:
             self.text_copy_btn.set_sensitive(not state)
         if self.listen_stack:
-            self.listen_stack.set_visible_child_name("pause" if state else "button")
+            # Unified stack management: handle both pause/play and spinner states
+            if state:
+                self.listen_stack.set_visible_child_name("pause")
+            else:
+                # Check if spinner is active before switching to button
+                current_child = self.listen_stack.get_visible_child_name()
+                if current_child != "spinner":
+                    self.listen_stack.set_visible_child_name("button")
 
     def do_destroy(self) -> None:
         """Clean up signal handlers to prevent memory leaks."""

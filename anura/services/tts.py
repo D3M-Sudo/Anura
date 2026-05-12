@@ -386,6 +386,9 @@ class TTSService(GObject.GObject):
             elif filepath:
                 logger.debug("Anura TTS: Cleanup skipped on stop, file already removed")
 
+            # Fix Bug 3: Emit stop signal to ensure proper UI cleanup
+            GLib.idle_add(self.emit, "stop", False)
+
     def pause(self) -> None:
         """Pauses the GStreamer player."""
         if self.player:

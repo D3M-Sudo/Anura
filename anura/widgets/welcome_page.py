@@ -94,10 +94,17 @@ class WelcomePage(Adw.NavigationPage):
 
             # Resolve window reference before scheduling async work
             window = self.get_root()
-            if not (window and hasattr(window, "process_gfile")):
-                logger.debug(f"DnD: Root window not found or missing process_gfile (root={window})")
+            if not window:
+                logger.error(f"DnD: Root window is None (self={self}, get_root() returned None)")
                 drop.finish(0, False)
                 return False
+
+            if not hasattr(window, "process_gfile"):
+                logger.error(f"DnD: Root window {window} missing process_gfile method")
+                drop.finish(0, False)
+                return False
+
+            logger.debug(f"DnD: Root window validated: {window}, has process_gfile: {hasattr(window, 'process_gfile')}")
 
             # Defer processing to next iteration of the main loop to avoid
             # Gtk-CRITICAL deadlock in the drag-and-drop signal handler.
@@ -106,7 +113,8 @@ class WelcomePage(Adw.NavigationPage):
             logger.debug(f"DnD: Scheduling process_gfile for {files[0].get_path()}")
             # Schedule the file processing
             GLib.idle_add(window.process_gfile, files[0])
-            GLib.idle_add(self._reset_drop_target, target)
+            # Fix Level A: Delay controller reset to avoid GTK race condition
+            GLib.timeout_add(100, self._reset_drop_target, target)
             drop_success = True
 
         except Exception as e:
