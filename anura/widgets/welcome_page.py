@@ -68,6 +68,7 @@ class WelcomePage(Adw.NavigationPage):
 
     def _on_dnd_drop(self, _target: Gtk.DropTarget, value: Gdk.FileList, _x: float, _y: float) -> bool:
         from loguru import logger
+
         self.drop_area.remove_css_class("drag-hover")
 
         if not value:
@@ -95,9 +96,16 @@ class WelcomePage(Adw.NavigationPage):
 
         logger.debug(f"DnD: Scheduling process_gfile for {files[0].get_path()}")
         GLib.idle_add(window.process_gfile, files[0])
-        self.drop_area.remove_controller(_target)
-        self._setup_drop_target()
+        GLib.idle_add(self._reset_drop_target, _target)
         return True
+
+    def _reset_drop_target(self, target: Gtk.DropTarget) -> bool:
+        """Reset the drop target to clear its state."""
+        from gi.repository import GLib
+
+        self.drop_area.remove_controller(target)
+        self._setup_drop_target()
+        return GLib.SOURCE_REMOVE
 
     def _on_language_changed(self, _: LanguagePopover, language: LanguageItem) -> None:
         self.lang_combo.set_label(language.title)
