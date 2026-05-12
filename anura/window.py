@@ -88,12 +88,17 @@ class AnuraWindow(Adw.ApplicationWindow):
 
         self._handler_go_back = self.extracted_page.connect("go-back", self.show_welcome_page)
         self._handler_clipboard = None
+        self._handler_clipboard_error = None
         self._clipboard_service = None
         try:
             self._clipboard_service = get_clipboard_service()
             self._handler_clipboard = self._clipboard_service.connect(
                 "paste_from_clipboard",
                 self._on_paste_from_clipboard_texture,
+            )
+            self._handler_clipboard_error = self._clipboard_service.connect(
+                "error",
+                self._on_clipboard_error,
             )
         except RuntimeError as e:
             logger.warning(f"Clipboard service unavailable: {e}")
@@ -111,6 +116,7 @@ class AnuraWindow(Adw.ApplicationWindow):
 
     def process_gfile(self, gfile: Gio.File) -> bool:
         """Public method to process a GFile (used by WelcomePage D&D)."""
+        logger.debug(f"DnD: process_gfile started for {gfile.get_path()}")
         try:
             self.welcome_page.spinner.set_visible(True)
             gfile.query_info_async(
@@ -122,7 +128,7 @@ class AnuraWindow(Adw.ApplicationWindow):
                 gfile,
             )
         except (GLib.Error, OSError, RuntimeError) as e:
-            logger.error(f"Failed to start file query: {e}")
+            logger.error(f"DnD: Failed to start file query: {e}")
             self.welcome_page.spinner.set_visible(False)
             self.show_toast(_("Failed to load image file"))
         return GLib.SOURCE_REMOVE
@@ -240,7 +246,13 @@ class AnuraWindow(Adw.ApplicationWindow):
         # Primary filter: All supported image formats
         all_img_filter = Gtk.FileFilter()
         all_img_filter.set_name(_("All supported images"))
-        all_img_filter.add_pixbuf_formats()
+        all_img_filter.add_mime_type("image/png")
+        all_img_filter.add_mime_type("image/jpeg")
+        all_img_filter.add_mime_type("image/webp")
+        all_img_filter.add_mime_type("image/avif")
+        all_img_filter.add_mime_type("image/tiff")
+        all_img_filter.add_mime_type("image/bmp")
+        all_img_filter.add_mime_type("image/gif")
 
         # Secondary filter: Specific common formats
         png_filter = Gtk.FileFilter()
@@ -368,9 +380,11 @@ class AnuraWindow(Adw.ApplicationWindow):
             self.show_toast(_("Failed to load image file"))
 
     def _on_dnd_query_info_done(self, gfile: Gio.File, result: Gio.AsyncResult, item: object) -> None:
+        logger.debug(f"DnD: query_info_done gfile={gfile}, item={item}")
         try:
             info = gfile.query_info_finish(result)
             if not info:
+                logger.error("DnD: query_info_finish returned None")
                 self.welcome_page.spinner.set_visible(False)
                 return
 
@@ -391,6 +405,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             # into `_`, it would shadow the gettext alias used in error paths.
             ok, contents, _etag = gfile.load_contents_finish(result)
             if not ok:
+                logger.error(f"DnD: Failed to load dropped file contents for {gfile.get_path()}")
                 self.welcome_page.spinner.set_visible(False)
                 self.show_toast(_("Failed to load dropped file"))
                 return
@@ -438,6 +453,12 @@ class AnuraWindow(Adw.ApplicationWindow):
         png_bytes = BytesIO(texture.save_to_png_bytes().get_data())
         GObjectWorker.call(self.backend.decode_image, (self.get_language(), png_bytes))
 
+    def _on_clipboard_error(self, _service: GObject.GObject, message: str) -> None:
+        """Handle clipboard service errors."""
+        self.welcome_page.spinner.set_visible(False)
+        if message:
+            self.show_toast(message)
+
     def do_close_request(self) -> bool:
         """Handle window close request and save window state."""
         width = self.get_width()
@@ -482,6 +503,10 @@ class AnuraWindow(Adw.ApplicationWindow):
             with contextlib.suppress(TypeError, RuntimeError):
                 self._clipboard_service.disconnect(self._handler_clipboard)
             self._handler_clipboard = None
+        if self._handler_clipboard_error and self._clipboard_service:
+            with contextlib.suppress(TypeError, RuntimeError):
+                self._clipboard_service.disconnect(self._handler_clipboard_error)
+            self._handler_clipboard_error = None
 
         # Chain up to parent class
         super().do_destroy()

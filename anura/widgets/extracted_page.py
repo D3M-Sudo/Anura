@@ -160,6 +160,9 @@ class ExtractedPage(Adw.NavigationPage):
         if not filepath:
             self.swap_controls(False)
             return
+
+        # Ensure the cancel button is visible while playing
+        self.listen_stack.set_visible_child_name("cancel")
         tts_service_instance = get_tts_service()
         tts_service_instance.play(filepath)
 

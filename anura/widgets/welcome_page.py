@@ -67,23 +67,33 @@ class WelcomePage(Adw.NavigationPage):
         self.drop_area.remove_css_class("drag-hover")
 
     def _on_dnd_drop(self, _target: Gtk.DropTarget, value: Gdk.FileList, _x: float, _y: float) -> bool:
+        from loguru import logger
         self.drop_area.remove_css_class("drag-hover")
-        if not value or not isinstance(value, Gdk.FileList):
+
+        if not value:
+            logger.debug("DnD: Drop value is None")
+            return False
+
+        if not isinstance(value, Gdk.FileList):
+            logger.debug(f"DnD: Drop value has unexpected type: {type(value)}")
             return False
 
         files = value.get_files()
         if not files:
+            logger.debug("DnD: Drop file list is empty")
             return False
 
         # Resolve window reference before scheduling async work
         window = self.get_root()
         if not (window and hasattr(window, "process_gfile")):
+            logger.debug(f"DnD: Root window not found or missing process_gfile (root={window})")
             return False
 
         # Defer processing to next iteration of the main loop to avoid
         # Gtk-CRITICAL deadlock in the drag-and-drop signal handler.
         from gi.repository import GLib
 
+        logger.debug(f"DnD: Scheduling process_gfile for {files[0].get_path()}")
         GLib.idle_add(window.process_gfile, files[0])
         return True
 
