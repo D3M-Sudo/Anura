@@ -163,8 +163,7 @@ class ClipboardService(GObject.GObject):
                     # expose file paths as text/uri-list but don't advertise them
                     # via get_formats() at the time of the initial check).
                     logger.warning(
-                        f"Anura Clipboard: Texture read failed ({e.message}); "
-                        "falling back to URI list read.",
+                        f"Anura Clipboard: Texture read failed ({e.message}); falling back to URI list read.",
                     )
                     self._fallback_to_uri_list_read()
                 except (ValueError, RuntimeError) as e:

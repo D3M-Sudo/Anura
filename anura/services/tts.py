@@ -40,17 +40,17 @@ class TTSService(GObject.GObject):
     }
 
     __slots__ = (
-        "player",
         "_bus",
         "_bus_message_handler_id",
         "_bus_watch_active",
+        "_bus_watch_lock",
         "_bus_watch_setup_in_progress",
         "_cleanup_lock",
-        "_bus_watch_lock",
-        "_state_lock",
-        "_init_lock",
-        "_gtts_languages",
         "_current_speech_file",
+        "_gtts_languages",
+        "_init_lock",
+        "_state_lock",
+        "player",
     )
 
     _tld: str = "com"

@@ -186,12 +186,10 @@ def test_extracted_page_tracks_share_handler_id() -> None:
     """ExtractedPage must track the share service handler ID for cleanup."""
     text = (ANURA_PKG / "widgets" / "extracted_page.py").read_text()
     assert "_share_handler_id" in text, (
-        "ExtractedPage must track the share service signal handler ID "
-        "(_share_handler_id) for cleanup in do_dispose."
+        "ExtractedPage must track the share service signal handler ID (_share_handler_id) for cleanup in do_dispose."
     )
     assert "_share_handler_id = self._share_service.connect" in text, (
-        "ExtractedPage must store the share service connect() return value "
-        "in _share_handler_id."
+        "ExtractedPage must store the share service connect() return value in _share_handler_id."
     )
 
 
@@ -215,12 +213,10 @@ def test_window_tracks_portal_banner_handler_id() -> None:
     """AnuraWindow must track the portal_banner handler ID for cleanup."""
     text = (ANURA_PKG / "window.py").read_text()
     assert "_handler_portal_banner" in text, (
-        "AnuraWindow must track the portal_banner signal handler ID "
-        "(_handler_portal_banner) for cleanup in do_destroy."
+        "AnuraWindow must track the portal_banner signal handler ID (_handler_portal_banner) for cleanup in do_destroy."
     )
     assert "_handler_portal_banner = self.portal_banner.connect" in text, (
-        "AnuraWindow must store the portal_banner connect() return value "
-        "in _handler_portal_banner."
+        "AnuraWindow must store the portal_banner connect() return value in _handler_portal_banner."
     )
 
 

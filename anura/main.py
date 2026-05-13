@@ -615,7 +615,7 @@ class AnuraApplication(Adw.Application):
             return
 
         # No explicit text passed via the action — copy whatever the window has.
-        if hasattr(window, '_do_copy_to_clipboard'):
+        if hasattr(window, "_do_copy_to_clipboard"):
             window._do_copy_to_clipboard()
         else:
             window.show_toast(_("No text available to copy"))
