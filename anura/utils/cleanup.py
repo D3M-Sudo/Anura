@@ -57,7 +57,7 @@ def _cleanup_tts_cache(cutoff_time: float) -> None:
                         os.remove(file_path)
                         cleaned_count += 1
                         logger.debug(f"Anura Cleanup: Removed old TTS file: {filename}")
-                except (OSError, PermissionError) as e:
+                except OSError as e:
                     logger.warning(f"Anura Cleanup: Failed to remove TTS file {filename}: {e}")
 
         if cleaned_count > 0:
@@ -88,9 +88,8 @@ def _cleanup_tessdata_temp_files(cutoff_time: float) -> None:
                         os.remove(file_path)
                         cleaned_count += 1
                         logger.debug(f"Anura Cleanup: Removed orphaned temp file: {filename}")
-                except (OSError, PermissionError) as e:
+                except OSError as e:
                     logger.warning(f"Anura Cleanup: Failed to remove temp file {filename}: {e}")
-
         if cleaned_count > 0:
             logger.info(f"Anura Cleanup: Removed {cleaned_count} orphaned temporary files")
 

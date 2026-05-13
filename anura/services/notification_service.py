@@ -72,11 +72,22 @@ class NotificationService:
             except (ImportError, AttributeError, TypeError) as e:
                 logger.warning(f"NotificationService: Failed to initialize libnotify: {e}")
 
+        # Start periodic cleanup timer for the notification tracking set
+        self._cleanup_timeout_id = GLib.timeout_add_seconds(60, self._periodic_cleanup)
+
         if not HAS_PORTAL and not self.libnotify_initialized:
             logger.warning("NotificationService: No notification backend available")
 
     # Valid priority levels according to XDG Portal specification
     _VALID_PRIORITIES: ClassVar[set[str]] = {"low", "normal", "high", "urgent"}
+
+    # Notification dismiss timeout in seconds (default: 8 seconds)
+    _DISMISS_SECONDS = 8
+
+    def _periodic_cleanup(self) -> bool:
+        """Periodic safety net: clear the notification tracking set every 60 seconds."""
+        self.cleanup_notifications()
+        return GLib.SOURCE_CONTINUE  # Keep the timeout active
 
     def show_notification(self, title: str, body: str, priority: str = "normal") -> bool:
         """
@@ -158,17 +169,33 @@ class NotificationService:
                 None,  # callback
                 None,  # data
             )
-            logger.debug(f"NotificationService: Portal notification sent: {title}")
+            # Schedule auto-dismiss after configured timeout
+            GLib.timeout_add_seconds(self._DISMISS_SECONDS, self._dismiss_portal_notification, notification_id)
+
+            logger.debug(f"NotificationService: Portal notification sent: {title}, dismiss in {self._DISMISS_SECONDS}s")
             return True
 
         except Exception as e:
             logger.warning(f"NotificationService: Portal notification failed: {e}")
             return False
 
+    def _dismiss_portal_notification(self, notification_id: str) -> bool:
+        """Auto-dismiss a portal notification by removing it via the portal API."""
+        try:
+            if self._portal is not None:
+                self._portal.remove_notification(notification_id, None, None, None)
+                logger.debug(f"NotificationService: Dismissed portal notification: {notification_id}")
+        except Exception as e:
+            logger.debug(f"NotificationService: Failed to dismiss portal notification: {e}")
+        # Remove from tracking set regardless
+        self._active_notifications.discard(notification_id)
+        return GLib.SOURCE_REMOVE  # One-shot timer
+
     def _show_libnotify_notification(self, title: str, body: str) -> bool:
         """Show notification via traditional libnotify."""
         try:
             notification = Notify.Notification.new(title, body, self.app_id)
+            notification.set_timeout(self._DISMISS_SECONDS * 1000)
             notification.show()
             logger.debug(f"NotificationService: libnotify notification sent: {title}")
             return True
@@ -183,20 +210,9 @@ class NotificationService:
     def cleanup_notifications(self) -> None:
         """Clean up tracking of active notifications.
 
-        Note: XDG Portal doesn't provide a way to cancel notifications,
-        but this cleanup helps prevent memory leaks from tracking.
+        Called periodically (every 60s) as a safety net and by
+        _dismiss_portal_notification after the auto-dismiss timer.
         """
         if self._active_notifications:
             logger.debug(f"NotificationService: Cleaning up {len(self._active_notifications)} tracked notifications")
             self._active_notifications.clear()
-
-    def get_backend_info(self) -> str:
-        """Get information about the active notification backend."""
-        if HAS_PORTAL and self.libnotify_initialized:
-            return "XDG Portal (primary) + libnotify (fallback)"
-        elif HAS_PORTAL:
-            return "XDG Portal (available, untested)"
-        elif self.libnotify_initialized:
-            return "libnotify (fallback)"
-        else:
-            return "None (notifications disabled)"

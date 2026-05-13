@@ -195,11 +195,6 @@ class ExtractedPage(Adw.NavigationPage):
                 self.listen_spinner.stop()
             # Note: Don't set stack here - let swap_controls handle it to avoid conflicts
 
-    def _on_share(self, service: object, provider: str) -> None:
-        """Share extracted text via external service."""
-        share_service_instance = get_share_service()
-        share_service_instance.share(provider, self.extracted_text)
-
     def _on_share_finished(self, _service: object, _success: bool) -> None:
         """Handle share completion - close the popover."""
         popover = self.share_button.get_popover()
@@ -257,11 +252,6 @@ class ExtractedPage(Adw.NavigationPage):
         # Show pause/stop controls
         self.swap_controls(True)
         # Start playback
-        tts_service_instance = get_tts_service()
-        tts_service_instance.play(filepath)
-
-    def _on_listen(self, service: object, filepath: str) -> None:
-        """Play TTS audio file."""
         tts_service_instance = get_tts_service()
         tts_service_instance.play(filepath)
 

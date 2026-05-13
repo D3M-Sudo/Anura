@@ -39,7 +39,19 @@ class TTSService(GObject.GObject):
         "paused": (GObject.SignalFlags.RUN_LAST, None, (bool,)),
     }
 
-    __slots__ = ("player",)
+    __slots__ = (
+        "player",
+        "_bus",
+        "_bus_message_handler_id",
+        "_bus_watch_active",
+        "_bus_watch_setup_in_progress",
+        "_cleanup_lock",
+        "_bus_watch_lock",
+        "_state_lock",
+        "_init_lock",
+        "_gtts_languages",
+        "_current_speech_file",
+    )
 
     _tld: str = "com"
 
@@ -125,26 +137,16 @@ class TTSService(GObject.GObject):
         "spa_old": "es",
     }
 
-    _gtts_languages: dict | None = None
-    _bus_watch_active: bool = False
-    _bus_watch_setup_in_progress: bool = False
-    _bus: Gst.Bus | None = None
-    _bus_message_handler_id: int | None = None
-    _cleanup_lock: threading.Lock = threading.Lock()
-    _bus_watch_lock: threading.Lock = threading.Lock()
-    _state_lock: threading.Lock = threading.Lock()
-    _init_lock: threading.Lock = threading.Lock()
-
     @classmethod
     def get_supported_gtts_languages(cls) -> dict:
-        """Cache of gTTS supported languages."""
-        if cls._gtts_languages is None:
+        """Cache of gTTS supported languages (class-level fallback)."""
+        if not hasattr(cls, "_gtts_cache"):
             try:
-                cls._gtts_languages = gtts.lang.tts_langs()
+                cls._gtts_cache = gtts.lang.tts_langs()
             except (requests.RequestException, ValueError, OSError):
                 # Network or API error - fallback to empty dict
-                cls._gtts_languages = {}
-        return cls._gtts_languages
+                cls._gtts_cache = {}
+        return cls._gtts_cache
 
     @staticmethod
     def map_tesseract_to_gtts(tess_code: str) -> str:
@@ -179,21 +181,32 @@ class TTSService(GObject.GObject):
     _cache_home = os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
     _speech_dir: str = os.path.join(_cache_home, "anura")
 
-    _current_speech_file: str | None = None
-
     def __init__(self) -> None:
         super().__init__()
         logger.debug("Anura TTSService: Initializing TTS service singleton")
         os.makedirs(self._speech_dir, exist_ok=True)
-        # Initialize GStreamer only once to prevent crashes on multiple instantiations
-        with TTSService._init_lock:
-            if not Gst.is_initialized():
-                logger.info("Anura TTSService: Initializing GStreamer pipeline")
-                Gst.init(None)
-            else:
-                logger.debug("Anura TTSService: GStreamer already initialized")
-        # Initialize player slot to prevent AttributeError before play() is called
+
+        # Initialize all instance attributes (fixes BUG-1: __slots__ compliance,
+        # BUG-2: class-level state leaking between instances)
+        self._gtts_languages: dict | None = None
+        self._bus_watch_active: bool = False
+        self._bus_watch_setup_in_progress: bool = False
+        self._bus: Gst.Bus | None = None
+        self._bus_message_handler_id: int | None = None
+        self._current_speech_file: str | None = None
+        self._cleanup_lock = threading.Lock()
+        self._bus_watch_lock = threading.Lock()
+        self._state_lock = threading.Lock()
+        self._init_lock = threading.Lock()
         self.player = None
+
+        # Initialize GStreamer only once to prevent crashes on multiple instantiations
+        if not Gst.is_initialized():
+            logger.info("Anura TTSService: Initializing GStreamer pipeline")
+            Gst.init(None)
+        else:
+            logger.debug("Anura TTSService: GStreamer already initialized")
+
         logger.debug("Anura TTSService: TTS service initialization complete")
 
     @staticmethod
@@ -224,9 +237,11 @@ class TTSService(GObject.GObject):
             if os.path.exists(filepath):
                 try:
                     os.remove(filepath)
-                except OSError as e:
-                    logger.debug(f"Anura TTS: Failed to remove temporary speech file during cleanup: {e}")
-            raise
+                except OSError:
+                    logger.debug("Anura TTS: Failed to remove temporary speech file during cleanup")
+            # Don't re-raise: GObjectWorker.errorback handles exceptions from
+            # the worker thread.  Let it catch the return value "" instead.
+            return ""
 
         logger.debug("Anura TTS: Speech file saved to cache directory")
 
@@ -381,7 +396,7 @@ class TTSService(GObject.GObject):
                 try:
                     os.unlink(filepath)
                     logger.debug("Anura TTS: Cleaned up temporary speech file on stop")
-                except (OSError, PermissionError):
+                except OSError:
                     logger.warning("Anura TTS: Failed to cleanup temporary speech file on stop")
             elif filepath:
                 logger.debug("Anura TTS: Cleanup skipped on stop, file already removed")
@@ -437,7 +452,7 @@ class TTSService(GObject.GObject):
                 try:
                     os.unlink(filepath)
                     logger.debug("Anura TTS: Cleaned up temporary speech file on shutdown")
-                except (OSError, PermissionError):
+                except OSError:
                     logger.debug("Anura TTS: Failed to cleanup temporary speech file on shutdown")
 
 
