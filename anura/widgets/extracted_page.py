@@ -156,9 +156,12 @@ class ExtractedPage(Adw.NavigationPage):
         # Store reference for cleanup if not already stored
         if self._tts_service is None:
             self._tts_service = tts_service_instance
+            # Only connect handlers if they are not already connected from __init__
             try:
-                self._tts_stop_handler_id = self._tts_service.connect("stop", self._on_listen_end)
-                self._tts_paused_handler_id = self._tts_service.connect("paused", self._on_paused)
+                if self._tts_stop_handler_id is None:
+                    self._tts_stop_handler_id = self._tts_service.connect("stop", self._on_listen_end)
+                if self._tts_paused_handler_id is None:
+                    self._tts_paused_handler_id = self._tts_service.connect("paused", self._on_paused)
             except (TypeError, RuntimeError, AttributeError) as e:
                 logger.warning(f"Failed to connect TTS signals during listen: {e}")
 
@@ -216,7 +219,11 @@ class ExtractedPage(Adw.NavigationPage):
             msg = _("Network error. Please check your internet connection.")
         else:
             msg = _("Text-to-speech failed. Please try again.")
-        self.show_toast(msg)
+
+        # Get the root window and call its show_toast method
+        window = self.get_root()
+        if window and hasattr(window, "show_toast"):
+            window.show_toast(msg)
 
     def listen_cancel(self) -> None:
         """Stop TTS playback (public method)."""

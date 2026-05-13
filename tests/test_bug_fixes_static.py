@@ -228,6 +228,7 @@ def test_window_tracks_portal_banner_handler_id() -> None:
     "rel_path",
     [
         "widgets/extracted_page.py",
+        "widgets/welcome_page.py",
         "main.py",
         "services/screenshot_service.py",
         "window.py",
