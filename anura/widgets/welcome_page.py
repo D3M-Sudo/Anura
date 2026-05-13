@@ -57,11 +57,9 @@ class WelcomePage(Adw.NavigationPage):
         """Configure the drop target for the dedicated drop area using DropTargetAsync."""
         # Use DropTargetAsync to bypass XDG portal on X11/Flatpak (GTK bugs #4562, #3755, #6769)
         # This prevents gtk_drop_target_handle_event assertion failures and freezes
-        self._drop_target = Gtk.DropTargetAsync.new()
-        # Explicitly set formats to text/uri-list to avoid portal file transfer activation
+        # NOTE: Gtk.DropTargetAsync.new() requires (formats, actions) in GTK 4.0+
         formats = Gdk.ContentFormats.new(["text/uri-list"])
-        self._drop_target.set_formats(formats)
-        self._drop_target.set_actions(Gdk.DragAction.COPY)
+        self._drop_target = Gtk.DropTargetAsync.new(formats, Gdk.DragAction.COPY)
         self._drop_target.connect("drop", self._on_dnd_drop_async)
         self.drop_area.add_controller(self._drop_target)
 
