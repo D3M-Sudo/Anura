@@ -1,5 +1,6 @@
 import contextlib
 from gettext import gettext as _
+from gettext import ngettext
 from io import BytesIO
 from mimetypes import guess_type
 import os
@@ -26,6 +27,7 @@ from anura.services.screenshot_service import ScreenshotService  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
 from anura.utils import uri_validator  # noqa: E402
 from anura.utils.portal_advice import detect_portal_advice  # noqa: E402
+from anura.utils.text_preprocessor import get_text_preprocessor  # noqa: E402
 from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
 from anura.widgets.preferences_dialog import PreferencesDialog  # noqa: E402
 from anura.widgets.welcome_page import WelcomePage  # noqa: E402
@@ -200,18 +202,44 @@ class AnuraWindow(Adw.ApplicationWindow):
                 clipboard_service_instance.set(text)
                 self.show_toast(_("Text copied to clipboard"))
 
-            # Extract URL from OCR text (not just validate entire text as URL)
+            # Extract structured data (emails, URLs, phone numbers) from OCR text
             try:
-                extracted_url = self.extract_url_from_text(text)
-                if extracted_url:
-                    if self.settings.get_boolean("autolinks"):
-                        self._launch_uri(extracted_url)
-                        self.show_toast(_("URL opened automatically"))
-                    else:
-                        self._show_url_toast(extracted_url)
+                preprocessor = get_text_preprocessor()
+                structured = preprocessor.extract_structured_data(text)
+
+                # Handle URL extraction (keep existing behaviour)
+                if structured["urls"]:
+                    extracted_url = structured["urls"][0]
+                    if uri_validator(extracted_url):
+                        if self.settings.get_boolean("autolinks"):
+                            self._launch_uri(extracted_url)
+                            self.show_toast(_("URL opened automatically"))
+                        else:
+                            self._show_url_toast(extracted_url)
+
+                # Show email toast if emails found
+                if structured["emails"]:
+                    email_count = len(structured["emails"])
+                    self.show_toast(
+                        ngettext("{n} email found in text", "{n} emails found in text", email_count).format(
+                            n=email_count,
+                        ),
+                    )
+
+                # Show phone toast if phone numbers found
+                if structured["phone_numbers"]:
+                    phone_count = len(structured["phone_numbers"])
+                    self.show_toast(
+                        ngettext(
+                            "{n} phone number found in text",
+                            "{n} phone numbers found in text",
+                            phone_count,
+                        ).format(n=phone_count),
+                    )
+
             except Exception as e:
-                logger.error(f"Anura: Error extracting/launching URL: {e}")
-                # Continue without URL functionality - don't crash the entire OCR flow
+                logger.error(f"Anura: Error extracting structured data: {e}")
+                # Continue without structured data - don't crash the entire OCR flow
 
             # Defer navigation to ExtractedPage until window is properly mapped
             GLib.idle_add(self._navigate_to_extracted_page)
@@ -227,7 +255,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             self._screenshot_timeout_id = None
 
         self.present()
-        self.welcome_page.hide_spinner()
+        self.welcome_page.reset_drop_area_state()
         if message:
             self.show_toast(message)
 

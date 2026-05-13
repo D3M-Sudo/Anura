@@ -3,7 +3,6 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
-import contextlib
 from gettext import gettext as _
 from typing import ClassVar
 
@@ -157,9 +156,12 @@ class ExtractedPage(Adw.NavigationPage):
         # Store reference for cleanup if not already stored
         if self._tts_service is None:
             self._tts_service = tts_service_instance
+            # Only connect handlers if they are not already connected from __init__
             try:
-                self._tts_stop_handler_id = self._tts_service.connect("stop", self._on_listen_end)
-                self._tts_paused_handler_id = self._tts_service.connect("paused", self._on_paused)
+                if self._tts_stop_handler_id is None:
+                    self._tts_stop_handler_id = self._tts_service.connect("stop", self._on_listen_end)
+                if self._tts_paused_handler_id is None:
+                    self._tts_paused_handler_id = self._tts_service.connect("paused", self._on_paused)
             except (TypeError, RuntimeError, AttributeError) as e:
                 logger.warning(f"Failed to connect TTS signals during listen: {e}")
 
@@ -193,11 +195,6 @@ class ExtractedPage(Adw.NavigationPage):
                 self.listen_spinner.stop()
             # Note: Don't set stack here - let swap_controls handle it to avoid conflicts
 
-    def _on_share(self, service: object, provider: str) -> None:
-        """Share extracted text via external service."""
-        share_service_instance = get_share_service()
-        share_service_instance.share(provider, self.extracted_text)
-
     def _on_share_finished(self, _service: object, _success: bool) -> None:
         """Handle share completion - close the popover."""
         popover = self.share_button.get_popover()
@@ -217,7 +214,11 @@ class ExtractedPage(Adw.NavigationPage):
             msg = _("Network error. Please check your internet connection.")
         else:
             msg = _("Text-to-speech failed. Please try again.")
-        self.show_toast(msg)
+
+        # Get the root window and call its show_toast method
+        window = self.get_root()
+        if window and hasattr(window, "show_toast"):
+            window.show_toast(msg)
 
     def listen_cancel(self) -> None:
         """Stop TTS playback (public method)."""
@@ -254,11 +255,6 @@ class ExtractedPage(Adw.NavigationPage):
         tts_service_instance = get_tts_service()
         tts_service_instance.play(filepath)
 
-    def _on_listen(self, service: object, filepath: str) -> None:
-        """Play TTS audio file."""
-        tts_service_instance = get_tts_service()
-        tts_service_instance.play(filepath)
-
     def _on_listen_end(self, service: object, success: bool) -> None:
         """Handle TTS playback completion."""
         # Don't disconnect the signal handler - it should persist for multiple TTS operations
@@ -288,21 +284,5 @@ class ExtractedPage(Adw.NavigationPage):
 
     def do_destroy(self) -> None:
         """Clean up signal handlers to prevent memory leaks."""
-        # Disconnect share signal handler
-        if hasattr(self, "_share_handler_id") and self._share_handler_id is not None:
-            if hasattr(self, "_share_service") and self._share_service is not None:
-                with contextlib.suppress(TypeError, RuntimeError, AttributeError):
-                    self._share_service.disconnect(self._share_handler_id)
-            self._share_handler_id = None
-
-        # Check handler is not None AND service is valid before disconnecting
-        if self._tts_service is not None:
-            if self._tts_stop_handler_id is not None:
-                with contextlib.suppress(TypeError, RuntimeError, AttributeError):
-                    self._tts_service.disconnect(self._tts_stop_handler_id)
-                self._tts_stop_handler_id = None
-            if self._tts_paused_handler_id is not None:
-                with contextlib.suppress(TypeError, RuntimeError, AttributeError):
-                    self._tts_service.disconnect(self._tts_paused_handler_id)
-                self._tts_paused_handler_id = None
+        # do_dispose() already handles TTS and share service cleanup
         super().do_destroy()

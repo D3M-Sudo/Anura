@@ -129,6 +129,12 @@ class ClipboardService(GObject.GObject):
     def _on_read_texture(self, _sender: GObject.GObject, result: Gio.AsyncResult) -> None:
         """
         Thread-safe callback for texture reading from clipboard.
+
+        If the direct texture read fails (e.g. GDK cannot decode the advertised
+        MIME type), falls back to reading the clipboard as a ``text/uri-list``
+        and loading the image file via PIL.  Some clipboard managers update their
+        MIME type list between the initial ``_available_clipboard_mimes()`` check
+        and the actual read, so this fallback increases robustness.
         """
         # Atomically cancel timeout and clear state under lock
         with self._state_lock:
@@ -153,13 +159,18 @@ class ClipboardService(GObject.GObject):
                     if e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED):
                         logger.debug("Anura Clipboard: Read operation cancelled.")
                         return
-                    # Other errors - log and emit error signal
-                    logger.error(f"Anura Clipboard Error: {e}")
-                    self.emit("error", _("No image in clipboard"))
+                    # Fallback: attempt to read as URI list (some clipboard managers
+                    # expose file paths as text/uri-list but don't advertise them
+                    # via get_formats() at the time of the initial check).
+                    logger.warning(
+                        f"Anura Clipboard: Texture read failed ({e.message}); "
+                        "falling back to URI list read.",
+                    )
+                    self._fallback_to_uri_list_read()
                 except (ValueError, RuntimeError) as e:
                     # Technical rigor: log error for X11/Wayland clipboard synchronization issues
                     logger.error(f"Anura Clipboard Error: {e}")
-                    self.emit("error", _("No image in clipboard"))
+                    self._fallback_to_uri_list_read()
                 finally:
                     # Clean up cancellable regardless of outcome
                     with self._state_lock:
@@ -278,6 +289,24 @@ class ClipboardService(GObject.GObject):
                 cancellable,
             )
         self.clipboard.read_texture_async(cancellable=cancellable, callback=self._on_read_texture)
+
+    def _fallback_to_uri_list_read(self) -> None:
+        """Rearm the read state and read the clipboard as a ``text/uri-list``."""
+        with self._state_lock:
+            if self._cancellable is None or self._cancellable.is_cancelled():
+                self._cancellable = Gio.Cancellable()
+            cancellable = self._cancellable
+            self._clipboard_timeout_id = GLib.timeout_add_seconds(
+                self.CLIPBOARD_TIMEOUT_SECONDS,
+                self._on_clipboard_timeout,
+                cancellable,
+            )
+        self.clipboard.read_async(
+            [_CLIPBOARD_TEXT_URI_LIST],
+            GLib.PRIORITY_DEFAULT,
+            cancellable,
+            self._on_read_uri_list,
+        )
 
     def _read_stream_to_bytes(
         self,
@@ -419,7 +448,7 @@ class ClipboardService(GObject.GObject):
             logger.info("Anura Clipboard: Text retrieved from clipboard.")
             # For text reading, we might emit a different signal or handle differently
             # For now, just log the success
-            GLib.idle_add(logger.debug, f"Clipboard text read: {text[:50]}...")
+            GLib.idle_add(lambda: logger.debug(f"Clipboard text read: {text[:50]}..."))
 
         except GLib.Error as e:
             # Check if operation was cancelled

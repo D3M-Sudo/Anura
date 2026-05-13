@@ -527,6 +527,27 @@ uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PA
 - Thread safety: never emit GObject signals from secondary threads — use `GLib.idle_add()`
 - When in doubt about an architectural choice, ask before proceeding
 
+### Workflows Disponibili (richiedili esplicitamente)
+
+I seguenti workflow sono definiti in `.windsurf/workflows/` e possono essere eseguiti su richiesta dell'utente:
+
+| Comando | Workflow | Descrizione |
+|---------|----------|-------------|
+| `bug analysis` | `.windsurf/workflows/bug_analysis.md` | Analisi statica bug file-per-file: attributi, callback, segnali, errori, threading, UI |
+| `code quality` | `.windsurf/workflows/code_quality.md` | Audit qualità + refactoring sistematico (5 fasi) |
+| `fix check` | `.windsurf/workflows/fix_check.md` | Verifica post-fix: 5 passi per confermare la correttezza |
+| `review` | `.windsurf/workflows/review.md` | Code review completo: 10 audit (thread safety, sicurezza, risorse, error handling, tipi, i18n, Flatpak, test coverage, performance) |
+
+Workflow aggiuntivi in `.windsurf/rules/`:
+- `debug <problema>` → `.windsurf/rules/debugging.md` (ipotesi-driven, 7 assi di analisi)
+- `vibe clean` / `tidy up` → `.windsurf/rules/vibe-clean.md` (pulizia codice seguendo pattern progetto)
+- `dead code` / `dead-code` → `.windsurf/rules/dead-code.md` (trova codice morto)
+- `commit` → `.windsurf/commit_rule.md` (generazione commit Conventional Commits)
+
+### Cline (questo agente) — Note specifiche
+
+Se stai usando **Cline**, il file `CLAUDE.md` nella root del progetto contiene tutte le regole operative compatte (tech stack, thread safety, testing, commit, sicurezza). Viene letto automaticamente all'inizio di ogni sessione.
+
 ### Test Architecture Note
 
 `anura/__init__.py` imports `gi` at module level, so ALL tests that import from `anura` require PyGObject (`python3-gi` system package) and must be marked with `@pytest.mark.gtk`. Only tests with zero `anura` imports (like `test_uri_validator.py`) run without a GTK environment.
