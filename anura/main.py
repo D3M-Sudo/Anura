@@ -1,9 +1,36 @@
 import contextlib
-from gettext import gettext as _
-import html
+import gettext
 import os
 import sys
 import threading
+
+
+# Initialize localization
+def _setup_i18n():
+    project_name = "anura"
+    # Priority: standard installation -> Flatpak -> relative (dev)
+    possible_localedirs = [
+        "/usr/share/locale",
+        "/usr/local/share/locale",
+        "/app/share/locale",
+        os.path.join(os.path.dirname(__file__), "..", "po"),
+    ]
+
+    localedir = None
+    for path in possible_localedirs:
+        if os.path.exists(path):
+            localedir = path
+            break
+
+    if localedir:
+        gettext.bindtextdomain(project_name, localedir)
+        gettext.textdomain(project_name)
+
+
+_setup_i18n()
+
+from gettext import gettext as _
+import html
 
 # Suppress a11y bus warnings in headless CI environments
 if not sys.stdin.isatty():
