@@ -201,9 +201,9 @@ class ExtractedPage(Adw.NavigationPage):
         )
 
     def _set_spinner_active(self, active: bool) -> None:
-        """X11 Constraint: Switch Stack between button and spinner with fixed dimensions."""
+        """X11 Constraint: Switch Stack between button and spinner."""
         if active:
-            # Ensure spinner has fixed dimensions to prevent UI shifting
+            # Ensure spinner is properly aligned to prevent UI shifting
             if self.listen_stack:
                 self.listen_stack.set_visible_child_name("spinner")
             # Explicitly start the spinner animation
