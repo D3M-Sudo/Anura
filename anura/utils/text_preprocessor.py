@@ -182,21 +182,35 @@ class TextPreprocessor:
         if not text:
             return text
 
-        # Capitalize first letter of sentences
-        sentences = re.split(r"([.!?]+)\s*", text)
-        for i in range(0, len(sentences), 2):
-            if sentences[i].strip():
-                sentences[i] = (
-                    sentences[i][0].upper() + sentences[i][1:] if len(sentences[i]) > 1 else sentences[i].upper()
+        # Capitalize first letter of sentences.
+        # re.split with a capturing group returns alternating [text, sep, text, sep, …].
+        # We join them with a space so the whitespace consumed by \s* is restored.
+        parts = re.split(r"([.!?]+)\s*", text)
+        for i in range(0, len(parts), 2):
+            if parts[i].strip():
+                parts[i] = (
+                    parts[i][0].upper() + parts[i][1:] if len(parts[i]) > 1 else parts[i].upper()
                 )
 
-        fixed = "".join(sentences)
+        # Rebuild: interleave text and punctuation, adding a space after each punctuation
+        # block to replace the whitespace that the split consumed.
+        rebuilt: list[str] = []
+        for i, part in enumerate(parts):
+            if i % 2 == 1:  # punctuation capture group
+                rebuilt.append(part + " ")
+            else:
+                rebuilt.append(part)
+        fixed = "".join(rebuilt).strip()
 
-        # Fix ALL CAPS words (except acronyms)
+        # Fix ALL CAPS words: words longer than 4 characters are likely not acronyms
+        # (acronyms are typically short: NASA, FBI, HTML …).
+        # words.isupper() is True for any-letter-all-uppercase word.
         words = fixed.split()
         for i, word in enumerate(words):
-            if word.isupper() and len(word) > 3 and not re.match(r"^[A-Z]{2,}$", word):
-                words[i] = word.capitalize()
+            # Strip trailing punctuation for the length/uppercase check
+            core = word.rstrip(".,;:!?")
+            if core.isupper() and len(core) > 4:
+                words[i] = word[0].upper() + word[1:].lower()
 
         return " ".join(words)
 

@@ -632,6 +632,10 @@ class AnuraApplication(Adw.Application):
 
     def on_paste_from_clipboard(self, _action: Gio.SimpleAction, _param: object) -> None:
         """Read image from clipboard and perform OCR."""
+        # Show spinner so the user has visual feedback while the async read runs
+        win = self.props.active_window
+        if win and hasattr(win, "welcome_page"):
+            win.welcome_page.show_spinner()
         clipboard_service_instance = get_clipboard_service()
         clipboard_service_instance.read_texture()
 
