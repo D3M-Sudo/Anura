@@ -418,15 +418,16 @@ Anura uses a comprehensive test suite with two main categories:
 | `tests/test_portal_advice.py` | XDG Desktop Portal detection/advice logic | Pure Python |
 | `tests/test_release_notes_generation.py` | CHANGELOG.md parser tests | Pure Python |
 | `tests/test_bug_fixes_static.py` | AST-based static regression checks | Pure Python (ast) |
-| `tests/test_services_simple.py` | Simple services tests (validators, config) | Import `anura` (needs gi) |
+| `tests/test_tts.py` | TTS language mapping and vertical variants | Pure Python |
+| `tests/test_services_simple.py` | ShareService logic and URL validation | Import `anura` (needs gi) |
 | `tests/test_services.py` | LanguageManager basics | Import `anura` (needs gi) |
 | `tests/test_tts_initialization.py` | TTSService init before play() regression | Import `anura` (needs gi) |
 | `tests/test_screenshot_service.py` | Screenshot capture, OCR, QR decoding | Mocked Xdp.Portal + gi |
 | `tests/test_clipboard_service.py` | Clipboard read/write operations | Mocked Gdk.Clipboard + gi |
 | `tests/test_share_service.py` | Social sharing providers, URL validation | Mocked Gtk.UriLauncher + gi |
-| `tests/test_tts_service.py` | Text-to-speech, language mapping, GStreamer | Mocked GStreamer + gi |
+| `tests/test_tts_service.py` | Text-to-speech, audio generation, GStreamer | Mocked GStreamer + gi |
 | `tests/test_notification_service.py` | Notifications with XDG Portal/libnotify fallback | Mocked Xdp.Portal + gi |
-| `tests/test_language_manager.py` | Language manager tests | Mocked fs + gi |
+| `tests/test_language_manager.py` | Language manager deep tests (fs, system dirs) | Mocked fs + gi |
 | `tests/test_keyboard_shortcuts.py` | Keyboard shortcuts verification | gi |
 | `tests/conftest.py` | Shared fixtures, environment isolation | Pure Python |
 

@@ -147,7 +147,9 @@ pytesseract.TesseractError("Test error", "Test error")
 | `uv run pytest tests/test_language_manager.py -v` | Language manager tests |
 | `uv run pytest tests/test_uri_validator.py -v` | URI validator tests |
 | `uv run pytest tests/test_unit_logic.py -v` | Unit logic tests (business logic) |
-| `uv run pytest tests/test_services_simple.py -v` | Simple services tests (pure Python) |
+| `uv run pytest tests/test_services_simple.py -v` | ShareService logic and URL validation |
+| `uv run pytest tests/test_tts.py -v` | TTS mapping and vertical variants |
+| `uv run pytest tests/test_services.py -v` | LanguageManager basics |
 | `PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" pytest` | Run with system gi |
 
 ## Test Architecture
@@ -162,7 +164,9 @@ pytesseract.TesseractError("Test error", "Test error")
 - `tests/test_config.py` - Configuration tests
 - `tests/test_language_manager.py` - Language management tests
 - `tests/test_uri_validator.py` - URI validation tests
-- `tests/test_services_simple.py` - Simple service tests
+- `tests/test_services_simple.py` - ShareService logic tests
+- `tests/test_services.py` - LanguageManager basic tests
+- `tests/test_tts.py` - TTS mapping and vertical variants
 - `tests/test_*_service.py` - Service tests with GTK dependencies
 
 ### Running Tests by Category
@@ -172,7 +176,11 @@ pytesseract.TesseractError("Test error", "Test error")
 uv run pytest tests/ -m "not gtk" -v
 # Or specific files that run without gi:
 uv run pytest tests/test_config.py tests/test_uri_validator.py tests/test_unit_logic.py tests/test_bug_fixes_static.py tests/test_cleanup.py tests/test_host_screenshot_fallback.py tests/test_portal_advice.py tests/test_release_notes_generation.py -v
-```
+
+#### Tests requiring PyGObject (but not full GTK runtime)
+```bash
+uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" pytest tests/test_services.py tests/test_services_simple.py tests/test_tts.py -v
+``````
 
 #### GTK Tests (Requires System Environment)
 ```bash
