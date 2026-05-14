@@ -4,6 +4,7 @@
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
 from gettext import gettext as _
+from gettext import ngettext
 from typing import ClassVar
 
 import gi
@@ -36,6 +37,7 @@ class ExtractedPage(Adw.NavigationPage):
         "on-listen-stop": (GObject.SignalFlags.RUN_LAST, None, ()),
     }
 
+    window_title: Adw.WindowTitle = Gtk.Template.Child()
     share_list_box: Gtk.ListBox = Gtk.Template.Child()
     grab_btn: Gtk.Button = Gtk.Template.Child()
     text_copy_btn: Gtk.Button = Gtk.Template.Child()
@@ -76,6 +78,24 @@ class ExtractedPage(Adw.NavigationPage):
             self._tts_paused_handler_id = self._tts_service.connect("paused", self._on_paused)
         except (TypeError, RuntimeError, AttributeError) as e:
             logger.warning(f"Failed to connect TTS services: {e}")
+
+        self.buffer.connect("changed", self._on_buffer_changed)
+
+    def _on_buffer_changed(self, buffer: Gtk.TextBuffer) -> None:
+        """Update character and word count in the header subtitle."""
+        text = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), False)
+        if not text:
+            self.window_title.set_subtitle("")
+            return
+
+        char_count = len(text)
+        # Use split() to get words, filtering out empty strings from multiple whitespace
+        word_count = len(text.split())
+
+        char_text = ngettext("{n} character", "{n} characters", char_count).format(n=char_count)
+        word_text = ngettext("{n} word", "{n} words", word_count).format(n=word_count)
+
+        self.window_title.set_subtitle(f"{char_text}, {word_text}")
 
     def do_hiding(self) -> None:
         """Handle widget hiding event."""

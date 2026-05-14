@@ -610,6 +610,8 @@ class AnuraWindow(Adw.ApplicationWindow):
     def _navigate_to_extracted_page(self) -> bool:
         """Navigate to the extracted text page after OCR."""
         self.split_view.set_show_content(True)
+        # Focus the text view to allow immediate keyboard interaction
+        self.extracted_page.text_view.grab_focus()
         return GLib.SOURCE_REMOVE
 
     def show_welcome_page(self, *_args: object) -> None:
