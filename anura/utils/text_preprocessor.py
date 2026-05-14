@@ -87,7 +87,11 @@ class TextPreprocessor:
             image = ImageOps.autocontrast(image, cutoff=2)
 
             # Use a simple but effective PIL-based thresholding.
-            return image.point(lambda x: 0 if x < 128 else 255, "1").convert("L")
+            # Optimization: Using a LUT (Look-Up Table) instead of a lambda is faster
+            # for the Image.point() operation as it avoids Python callback overhead.
+            threshold = 128
+            lut = [0 if i < threshold else 255 for i in range(256)]
+            return image.point(lut, "1").convert("L")
         except Exception as e:
             logger.warning(f"Thresholding failed: {e}")
             return image
