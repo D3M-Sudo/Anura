@@ -17,7 +17,7 @@ uv run ruff check .
 uv run pytest tests/ -m "not gtk" -v
 ```
 
-Expected: `All checks passed!` and `148 passed, 47 deselected` (counts will drift over time — the important part is zero failures and the GTK-marked subset being deselected, not skipped).
+Expected: `All checks passed!` and `148 passed, 29 deselected` (counts will drift over time — the important part is zero failures and the GTK-marked subset being deselected, not skipped). Note: the "deselected" count is lower now because some tests originally marked `@pytest.mark.gtk` now skip gracefully via `pytest.importorskip("gi")` instead. These skipped tests no longer appear in the "deselected" category.
 
 ## When you can run the gtk-marked tests
 

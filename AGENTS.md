@@ -410,12 +410,24 @@ Anura uses a comprehensive test suite with two main categories:
 
 | File | Purpose | Dependencies |
 |------|---------|--------------|
-| `tests/test_unit_logic.py` | Business logic validation (URL encoding, language mapping, validation) | Pure Python |
-| `tests/test_screenshot_service.py` | Screenshot capture, OCR, QR decoding | Mocked Xdp.Portal |
-| `tests/test_clipboard_service.py` | Clipboard read/write operations | Mocked Gdk.Clipboard |
-| `tests/test_share_service.py` | Social sharing providers, URL validation | Mocked Gtk.UriLauncher |
-| `tests/test_tts_service.py` | Text-to-speech, language mapping, GStreamer | Mocked GStreamer |
-| `tests/test_notification_service.py` | Notifications with XDG Portal/libnotify fallback | Mocked Xdp.Portal |
+| `tests/test_unit_logic.py` | Business logic validation (URL encoding, validation) | Pure Python |
+| `tests/test_config.py` | Configuration tests (LANG_CODE_PATTERN, Tesseract config, LOG_LEVEL) | Pure Python |
+| `tests/test_uri_validator.py` | URI validation security tests (control chars, schemes, IPs) | Pure Python (inline mirror) |
+| `tests/test_cleanup.py` | Resource cleanup tests (temp files, TTS cache) | Pure Python |
+| `tests/test_host_screenshot_fallback.py` | Host screenshot fallback command builders | Pure Python |
+| `tests/test_portal_advice.py` | XDG Desktop Portal detection/advice logic | Pure Python |
+| `tests/test_release_notes_generation.py` | CHANGELOG.md parser tests | Pure Python |
+| `tests/test_bug_fixes_static.py` | AST-based static regression checks | Pure Python (ast) |
+| `tests/test_services_simple.py` | Simple services tests (validators, config) | Import `anura` (needs gi) |
+| `tests/test_services.py` | LanguageManager basics | Import `anura` (needs gi) |
+| `tests/test_tts_initialization.py` | TTSService init before play() regression | Import `anura` (needs gi) |
+| `tests/test_screenshot_service.py` | Screenshot capture, OCR, QR decoding | Mocked Xdp.Portal + gi |
+| `tests/test_clipboard_service.py` | Clipboard read/write operations | Mocked Gdk.Clipboard + gi |
+| `tests/test_share_service.py` | Social sharing providers, URL validation | Mocked Gtk.UriLauncher + gi |
+| `tests/test_tts_service.py` | Text-to-speech, language mapping, GStreamer | Mocked GStreamer + gi |
+| `tests/test_notification_service.py` | Notifications with XDG Portal/libnotify fallback | Mocked Xdp.Portal + gi |
+| `tests/test_language_manager.py` | Language manager tests | Mocked fs + gi |
+| `tests/test_keyboard_shortcuts.py` | Keyboard shortcuts verification | gi |
 | `tests/conftest.py` | Shared fixtures, environment isolation | Pure Python |
 
 ### Running Tests
@@ -550,7 +562,13 @@ Se stai usando **Cline**, il file `CLAUDE.md` nella root del progetto contiene t
 
 ### Test Architecture Note
 
-`anura/__init__.py` imports `gi` at module level, so ALL tests that import from `anura` require PyGObject (`python3-gi` system package) and must be marked with `@pytest.mark.gtk`. Only tests with zero `anura` imports (like `test_uri_validator.py`) run without a GTK environment.
+`anura/__init__.py` imports `gi` at module level. Most tests that import from `anura` require PyGObject (`python3-gi` system package) for the import to succeed at collection time. The following conventions apply:
+
+- Tests that need GTK runtime (widgets, Xdp, GStreamer) are marked `@pytest.mark.gtk` and skipped/deselected when `gi` is unavailable.
+- Tests that only need `gi` for the module-level import (e.g. `test_services_simple.py::TestShareServiceLogic`) use `@pytest.fixture(autouse=True)` with `pytest.importorskip("gi")` and are **skipped** (not deselected) when `gi` is missing.
+- Truly pure-Python tests (like `test_uri_validator.py`) that do not import `anura` at all need no marker.
+
+Run `uv run pytest tests/ -m "not gtk" -v` for the subset that runs without any GTK dependency.
 
 ## Decision Log
 

@@ -23,12 +23,12 @@ def uri_validator(text: str) -> bool:
     Returns:
         True if the URL is safe to use, False otherwise.
     """
-    url = text.strip()
-
-    # Block control characters (0x00-0x1F) and DEL (0x7F)
-    # This prevents newline, tab, carriage return, null byte injection
-    if any(ord(c) < 0x20 or ord(c) == 0x7F for c in url):
+    # Block control characters (0x00-0x1F) and DEL (0x7F) BEFORE strip
+    # so that e.g. trailing \x1f (whitespace) is caught
+    if any(ord(c) < 0x20 or ord(c) == 0x7F for c in text):
         return False
+
+    url = text.strip()
 
     # Ensure URL is ASCII-only (prevent Unicode homograph attacks)
     try:

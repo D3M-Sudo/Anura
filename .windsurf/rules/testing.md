@@ -169,7 +169,9 @@ pytesseract.TesseractError("Test error", "Test error")
 
 #### Pure Python Tests (No GTK Required)
 ```bash
-uv run pytest tests/test_config.py tests/test_language_manager.py tests/test_uri_validator.py tests/test_unit_logic.py tests/test_services_simple.py -v
+uv run pytest tests/ -m "not gtk" -v
+# Or specific files that run without gi:
+uv run pytest tests/test_config.py tests/test_uri_validator.py tests/test_unit_logic.py tests/test_bug_fixes_static.py tests/test_cleanup.py tests/test_host_screenshot_fallback.py tests/test_portal_advice.py tests/test_release_notes_generation.py -v
 ```
 
 #### GTK Tests (Requires System Environment)
