@@ -26,8 +26,8 @@ class TextPreprocessor:
         self._punctuation_patterns = [
             (r"([.!?])\1+", r"\1"),  # Multiple punctuation
             (r",+", ","),  # Multiple commas
-            (r"\s*([.,;:!?])\s*", r"\1 "),  # Space around punctuation
-            (r"\s+([.,;:!?])", r"\1"),  # Remove space before punctuation
+            (r"\s+([.,;:!?])", r"\1"),  # Remove space before punctuation (first)
+            (r"(?<!\d)([.,;:!?])(?!\d)(\S)", r"\1 \2"),  # Add space after punctuation if missing (second)
         ]
 
     def enhance_image(self, image: Image.Image) -> Image.Image:
@@ -185,7 +185,7 @@ class TextPreprocessor:
         # Capitalize first letter of sentences.
         # re.split with a capturing group returns alternating [text, sep, text, sep, …].
         # We join them with a space so the whitespace consumed by \s* is restored.
-        parts = re.split(r"([.!?]+)\s*", text)
+        parts = re.split(r"((?<!\d)[.!?]+)\s*", text)
         for i in range(0, len(parts), 2):
             if parts[i].strip():
                 parts[i] = (
@@ -229,8 +229,10 @@ class TextPreprocessor:
             if re.match(r"^[\s\-_+=*~`]+$|^[\.\-]{3,}$", line):
                 continue
 
-            # Remove leading bullet characters
-            line = re.sub(r"^[\s•·▪▫◦‣-]+\s*", "", line)
+            # Remove leading Unicode bullet characters (never ambiguous)
+            line = re.sub(r"^[\s•·▪▫◦‣]+\s*", "", line)
+            # Remove markdown-style list markers ("- ") only when followed by a space
+            line = re.sub(r"^-\s+", "", line)
 
             cleaned_lines.append(line)
 

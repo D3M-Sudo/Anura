@@ -55,8 +55,8 @@ class ExtractedPage(Adw.NavigationPage):
         self.settings = settings
         self._share_service = None
         self._share_handler_id = None
-        # X11 Constraint: Ensure TTS service is properly initialized before any signal connections
-        self._tts_service = get_tts_service()
+        # TTS service reference — initialized post-super() to avoid pre-template access
+        self._tts_service = None
         self._tts_stop_handler_id = None
         self._tts_paused_handler_id = None
 
@@ -223,8 +223,14 @@ class ExtractedPage(Adw.NavigationPage):
 
     def _on_generate_error(self, error: Exception, traceback_str: str | None = None) -> None:
         """Handle generation errors (called on main thread by GObjectWorker)."""
-        # X11 Constraint: Ensure spinner is properly deactivated on error
-        self._set_spinner_active(False)
+        # Force stack back to button state on error — the spinner must not persist.
+        # We bypass _set_spinner_active + swap_controls here because swap_controls
+        # intentionally refuses to switch away from "spinner" (to avoid conflicts
+        # during normal flow). On error, we need an unconditional reset.
+        if self.listen_spinner:
+            self.listen_spinner.stop()
+        if self.listen_stack:
+            self.listen_stack.set_visible_child_name("button")
         self.swap_controls(False)
 
         # Determine error message by type - check specific exceptions first
