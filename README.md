@@ -259,10 +259,10 @@ Anura is translated via [Weblate](https://hosted.weblate.org/engage/anura/). Con
 
 ```bash
 # Update the POT file and POTFILES
-bash update_potfiles.sh
+./update_potfiles.sh
 
 # Sync all locale files before committing
-for f in *.po; do msgmerge -U "$f" anura.pot --backup=none; done
+for f in *.po; do msgmerge -U "$f" com.github.d3msudo.anura.pot --backup=none; done
 ```
 
 Then push `anura.pot`, `POTFILES`, and the updated `.po` files to keep Weblate in sync.

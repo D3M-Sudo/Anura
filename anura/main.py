@@ -1,5 +1,6 @@
 import contextlib
 import gettext
+import locale
 import os
 import sys
 import threading
@@ -7,13 +8,18 @@ import threading
 
 # Initialize localization
 def _setup_i18n():
-    project_name = "anura"
+    from gi.repository import GLib
+
+    from anura.config import APP_ID
+
+    project_name = APP_ID
     # Priority: standard installation -> Flatpak -> relative (dev)
     possible_localedirs = [
-        "/usr/share/locale",
-        "/usr/local/share/locale",
         "/app/share/locale",
+        os.path.join(os.path.dirname(__file__), "..", "builddir", "po"),
         os.path.join(os.path.dirname(__file__), "..", "po"),
+        "/usr/local/share/locale",
+        "/usr/share/locale",
     ]
 
     localedir = None
@@ -22,9 +28,25 @@ def _setup_i18n():
             localedir = path
             break
 
+    # Initialize C-level locale for GTK/Libadwaita
+    try:
+        locale.setlocale(locale.LC_ALL, "")
+    except locale.Error as e:
+        # Fallback to C locale if requested locale is missing on host
+        print(f"Warning: Could not set locale: {e}. Falling back to 'C'.", file=sys.stderr)
+        locale.setlocale(locale.LC_ALL, "C")
+
     if localedir:
+        # Bind for Python gettext
         gettext.bindtextdomain(project_name, localedir)
         gettext.textdomain(project_name)
+
+        # Bind for GLib/GTK (used for .ui files and resources)
+        # We use the locale module which calls the C library's bindtextdomain
+        locale.bindtextdomain(project_name, localedir)
+        locale.textdomain(project_name)
+        if hasattr(locale, "bind_textdomain_codeset"):
+            locale.bind_textdomain_codeset(project_name, "UTF-8")
 
 
 _setup_i18n()
@@ -65,16 +87,6 @@ logger.add(
     colorize=True,
     catch=True,
 )
-from anura.language_manager import get_language_manager
-from anura.services.clipboard_service import get_clipboard_service
-from anura.services.notification_service import (
-    HAS_LIBNOTIFY,
-    NotificationService,
-)
-from anura.services.screenshot_service import ScreenshotService
-from anura.services.settings import settings
-from anura.utils import cleanup_orphaned_resources
-from anura.window import AnuraWindow
 
 
 def _load_gresource_bundle() -> bool:
@@ -89,7 +101,6 @@ def _load_gresource_bundle() -> bool:
     with contextlib.suppress(GLib.Error):
         # Try to lookup a known resource - if found, bundle is already loaded
         Gio.resources_lookup_data("/com/github/d3msudo/anura/window.ui", Gio.ResourceLookupFlags.NONE)
-        logger.debug("GResource bundle already registered (likely by anura.in)")
         return True
 
     # Determine possible paths for the gresource bundle
@@ -107,21 +118,29 @@ def _load_gresource_bundle() -> bool:
         if os.path.exists(path):
             try:
                 resource = Gio.Resource.load(path)
-                resource.register()
-                logger.debug(f"Loaded GResource bundle from {path}")
+                Gio.resources_register(resource)
                 return True
-            except Exception as e:
-                logger.warning(f"Failed to load GResource from {path}: {e}")
+            except Exception:
                 continue
 
-    logger.error("Could not find or load GResource bundle - UI files may not be available")
     return False
-
-
 # Load GResource before importing any widgets with @Gtk.Template decorators
 if not _load_gresource_bundle():
-    logger.critical("GResource bundle is required to run Anura. The application cannot start.")
+    # If logger isn't initialized yet, use print
+    print("CRITICAL: GResource bundle is required to run Anura. The application cannot start.", file=sys.stderr)
     sys.exit(1)
+
+
+from anura.language_manager import get_language_manager
+from anura.services.clipboard_service import get_clipboard_service
+from anura.services.notification_service import (
+    HAS_LIBNOTIFY,
+    NotificationService,
+)
+from anura.services.screenshot_service import ScreenshotService
+from anura.services.settings import settings
+from anura.utils import cleanup_orphaned_resources
+from anura.window import AnuraWindow
 
 
 class AnuraApplication(Adw.Application):

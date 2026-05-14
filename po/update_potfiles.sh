@@ -64,9 +64,8 @@ if [ ! -z "${lang}" ]; then
 fi
 
 # 7. Finalization
-# Rename the APPID.pot to the standard project name for the build system
-mv $APPID.pot $APPNAME.pot.bak
-rm -f *.pot
-mv $APPNAME.pot.bak $APPNAME.pot
+# Keep the POT file named after the APPID for Meson i18n compatibility
+# No renaming needed
+rm -f $APPNAME.pot $APPNAME-python.pot $APPNAME-blueprint.pot $APPNAME-desktop.pot $APPNAME-metainfo.pot *.ui
 
-echo "Anura: Extraction complete. Template saved as $APPNAME.pot"
+echo "Anura: Extraction complete. Template saved as $APPID.pot"

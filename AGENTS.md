@@ -147,10 +147,10 @@ flatpak-external-data-checker --update flatpak/com.github.d3msudo.anura.json
 
 ```bash
 # Regenerate POT template after string changes
-./generate_pot.sh
+cd po && ./update_potfiles.sh
 
 # Update existing .po files
-for lang in po/*.po; do msgmerge -U "$lang" po/anura.pot; done
+for lang in po/*.po; do msgmerge -U "$lang" po/com.github.d3msudo.anura.pot; done
 ```
 
 ## Dependency Management
@@ -523,7 +523,7 @@ uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PA
 - Do NOT add dependencies not present in the Flatpak manifest without discussing first
 - The only official linter is `ruff` — do not suggest flake8, pylint or black
 - Never modify: `po/*.po`, `anura/_release_notes.py`, `data/ui/*.ui`, `CHANGELOG.md`
-- After any new UI string, remind the user to run `./generate_pot.sh`
+- After any new UI string, remind the user to run `cd po && ./update_potfiles.sh`
 - Thread safety: never emit GObject signals from secondary threads — use `GLib.idle_add()`
 - When in doubt about an architectural choice, ask before proceeding
 
