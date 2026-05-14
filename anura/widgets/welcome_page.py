@@ -7,7 +7,7 @@ import contextlib
 from mimetypes import guess_type
 import os
 
-from gi.repository import Adw, Gdk, Gio, Gtk
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk
 from loguru import logger
 
 from anura.config import RESOURCE_PREFIX
@@ -47,19 +47,31 @@ class WelcomePage(Adw.NavigationPage):
         self._setup_drop_target()
 
     def _setup_drop_target(self) -> None:
-        """Configure the drop target using Gtk.DropTarget with Gdk.FileList.
+        """Configure drop target with DropTargetAsync and explicit text/uri-list.
 
-        This uses the GTK4 high-level API which handles the X11 Xdnd protocol
-        internally and delivers data only after complete transfer — preventing
-        the blocking stream read freeze on non-GNOME desktops (XFCE, LXDE, etc).
+        We deliberately request only 'text/uri-list' and NOT Gdk.FileList.
 
-        Gdk.FileList covers: text/uri-list, libfm/files, x-special/gnome-icon-list
-        and other file list formats used by various file managers.
+        Why: Gtk.DropTarget(Gdk.FileList) in a Flatpak causes GTK to prefer
+        'application/vnd.portal.filetransfer'. In VirtualBox guests (where VBoxClient
+        --draganddrop intercepts DnD), the portal transfer hangs because xdg-desktop-portal
+        is not properly available in non-GNOME (LXDE/XFCE) guests.
+
+        By requesting 'text/uri-list' explicitly, GDK uses the raw Xdnd protocol
+        (which PCManFM, Thunar and all standard file managers provide directly)
+        and bypasses the portal entirely.
+
+        The stream read is done fully asynchronously (read_bytes_async, NOT read_upto)
+        so the GTK main loop is never blocked.
         """
-        self._drop_target = Gtk.DropTarget.new(Gdk.FileList, Gdk.DragAction.COPY)
+        formats = Gdk.ContentFormats.new(["text/uri-list"])
+        self._drop_target = Gtk.DropTargetAsync(
+            formats=formats,
+            actions=Gdk.DragAction.COPY,
+        )
+        self._drop_cancellable: Gio.Cancellable | None = None
         self._drop_target.connect("drop", self._on_dnd_drop)
-        self._drop_target.connect("enter", self._on_dnd_enter)
-        self._drop_target.connect("leave", self._on_dnd_leave)
+        self._drop_target.connect("drag-enter", self._on_dnd_enter)
+        self._drop_target.connect("drag-leave", self._on_dnd_leave)
         self.drop_area.add_controller(self._drop_target)
 
     def _on_drop_button_clicked(self, _: Gtk.Button) -> None:
@@ -71,66 +83,140 @@ class WelcomePage(Adw.NavigationPage):
         else:
             self.drop_button.remove_css_class("suggested-action")
 
-    def _on_dnd_enter(self, target: Gtk.DropTarget, x: float, y: float) -> Gdk.DragAction:
+    def _on_dnd_enter(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float) -> Gdk.DragAction:
         """Visual feedback when drag enters the drop area."""
         self.drop_area.add_css_class("drag-hover")
         return Gdk.DragAction.COPY
 
-    def _on_dnd_leave(self, target: Gtk.DropTarget) -> None:
+    def _on_dnd_leave(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop) -> None:
         """Remove visual feedback when drag leaves the drop area."""
         self.drop_area.remove_css_class("drag-hover")
 
-    def _on_dnd_drop(self, target: Gtk.DropTarget, value: Gdk.FileList, x: float, y: float) -> bool:
-        """Handle drop event. GTK has already fully transferred the data at this point.
+    def _on_dnd_drop(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float) -> bool:
+        """Handle drop signal. Initiates a fully async stream read.
 
-        Called only after complete data transfer — no blocking I/O on main thread.
-        value is a Gdk.FileList containing Gio.File objects.
+        We start an async read of text/uri-list and return True immediately so GTK
+        does not reject the drop. The actual processing happens in callbacks.
+        drop.finish() MUST be called in the final callback (Xdnd protocol requirement).
+        """
+        self.drop_area.remove_css_class("drag-hover")
+
+        # Cancel any previous in-flight drop
+        if self._drop_cancellable:
+            self._drop_cancellable.cancel()
+        self._drop_cancellable = Gio.Cancellable()
+
+        drop.read_async(
+            ["text/uri-list"],
+            GLib.PRIORITY_DEFAULT,
+            self._drop_cancellable,
+            self._on_drop_stream_ready,
+            drop,
+        )
+        return True  # Accept the drop; we will finish() in the final callback
+
+    def _on_drop_stream_ready(
+        self,
+        source_object: Gdk.Drop,
+        result: Gio.AsyncResult,
+        drop: Gdk.Drop,
+    ) -> None:
+        """Called when the Xdnd stream is ready. Starts async byte read.
+
+        source_object is the Gdk.Drop that initiated read_async (not an InputStream).
+        We immediately start read_bytes_async — no blocking calls here.
+        """
+        try:
+            input_stream, _mime_type = source_object.read_finish(result)
+        except GLib.Error as e:
+            logger.error(f"DnD: Failed to open drop stream: {e}")
+            drop.finish(Gdk.DragAction.COPY)  # Always finish, even on error
+            return
+
+        input_stream.read_bytes_async(
+            65536,  # 64 KB — more than enough for any URI list
+            GLib.PRIORITY_DEFAULT,
+            self._drop_cancellable,
+            self._on_drop_bytes_ready,
+            (input_stream, drop),
+        )
+
+    def _on_drop_bytes_ready(
+        self,
+        input_stream: Gio.InputStream,
+        result: Gio.AsyncResult,
+        user_data: tuple,
+    ) -> None:
+        """Called when bytes are available. Parses URIs and triggers OCR.
+
+        This is the end of the async chain. We call drop.finish() here (required),
+        then process the first valid local image path.
         """
         from gettext import gettext as _
 
-        self.drop_area.remove_css_class("drag-hover")
+        stream, drop = user_data
 
-        files = value.get_files()
-        if not files:
-            logger.error("DnD: Empty file list received")
+        try:
+            gbytes = stream.read_bytes_finish(result)
+        except GLib.Error as e:
+            logger.error(f"DnD: Failed to read drop bytes: {e}")
+            drop.finish(Gdk.DragAction.COPY)
+            return
+        finally:
+            self._drop_cancellable = None
+
+        # Xdnd protocol: always call finish BEFORE processing
+        drop.finish(Gdk.DragAction.COPY)
+
+        raw = gbytes.get_data() if gbytes else None
+        if not raw:
+            logger.error("DnD: Received empty data from drop stream")
+            self._show_error_toast(_("No file data received from drop"))
+            return
+
+        try:
+            text = raw.decode("utf-8")
+        except UnicodeDecodeError:
+            text = raw.decode("latin-1", errors="replace")
+
+        # Parse text/uri-list: skip comment lines (#) and empty lines
+        uris = [line.strip() for line in text.splitlines() if line.strip() and not line.startswith("#")]
+
+        if not uris:
+            logger.error("DnD: No valid URIs found in drop data")
             self._show_error_toast(_("No valid file found in drop"))
-            return False
+            return
 
-        # Take the first file only (Anura processes one image at a time)
-        gfile: Gio.File = files[0]
+        # Anura processes one image at a time — take the first URI
+        gfile = Gio.File.new_for_uri(uris[0])
         local_path = gfile.get_path()
 
         if not local_path:
-            logger.error("DnD: File has no local path (non-local URI?)")
+            logger.error(f"DnD: URI has no local path: {uris[0]}")
             self._show_error_toast(_("Only local files can be dropped"))
-            return False
+            return
 
         if not os.path.exists(local_path):
-            logger.error(f"DnD: File not accessible (Flatpak permission): {local_path}")
+            logger.error(f"DnD: File not accessible: {local_path}")
             self._show_error_toast(_("File not accessible. Ensure Anura has permission to access this location."))
-            return False
+            return
 
-        # Validate MIME type
         (mimetype, _encoding) = guess_type(local_path)
         logger.debug(f"DnD: Dropped file ({mimetype}): {local_path}")
 
         if not mimetype or not mimetype.startswith("image"):
             self._show_error_toast(_("Only images can be processed that way."))
-            return False
+            return
 
-        # Resolve window reference
         window = self.get_root()
         if not window or not hasattr(window, "process_dnd_file_sync"):
-            logger.error("DnD: Root window missing or missing process_dnd_file_sync")
+            logger.error("DnD: Root window missing process_dnd_file_sync")
             self._show_error_toast(_("Failed to process dropped file"))
-            return False
+            return
 
-        # Set processing state and start OCR
         self._set_drop_area_processing_state(True)
         self.show_spinner()
         window.process_dnd_file_sync(local_path)
-
-        return True
 
     def _show_error_toast(self, message: str) -> None:
         """Show error toast to user."""
@@ -182,6 +268,11 @@ class WelcomePage(Adw.NavigationPage):
             with contextlib.suppress(Exception):
                 self.language_popover.disconnect(self._language_changed_handler_id)
             self._language_changed_handler_id = None
+
+        # Cancel any in-flight drop operation
+        if self._drop_cancellable:
+            self._drop_cancellable.cancel()
+            self._drop_cancellable = None
 
         # Clean up drop target controller
         if hasattr(self, "_drop_target") and self._drop_target:
