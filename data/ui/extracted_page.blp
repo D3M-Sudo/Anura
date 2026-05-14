@@ -25,7 +25,9 @@ template $ExtractedPage : Adw.NavigationPage {
       Adw.SplitButton grab_btn {
         action-name: "app.get_screenshot";
         tooltip-text: _("Take a screenshot");
-        accessible-label: _("Take a screenshot");
+        accessibility {
+          label: _("Take a screenshot");
+        }
         icon-name: "camera-photo-symbolic";
         menu-model: grab_menu;
       }
@@ -34,7 +36,9 @@ template $ExtractedPage : Adw.NavigationPage {
       Button text_copy_btn {
         action-name: "app.copy_to_clipboard";
         tooltip-text: C_("Extracted screen", "Copy extracted text to clipboard");
-        accessible-label: C_("Extracted screen", "Copy extracted text to clipboard");
+        accessibility {
+          label: C_("Extracted screen", "Copy extracted text to clipboard");
+        }
         icon-name: "edit-copy-symbolic";
       }
 
@@ -47,7 +51,9 @@ template $ExtractedPage : Adw.NavigationPage {
           child: Button listen_btn {
             action-name: "app.listen";
             tooltip-text: C_("Extracted screen", "Listen to text");
-            accessible-label: C_("Extracted screen", "Listen to text");
+            accessibility {
+              label: C_("Extracted screen", "Listen to text");
+            }
             icon-name: "audio-speakers-symbolic";
           };
         }
@@ -57,7 +63,9 @@ template $ExtractedPage : Adw.NavigationPage {
           child: Button listen_cancel_btn {
             action-name: "app.listen_cancel";
             tooltip-text: C_("Extracted screen", "Cancel listening to text");
-            accessible-label: C_("Extracted screen", "Cancel listening to text");
+            accessibility {
+              label: C_("Extracted screen", "Cancel listening to text");
+            }
             icon-name: "media-playback-stop-symbolic";
           };
         }
@@ -80,14 +88,18 @@ template $ExtractedPage : Adw.NavigationPage {
             Button listen_pause_btn {
               action-name: "app.listen_pause";
               tooltip-text: C_("Extracted screen", "Pause/Resume listening");
-              accessible-label: C_("Extracted screen", "Pause or resume listening");
+              accessibility {
+                label: C_("Extracted screen", "Pause or resume listening");
+              }
               icon-name: "media-playback-pause-symbolic";
             }
 
             Button {
               action-name: "app.listen_cancel";
               tooltip-text: C_("Extracted screen", "Stop listening");
-              accessible-label: C_("Extracted screen", "Stop listening");
+              accessibility {
+                label: C_("Extracted screen", "Stop listening");
+              }
               icon-name: "media-playback-stop-symbolic";
             }
           };
@@ -98,7 +110,9 @@ template $ExtractedPage : Adw.NavigationPage {
       MenuButton {
         icon-name: "open-menu-symbolic";
         tooltip-text: C_("Extracted screen", "Open menu");
-        accessible-label: C_("Extracted screen", "Open menu");
+        accessibility {
+          label: C_("Extracted screen", "Open menu");
+        }
         menu-model: primary_menu;
       }
 
@@ -106,7 +120,9 @@ template $ExtractedPage : Adw.NavigationPage {
       MenuButton share_button {
         icon-name: "emblem-shared-symbolic";
         tooltip-text: C_("Extracted screen", "Share To");
-        accessible-label: C_("Extracted screen", "Share text to other applications");
+        accessibility {
+          label: C_("Extracted screen", "Share text to other applications");
+        }
         popover: Popover {
 
           styles ["menu"]
