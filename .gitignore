@@ -64,5 +64,10 @@ coverage.xml
 # Test runner script (development utility)
 run_tests.py
 
-# AI testing reference (private)
-.TESTING.md
+# Local development and temporary files
+.jules/
+.env
+.env.*
+*.bak
+*.tmp
+*.temp

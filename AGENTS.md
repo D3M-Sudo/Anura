@@ -211,7 +211,7 @@ Python runtime dependencies (installed in Flatpak):
 
 ```meson
 project('anura',
-    version: '0.1.4',
+    version: '0.1.4.3',
     meson_version: '>= 1.5.0',
     ...
 )
@@ -573,3 +573,8 @@ Se stai usando **Cline**, il file `CLAUDE.md` nella root del progetto contiene t
 | 2026-05-04 | Fixed ruff linting errors across codebase | Resolved import sorting and code style issues in 14 files |
 | 2026-05-04 | Fixed Flatpak manifest warnings | Removed _comment properties causing flatpak-builder warnings |
 | 2026-05-04 | Regenerated anura.pot (+30 net strings) and synced 25 .po files | Image validation, clipboard timeout, URL security blocking strings added |
+| 2026-05-14 | Implemented Asynchronous Drag-and-Drop | Resolved UI freezes in VM/X11 environments by using Gtk.DropTargetAsync |
+| 2026-05-14 | Optimized image processing with LUT | Significant performance improvement in Bolt thresholding pipeline |
+| 2026-05-14 | Hardened signal lifecycle management | Prevented memory leaks and signal leaks in core services and widgets |
+| 2026-05-14 | Enhanced accessibility for ExtractedPage | Palette improvements and proper focus management for OCR results |
+| 2026-05-14 | Implemented structured data extraction | OCR text now automatically identifies emails, URLs, and phone numbers |
