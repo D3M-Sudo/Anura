@@ -8,7 +8,6 @@ import threading
 
 # Initialize localization
 def _setup_i18n():
-    from gi.repository import GLib
 
     from anura.config import APP_ID
 
