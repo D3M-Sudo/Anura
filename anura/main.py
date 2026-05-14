@@ -63,7 +63,6 @@ def _setup_i18n():
                 locale.bind_textdomain_codeset(project_name, "UTF-8")
 
             # Try to also bind via GLib if available early
-            import gi
             from gi.repository import GLib
 
             GLib.bindtextdomain(project_name, localedir)
