@@ -5,18 +5,54 @@
 
 from gettext import gettext as _
 import os
+from pathlib import Path
 import re
 import threading
+import time
 from typing import ClassVar
 from urllib.request import url2pathname
+import uuid
 
-from gi.repository import Gio, GLib, GObject, Xdp
-from loguru import logger
-from PIL import Image
-import pytesseract
-from pyzbar.pyzbar import decode
+import gi
 
-from anura.config import LANG_CODE_PATTERN, get_tesseract_config
+# Set GTK version requirements before imports
+gi.require_version("Gio", "2.0")
+gi.require_version("GLib", "2.0")
+gi.require_version("GObject", "2.0")
+gi.require_version("Xdp", "1.0")
+
+from gi.repository import Gio, GLib, GObject, Xdp  # noqa: E402
+from loguru import logger  # noqa: E402
+from PIL import Image  # noqa: E402
+import pytesseract  # noqa: E402
+from pyzbar.pyzbar import decode  # noqa: E402
+
+from anura.config import LANG_CODE_PATTERN, get_tesseract_config  # noqa: E402
+from anura.services.host_screenshot_fallback import (  # noqa: E402
+    build_detection_argv,
+    build_screenshot_argv,
+    find_tool_by_name,
+    parse_detection_output,
+)
+from anura.utils.portal_advice import detect_portal_advice  # noqa: E402
+from anura.utils.text_preprocessor import get_text_preprocessor  # noqa: E402
+
+
+def _is_flatpak_environment() -> bool:
+    """Detect if running in Flatpak sandbox."""
+    return os.path.exists("/.flatpak-info")
+
+
+def _configure_tesseract_path() -> None:
+    """Configure Tesseract command path for Flatpak environment."""
+    if _is_flatpak_environment() and os.path.exists("/app/bin/tesseract"):
+        # Force Tesseract to use Flatpak path
+        os.environ["TESSERACT_CMD"] = "/app/bin/tesseract"
+        logger.info("Anura OCR: Using Flatpak Tesseract at /app/bin/tesseract")
+    else:
+        # Use system Tesseract from PATH
+        os.environ.pop("TESSERACT_CMD", None)
+        logger.debug("Anura OCR: Using system Tesseract from PATH")
 
 
 class ScreenshotService(GObject.GObject):
@@ -28,62 +64,379 @@ class ScreenshotService(GObject.GObject):
     __gtype_name__ = "ScreenshotService"
 
     __gsignals__: ClassVar[dict[str, tuple]] = {
-        "error": (GObject.SIGNAL_RUN_LAST, None, (str,)),
-        "decoded": (GObject.SIGNAL_RUN_FIRST, None, (str, bool)),
+        "error": (GObject.SignalFlags.RUN_LAST, None, (str,)),
+        "decoded": (GObject.SignalFlags.RUN_FIRST, None, (str, bool)),
+        # Emitted when the host's xdg-desktop-portal screenshot backend is
+        # missing/broken (libportal generic-failure pattern). Consumers
+        # typically use this to reveal a persistent install hint banner;
+        # the user-facing toast is still emitted via "error".
+        "portal-backend-missing": (GObject.SignalFlags.RUN_FIRST, None, ()),
     }
 
-    __slots__ = ("_cancelable_handler_id", "_cancellable_lock", "cancelable", "portal")
+    __slots__ = (
+        "_active_cancellable",
+        "_cancellable_lock",
+        "_env_diagnostics_logged",
+        "cancelable",
+        "portal",
+    )
 
-    def __init__(self):
+    def __init__(self) -> None:
         GObject.GObject.__init__(self)
         self._cancellable_lock = threading.Lock()
         with self._cancellable_lock:
             self.cancelable: Gio.Cancellable = Gio.Cancellable.new()
-            self._cancelable_handler_id = self.cancelable.connect("cancelled", self.capture_cancelled)
         self.portal = Xdp.Portal()
+        self._active_cancellable = None
+        self._env_diagnostics_logged = False
+
+        # Configure Tesseract path for Flatpak environment
+        _configure_tesseract_path()
 
     def capture(self, lang: str, copy: bool = False) -> None:
         """Requests a screenshot from the system portal."""
+        # Make cancellable check and replacement atomic
         with self._cancellable_lock:
             # If previous request was cancelled, create fresh cancellable
             if self.cancelable.is_cancelled():
-                # Disconnect old handler before creating new cancellable
-                if self._cancelable_handler_id is not None:
-                    try:
-                        self.cancelable.disconnect(self._cancelable_handler_id)
-                    except (TypeError, RuntimeError):
-                        pass
                 self.cancelable = Gio.Cancellable.new()
-                self._cancelable_handler_id = self.cancelable.connect("cancelled", self.capture_cancelled)
             cancellable = self.cancelable
-        # Release lock before async D-Bus call to prevent deadlock
-        self.portal.take_screenshot(
-            None,
-            Xdp.ScreenshotFlags.INTERACTIVE,
-            cancellable,
-            self.take_screenshot_finish,
-            [lang, copy],
-        )
+            # Store reference for callback to prevent race condition
+            self._active_cancellable = cancellable
 
-    def take_screenshot_finish(self, source_object, res: Gio.Task, user_data):
-        """Callback triggered when the portal finishes the screenshot request."""
-        if res.had_error():
-            logger.error("Anura Screenshot: Portal failed to provide a screenshot.")
-            return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))
+        # Call portal outside lock but with captured cancellable reference
+        # This prevents deadlock while maintaining thread safety
+        try:
+            self.portal.take_screenshot(
+                None,
+                Xdp.ScreenshotFlags.INTERACTIVE,
+                cancellable,
+                self.take_screenshot_finish,
+                [lang, copy],
+            )
+        except Exception as e:
+            logger.error(f"Anura Screenshot: Portal take_screenshot call failed: {e}")
+            GLib.idle_add(self.emit, "error", _("Failed to initiate screenshot capture."))
 
+    def take_screenshot_finish(self, source_object: object, res: Gio.Task, user_data: tuple) -> None:
+        """Callback triggered when portal finishes screenshot request."""
         lang, copy = user_data
-        uri = self.portal.take_screenshot_finish(res)
+        try:
+            uri = self.portal.take_screenshot_finish(res)
+        except GLib.Error as e:
+            # User cancellation (Esc / dismissed Portal dialog) is a normal
+            # outcome — don't surface a noisy error notification for it.
+            if e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED):
+                logger.debug("Anura Screenshot: Portal request cancelled by user.")
+                return None
+            # Log full error context (domain + code + message) to help diagnose
+            # portal backend issues (e.g. missing xdg-desktop-portal-gtk on
+            # non-GNOME desktops, where the request is rejected with a generic
+            # "Screenshot failed" message).
+            logger.error(
+                "Anura Screenshot: Portal failed to provide a screenshot "
+                f"(domain={e.domain}, code={e.code}): {e.message}",
+            )
+            # Detect the libportal generic-failure pattern: G_IO_ERROR_FAILED
+            # (code 0) with the literal "Screenshot failed" string. libportal
+            # raises this when the host's xdg-desktop-portal backend rejects
+            # the request without a useful reason — typically because no
+            # screenshot-capable backend (xdg-desktop-portal-gtk /
+            # xdg-desktop-portal-gnome / -kde) is installed for the active
+            # desktop session, or the backend itself failed (e.g. lack of
+            # DRI3 in a VirtualBox guest). Tell the user where to look.
+            is_generic_backend_failure = (
+                e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.FAILED)
+                and (e.message or "").strip().lower() == "screenshot failed"
+            )
+            if is_generic_backend_failure:
+                # On a generic backend failure, dump host environment context
+                # (desktop, session type, display server, Flatpak state) once
+                # per process so support logs include enough information to
+                # tell apart "backend missing" from "backend installed but
+                # broken in this session" (e.g. VirtualBox guest, Wayland
+                # without screencast, etc.).
+                self._log_portal_environment()
+                # Before surfacing the failure to the user, try a host-side
+                # fallback (gnome-screenshot / xfce4-screenshooter / scrot /
+                # ...). This rescues users on LXQt / Xfce / Openbox where the
+                # portal is present but no backend exposes Screenshot.
+                self._try_host_screenshot_fallback(lang, copy)
+                return None
+            user_message = _("Screenshot failed: {reason}").format(reason=e.message)
+            return GLib.idle_add(self.emit, "error", user_message)
+        except Exception as e:
+            logger.error(f"Anura Screenshot: Unexpected error finishing screenshot: {e}")
+            return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))
 
         if not uri:
-            logger.warning("Anura Screenshot: Portal returned empty URI.")
+            # Some portals return success but empty URI if the user dismissed a custom UI
+            logger.warning("Anura Screenshot: Portal returned empty URI - treating as cancellation.")
+            return None
+
+        try:
+            if uri.startswith("file://") and len(uri) > len("file://"):
+                filename = url2pathname(uri[len("file://") :])
+            else:
+                filename = GLib.Uri.unescape_string(uri)
+        except (ValueError, GLib.Error) as e:
+            logger.error(f"Anura Screenshot: Failed to parse URI '{uri}': {e}")
             return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))
 
-        if uri.startswith("file://"):
-            filename = url2pathname(uri[len("file://") :])
-        else:
-            filename = GLib.Uri.unescape_string(uri)
+        # Validate the extracted filename before processing
+        if not filename or not os.path.exists(filename):
+            logger.error(f"Anura Screenshot: Invalid or non-existent file path: {filename}")
+            return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))
 
-        self.decode_image(lang, filename, copy, True)
+        from anura.gobject_worker import GObjectWorker
+        GObjectWorker.call(self.decode_image, (lang, filename, copy, True))
+
+    # Environment variables surfaced when the portal screenshot fails. These
+    # tell us which desktop/session backend should be answering the portal
+    # request, which is the single most useful piece of triage data when a
+    # screenshot fails with a generic libportal error.
+    _PORTAL_DIAGNOSTIC_ENV_KEYS = (
+        "XDG_CURRENT_DESKTOP",
+        "XDG_SESSION_TYPE",
+        "XDG_SESSION_DESKTOP",
+        "DESKTOP_SESSION",
+        "GDMSESSION",
+        "WAYLAND_DISPLAY",
+        "DISPLAY",
+        "FLATPAK_ID",
+        "container",
+    )
+
+    def _log_portal_environment(self) -> None:
+        """Dump host environment context once on portal failure.
+
+        Captures the XDG/Flatpak environment variables that determine which
+        xdg-desktop-portal backend handles the request. Logged at most once
+        per process so repeated failures don't flood the log.
+        """
+        if self._env_diagnostics_logged:
+            return
+        self._env_diagnostics_logged = True
+
+        snapshot = ", ".join(f"{key}={os.environ.get(key) or '<unset>'}" for key in self._PORTAL_DIAGNOSTIC_ENV_KEYS)
+        in_flatpak = _is_flatpak_environment()
+        logger.debug(
+            f"Anura Screenshot diagnostics: in_flatpak={in_flatpak}, {snapshot}",
+        )
+
+    def _emit_portal_failure(self) -> None:
+        """Emit the user-facing failure UI for a missing portal backend.
+
+        Centralised so both ``take_screenshot_finish`` (when the host
+        fallback is unavailable) and ``_on_host_capture_complete`` (when
+        the host fallback runs out of options) can call it consistently.
+        Uses desktop-aware advice based on XDG_CURRENT_DESKTOP.
+        """
+        advice = detect_portal_advice()
+        user_message = advice.long_message
+        GLib.idle_add(self.emit, "portal-backend-missing")
+        GLib.idle_add(self.emit, "error", user_message)
+
+    def _try_host_screenshot_fallback(self, lang: str, copy: bool) -> None:
+        """Attempt to capture a screenshot via a host-side CLI tool.
+
+        Triggered after ``xdg-desktop-portal`` returns the libportal generic
+        ``Screenshot failed`` (no backend exposes the Screenshot interface
+        for the active session). Tries ``flatpak-spawn --host`` to invoke
+        a host-installed screenshot tool (gnome-screenshot, xfce4-screenshooter,
+        scrot, …). On success the captured PNG is fed into the same OCR
+        pipeline as portal screenshots; on failure ``_emit_portal_failure``
+        surfaces the original error.
+
+        Only runs in a Flatpak sandbox — outside Flatpak there is no
+        ``flatpak-spawn`` and the portal failure is genuinely terminal.
+        """
+        if not _is_flatpak_environment():
+            self._emit_portal_failure()
+            return
+        try:
+            argv = build_detection_argv()
+            proc = Gio.Subprocess.new(
+                argv,
+                Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_SILENCE,
+            )
+        except GLib.Error as e:
+            logger.warning(f"Anura Screenshot: cannot spawn flatpak-spawn for host fallback: {e.message}")
+            self._emit_portal_failure()
+            return
+        proc.communicate_utf8_async(
+            None,
+            self.cancelable,
+            self._on_host_detection_complete,
+            (lang, copy),
+        )
+
+    def _on_host_detection_complete(
+        self,
+        proc: Gio.Subprocess,
+        res: Gio.AsyncResult,
+        user_data: tuple,
+    ) -> None:
+        """Handle the result of the host-tool detection probe.
+
+        On success, picks a tool from the probe's stdout and proceeds to
+        the capture step. On failure, falls back to the original portal
+        error UI.
+        """
+        lang, copy = user_data
+        try:
+            success, stdout, _stderr = proc.communicate_utf8_finish(res)
+        except GLib.Error as e:
+            logger.debug(f"Anura Screenshot: host fallback detection failed: {e.message}")
+            self._emit_portal_failure()
+            return
+
+        exit_status = proc.get_exit_status() if proc.get_if_exited() else -1
+        if not success or exit_status != 0:
+            logger.debug(
+                f"Anura Screenshot: no host-side screenshot tool found (exit={exit_status}). "
+                "Surface the original portal error.",
+            )
+            self._emit_portal_failure()
+            return
+
+        tool_name = parse_detection_output(stdout or "")
+        if tool_name is None:
+            self._emit_portal_failure()
+            return
+        tool = find_tool_by_name(tool_name)
+        if tool is None:
+            self._emit_portal_failure()
+            return
+
+        # Pick a host-addressable temp path inside ~/Anura screenshots.
+        # This directory is created on the host via flatpak-spawn --host.
+        output_dir = Path.home() / "Anura screenshots"
+        output_path = str(output_dir / f"anura-shot-{uuid.uuid4().hex}.png")
+
+        logger.info(f"Anura Screenshot: portal failed, falling back to host '{tool_name}'.")
+        # Log environment for debugging display issues
+        env_vars = ["DISPLAY", "WAYLAND_DISPLAY", "XDG_SESSION_TYPE", "XDG_CURRENT_DESKTOP"]
+        env_snapshot = ", ".join(f"{k}={os.environ.get(k) or '<unset>'}" for k in env_vars)
+        logger.debug(f"Anura Screenshot: host fallback env: {env_snapshot}")
+
+        # Create the directory on the host asynchronously to avoid blocking main thread
+        mkdir_argv = ["flatpak-spawn", "--host", "mkdir", "-p", str(output_dir)]
+        try:
+            mkdir_proc = Gio.Subprocess.new(mkdir_argv, Gio.SubprocessFlags.STDERR_SILENCE)
+            mkdir_proc.wait_async(
+                self.cancelable,
+                self._on_mkdir_complete,
+                (lang, copy, output_path, tool),
+            )
+        except GLib.Error as e:
+            logger.warning(f"Anura Screenshot: cannot spawn host mkdir: {e.message}")
+            self._emit_portal_failure()
+            return
+
+    def _on_mkdir_complete(
+        self,
+        proc: Gio.Subprocess,
+        res: Gio.AsyncResult,
+        user_data: tuple,
+    ) -> None:
+        """Handle mkdir completion and proceed with screenshot capture."""
+        lang, copy, output_path, tool = user_data
+        try:
+            proc.wait_finish(res)
+        except GLib.Error as e:
+            logger.warning(f"Anura Screenshot: mkdir failed: {e.message}")
+            self._emit_portal_failure()
+            return
+
+        exit_status = proc.get_exit_status() if proc.get_if_exited() else -1
+        if exit_status != 0:
+            logger.warning(f"Anura Screenshot: mkdir failed with exit code {exit_status}")
+            self._emit_portal_failure()
+            return
+
+        # Now proceed with screenshot capture
+        try:
+            argv = build_screenshot_argv(tool, output_path)
+            logger.debug(f"Anura Screenshot: host fallback argv: {argv}")
+            capture_proc = Gio.Subprocess.new(
+                argv,
+                Gio.SubprocessFlags.STDERR_PIPE | Gio.SubprocessFlags.STDOUT_PIPE,
+            )
+        except GLib.Error as e:
+            logger.warning(f"Anura Screenshot: cannot spawn host screenshot tool: {e.message}")
+            self._emit_portal_failure()
+            return
+        capture_proc.wait_async(
+            self.cancelable,
+            self._on_host_capture_complete,
+            (lang, copy, output_path),
+        )
+
+    def _on_host_capture_complete(
+        self,
+        proc: Gio.Subprocess,
+        res: Gio.AsyncResult,
+        user_data: tuple,
+    ) -> None:
+        """Handle the result of the host-side screenshot capture.
+
+        Feeds the captured PNG into the OCR pipeline on success
+        (``decode_image`` with ``remove_source=True`` cleans up the temp
+        file). On failure or user-cancellation, emits the original portal
+        error.
+        """
+        lang, copy, output_path = user_data
+        try:
+            proc.wait_finish(res)
+        except GLib.Error as e:
+            logger.debug(f"Anura Screenshot: host capture wait failed: {e.message}")
+            self._emit_portal_failure()
+            return
+
+        exit_status = proc.get_exit_status() if proc.get_if_exited() else -1
+
+        # Retry loop for file existence check - handles race condition where
+        # the filesystem hasn't flushed the file yet after process exit.
+        file_exists = False
+        file_size = 0
+        max_retries = 10
+        retry_delay_ms = 100
+
+        for attempt in range(max_retries):
+            file_exists = os.path.exists(output_path)
+            if file_exists:
+                file_size = os.path.getsize(output_path)
+                if file_size > 0:
+                    break
+            if attempt < max_retries - 1:
+                time.sleep(retry_delay_ms / 1000.0)
+
+        if exit_status != 0:
+            # User pressed Esc / closed the host tool's selection dialog.
+            logger.info(
+                f"Anura Screenshot: host tool exited non-zero ({exit_status}); "
+                f"user likely cancelled. file_exists={file_exists}, file_size={file_size}"
+            )
+            # Best-effort cleanup: tool may still have created an empty file.
+            if file_exists:
+                try:
+                    os.unlink(output_path)
+                except OSError as e:
+                    logger.debug(f"Anura Screenshot: cleanup failed: {e}")
+            self._emit_portal_failure()
+            return
+
+        if not file_exists or file_size == 0:
+            logger.warning(
+                f"Anura Screenshot: host tool exited 0 but produced no output after {max_retries} retries. "
+                f"path={output_path}, exists={file_exists}, size={file_size}"
+            )
+            self._emit_portal_failure()
+            return
+
+        # Same OCR path as a successful portal screenshot.
+        self.decode_image(lang, output_path, copy, True)
 
     def decode_image_sync(
         self,
@@ -101,64 +454,143 @@ class ScreenshotService(GObject.GObject):
                    - text: The extracted text or QR code content (None if failed or no text)
                    - error_message: Error description if failed, None otherwise
         """
-        # Security: Validate language code before processing (same as decode_image)
+        validation_result = self._validate_decode_inputs(lang)
+        if not validation_result[0]:
+            return validation_result
+
+        is_physical_file = self._determine_file_type(file, remove_source)
+        start_time = time.time()
+
+        try:
+            extracted, error_message = self._process_image_decode(file, lang, start_time)
+        except Exception as e:
+            extracted, error_message = self._handle_decode_exception(e)
+        finally:
+            self._cleanup_temporary_file(file, is_physical_file, remove_source)
+
+        return self._format_decode_result(extracted, error_message)
+
+    def _validate_decode_inputs(self, lang: str) -> tuple[bool, str | None, str | None]:
+        """Validate language code for OCR processing."""
         if not lang or not re.match(LANG_CODE_PATTERN, lang):
             logger.error(f"Anura: Invalid language code '{lang}' for OCR")
-            return (False, None, _("Invalid language code specified."))
+            return (False, "", _("Invalid language code specified."))
+        return (True, None, None)
 
-        # Rigor: Ensure source removal only for valid local file paths
-        is_physical_file = isinstance(file, str) and os.path.exists(file)
-        if not is_physical_file:
-            remove_source = False
+    def _determine_file_type(self, file: str | Image.Image | object, _remove_source: bool) -> bool:
+        """Determine if file is a physical file."""
+        return isinstance(file, str) and os.path.exists(file)
 
-        logger.debug(f"Anura OCR: Decoding image synchronously with language: {lang}")
+    def _process_image_decode(
+        self,
+        file: str | Image.Image | object,
+        lang: str,
+        start_time: float,
+    ) -> tuple[str | None, str | None]:
+        """Process image for QR code detection and OCR."""
         extracted = None
         error_message = None
 
+        with Image.open(file) as img:
+            image_size = img.size
+            logger.debug(f"Anura OCR: Processing image size: {image_size[0]}x{image_size[1]}")
+
+            # Try QR code detection first
+            extracted = self._try_qr_detection(img, start_time)
+
+            # If no QR code found, try OCR
+            if extracted is None:
+                extracted = self._try_ocr_extraction(img, lang, start_time)
+
+        return extracted, error_message
+
+    def _try_qr_detection(self, img: Image.Image, start_time: float) -> str | None:
+        """Try to detect and decode QR codes from image."""
         try:
-            # Image.open is polymorphic: handles both paths and byte streams
-            with Image.open(file) as img:
-                # Step 1: QR Code detection
-                qr_data = decode(img)
+            qr_data = decode(img)
+            if len(qr_data) > 0:
+                extracted = qr_data[0].data.decode("utf-8")
+                duration = time.time() - start_time
+                logger.info(f"Anura OCR: QR code detected in {duration:.3f}s")
+                return extracted
+        except Exception as e:
+            logger.debug(f"Anura OCR: QR detection failed: {e}")
+        return None
 
-                if len(qr_data) > 0:
-                    extracted = qr_data[0].data.decode("utf-8")
-                    logger.info("Anura OCR: QR code detected.")
+    def _try_ocr_extraction(self, img: Image.Image, lang: str, start_time: float) -> str | None:
+        """Try to extract text using Tesseract OCR with preprocessing."""
+        try:
+            # Apply image enhancement preprocessing
+            preprocessor = get_text_preprocessor()
+            enhanced_img = preprocessor.enhance_image(img)
 
-                # Step 2: Tesseract OCR
-                else:
-                    text = pytesseract.image_to_string(img, lang=lang, config=get_tesseract_config(lang))
-                    extracted = text.strip()
+            # Extract text with Tesseract
+            raw_text = pytesseract.image_to_string(enhanced_img, lang=lang, config=get_tesseract_config(lang))
 
-        except OSError as e:
-            logger.error(f"Anura OCR/QR File Error: {e}")
+            # Clean and normalize the extracted text
+            cleaned_text = preprocessor.clean_extracted_text(raw_text.strip())
+
+            duration = time.time() - start_time
+            logger.info(f"Anura OCR: Text extraction completed in {duration:.3f}s")
+
+            # Log if preprocessing improved results
+            if cleaned_text != raw_text.strip():
+                logger.debug("Anura OCR: Text preprocessing improved OCR results")
+
+            return cleaned_text
+        except Exception as e:
+            logger.debug(f"Anura OCR: OCR extraction failed: {e}")
+            return None
+
+    def _handle_decode_exception(self, e: Exception) -> tuple[str | None, str | None]:
+        """Handle exceptions during image decoding."""
+        extracted = None
+        error_message = None
+
+        if isinstance(e, OSError):
+            logger.exception(f"Anura OCR/QR File Error: {e}")
             error_message = _("Failed to read image file.")
-        except (pytesseract.TesseractError, pytesseract.TesseractNotFoundError) as e:
-            logger.error(f"Anura OCR Error: Tesseract failed: {e}")
+        elif isinstance(e, (pytesseract.TesseractError, pytesseract.TesseractNotFoundError)):
+            logger.exception(f"Anura OCR Error: Tesseract failed: {e}")
             error_message = _("OCR engine failed to process image.")
-        except (Image.DecompressionBombError, Image.UnidentifiedImageError, Exception) as e:
-            # Catch specific image/QR decoding errors (PIL, zbar) but NOT system exceptions
-            # KeyboardInterrupt and SystemExit will propagate correctly
-            if isinstance(e, (SystemExit, KeyboardInterrupt)):
-                raise
-            logger.error(f"Anura OCR/QR Error: {type(e).__name__}: {e}")
+        elif isinstance(e, (Image.DecompressionBombError, Image.UnidentifiedImageError)):
+            logger.exception(f"Anura OCR/QR Error: {type(e).__name__}: {e}")
+            error_message = _("Failed to decode data.")
+        elif isinstance(e, (SystemExit, KeyboardInterrupt)):
+            # Let system exceptions propagate
+            raise
+        else:
+            logger.exception(f"Anura OCR/QR Error: {type(e).__name__}: {e}")
             error_message = _("Failed to decode data.")
 
-        finally:
-            # Cleanup: Delete temporary portal files if requested
-            if remove_source and is_physical_file:
-                try:
-                    os.unlink(file)
-                    logger.debug(f"Anura OCR: Cleaned up temporary file: {file}")
-                except (OSError, PermissionError) as e:
-                    logger.warning(f"Anura OCR: Could not delete {file}: {e}")
+        return extracted, error_message
 
+    def _cleanup_temporary_file(
+        self,
+        file: str | Image.Image | object,
+        is_physical_file: bool,
+        remove_source: bool,
+    ) -> None:
+        """Clean up temporary files if requested."""
+        if remove_source and is_physical_file:
+            try:
+                os.unlink(file)
+                logger.debug(f"Anura OCR: Cleaned up temporary file: {file}")
+            except (OSError, PermissionError) as e:
+                logger.warning(f"Anura OCR: Could not delete {file}: {e}")
+
+    def _format_decode_result(
+        self,
+        extracted: str | None,
+        error_message: str | None,
+    ) -> tuple[bool, str | None, str | None]:
+        """Format the final decode result."""
         if extracted:
             return (True, extracted, None)
         elif error_message:
-            return (False, None, error_message)
+            return (False, "", error_message)
         else:
-            return (False, None, _("No text found."))
+            return (False, "", _("No text found."))
 
     def decode_image(
         self,
@@ -185,33 +617,11 @@ class ScreenshotService(GObject.GObject):
         else:
             GLib.idle_add(self.emit, "error", error_message)
 
-    def capture_cancelled(self, cancellable: Gio.Cancellable, user_data=None) -> None:
-        """Handles the cancellation of the screenshot request."""
-        logger.info("Anura Screenshot: Capture cancelled by user.")
-        GLib.idle_add(self.emit, "error", _("Cancelled"))
-        # Disconnect old handler and reset cancellable for future use (with lock to prevent race condition)
-        with self._cancellable_lock:
-            # Clear handler ID first to prevent race with concurrent cancellation
-            old_handler_id = self._cancelable_handler_id
-            self._cancelable_handler_id = None
-            if old_handler_id is not None:
-                try:
-                    self.cancelable.disconnect(old_handler_id)
-                except Exception:
-                    pass
-            self.cancelable = Gio.Cancellable.new()
-            self._cancelable_handler_id = self.cancelable.connect("cancelled", self.capture_cancelled)
-
     def do_destroy(self) -> None:
-        """Clean up signal handlers and cancellable to prevent leaks."""
+        """Clean up cancellable to prevent leaks."""
+        # Clean up cancellable
         with self._cancellable_lock:
-            if self._cancelable_handler_id is not None:
-                try:
-                    self.cancelable.disconnect(self._cancelable_handler_id)
-                except (TypeError, RuntimeError):
-                    pass
-                self._cancelable_handler_id = None
-            if not self.cancelable.is_cancelled():
-                self.cancelable.cancel()
-            self.cancelable = Gio.Cancellable.new()
-            self._cancelable_handler_id = self.cancelable.connect("cancelled", self.capture_cancelled)
+            if self.cancelable is not None:
+                if not self.cancelable.is_cancelled():
+                    self.cancelable.cancel()
+                self.cancelable = None

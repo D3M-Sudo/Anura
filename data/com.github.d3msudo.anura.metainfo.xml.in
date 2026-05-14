@@ -25,6 +25,24 @@
       the optional text-to-speech feature powered by Google TTS. No user
       data or extracted text is ever transmitted externally.
     </p>
+    <p>
+      Screenshot capture uses the XDG Desktop Portal interface, which
+      requires a portal backend to be installed on the host. GNOME and KDE
+      typically ship one by default (xdg-desktop-portal-gnome /
+      xdg-desktop-portal-kde). On other desktops you may need to install
+      a backend explicitly: xdg-desktop-portal-gtk on LXQt / Xfce / MATE,
+      xdg-desktop-portal-wlr on wlroots-based compositors. Without a
+      backend the system cannot grant Anura access to the screen and the
+      "Take a screenshot" action will fail.
+    </p>
+    <p>
+      When the portal backend is unavailable or fails, Anura automatically
+      falls back to host-side screenshot tools via flatpak-spawn. To enable
+      this fallback, install at least one screenshot tool on the host system:
+      gnome-screenshot (recommended), xfce4-screenshooter, spectacle, scrot,
+      maim, or ImageMagick import. Anura tries them in order and uses the
+      first available tool.
+    </p>
   </description>
   <screenshots>
     <screenshot type="default">
@@ -37,6 +55,52 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="0.1.4.3" type="stable" date="2026-05-14">
+      <description>
+        <p>Enhanced OCR preprocessing, modern keyboard shortcuts overlay, and robust screenshot fallback system.</p>
+        <ul>
+          <li>Added advanced TextPreprocessor utility with intelligent image enhancement and OCR text cleanup.</li>
+          <li>Added smart text preprocessing including common OCR error correction, whitespace normalization, and punctuation fixing.</li>
+          <li>Added structured data extraction from OCR text (emails, URLs, phone numbers, dates).</li>
+          <li>Added adaptive image enhancement based on brightness/contrast analysis for better OCR accuracy.</li>
+          <li>Added modern ShortcutsOverlay widget with live search and categorized keyboard shortcuts.</li>
+          <li>Added enhanced keyboard shortcuts overlay with search functionality and elegant Adw.Window-based interface.</li>
+          <li>Added configurable logging level via ANURA_LOG_LEVEL environment variable for debugging.</li>
+          <li>Added host screenshot fallback system using flatpak-spawn --host for missing portal backends.</li>
+          <li>Added persistent install-hint banner when screenshot portal backend is missing.</li>
+          <li>Added desktop-aware portal advice messages with environment-specific guidance.</li>
+          <li>Added enhanced diagnostic logging for host screenshot operations.</li>
+          <li>Added comprehensive drag-and-drop functionality with visual feedback and proper lifecycle management.</li>
+          <li>Added complete drag-and-drop event handlers (enter, leave, motion, drop) with CSS styling for hover states.</li>
+          <li>Added enhanced AboutDialog with complete legal information for Flathub compliance.</li>
+          <li>Added full copyright and MIT license text for transparency.</li>
+          <li>Added open source dependencies attribution in legal information.</li>
+          <li>Added complete legal information ensuring Flathub compliance requirements.</li>
+          <li>Added asynchronous Drag-and-Drop implementation to prevent UI freezes.</li>
+          <li>Added fallback for URI list on clipboard texture read failure.</li>
+          <li>Added optimized image thresholding using Look-Up Tables (LUT) for performance.</li>
+          <li>Added enhanced accessibility and Micro-UX improvements for the OCR results page.</li>
+          <li>Added persistent Drag-and-Drop controller for better stability.</li>
+          <li>Fixed notification service cleanup and URI validator function calls.</li>
+          <li>Fixed dialog response handling for browser launch failures.</li>
+          <li>Fixed extra language combo signal connection and modal property removal.</li>
+          <li>Fixed keyboard shortcuts test to match correct method signature.</li>
+          <li>Fixed multiple UI/runtime bugs, memory leaks, and signal leaks.</li>
+          <li>Fixed X11 Drag-and-Drop deadlocks and portal file transfer freezes.</li>
+          <li>Fixed TTS state transitions, visual feedback, and audio issues.</li>
+          <li>Fixed localization initialization and updated Italian translations.</li>
+          <li>Fixed broken status window in Legal Information page.</li>
+          <li>Resolved GTK navigation warnings and linting violations.</li>
+          <li>Fixed About dialog property names and legal information display.</li>
+          <li>Improved error handling for browser launch and file filters.</li>
+          <li>Fixed UI spinner animations and state management.</li>
+          <li>Refactored Drag-and-Drop system for improved reliability.</li>
+          <li>Optimized Flatpak build and updated dependencies.</li>
+          <li>Improved OCR pipeline and image processing performance.</li>
+          <li>Updated release notes generation logic with hybrid GitHub link display.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.4.2" type="stable" date="2026-05-05">
       <description>
         <p>Hardened thread safety, sanitized error logging, and optimized resource cleanup.</p>

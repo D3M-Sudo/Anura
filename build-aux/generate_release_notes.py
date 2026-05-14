@@ -9,106 +9,128 @@ import sys
 
 def parse_changelog(changelog_path: Path) -> dict:
     """Parse CHANGELOG.md and return a dict of version -> html notes."""
-    content = changelog_path.read_text()
+    try:
+        content = changelog_path.read_text()
+    except (FileNotFoundError, PermissionError, OSError) as e:
+        print(f"Error reading changelog file {changelog_path}: {e}", file=sys.stderr)
+        return {}
 
     # Pattern to match version sections (supports 3 or 4 component versions like 0.1.4 or 0.1.4.1)
-    # Uses atomic-like grouping and limited repetition to prevent catastrophic backtracking
+    # Content uses ".*?" with DOTALL so it can include sub-sections like "### Added"
+    # whose lines start with "#"; the lookahead anchors the section end at the next
+    # version header (or end of file) instead of stopping at the first "#".
+    # Also handles optional {version-x.y.z} suffix at end of version line
     version_pattern = (
-        r'^## \[(?P<version>\d{1,4}\.\d{1,4}\.\d{1,4}(?:\.\d{1,4})?)\] - (?P<date>\d{4}-\d{2}-\d{2})\n+'
-        r'(?P<content>[^#]*?)(?=^## \[|\Z)'
+        r"^## \[(?P<version>\d{1,4}\.\d{1,4}\.\d{1,4}(?:\.\d{1,4})?)\] - "
+        r"(?P<date>\d{4}-\d{2}-\d{2})(?:\s+\{version-[^}]+\})?\n+"
+        r"(?P<content>.*?)(?=^## \[|\Z)"
     )
 
     releases = {}
 
     for match in re.finditer(version_pattern, content, re.MULTILINE | re.DOTALL):
-        version = match.group('version')
-        section_content = match.group('content')
+        version = match.group("version")
+        section_content = match.group("content")
 
         # Parse subsections (### Added, ### Fixed, etc.)
         sections = {}
         current_section = "Changes"
 
-        for line in section_content.strip().split('\n'):
+        for line in section_content.strip().split("\n"):
             line = line.strip()
-            if line.startswith('### '):
+            if line.startswith("### "):
                 # New section header
                 current_section = line[4:].strip()
                 sections.setdefault(current_section, [])
-            elif line.startswith('- '):
+            elif line.startswith("- "):
                 # Remove the leading "- " first
                 item_text = line[2:]
                 # Escape HTML FIRST to prevent injection from markdown links [text](url)
                 item_text = html.escape(item_text)
                 # Then remove markdown syntax (now safe from HTML injection)
-                item_text = (item_text
-                    .replace('**', '')
-                    .replace('__', '')
-                    .replace('*', '')
-                    .replace('_', '')
-                    .replace('`', ''))
+                item_text = (
+                    item_text.replace("**", "").replace("__", "").replace("*", "").replace("_", "").replace("`", "")
+                )
                 sections.setdefault(current_section, []).append(item_text)
 
         if sections:
             # Build HTML with sections
             html_parts = []
+            total_items = 0
+
             for section_name, items in sections.items():
                 if items:
-                    html_parts.append(f'<b>{html.escape(section_name)}</b>')
-                    html_items = ''.join(f'<li>{item}</li>' for item in items)
-                    html_parts.append(f'<ul>{html_items}</ul>')
-            html_output = ''.join(html_parts)
+                    # Limit to 5 items per section
+                    limited_items = items[:5]
+                    total_items += len(limited_items)
+
+                    html_parts.append(f"<p><em>{html.escape(section_name)}</em></p>")
+                    html_items = "".join(f"<li>{item}</li>" for item in limited_items)
+                    html_parts.append(f"<ul>{html_items}</ul>")
+
+            # NOTE: Adw.AboutDialog's release notes use a restricted markup that
+            # does not support <a> tags with 'href'.
+            # Link is now handled via official add_link() in on_about().
+
+            html_output = "".join(html_parts)
         else:
-            html_output = '<p>No changes listed.</p>'
+            html_output = "<p>No changes listed.</p>"
         releases[version] = html_output
 
     return releases
 
 
-def generate_release_notes_py(changelog_path: Path, output_path: Path, current_version: str):
+def generate_release_notes_py(changelog_path: Path, output_path: Path, current_version: str) -> None:
     """Generate the _release_notes.py file."""
     releases = parse_changelog(changelog_path)
 
-    current_notes = releases.get(current_version, 'Bug fixes and improvements.')
+    current_notes = releases.get(current_version, "Bug fixes and improvements.")
 
     # Build the Python file content
     lines = [
-        '# Auto-generated file. Do not edit manually.',
-        '# Generated from CHANGELOG.md during build.',
-        '',
-        'RELEASE_NOTES = {',
+        "# Auto-generated file. Do not edit manually.",
+        "# Generated from CHANGELOG.md during build.",
+        "",
+        "RELEASE_NOTES = {",
     ]
 
     for version, html_content in releases.items():
         # Use repr() to safely escape the content and avoid triple-quote issues
         lines.append(f'    "{version}": {html_content!r},')
 
-    lines.extend([
-        '}',
-        '',
-        f'CURRENT_VERSION = "{current_version}"',
-        '',
-        # Use repr() to safely escape current_notes
-        f'CURRENT_NOTES = {current_notes!r}',
-        '',
-        'def get_release_notes(version: str = None) -> str:',
-        '    """Get release notes for a specific version or current version."""',
-        '    if version is None:',
-        '        return CURRENT_NOTES',
-        '    return RELEASE_NOTES.get(version, "Bug fixes and improvements.")',
-        '',
-    ])
+    lines.extend(
+        [
+            "}",
+            "",
+            f'CURRENT_VERSION = "{current_version}"',
+            "",
+            # Use repr() to safely escape current_notes
+            f"CURRENT_NOTES = {current_notes!r}",
+            "",
+            "def get_release_notes(version: str = None) -> str:",
+            '    """Get release notes for a specific version or current version."""',
+            "    if version is None:",
+            "        return CURRENT_NOTES",
+            '    return RELEASE_NOTES.get(version, "Bug fixes and improvements.")',
+            "",
+        ]
+    )
 
-    output_path.write_text('\n'.join(lines))
+    try:
+        output_path.write_text("\n".join(lines))
+    except (PermissionError, OSError) as e:
+        print(f"Error writing output file {output_path}: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 def validate_version(version: str) -> bool:
     """Validate version string format (e.g., '0.1.4' or '0.1.4.1')."""
-    return bool(re.match(r'^[0-9]+\.[0-9]+\.[0-9]+(?:\.[0-9]+)?$', version))
+    return bool(re.match(r"^[0-9]+\.[0-9]+\.[0-9]+(?:\.[0-9]+)?$", version))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     if len(sys.argv) != 4:
-        print(f'Usage: {sys.argv[0]} <changelog.md> <output.py> <version>', file=sys.stderr)
+        print(f"Usage: {sys.argv[0]} <changelog.md> <output.py> <version>", file=sys.stderr)
         sys.exit(1)
 
     changelog = Path(sys.argv[1])
@@ -116,9 +138,9 @@ if __name__ == '__main__':
     version = sys.argv[3]
 
     if not validate_version(version):
-        print(f'Error: Invalid version format: {version}', file=sys.stderr)
-        print('Expected format: MAJOR.MINOR.PATCH[.PATCH2] (e.g., 0.1.4 or 0.1.4.1)', file=sys.stderr)
+        print(f"Error: Invalid version format: {version}", file=sys.stderr)
+        print("Expected format: MAJOR.MINOR.PATCH[.PATCH2] (e.g., 0.1.4 or 0.1.4.1)", file=sys.stderr)
         sys.exit(1)
 
     generate_release_notes_py(changelog, output, version)
-    print(f'Generated {output} with release notes for version {version}')
+    print(f"Generated {output} with release notes for version {version}")

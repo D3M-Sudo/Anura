@@ -11,7 +11,12 @@ import logging
 import threading
 import traceback
 
-from gi.repository import GLib
+import gi
+
+# Set GTK version requirements before imports
+gi.require_version("GLib", "2.0")
+
+from gi.repository import GLib  # noqa: E402
 
 
 class GObjectWorker:
@@ -22,7 +27,12 @@ class GObjectWorker:
     """
 
     @staticmethod
-    def call(command: Callable, args: tuple = (), callback: Callable | None = None, errorback: Callable | None = None):
+    def call(
+        command: Callable,
+        args: tuple = (),
+        callback: Callable | None = None,
+        errorback: Callable | None = None,
+    ) -> None:
         """
         Executes a command in a separate thread.
 
@@ -32,7 +42,8 @@ class GObjectWorker:
             callback: Function to call on the main thread upon success.
             errorback: Function to call on the main thread upon failure.
         """
-        def run(data):
+
+        def run(data: tuple) -> None:
             cmd, cmd_args, cb, eb = data
             try:
                 # Execute the heavy task
@@ -43,11 +54,14 @@ class GObjectWorker:
             except (KeyboardInterrupt, SystemExit):
                 # Re-raise to allow clean shutdown
                 raise
-            except Exception as e:
-                # Capture full traceback for technical debugging
+            except (OSError, ValueError, RuntimeError) as e:
+                # Handle expected operational errors (file I/O, invalid values, runtime issues)
                 tb_str = traceback.format_exc()
-                # Wrap exception with traceback info in a safe way
-                # (errorback is always set to _default_errorback if not provided)
+                GLib.idle_add(eb, e, tb_str)
+            except Exception as e:
+                # Handle truly unexpected errors (logical errors, system failures)
+                tb_str = traceback.format_exc()
+                logging.error(f"Unexpected error in GObjectWorker: {e}")
                 GLib.idle_add(eb, e, tb_str)
 
         # Use default error handler if none provided
@@ -62,10 +76,10 @@ class GObjectWorker:
         worker_thread.start()
 
     @staticmethod
-    def _default_errorback(error: Exception, traceback_str: str | None = None):
+    def _default_errorback(error: Exception, traceback_str: str | None = None) -> None:
         """
         Standardized error logging for worker thread failures.
         """
-        tb = traceback_str or getattr(error, '__traceback__', None)
+        tb = traceback_str or getattr(error, "__traceback__", None)
         if tb:
             logging.error("Anura Worker Error: Unhandled exception in background thread:\n%s", tb)

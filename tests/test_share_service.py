@@ -5,9 +5,12 @@
 
 from unittest.mock import Mock, patch
 
+import pytest
+
 from anura.services.share_service import ShareService
 
 
+@pytest.mark.gtk
 class TestShareService:
     """Test suite for ShareService core functionality."""
 
@@ -26,7 +29,17 @@ class TestShareService:
     def test_providers(self):
         """Test provider list."""
         providers = ShareService.providers()
-        expected = ["email", "mastodon", "reddit", "telegram", "x"]
+        expected = [
+            "email",
+            "mastodon",
+            "reddit",
+            "telegram",
+            "x",
+            "bluesky",
+            "discord",
+            "linkedin",
+            "threads",
+        ]
         assert providers == expected
 
     def test_validate_share_url_valid_http(self):
@@ -72,10 +85,10 @@ class TestShareService:
         assert link == expected
 
     def test_get_link_reddit(self):
-        """Test Reddit link generation."""
+        """Test Reddit link generation for short text (uses both title + selftext)."""
         text = "Hello world"
         link = ShareService.get_link_reddit(text)
-        expected = "https://www.reddit.com/submit?selftext=Hello%20world"
+        expected = "https://www.reddit.com/submit?title=Hello%20world&selftext=Hello%20world"
         assert link == expected
 
     def test_get_link_telegram(self):
@@ -89,7 +102,7 @@ class TestShareService:
         """Test X (Twitter) link generation."""
         text = "Hello world"
         link = ShareService.get_link_x(text)
-        expected = "https://twitter.com/intent/tweet?text=Hello%20world"
+        expected = "https://x.com/intent/tweet?text=Hello%20world"
         assert link == expected
 
     def test_get_link_mastodon(self):
@@ -102,7 +115,7 @@ class TestShareService:
     def test_share_text_valid_provider(self):
         """Test sharing text with valid provider."""
         with patch("anura.services.share_service.GLib"):
-            self.service.share_text("test text", "email")
+            self.service.share("email", "test text")
 
             self.service.launcher.set_uri.assert_called_once()
             self.service.launcher.launch.assert_called_once()
@@ -110,7 +123,7 @@ class TestShareService:
     def test_share_text_invalid_provider(self):
         """Test sharing text with invalid provider."""
         with patch("anura.services.share_service.GLib"):
-            self.service.share_text("test text", "invalid_provider")
+            self.service.share("invalid_provider", "test text")
 
             # Should not call launcher
             self.service.launcher.set_uri.assert_not_called()
@@ -119,10 +132,11 @@ class TestShareService:
     def test_share_text_blocked_url(self):
         """Test sharing text with blocked URL."""
         # Mock URL validation to return False
-        with patch.object(
-            ShareService, "_validate_share_url", return_value=False
-        ), patch("anura.services.share_service.GLib"):
-            self.service.share_text("test text", "email")
+        with (
+            patch.object(ShareService, "_validate_share_url", return_value=False),
+            patch("anura.services.share_service.GLib"),
+        ):
+            self.service.share("email", "test text")
 
             # Should not call launcher
             self.service.launcher.set_uri.assert_not_called()
@@ -134,7 +148,7 @@ class TestShareService:
 
         with patch("anura.services.share_service.GLib"):
             # Should not raise exception
-            self.service.share_text("test text", "email")
+            self.service.share("email", "test text")
 
     def test_share_mastodon_with_fallback_success(self):
         """Test Mastodon sharing with successful official scheme."""
@@ -150,11 +164,10 @@ class TestShareService:
 
     def test_share_mastodon_with_fallback_to_dialog(self):
         """Test Mastodon sharing fallback to instance dialog."""
-        with patch(
-            "anura.services.share_service.GLib"
-        ), patch.object(
-            self.service, "_show_mastodon_instance_dialog"
-        ) as mock_dialog:
+        with (
+            patch("anura.services.share_service.GLib"),
+            patch.object(self.service, "_show_mastodon_instance_dialog") as mock_dialog,
+        ):
             # Mock failed launch
             self.service.launcher.launch_finish.return_value = False
 
@@ -165,11 +178,10 @@ class TestShareService:
 
     def test_share_mastodon_with_fallback_launch_error(self):
         """Test Mastodon sharing with launch error."""
-        with patch(
-            "anura.services.share_service.GLib"
-        ), patch.object(
-            self.service, "_show_mastodon_instance_dialog"
-        ) as mock_dialog:
+        with (
+            patch("anura.services.share_service.GLib"),
+            patch.object(self.service, "_show_mastodon_instance_dialog") as mock_dialog,
+        ):
             # Mock launch exception
             self.service.launcher.launch.side_effect = Exception("Launch error")
 
@@ -194,11 +206,11 @@ class TestShareService:
 
     def test_show_mastodon_instance_dialog(self):
         """Test Mastodon instance dialog creation."""
-        with patch(
-            "anura.services.share_service.Adw"
-        ) as mock_adw, patch(
-            "anura.services.share_service.Gio"
-        ) as mock_gio, patch("anura.services.share_service.GLib"):
+        with (
+            patch("anura.services.share_service.Adw") as mock_adw,
+            patch("anura.services.share_service.Gio") as mock_gio,
+            patch("anura.services.share_service.GLib"),
+        ):
             # Mock app and window
             mock_app = Mock()
             mock_window = Mock()
@@ -220,13 +232,11 @@ class TestShareService:
 
     def test_show_mastodon_instance_dialog_no_window(self):
         """Test Mastodon instance dialog without active window."""
-        with patch(
-            "anura.services.share_service.Adw"
-        ) as mock_adw, patch(
-            "anura.services.share_service.Gio"
-        ) as mock_gio, patch(
-            "anura.services.share_service.GLib"
-        ) as mock_glib:
+        with (
+            patch("anura.services.share_service.Adw") as mock_adw,
+            patch("anura.services.share_service.Gio") as mock_gio,
+            patch("anura.services.share_service.GLib") as mock_glib,
+        ):
             # Mock no active window
             mock_app = Mock()
             mock_app.get_active_window.return_value = None

@@ -8,7 +8,7 @@ Anura OCR is a GTK4/Libadwaita desktop application for GNOME that extracts text 
 
 **Key Facts:**
 
-- Python 3.11+ required
+- Python 3.12+ required
 - GTK4 + Libadwaita + Blueprint Compiler for declarative UI
 - OCR via `pytesseract` (Tesseract 5.x wrapper)
 - QR code via `pyzbar` + `zbar`
@@ -21,7 +21,7 @@ Anura OCR is a GTK4/Libadwaita desktop application for GNOME that extracts text 
 
 ## Repository Structure
 
-```
+```text
 anura/
 ├── anura/                      Python application source
 │   ├── main.py                 AnuraApplication (Adw.Application) + CLI + AboutDialog
@@ -180,9 +180,8 @@ pip install -e ".[dev]"
 # Or specifically meson for local build testing
 pip install "meson>=1.5.0"
 # Automatically installs ninja if needed
-```
 
-**Typical venv packages for testing:**
+# Typical venv packages for testing:
 - `meson` — Build system
 - `ninja` — Build tool (meson dependency)
 - `ruff` — Linter
@@ -212,13 +211,14 @@ Python runtime dependencies (installed in Flatpak):
 
 ```meson
 project('anura',
-    version: '0.1.4',
+    version: '0.1.4.3',
     meson_version: '>= 1.5.0',
     ...
 )
 ```
 
 Release notes generation from CHANGELOG.md:
+
 ```meson
 custom_target('release_notes',
   input: ['CHANGELOG.md', 'build-aux/generate_release_notes.py'],
@@ -228,6 +228,7 @@ custom_target('release_notes',
 ```
 
 **Build commands with venv:**
+
 ```bash
 .venv/bin/meson setup builddir
 .venv/bin/meson compile -C builddir
@@ -311,6 +312,7 @@ msg = ngettext("{n} file processed", "{n} files processed", count).format(n=coun
 ```
 
 **Do NOT translate:**
+
 - Logger messages (`logger.debug/info/warning/error`)
 - Developer exceptions
 - GSettings keys, CSS class names, D-Bus paths, technical identifiers
@@ -425,12 +427,21 @@ pytest tests/ -v -m "not gtk"
 # Unit logic tests only
 pytest tests/test_unit_logic.py -v
 
-# Service-specific tests
+# Setup GSettings schema for GTK tests (required once)
+mkdir -p builddir
+cp data/com.github.d3msudo.anura.gschema.xml builddir/
+glib-compile-schemas builddir/
+
+# Service-specific tests (requires system gi + GSettings)
+export GSETTINGS_SCHEMA_DIR="builddir"
 pytest tests/test_screenshot_service.py -v
 pytest tests/test_clipboard_service.py -v
 pytest tests/test_share_service.py -v
 pytest tests/test_tts_service.py -v
 pytest tests/test_notification_service.py -v
+
+# Or use automated setup script
+./setup-gschema.sh
 
 # GTK tests (require Flatpak environment)
 flatpak run --devel --command=bash com.github.d3msudo.anura
@@ -440,6 +451,7 @@ python3 -m pytest tests/ -m "gtk" -v
 ### Test Patterns
 
 **Mocking GTK Dependencies:**
+
 ```python
 def setup_method(self):
     self.service = ScreenshotService()
@@ -447,6 +459,7 @@ def setup_method(self):
 ```
 
 **Business Logic Testing:**
+
 ```python
 def test_language_mapping(self):
     service = TTSService()
@@ -455,6 +468,7 @@ def test_language_mapping(self):
 ```
 
 **Error Handling:**
+
 ```python
 def test_service_error(self):
     with patch.object(self.service.portal, 'send_notification', side_effect=Exception("Error")):
@@ -469,6 +483,40 @@ def test_service_error(self):
 - **Environment isolation** via `conftest.py` fixtures
 - **Coverage** focuses on business logic and error paths
 
+### Common Testing Issues
+
+#### Error: `RuntimeError: GSettings schema 'com.github.d3msudo.anura' not found`
+
+**Cause**: GSettings schema not compiled or not in schema path
+**Fix**:
+
+```bash
+mkdir -p builddir
+cp data/com.github.d3msudo.anura.gschema.xml builddir/
+glib-compile-schemas builddir/
+export GSETTINGS_SCHEMA_DIR="builddir"
+```
+
+#### Error: `ModuleNotFoundError: No module named 'gi'`
+
+**Cause**: Virtual environment doesn't have access to system packages
+**Fix**: Use PYTHONPATH and GI_TYPELIB_PATH:
+
+```bash
+uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" pytest tests/ -v
+```
+
+#### Complete GTK Test Setup
+
+```bash
+# One-time setup
+./setup-gschema.sh
+
+# Run tests
+export GSETTINGS_SCHEMA_DIR="builddir"
+uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" GSETTINGS_SCHEMA_DIR="builddir" pytest tests/ -v
+```
+
 ## For Cascade / AI Agents
 
 - Read this file BEFORE any operation on the codebase
@@ -478,6 +526,27 @@ def test_service_error(self):
 - After any new UI string, remind the user to run `./generate_pot.sh`
 - Thread safety: never emit GObject signals from secondary threads — use `GLib.idle_add()`
 - When in doubt about an architectural choice, ask before proceeding
+
+### Workflows Disponibili (richiedili esplicitamente)
+
+I seguenti workflow sono definiti in `.windsurf/workflows/` e possono essere eseguiti su richiesta dell'utente:
+
+| Comando | Workflow | Descrizione |
+|---------|----------|-------------|
+| `bug analysis` | `.windsurf/workflows/bug_analysis.md` | Analisi statica bug file-per-file: attributi, callback, segnali, errori, threading, UI |
+| `code quality` | `.windsurf/workflows/code_quality.md` | Audit qualità + refactoring sistematico (5 fasi) |
+| `fix check` | `.windsurf/workflows/fix_check.md` | Verifica post-fix: 5 passi per confermare la correttezza |
+| `review` | `.windsurf/workflows/review.md` | Code review completo: 10 audit (thread safety, sicurezza, risorse, error handling, tipi, i18n, Flatpak, test coverage, performance) |
+
+Workflow aggiuntivi in `.windsurf/rules/`:
+- `debug <problema>` → `.windsurf/rules/debugging.md` (ipotesi-driven, 7 assi di analisi)
+- `vibe clean` / `tidy up` → `.windsurf/rules/vibe-clean.md` (pulizia codice seguendo pattern progetto)
+- `dead code` / `dead-code` → `.windsurf/rules/dead-code.md` (trova codice morto)
+- `commit` → `.windsurf/commit_rule.md` (generazione commit Conventional Commits)
+
+### Cline (questo agente) — Note specifiche
+
+Se stai usando **Cline**, il file `CLAUDE.md` nella root del progetto contiene tutte le regole operative compatte (tech stack, thread safety, testing, commit, sicurezza). Viene letto automaticamente all'inizio di ogni sessione.
 
 ### Test Architecture Note
 
@@ -504,3 +573,8 @@ def test_service_error(self):
 | 2026-05-04 | Fixed ruff linting errors across codebase | Resolved import sorting and code style issues in 14 files |
 | 2026-05-04 | Fixed Flatpak manifest warnings | Removed _comment properties causing flatpak-builder warnings |
 | 2026-05-04 | Regenerated anura.pot (+30 net strings) and synced 25 .po files | Image validation, clipboard timeout, URL security blocking strings added |
+| 2026-05-14 | Implemented Asynchronous Drag-and-Drop | Resolved UI freezes in VM/X11 environments by using Gtk.DropTargetAsync |
+| 2026-05-14 | Optimized image processing with LUT | Significant performance improvement in Bolt thresholding pipeline |
+| 2026-05-14 | Hardened signal lifecycle management | Prevented memory leaks and signal leaks in core services and widgets |
+| 2026-05-14 | Enhanced accessibility for ExtractedPage | Palette improvements and proper focus management for OCR results |
+| 2026-05-14 | Implemented structured data extraction | OCR text now automatically identifies emails, URLs, and phone numbers |

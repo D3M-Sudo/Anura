@@ -15,6 +15,7 @@ class TestLanguageManager:
     def language_manager(self):
         """Provide LanguageManager singleton for tests."""
         from anura.language_manager import language_manager
+
         return language_manager
 
     def test_get_language_returns_name(self, language_manager):
@@ -63,6 +64,7 @@ class TestLanguageManager:
 
         # Monkeypatch TESSDATA_DIR
         from anura import language_manager as lm_module
+
         monkeypatch.setattr(lm_module, "TESSDATA_DIR", str(fake_tessdata))
         monkeypatch.setattr(lm_module, "TESSDATA_SYSTEM_DIR", str(fake_tessdata))
 
@@ -86,6 +88,7 @@ class TestLanguageManager:
 
         # Monkeypatch directories
         from anura import language_manager as lm_module
+
         monkeypatch.setattr(lm_module, "TESSDATA_DIR", str(user_dir))
         monkeypatch.setattr(lm_module, "TESSDATA_SYSTEM_DIR", str(system_dir))
 
@@ -94,3 +97,124 @@ class TestLanguageManager:
 
         codes = language_manager.get_downloaded_codes(force=True)
         assert "ita" in codes
+
+
+@pytest.mark.gtk
+class TestLanguageManagerInitTessdata:
+    """Tests for LanguageManager.init_tessdata() method."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self, tmp_path, monkeypatch):
+        """Set up test environment and provide language_manager."""
+        from anura.language_manager import get_language_manager
+
+        self.language_manager = get_language_manager()
+        self.tmp_path = tmp_path
+        self.monkeypatch = monkeypatch
+
+    def test_init_tessdata_creates_directory(self):
+        """init_tessdata() creates tessdata directory if it doesn't exist."""
+        import anura.language_manager as lm_module
+
+        # Set tessdata to a non-existent path
+        fake_tessdata = self.tmp_path / "nonexistent" / "tessdata"
+        self.monkeypatch.setattr(lm_module, "TESSDATA_DIR", str(fake_tessdata))
+
+        # Directory should not exist initially
+        assert not fake_tessdata.exists()
+
+        # Call init_tessdata - should create directory
+        self.language_manager.init_tessdata()
+
+        # Directory should now exist
+        assert fake_tessdata.exists()
+
+    def test_init_tessdata_handles_existing_directory(self):
+        """init_tessdata() handles existing tessdata directory gracefully."""
+        import anura.language_manager as lm_module
+
+        fake_tessdata = self.tmp_path / "existing" / "tessdata"
+        fake_tessdata.mkdir(parents=True)
+
+        self.monkeypatch.setattr(lm_module, "TESSDATA_DIR", str(fake_tessdata))
+
+        # Should not raise exception for existing directory
+        self.language_manager.init_tessdata()
+
+        # Directory should still exist
+        assert fake_tessdata.exists()
+
+    def test_init_tessdata_cleans_orphaned_temp_files(self):
+        """init_tessdata() cleans up orphaned .tmp files."""
+        import anura.language_manager as lm_module
+
+        fake_tessdata = self.tmp_path / "cleanup_test" / "tessdata"
+        fake_tessdata.mkdir(parents=True)
+
+        # Create some orphaned temp files
+        (fake_tessdata / "orphaned1.tmp").write_bytes(b"temp data")
+        (fake_tessdata / "orphaned2.tmp").write_bytes(b"temp data")
+        (fake_tessdata / "valid.traineddata").write_bytes(b"model data")
+
+        self.monkeypatch.setattr(lm_module, "TESSDATA_DIR", str(fake_tessdata))
+
+        # Call init_tessdata - should clean temp files
+        self.language_manager.init_tessdata()
+
+        # Temp files should be removed, valid files should remain
+        assert not (fake_tessdata / "orphaned1.tmp").exists()
+        assert not (fake_tessdata / "orphaned2.tmp").exists()
+        assert (fake_tessdata / "valid.traineddata").exists()
+
+    def test_init_tessdata_handles_permission_errors(self):
+        """init_tessdata() handles permission errors gracefully."""
+        from unittest.mock import patch
+
+        import anura.language_manager as lm_module
+
+        fake_tessdata = self.tmp_path / "restricted" / "tessdata"
+        fake_tessdata.mkdir(parents=True)
+
+        self.monkeypatch.setattr(lm_module, "TESSDATA_DIR", str(fake_tessdata))
+
+        # Mock os.listdir to raise PermissionError
+        with patch("os.listdir", side_effect=PermissionError("Permission denied")):
+            # Should not raise exception
+            self.language_manager.init_tessdata()
+
+        # Directory should still exist
+        assert fake_tessdata.exists()
+
+    def test_init_tessdata_thread_safety(self):
+        """init_tessdata() is thread-safe with lock protection."""
+        import anura.language_manager as lm_module
+
+        fake_tessdata = self.tmp_path / "thread_safe" / "tessdata"
+        self.monkeypatch.setattr(lm_module, "TESSDATA_DIR", str(fake_tessdata))
+
+        # Call init_tessdata multiple times concurrently
+        import threading
+
+        threads = []
+        exceptions = []
+
+        def call_init():
+            try:
+                self.language_manager.init_tessdata()
+            except Exception as e:
+                exceptions.append(e)
+
+        # Start multiple threads
+        for _ in range(5):
+            thread = threading.Thread(target=call_init)
+            threads.append(thread)
+            thread.start()
+
+        # Wait for all threads to complete
+        for thread in threads:
+            thread.join()
+
+        # No exceptions should have occurred
+        assert len(exceptions) == 0
+        # Directory should exist
+        assert fake_tessdata.exists()

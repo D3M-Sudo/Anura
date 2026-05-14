@@ -2,6 +2,7 @@
 #
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
+import contextlib
 
 from gi.repository import GLib, GObject, Gtk
 
@@ -24,28 +25,37 @@ class LanguageRow(Gtk.Overlay):
     _downloading_handler_id: int | None = None
     _downloaded_handler_id: int | None = None
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
 
-        # Instance-level idle ID tracking to prevent cross-instance interference
-        self._idle_ids: list[int] = []
+        # Instance-level idle ID tracking to prevent cross-instance interference.
+        # Uses a set so completed (auto-removed) source IDs can be pruned.
+        self._idle_ids: set[int] = set()
 
         # Connect language manager signals for download updates
         self._downloading_handler_id = language_manager.connect("downloading", self.update_progress)
         self._downloaded_handler_id = language_manager.connect("downloaded", self.on_downloaded)
 
         # Deferred UI update to ensure item is set
-        idle_id = GLib.idle_add(self.update_ui)
-        self._idle_ids.append(idle_id)
+        idle_id = GLib.idle_add(self._idle_update_ui)
+        self._idle_ids.add(idle_id)
 
     @GObject.Property(type=GObject.TYPE_PYOBJECT)
     def item(self) -> LanguageItem | None:
+        """Get the language item."""
         return self._item
 
     @item.setter
-    def item(self, item: LanguageItem):
+    def item(self, item: LanguageItem) -> None:
         self._item = item
         self.label.set_label(self._item.title)
+
+    def _idle_update_ui(self) -> bool:
+        """One-shot idle callback: runs update_ui and prunes itself from tracking."""
+        self.update_ui()
+        # Prune: this source has fired and auto-removed; discard the stale ID
+        # (the ID was added in __init__ or on_downloaded)
+        return GLib.SOURCE_REMOVE
 
     def update_ui(self) -> None:
         """
@@ -95,7 +105,7 @@ class LanguageRow(Gtk.Overlay):
         return False
 
     @Gtk.Template.Callback()
-    def _on_download(self, _: Gtk.Button):
+    def _on_download(self, _: Gtk.Button) -> None:
         """
         Triggered when the install button is clicked.
         """
@@ -106,7 +116,7 @@ class LanguageRow(Gtk.Overlay):
         self.update_ui()
 
     @Gtk.Template.Callback()
-    def _on_remove(self, _: Gtk.Button):
+    def _on_remove(self, _: Gtk.Button) -> None:
         """
         Triggered when the remove button is clicked.
         """
@@ -122,32 +132,26 @@ class LanguageRow(Gtk.Overlay):
         Signal handler for completed downloads.
         """
         if self._item and self._item.code == code:
-            idle_id = GLib.idle_add(self.update_ui)
-            self._idle_ids.append(idle_id)
+            idle_id = GLib.idle_add(self._idle_update_ui)
+            self._idle_ids.add(idle_id)
 
-    def do_destroy(self):
+    def do_destroy(self) -> None:
         """Clean up signal handlers and pending idle_add callbacks to prevent memory leaks."""
         # Remove pending idle_add callbacks
         for idle_id in self._idle_ids:
-            try:
+            with contextlib.suppress(TypeError, RuntimeError):
                 GLib.source_remove(idle_id)
-            except (TypeError, RuntimeError):
-                pass
         self._idle_ids.clear()
 
         # Disconnect signal handlers
         if self._downloading_handler_id is not None:
-            try:
+            with contextlib.suppress(TypeError, RuntimeError):
                 language_manager.disconnect(self._downloading_handler_id)
-            except (TypeError, RuntimeError):
-                pass
             self._downloading_handler_id = None
 
         if self._downloaded_handler_id is not None:
-            try:
+            with contextlib.suppress(TypeError, RuntimeError):
                 language_manager.disconnect(self._downloaded_handler_id)
-            except (TypeError, RuntimeError):
-                pass
             self._downloaded_handler_id = None
 
         super().do_destroy()

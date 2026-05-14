@@ -6,16 +6,75 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.1.4.3] - 2026-05-14 {version-0.1.4.3}
+
 ### Added
+
+- Advanced TextPreprocessor utility with intelligent image enhancement and OCR text cleanup
+- Smart text preprocessing including common OCR error correction, whitespace normalization, and punctuation fixing
+- Structured data extraction from OCR text (emails, URLs, phone numbers, dates)
+- Adaptive image enhancement based on brightness/contrast analysis for better OCR accuracy
+- Modern ShortcutsOverlay widget with live search and categorized keyboard shortcuts
+- Enhanced keyboard shortcuts overlay with search functionality and elegant Adw.Window-based interface
+- Configurable logging level via `ANURA_LOG_LEVEL` environment variable for debugging
+- Host screenshot fallback system using `flatpak-spawn --host` for missing portal backends
+- Persistent install-hint banner when screenshot portal backend is missing
+- Desktop-aware portal advice messages with environment-specific guidance
+- Enhanced diagnostic logging for host screenshot operations
+- Comprehensive drag-and-drop functionality with visual feedback and proper lifecycle management
+- Complete drag-and-drop event handlers (enter, leave, motion, drop) with CSS styling for hover states
+- Enhanced AboutDialog with complete legal information for Flathub compliance
+- Full copyright and MIT license text for transparency
+- Open source dependencies attribution in legal information
+- Complete legal information ensuring Flathub compliance requirements
+- Asynchronous Drag-and-Drop implementation to prevent UI freezes, especially in VM environments
+- Fallback for URI list on clipboard texture read failure
+- Optimized image thresholding using Look-Up Tables (LUT) for performance
+- Enhanced accessibility and Micro-UX improvements for the OCR results page
+- Persistent Drag-and-Drop controller for better stability
+
+### Fixed
+
+- Fixed notification service cleanup by removing incorrect underscore reference
+- Fixed URI validator function call in window.py for proper URL validation
+- Fixed dialog response handling for browser launch failures with proper error management
+- Fixed extra language combo signal connection to ensure it's always connected regardless of settings
+- Fixed modal property removal from shortcuts window for better user experience
+- Fixed keyboard shortcuts test to match correct method signature with _param parameter
+- Fixed five UI/runtime bugs from Flatpak debug log
+- Fixed three additional bugs (release notes parse, TTS AttributeError, screenshot diagnostic)
+- Fixed Gio.Subprocess.wait() method usage instead of wait_sync()
+- Fixed host screenshot file existence check with retry loop
+- Fixed designer credit and share-row action prefix corrections
+- Fixed incomplete URL substring sanitization (security fix)
+- Resolved multiple critical runtime bugs, memory leaks, and signal leaks across core services
+- Fixed X11 Drag-and-Drop deadlocks and portal file transfer freezes
+- Corrected Text-to-Speech (TTS) state transitions, visual feedback, and "zombie audio" issues
+- Fixed localization initialization and updated Italian translations
+- Fixed broken status window in "Legal Information" page
+- Resolved GTK navigation warnings and ruff linting violations (E501, W292)
+- Fixed About dialog property names and legal information display
+- Improved error handling for browser launch and file filters
+- Fixed UI spinner animations and state management
+- Fixed missing trailing newline in anura/window.py
 
 ### Changed
 
+- Enhanced screenshot service with host fallback capabilities
+- Improved error handling and logging throughout the application
+- Better portal environment diagnostics and user guidance
+- Updated release notes generation logic with hybrid GitHub link display
+- Lower threshold for GitHub link from 15 to 12 items for better UX
+- Enhanced drag-and-drop drop target attachment to welcome page widget
+- Improved release notes generation with tracking for truncated sections
+- Refactored Drag-and-Drop system for improved reliability
+- Optimized Flatpak build and updated dependencies (urllib3)
+- Improved OCR pipeline and image processing performance
+
+## [0.1.4.2] - 2026-05-05 {version-0.1.4.2}
+
 ### Fixed
 
-
-## [0.1.4.2] - 2026-05-05
-
-### Fixed
 - Fixed `__slots__` conflict in ClipboardService - missing `_cancellable` in declaration causing AttributeError
 - Fixed ruff linting errors across codebase including import sorting and code style issues
 - Fixed concurrency issues in TTS and clipboard services against race conditions
@@ -24,6 +83,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fixed Flatpak manifest warnings by removing `_comment` properties
 
 ### Changed
+
 - Extracted URI validation to utils module and relaxed IP/localhost restrictions
 - Improved code quality with comprehensive type hints and cleanup
 - Implemented atomic cancellation for Clipboard and thread-safe signal emission for TTS GStreamer bus
@@ -31,9 +91,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Added comprehensive unit tests for core services
 - Resolved all remaining linting errors and line length issues
 
-## [0.1.4.1] - 2026-05-02
+## [0.1.4.1] - 2026-05-02 {version-0.1.4.1}
 
 ### Fixed
+
 - Fixed missing `Adw.init()` call causing "greyed out UI" on some systems
 - Fixed GResource bundle loading to properly exit on failure instead of continuing with broken UI
 - Fixed notification portal API to use proper GLib.Variant format (a{sv}) for XDG Portal compatibility
@@ -41,12 +102,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fixed HTML escaping in release notes generation to prevent XSS vulnerabilities
 
 ### Changed
+
 - Added CHANGELOG.md as source of truth for release notes
 - Added translate URL to metainfo for Weblate integration
 
-## [0.1.4] - 2026-05-01
+## [0.1.4] - 2026-05-01 {version-0.1.4}
 
 ### Fixed
+
 - Fixed critical thread-safety issues and race conditions in language manager and screenshot service
 - Fixed memory leaks in widget lifecycle management and GStreamer bus watch
 - Fixed all Flatpak manifest dependencies (requests, urllib3, certifi, hatchling, pyzbar)
@@ -59,24 +122,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fixed Telegram share URL to send text as message instead of URL
 
 ### Changed
+
 - Updated OARS content rating for Flathub compliance
 - Improved CI/CD workflow with smoke tests and build verification
 - Updated tessdata-fast to pinned commit SHA for reproducible builds
 
-## [0.1.3] - 2026-04-25
+## [0.1.3] - 2026-04-25 {version-0.1.3}
 
 ### Fixed
+
 - Fixed import error in screenshot service (tessdata_config casing)
 - Fixed missing init_tessdata() method in LanguageManager
 - Fixed settings module path mismatch (moved to anura/services/settings.py)
 - Fixed blueprint-compiler GIRepository compatibility with GNOME Platform 49
 
 ### Changed
+
 - Improved TTS cache file location (XDG_CACHE_HOME)
 
-## [0.1.0] - 2026-04-23
+## [0.1.0] - 2026-04-23 {version-0.1.0}
 
 ### Added
+
 - Initial release of Anura (fork of Frog)
 - Complete rebranding to Anura
 - Removed all telemetry and PostHog tracking for total privacy

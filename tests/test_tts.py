@@ -18,16 +18,23 @@ class TestMapTesseractToGtts:
         Returns a minimal set of supported languages for tests.
         """
         supported = {
-            "en": "English", "it": "Italian", "fr": "French",
-            "de": "German", "es": "Spanish", "ja": "Japanese",
-            "zh-CN": "Chinese (Simplified)", "ar": "Arabic",
+            "en": "English",
+            "it": "Italian",
+            "fr": "French",
+            "de": "German",
+            "es": "Spanish",
+            "ja": "Japanese",
+            "zh-CN": "Chinese (Simplified)",
+            "ar": "Arabic",
         }
         from anura.services import tts as tts_module
+
         monkeypatch.setattr(tts_module.TTSService, "_gtts_languages", supported)
 
     @pytest.fixture
     def svc(self):
         from anura.services.tts import TTSService
+
         return TTSService
 
     # ── Direct LANG_MAP lookups ───────────────────────────────────────────────
@@ -71,21 +78,25 @@ class TestDownloadStatePercentage:
 
     def test_normal_percentage(self):
         from anura.types.download_state import DownloadState
+
         ds = DownloadState(total=1000, progress=250)
         assert ds.percentage == 25.0
 
     def test_zero_total_returns_zero(self):
         from anura.types.download_state import DownloadState
+
         ds = DownloadState(total=0, progress=0)
         assert ds.percentage == 0.0
 
     def test_complete_download(self):
         from anura.types.download_state import DownloadState
+
         ds = DownloadState(total=500, progress=500)
         assert ds.percentage == 100.0
 
     def test_negative_total_returns_zero(self):
         """Guard against malformed data from server responses."""
         from anura.types.download_state import DownloadState
+
         ds = DownloadState(total=-1, progress=0)
         assert ds.percentage == 0.0

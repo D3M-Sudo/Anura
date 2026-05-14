@@ -10,7 +10,9 @@ template $ExtractedPage : Adw.NavigationPage {
     Adw.HeaderBar headerbar {
 
       [title]
-      Label {}
+      Adw.WindowTitle window_title {
+        title: _("Extracted Text");
+      }
 
       // [start]
       // MenuButton lang_combo {
@@ -23,6 +25,9 @@ template $ExtractedPage : Adw.NavigationPage {
       Adw.SplitButton grab_btn {
         action-name: "app.get_screenshot";
         tooltip-text: _("Take a screenshot");
+        accessibility {
+          label: _("Take a screenshot");
+        }
         icon-name: "camera-photo-symbolic";
         menu-model: grab_menu;
       }
@@ -31,6 +36,9 @@ template $ExtractedPage : Adw.NavigationPage {
       Button text_copy_btn {
         action-name: "app.copy_to_clipboard";
         tooltip-text: C_("Extracted screen", "Copy extracted text to clipboard");
+        accessibility {
+          label: C_("Extracted screen", "Copy extracted text to clipboard");
+        }
         icon-name: "edit-copy-symbolic";
       }
 
@@ -43,29 +51,68 @@ template $ExtractedPage : Adw.NavigationPage {
           child: Button listen_btn {
             action-name: "app.listen";
             tooltip-text: C_("Extracted screen", "Listen to text");
+            accessibility {
+              label: C_("Extracted screen", "Listen to text");
+            }
             icon-name: "audio-speakers-symbolic";
           };
         }
 
         StackPage {
-          name: "spinner";
-          child: Adw.Spinner listen_spinner {
+          name: "cancel";
+          child: Button listen_cancel_btn {
+            action-name: "app.listen_cancel";
+            tooltip-text: C_("Extracted screen", "Cancel listening to text");
+            accessibility {
+              label: C_("Extracted screen", "Cancel listening to text");
+            }
+            icon-name: "media-playback-stop-symbolic";
           };
         }
-      }
 
-      [start]
-      Button listen_cancel_btn {
-        action-name: "app.listen_cancel";
-        tooltip-text: C_("Extracted screen", "Cancel listening to text");
-        icon-name: "media-playback-stop-symbolic";
-        visible: false;
+        StackPage {
+          name: "spinner";
+          child: Gtk.Spinner listen_spinner {
+            width-request: 34;
+            height-request: 34;
+            halign: center;
+            valign: center;
+          };
+        }
+
+        StackPage {
+          name: "pause";
+          child: Box {
+            styles ["linked"]
+
+            Button listen_pause_btn {
+              action-name: "app.listen_pause";
+              tooltip-text: C_("Extracted screen", "Pause/Resume listening");
+              accessibility {
+                label: C_("Extracted screen", "Pause or resume listening");
+              }
+              icon-name: "media-playback-pause-symbolic";
+            }
+
+            Button {
+              action-name: "app.listen_cancel";
+              tooltip-text: C_("Extracted screen", "Stop listening");
+              accessibility {
+                label: C_("Extracted screen", "Stop listening");
+              }
+              icon-name: "media-playback-stop-symbolic";
+            }
+          };
+        }
       }
 
       [end]
       MenuButton {
         icon-name: "open-menu-symbolic";
         tooltip-text: C_("Extracted screen", "Open menu");
+        accessibility {
+          label: C_("Extracted screen", "Open menu");
+        }
         menu-model: primary_menu;
       }
 
@@ -73,6 +120,9 @@ template $ExtractedPage : Adw.NavigationPage {
       MenuButton share_button {
         icon-name: "emblem-shared-symbolic";
         tooltip-text: C_("Extracted screen", "Share To");
+        accessibility {
+          label: C_("Extracted screen", "Share text to other applications");
+        }
         popover: Popover {
 
           styles ["menu"]
@@ -98,7 +148,7 @@ template $ExtractedPage : Adw.NavigationPage {
         bottom-margin: 12;
         pixels-above-lines: 4;
         pixels-below-lines: 4;
-        wrap-mode: char;
+        wrap-mode: word_char;
 
         buffer: TextBuffer buffer {};
       }
@@ -111,6 +161,7 @@ menu primary_menu {
     item {
       label: _("Preferences");
       action: "app.preferences";
+      icon: "preferences-system-symbolic";
     }
   }
 
@@ -118,11 +169,19 @@ menu primary_menu {
     item {
       label: _("Keyboard Shortcuts");
       action: "app.shortcuts";
+      icon: "preferences-desktop-keyboard-shortcuts-symbolic";
     }
 
     item {
       label: _("About Anura");
       action: "app.about";
+      icon: "help-about-symbolic";
+    }
+
+    item {
+      label: _("Report an Issue");
+      action: "app.report_issue";
+      icon: "dialog-warning-symbolic";
     }
   }
 }
@@ -130,5 +189,5 @@ menu primary_menu {
 
 menu grab_menu {
     item (_("Open image"), "app.open_image", "folder-open-symbolic")
-    item (_("Paste from clipboard"), "app.paste_from_clipboard", "folder-open-symbolic")
+    item (_("Paste from clipboard"), "app.paste_from_clipboard", "edit-paste-symbolic")
 }

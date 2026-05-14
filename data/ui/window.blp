@@ -12,19 +12,24 @@ template $AnuraWindow : Adw.ApplicationWindow {
   [content]
   Adw.ToastOverlay toast_overlay {
 
-    Adw.NavigationSplitView split_view {
-      collapsed: true;
+    Gtk.Box {
+      orientation: vertical;
 
-      [sidebar]
-      Adw.NavigationPage {
-        title: _("Welcome");
-        child: $WelcomePage welcome_page {};
+      Adw.Banner portal_banner {
+        title: _("Screenshot portal unavailable. Install xdg-desktop-portal-gtk (or the backend matching your desktop) and re-login.");
+        button-label: _("Dismiss");
+        revealed: false;
       }
 
-      [content]
-      Adw.NavigationPage {
-        title: _("Extracted Text");
-        child: $ExtractedPage extracted_page {};
+      Adw.NavigationSplitView split_view {
+        vexpand: true;
+        collapsed: true;
+
+        [sidebar]
+        $WelcomePage welcome_page {}
+
+        [content]
+        $ExtractedPage extracted_page {}
       }
     }
   }

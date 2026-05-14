@@ -8,8 +8,13 @@
 from collections.abc import Callable
 from typing import Any
 
-from gi.repository import GObject
-from loguru import logger
+import gi
+
+# Set GTK version requirements before imports
+gi.require_version("GObject", "2.0")
+
+from gi.repository import GObject  # noqa: E402
+from loguru import logger  # noqa: E402
 
 
 class SignalManagerMixin:
@@ -38,7 +43,10 @@ class SignalManagerMixin:
         self._signal_connections: dict[Any, list[int]] = {}
 
     def connect_tracked(
-        self, emitter: GObject.Object, signal_name: str, callback: Callable
+        self,
+        emitter: GObject.Object,
+        signal_name: str,
+        callback: Callable,
     ) -> int:
         """
         Connect to a signal and track the handler ID for automatic cleanup.
@@ -58,8 +66,7 @@ class SignalManagerMixin:
         self._signal_connections[emitter].append(handler_id)
 
         logger.debug(
-            f"SignalManagerMixin: Connected {signal_name} on {type(emitter).__name__}, "
-            f"handler_id={handler_id}"
+            f"SignalManagerMixin: Connected {signal_name} on {type(emitter).__name__}, handler_id={handler_id}",
         )
         return handler_id
 
@@ -74,7 +81,10 @@ class SignalManagerMixin:
         disconnected_count = 0
         failed_count = 0
 
-        for emitter, handler_ids in self._signal_connections.items():
+        # Create a copy of items to prevent race condition if dict is modified during iteration
+        signal_items = list(self._signal_connections.items())
+
+        for emitter, handler_ids in signal_items:
             for handler_id in handler_ids:
                 try:
                     if emitter:
@@ -83,14 +93,13 @@ class SignalManagerMixin:
                 except (TypeError, RuntimeError, AttributeError) as e:
                     logger.debug(
                         f"SignalManagerMixin: Could not disconnect handler {handler_id} "
-                        f"from {type(emitter).__name__}: {e}"
+                        f"from {type(emitter).__name__}: {e}",
                     )
                     failed_count += 1
 
         if disconnected_count > 0 or failed_count > 0:
             logger.debug(
-                f"SignalManagerMixin: Disconnected {disconnected_count} signals "
-                f"({failed_count} failed)"
+                f"SignalManagerMixin: Disconnected {disconnected_count} signals ({failed_count} failed)",
             )
 
         self._signal_connections.clear()

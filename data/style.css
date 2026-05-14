@@ -43,3 +43,204 @@
 .lang-selector separator {
   margin: 0 6px;
 }
+
+/* Modern animations and transitions */
+.anura-button {
+    transition: all 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.anura-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.anura-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.anura-card {
+    transition: all 250ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.anura-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.anura-fade-in {
+    animation: fadeIn 300ms ease-out;
+}
+
+.anura-slide-up {
+    animation: slideUp 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.anura-pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { 
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Enhanced extracted page styling */
+.extracted-page textview {
+    border-radius: 12px;
+    border: 1px solid @borders;
+    background: @theme_base_color;
+    transition: all 200ms ease;
+}
+
+.extracted-page textview:focus {
+    border-color: @accent_color;
+    box-shadow: 0 0 0 2px alpha(@accent_color, 0.2);
+}
+
+/* Share buttons with hover effects */
+.share-row {
+    transition: all 150ms ease;
+}
+
+.share-row:hover {
+    background: alpha(@accent_color, 0.1);
+    transform: translateX(4px);
+}
+
+.share-row:active {
+    transform: translateX(2px);
+}
+
+/* Loading spinner animation */
+.anura-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Toast notifications */
+.anura-toast {
+    animation: toastSlideIn 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.anura-toast.hiding {
+    animation: toastSlideOut 250ms ease-in;
+}
+
+@keyframes toastSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes toastSlideOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-40px);
+    }
+}
+
+/* Welcome page enhancements */
+.welcome-page {
+    background: linear-gradient(135deg, alpha(@accent_color, 0.05) 0%, alpha(@accent_color, 0.02) 100%);
+}
+
+.welcome-card {
+    transition: all 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.welcome-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+}
+
+/* Language selector improvements */
+.language-popover {
+    transition: all 200ms ease;
+}
+
+.language-row {
+    transition: all 150ms ease;
+}
+
+.language-row:hover {
+    background: alpha(@accent_color, 0.08);
+}
+
+.language-row:selected {
+    background: alpha(@accent_color, 0.15);
+}
+
+/* Screenshot button pulse effect */
+.screenshot-btn.ready {
+    animation: readyPulse 2s infinite;
+}
+
+@keyframes readyPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 alpha(@accent_color, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px alpha(@accent_color, 0);
+    }
+}
+
+/* Drag and drop visual feedback */
+.drag-hover {
+    background: alpha(@accent_color, 0.1);
+    border: 2px dashed @accent_color;
+    border-radius: 12px;
+    transition: all 200ms ease;
+}
+
+.drag-processing {
+    background: alpha(@warning_color, 0.15);
+    border: 2px dashed @warning_color;
+    border-radius: 12px;
+    transition: all 200ms ease;
+}
+
+#drop_area {
+    border: 2px dashed alpha(@theme_fg_color, 0.3);
+    border-radius: 12px;
+    background: alpha(@theme_fg_color, 0.05);
+}
+
+#drop_area.drag-hover {
+    border-color: @accent_color;
+    background: alpha(@accent_color, 0.15);
+}
+
+#drop_area.drag-processing {
+    border-color: @warning_color;
+    background: alpha(@warning_color, 0.15);
+}

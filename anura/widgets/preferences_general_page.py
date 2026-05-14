@@ -3,6 +3,7 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
+import contextlib
 from gettext import gettext as _
 
 from gi.repository import Adw, Gio, Gtk
@@ -29,7 +30,7 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
     # disabled in Anura). Keeping a Template.Child() for a non-existent widget
     # causes a Gtk.BuilderError at runtime.
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
         SignalManagerMixin.__init__(self)
 
@@ -47,14 +48,23 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
         self._setup_tts_volume()
         self._setup_tts_language()
 
-    def _setup_extra_languages(self):
+    def _setup_extra_languages(self) -> None:
         downloaded_langs = language_manager.get_downloaded_languages()
         if not downloaded_langs:
             return
 
         self.extra_language_combo.set_model(Gtk.StringList.new(downloaded_langs))
 
+        # Connect the signal ALWAYS, regardless of current extra language setting
+        self.connect_tracked(self.extra_language_combo, "notify::selected-item", self._on_extra_language_changed)
+
         current_extra = self.settings.get_string("extra-language")
+
+        # Guard against empty/unset extra-language
+        if not current_extra:
+            # No extra language configured - leave combo at default (index 0)
+            return
+
         current_name = language_manager.get_language(current_extra)
 
         try:
@@ -63,9 +73,7 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
         except ValueError:
             logger.warning(f"Anura: Extra language '{current_name}' not found among installed models.")
 
-        self.connect_tracked(self.extra_language_combo, "notify::selected-item", self._on_extra_language_changed)
-
-    def _on_extra_language_changed(self, combo_row: Adw.ComboRow, _param):
+    def _on_extra_language_changed(self, combo_row: Adw.ComboRow, _param: object) -> None:
         selected_item = combo_row.get_selected_item()
         if not selected_item:
             return
@@ -74,16 +82,19 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
         logger.debug(f"Anura: Extra language set to {lang_name} ({lang_code})")
         self.settings.set_string("extra-language", lang_code)
 
-    def _on_language_changed(self, _sender, _code: str) -> None:
+    def _on_language_changed(self, _sender: object, _code: str) -> None:
         """Refresh the extra-language combo when models are installed or removed."""
-        # Disconnect old signal to avoid duplicate connections
-        try:
-            self.extra_language_combo.disconnect_by_func(self._on_extra_language_changed)
-        except TypeError:
-            pass  # Handler not connected yet (first call)
+        # Disconnect old combo handler via SignalManagerMixin tracking to avoid
+        # stale IDs accumulating in _signal_connections (BUG-4 fix).
+        emitter = self.extra_language_combo
+        if emitter in self._signal_connections:
+            for hid in list(self._signal_connections[emitter]):
+                with contextlib.suppress(TypeError, RuntimeError):
+                    emitter.disconnect(hid)
+            self._signal_connections[emitter].clear()
         self._setup_extra_languages()
 
-    def _setup_tts_volume(self):
+    def _setup_tts_volume(self) -> None:
         """Setup TTS volume spin row with percentage display (0-100)."""
         # Load initial value from settings (0.0-1.0) and convert to percentage
         volume_normalized = self.settings.get_double("tts-volume")
@@ -95,11 +106,11 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
         # Connect to changes and convert back to 0.0-1.0 for GSettings
         self.connect_tracked(self.volume_row, "notify::value", self._on_volume_changed)
 
-    def _update_volume_subtitle(self, percentage: float):
+    def _update_volume_subtitle(self, percentage: float) -> None:
         """Update the volume row subtitle to show the percentage."""
         self.volume_row.set_subtitle(_("TTS playback volume level: {percentage:.0f}%").format(percentage=percentage))
 
-    def _on_volume_changed(self, spin_row, _param):
+    def _on_volume_changed(self, spin_row: Adw.SpinRow, _param: object) -> None:
         """Convert percentage (0-100) to normalized value (0.0-1.0) for GSettings."""
         percentage = spin_row.get_value()
         normalized = percentage / 100.0
@@ -107,7 +118,7 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
         self._update_volume_subtitle(percentage)
         logger.debug(f"Anura: TTS volume set to {percentage:.0f}% ({normalized:.2f})")
 
-    def _setup_tts_language(self):
+    def _setup_tts_language(self) -> None:
         """Populate TTS language combo with gTTS supported languages."""
         supported = ttsservice.get_supported_gtts_languages()
 
@@ -128,7 +139,7 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
 
         self.connect_tracked(self.tts_language_combo, "notify::selected", self._on_tts_language_changed)
 
-    def _on_tts_language_changed(self, combo, _param):
+    def _on_tts_language_changed(self, combo: Adw.ComboRow, _param: object) -> None:
         idx = combo.get_selected()
         if idx == 0:
             self.settings.set_string("tts-language", "")  # Auto
@@ -144,7 +155,7 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
                 logger.warning(f"Anura: TTS language index {idx} out of bounds, falling back to Auto")
                 self.settings.set_string("tts-language", "")
 
-    def do_destroy(self):
+    def do_destroy(self) -> None:
         """Clean up all tracked signal handlers to prevent memory leaks."""
         self.disconnect_all_signals()
         super().do_destroy()

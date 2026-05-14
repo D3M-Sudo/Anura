@@ -5,10 +5,10 @@ permissions:
 
 on:
   push:
-    branches: [ "main", "development" ]
+    branches: [ "main", "development", "testing" ]
     tags: [ "v*" ]
   pull_request:
-    branches: [ "main", "development" ]
+    branches: [ "main", "development", "testing" ]
 
 jobs:
   # JOB 1: Python code analysis and linting
@@ -23,6 +23,12 @@ jobs:
         with:
           # Strict linting with enforcement - no automatic fixes in CI
           args: check --select E,F,W,I --target-version py312
+
+      - name: Run Unit Tests
+        run: |
+          pip install uv
+          uv sync --dev
+          uv run pytest tests/ -m "not gtk" --tb=short
 
   # JOB 2: Flatpak build and optional release
   flatpak-builder:
@@ -61,7 +67,7 @@ jobs:
           flatpak-builder --show-manifest flatpak/com.github.d3msudo.anura.json > /dev/null
           echo "✓ Manifest validation passed"
 
-      # 2. BUILD (senza test unitari - il progetto non ha pytest)
+      # 2. BUILD (con test unitari pytest eseguiti nel step precedente)
       - name: Build Anura Flatpak
         uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:
@@ -138,8 +144,9 @@ jobs:
           # --help exits immediately with code 0 if app starts correctly
           # Environment variables to suppress harmless warnings in headless CI:
           # - NO_AT_BRIDGE=1: disables a11y bus warnings
+          # - GTK_A11Y=none: disables GTK accessibility entirely for headless mode
           # - LIBGL_ALWAYS_SOFTWARE=1: forces software rendering, suppresses DRI3 warnings
-          if ! dbus-run-session xvfb-run -a flatpak run --env=NO_AT_BRIDGE=1 --env=LIBGL_ALWAYS_SOFTWARE=1 com.github.d3msudo.anura --help; then
+          if ! dbus-run-session xvfb-run -a flatpak run --env=NO_AT_BRIDGE=1 --env=GTK_A11Y=none --env=LIBGL_ALWAYS_SOFTWARE=1 com.github.d3msudo.anura --help; then
             echo "✗ Smoke test failed - app failed to launch"
             exit 1
           fi

@@ -8,13 +8,13 @@ import re
 import pytest
 
 
-@pytest.mark.gtk
 class TestLangCodePattern:
     """Tests for LANG_CODE_PATTERN — the security boundary before Tesseract."""
 
     @pytest.fixture(autouse=True)
     def import_pattern(self):
         from anura.config import LANG_CODE_PATTERN
+
         self.pattern = LANG_CODE_PATTERN
 
     def _match(self, code: str) -> bool:
@@ -58,7 +58,7 @@ class TestLangCodePattern:
         assert not self._match("e")
 
     def test_too_long(self):
-        assert not self._match("abcdefghi")  # 9 chars
+        assert not self._match("abcdefghijklmnopqrs")  # 19 chars, exceeds 18 char limit
 
     def test_shell_injection_semicolon(self):
         assert not self._match("eng;rm -rf /")
@@ -80,7 +80,6 @@ class TestLangCodePattern:
         assert not self._match("eng.exe")
 
 
-@pytest.mark.gtk
 class TestGetTesseractConfig:
     """Tests for get_tesseract_config() path resolution logic."""
 
@@ -95,6 +94,7 @@ class TestGetTesseractConfig:
 
         monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
         import anura.config as cfg
+
         monkeypatch.setattr(cfg, "TESSDATA_DIR", str(user_dir))
         monkeypatch.setattr(cfg, "TESSDATA_SYSTEM_DIR", str(system_dir))
 
@@ -110,6 +110,7 @@ class TestGetTesseractConfig:
         (system_dir / "eng.traineddata").write_bytes(b"fake")
 
         import anura.config as cfg
+
         monkeypatch.setattr(cfg, "TESSDATA_DIR", str(user_dir))
         monkeypatch.setattr(cfg, "TESSDATA_SYSTEM_DIR", str(system_dir))
 
@@ -119,6 +120,7 @@ class TestGetTesseractConfig:
     def test_invalid_lang_code_defaults_to_eng(self, tmp_path, monkeypatch):
         """Invalid lang_code is rejected and falls back to 'eng'."""
         import anura.config as cfg
+
         monkeypatch.setattr(cfg, "TESSDATA_DIR", str(tmp_path))
         monkeypatch.setattr(cfg, "TESSDATA_SYSTEM_DIR", str(tmp_path))
 
@@ -131,9 +133,59 @@ class TestGetTesseractConfig:
     def test_config_contains_psm_and_oem(self, tmp_path, monkeypatch):
         """Config string always contains Tesseract mode flags."""
         import anura.config as cfg
+
         monkeypatch.setattr(cfg, "TESSDATA_DIR", str(tmp_path))
         monkeypatch.setattr(cfg, "TESSDATA_SYSTEM_DIR", str(tmp_path))
 
         result = cfg.get_tesseract_config("eng")
         assert "--psm 3" in result
         assert "--oem 1" in result
+
+
+class TestLogLevel:
+    """Tests for LOG_LEVEL resolution from ANURA_LOG_LEVEL environment variable."""
+
+    @pytest.fixture(autouse=True)
+    def clean_config_module(self, monkeypatch):
+        """Ensure anura.config is reloaded fresh for each test."""
+        import sys
+
+        monkeypatch.delenv("ANURA_LOG_LEVEL", raising=False)
+        # Remove cached module so reload picks up env changes
+        sys.modules.pop("anura.config", None)
+        # Also remove anura package cache to force clean import
+        sys.modules.pop("anura", None)
+
+    def test_default_log_level_is_info(self, monkeypatch):
+        """Without ANURA_LOG_LEVEL, LOG_LEVEL defaults to INFO."""
+        monkeypatch.delenv("ANURA_LOG_LEVEL", raising=False)
+        import anura.config as cfg
+
+        assert cfg.LOG_LEVEL == "INFO"
+
+    def test_debug_override(self, monkeypatch):
+        """ANURA_LOG_LEVEL=DEBUG sets LOG_LEVEL to DEBUG."""
+        import sys
+
+        monkeypatch.setenv("ANURA_LOG_LEVEL", "DEBUG")
+        # Must reload after env change
+        if "anura.config" in sys.modules:
+            del sys.modules["anura.config"]
+        if "anura" in sys.modules:
+            del sys.modules["anura"]
+        import anura.config as cfg
+
+        assert cfg.LOG_LEVEL == "DEBUG"
+
+    def test_invalid_fallback_to_info(self, monkeypatch):
+        """Invalid ANURA_LOG_LEVEL falls back to INFO."""
+        import sys
+
+        monkeypatch.setenv("ANURA_LOG_LEVEL", "VERBOSE")
+        if "anura.config" in sys.modules:
+            del sys.modules["anura.config"]
+        if "anura" in sys.modules:
+            del sys.modules["anura"]
+        import anura.config as cfg
+
+        assert cfg.LOG_LEVEL == "INFO"

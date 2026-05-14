@@ -27,7 +27,7 @@ For non-sensitive security questions or general inquiries, open a [GitHub Issue]
 ## Supported Versions
 
 | Version | Supported |
-|---------|-----------|
+| ------- | -------- |
 | 0.1.x | ✅ Active |
 
 This policy will be updated as the project matures.
@@ -39,7 +39,7 @@ This policy will be updated as the project matures.
 ### 🔴 High Priority
 
 | Issue | Description |
-|-------|-------------|
+| ------- | ----------- |
 | **Tesseract Injection** | Unvalidated `lang_code` arguments passed to pytesseract or Tesseract |
 | **Path Traversal** | Access to files outside intended directories (tessdata, TTS cache, downloads) |
 | **Command Injection** | Insufficient sanitization of paths or user input in shell commands |
@@ -49,7 +49,7 @@ This policy will be updated as the project matures.
 ### 🟡 Medium Priority
 
 | Issue | Description |
-|-------|-------------|
+| ------- | ----------- |
 | **Denial of Service** | Crashes or resource exhaustion from malformed images (Pillow, pyzbar, pytesseract) |
 | **Race Conditions** | TOCTOU vulnerabilities in temporary file operations |
 | **Symlink Attacks** | Improper symlink handling in download or cache paths |
@@ -59,7 +59,7 @@ This policy will be updated as the project matures.
 ### 🔍 Areas of Concern
 
 | File | Area |
-|------|------|
+| ---- | ---- |
 | `anura/config.py` | `lang_code` validation — used as Tesseract argument |
 | `anura/utils/validators.py` | URI validation → `uri_validator()` |
 | `anura/language_manager.py` | Tessdata model download and writing |
@@ -99,7 +99,7 @@ The following are **not** considered security vulnerabilities:
 ## Implemented Security Features
 
 | Feature | Implementation |
-|---------|----------------|
+| ------- | ------------- |
 | **lang_code validation** | `LANG_CODE_PATTERN` regex prevents Tesseract argument injection |
 | **URI validation** | `uri_validator()` blocks homograph attacks, control characters, disallowed schemes |
 | **Atomic tessdata writes** | `tempfile` + `shutil.move` prevents partial file corruption |
@@ -125,7 +125,7 @@ The following are **not** considered security vulnerabilities:
 ## Contacts
 
 | Channel | Link |
-|---------|------|
+| ------- | ---- |
 | Security vulnerabilities | [GitHub Security Advisories](https://github.com/d3msudo/anura/security/advisories) |
 | General issues | [GitHub Issues](https://github.com/d3msudo/anura/issues) |
 | Project | https://github.com/d3msudo/anura |

@@ -54,6 +54,8 @@ trigger: always_on
 - If you touch public types or exported APIs, check every caller.  
 - Never modify protected files: `po/*.po`, `anura/_release_notes.py`, `data/ui/*.ui`, `CHANGELOG.md`, `release.sh`
 - After any new UI string → remind user to run `./generate_pot.sh`
+- Use uv for dependency management: `uv sync --dev` for development dependencies
+- Run tests with uv: `uv run pytest tests/ -m "not gtk"` for pure Python tests
                                                                                                                                                                                       
 ---                                                                
 Generated for Anura OCR — GTK4/Libadwaita + Python + Meson + Flatpak

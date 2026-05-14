@@ -23,5 +23,7 @@ trigger: always_on
 
 ## Tests
 - Framework: pytest, lives in tests/ (root)
-- Run: pytest tests/ -m "not gtk"
+- Run: uv run pytest tests/ -m "not gtk" (pure Python tests)
+- Run with GTK: uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" pytest tests/ -v
 - conftest.py must exist before other test files
+- Install dependencies: uv sync --dev

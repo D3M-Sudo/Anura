@@ -23,7 +23,7 @@ def cleanup_orphaned_resources() -> None:
     Only files older than 1 hour are removed to avoid conflicts with
     currently running operations.
     """
-    current_time = time.monotonic()
+    current_time = time.time()
     one_hour_ago = current_time - 3600  # 1 hour in seconds
 
     # Clean up TTS cache files
@@ -48,7 +48,7 @@ def _cleanup_tts_cache(cutoff_time: float) -> None:
 
         cleaned_count = 0
         for filename in os.listdir(tts_cache_dir):
-            if filename.endswith('.mp3'):
+            if filename.endswith(".mp3"):
                 file_path = os.path.join(tts_cache_dir, filename)
                 try:
                     # Check file age to avoid deleting recent files
@@ -57,7 +57,7 @@ def _cleanup_tts_cache(cutoff_time: float) -> None:
                         os.remove(file_path)
                         cleaned_count += 1
                         logger.debug(f"Anura Cleanup: Removed old TTS file: {filename}")
-                except (OSError, PermissionError) as e:
+                except OSError as e:
                     logger.warning(f"Anura Cleanup: Failed to remove TTS file {filename}: {e}")
 
         if cleaned_count > 0:
@@ -79,7 +79,7 @@ def _cleanup_tessdata_temp_files(cutoff_time: float) -> None:
 
         cleaned_count = 0
         for filename in os.listdir(TESSDATA_DIR):
-            if filename.endswith('.tmp'):
+            if filename.endswith(".tmp"):
                 file_path = os.path.join(TESSDATA_DIR, filename)
                 try:
                     # Check file age to avoid deleting active downloads
@@ -88,9 +88,8 @@ def _cleanup_tessdata_temp_files(cutoff_time: float) -> None:
                         os.remove(file_path)
                         cleaned_count += 1
                         logger.debug(f"Anura Cleanup: Removed orphaned temp file: {filename}")
-                except (OSError, PermissionError) as e:
+                except OSError as e:
                     logger.warning(f"Anura Cleanup: Failed to remove temp file {filename}: {e}")
-
         if cleaned_count > 0:
             logger.info(f"Anura Cleanup: Removed {cleaned_count} orphaned temporary files")
 
@@ -114,15 +113,19 @@ def get_cache_info() -> dict[str, int]:
 
         if os.path.exists(tts_cache_dir):
             for filename in os.listdir(tts_cache_dir):
-                if filename.endswith('.mp3'):
+                if filename.endswith(".mp3"):
                     file_path = os.path.join(tts_cache_dir, filename)
                     cache_info["tts_files"] += 1
-                    cache_info["tts_size_bytes"] += os.path.getsize(file_path)
+                    try:
+                        cache_info["tts_size_bytes"] += os.path.getsize(file_path)
+                    except (OSError, FileNotFoundError):
+                        # File might have been deleted between listdir and getsize
+                        pass
 
         # Temp files info
         if os.path.exists(TESSDATA_DIR):
             for filename in os.listdir(TESSDATA_DIR):
-                if filename.endswith('.tmp'):
+                if filename.endswith(".tmp"):
                     cache_info["temp_files"] += 1
 
     except OSError as e:

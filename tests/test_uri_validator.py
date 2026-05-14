@@ -51,11 +51,11 @@ def uri_validator(text: str) -> bool:
         # Check for valid IP address (IPv4 or IPv6)
         # Remove port if present for validation
         host = res.netloc
-        if ':' in host and not host.endswith(']'):
+        if ":" in host and not host.endswith("]"):
             # Could be IPv4:port or IPv6:port - split on last colon
-            host = host.rsplit(':', 1)[0]
+            host = host.rsplit(":", 1)[0]
         # Unbracket IPv6 if bracketed
-        if host.startswith('[') and host.endswith(']'):
+        if host.startswith("[") and host.endswith("]"):
             host = host[1:-1]
         try:
             ipaddress.ip_address(host)
@@ -70,7 +70,6 @@ def uri_validator(text: str) -> bool:
 
 
 class TestUriValidator:
-
     # ── Valid URIs ─────────────────────────────────────────────────────────────
 
     def test_https_valid(self):

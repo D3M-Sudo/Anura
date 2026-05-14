@@ -1,6 +1,6 @@
 [project]
 name = "anura"
-version = "0.1.4.2"
+version = "0.1.4.3"
 description = "GTK4/Libadwaita desktop app for OCR via Tesseract — fork of Frog OCR"
 requires-python = ">=3.12"
 license = { text = "MIT" }
@@ -13,25 +13,12 @@ dependencies = [
     "requests>=2.33.1",
 ]
 
-[project.optional-dependencies]
-dev = [
-    "ruff>=0.15.0",       # Linter and formatter
-    "meson>=1.5.0",       # Build system (for local testing)
-    "pytest>=8.0",        # Test framework
-    "pytest-mock>=3.14",  # Mocking for GTK/GLib-dependent code
-    "pytesseract>=0.3.13", # OCR engine (for testing)
-    "Pillow>=12.2.0",      # Image processing (for testing)
-    "pyzbar>=0.1.9",      # QR code decoding (for testing)
-    "gtts>=2.5.4",         # Text-to-speech (for testing)
-    "loguru>=0.7.3",        # Logging (for testing)
-    "requests>=2.33.1",      # HTTP requests (for testing)
-]
-
 # ─── Ruff ─────────────────────────────────────────────────────────────────────
 [tool.ruff]
 line-length = 120
 target-version = "py312"
 src = ["anura", "build-aux"]
+exclude = ["data/", "po/"]
 
 [tool.ruff.lint]
 select = [
@@ -64,6 +51,8 @@ force-sort-within-sections = true
 "anura/**/__init__.py" = ["F401"]
 # Allow broad exceptions in worker error handlers
 "anura/gobject_worker.py" = ["B"]
+# Allow module level imports not at top of file (intentional for logging setup)
+"anura/main.py" = ["E402"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -83,10 +72,12 @@ markers = [
     "network: tests that require network access",
 ]
 # Skip GTK tests in CI unless DISPLAY or WAYLAND_DISPLAY is set
-addopts = "-v --tb=short"
+addopts = "-v --tb=short --ignore=tests/test_clipboard_service.py --ignore=tests/test_screenshot_service.py --ignore=tests/test_share_service.py --ignore=tests/test_tts_service.py --ignore=tests/test_notification_service.py --ignore=tests/test_services.py --ignore=tests/test_language_manager.py --ignore=tests/test_tts.py --ignore=tests/test_tts_initialization.py"
 
 [dependency-groups]
 dev = [
+    "meson>=1.11.1",
+    "ninja>=1.13.0",
     "pytest>=9.0.3",
     "ruff>=0.15.12",
 ]

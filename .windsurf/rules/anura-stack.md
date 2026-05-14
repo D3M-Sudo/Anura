@@ -14,4 +14,4 @@ trigger: always_on
 - Screenshots: Xdp.Portal (libportal)
 - Settings: GSettings singleton → anura/services/settings.py
 - Lang validation: LANG_CODE_PATTERN in anura/config.py
-- URI validation: uri_validator() in anura/window.py
+- URI validation: uri_validator() in anura/utils/validators.py

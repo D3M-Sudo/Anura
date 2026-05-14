@@ -10,11 +10,17 @@ from loguru import logger
 
 # Core Application Identity
 APP_ID = "com.github.d3msudo.anura"
+
+# Logging configuration — override via ANURA_LOG_LEVEL env var
+_LOG_LEVEL = os.environ.get("ANURA_LOG_LEVEL", "INFO").upper()
+_VALID_LOG_LEVELS = {"TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
+LOG_LEVEL: str = _LOG_LEVEL if _LOG_LEVEL in _VALID_LOG_LEVELS else "INFO"
 RESOURCE_PREFIX = "/com/github/d3msudo/anura"
 
-# Language code validation pattern (ISO 639-2, 2-18 alphanumeric chars with underscore and plus)
+# Language code validation pattern (ISO 639-2, 2-18 alphanumeric chars with plus and underscore)
 # Plus character allows multi-language OCR codes like "eng+ita"
-LANG_CODE_PATTERN = r'^[a-zA-Z0-9_+]{2,18}$'
+# Underscore allowed for Tesseract codes like "chi_sim" (Chinese Simplified)
+LANG_CODE_PATTERN = r"^[a-zA-Z0-9+_]{2,18}$"
 
 # XDG Base Directory specification compliance
 XDG_DATA_HOME = os.getenv("XDG_DATA_HOME", os.path.expanduser("~/.local/share"))
@@ -44,10 +50,10 @@ def _get_tessdata_system_dir() -> str:
     # Priority 2: Dynamic scan of candidate directories
     # Scan in order of preference - first existing directory wins
     candidate_dirs = [
-        "/app/share/tessdata",           # Flatpak
+        "/app/share/tessdata",  # Flatpak
         "/usr/share/tesseract-ocr/tessdata",  # Debian/Ubuntu, Arch, Fedora
-        "/usr/share/tesseract/tessdata",      # Alternative layout
-        "/usr/share/tessdata",               # Alternative system path
+        "/usr/share/tesseract/tessdata",  # Alternative layout
+        "/usr/share/tessdata",  # Alternative system path
     ]
 
     for path in candidate_dirs:
@@ -100,13 +106,18 @@ def get_tesseract_config(lang_code: str) -> str:
         logger.error(f"Anura: Invalid language code '{lang_code}' - using default 'eng'")
         lang_code = "eng"
 
+    # For multi-language codes like "eng+ita", Tesseract looks for individual
+    # .traineddata files (eng.traineddata, ita.traineddata) — not a combined one.
+    # Use the first component to determine which directory contains the models.
+    primary_code = lang_code.split("+")[0]
+
     # Check user directory first (user models take priority)
-    user_model = os.path.join(TESSDATA_DIR, f"{lang_code}.traineddata")
+    user_model = os.path.join(TESSDATA_DIR, f"{primary_code}.traineddata")
     if os.path.exists(user_model):
         return f'--tessdata-dir "{TESSDATA_DIR}" --psm 3 --oem 1'
 
     # Fall back to system directory (bundled models in Flatpak)
-    system_model = os.path.join(TESSDATA_SYSTEM_DIR, f"{lang_code}.traineddata")
+    system_model = os.path.join(TESSDATA_SYSTEM_DIR, f"{primary_code}.traineddata")
     if os.path.exists(system_model):
         return f'--tessdata-dir "{TESSDATA_SYSTEM_DIR}" --psm 3 --oem 1'
 

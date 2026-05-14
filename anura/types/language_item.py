@@ -11,14 +11,15 @@ class LanguageItem(GObject.GObject):
     Represent a language item in the OCR language list.
     Designed for use with Gio.ListStore and Gtk.ListView/ListBox.
     """
-    __gtype_name__ = 'LanguageItem'
+
+    __gtype_name__ = "LanguageItem"
 
     # Properties definition for GTK/GObject Data Binding
     title = GObject.Property(type=str)
     code = GObject.Property(type=str)
     selected = GObject.Property(type=bool, default=False)
 
-    def __init__(self, code: str, title: str, selected: bool = False):
+    def __init__(self, code: str, title: str, selected: bool = False) -> None:
         """
         Initialize a new LanguageItem.
 
@@ -32,5 +33,5 @@ class LanguageItem(GObject.GObject):
         self.code = code
         self.selected = selected
 
-    def __repr__(self):
-        return f'<LanguageItem: {self.title} ({self.code}), selected={self.selected}>'
+    def __repr__(self) -> str:
+        return f"<LanguageItem: {self.title} ({self.code}), selected={self.selected}>"

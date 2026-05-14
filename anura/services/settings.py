@@ -6,8 +6,15 @@
 # Settings module - moved from anura/settings.py to anura/services/settings.py
 # to avoid ModuleNotFoundError in Flatpak sandbox.
 
-from gi.repository import Gio
-from loguru import logger
+import threading
+
+import gi
+
+# Set GTK version requirements before imports
+gi.require_version("Gio", "2.0")
+
+from gi.repository import Gio  # noqa: E402
+from loguru import logger  # noqa: E402
 
 # Inline APP_ID to avoid circular import with config.py
 # This ensures settings can be imported independently
@@ -22,14 +29,13 @@ class Settings(Gio.Settings):
 
     __gtype_name__ = "AnuraSettings"
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: object) -> None:
         schema_source = Gio.SettingsSchemaSource.get_default()
         if schema_source and schema_source.lookup(APP_ID, True):
             super().__init__(schema_id=APP_ID, **kwargs)
         else:
             logger.error(
-                f"GSettings schema '{APP_ID}' not found. "
-                "Make sure glib-compile-schemas has been run."
+                f"GSettings schema '{APP_ID}' not found. Make sure glib-compile-schemas has been run.",
             )
             raise RuntimeError(f"GSettings schema '{APP_ID}' not found.")
 
@@ -42,13 +48,17 @@ class _LazySettings:
     """
 
     _instance: Settings | None = None
+    _lock = threading.Lock()
 
     def _get_instance(self) -> Settings:
         if self._instance is None:
-            self._instance = Settings()
+            with self._lock:
+                # Double-checked locking pattern
+                if self._instance is None:
+                    self._instance = Settings()
         return self._instance
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> object:
         """Delegate all attribute access to the actual Settings instance."""
         return getattr(self._get_instance(), name)
 

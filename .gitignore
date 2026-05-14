@@ -63,3 +63,11 @@ coverage.xml
 
 # Test runner script (development utility)
 run_tests.py
+
+# Local development and temporary files
+.jules/
+.env
+.env.*
+*.bak
+*.tmp
+*.temp

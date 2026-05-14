@@ -2,6 +2,7 @@
 #
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
+import contextlib
 import ipaddress
 from urllib.parse import urlparse
 
@@ -50,17 +51,15 @@ def uri_validator(text: str) -> bool:
         # Check for valid IP address (IPv4 or IPv6)
         # Remove port if present for validation
         host = res.netloc
-        if ':' in host and not host.endswith(']'):
+        if ":" in host and not host.endswith("]"):
             # Could be IPv4:port or IPv6:port - split on last colon
-            host = host.rsplit(':', 1)[0]
+            host = host.rsplit(":", 1)[0]
         # Unbracket IPv6 if bracketed
-        if host.startswith('[') and host.endswith(']'):
+        if host.startswith("[") and host.endswith("]"):
             host = host[1:-1]
-        try:
+        with contextlib.suppress(ValueError):
             ipaddress.ip_address(host)
             return True
-        except ValueError:
-            pass
 
         # Reject single-word hostnames without dots (prevents "http://evil")
         return False

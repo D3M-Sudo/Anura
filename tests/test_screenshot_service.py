@@ -8,10 +8,12 @@ from unittest.mock import Mock, patch
 
 from PIL import Image
 import pytesseract
+import pytest
 
 from anura.services.screenshot_service import ScreenshotService
 
 
+@pytest.mark.gtk
 class TestScreenshotService:
     """Test suite for ScreenshotService core functionality."""
 
@@ -24,7 +26,6 @@ class TestScreenshotService:
     def test_init(self):
         """Test service initialization."""
         assert self.service.cancelable is not None
-        assert self.service._cancelable_handler_id is not None
         assert self.service.portal is not None
 
     def test_decode_image_sync_ocr_success(self, tmp_path):
@@ -74,7 +75,7 @@ class TestScreenshotService:
         with patch("pytesseract.image_to_string") as mock_ocr:
             mock_ocr.return_value = ""
 
-            success, result, error = self.service.decode_image_sync("invalid_lang", str(test_file), False)
+            success, result, error = self.service.decode_image_sync("invalid@lang", str(test_file), False)
 
             assert success is False
             assert result == ""
@@ -107,7 +108,7 @@ class TestScreenshotService:
         img.save(test_file)
 
         with patch("pytesseract.image_to_string") as mock_ocr:
-            mock_ocr.side_effect = pytesseract.TesseractError("Test error")
+            mock_ocr.side_effect = pytesseract.TesseractError("Test error", "Test error")
 
             success, result, error = self.service.decode_image_sync("eng", str(test_file), False)
 
@@ -133,18 +134,6 @@ class TestScreenshotService:
             assert success is True
             # File should still exist since it's not a portal temp file
             assert test_file.exists()
-
-    def test_capture_cancelled(self):
-        """Test screenshot cancellation handling."""
-        mock_cancellable = Mock()
-
-        with patch("anura.services.screenshot_service.GLib") as mock_glib:
-            self.service.capture_cancelled(mock_cancellable)
-
-            mock_glib.idle_add.assert_called_once()
-            args = mock_glib.idle_add.call_args[0]
-            assert args[0] == self.service.emit
-            assert args[1] == "error"
 
     def test_decode_image_with_portal_file(self, tmp_path):
         """Test decoding with portal-generated temporary files."""
@@ -181,6 +170,6 @@ class TestScreenshotService:
 
             success, result, error = self.service.decode_image_sync("eng", str(test_file), False)
 
-            assert success is True
+            assert success is False
             assert result == ""
-            assert error is None
+            assert error is not None

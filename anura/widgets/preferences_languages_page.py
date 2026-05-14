@@ -5,7 +5,7 @@
 
 from gettext import gettext as _
 
-from gi.repository import Adw, Gio, Gtk
+from gi.repository import Adw, Gio, GLib, Gtk
 
 from anura.config import RESOURCE_PREFIX
 from anura.language_manager import language_manager
@@ -17,7 +17,7 @@ from anura.widgets.language_row import LanguageRow
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/preferences_languages.ui")
 class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
-    __gtype_name__ = 'PreferencesLanguagesPage'
+    __gtype_name__ = "PreferencesLanguagesPage"
 
     banner: Adw.Banner = Gtk.Template.Child()
     views: Gtk.Stack = Gtk.Template.Child()
@@ -28,7 +28,7 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
     list_store: Gio.ListStore = Gtk.Template.Child()
     revealer: Gtk.Revealer = Gtk.Template.Child()
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
         SignalManagerMixin.__init__(self)
 
@@ -41,14 +41,14 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
                 self.list_store.append(item)
 
         # Signals for dynamic model updates (tracked for automatic cleanup)
-        self.connect_tracked(language_manager, 'added', self.on_language_added)
-        self.connect_tracked(language_manager, 'downloaded', self.on_language_added)
-        self.connect_tracked(language_manager, 'removed', self.on_language_removed)
+        self.connect_tracked(language_manager, "added", self.on_language_added)
+        self.connect_tracked(language_manager, "downloaded", self.on_language_added)
+        self.connect_tracked(language_manager, "removed", self.on_language_removed)
 
         # UI signal connections (tracked for automatic cleanup)
-        self.connect_tracked(self.language_search_entry, 'search-changed', self.on_language_search)
-        self.connect_tracked(self.language_search_entry, 'stop-search', self.on_language_search_stop)
-        self.connect_tracked(self.search_bar, 'notify::search-mode-enabled', self.on_search_mode_enabled)
+        self.connect_tracked(self.language_search_entry, "search-changed", self.on_language_search)
+        self.connect_tracked(self.language_search_entry, "stop-search", self.on_language_search_stop)
+        self.connect_tracked(self.search_bar, "notify::search-mode-enabled", self.on_search_mode_enabled)
 
         self.load_languages()
         self.activate_filter()
@@ -60,10 +60,10 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
         address = Gio.NetworkAddress.new("google.com", 443)
         monitor.can_reach_async(address, None, self._on_connection_checked)
 
-    def _on_connection_checked(self, monitor, result) -> None:
+    def _on_connection_checked(self, monitor: Gio.NetworkMonitor, result: Gio.AsyncResult) -> None:
         try:
             reachable = monitor.can_reach_finish(result)
-        except Exception:
+        except (GLib.Error, OSError):
             reachable = False
 
         if not reachable:
@@ -79,21 +79,21 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
         self.banner.set_revealed(False)
 
     @Gtk.Template.Callback()
-    def _on_banner_clicked(self, _):
+    def _on_banner_clicked(self, _: object) -> None:
         self.check_connection()
 
     @Gtk.Template.Callback()
-    def _on_item_setup(self, factory: Gtk.SignalListItemFactory, item: Gtk.ListItem):
+    def _on_item_setup(self, factory: Gtk.SignalListItemFactory, item: Gtk.ListItem) -> None:
         item.set_child(LanguageRow())
 
     @Gtk.Template.Callback()
-    def _on_item_bind(self, factory: Gtk.SignalListItemFactory, list_item: Gtk.ListItem):
+    def _on_item_bind(self, factory: Gtk.SignalListItemFactory, list_item: Gtk.ListItem) -> None:
         row: LanguageRow = list_item.get_child()
         item: LanguageItem = list_item.get_item()
         row.item = item
 
     @Gtk.Template.Callback()
-    def _on_add_language(self, sender: Gtk.Widget):
+    def _on_add_language(self, sender: Gtk.Widget) -> None:
         if not self.is_search_mode:
             self.deactivate_filter()
             self.search_bar.set_search_mode(True)
@@ -102,7 +102,8 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
             self.activate_filter()
             self.search_bar.set_search_mode(False)
 
-    def load_languages(self):
+    def load_languages(self) -> None:
+        """Load all available languages into the list store."""
         self.list_store.remove_all()
         existing_codes = set()
         for lang_code in language_manager.get_available_codes():
@@ -112,37 +113,45 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
                 existing_codes.add(item.code)
 
     @property
-    def is_search_mode(self):
+    def is_search_mode(self) -> bool:
+        """Check if search mode is currently active."""
         return self.search_bar.get_search_mode()
 
     def activate_filter(self, search_text: str | None = None) -> None:
+        """Activate search filter with the given text."""
         _filter = Gtk.CustomFilter.new(PreferencesLanguagesPage.filter_func, search_text)
         self.model.set_filter(_filter)
         self.toggle_empty_state(not self.model.get_n_items())
 
-    def deactivate_filter(self):
+    def deactivate_filter(self) -> None:
+        """Deactivate search filter and show all items."""
         self.model.set_filter(None)
 
-    def on_language_search(self, entry: Gtk.SearchEntry, _user_data=None) -> None:
+    def on_language_search(self, entry: Gtk.SearchEntry, _user_data: object = None) -> None:
+        """Handle language search text changes."""
         self.activate_filter(entry.get_text())
 
     def on_language_search_stop(self, entry: Gtk.SearchEntry) -> None:
-        entry.set_text('')
+        """Handle language search stop event."""
+        entry.set_text("")
         self.search_bar.set_search_mode(False)
         self.revealer.set_reveal_child(True)
         self.activate_filter()
 
-    def on_search_mode_enabled(self, _searchbar, _enabled: bool) -> None:
+    def on_search_mode_enabled(self, _searchbar: object, _enabled: bool) -> None:
+        """Handle search mode enabled/disabled event."""
         if not self.search_bar.get_search_mode():
             self.activate_filter()
 
     @staticmethod
-    def filter_func(item, user_data: str) -> bool:
+    def filter_func(item: object, user_data: str) -> bool:
+        """Filter function for language search."""
         if user_data:
             return user_data.lower() in item.title.lower()
         return item.code in language_manager.get_downloaded_codes()
 
-    def on_language_added(self, _sender, code: str | None = None) -> None:
+    def on_language_added(self, _sender: object, code: str | None = None) -> None:
+        """Handle language added event."""
         # Idempotent: only add if not already in the list
         if code is not None:
             existing_codes = {item.code for item in self.list_store}
@@ -153,15 +162,17 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
         if not self.search_bar.get_search_mode():
             self.activate_filter()
 
-    def on_language_removed(self, _sender, _code) -> None:
+    def on_language_removed(self, _sender: object, _code: str) -> None:
+        """Handle language removed event."""
         if not self.search_bar.get_search_mode():
             self.activate_filter()
 
     def toggle_empty_state(self, is_empty: bool = False) -> None:
-        state = 'empty_state' if is_empty else 'languages_state'
+        """Toggle between empty and languages state views."""
+        state = "empty_state" if is_empty else "languages_state"
         self.views.set_visible_child_name(state)
 
-    def do_destroy(self):
+    def do_destroy(self) -> None:
         """Clean up all tracked signal handlers to prevent memory leaks."""
         self.disconnect_all_signals()
         super().do_destroy()
