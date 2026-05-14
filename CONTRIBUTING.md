@@ -34,8 +34,8 @@ GSETTINGS_SCHEMA_DIR=builddir/data python3 -m anura.main
 
 Anura has two categories of tests:
 
-1. **Unit Tests** - Pure Python logic without GTK dependencies (38 tests)
-2. **Integration Tests** - Require GTK/GLib environment (61 tests)
+1. **Unit Tests** - Pure Python logic without GTK dependencies (148 tests)
+2. **Integration Tests** - Require GTK/GLib environment (47 tests)
 
 ### 🚀 QUICK START - Daily Development
 
@@ -45,7 +45,7 @@ uv sync --dev
 
 # 2. Run unit tests (ALWAYS use this for daily development)
 uv run pytest tests/ -m "not gtk" -v
-# Expected: 38 passed, 61 deselected ✅
+# Expected: 148 passed, 47 deselected ✅
 ```
 
 ### 📋 COMPLETE TEST COMMANDS
@@ -107,8 +107,8 @@ uv run pytest tests/ -v
 
 | Command | Expected Result | Use Case |
 |---------|----------------|----------|
-| `uv run pytest tests/ -m "not gtk" -v` | `38 passed, 61 deselected` | Daily development |
-| `python3 -m pytest tests/ -m "gtk" -v` (in Flatpak) | `61 passed, 38 deselected` | Full GTK testing |
+| `uv run pytest tests/ -m "not gtk" -v` | `148 passed, 47 deselected` | Daily development |
+| `python3 -m pytest tests/ -m "gtk" -v` (in Flatpak) | `47 passed, 148 deselected` | Full GTK testing |
 | `uv run pytest tests/ -v` | `9 failed, 85 passed, 2 skipped, 3 errors` | ❌ Never use |
 
 ### Test Architecture

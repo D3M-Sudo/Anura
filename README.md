@@ -46,6 +46,7 @@ It also decodes **QR codes** in a single click, with full system integration on 
 | 🔊 **Text-to-Speech** | Read extracted text aloud via gTTS |
 | 🔒 **Privacy-first** | All processing happens locally — no data leaves your machine |
 | 🎨 **Native GTK4** | Designed for GNOME, built with Libadwaita |
+| 🚀 **Async D&D** | Smooth, non-blocking drag-and-drop experience |
 
 ---
 

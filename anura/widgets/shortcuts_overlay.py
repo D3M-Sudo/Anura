@@ -138,9 +138,9 @@ class ShortcutsOverlay(Adw.Window):
 
     def _connect_signals(self) -> None:
         """Connect signals for search and window events."""
-        self.search_entry.connect("search-changed", self._on_search_changed)
+        self._search_handler_id = self.search_entry.connect("search-changed", self._on_search_changed)
 
-        self.connect("close-request", self._on_close_request)
+        self._close_handler_id = self.connect("close-request", self._on_close_request)
 
         # Use CAPTURE phase so Escape closes the window even when focus is in
         # the SearchEntry (which would otherwise consume the key event via its
@@ -149,6 +149,20 @@ class ShortcutsOverlay(Adw.Window):
         key_controller.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
         key_controller.connect("key-pressed", self._on_key_pressed)
         self.add_controller(key_controller)
+
+    def do_destroy(self) -> None:
+        """Clean up signal handlers to prevent memory leaks."""
+        import contextlib
+
+        if getattr(self, "_search_handler_id", None) is not None:
+            with contextlib.suppress(TypeError, RuntimeError):
+                self.search_entry.disconnect(self._search_handler_id)
+            self._search_handler_id = None
+        if getattr(self, "_close_handler_id", None) is not None:
+            with contextlib.suppress(TypeError, RuntimeError):
+                self.disconnect(self._close_handler_id)
+            self._close_handler_id = None
+        super().do_destroy()
 
     def _on_search_changed(self, entry: Gtk.SearchEntry) -> None:
         """Handle search entry changes."""

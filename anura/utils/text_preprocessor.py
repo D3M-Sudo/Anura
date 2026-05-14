@@ -26,8 +26,8 @@ class TextPreprocessor:
         self._punctuation_patterns = [
             (r"([.!?])\1+", r"\1"),  # Multiple punctuation
             (r",+", ","),  # Multiple commas
-            (r"\s*([.,;:!?])\s*", r"\1 "),  # Space around punctuation
-            (r"\s+([.,;:!?])", r"\1"),  # Remove space before punctuation
+            (r"\s+([.,;:!?])", r"\1"),  # Remove space before punctuation (first)
+            (r"(?<!\d)([.,;:!?])(?!\d)(\S)", r"\1 \2"),  # Add space after punctuation if missing (second)
         ]
 
     def enhance_image(self, image: Image.Image) -> Image.Image:
@@ -87,7 +87,11 @@ class TextPreprocessor:
             image = ImageOps.autocontrast(image, cutoff=2)
 
             # Use a simple but effective PIL-based thresholding.
-            return image.point(lambda x: 0 if x < 128 else 255, "1").convert("L")
+            # Optimization: Using a LUT (Look-Up Table) instead of a lambda is faster
+            # for the Image.point() operation as it avoids Python callback overhead.
+            threshold = 128
+            lut = [0 if i < threshold else 255 for i in range(256)]
+            return image.point(lut, "1").convert("L")
         except Exception as e:
             logger.warning(f"Thresholding failed: {e}")
             return image
@@ -178,21 +182,35 @@ class TextPreprocessor:
         if not text:
             return text
 
-        # Capitalize first letter of sentences
-        sentences = re.split(r"([.!?]+)\s*", text)
-        for i in range(0, len(sentences), 2):
-            if sentences[i].strip():
-                sentences[i] = (
-                    sentences[i][0].upper() + sentences[i][1:] if len(sentences[i]) > 1 else sentences[i].upper()
+        # Capitalize first letter of sentences.
+        # re.split with a capturing group returns alternating [text, sep, text, sep, …].
+        # We join them with a space so the whitespace consumed by \s* is restored.
+        parts = re.split(r"((?<!\d)[.!?]+)\s*", text)
+        for i in range(0, len(parts), 2):
+            if parts[i].strip():
+                parts[i] = (
+                    parts[i][0].upper() + parts[i][1:] if len(parts[i]) > 1 else parts[i].upper()
                 )
 
-        fixed = "".join(sentences)
+        # Rebuild: interleave text and punctuation, adding a space after each punctuation
+        # block to replace the whitespace that the split consumed.
+        rebuilt: list[str] = []
+        for i, part in enumerate(parts):
+            if i % 2 == 1:  # punctuation capture group
+                rebuilt.append(part + " ")
+            else:
+                rebuilt.append(part)
+        fixed = "".join(rebuilt).strip()
 
-        # Fix ALL CAPS words (except acronyms)
+        # Fix ALL CAPS words: words longer than 4 characters are likely not acronyms
+        # (acronyms are typically short: NASA, FBI, HTML …).
+        # words.isupper() is True for any-letter-all-uppercase word.
         words = fixed.split()
         for i, word in enumerate(words):
-            if word.isupper() and len(word) > 3 and not re.match(r"^[A-Z]{2,}$", word):
-                words[i] = word.capitalize()
+            # Strip trailing punctuation for the length/uppercase check
+            core = word.rstrip(".,;:!?")
+            if core.isupper() and len(core) > 4:
+                words[i] = word[0].upper() + word[1:].lower()
 
         return " ".join(words)
 
@@ -211,8 +229,10 @@ class TextPreprocessor:
             if re.match(r"^[\s\-_+=*~`]+$|^[\.\-]{3,}$", line):
                 continue
 
-            # Remove leading bullet characters
-            line = re.sub(r"^[\s•·▪▫◦‣-]+\s*", "", line)
+            # Remove leading Unicode bullet characters (never ambiguous)
+            line = re.sub(r"^[\s•·▪▫◦‣]+\s*", "", line)
+            # Remove markdown-style list markers ("- ") only when followed by a space
+            line = re.sub(r"^-\s+", "", line)
 
             cleaned_lines.append(line)
 

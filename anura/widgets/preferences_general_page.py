@@ -84,9 +84,14 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
 
     def _on_language_changed(self, _sender: object, _code: str) -> None:
         """Refresh the extra-language combo when models are installed or removed."""
-        # Disconnect old signal to avoid duplicate connections
-        with contextlib.suppress(TypeError):
-            self.extra_language_combo.disconnect_by_func(self._on_extra_language_changed)
+        # Disconnect old combo handler via SignalManagerMixin tracking to avoid
+        # stale IDs accumulating in _signal_connections (BUG-4 fix).
+        emitter = self.extra_language_combo
+        if emitter in self._signal_connections:
+            for hid in list(self._signal_connections[emitter]):
+                with contextlib.suppress(TypeError, RuntimeError):
+                    emitter.disconnect(hid)
+            self._signal_connections[emitter].clear()
         self._setup_extra_languages()
 
     def _setup_tts_volume(self) -> None:

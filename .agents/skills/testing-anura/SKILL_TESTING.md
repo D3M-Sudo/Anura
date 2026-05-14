@@ -17,7 +17,7 @@ uv run ruff check .
 uv run pytest tests/ -m "not gtk" -v
 ```
 
-Expected: `All checks passed!` and `57 passed, 42 deselected` (counts will drift over time — the important part is zero failures and the GTK-marked subset being deselected, not skipped).
+Expected: `All checks passed!` and `148 passed, 47 deselected` (counts will drift over time — the important part is zero failures and the GTK-marked subset being deselected, not skipped).
 
 ## When you can run the gtk-marked tests
 

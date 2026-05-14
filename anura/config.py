@@ -106,13 +106,18 @@ def get_tesseract_config(lang_code: str) -> str:
         logger.error(f"Anura: Invalid language code '{lang_code}' - using default 'eng'")
         lang_code = "eng"
 
+    # For multi-language codes like "eng+ita", Tesseract looks for individual
+    # .traineddata files (eng.traineddata, ita.traineddata) — not a combined one.
+    # Use the first component to determine which directory contains the models.
+    primary_code = lang_code.split("+")[0]
+
     # Check user directory first (user models take priority)
-    user_model = os.path.join(TESSDATA_DIR, f"{lang_code}.traineddata")
+    user_model = os.path.join(TESSDATA_DIR, f"{primary_code}.traineddata")
     if os.path.exists(user_model):
         return f'--tessdata-dir "{TESSDATA_DIR}" --psm 3 --oem 1'
 
     # Fall back to system directory (bundled models in Flatpak)
-    system_model = os.path.join(TESSDATA_SYSTEM_DIR, f"{lang_code}.traineddata")
+    system_model = os.path.join(TESSDATA_SYSTEM_DIR, f"{primary_code}.traineddata")
     if os.path.exists(system_model):
         return f'--tessdata-dir "{TESSDATA_SYSTEM_DIR}" --psm 3 --oem 1'
 

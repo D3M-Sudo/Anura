@@ -188,7 +188,8 @@ class ScreenshotService(GObject.GObject):
             logger.error(f"Anura Screenshot: Invalid or non-existent file path: {filename}")
             return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))
 
-        self.decode_image(lang, filename, copy, True)
+        from anura.gobject_worker import GObjectWorker
+        GObjectWorker.call(self.decode_image, (lang, filename, copy, True))
 
     # Environment variables surfaced when the portal screenshot fails. These
     # tell us which desktop/session backend should be answering the portal

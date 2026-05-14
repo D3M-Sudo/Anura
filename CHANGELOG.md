@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-## [0.1.4.3] - 2026-05-10 {version-0.1.4.3}
+## [0.1.4.3] - 2026-05-14 {version-0.1.4.3}
 
 ### Added
 
@@ -27,6 +27,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Full copyright and MIT license text for transparency
 - Open source dependencies attribution in legal information
 - Complete legal information ensuring Flathub compliance requirements
+- Asynchronous Drag-and-Drop implementation to prevent UI freezes, especially in VM environments
+- Fallback for URI list on clipboard texture read failure
+- Optimized image thresholding using Look-Up Tables (LUT) for performance
+- Enhanced accessibility and Micro-UX improvements for the OCR results page
+- Persistent Drag-and-Drop controller for better stability
 
 ### Fixed
 
@@ -42,6 +47,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fixed host screenshot file existence check with retry loop
 - Fixed designer credit and share-row action prefix corrections
 - Fixed incomplete URL substring sanitization (security fix)
+- Resolved multiple critical runtime bugs, memory leaks, and signal leaks across core services
+- Fixed X11 Drag-and-Drop deadlocks and portal file transfer freezes
+- Corrected Text-to-Speech (TTS) state transitions, visual feedback, and "zombie audio" issues
+- Fixed localization initialization and updated Italian translations
+- Fixed broken status window in "Legal Information" page
+- Resolved GTK navigation warnings and ruff linting violations (E501, W292)
+- Fixed About dialog property names and legal information display
+- Improved error handling for browser launch and file filters
+- Fixed UI spinner animations and state management
+- Fixed missing trailing newline in anura/window.py
 
 ### Changed
 
@@ -52,6 +67,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Lower threshold for GitHub link from 15 to 12 items for better UX
 - Enhanced drag-and-drop drop target attachment to welcome page widget
 - Improved release notes generation with tracking for truncated sections
+- Refactored Drag-and-Drop system for improved reliability
+- Optimized Flatpak build and updated dependencies (urllib3)
+- Improved OCR pipeline and image processing performance
 
 ## [0.1.4.2] - 2026-05-05 {version-0.1.4.2}
 

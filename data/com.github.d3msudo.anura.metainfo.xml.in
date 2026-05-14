@@ -55,7 +55,7 @@
     </screenshot>
   </screenshots>
   <releases>
-    <release version="0.1.4.3" type="stable" date="2026-05-10">
+    <release version="0.1.4.3" type="stable" date="2026-05-14">
       <description>
         <p>Enhanced OCR preprocessing, modern keyboard shortcuts overlay, and robust screenshot fallback system.</p>
         <ul>
@@ -76,22 +76,28 @@
           <li>Added full copyright and MIT license text for transparency.</li>
           <li>Added open source dependencies attribution in legal information.</li>
           <li>Added complete legal information ensuring Flathub compliance requirements.</li>
-          <li>Fixed notification service cleanup by removing incorrect underscore reference.</li>
-          <li>Fixed URI validator function call in window.py for proper URL validation.</li>
-          <li>Fixed dialog response handling for browser launch failures with proper error management.</li>
-          <li>Fixed extra language combo signal connection to ensure it's always connected regardless of settings.</li>
-          <li>Fixed modal property removal from shortcuts window for better user experience.</li>
-          <li>Fixed keyboard shortcuts test to match correct method signature with _param parameter.</li>
-          <li>Fixed five UI/runtime bugs from Flatpak debug log.</li>
-          <li>Fixed three additional bugs (release notes parse, TTS AttributeError, screenshot diagnostic).</li>
-          <li>Fixed Gio.Subprocess.wait() method usage instead of wait_sync().</li>
-          <li>Fixed host screenshot file existence check with retry loop.</li>
-          <li>Fixed designer credit and share-row action prefix corrections.</li>
-          <li>Fixed incomplete URL substring sanitization (security fix).</li>
+          <li>Added asynchronous Drag-and-Drop implementation to prevent UI freezes.</li>
+          <li>Added fallback for URI list on clipboard texture read failure.</li>
+          <li>Added optimized image thresholding using Look-Up Tables (LUT) for performance.</li>
+          <li>Added enhanced accessibility and Micro-UX improvements for the OCR results page.</li>
+          <li>Added persistent Drag-and-Drop controller for better stability.</li>
+          <li>Fixed notification service cleanup and URI validator function calls.</li>
+          <li>Fixed dialog response handling for browser launch failures.</li>
+          <li>Fixed extra language combo signal connection and modal property removal.</li>
+          <li>Fixed keyboard shortcuts test to match correct method signature.</li>
+          <li>Fixed multiple UI/runtime bugs, memory leaks, and signal leaks.</li>
+          <li>Fixed X11 Drag-and-Drop deadlocks and portal file transfer freezes.</li>
+          <li>Fixed TTS state transitions, visual feedback, and audio issues.</li>
+          <li>Fixed localization initialization and updated Italian translations.</li>
+          <li>Fixed broken status window in Legal Information page.</li>
+          <li>Resolved GTK navigation warnings and linting violations.</li>
+          <li>Fixed About dialog property names and legal information display.</li>
+          <li>Improved error handling for browser launch and file filters.</li>
+          <li>Fixed UI spinner animations and state management.</li>
+          <li>Refactored Drag-and-Drop system for improved reliability.</li>
+          <li>Optimized Flatpak build and updated dependencies.</li>
+          <li>Improved OCR pipeline and image processing performance.</li>
           <li>Updated release notes generation logic with hybrid GitHub link display.</li>
-          <li>Lower threshold for GitHub link from 15 to 12 items for better UX.</li>
-          <li>Enhanced drag-and-drop drop target attachment to welcome page widget.</li>
-          <li>Improved release notes generation with tracking for truncated sections.</li>
         </ul>
       </description>
     </release>

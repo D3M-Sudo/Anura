@@ -1,9 +1,36 @@
 import contextlib
-from gettext import gettext as _
-import html
+import gettext
 import os
 import sys
 import threading
+
+
+# Initialize localization
+def _setup_i18n():
+    project_name = "anura"
+    # Priority: standard installation -> Flatpak -> relative (dev)
+    possible_localedirs = [
+        "/usr/share/locale",
+        "/usr/local/share/locale",
+        "/app/share/locale",
+        os.path.join(os.path.dirname(__file__), "..", "po"),
+    ]
+
+    localedir = None
+    for path in possible_localedirs:
+        if os.path.exists(path):
+            localedir = path
+            break
+
+    if localedir:
+        gettext.bindtextdomain(project_name, localedir)
+        gettext.textdomain(project_name)
+
+
+_setup_i18n()
+
+from gettext import gettext as _
+import html
 
 # Suppress a11y bus warnings in headless CI environments
 if not sys.stdin.isatty():
@@ -525,24 +552,19 @@ class AnuraApplication(Adw.Application):
             release_notes=self._get_release_notes(),
         )
 
-        # Present the dialog first, then add legal section to prevent widget lifecycle warnings
+        # Add legal sections BEFORE presenting to prevent widget lifecycle warnings
+        about_window.add_legal_section(
+            _("Acknowledgements"),
+            "© 2022-2025 Andrey Maksimov",
+            Gtk.License.MIT_X11,
+            _(
+                "Anura is a fork of Frog OCR. This software uses Tesseract OCR, Leptonica, "
+                "GTK4, Libadwaita, gTTS, Pillow, PyZBar, and other open source components."
+            ),
+        )
+        about_window.add_link(_("Changelog"), "https://github.com/D3M-Sudo/Anura/blob/main/CHANGELOG.md")
+
         about_window.present(window)
-
-        # Defer legal section addition to after dialog is fully realized
-        def add_legal_sections():
-            about_window.add_legal_section(
-                _("Acknowledgements"),
-                "© 2022-2025 Andrey Maksimov",
-                Gtk.License.MIT_X11,
-                _(
-                    "Anura is a fork of Frog OCR. This software uses Tesseract OCR, Leptonica, "
-                    "GTK4, Libadwaita, gTTS, Pillow, PyZBar, and other open source components."
-                ),
-            )
-            about_window.add_link(_("Changelog"), "https://github.com/D3M-Sudo/Anura/blob/main/CHANGELOG.md")
-            return False
-
-        GLib.idle_add(add_legal_sections)
 
     def on_github_star(self, _action: object, _param: object) -> None:
         """Open GitHub repository page in the default browser."""
@@ -615,7 +637,7 @@ class AnuraApplication(Adw.Application):
             return
 
         # No explicit text passed via the action — copy whatever the window has.
-        if hasattr(window, '_do_copy_to_clipboard'):
+        if hasattr(window, "_do_copy_to_clipboard"):
             window._do_copy_to_clipboard()
         else:
             window.show_toast(_("No text available to copy"))
@@ -637,6 +659,10 @@ class AnuraApplication(Adw.Application):
 
     def on_paste_from_clipboard(self, _action: Gio.SimpleAction, _param: object) -> None:
         """Read image from clipboard and perform OCR."""
+        # Show spinner so the user has visual feedback while the async read runs
+        win = self.props.active_window
+        if win and hasattr(win, "welcome_page"):
+            win.welcome_page.show_spinner()
         clipboard_service_instance = get_clipboard_service()
         clipboard_service_instance.read_texture()
 

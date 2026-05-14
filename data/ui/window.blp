@@ -26,16 +26,10 @@ template $AnuraWindow : Adw.ApplicationWindow {
         collapsed: true;
 
         [sidebar]
-        Adw.NavigationPage {
-          title: _("Welcome");
-          child: $WelcomePage welcome_page {};
-        }
+        $WelcomePage welcome_page {}
 
         [content]
-        Adw.NavigationPage {
-          title: _("Extracted Text");
-          child: $ExtractedPage extracted_page {};
-        }
+        $ExtractedPage extracted_page {}
       }
     }
   }
