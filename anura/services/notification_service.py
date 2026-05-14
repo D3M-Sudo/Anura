@@ -5,6 +5,7 @@
 # Notification service with XDG Portal and libnotify fallback
 # Provides maximum compatibility across desktop environments
 
+import contextlib
 from itertools import count
 import time
 from typing import ClassVar
@@ -77,6 +78,14 @@ class NotificationService:
 
         if not HAS_PORTAL and not self.libnotify_initialized:
             logger.warning("NotificationService: No notification backend available")
+
+    def cleanup(self) -> None:
+        """Clean up the periodic timer to prevent resource leaks."""
+        if hasattr(self, "_cleanup_timeout_id") and self._cleanup_timeout_id:
+            with contextlib.suppress(GLib.Error):
+                GLib.source_remove(self._cleanup_timeout_id)
+            self._cleanup_timeout_id = None
+        self.cleanup_notifications()
 
     # Valid priority levels according to XDG Portal specification
     _VALID_PRIORITIES: ClassVar[set[str]] = {"low", "normal", "high", "urgent"}

@@ -119,15 +119,12 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
         try:
             self.lang_list.remove_all()
 
-            downloaded_languages = language_manager.get_downloaded_languages(force=True)
-            for lang in downloaded_languages:
-                code = language_manager.get_language_code(lang)
-                if code is None:  # Add defensive check
-                    logger.warning(f"Failed to get language code for: {lang}")
-                    continue
+            downloaded_codes = language_manager.get_downloaded_codes(force=True)
+            for code in downloaded_codes:
+                title = language_manager.get_language(code)
 
                 selected = self.active_language == code
-                self.lang_list.append(LanguageItem(code=code, title=lang, selected=selected))
+                self.lang_list.append(LanguageItem(code=code, title=title, selected=selected))
 
             # Fallback to English if current language was removed, emitting only on actual change
             current_code = self.active_language

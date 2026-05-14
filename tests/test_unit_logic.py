@@ -44,10 +44,10 @@ class TestShareServiceLogic:
 
     def test_x_link_generation(self):
         """Test X (Twitter) link generation logic."""
-        text = "Hello world"
-        encoded = quote(text, safe="")
-        expected = f"https://twitter.com/intent/tweet?text={encoded}"
-        assert expected == "https://twitter.com/intent/tweet?text=Hello%20world"
+        from anura.services.share_service import ShareService
+
+        result = ShareService.get_link_x("Hello world")
+        assert result == "https://x.com/intent/tweet?text=Hello%20world"
 
     def test_mastodon_link_generation(self):
         """Test Mastodon link generation logic."""
@@ -62,48 +62,57 @@ class TestTTSLogic:
 
     def test_language_mapping_english(self):
         """Test English language mapping."""
-        expected = "en"
-        assert expected == "en"
+        from anura.services.tts import TTSService
+        result = TTSService.map_tesseract_to_gtts("eng")
+        assert result == "en"
 
     def test_language_mapping_italian(self):
         """Test Italian language mapping."""
-        expected = "it"
-        assert expected == "it"
+        from anura.services.tts import TTSService
+        result = TTSService.map_tesseract_to_gtts("ita")
+        assert result == "it"
 
     def test_language_mapping_spanish(self):
         """Test Spanish language mapping."""
-        expected = "es"
-        assert expected == "es"
+        from anura.services.tts import TTSService
+        result = TTSService.map_tesseract_to_gtts("spa")
+        assert result == "es"
 
     def test_language_mapping_french(self):
         """Test French language mapping."""
-        expected = "fr"
-        assert expected == "fr"
+        from anura.services.tts import TTSService
+        result = TTSService.map_tesseract_to_gtts("fra")
+        assert result == "fr"
 
     def test_language_mapping_german(self):
         """Test German language mapping."""
-        expected = "de"
-        assert expected == "de"
+        from anura.services.tts import TTSService
+        result = TTSService.map_tesseract_to_gtts("deu")
+        assert result == "de"
 
     def test_language_mapping_unknown(self):
         """Test unknown language mapping defaults to English."""
-        expected = "en"  # Should default to English
-        assert expected == "en"
+        from anura.services.tts import TTSService
+        result = TTSService.map_tesseract_to_gtts("zzz")
+        assert result == "en"
 
     def test_language_mapping_multilingual(self):
-        """Test multilingual OCR codes use first language."""
-        expected = "en"  # Should use first language
-        assert expected == "en"
+        """Test multilingual OCR codes use first language for TTS."""
+        from anura.services.tts import TTSService
+        result = TTSService.map_tesseract_to_gtts("ita+eng")
+        assert result == "it"
 
     def test_language_mapping_empty(self):
         """Test empty language code defaults to English."""
-        expected = "en"  # Should default to English
-        assert expected == "en"
+        from anura.services.tts import TTSService
+        result = TTSService.map_tesseract_to_gtts("")
+        assert result == "en"
 
     def test_language_mapping_none(self):
         """Test None language code defaults to English."""
-        expected = "en"  # Should default to English
-        assert expected == "en"
+        from anura.services.tts import TTSService
+        result = TTSService.map_tesseract_to_gtts(None)
+        assert result == "en"
 
 
 class TestConfigLogic:
@@ -111,7 +120,7 @@ class TestConfigLogic:
 
     def test_lang_code_pattern_valid(self):
         """Test valid language code patterns."""
-        LANG_CODE_PATTERN = r"^[a-zA-Z0-9_+]{2,18}$"
+        from anura.config import LANG_CODE_PATTERN
 
         valid_codes = ["eng", "ita", "spa", "fra", "deu", "eng+ita", "chi_sim"]
 
@@ -120,7 +129,7 @@ class TestConfigLogic:
 
     def test_lang_code_pattern_invalid(self):
         """Test invalid language code patterns."""
-        LANG_CODE_PATTERN = r"^[a-zA-Z0-9_+]{2,18}$"
+        from anura.config import LANG_CODE_PATTERN
 
         invalid_codes = ["", "a", "toolongcode123456789", "invalid!@#", "a b"]
 
@@ -150,7 +159,8 @@ class TestValidatorLogic:
 
     def test_uri_validator_control_characters(self):
         """Test URI validator blocks control characters."""
-        # Control characters (0x00-0x1F, 0x7F) should be blocked
+        from anura.utils.validators import uri_validator
+
         invalid_urls = [
             "https://example.com\x00null",
             "https://example.com\x01",
@@ -159,12 +169,12 @@ class TestValidatorLogic:
         ]
 
         for url in invalid_urls:
-            # Check for control characters
-            assert any(ord(c) < 0x20 or ord(c) == 0x7F for c in url)
+            assert not uri_validator(url)
 
     def test_uri_validator_ascii_only(self):
         """Test URI validator requires ASCII-only URLs."""
-        # Unicode characters should be blocked
+        from anura.utils.validators import uri_validator
+
         unicode_urls = [
             "https://example.com/测试",
             "https://example.com/🔒",
@@ -172,15 +182,12 @@ class TestValidatorLogic:
         ]
 
         for url in unicode_urls:
-            try:
-                url.encode("ascii")
-                ascii_only = True
-            except UnicodeEncodeError:
-                ascii_only = False
-            assert ascii_only is False
+            assert not uri_validator(url)
 
     def test_uri_validator_valid_schemes(self):
         """Test URI validator accepts valid schemes."""
+        from anura.utils.validators import uri_validator
+
         valid_urls = [
             "https://example.com",
             "http://localhost:8080",
@@ -189,13 +196,12 @@ class TestValidatorLogic:
         ]
 
         for url in valid_urls:
-            # Basic validation - should have http/https scheme and netloc
-            assert url.startswith(("http://", "https://"))
-            assert "://" in url
-            assert len(url.split("://")[1]) > 0
+            assert uri_validator(url)
 
     def test_uri_validator_invalid_schemes(self):
         """Test URI validator blocks invalid schemes."""
+        from anura.utils.validators import uri_validator
+
         invalid_urls = [
             "ftp://example.com",
             "javascript:alert('xss')",
@@ -203,11 +209,12 @@ class TestValidatorLogic:
         ]
 
         for url in invalid_urls:
-            # Should not start with http/https
-            assert not url.startswith(("http://", "https://"))
+            assert not uri_validator(url)
 
     def test_uri_validator_localhost_allowed(self):
         """Test URI validator allows localhost."""
+        from anura.utils.validators import uri_validator
+
         localhost_urls = [
             "http://localhost:8080",
             "https://localhost:3000",
@@ -216,12 +223,13 @@ class TestValidatorLogic:
         ]
 
         for url in localhost_urls:
-            # Should be valid (localhost/IP addresses allowed)
-            assert any(host in url for host in ["localhost", "127.0.0.1", "192.168.1.1"])
+            assert uri_validator(url)
 
     def test_uri_validator_domain_validation(self):
         """Test URI validator domain validation."""
-        # Valid domains should have dots
+        from anura.utils.validators import uri_validator
+
+        # Valid domains should pass
         valid_domains = [
             "https://example.com",
             "https://mastodon.social",
@@ -235,12 +243,10 @@ class TestValidatorLogic:
         ]
 
         for url in valid_domains:
-            netloc = url.split("://")[1].split("/")[0]
-            assert "." in netloc or "localhost" in netloc
+            assert uri_validator(url)
 
         for url in invalid_domains:
-            netloc = url.split("://")[1].split("/")[0]
-            assert "." not in netloc and "localhost" not in netloc
+            assert not uri_validator(url)
 
 
 class TestUrlLengthValidation:

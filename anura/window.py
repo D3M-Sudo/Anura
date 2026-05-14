@@ -4,7 +4,6 @@ from gettext import ngettext
 from io import BytesIO
 from mimetypes import guess_type
 import os
-import re
 
 import gi
 
@@ -421,62 +420,6 @@ class AnuraWindow(Adw.ApplicationWindow):
             logger.error(f"Failed to load file contents: {e}")
             self.show_toast(_("Failed to load image file"))
 
-    def _on_dnd_query_info_done(self, gfile: Gio.File, result: Gio.AsyncResult, item: object) -> None:
-        logger.debug(f"DnD: query_info_done gfile={gfile}, item={item}")
-        try:
-            info = gfile.query_info_finish(result)
-            if not info:
-                logger.error("DnD: query_info_finish returned None")
-                self.welcome_page.spinner.set_visible(False)
-                return
-
-            mimetype = info.get_content_type()
-            if not mimetype or not mimetype.startswith("image"):
-                self.welcome_page.spinner.set_visible(False)
-                self.show_toast(_("Unsupported file format."))
-                return
-
-            item.load_contents_async(None, self._on_dnd_file_contents_loaded)
-        except (GLib.Error, OSError, ValueError, RuntimeError) as e:
-            logger.error(f"DnD query_info failed: {e}")
-            self.welcome_page.spinner.set_visible(False)
-
-    def _on_dnd_file_contents_loaded(self, gfile: Gio.File, result: Gio.AsyncResult) -> None:
-        logger.debug(f"DnD: _on_dnd_file_contents_loaded called for {gfile.get_path()}")
-        try:
-            # See comment in _on_file_contents_loaded: do not unpack the etag
-            # into `_`, it would shadow the gettext alias used in error paths.
-            ok, contents, _etag = gfile.load_contents_finish(result)
-            if not ok:
-                logger.error(f"DnD: Failed to load dropped file contents for {gfile.get_path()}")
-                self.welcome_page.spinner.set_visible(False)
-                self.show_toast(_("Failed to load dropped file"))
-                return
-
-            # Validate file size
-            file_size = len(contents)
-            if file_size > self.MAX_IMAGE_SIZE_BYTES:
-                self.welcome_page.spinner.set_visible(False)
-                self.show_toast(
-                    _("Image too large: {size}MB (max {max}MB)").format(
-                        size=round(file_size / (1024 * 1024), 1),
-                        max=self.MAX_IMAGE_SIZE_MB,
-                    ),
-                )
-                return
-
-            stream = BytesIO(contents)
-            logger.debug("DnD: Reached GObjectWorker.call in _on_dnd_file_contents_loaded")
-            GObjectWorker.call(self.backend.decode_image, (self.get_language(), stream))
-        except (GLib.Error, OSError, ValueError, RuntimeError) as e:
-            self.welcome_page.spinner.set_visible(False)
-            logger.error(f"Failed to load dropped file: {e}")
-            self.show_toast(_("Failed to load dropped file"))
-
-    def on_copy_to_clipboard(self, _action: Gio.SimpleAction) -> None:
-        """Copy the current extracted text to the clipboard."""
-        return self._do_copy_to_clipboard()
-
     def _do_copy_to_clipboard(self) -> None:
         text = self.extracted_page.extracted_text
         if text:
@@ -485,12 +428,6 @@ class AnuraWindow(Adw.ApplicationWindow):
             self.show_toast(_("Text copied to clipboard"))
         else:
             self.show_toast(_("No text to copy"))
-
-    def on_paste_from_clipboard(self, _action: Gio.SimpleAction) -> None:
-        """Read image from clipboard and perform OCR."""
-        self.welcome_page.show_spinner()
-        clipboard_service_instance = get_clipboard_service()
-        clipboard_service_instance.read_texture()
 
     def _on_paste_from_clipboard_texture(self, _service: GObject.GObject, texture: Gdk.Texture) -> None:
         self.welcome_page.show_spinner()
@@ -670,27 +607,3 @@ class AnuraWindow(Adw.ApplicationWindow):
 
         launcher.launch(self, None, on_launch_finish)
 
-    # Maximum URL length to prevent issues with extremely long OCR results
-    MAX_URL_LENGTH = 2048
-
-    def extract_url_from_text(self, text: str) -> str | None:
-        """Extract the first valid URL from OCR text using regex.
-
-        Returns the URL if found and valid, None otherwise.
-        """
-        # Null check to prevent errors with None input
-        if text is None:
-            return None
-        # Regex to find URLs starting with http:// or https://
-        # Use * instead of + to apply quantifier to entire character class
-        url_pattern = re.compile(r'https?://[^\s<>"{}|\\^`\[\]]*')
-        match = url_pattern.search(text)
-        if match:
-            url = match.group(0).rstrip(".,;:")
-            # Length check to prevent issues with extremely long URLs
-            if len(url) > self.MAX_URL_LENGTH:
-                logger.warning(f"Anura: URL too long ({len(url)} chars), ignoring.")
-                return None
-            if uri_validator(url):
-                return url
-        return None
