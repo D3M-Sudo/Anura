@@ -28,12 +28,25 @@ def _setup_i18n():
             break
 
     # Initialize C-level locale for GTK/Libadwaita
+    locale_success = True
     try:
         locale.setlocale(locale.LC_ALL, "")
     except locale.Error as e:
         # Fallback to C locale if requested locale is missing on host
         print(f"Warning: Could not set locale: {e}. Falling back to 'C'.", file=sys.stderr)
-        locale.setlocale(locale.LC_ALL, "C")
+        try:
+            locale.setlocale(locale.LC_ALL, "C")
+        except locale.Error:
+            pass
+        locale_success = False
+
+    # If the C locale failed to initialize to the system preference,
+    # we MUST force English for the Python gettext too, otherwise we get a
+    # "Hybrid" UI where Python strings are translated but GTK (.ui) ones are not.
+    if not locale_success:
+        os.environ["LANGUAGE"] = "C"
+        os.environ["LC_ALL"] = "C"
+        os.environ["LANG"] = "C"
 
     if localedir:
         # Bind for Python gettext
@@ -41,11 +54,24 @@ def _setup_i18n():
         gettext.textdomain(project_name)
 
         # Bind for GLib/GTK (used for .ui files and resources)
-        # We use the locale module which calls the C library's bindtextdomain
-        locale.bindtextdomain(project_name, localedir)
-        locale.textdomain(project_name)
-        if hasattr(locale, "bind_textdomain_codeset"):
-            locale.bind_textdomain_codeset(project_name, "UTF-8")
+        # We use the locale module which calls the C library's bindtextdomain.
+        # On some systems, we also need to explicitly bind for GLib.
+        try:
+            locale.bindtextdomain(project_name, localedir)
+            locale.textdomain(project_name)
+            if hasattr(locale, "bind_textdomain_codeset"):
+                locale.bind_textdomain_codeset(project_name, "UTF-8")
+
+            # Try to also bind via GLib if available early
+            import gi
+            from gi.repository import GLib
+
+            GLib.bindtextdomain(project_name, localedir)
+            GLib.bind_textdomain_codeset(project_name, "UTF-8")
+            GLib.textdomain(project_name)
+        except (ImportError, AttributeError, ValueError):
+            # gi might not be fully ready yet, or GLib methods missing
+            pass
 
 
 _setup_i18n()
