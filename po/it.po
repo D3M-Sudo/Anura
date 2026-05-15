@@ -769,7 +769,7 @@ msgstr ""
 #: anura/widgets/extracted_page.py:87 anura/widgets/extracted_page.py:94
 #, python-format
 msgid "Words: %d | Characters: %d"
-msgstr ""
+msgstr "Parole: %d | Caratteri: %d"
 
 #: anura/widgets/extracted_page.py:234
 msgid "Request timed out. Please try again."
@@ -923,7 +923,7 @@ msgstr "Elaborazione in corso..."
 
 #: anura/widgets/welcome_page.py:252
 msgid "Drop image file here"
-msgstr ""
+msgstr "Rilascia il file immagine qui"
 
 #: anura/window.py:128 anura/window.py:328 anura/window.py:374
 #, python-brace-format
@@ -951,15 +951,15 @@ msgstr ""
 #, python-brace-format
 msgid "{n} email found in text"
 msgid_plural "{n} emails found in text"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{n} email trovata nel testo"
+msgstr[1] "{n} email trovate nel testo"
 
 #: anura/window.py:233
 #, python-brace-format
 msgid "{n} phone number found in text"
 msgid_plural "{n} phone numbers found in text"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{n} numero di telefono trovato nel testo"
+msgstr[1] "{n} numeri di telefono trovati nel testo"
 
 #: anura/window.py:285
 #, fuzzy
@@ -1057,32 +1057,32 @@ msgstr "Cattura schermata"
 #: data/ui/extracted_page.blp:33 data/ui/extracted_page.blp:35
 msgctxt "Extracted screen"
 msgid "Copy extracted text to clipboard"
-msgstr ""
+msgstr "Copia testo estratto negli appunti"
 
 #: data/ui/extracted_page.blp:48 data/ui/extracted_page.blp:50
 msgctxt "Extracted screen"
 msgid "Listen to text"
-msgstr ""
+msgstr "Ascolta il testo"
 
 #: data/ui/extracted_page.blp:60 data/ui/extracted_page.blp:62
 msgctxt "Extracted screen"
 msgid "Cancel listening to text"
-msgstr ""
+msgstr "Annulla ascolto del testo"
 
 #: data/ui/extracted_page.blp:83
 msgctxt "Extracted screen"
 msgid "Pause/Resume listening"
-msgstr ""
+msgstr "Sospendi/Riprendi ascolto"
 
 #: data/ui/extracted_page.blp:85
 msgctxt "Extracted screen"
 msgid "Pause or resume listening"
-msgstr ""
+msgstr "Sospendi o riprendi l'ascolto"
 
 #: data/ui/extracted_page.blp:92 data/ui/extracted_page.blp:94
 msgctxt "Extracted screen"
 msgid "Stop listening"
-msgstr ""
+msgstr "Ferma ascolto"
 
 #: data/ui/extracted_page.blp:105 data/ui/extracted_page.blp:107
 msgctxt "Extracted screen"
@@ -1097,7 +1097,7 @@ msgstr "Condividi con"
 #: data/ui/extracted_page.blp:117
 msgctxt "Extracted screen"
 msgid "Share text to other applications"
-msgstr ""
+msgstr "Condividi il testo con altre applicazioni"
 
 #: data/ui/extracted_page.blp:169 data/ui/preferences_dialog.blp:5
 #: data/ui/welcome_page.blp:137
@@ -1230,7 +1230,6 @@ msgid "Welcome"
 msgstr "Benvenuto"
 
 #: data/ui/welcome_page.blp:14 data/ui/welcome_page.blp:38
-#, fuzzy
 msgid "Anura"
 msgstr "Anura"
 
