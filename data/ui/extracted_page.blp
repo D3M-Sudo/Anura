@@ -9,11 +9,6 @@ template $ExtractedPage : Adw.NavigationPage {
     [top]
     Adw.HeaderBar headerbar {
 
-      [title]
-      Adw.WindowTitle window_title {
-        title: _("Extracted Text");
-      }
-
       // [start]
       // MenuButton lang_combo {
       //     label: _("Language");
@@ -149,6 +144,20 @@ template $ExtractedPage : Adw.NavigationPage {
         wrap-mode: word_char;
 
         buffer: TextBuffer buffer {};
+      }
+    }
+
+    [bottom]
+    Box {
+      styles ["footer"]
+
+      Label stats_label {
+        halign: end;
+        hexpand: true;
+        margin-end: 12;
+        margin-top: 6;
+        margin-bottom: 6;
+        styles ["dim-label"]
       }
     }
   }
