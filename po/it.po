@@ -46,7 +46,6 @@ msgid "Azerbaijani"
 msgstr "Azero"
 
 #: anura/language_manager.py:77
-#, fuzzy
 msgid "Azerbaijani - Cyrillic"
 msgstr "Azero (alfabeto cirillico)"
 
@@ -123,7 +122,6 @@ msgid "Greek"
 msgstr ""
 
 #: anura/language_manager.py:97
-#, fuzzy
 msgid "English, Middle"
 msgstr "Inglese medio (1100-1500)"
 
@@ -132,7 +130,6 @@ msgid "Esperanto"
 msgstr "Esperanto"
 
 #: anura/language_manager.py:99
-#, fuzzy
 msgid "Math / Equation Detection"
 msgstr "Matematica (riconoscimento equazione)"
 
@@ -169,7 +166,6 @@ msgid "German - Fraktur"
 msgstr "Tedesco - Fraktur"
 
 #: anura/language_manager.py:108
-#, fuzzy
 msgid "French, Middle"
 msgstr "Francese medio (1400-1600 ca.)"
 
@@ -198,9 +194,8 @@ msgid "Gujarati"
 msgstr "Gujarati"
 
 #: anura/language_manager.py:115
-#, fuzzy
 msgid "Haitian"
-msgstr "Croato"
+msgstr "Haitiano"
 
 #: anura/language_manager.py:116
 msgid "Hebrew"
@@ -275,9 +270,8 @@ msgid "Central Khmer"
 msgstr "Khmer centrale"
 
 #: anura/language_manager.py:134
-#, fuzzy
 msgid "Kirghiz"
-msgstr "Kirghisa"
+msgstr "Kirghiso"
 
 #: anura/language_manager.py:135
 msgid "Kurmanji"
@@ -368,7 +362,6 @@ msgid "OSD Module"
 msgstr ""
 
 #: anura/language_manager.py:157
-#, fuzzy
 msgid "Panjabi"
 msgstr "Panjabi; punjabi"
 
@@ -381,7 +374,6 @@ msgid "Portuguese"
 msgstr "Portoghese"
 
 #: anura/language_manager.py:160
-#, fuzzy
 msgid "Pushto"
 msgstr "Pushtu; pashtu"
 
@@ -390,9 +382,8 @@ msgid "Quechua"
 msgstr "Quechua"
 
 #: anura/language_manager.py:162
-#, fuzzy
 msgid "Romanian"
-msgstr "Bosniaco"
+msgstr "Rumeno"
 
 #: anura/language_manager.py:163
 msgid "Russian"
@@ -419,14 +410,12 @@ msgid "Sindhi"
 msgstr "Sindhi"
 
 #: anura/language_manager.py:169
-#, fuzzy
 msgid "Spanish"
-msgstr "Danese"
+msgstr "Spagnolo"
 
 #: anura/language_manager.py:170
-#, fuzzy
 msgid "Spanish - Old"
-msgstr "Spagnolo; castigliano antico"
+msgstr "Spagnolo antico"
 
 #: anura/language_manager.py:171
 msgid "Albanian"
@@ -489,7 +478,6 @@ msgid "Turkish"
 msgstr "Turco"
 
 #: anura/language_manager.py:186
-#, fuzzy
 msgid "Uighur"
 msgstr "Uiguro"
 
@@ -506,7 +494,6 @@ msgid "Uzbek"
 msgstr "Uzbeco"
 
 #: anura/language_manager.py:190
-#, fuzzy
 msgid "Uzbek - Cyrillic"
 msgstr "Uzbeco (alfabeto cirillico)"
 
@@ -582,9 +569,8 @@ msgid "No text found. Try to grab another region."
 msgstr "Nessun testo trovato. Prova a fare un'altra schermata."
 
 #: anura/main.py:727
-#, fuzzy
 msgid "Text extracted and copied to clipboard."
-msgstr "Estrai il testo negli appunti"
+msgstr "Testo estratto e copiato negli appunti."
 
 #: anura/main.py:733
 msgid "Text extracted successfully."
@@ -652,9 +638,8 @@ msgid "Failed to decode data."
 msgstr ""
 
 #: anura/services/screenshot_service.py:647
-#, fuzzy
 msgid "No text found."
-msgstr "Nessun risultato trovato"
+msgstr "Nessun testo trovato."
 
 #: anura/services/share_service.py:175
 msgid "Select Mastodon Instance"
@@ -774,7 +759,7 @@ msgstr ""
 #: anura/widgets/extracted_page.py:89 anura/widgets/extracted_page.py:96
 #, python-format
 msgid "Words: %d | Characters: %d"
-msgstr ""
+msgstr "Parole: %d | Caratteri: %d"
 
 #: anura/widgets/extracted_page.py:242
 msgid "Request timed out. Please try again."
@@ -900,7 +885,6 @@ msgid "Open application menu"
 msgstr ""
 
 #: anura/widgets/welcome_page.py:95
-#, fuzzy
 msgid "Drop image to extract text"
 msgstr "Trascina l'immagine qui"
 
@@ -952,9 +936,8 @@ msgid "Failed to load dropped file"
 msgstr ""
 
 #: anura/window.py:172
-#, fuzzy
 msgid "Failed to capture screenshot"
-msgstr "Cattura schermata"
+msgstr "Acquisizione schermata non riuscita"
 
 #: anura/window.py:178
 msgid "Screenshot service did not respond."
@@ -979,7 +962,6 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: anura/window.py:285
-#, fuzzy
 msgid "Choose an image for extraction"
 msgstr "Apri l'immagine per estrarre il testo"
 
@@ -1058,7 +1040,6 @@ msgstr ""
 #: data/com.github.d3msudo.anura.desktop.in:3
 #: data/com.github.d3msudo.anura.metainfo.xml.in:6 data/ui/welcome_page.blp:14
 #: data/ui/welcome_page.blp:41
-#, fuzzy
 msgid "Anura"
 msgstr "Anura"
 
@@ -1067,22 +1048,18 @@ msgid "OCR Tool"
 msgstr ""
 
 #: data/com.github.d3msudo.anura.desktop.in:5
-#, fuzzy
 msgid "Extract text from any image, video, or web page"
 msgstr "Estrai il testo da qualsiasi immagine, video o pagina web"
 
 #: data/com.github.d3msudo.anura.desktop.in:11
-#, fuzzy
 msgid "OCR;Text;Extraction;Reader;QR;Scanner;"
 msgstr "OCR; Testo; Estrazione;"
 
 #: data/com.github.d3msudo.anura.desktop.in:17
-#, fuzzy
 msgid "Extract Text to Clipboard"
 msgstr "Estrai il testo negli Appunti"
 
 #: data/com.github.d3msudo.anura.metainfo.xml.in:7
-#, fuzzy
 msgid "Extract text from anywhere on your screen"
 msgstr "Estrai testo da qualsiasi luogo, anche dal codice QR"
 
@@ -1322,12 +1299,10 @@ msgid "Retry"
 msgstr "Riprova"
 
 #: data/ui/preferences_languages.blp:42
-#, fuzzy
 msgid "Installed Languages"
 msgstr "Lingue installate"
 
 #: data/ui/preferences_languages.blp:51
-#, fuzzy
 msgid "Add language"
 msgstr "Aggiungi lingua"
 
@@ -1415,18 +1390,15 @@ msgstr "Ignora"
 #~ msgstr[0] "{n} parola"
 #~ msgstr[1] "{n} parole"
 
-#, fuzzy
 #~ msgid "extraction"
 #~ msgstr "Estrazione del testo"
 
-#, fuzzy
 #~ msgid "screenshot"
 #~ msgstr "Cattura schermata"
 
 #~ msgid "...or drop image here"
 #~ msgstr "...o trascina l'immagine qui"
 
-#, fuzzy
 #~ msgid "Images"
 #~ msgstr "Apri immagine"
 
@@ -1486,6 +1458,5 @@ msgstr "Ignora"
 #~ msgid "Display Shortcuts (universal)"
 #~ msgstr "Mostra scorciatoie (universale)"
 
-#, fuzzy
 #~ msgid "Extracted Text from Anura"
 #~ msgstr "Estrai testo da dovunque"
