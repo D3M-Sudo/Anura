@@ -37,7 +37,7 @@ class ExtractedPage(Adw.NavigationPage):
         "on-listen-stop": (GObject.SignalFlags.RUN_LAST, None, ()),
     }
 
-    window_title: Adw.WindowTitle = Gtk.Template.Child()
+    stats_label: Gtk.Label = Gtk.Template.Child()
     share_list_box: Gtk.ListBox = Gtk.Template.Child()
     grab_btn: Gtk.Button = Gtk.Template.Child()
     text_copy_btn: Gtk.Button = Gtk.Template.Child()
@@ -82,10 +82,10 @@ class ExtractedPage(Adw.NavigationPage):
         self.buffer.connect("changed", self._on_buffer_changed)
 
     def _on_buffer_changed(self, buffer: Gtk.TextBuffer) -> None:
-        """Update character and word count in the header subtitle."""
+        """Update character and word count in the status bar."""
         text = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), False)
         if not text:
-            self.window_title.set_subtitle("")
+            self.stats_label.set_text("")
             return
 
         char_count = len(text)
@@ -95,7 +95,7 @@ class ExtractedPage(Adw.NavigationPage):
         char_text = ngettext("{n} character", "{n} characters", char_count).format(n=char_count)
         word_text = ngettext("{n} word", "{n} words", word_count).format(n=word_count)
 
-        self.window_title.set_subtitle(f"{char_text}, {word_text}")
+        self.stats_label.set_text(f"{word_text} | {char_text}")
 
     def do_hiding(self) -> None:
         """Handle widget hiding event."""
