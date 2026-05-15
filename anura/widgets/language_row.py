@@ -45,7 +45,7 @@ class LanguageRow(Gtk.Overlay):
         """Get the language item."""
         return self._item
 
-    @item.setter
+    @item.setter  # type: ignore[no-redef]
     def item(self, item: LanguageItem) -> None:
         self._item = item
         self.label.set_label(self._item.title)

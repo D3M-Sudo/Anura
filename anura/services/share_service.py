@@ -126,7 +126,12 @@ class ShareService(GObject.GObject):
             logger.warning(
                 f"Anura Share: Mastodon URL too long ({len(mastodon_url)} chars, max {self.MAX_URL_LENGTH})",
             )
-            GLib.idle_add(self.emit, "share", False)
+
+            def _on_share_idle(res):
+                self.emit("share", res)
+                return GLib.SOURCE_REMOVE
+
+            GLib.idle_add(_on_share_idle, False)
             return
 
         self.launcher.set_uri(mastodon_url)
@@ -137,10 +142,15 @@ class ShareService(GObject.GObject):
                 success = self.launcher.launch_finish(result)
                 if not success:
                     # Official scheme failed, show instance selection
-                    logger.info("Anura Share: web+mastodon:// not supported, showing instance selection")
+                    logger.info("Anura Share: web+mastodon:// not supported, showing language selection")
                     self._show_mastodon_instance_dialog(encoded_text)
                 else:
-                    GLib.idle_add(self.emit, "share", True)
+
+                    def _on_share_idle(res):
+                        self.emit("share", res)
+                        return GLib.SOURCE_REMOVE
+
+                    GLib.idle_add(_on_share_idle, True)
             except (GLib.Error, RuntimeError) as e:
                 logger.warning(f"Anura Share: web+mastodon:// launch failed: {e}")
                 self._show_mastodon_instance_dialog(encoded_text)
@@ -174,9 +184,10 @@ class ShareService(GObject.GObject):
         dialog.set_close_response("cancel")
 
         # Connect response signal
-        dialog.connect(
-            "response", lambda dialog, response: self._on_mastodon_instance_selected(dialog, response, encoded_text)
-        )
+        def _on_response(dlg, response):
+            self._on_mastodon_instance_selected(dlg, response, encoded_text)
+
+        dialog.connect("response", _on_response)
 
         # Show dialog (we need a parent window)
         try:
@@ -196,12 +207,27 @@ class ShareService(GObject.GObject):
                 if app:
                     main_window = app.get_active_window()
                     if main_window and hasattr(main_window, "show_toast"):
-                        GLib.idle_add(main_window.show_toast, _("Cannot show dialog without active window"))
-                GLib.idle_add(self.emit, "share", False)
+
+                        def _on_toast_idle(msg):
+                            main_window.show_toast(msg)
+                            return GLib.SOURCE_REMOVE
+
+                        GLib.idle_add(_on_toast_idle, _("Cannot show dialog without active window"))
+
+                def _on_share_idle(res):
+                    self.emit("share", res)
+                    return GLib.SOURCE_REMOVE
+
+                GLib.idle_add(_on_share_idle, False)
                 dialog.destroy()
         except (GLib.Error, RuntimeError) as e:
             logger.error(f"Anura Share: Failed to show Mastodon instance dialog: {e}")
-            GLib.idle_add(self.emit, "share", False)
+
+            def _on_share_idle(res):
+                self.emit("share", res)
+                return GLib.SOURCE_REMOVE
+
+            GLib.idle_add(_on_share_idle, False)
             dialog.destroy()
 
     def _on_mastodon_instance_selected(self, dialog: Adw.MessageDialog, response: str, encoded_text: str) -> None:
@@ -215,7 +241,12 @@ class ShareService(GObject.GObject):
                 self.launcher.launch(parent=None, cancellable=None, callback=self._on_share)
             except (GLib.Error, RuntimeError) as e:
                 logger.error(f"Anura Share: Failed to share via Mastodon instance {domain}: {e}")
-                GLib.idle_add(self.emit, "share", False)
+
+                def _on_share_idle(res):
+                    self.emit("share", res)
+                    return GLib.SOURCE_REMOVE
+
+                GLib.idle_add(_on_share_idle, False)
 
         dialog.destroy()
 
@@ -225,10 +256,20 @@ class ShareService(GObject.GObject):
         """
         try:
             success = self.launcher.launch_finish(result)
-            GLib.idle_add(self.emit, "share", success)
+
+            def _on_share_idle(res):
+                self.emit("share", res)
+                return GLib.SOURCE_REMOVE
+
+            GLib.idle_add(_on_share_idle, success)
         except (GLib.Error, RuntimeError) as e:
             logger.warning(f"Anura Share Warning: URI launch failed: {e}")
-            GLib.idle_add(self.emit, "share", False)
+
+            def _on_share_idle(res):
+                self.emit("share", res)
+                return GLib.SOURCE_REMOVE
+
+            GLib.idle_add(_on_share_idle, False)
 
     @staticmethod
     def get_link_telegram(text: str) -> str:

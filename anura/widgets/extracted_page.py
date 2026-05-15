@@ -58,6 +58,7 @@ class ExtractedPage(Adw.NavigationPage):
         self._tts_service = None
         self._tts_stop_handler_id = None
         self._tts_paused_handler_id = None
+        self._buffer_handler_id = None
 
         super().__init__(**kwargs)
 
@@ -78,7 +79,7 @@ class ExtractedPage(Adw.NavigationPage):
         except (TypeError, RuntimeError, AttributeError) as e:
             logger.warning(f"Failed to connect TTS services: {e}")
 
-        self.buffer.connect("changed", self._on_buffer_changed)
+        self._buffer_handler_id = self.buffer.connect("changed", self._on_buffer_changed)
 
     def _on_buffer_changed(self, buffer: Gtk.TextBuffer) -> None:
         """Update character and word count in the status bar label."""
@@ -132,6 +133,12 @@ class ExtractedPage(Adw.NavigationPage):
             except (TypeError, RuntimeError) as e:
                 logger.warning(f"Failed to cleanup share service during dispose: {e}")
 
+        # Disconnect internal buffer handler
+        if self._buffer_handler_id:
+            with contextlib.suppress(TypeError, RuntimeError):
+                self.buffer.disconnect(self._buffer_handler_id)
+            self._buffer_handler_id = None
+
         super().do_dispose()
 
     @GObject.Property(type=str)
@@ -143,7 +150,7 @@ class ExtractedPage(Adw.NavigationPage):
             include_hidden_chars=False,
         )
 
-    @extracted_text.setter
+    @extracted_text.setter  # type: ignore[no-redef]
     def extracted_text(self, text: str) -> None:
         try:
             self.buffer.set_text(text)

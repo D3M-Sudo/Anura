@@ -516,15 +516,21 @@ class AnuraWindow(Adw.ApplicationWindow):
                     pass  # Handler already disconnected or invalid
 
         # Connect to language manager signals and track handler IDs
+        def _on_downloaded_idle(_mgr, code):
+            GLib.idle_add(dialog.on_language_downloaded, code)
+
+        def _on_failed_idle(_mgr, code):
+            GLib.idle_add(dialog.on_language_download_failed, code)
+
         downloaded_handler = language_manager_instance.connect(
             "downloaded",
-            lambda _mgr, code: GLib.idle_add(dialog.on_language_downloaded, code),
+            _on_downloaded_idle,
         )
         signal_handlers.append(downloaded_handler)
 
         failed_handler = language_manager_instance.connect(
             "download-failed",
-            lambda _mgr, code: GLib.idle_add(dialog.on_language_download_failed, code),
+            _on_failed_idle,
         )
         signal_handlers.append(failed_handler)
 
