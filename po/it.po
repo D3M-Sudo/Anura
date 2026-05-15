@@ -1300,7 +1300,7 @@ msgstr "Aggiungi lingua"
 #: ../data/com.github.d3msudo.anura.desktop.in:3
 #, fuzzy
 msgid "Anura"
-msgstr "anura"
+msgstr "Anura"
 
 #: ../data/com.github.d3msudo.anura.desktop.in:4
 msgid "OCR Tool"
@@ -1910,3 +1910,9 @@ msgstr ""
 #, fuzzy
 #~ msgid "Extracted Text from Anura"
 #~ msgstr "Estrai testo da dovunque"
+
+msgid "Anura OCR"
+msgstr "Anura OCR"
+
+msgid "Extracted"
+msgstr "Estratto"

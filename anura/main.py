@@ -712,7 +712,7 @@ class AnuraApplication(Adw.Application):
     def on_decoded(self, _sender: object, text: str, copy: bool) -> None:
         if not text:
             self.notification_service.show_notification(
-                title="Anura OCR",
+                title=_("Anura OCR"),
                 body=_("No text found. Try to grab another region."),
             )
             return
@@ -721,13 +721,13 @@ class AnuraApplication(Adw.Application):
             clipboard_service_instance = get_clipboard_service()
             clipboard_service_instance.set(text)
             self.notification_service.show_notification(
-                title="Anura OCR",
+                title=_("Anura OCR"),
                 body=_("Text extracted and copied to clipboard."),
             )
         else:
             # Text extracted but not copied - show notification
             self.notification_service.show_notification(
-                title="Anura OCR",
+                title=_("Anura OCR"),
                 body=_("Text extracted successfully."),
             )
 
@@ -738,7 +738,7 @@ class AnuraApplication(Adw.Application):
             logger.info("Anura: Screenshot cancelled by user.")
             return
         # Real error - show notification
-        self.notification_service.show_notification(title="Anura OCR", body=message)
+        self.notification_service.show_notification(title=_("Anura OCR"), body=message)
 
     def on_listen(self, _sender: object, _event: object) -> None:
         window = self.get_active_window()
