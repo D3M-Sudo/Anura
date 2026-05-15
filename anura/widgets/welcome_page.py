@@ -31,6 +31,7 @@ class WelcomePage(Adw.NavigationPage):
     drop_area_label: Gtk.Label = Gtk.Template.Child()
 
     _language_changed_handler_id: int | None = None
+    _drop_button_handler_id: int | None = None
 
     def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
@@ -44,7 +45,7 @@ class WelcomePage(Adw.NavigationPage):
             language_manager.get_language(current_lang_code),
         )
 
-        self.drop_button.connect("clicked", self._on_drop_button_clicked)
+        self._drop_button_handler_id = self.drop_button.connect("clicked", self._on_drop_button_clicked)
         self._setup_drop_target()
 
     def _setup_drop_target(self) -> None:
@@ -70,9 +71,12 @@ class WelcomePage(Adw.NavigationPage):
             actions=Gdk.DragAction.COPY,
         )
         self._drop_cancellable: Gio.Cancellable | None = None
-        self._drop_target.connect("drop", self._on_dnd_drop)
-        self._drop_target.connect("drag-enter", self._on_dnd_enter)
-        self._drop_target.connect("drag-leave", self._on_dnd_leave)
+
+        # Track internal drop target handlers for cleanup
+        self._dnd_drop_handler_id = self._drop_target.connect("drop", self._on_dnd_drop)
+        self._dnd_enter_handler_id = self._drop_target.connect("drag-enter", self._on_dnd_enter)
+        self._dnd_leave_handler_id = self._drop_target.connect("drag-leave", self._on_dnd_leave)
+
         self.add_controller(self._drop_target)
 
     def _on_drop_button_clicked(self, _: Gtk.Button) -> None:
@@ -277,13 +281,26 @@ class WelcomePage(Adw.NavigationPage):
                 self.language_popover.disconnect(self._language_changed_handler_id)
             self._language_changed_handler_id = None
 
+        if self._drop_button_handler_id is not None:
+            with contextlib.suppress(Exception):
+                self.drop_button.disconnect(self._drop_button_handler_id)
+            self._drop_button_handler_id = None
+
         # Cancel any in-flight drop operation
         if getattr(self, "_drop_cancellable", None):
             self._drop_cancellable.cancel()
             self._drop_cancellable = None
 
-        # Remove drop target controller
+        # Remove drop target controller and disconnect its internal handlers
         if hasattr(self, "_drop_target") and self._drop_target:
+            with contextlib.suppress(Exception):
+                if hasattr(self, "_dnd_drop_handler_id") and self._dnd_drop_handler_id:
+                    self._drop_target.disconnect(self._dnd_drop_handler_id)
+                if hasattr(self, "_dnd_enter_handler_id") and self._dnd_enter_handler_id:
+                    self._drop_target.disconnect(self._dnd_enter_handler_id)
+                if hasattr(self, "_dnd_leave_handler_id") and self._dnd_leave_handler_id:
+                    self._drop_target.disconnect(self._dnd_leave_handler_id)
+
             self.remove_controller(self._drop_target)
             self._drop_target = None
 

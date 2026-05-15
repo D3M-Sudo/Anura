@@ -63,7 +63,7 @@ class LanguageManager(GObject.GObject):
         super().__init__()
 
         self.loading_languages: dict[str, DownloadState] = {}
-        self._downloaded_codes = []
+        self._downloaded_codes: list[str] = []
         self._need_update_cache = True
         self._cache_lock = threading.Lock()
 
@@ -197,7 +197,7 @@ class LanguageManager(GObject.GObject):
     def active_language(self) -> LanguageItem:
         return self._active_language
 
-    @active_language.setter
+    @active_language.setter  # type: ignore[no-redef]
     def active_language(self, language: LanguageItem) -> None:
         self._active_language = language
         self.notify("active_language")
@@ -255,7 +255,7 @@ class LanguageManager(GObject.GObject):
         with self._cache_lock:
             need_update = self._need_update_cache
             if need_update or force:
-                codes = set()
+                codes: set[str] = set()
 
                 # Enhanced logging: Log paths being checked with directory status
                 logger.debug(f"Anura LanguageManager: Scanning user tessdata directory: {TESSDATA_DIR}")
@@ -328,7 +328,11 @@ class LanguageManager(GObject.GObject):
                 return
             self.loading_languages[code] = DownloadState()
 
-        GLib.idle_add(self.emit, "added", code)
+        def _on_added_idle(c):
+            self.emit("added", c)
+            return GLib.SOURCE_REMOVE
+
+        GLib.idle_add(_on_added_idle, code, priority=GLib.PRIORITY_DEFAULT)
 
         # Use a wrapper to ensure download_done knows which code was being downloaded
         # even when download_begin returns None on failure
@@ -339,6 +343,12 @@ class LanguageManager(GObject.GObject):
 
     def download_begin(self, code: str) -> str | None:
         """Performs the physical download of the .traineddata file atomically."""
+        # Hardening: verify Tesseract binary availability before downloading models
+        tess_bin = os.environ.get("TESSERACT_CMD", "tesseract")
+        if not shutil.which(tess_bin):
+            logger.error(f"Anura: Cannot download '{code}'; Tesseract binary not found.")
+            return None
+
         # Use filename mapping for language codes with different filenames
         filename_code = self._TESSDATA_FILENAME_MAPPING.get(code, code)
 
@@ -386,11 +396,27 @@ class LanguageManager(GObject.GObject):
                                         progress = int(downloaded * 100 / total_size)
                                         # Only emit if progress actually changed
                                         if progress != last_progress_value:
-                                            GLib.idle_add(self.emit, "downloading", code, min(progress, 100))
+
+                                            def _on_progress_idle(c, p):
+                                                self.emit("downloading", c, p)
+                                                return GLib.SOURCE_REMOVE
+
+                                            GLib.idle_add(
+                                                _on_progress_idle,
+                                                code,
+                                                min(progress, 100),
+                                                priority=GLib.PRIORITY_DEFAULT,
+                                            )
                                             last_progress_value = progress
                                     else:
                                         # No content-length header, emit indeterminate progress
-                                        GLib.idle_add(self.emit, "downloading", code, -1)
+                                        def _on_progress_idle(c, p):
+                                            self.emit("downloading", c, p)
+                                            return GLib.SOURCE_REMOVE
+
+                                        GLib.idle_add(
+                                            _on_progress_idle, code, -1, priority=GLib.PRIORITY_DEFAULT
+                                        )
                                     last_progress_time = now
 
                     # Use copy+delete for cross-filesystem compatibility
@@ -431,9 +457,19 @@ class LanguageManager(GObject.GObject):
 
             # Emit signals while holding lock to ensure consistency
             if result_code:
-                GLib.idle_add(self.emit, "downloaded", result_code)
+
+                def _on_downloaded_idle(c):
+                    self.emit("downloaded", c)
+                    return GLib.SOURCE_REMOVE
+
+                GLib.idle_add(_on_downloaded_idle, result_code, priority=GLib.PRIORITY_DEFAULT)
             else:
-                GLib.idle_add(self.emit, "download-failed", requested_code)
+
+                def _on_failed_idle(c):
+                    self.emit("download-failed", c)
+                    return GLib.SOURCE_REMOVE
+
+                GLib.idle_add(_on_failed_idle, requested_code, priority=GLib.PRIORITY_DEFAULT)
 
     def remove_language(self, code: str) -> None:
         """Thread-safe removal of model file from system."""
@@ -446,7 +482,12 @@ class LanguageManager(GObject.GObject):
             with self._cache_lock:
                 self._need_update_cache = True
             logger.info(f"Anura: Model '{code}' removed successfully.")
-            GLib.idle_add(self.emit, "removed", code)
+
+            def _on_removed_idle(c):
+                self.emit("removed", c)
+                return GLib.SOURCE_REMOVE
+
+            GLib.idle_add(_on_removed_idle, code, priority=GLib.PRIORITY_DEFAULT)
         except PermissionError as e:
             logger.error(f"Anura: Permission denied removing language '{code}': {e}")
         except OSError as e:

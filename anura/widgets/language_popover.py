@@ -58,7 +58,7 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
         """Get the currently active language."""
         return self._active_language
 
-    @active_language.setter
+    @active_language.setter  # type: ignore[no-redef]
     def active_language(self, lang_code: str) -> None:
         self._active_language = lang_code
 
