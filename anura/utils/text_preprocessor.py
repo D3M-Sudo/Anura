@@ -255,7 +255,7 @@ class TextPreprocessor:
         structured["emails"] = re.findall(email_pattern, text)
 
         # URL pattern
-        url_pattern = r"https?://(?:[-\w.])+(?:[:\d]+)?(?:/(?:[\w/_.])*(?:\?(?:[\w&=%.])*)?(?:#(?:\w*))?)?"
+        url_pattern = r"https?://(?:[-\w.])+(?:[:\d]+)?(?:/(?:[\w/_.-])*(?:\?(?:[\w&=%.-])*)?(?:#(?:\w*))?)?"
         structured["urls"] = re.findall(url_pattern, text)
 
         # Phone number pattern (various formats)
