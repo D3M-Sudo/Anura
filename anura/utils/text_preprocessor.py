@@ -106,21 +106,23 @@ class TextPreprocessor:
         dark_pixels = sum(histogram[:128]) / total_pixels
         light_pixels = sum(histogram[128:]) / total_pixels
 
-        enhanced = image.copy()
+        # Optimization: No need to copy as ImageEnhance operations return new instances
+        enhanced = image
 
+        contrast_factor = 1.2
         if dark_pixels > 0.7:  # Image is too dark
             logger.debug("Applying brightness enhancement for dark image")
             enhancer = ImageEnhance.Brightness(enhanced)
             enhanced = enhancer.enhance(1.3)
 
         elif light_pixels > 0.8:  # Image is too light
-            logger.debug("Applying contrast enhancement for light image")
-            enhancer = ImageEnhance.Contrast(enhanced)
-            enhanced = enhancer.enhance(1.4)
+            logger.debug("Applying combined contrast enhancement for light image")
+            # Optimization: Combined 1.4x (light) and 1.2x (mandatory) contrast pass
+            contrast_factor = 1.68
 
         # Always apply contrast enhancement for better text definition
         enhancer = ImageEnhance.Contrast(enhanced)
-        enhanced = enhancer.enhance(1.2)
+        enhanced = enhancer.enhance(contrast_factor)
 
         return enhanced
 
@@ -188,9 +190,7 @@ class TextPreprocessor:
         parts = re.split(r"((?<!\d)[.!?]+)\s*", text)
         for i in range(0, len(parts), 2):
             if parts[i].strip():
-                parts[i] = (
-                    parts[i][0].upper() + parts[i][1:] if len(parts[i]) > 1 else parts[i].upper()
-                )
+                parts[i] = parts[i][0].upper() + parts[i][1:] if len(parts[i]) > 1 else parts[i].upper()
 
         # Rebuild: interleave text and punctuation, adding a space after each punctuation
         # block to replace the whitespace that the split consumed.

@@ -83,9 +83,7 @@ class WelcomePage(Adw.NavigationPage):
         else:
             self.drop_button.remove_css_class("suggested-action")
 
-    def _on_dnd_enter(
-        self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float
-    ) -> Gdk.DragAction:
+    def _on_dnd_enter(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float) -> Gdk.DragAction:
         """Visual feedback when drag enters the drop area."""
         self.drop_area.add_css_class("drag-hover")
         return Gdk.DragAction.COPY
@@ -94,9 +92,7 @@ class WelcomePage(Adw.NavigationPage):
         """Remove visual feedback when drag leaves the drop area."""
         self.drop_area.remove_css_class("drag-hover")
 
-    def _on_dnd_drop(
-        self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float
-    ) -> bool:
+    def _on_dnd_drop(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float) -> bool:
         """Handle drop signal. Initiates a fully async stream read.
 
         We start an async read of text/uri-list and return True immediately so GTK
@@ -184,11 +180,7 @@ class WelcomePage(Adw.NavigationPage):
             text = raw.decode("latin-1", errors="replace")
 
         # Parse text/uri-list: skip comment lines (#) and empty lines
-        uris = [
-            line.strip()
-            for line in text.splitlines()
-            if line.strip() and not line.startswith("#")
-        ]
+        uris = [line.strip() for line in text.splitlines() if line.strip() and not line.startswith("#")]
 
         if not uris:
             logger.error("DnD: No valid URIs found in drop data")
@@ -206,9 +198,7 @@ class WelcomePage(Adw.NavigationPage):
 
         if not os.path.exists(local_path):
             logger.error(f"DnD: File not accessible: {local_path}")
-            self._show_error_toast(
-                _("File not accessible. Ensure Anura has permission to access this location.")
-            )
+            self._show_error_toast(_("File not accessible. Ensure Anura has permission to access this location."))
             return
 
         (mimetype, _encoding) = guess_type(local_path)

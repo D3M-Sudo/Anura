@@ -189,6 +189,7 @@ class ScreenshotService(GObject.GObject):
             return GLib.idle_add(self.emit, "error", _("Can't take a screenshot."))
 
         from anura.gobject_worker import GObjectWorker
+
         GObjectWorker.call(self.decode_image, (lang, filename, copy, True))
 
     # Environment variables surfaced when the portal screenshot fails. These

@@ -606,4 +606,3 @@ class AnuraWindow(Adw.ApplicationWindow):
                 self.show_toast(_("Failed to open link"))
 
         launcher.launch(self, None, on_launch_finish)
-
