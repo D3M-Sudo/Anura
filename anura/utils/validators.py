@@ -23,6 +23,9 @@ def uri_validator(text: str) -> bool:
     Returns:
         True if the URL is safe to use, False otherwise.
     """
+    if text is None:
+        return False
+
     # Block control characters (0x00-0x1F) and DEL (0x7F) BEFORE strip
     # so that e.g. trailing \x1f (whitespace) is caught
     if any(ord(c) < 0x20 or ord(c) == 0x7F for c in text):
@@ -41,22 +44,26 @@ def uri_validator(text: str) -> bool:
         if not (res.scheme in ("http", "https") and bool(res.netloc)):
             return False
 
+        # Security: Reject URLs with userinfo (username or password)
+        # This prevents spoofing attacks like http://google.com@evil.com
+        if res.username or res.password:
+            return False
+
+        # Use hostname for validation (excludes port and userinfo)
+        host = res.hostname
+        if not host:
+            return False
+
         # Allow localhost and IP addresses (common in development/enterprise)
         # Also allow hostnames with dots (normal domains)
-        netloc_lower = res.netloc.lower()
-        if netloc_lower == "localhost" or netloc_lower.startswith("localhost:"):
+        host_lower = host.lower()
+        if host_lower == "localhost":
             return True
-        if "." in res.netloc:
+        if "." in host:
             return True
+
         # Check for valid IP address (IPv4 or IPv6)
-        # Remove port if present for validation
-        host = res.netloc
-        if ":" in host and not host.endswith("]"):
-            # Could be IPv4:port or IPv6:port - split on last colon
-            host = host.rsplit(":", 1)[0]
-        # Unbracket IPv6 if bracketed
-        if host.startswith("[") and host.endswith("]"):
-            host = host[1:-1]
+        # res.hostname handles unbracketing IPv6
         with contextlib.suppress(ValueError):
             ipaddress.ip_address(host)
             return True
