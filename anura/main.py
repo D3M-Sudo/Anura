@@ -148,6 +148,8 @@ def _load_gresource_bundle() -> bool:
                 continue
 
     return False
+
+
 # Load GResource before importing any widgets with @Gtk.Template decorators
 if not _load_gresource_bundle():
     # If logger isn't initialized yet, use print
