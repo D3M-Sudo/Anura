@@ -25,7 +25,7 @@ from gi.repository import Gio, GLib, GObject, Xdp  # noqa: E402
 from loguru import logger  # noqa: E402
 from PIL import Image  # noqa: E402
 import pytesseract  # noqa: E402
-from pyzbar.pyzbar import decode  # noqa: E402
+from pyzbar.pyzbar import ZBarSymbol, decode  # noqa: E402
 
 from anura.config import LANG_CODE_PATTERN, get_tesseract_config  # noqa: E402
 from anura.services.host_screenshot_fallback import (  # noqa: E402
@@ -508,7 +508,10 @@ class ScreenshotService(GObject.GObject):
     def _try_qr_detection(self, img: Image.Image, start_time: float) -> str | None:
         """Try to detect and decode QR codes from image."""
         try:
-            qr_data = decode(img)
+            # Optimization: Restrict decoding to QR codes only.
+            # By default, pyzbar tries to decode all supported barcode formats
+            # (EAN13, Code128, etc.), which adds unnecessary overhead.
+            qr_data = decode(img, symbols=[ZBarSymbol.QRCODE])
             if len(qr_data) > 0:
                 extracted = qr_data[0].data.decode("utf-8")
                 duration = time.time() - start_time
