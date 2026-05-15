@@ -6,8 +6,8 @@
 from gettext import gettext as _
 import os
 from pathlib import Path
-import shutil
 import re
+import shutil
 import threading
 import time
 from typing import ClassVar
