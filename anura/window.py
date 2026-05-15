@@ -60,7 +60,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             # Ultimate fallback - should never happen for built-in languages
             from anura.types.language_item import LanguageItem
 
-            item = LanguageItem(code="eng", title="English")
+            item = LanguageItem(code="eng", title=_("English"))
         language_manager_instance.active_language = item
 
         self._setup_geometry()

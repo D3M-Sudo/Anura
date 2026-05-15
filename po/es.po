@@ -1307,7 +1307,7 @@ msgstr "Añadir un idioma"
 #: ../data/com.github.d3msudo.anura.desktop.in:3
 #, fuzzy
 msgid "Anura"
-msgstr "anura"
+msgstr "Anura"
 
 #: ../data/com.github.d3msudo.anura.desktop.in:4
 msgid "OCR Tool"
@@ -1878,3 +1878,9 @@ msgstr "tesseract"
 
 #~ msgid "Failed to generate speech."
 #~ msgstr "Error al generar el discurso."
+
+msgid "Anura OCR"
+msgstr "Anura OCR"
+
+msgid "Extracted"
+msgstr "Extraído"
