@@ -561,7 +561,8 @@ class ScreenshotService(GObject.GObject):
             # (EAN13, Code128, etc.), which adds unnecessary overhead.
             qr_data = decode(img, symbols=[ZBarSymbol.QRCODE])
             if len(qr_data) > 0:
-                extracted = qr_data[0].data.decode("utf-8")
+                # Security/Robustness: Strip leading/trailing whitespace and control characters
+                extracted = qr_data[0].data.decode("utf-8").strip()
                 duration = time.time() - start_time
                 logger.info(f"Anura OCR: QR code detected in {duration:.3f}s")
                 return extracted

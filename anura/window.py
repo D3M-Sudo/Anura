@@ -597,6 +597,9 @@ class AnuraWindow(Adw.ApplicationWindow):
 
     def _launch_uri(self, url: str) -> None:
         """Open a URI in the default system browser."""
+        # Clean URL to ensure no trailing control characters or whitespace
+        url = url.strip() if url else ""
+
         # Security: validate URL before launching (defense in depth)
         if not uri_validator(url):
             logger.warning(f"Anura: Blocked invalid URL launch: {url}")
