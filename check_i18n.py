@@ -43,8 +43,17 @@ def check_i18n(directory):
                             match = re.search(pattern, line)
                             if match:
                                 # For some patterns we want the second group if it exists
-                                val = match.group(2) if len(match.groups()) > 1 and match.group(2) else match.group(1)
-                                if val and not val.startswith("/") and not val.startswith("com.github") and not val.endswith(".ui"):
+                                val = (
+                                    match.group(2)
+                                    if len(match.groups()) > 1 and match.group(2)
+                                    else match.group(1)
+                                )
+                                if (
+                                    val
+                                    and not val.startswith("/")
+                                    and not val.startswith("com.github")
+                                    and not val.endswith(".ui")
+                                ):
                                     print(f"[!] Unmapped string in {path} (line {i}): {line.strip()}")
                                     found_issues = True
     return found_issues
