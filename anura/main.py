@@ -562,54 +562,59 @@ class AnuraApplication(Adw.Application):
 
     def on_about(self, _action: object, _param: object) -> None:
         window = self.props.active_window
-        if window:
-            # Clear focus to prevent "Broken accounting of active state" warnings
-            # when the transient dialog takes over.
-            window.set_focus(None)
 
-        about_window = Adw.AboutDialog(
-            application_name="Anura",
-            application_icon=APP_ID,
-            version=self.version,
-            copyright="© 2025-2026 D3M-Sudo &amp; Anura Contributors\n© 2022-2025 Frog OCR Contributors",
-            website="https://github.com/D3M-Sudo/Anura",
-            license_type=Gtk.License.MIT_X11,
-            license=(
-                "MIT License\n\n"
-                "Permission is hereby granted, free of charge, to any person obtaining a copy of "
-                'this software and associated documentation files (the "Software"), to deal in '
-                "the Software without restriction, including without limitation the rights to "
-                "use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of "
-                "the Software, and to permit persons to whom the Software is furnished to do so, "
-                "subject to the following conditions:\n\n"
-                "The above copyright notice and this permission notice shall be included in all "
-                "copies or substantial portions of the Software.\n\n"
-                'THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR '
-                "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, "
-                "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE "
-                "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER "
-                "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, "
-                "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE "
-                "SOFTWARE."
-            ),
-            developers=["Andrey Maksimov (Frog OCR)", "D3M-Sudo (Anura)"],
-            designers=["D3M-Sudo"],
-            release_notes=self._get_release_notes(),
-        )
+        def _present_about() -> bool:
+            if window:
+                # Clear focus to prevent "Broken accounting of active state" warnings
+                # when the transient dialog takes over.
+                window.set_focus(None)
 
-        # Add legal sections BEFORE presenting to prevent widget lifecycle warnings
-        about_window.add_legal_section(
-            _("Acknowledgements"),
-            "© 2022-2025 Andrey Maksimov",
-            Gtk.License.MIT_X11,
-            _(
-                "Anura is a fork of Frog OCR. This software uses Tesseract OCR, Leptonica, "
-                "GTK4, Libadwaita, gTTS, Pillow, PyZBar, and other open source components."
-            ),
-        )
-        about_window.add_link(_("Changelog"), "https://github.com/D3M-Sudo/Anura/blob/main/CHANGELOG.md")
+            about_window = Adw.AboutDialog(
+                application_name="Anura",
+                application_icon=APP_ID,
+                version=self.version,
+                copyright="© 2025-2026 D3M-Sudo &amp; Anura Contributors\n© 2022-2025 Frog OCR Contributors",
+                website="https://github.com/D3M-Sudo/Anura",
+                license_type=Gtk.License.MIT_X11,
+                license=(
+                    "MIT License\n\n"
+                    "Permission is hereby granted, free of charge, to any person obtaining a copy of "
+                    'this software and associated documentation files (the "Software"), to deal in '
+                    "the Software without restriction, including without limitation the rights to "
+                    "use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of "
+                    "the Software, and to permit persons to whom the Software is furnished to do so, "
+                    "subject to the following conditions:\n\n"
+                    "The above copyright notice and this permission notice shall be included in all "
+                    "copies or substantial portions of the Software.\n\n"
+                    'THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR '
+                    "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, "
+                    "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE "
+                    "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER "
+                    "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, "
+                    "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE "
+                    "SOFTWARE."
+                ),
+                developers=["Andrey Maksimov (Frog OCR)", "D3M-Sudo (Anura)"],
+                designers=["D3M-Sudo"],
+                release_notes=self._get_release_notes(),
+            )
 
-        about_window.present(window)
+            # Add legal sections BEFORE presenting to prevent widget lifecycle warnings
+            about_window.add_legal_section(
+                _("Acknowledgements"),
+                "© 2022-2025 Andrey Maksimov",
+                Gtk.License.MIT_X11,
+                _(
+                    "Anura is a fork of Frog OCR. This software uses Tesseract OCR, Leptonica, "
+                    "GTK4, Libadwaita, gTTS, Pillow, PyZBar, and other open source components."
+                ),
+            )
+            about_window.add_link(_("Changelog"), "https://github.com/D3M-Sudo/Anura/blob/main/CHANGELOG.md")
+
+            about_window.present(window)
+            return GLib.SOURCE_REMOVE
+
+        GLib.idle_add(_present_about)
 
     def on_github_star(self, _action: object, _param: object) -> None:
         """Open GitHub repository page in the default browser."""
