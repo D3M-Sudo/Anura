@@ -104,6 +104,7 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
     @Gtk.Template.Callback()
     def _on_popover_show(self, _: object) -> None:
         self.populate_model()
+        self.entry.grab_focus()
 
     @Gtk.Template.Callback()
     def _on_popover_closed(self, *_args: object) -> None:
