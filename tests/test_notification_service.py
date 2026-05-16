@@ -55,7 +55,9 @@ class TestNotificationService:
 
                     self.service.show_notification("Test title", "Test body")
 
-                    mock_notify.Notification.new.assert_called_once_with("Test title", "Test body", "com.github.d3msudo.anura.test")
+                    mock_notify.Notification.new.assert_called_once_with(
+                        "Test title", "Test body", self.service.app_id
+                    )
                     mock_notification.show.assert_called_once()
             else:
                 # Should not raise exception even without libnotify
@@ -131,7 +133,9 @@ class TestNotificationService:
 
             self.service.show_notification("Title", "Body")
 
-            mock_notify.Notification.new.assert_called_once_with("Title", "Body", "com.github.d3msudo.anura.test")
+            mock_notify.Notification.new.assert_called_once_with(
+                "Title", "Body", self.service.app_id
+            )
             mock_notification.show.assert_called_once()
 
     @patch("anura.services.notification_service.HAS_LIBNOTIFY", True)
