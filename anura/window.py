@@ -615,3 +615,68 @@ class AnuraWindow(Adw.ApplicationWindow):
                 self.show_toast(_("Failed to open link"))
 
         launcher.launch(self, None, on_launch_finish)
+
+    def close_popovers(self) -> None:
+        """Close all open popovers to prevent 'Broken accounting of active state' warnings.
+
+        Must be called before presenting modal dialogs (About, Preferences, etc.)
+        when a popover from the headerbar menu might still be visible. This ensures
+        the popover's internal state machine completes its teardown before the
+        widget hierarchy is updated by the new dialog.
+        """
+        # 1. Close share button popover on extracted page
+        try:
+            share_popover = self.extracted_page.share_button.get_popover()
+            if share_popover and share_popover.get_visible():
+                share_popover.popdown()
+        except (AttributeError, RuntimeError, TypeError) as e:
+            logger.debug(f"Failed to close share popover: {e}")
+
+        # 2. Find and close any MenuButton popovers on both navigation pages
+        for page in (self.welcome_page, self.extracted_page):
+            if page is None:
+                continue
+            try:
+                self._close_page_menu_popovers(page)
+            except (AttributeError, RuntimeError, TypeError) as e:
+                logger.debug(f"Failed to close popovers on page {page}: {e}")
+
+    def _close_page_menu_popovers(self, page: Adw.NavigationPage) -> None:
+        """Traverse a NavigationPage's widget tree to close open MenuButton popovers.
+
+        GTK4 widget hierarchy:
+            Adw.NavigationPage → Adw.ToolbarView → Adw.HeaderBar → MenuButton(s)
+
+        The primary menu MenuButton is unnamed in the Blueprint template, so we
+        must locate it by walking the headerbar children.
+        """
+        # Walk from NavigationPage to ToolbarView to HeaderBar
+        child = page.get_first_child()
+        while child is not None:
+            if isinstance(child, Adw.ToolbarView):
+                self._close_toolbar_view_popovers(child)
+                return
+            child = child.get_next_sibling()
+
+    def _close_toolbar_view_popovers(self, toolbar_view: Adw.ToolbarView) -> None:
+        """Close MenuButton popovers within a ToolbarView."""
+        # ToolbarView contains HeaderBar(s) as children
+        child = toolbar_view.get_first_child()
+        while child is not None:
+            if isinstance(child, Adw.HeaderBar):
+                self._close_header_bar_popovers(child)
+                return
+            child = child.get_next_sibling()
+
+    def _close_header_bar_popovers(self, headerbar: Adw.HeaderBar) -> None:
+        """Close any visible MenuButton popovers in a HeaderBar."""
+        child = headerbar.get_first_child()
+        while child is not None:
+            if isinstance(child, Gtk.MenuButton):
+                try:
+                    popover = child.get_popover()
+                    if popover and popover.get_visible():
+                        popover.popdown()
+                except (AttributeError, RuntimeError, TypeError) as e:
+                    logger.debug(f"Failed to popdown menu button popover: {e}")
+            child = child.get_next_sibling()

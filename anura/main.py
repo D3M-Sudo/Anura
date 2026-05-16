@@ -563,17 +563,21 @@ class AnuraApplication(Adw.Application):
     def on_about(self, _action: object, _param: object) -> None:
         window = self.props.active_window
 
-        def _present_about() -> bool:
+        def _schedule_present() -> bool:
+            """Stage 2: Present the AboutDialog in a separate iteration.
+
+            This runs AFTER Stage 1 has completed, ensuring the popover's
+            internal teardown has fully propagated through the GTK event loop
+            before the AboutDialog causes a widget hierarchy update.
+            """
             if window:
-                # Clear focus to prevent "Broken accounting of active state" warnings
-                # when the transient dialog takes over.
                 window.set_focus(None)
 
             about_window = Adw.AboutDialog(
                 application_name="Anura",
                 application_icon=APP_ID,
                 version=self.version,
-                copyright="© 2025-2026 D3M-Sudo &amp; Anura Contributors\n© 2022-2025 Frog OCR Contributors",
+                copyright="© 2025-2026 D3M-Sudo & Anura Contributors\n© 2022-2025 Frog OCR Contributors",
                 website="https://github.com/D3M-Sudo/Anura",
                 license_type=Gtk.License.MIT_X11,
                 license=(
@@ -614,7 +618,29 @@ class AnuraApplication(Adw.Application):
             about_window.present(window)
             return GLib.SOURCE_REMOVE
 
-        GLib.idle_add(_present_about)
+        def _close_popovers() -> bool:
+            """Stage 1: Close open popovers and defer dialog presentation.
+
+            This runs first to pop down any visible popovers (primary menu,
+            share popup) before the AboutDialog is created. The popover's
+            internal state machine needs an iteration to complete teardown,
+            so we schedule the dialog presentation in a second idle callback.
+            """
+            if window and hasattr(window, "close_popovers"):
+                window.set_focus(None)
+                window.close_popovers()
+
+            # Schedule Stage 2 in a separate idle iteration to allow
+            # GTK to finish the popover teardown.
+            GLib.idle_add(_schedule_present)
+            return GLib.SOURCE_REMOVE
+
+        # Stage 0: Immediate focus release
+        if window:
+            window.set_focus(None)
+
+        # Stage 1: Close popovers (first idle callback)
+        GLib.idle_add(_close_popovers)
 
     def on_github_star(self, _action: object, _param: object) -> None:
         """Open GitHub repository page in the default browser."""
