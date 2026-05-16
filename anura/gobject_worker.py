@@ -53,7 +53,10 @@ class GObjectWorker:
                     # Use a wrapper that ensures False is returned to GLib.idle_add
                     # while passing the result to the actual callback.
                     def cb_wrapper(res):
-                        cb(res)
+                        try:
+                            cb(res)
+                        except Exception:
+                            logging.exception("Unhandled error in GObjectWorker success callback")
                         return GLib.SOURCE_REMOVE
 
                     GLib.idle_add(cb_wrapper, result, priority=GLib.PRIORITY_DEFAULT)
@@ -65,7 +68,10 @@ class GObjectWorker:
                 tb_str = traceback.format_exc()
 
                 def eb_wrapper(error, tb):
-                    eb(error, tb)
+                    try:
+                        eb(error, tb)
+                    except Exception:
+                        logging.exception("Unhandled error in GObjectWorker error callback")
                     return GLib.SOURCE_REMOVE
 
                 GLib.idle_add(eb_wrapper, e, tb_str, priority=GLib.PRIORITY_DEFAULT)
@@ -75,7 +81,10 @@ class GObjectWorker:
                 logging.error(f"Unexpected error in GObjectWorker: {e}")
 
                 def eb_wrapper(error, tb):
-                    eb(error, tb)
+                    try:
+                        eb(error, tb)
+                    except Exception:
+                        logging.exception("Unhandled error in GObjectWorker fallback error callback")
                     return GLib.SOURCE_REMOVE
 
                 GLib.idle_add(eb_wrapper, e, tb_str, priority=GLib.PRIORITY_DEFAULT)

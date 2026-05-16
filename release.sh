@@ -19,8 +19,8 @@ if [ -z "$VERSION" ]; then
 fi
 
 # Validate version format
-if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-    echo "Error: Version must be in format X.Y.Z (e.g., 0.1.4)"
+if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$'; then
+    echo "Error: Version must be in format X.Y.Z or X.Y.Z.W (e.g., 0.1.4 or 0.1.4.3)"
     exit 1
 fi
 

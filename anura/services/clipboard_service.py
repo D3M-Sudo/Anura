@@ -178,6 +178,7 @@ class ClipboardService(GObject.GObject):
                         f"Anura Clipboard: Texture read failed ({e.message}); falling back to URI list read.",
                     )
                     self._fallback_to_uri_list_read()
+                    return
                 except (ValueError, RuntimeError) as e:
                     # Technical rigor: log error for X11/Wayland clipboard synchronization issues
                     with self._state_lock:
@@ -188,6 +189,7 @@ class ClipboardService(GObject.GObject):
                         self._fallback_attempted = True
                     logger.error(f"Anura Clipboard Error: {e}")
                     self._fallback_to_uri_list_read()
+                    return
                 finally:
                     # Clean up cancellable regardless of outcome
                     with self._state_lock:

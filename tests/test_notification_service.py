@@ -163,9 +163,9 @@ class TestNotificationService:
             self.service.show_notification("Title", "Body", priority="high")
 
             mock_send.assert_called_once()
-            call_args = mock_send.call_args[1]
-            assert call_args["title"] == "Title"
-            assert call_args["body"] == "Body"
+            notification = mock_send.call_args[0][1].unpack()
+            assert notification["title"] == "Title"
+            assert notification["body"] == "Body"
 
     def test_portal_notification_error_handling(self):
         """Test portal notification error handling."""
@@ -189,9 +189,9 @@ class TestNotificationService:
             self.service.show_notification(special_title, special_body)
 
             mock_send.assert_called_once()
-            call_args = mock_send.call_args[1]
-            assert call_args["title"] == special_title
-            assert call_args["body"] == special_body
+            notification = mock_send.call_args[0][1].unpack()
+            assert notification["title"] == special_title
+            assert notification["body"] == special_body
 
     def test_notification_service_singleton_behavior(self):
         """Test that service can be instantiated multiple times."""
