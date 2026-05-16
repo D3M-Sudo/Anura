@@ -55,15 +55,11 @@ def _setup_i18n():
     try:
         locale.setlocale(locale.LC_ALL, "")
     except locale.Error as e:
-        print(f"Warning: Could not set locale: {e}. Falling back to 'C'.", file=sys.stderr)
-        try:
-            locale.setlocale(locale.LC_ALL, "C")
-        except locale.Error:
-            pass
-        # Force English to avoid hybrid UI
-        os.environ.setdefault("LANGUAGE", "C")
-        os.environ["LC_ALL"] = "C"
-        os.environ["LANG"] = "C"
+        print(
+            f"Warning: locale.setlocale(LC_ALL, '') failed: {e}. "
+            "Continuing with the existing runtime locale environment.",
+            file=sys.stderr,
+        )
 
     if not localedir:
         return
@@ -586,10 +582,10 @@ class AnuraApplication(Adw.Application):
     def on_about(self, _action: object, _param: object) -> None:
         window = self.props.active_window
 
-        # GTK interprets copyright/license strings as Pango markup,
-        # so we must escape special characters like &
-        _copyright = html.escape(
-            "© 2025-2026 D3M-Sudo & Anura Contributors\n© 2022-2025 Frog OCR Contributors"
+        # Adw.AboutDialog interprets copyright as plain text, so no html escaping is needed.
+        _copyright = (
+            "© 2025-2026 D3M-Sudo & Anura Contributors\n"
+            "© 2022-2025 Frog OCR Contributors"
         )
 
         def _schedule_present() -> bool:
@@ -609,24 +605,6 @@ class AnuraApplication(Adw.Application):
                 copyright=_copyright,
                 website="https://github.com/D3M-Sudo/Anura",
                 license_type=Gtk.License.MIT_X11,
-                license=(
-                    "MIT License\n\n"
-                    "Permission is hereby granted, free of charge, to any person obtaining a copy of "
-                    'this software and associated documentation files (the "Software"), to deal in '
-                    "the Software without restriction, including without limitation the rights to "
-                    "use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of "
-                    "the Software, and to permit persons to whom the Software is furnished to do so, "
-                    "subject to the following conditions:\n\n"
-                    "The above copyright notice and this permission notice shall be included in all "
-                    "copies or substantial portions of the Software.\n\n"
-                    'THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR '
-                    "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, "
-                    "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE "
-                    "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER "
-                    "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, "
-                    "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE "
-                    "SOFTWARE."
-                ),
                 developers=["Andrey Maksimov (Frog OCR)", "D3M-Sudo (Anura)"],
                 designers=["D3M-Sudo"],
                 release_notes=self._get_release_notes(),

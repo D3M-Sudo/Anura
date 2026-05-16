@@ -17,7 +17,7 @@ import locale
 VERSION = '@VERSION@'
 pkgdatadir = '@pkgdatadir@'
 localedir = '@localedir@'
-project_name = '@projectname@'
+project_name = '@appid@'
 
 # Ensure the package data directory is in the path for module discovery
 sys.path.insert(1, pkgdatadir)

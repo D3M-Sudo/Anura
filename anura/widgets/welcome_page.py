@@ -163,8 +163,6 @@ class WelcomePage(Adw.NavigationPage):
         This is the end of the async chain. We call drop.finish() here (required),
         then process the first valid local image path.
         """
-        from gettext import gettext as _
-
         stream, drop = user_data
 
         try:
@@ -242,14 +240,10 @@ class WelcomePage(Adw.NavigationPage):
         if processing:
             self.drop_area.add_css_class("drag-processing")
             if self.drop_area_label:
-                from gettext import gettext as _
-
                 self.drop_area_label.set_label(_("Processing..."))
         else:
             self.drop_area.remove_css_class("drag-processing")
             if self.drop_area_label:
-                from gettext import gettext as _
-
                 self.drop_area_label.set_label(_("Drop image file here"))
 
     def reset_drop_area_state(self) -> None:
