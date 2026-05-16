@@ -7,6 +7,30 @@ import threading
 
 
 # Initialize localization
+def _glib_bindtextdomain(domain: str, localedir: str) -> None:
+    """Bind the translation domain at the GLib/C-library level via ctypes.
+
+    GLib.bindtextdomain() è stato rimosso dalle PyGObject bindings in GLib 2.76+.
+    GtkBuilder usa g_dgettext() / dgettext() al livello C per risolvere le stringhe
+    translatable="yes" nei file .ui. La soluzione primaria è translation-domain in
+    ogni .blp; questa funzione è un fallback belt-and-suspenders for the C domain.
+    """
+    import ctypes
+    import ctypes.util
+
+    try:
+        _libname = ctypes.util.find_library("glib-2.0") or ctypes.util.find_library("c")
+        if not _libname:
+            return
+        _lib = ctypes.CDLL(_libname)
+        _lib.bindtextdomain(domain.encode(), localedir.encode())
+        _lib.bind_textdomain_codeset(domain.encode(), b"UTF-8")
+        _lib.textdomain(domain.encode())
+    except (OSError, AttributeError):
+        # Non-fatal: the translation-domain in .blp is the primary mechanism
+        pass
+
+
 def _setup_i18n():
 
     from anura.config import APP_ID
@@ -27,50 +51,43 @@ def _setup_i18n():
             localedir = path
             break
 
-    # Initialize C-level locale for GTK/Libadwaita
-    locale_success = True
+    # Step 1: C-level locale for GTK/Libadwaita
     try:
         locale.setlocale(locale.LC_ALL, "")
     except locale.Error as e:
-        # Fallback to C locale if requested locale is missing on host
         print(f"Warning: Could not set locale: {e}. Falling back to 'C'.", file=sys.stderr)
         try:
             locale.setlocale(locale.LC_ALL, "C")
         except locale.Error:
             pass
-        locale_success = False
-
-    # If the C locale failed to initialize to the system preference,
-    # we MUST force English for the Python gettext too, otherwise we get a
-    # "Hybrid" UI where Python strings are translated but GTK (.ui) ones are not.
-    if not locale_success:
-        os.environ["LANGUAGE"] = "C"
+        # Force English to avoid hybrid UI
+        os.environ.setdefault("LANGUAGE", "C")
         os.environ["LC_ALL"] = "C"
         os.environ["LANG"] = "C"
 
-    if localedir:
-        # Bind for Python gettext
-        gettext.bindtextdomain(project_name, localedir)
-        gettext.textdomain(project_name)
+    if not localedir:
+        return
 
-        # Bind for GLib/GTK (used for .ui files and resources)
-        # We use the locale module which calls the C library's bindtextdomain.
-        # On some systems, we also need to explicitly bind for GLib.
-        try:
-            locale.bindtextdomain(project_name, localedir)
-            locale.textdomain(project_name)
-            if hasattr(locale, "bind_textdomain_codeset"):
-                locale.bind_textdomain_codeset(project_name, "UTF-8")
+    # Step 2: Python gettext (used by _() in all .py files)
+    gettext.bindtextdomain(project_name, localedir)
+    gettext.textdomain(project_name)
 
-            # Try to also bind via GLib if available early
-            from gi.repository import GLib
+    # Step 3: C-level textdomain — separate from GLib block so that a
+    # GLib failure cannot mask a local setup failure.
+    # GtkBuilder falls back to dgettext(NULL, ...) which uses this domain when
+    # <interface> doesn't have an explicit domain attribute.
+    try:
+        locale.bindtextdomain(project_name, localedir)
+        locale.textdomain(project_name)
+        if hasattr(locale, "bind_textdomain_codeset"):
+            locale.bind_textdomain_codeset(project_name, "UTF-8")
+    except (AttributeError, OSError) as e:
+        print(f"Warning: C-level locale binding failed: {e}", file=sys.stderr)
 
-            GLib.bindtextdomain(project_name, localedir)
-            GLib.bind_textdomain_codeset(project_name, "UTF-8")
-            GLib.textdomain(project_name)
-        except (ImportError, AttributeError, ValueError):
-            # gi might not be fully ready yet, or GLib methods missing
-            pass
+    # Step 4: GLib-level binding via ctypes (belt-and-suspenders).
+    # GLib.bindtextdomain() has been removed from PyGObject in GLib 2.76+.
+    # The primary fix is translation-domain in each .blp; this is the fallback.
+    _glib_bindtextdomain(project_name, localedir)
 
 
 _setup_i18n()

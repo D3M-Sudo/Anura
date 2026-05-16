@@ -924,7 +924,7 @@ msgstr "Elaborazione in corso..."
 
 #: anura/widgets/welcome_page.py:253 data/ui/welcome_page.blp:123
 msgid "Drop image file here"
-msgstr ""
+msgstr "Rilascia il file immagine qui"
 
 #: anura/window.py:128 anura/window.py:328 anura/window.py:374
 #, python-brace-format
@@ -1284,7 +1284,7 @@ msgstr "Livello del volume della sintesi vocale (0-100%)"
 
 #: data/ui/preferences_general.blp:55
 msgid "TTS Language"
-msgstr ""
+msgstr "Lingua sintesi vocale"
 
 #: data/ui/preferences_general.blp:56
 msgid "Language for speech synthesis. Uses OCR language if not set."
@@ -1308,7 +1308,7 @@ msgstr "Aggiungi lingua"
 
 #: data/ui/shortcuts_overlay.blp:30
 msgid "Search shortcuts..."
-msgstr ""
+msgstr "Cerca scorciatoie..."
 
 #: data/ui/welcome_page.blp:5
 msgid "Welcome"
