@@ -29,6 +29,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 try:
     locale.setlocale(locale.LC_ALL, '')
     locale.bindtextdomain(project_name, localedir)
+    locale.textdomain(project_name)
 except Exception:
     # Fallback if locale is not set correctly on the system
     pass
