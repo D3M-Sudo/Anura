@@ -15,6 +15,9 @@ template $LanguagePopover : Popover {
       styles ["search_box"]
 
       SearchEntry entry {
+        accessibility {
+          label: _("Search Languages");
+        }
 
         placeholder-text: _("Search Languages…");
         activate => $_on_search_activate();
