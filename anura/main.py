@@ -319,6 +319,12 @@ class AnuraApplication(Adw.Application):
         self.create_action("github_star", self.on_github_star)
         self.create_action("report_issue", self.on_report_issue)
 
+        # Register action for QR code notification clicks (Flatpak-safe Gio.Notification)
+        open_qr_action = Gio.SimpleAction.new("open-qr-url", GLib.VariantType.new("s"))
+        open_qr_action.connect("activate", self._on_open_qr_notification)
+        self.add_action(open_qr_action)
+        logger.debug("Anura: Registered action 'app.open-qr-url' for notification click handling")
+
     def do_activate(self) -> None:
         win = self.props.active_window
         if not win:
@@ -580,6 +586,12 @@ class AnuraApplication(Adw.Application):
     def on_about(self, _action: object, _param: object) -> None:
         window = self.props.active_window
 
+        # GTK interprets copyright/license strings as Pango markup,
+        # so we must escape special characters like &
+        _copyright = html.escape(
+            "© 2025-2026 D3M-Sudo & Anura Contributors\n© 2022-2025 Frog OCR Contributors"
+        )
+
         def _schedule_present() -> bool:
             """Stage 2: Present the AboutDialog in a separate iteration.
 
@@ -594,7 +606,7 @@ class AnuraApplication(Adw.Application):
                 application_name="Anura",
                 application_icon=APP_ID,
                 version=self.version,
-                copyright="© 2025-2026 D3M-Sudo & Anura Contributors\n© 2022-2025 Frog OCR Contributors",
+                copyright=_copyright,
                 website="https://github.com/D3M-Sudo/Anura",
                 license_type=Gtk.License.MIT_X11,
                 license=(
@@ -758,6 +770,54 @@ class AnuraApplication(Adw.Application):
             win.welcome_page.show_spinner()
         clipboard_service_instance = get_clipboard_service()
         clipboard_service_instance.read_texture()
+
+    def _on_open_qr_notification(self, _action: Gio.SimpleAction, parameter: GLib.Variant | None) -> None:
+        """Handle QR code notification click — open the URL in the default browser.
+
+        Triggered when the user clicks a Gio.Notification sent via
+        send_notification_with_action(). The URL is extracted from the
+        action's target parameter, sanitized, validated, and launched.
+
+        This runs inside the Flatpak sandbox via Gio.SimpleAction, avoiding
+        libnotify callback sandbox issues.
+        """
+        if parameter is None:
+            logger.warning("Anura: open-qr-url action triggered without a URL parameter")
+            return
+
+        # Sanitize: strip all control characters and whitespace (defense in depth)
+        url = parameter.get_string().strip()
+        url = url.strip("\n\r\t\v\f")
+
+        if not url:
+            logger.warning("Anura: open-qr-url action triggered with empty URL")
+            return
+
+        # Security: validate URL before launching (defense in depth)
+        from anura.utils import uri_validator
+
+        if not uri_validator(url):
+            logger.warning(f"Anura: Blocked invalid URL from notification: {url}")
+            window = self.get_active_window()
+            if window and hasattr(window, "show_toast"):
+                window.show_toast(_("Invalid URL blocked for security"))
+            return
+
+        # Launch URL via Gtk.UriLauncher
+        window = self.get_active_window()
+        if window and hasattr(window, "_launch_uri"):
+            window._launch_uri(url)
+        else:
+            # Fallback: launch directly if no window available
+            launcher = Gtk.UriLauncher.new(url)
+
+            def on_launch_finish(_launcher: object, result: Gio.AsyncResult) -> None:
+                try:
+                    launcher.launch_finish(result)
+                except GLib.Error as e:
+                    logger.error(f"Anura: Failed to open URL from notification: {e.message}")
+
+            launcher.launch(None, None, on_launch_finish)
 
     def on_decoded(self, _sender: object, text: str, copy: bool) -> None:
         if not text:

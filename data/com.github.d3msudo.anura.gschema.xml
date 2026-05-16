@@ -28,9 +28,9 @@
       <description>Automatically copy the extracted text to the clipboard.</description>
     </key>
     <key name="autolinks" type="b">
-      <default>false</default>
-      <summary>Auto-open detected links</summary>
-      <description>Automatically open URLs found in extracted text.</description>
+      <default>true</default>
+      <summary>Open QR-code links automatically</summary>
+      <description>When enabled, QR code URLs open directly in the browser. When disabled, a desktop notification with an action button is shown instead.</description>
     </key>
 
     <key name="tts-volume" type="d">

@@ -11,7 +11,13 @@
 
 from unittest.mock import Mock, patch
 
-from anura.services.notification_service import HAS_LIBNOTIFY, NotificationService
+import gi
+
+gi.require_version("GLib", "2.0")
+
+from gi.repository import GLib  # noqa: E402
+
+from anura.services.notification_service import HAS_LIBNOTIFY, NotificationService  # noqa: E402
 
 
 class TestNotificationService:
@@ -192,6 +198,67 @@ class TestNotificationService:
             notification = mock_send.call_args[0][1].unpack()
             assert notification["title"] == special_title
             assert notification["body"] == special_body
+
+    def test_send_notification_with_action_sends_via_application(self):
+        """Test that send_notification_with_action sends via Gio.Application."""
+        from unittest.mock import MagicMock, patch
+
+        with patch("anura.services.notification_service.Gio.Application.get_default") as mock_get_app:
+            mock_app = MagicMock()
+            mock_get_app.return_value = mock_app
+
+            target = GLib.Variant("s", "https://example.com")
+            self.service.send_notification_with_action(
+                notification_id="qr-url",
+                title="QR Code URL Detected",
+                body="https://example.com",
+                action_id="app.open-qr-url",
+                action_target=target,
+                priority="high",
+            )
+
+            mock_app.send_notification.assert_called_once()
+            args = mock_app.send_notification.call_args[0]
+            assert args[0] == "qr-url"  # notification_id
+            notification = args[1]
+            assert notification.get_title() == "QR Code URL Detected"
+            assert notification.get_body() == "https://example.com"
+
+    def test_send_notification_with_action_no_application(self):
+        """Test graceful handling when no Gio.Application is available."""
+        from unittest.mock import patch
+
+        with patch("anura.services.notification_service.Gio.Application.get_default") as mock_get_app:
+            mock_get_app.return_value = None
+
+            target = GLib.Variant("s", "https://example.com")
+            # Should not raise
+            self.service.send_notification_with_action(
+                notification_id="qr-url",
+                title="Test",
+                body="Test body",
+                action_id="app.open-qr-url",
+                action_target=target,
+            )
+
+    def test_send_notification_with_action_empty_url(self):
+        """Test notification with empty URL body."""
+        from unittest.mock import MagicMock, patch
+
+        with patch("anura.services.notification_service.Gio.Application.get_default") as mock_get_app:
+            mock_app = MagicMock()
+            mock_get_app.return_value = mock_app
+
+            target = GLib.Variant("s", "")
+            self.service.send_notification_with_action(
+                notification_id="qr-url",
+                title="QR Code URL Detected",
+                body="",
+                action_id="app.open-qr-url",
+                action_target=target,
+            )
+
+            mock_app.send_notification.assert_called_once()
 
     def test_notification_service_singleton_behavior(self):
         """Test that service can be instantiated multiple times."""

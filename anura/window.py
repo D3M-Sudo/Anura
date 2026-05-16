@@ -199,7 +199,8 @@ class AnuraWindow(Adw.ApplicationWindow):
         try:
             self.extracted_page.extracted_text = text
 
-            if self.settings.get_boolean("autocopy") or copy:
+            # Handle OCR autocopy (text content only, NOT URLs)
+            if (self.settings.get_boolean("autocopy") or copy) and text:
                 clipboard_service_instance = get_clipboard_service()
                 clipboard_service_instance.set(text)
                 self.show_toast(_("Text copied to clipboard"))
@@ -209,20 +210,33 @@ class AnuraWindow(Adw.ApplicationWindow):
                 preprocessor = get_text_preprocessor()
                 structured = preprocessor.extract_structured_data(text)
 
-                # Handle URL extraction
+                # Handle URL extraction from QR codes
                 if structured["urls"]:
                     extracted_url = structured["urls"][0]
-                    if uri_validator(extracted_url):
-                        # Copy URL to clipboard if autocopy is enabled (default: true)
-                        if self.settings.get_boolean("autocopy"):
-                            clipboard_service_instance = get_clipboard_service()
-                            clipboard_service_instance.set(extracted_url)
 
+                    # Security: strip all control characters and whitespace
+                    extracted_url = extracted_url.strip()
+                    extracted_url = extracted_url.strip("\n\r\t\v\f")
+
+                    if uri_validator(extracted_url):
                         if self.settings.get_boolean("autolinks"):
+                            # Behavior A: Open directly in browser (toggle ON)
                             self._launch_uri(extracted_url)
                             self.show_toast(_("URL opened automatically"))
                         else:
-                            self._show_qr_url_toast(extracted_url)
+                            # Behavior B: Send desktop notification with clickable action
+                            # Do NOT copy URL to clipboard, do NOT open browser
+                            target = GLib.Variant("s", extracted_url)
+                            app = Gtk.Application.get_default()
+                            if app and hasattr(app, "notification_service"):
+                                app.notification_service.send_notification_with_action(
+                                    notification_id="qr-url",
+                                    title=_("QR Code URL Detected"),
+                                    body=extracted_url,
+                                    action_id="app.open-qr-url",
+                                    action_target=target,
+                                    priority="high",
+                                )
 
                 # Show email toast if emails found
                 if structured["emails"]:
@@ -641,27 +655,6 @@ class AnuraWindow(Adw.ApplicationWindow):
     def show_toast(self, title: str, priority: Adw.ToastPriority = Adw.ToastPriority.NORMAL) -> None:
         """Show a toast notification to the user."""
         self.toast_overlay.add_toast(Adw.Toast(title=title, priority=priority))
-
-    def _show_url_toast(self, url: str) -> None:
-        toast = Adw.Toast(
-            title=_("Text contains a link"),
-            button_label=_("Open"),
-        )
-        toast.connect("button-clicked", lambda _: self._launch_uri(url))
-        self.toast_overlay.add_toast(toast)
-
-    def _show_qr_url_toast(self, url: str) -> None:
-        """Show interactive toast for QR-detected URL with clipboard feedback."""
-        if self.settings.get_boolean("autocopy"):
-            title = _("URL copied to clipboard")
-        else:
-            title = _("URL detected")
-        toast = Adw.Toast(
-            title=title,
-            button_label=_("Open"),
-        )
-        toast.connect("button-clicked", lambda _: self._launch_uri(url))
-        self.toast_overlay.add_toast(toast)
 
     def _launch_uri(self, url: str) -> None:
         """Open a URI in the default system browser."""
