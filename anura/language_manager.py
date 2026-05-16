@@ -24,6 +24,7 @@ from loguru import logger  # noqa: E402
 import requests  # noqa: E402
 
 from anura.config import (  # noqa: E402
+    LANG_CODE_PATTERN,
     REQUEST_TIMEOUT,
     TESSDATA_BEST_URL,
     TESSDATA_DIR,
@@ -473,6 +474,11 @@ class LanguageManager(GObject.GObject):
 
     def remove_language(self, code: str) -> None:
         """Thread-safe removal of model file from system."""
+        # Security: Validate lang_code is a valid ISO 639-2 code to prevent path traversal
+        if not code or not re.match(LANG_CODE_PATTERN, code):
+            logger.error(f"Anura: Blocked invalid language code removal attempt: '{code}'")
+            return
+
         path = os.path.join(TESSDATA_DIR, f"{code}.traineddata")
         if not os.path.exists(path):
             return

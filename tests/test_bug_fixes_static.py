@@ -151,6 +151,33 @@ def test_window_blp_contains_adw_banner() -> None:
     assert "revealed: false" in blp, "Banner must be hidden by default."
 
 
+# ---------------------------------------------------------------------------
+# Security: LanguageManager.remove_language() must validate the language code
+# to prevent path traversal attacks.
+# ---------------------------------------------------------------------------
+
+
+def test_language_manager_remove_language_validates_code() -> None:
+    """LanguageManager.remove_language must validate the input code against
+    LANG_CODE_PATTERN to prevent path traversal."""
+    tree, _ = _load_module_source("language_manager.py")
+    remove_fn = _find_method(tree, "LanguageManager", "remove_language")
+
+    found_validation = False
+    for node in ast.walk(remove_fn):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+            if node.func.attr == "match" and isinstance(node.func.value, ast.Name) and node.func.value.id == "re":
+                # Check if LANG_CODE_PATTERN is passed to re.match
+                for arg in node.args:
+                    if isinstance(arg, ast.Name) and arg.id == "LANG_CODE_PATTERN":
+                        found_validation = True
+                        break
+    assert found_validation, (
+        "LanguageManager.remove_language() must validate the code against "
+        "LANG_CODE_PATTERN to prevent path traversal attacks."
+    )
+
+
 def test_metainfo_documents_portal_requirement() -> None:
     metainfo = (PROJECT_ROOT / "data" / "com.github.d3msudo.anura.metainfo.xml.in").read_text()
     assert "xdg-desktop-portal" in metainfo, (
