@@ -568,9 +568,6 @@ class ClipboardService(GObject.GObject):
             if cancellable is not self._cancellable:
                 # Stale timeout from previous operation - ignore
                 logger.debug("Anura Clipboard: Stale timeout detected, ignoring")
-                # Clear timeout ID for stale timeouts to prevent invalid reference
-                if self._clipboard_timeout_id is not None:
-                    self._clipboard_timeout_id = None
                 return False
 
             # This is the active timeout, handle cancellation

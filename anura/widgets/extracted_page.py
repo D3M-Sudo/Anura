@@ -60,6 +60,7 @@ class ExtractedPage(Adw.NavigationPage):
         self._tts_stop_handler_id = None
         self._tts_paused_handler_id = None
         self._buffer_handler_id = None
+        self._is_generating_tts = False
 
         super().__init__(**kwargs)
 
@@ -123,10 +124,9 @@ class ExtractedPage(Adw.NavigationPage):
 
     def _reset_copy_icon(self, icon_name: str) -> bool:
         """Helper to reset copy button icon."""
-        if self.text_copy_btn:
+        if self.text_copy_btn and self.text_copy_btn.get_icon_name() == "emblem-ok-symbolic":
             # Only reset if it's still showing the checkmark (don't overwrite newer state)
-            if self.text_copy_btn.get_icon_name() == "emblem-ok-symbolic":
-                self.text_copy_btn.set_icon_name(icon_name)
+            self.text_copy_btn.set_icon_name(icon_name)
         return GLib.SOURCE_REMOVE
 
     def do_hiding(self) -> None:
@@ -194,6 +194,11 @@ class ExtractedPage(Adw.NavigationPage):
 
     def listen(self) -> None:
         """Start TTS playback for the extracted text."""
+        # Prevent concurrent TTS generation requests
+        if self._is_generating_tts:
+            logger.warning("Anura TTS: Generation already in progress, ignoring request.")
+            return
+
         tts_service_instance = get_tts_service()
 
         # Defensive check: ensure critical template components are loaded
@@ -205,6 +210,8 @@ class ExtractedPage(Adw.NavigationPage):
         if self._tts_service and self.listen_stack.get_visible_child_name() == "pause":
             self.listen_pause()
             return
+
+        self._is_generating_tts = True
 
         # X11 Constraint: Set UI to generating state (Spinner) immediately and keep it active
         # during entire generate phase until GStreamer reaches PLAYING state
@@ -261,6 +268,7 @@ class ExtractedPage(Adw.NavigationPage):
 
     def _on_generate_error(self, error: Exception, traceback_str: str | None = None) -> None:
         """Handle generation errors (called on main thread by GObjectWorker)."""
+        self._is_generating_tts = False
         # Force stack back to button state on error — the spinner must not persist.
         # We bypass _set_spinner_active + swap_controls here because swap_controls
         # intentionally refuses to switch away from "spinner" (to avoid conflicts
@@ -306,6 +314,7 @@ class ExtractedPage(Adw.NavigationPage):
             self.listen_pause_btn.set_icon_name(icon)
 
     def _on_generated(self, filepath: str | None) -> None:
+        self._is_generating_tts = False
         if not filepath:
             self._set_spinner_active(False)
             self.swap_controls(False)

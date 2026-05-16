@@ -191,7 +191,7 @@ class AnuraApplication(Adw.Application):
 
     def __init__(self, version: str | None = None) -> None:
         super().__init__(application_id=APP_ID, flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
-        self.backend = None
+        self.backend: ScreenshotService | None = None
         self.version = version
         self.settings = settings
 

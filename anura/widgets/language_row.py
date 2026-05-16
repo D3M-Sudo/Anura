@@ -109,7 +109,7 @@ class LanguageRow(Gtk.Overlay):
         """
         Triggered when the install button is clicked.
         """
-        if self._item.code in language_manager.loading_languages:
+        if not self._item or self._item.code in language_manager.loading_languages:
             return
 
         language_manager.download(self._item.code)
@@ -120,7 +120,7 @@ class LanguageRow(Gtk.Overlay):
         """
         Triggered when the remove button is clicked.
         """
-        if self._item.code in language_manager.loading_languages:
+        if not self._item or self._item.code in language_manager.loading_languages:
             return
 
         if self._item.code in language_manager.get_downloaded_codes():

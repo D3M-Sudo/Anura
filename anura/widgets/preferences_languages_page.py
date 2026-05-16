@@ -144,7 +144,7 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
             self.activate_filter()
 
     @staticmethod
-    def filter_func(item: object, user_data: str) -> bool:
+    def filter_func(item: LanguageItem, user_data: str) -> bool:
         """Filter function for language search."""
         if user_data:
             return user_data.lower() in item.title.lower()
