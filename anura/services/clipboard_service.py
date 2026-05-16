@@ -47,7 +47,7 @@ class ClipboardService(GObject.GObject):
         "error": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
     }
 
-    __slots__ = ("_cancellable", "_clipboard", "_clipboard_timeout_id", "_state_lock")
+    __slots__ = ("_cancellable", "_clipboard", "_clipboard_timeout_id", "_fallback_attempted", "_state_lock")
 
     # Timeout for clipboard read operations (seconds)
     CLIPBOARD_TIMEOUT_SECONDS = 10
@@ -71,6 +71,7 @@ class ClipboardService(GObject.GObject):
         self._clipboard = None
         self._clipboard_timeout_id = None
         self._state_lock = threading.Lock()
+        self._fallback_attempted = False
         logger.debug("Anura ClipboardService: Clipboard service initialization complete")
 
     def init(self) -> None:
@@ -159,6 +160,17 @@ class ClipboardService(GObject.GObject):
                     if e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED):
                         logger.debug("Anura Clipboard: Read operation cancelled.")
                         return
+                    # Guard: if we already attempted the fallback chain once,
+                    # emit an error instead of looping indefinitely.
+                    with self._state_lock:
+                        if self._fallback_attempted:
+                            logger.warning(
+                                f"Anura Clipboard: Texture read failed ({e.message}); "
+                                "fallback already attempted, giving up.",
+                            )
+                            self._emit_clipboard_error(_("No image in clipboard"))
+                            return
+                        self._fallback_attempted = True
                     # Fallback: attempt to read as URI list (some clipboard managers
                     # expose file paths as text/uri-list but don't advertise them
                     # via get_formats() at the time of the initial check).
@@ -168,6 +180,12 @@ class ClipboardService(GObject.GObject):
                     self._fallback_to_uri_list_read()
                 except (ValueError, RuntimeError) as e:
                     # Technical rigor: log error for X11/Wayland clipboard synchronization issues
+                    with self._state_lock:
+                        if self._fallback_attempted:
+                            logger.error(f"Anura Clipboard Error: {e}; fallback already attempted.")
+                            self._emit_clipboard_error(_("No image in clipboard"))
+                            return
+                        self._fallback_attempted = True
                     logger.error(f"Anura Clipboard Error: {e}")
                     self._fallback_to_uri_list_read()
                 finally:
@@ -197,6 +215,9 @@ class ClipboardService(GObject.GObject):
         screenshot tools, browsers, etc.).
         """
         with self._state_lock:
+            # Reset fallback flag for this fresh read attempt
+            self._fallback_attempted = False
+
             # Cancel any previous timeout to prevent accumulation
             if self._clipboard_timeout_id and self._clipboard_timeout_id > 0:
                 GLib.source_remove(self._clipboard_timeout_id)
@@ -243,6 +264,14 @@ class ClipboardService(GObject.GObject):
         except Exception as e:
             logger.debug(f"Anura Clipboard: get_mime_types() failed: {e}")
             return []
+
+    def _emit_clipboard_error(self, message: str) -> None:
+        """Emit the ``error`` signal from the main thread via idle_add."""
+        def _on_error_idle():
+            self.emit("error", message)
+            return GLib.SOURCE_REMOVE
+
+        GLib.idle_add(_on_error_idle)
 
     def _clear_active_timeout(self) -> None:
         """Atomically remove the in-flight read timeout, if any."""
