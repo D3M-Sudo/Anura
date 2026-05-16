@@ -15,3 +15,7 @@
 ## 2026-05-15 - Regex and str.isascii() Optimization for URI Validation
 **Learning:** Manual loops for character detection in Python are significantly slower than pre-compiled regular expressions (13x difference). Additionally, `str.isascii()` is much faster than the `try-except` encoding pattern (up to 20x faster) for ASCII validation.
 **Action:** Use `re.search()` with pre-compiled patterns for character-set checks and prefer built-in string methods like `isascii()` over manual validation or exception-based checks.
+
+## 2026-05-16 - Pre-compilation and PIL Mode Optimization
+**Learning:** Pre-compiling regular expressions in a class constructor for frequently used utility methods (like text cleaning) avoids redundant parsing overhead. Additionally, PIL's `image.point(lut, "L")` is significantly faster (~1.6x) than `image.point(lut, "1").convert("L")` because it skips an intermediate 1-bit mode conversion.
+**Action:** Always pre-compile regex patterns used in hot paths and avoid unnecessary image mode conversions in Pillow pipelines.
