@@ -178,7 +178,8 @@ class NotificationService:
             logger.warning("NotificationService: Gio not available for action notification")
             return
 
-        notification = Gio.Notification.new(title, body)
+        notification = Gio.Notification.new(title)
+        notification.set_body(body)
         notification.set_default_action_and_target(action_id, action_target)
 
         # Set priority if valid
