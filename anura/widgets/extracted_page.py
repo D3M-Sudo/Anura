@@ -85,6 +85,16 @@ class ExtractedPage(Adw.NavigationPage):
     def _on_buffer_changed(self, buffer: Gtk.TextBuffer) -> None:
         """Update character and word count in the status bar label."""
         text = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), False)
+        has_text = bool(text.strip()) if text else False
+
+        # Update action sensitivity based on text presence
+        if self.text_copy_btn:
+            self.text_copy_btn.set_sensitive(has_text)
+        if self.share_button:
+            self.share_button.set_sensitive(has_text)
+        if self.listen_btn:
+            self.listen_btn.set_sensitive(has_text)
+
         if not text:
             self.stats_label.set_text(_("Words: %d | Characters: %d") % (0, 0))
             return
@@ -94,6 +104,30 @@ class ExtractedPage(Adw.NavigationPage):
         word_count = len(text.split())
 
         self.stats_label.set_text(_("Words: %d | Characters: %d") % (word_count, char_count))
+
+    def show_copy_feedback(self) -> None:
+        """Temporarily change the copy button icon to a checkmark for UX feedback."""
+        if not self.text_copy_btn:
+            return
+
+        # Defensive: if already showing feedback, don't nested-capture the checkmark
+        if self.text_copy_btn.get_icon_name() == "emblem-ok-symbolic":
+            return
+
+        # Store original icon and switch to checkmark
+        original_icon = self.text_copy_btn.get_icon_name()
+        self.text_copy_btn.set_icon_name("emblem-ok-symbolic")
+
+        # Revert icon after 2 seconds
+        GLib.timeout_add_seconds(2, self._reset_copy_icon, original_icon)
+
+    def _reset_copy_icon(self, icon_name: str) -> bool:
+        """Helper to reset copy button icon."""
+        if self.text_copy_btn:
+            # Only reset if it's still showing the checkmark (don't overwrite newer state)
+            if self.text_copy_btn.get_icon_name() == "emblem-ok-symbolic":
+                self.text_copy_btn.set_icon_name(icon_name)
+        return GLib.SOURCE_REMOVE
 
     def do_hiding(self) -> None:
         """Handle widget hiding event."""

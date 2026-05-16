@@ -476,6 +476,8 @@ class AnuraWindow(Adw.ApplicationWindow):
             clipboard_service_instance = get_clipboard_service()
             clipboard_service_instance.set(text)
             self.show_toast(_("Text copied to clipboard"))
+            # Visual feedback on the button itself
+            self.extracted_page.show_copy_feedback()
         else:
             self.show_toast(_("No text to copy"))
 
