@@ -287,8 +287,9 @@ class WelcomePage(Adw.NavigationPage):
             self._drop_button_handler_id = None
 
         # Cancel any in-flight drop operation
-        if getattr(self, "_drop_cancellable", None):
-            self._drop_cancellable.cancel()
+        drop_cancellable = getattr(self, "_drop_cancellable", None)
+        if drop_cancellable:
+            drop_cancellable.cancel()
             self._drop_cancellable = None
 
         # Remove drop target controller and disconnect its internal handlers

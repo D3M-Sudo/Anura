@@ -85,9 +85,9 @@ class AnuraWindow(Adw.ApplicationWindow):
         )
         # Banner's "button-clicked" fires when the user dismisses; hide until
         # the next backend failure re-reveals it.
-        self._handler_portal_banner = self.portal_banner.connect("button-clicked", self._on_portal_banner_dismissed)
+        self._handler_portal_banner = self.portal_banner.connect("button-clicked", self._on_portal_banner_dismissed)  # type: ignore[arg-type]
 
-        self._handler_go_back = self.extracted_page.connect("go-back", self.show_welcome_page)
+        self._handler_go_back = self.extracted_page.connect("go-back", self.show_welcome_page)  # type: ignore[arg-type]
         self._handler_clipboard = None
         self._handler_clipboard_error = None
         self._clipboard_service = None
@@ -158,6 +158,9 @@ class AnuraWindow(Adw.ApplicationWindow):
         self.hide()
 
         # Safety timeout: if portal doesn't respond within 30s, restore window
+        if self._screenshot_timeout_id is not None:
+            GLib.source_remove(self._screenshot_timeout_id)
+
         self._screenshot_timeout_id = GLib.timeout_add_seconds(30, self._on_screenshot_timeout)
 
         try:

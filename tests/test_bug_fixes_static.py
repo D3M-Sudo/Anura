@@ -165,9 +165,14 @@ def test_language_manager_remove_language_validates_code() -> None:
 
     found_validation = False
     for node in ast.walk(remove_fn):
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
-            if node.func.attr == "match" and isinstance(node.func.value, ast.Name) and node.func.value.id == "re":
-                # Check if LANG_CODE_PATTERN is passed to re.match
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "match"
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id == "re"
+        ):
+            # Check if LANG_CODE_PATTERN is passed to re.match
                 for arg in node.args:
                     if isinstance(arg, ast.Name) and arg.id == "LANG_CODE_PATTERN":
                         found_validation = True

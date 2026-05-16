@@ -83,6 +83,7 @@ class ScreenshotService(GObject.GObject):
         "_active_cancellable",
         "_cancellable_lock",
         "_env_diagnostics_logged",
+        "_is_capturing",
         "cancelable",
         "portal",
     )
@@ -95,12 +96,20 @@ class ScreenshotService(GObject.GObject):
         self.portal = Xdp.Portal()
         self._active_cancellable = None
         self._env_diagnostics_logged = False
+        self._is_capturing = False
 
         # Configure Tesseract path for Flatpak environment
         _configure_tesseract_path()
 
     def capture(self, lang: str, copy: bool = False) -> None:
         """Requests a screenshot from the system portal."""
+        # Prevent concurrent capture requests
+        if self._is_capturing:
+            logger.warning("Anura Screenshot: Capture already in progress, ignoring request.")
+            return
+
+        self._is_capturing = True
+
         # Make cancellable check and replacement atomic
         with self._cancellable_lock:
             # If previous request was cancelled, create fresh cancellable
@@ -121,6 +130,7 @@ class ScreenshotService(GObject.GObject):
                 [lang, copy],
             )
         except Exception as e:
+            self._is_capturing = False
             logger.error(f"Anura Screenshot: Portal take_screenshot call failed: {e}")
 
             def _on_error_idle():
@@ -131,6 +141,7 @@ class ScreenshotService(GObject.GObject):
 
     def take_screenshot_finish(self, source_object: object, res: Gio.Task, user_data: tuple) -> None:
         """Callback triggered when portal finishes screenshot request."""
+        self._is_capturing = False
         lang, copy = user_data
         try:
             uri = self.portal.take_screenshot_finish(res)
@@ -662,29 +673,29 @@ class ScreenshotService(GObject.GObject):
         if not lang or not re.match(LANG_CODE_PATTERN, lang):
             logger.error(f"Anura: Invalid language code '{lang}' for OCR")
 
-            def _on_error_idle():
+            def _on_invalid_lang_error_idle() -> bool:
                 self.emit("error", _("Invalid language code specified."))
                 return GLib.SOURCE_REMOVE
 
-            GLib.idle_add(_on_error_idle, priority=GLib.PRIORITY_DEFAULT)
+            GLib.idle_add(_on_invalid_lang_error_idle, priority=GLib.PRIORITY_DEFAULT)
             return False
 
         success, extracted, error_message = self.decode_image_sync(lang, file, remove_source)
 
         if success:
 
-            def _on_decoded_idle(text, cp):
+            def _on_decoded_idle(text: str, cp: bool) -> bool:
                 self.emit("decoded", text, cp)
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_decoded_idle, extracted, copy, priority=GLib.PRIORITY_DEFAULT)
         else:
 
-            def _on_error_idle(msg):
+            def _on_decode_error_idle(msg: str | None) -> bool:
                 self.emit("error", msg)
                 return GLib.SOURCE_REMOVE
 
-            GLib.idle_add(_on_error_idle, error_message, priority=GLib.PRIORITY_DEFAULT)
+            GLib.idle_add(_on_decode_error_idle, error_message, priority=GLib.PRIORITY_DEFAULT)
 
         return False
 
