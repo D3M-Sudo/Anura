@@ -199,46 +199,62 @@ class AnuraWindow(Adw.ApplicationWindow):
         try:
             self.extracted_page.extracted_text = text
 
-            # Handle OCR autocopy (text content only, NOT URLs)
-            if (self.settings.get_boolean("autocopy") or copy) and text:
-                clipboard_service_instance = get_clipboard_service()
-                clipboard_service_instance.set(text)
-                self.show_toast(_("Text copied to clipboard"))
+            # 1. Extract structured data (emails, URLs, phone numbers) from OCR text
+            preprocessor = get_text_preprocessor()
+            structured = preprocessor.extract_structured_data(text)
 
-            # Extract structured data (emails, URLs, phone numbers) from OCR text
-            try:
-                preprocessor = get_text_preprocessor()
-                structured = preprocessor.extract_structured_data(text)
+            # 2. Identify if the result is primarily a URL (e.g. from a QR code)
+            primary_url = None
+            if structured["urls"]:
+                # If the entire text is just a URL (allowing for whitespace/newlines)
+                candidate = structured["urls"][0]
+                if candidate.strip() == text.strip():
+                    primary_url = candidate
 
-                # Handle URL extraction from QR codes
-                if structured["urls"]:
-                    extracted_url = structured["urls"][0]
+            # 3. Handle URL Flow (Mode A/B)
+            if primary_url:
+                # Security: strip all control characters and whitespace
+                primary_url = primary_url.strip().strip("\n\r\t\v\f")
 
-                    # Security: strip all control characters and whitespace
-                    extracted_url = extracted_url.strip()
-                    extracted_url = extracted_url.strip("\n\r\t\v\f")
+                if uri_validator(primary_url):
+                    if self.settings.get_boolean("autolinks"):
+                        # Behavior A: Open directly in browser (toggle ON)
+                        self._launch_uri(primary_url)
+                        self.show_toast(_("URL opened automatically"))
+                    else:
+                        # Behavior B: Send desktop notification with clickable action
+                        # Do NOT copy URL to clipboard, do NOT open browser automatically
+                        target = GLib.Variant("s", primary_url)
+                        app = Gtk.Application.get_default()
+                        if app and hasattr(app, "notification_service"):
+                            app.notification_service.send_notification_with_action(
+                                notification_id="qr-url",
+                                title=_("QR Code URL Detected"),
+                                body=primary_url,
+                                action_id="app.open-qr-url",
+                                action_target=target,
+                                priority="high",
+                            )
 
-                    if uri_validator(extracted_url):
-                        if self.settings.get_boolean("autolinks"):
-                            # Behavior A: Open directly in browser (toggle ON)
-                            self._launch_uri(extracted_url)
-                            self.show_toast(_("URL opened automatically"))
-                        else:
-                            # Behavior B: Send desktop notification with clickable action
-                            # Do NOT copy URL to clipboard, do NOT open browser
-                            target = GLib.Variant("s", extracted_url)
-                            app = Gtk.Application.get_default()
-                            if app and hasattr(app, "notification_service"):
-                                app.notification_service.send_notification_with_action(
-                                    notification_id="qr-url",
-                                    title=_("QR Code URL Detected"),
-                                    body=extracted_url,
-                                    action_id="app.open-qr-url",
-                                    action_target=target,
-                                    priority="high",
-                                )
+                # 4. Handle URL Clipboard (respecting global autocopy)
+                if self.settings.get_boolean("autocopy") or copy:
+                    clipboard_service_instance = get_clipboard_service()
+                    clipboard_service_instance.set(primary_url)
+                    # Only show "copied" toast if we didn't open the browser automatically
+                    # to avoid toast spam when both are ON.
+                    if not self.settings.get_boolean("autolinks"):
+                        self.show_toast(_("URL copied to clipboard"))
 
-                # Show email toast if emails found
+                logger.debug("Anura: URL-primary result processed")
+
+            else:
+                # 4. Handle Regular Text Flow (Clipboard)
+                if (self.settings.get_boolean("autocopy") or copy):
+                    clipboard_service_instance = get_clipboard_service()
+                    clipboard_service_instance.set(text)
+                    self.show_toast(_("Text copied to clipboard"))
+
+                # Still show toasts for other structured data if found in mixed text
                 if structured["emails"]:
                     email_count = len(structured["emails"])
                     self.show_toast(
@@ -247,7 +263,6 @@ class AnuraWindow(Adw.ApplicationWindow):
                         ),
                     )
 
-                # Show phone toast if phone numbers found
                 if structured["phone_numbers"]:
                     phone_count = len(structured["phone_numbers"])
                     self.show_toast(
@@ -258,15 +273,11 @@ class AnuraWindow(Adw.ApplicationWindow):
                         ).format(n=phone_count),
                     )
 
-            except Exception as e:
-                logger.error(f"Anura: Error extracting structured data: {e}")
-                # Continue without structured data - don't crash the entire OCR flow
-
             # Defer navigation to ExtractedPage until window is properly mapped
             GLib.idle_add(self._navigate_to_extracted_page)
 
-        except (GLib.Error, RuntimeError, AttributeError) as e:
-            logger.error(f"Anura UI Error: {e}")
+        except Exception as e:
+            logger.error(f"Anura UI Error in on_shot_done: {e}")
 
     def on_shot_error(self, _sender: GObject.GObject, message: str) -> None:
         """Handle screenshot capture errors."""

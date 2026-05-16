@@ -19,10 +19,16 @@ def _glib_bindtextdomain(domain: str, localedir: str) -> None:
     import ctypes.util
 
     try:
-        _libname = ctypes.util.find_library("glib-2.0") or ctypes.util.find_library("c")
-        if not _libname:
-            return
-        _lib = ctypes.CDLL(_libname)
+        # In Flatpak and Linux generally, libglib is accessible via soname
+        try:
+            _lib = ctypes.CDLL("libglib-2.0.so.0")
+        except OSError:
+            # Fallback to find_library (fails in Flatpak but works on host)
+            _libname = ctypes.util.find_library("glib-2.0") or ctypes.util.find_library("c")
+            if not _libname:
+                return
+            _lib = ctypes.CDLL(_libname)
+
         _lib.bindtextdomain(domain.encode(), localedir.encode())
         _lib.bind_textdomain_codeset(domain.encode(), b"UTF-8")
         _lib.textdomain(domain.encode())
@@ -582,8 +588,10 @@ class AnuraApplication(Adw.Application):
     def on_about(self, _action: object, _param: object) -> None:
         window = self.props.active_window
 
-        # Adw.AboutDialog interprets copyright as plain text, so no html escaping is needed.
-        _copyright = (
+        # Adw.AboutDialog internally uses a GtkLabel with markup enabled for the copyright
+        # and license block (especially when combined with license links), so ampersands
+        # MUST be escaped to avoid Gtk-WARNING parsing errors.
+        _copyright = html.escape(
             "© 2025-2026 D3M-Sudo & Anura Contributors\n"
             "© 2022-2025 Frog OCR Contributors"
         )
@@ -798,6 +806,13 @@ class AnuraApplication(Adw.Application):
             launcher.launch(None, None, on_launch_finish)
 
     def on_decoded(self, _sender: object, text: str, copy: bool) -> None:
+        # If a window is present, it handles the 'decoded' signal itself to
+        # provide UI feedback (toasts, page navigation, QR handling).
+        # We only proceed here if there is no active window (CLI/silent mode).
+        if self.props.active_window:
+            logger.debug("Anura: Application-level on_decoded skipped as window is active")
+            return
+
         if not text:
             self.notification_service.show_notification(
                 title=_("Anura OCR"),
