@@ -206,15 +206,20 @@ class AnuraWindow(Adw.ApplicationWindow):
                 preprocessor = get_text_preprocessor()
                 structured = preprocessor.extract_structured_data(text)
 
-                # Handle URL extraction (keep existing behaviour)
+                # Handle URL extraction
                 if structured["urls"]:
                     extracted_url = structured["urls"][0]
                     if uri_validator(extracted_url):
+                        # Copy URL to clipboard if autocopy is enabled (default: true)
+                        if self.settings.get_boolean("autocopy"):
+                            clipboard_service_instance = get_clipboard_service()
+                            clipboard_service_instance.set(extracted_url)
+
                         if self.settings.get_boolean("autolinks"):
                             self._launch_uri(extracted_url)
                             self.show_toast(_("URL opened automatically"))
                         else:
-                            self._show_url_toast(extracted_url)
+                            self._show_qr_url_toast(extracted_url)
 
                 # Show email toast if emails found
                 if structured["emails"]:
@@ -635,6 +640,19 @@ class AnuraWindow(Adw.ApplicationWindow):
     def _show_url_toast(self, url: str) -> None:
         toast = Adw.Toast(
             title=_("Text contains a link"),
+            button_label=_("Open"),
+        )
+        toast.connect("button-clicked", lambda _: self._launch_uri(url))
+        self.toast_overlay.add_toast(toast)
+
+    def _show_qr_url_toast(self, url: str) -> None:
+        """Show interactive toast for QR-detected URL with clipboard feedback."""
+        if self.settings.get_boolean("autocopy"):
+            title = _("URL copied to clipboard")
+        else:
+            title = _("URL detected")
+        toast = Adw.Toast(
+            title=title,
             button_label=_("Open"),
         )
         toast.connect("button-clicked", lambda _: self._launch_uri(url))
