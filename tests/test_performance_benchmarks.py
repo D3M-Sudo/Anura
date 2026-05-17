@@ -40,8 +40,10 @@ class TestPerformanceBenchmarks:
     def test_memory_leak_check_repeated_enhancement(self):
         # Basic check for memory growth by running 50 iterations
         import gc
+
         try:
             import psutil
+
             process = psutil.Process(os.getpid())
             initial_mem = process.memory_info().rss
 

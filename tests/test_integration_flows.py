@@ -1,8 +1,11 @@
 # tests/test_integration_flows.py
+import pytest
+
+pytest.importorskip("gi")
+
 from unittest.mock import MagicMock, patch
 
 from gi.repository import GLib
-import pytest
 
 from anura.services.screenshot_service import ScreenshotService
 from anura.services.share_service import ShareService
@@ -21,6 +24,7 @@ class TestIntegrationFlows:
         # Track if share was called
         share_called = []
         with patch.object(share_service, "share") as mock_share:
+
             def on_decoded(service, text, copy):
                 share_service.share("email", text)
                 share_called.append(text)
@@ -42,6 +46,7 @@ class TestIntegrationFlows:
 
         # Track if TTS generate was called
         with patch.object(tts_service, "generate", return_value="/tmp/test.mp3") as mock_gen:
+
             def on_decoded(service, text, copy):
                 tts_service.generate(text, lang="en")
 
@@ -59,6 +64,7 @@ class TestIntegrationFlows:
         with patch.object(service, "_try_host_screenshot_fallback") as mock_fallback:
             # Create a mock error that looks like portal backend missing
             from gi.repository import Gio
+
             error = GLib.Error.new_literal(Gio.io_error_quark(), "Screenshot failed", Gio.IOErrorEnum.FAILED)
 
             # We need to mock the portal object itself

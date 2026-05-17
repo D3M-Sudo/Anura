@@ -4,6 +4,8 @@ from unittest.mock import patch
 
 import pytest
 
+pytest.importorskip("gi")
+
 import anura.config
 from anura.types.download_state import DownloadState
 from anura.types.language_item import LanguageItem
@@ -14,7 +16,7 @@ class TestConfig:
         assert re.match(anura.config.LANG_CODE_PATTERN, "eng")
         assert re.match(anura.config.LANG_CODE_PATTERN, "chi_sim")
         assert re.match(anura.config.LANG_CODE_PATTERN, "eng+ita")
-        assert not re.match(anura.config.LANG_CODE_PATTERN, "a") # too short
+        assert not re.match(anura.config.LANG_CODE_PATTERN, "a")  # too short
         assert not re.match(anura.config.LANG_CODE_PATTERN, "very_long_language_code_exceeding_limit")
         assert not re.match(anura.config.LANG_CODE_PATTERN, "eng; drop table")
 
@@ -32,6 +34,7 @@ class TestConfig:
         config = anura.config.get_tesseract_config("invalid!")
         assert "--psm 3" in config
 
+
 class TestDownloadState:
     def test_percentage_zero_total(self):
         ds = DownloadState(total=0, progress=10)
@@ -46,6 +49,7 @@ class TestDownloadState:
         assert ds.percentage == 100.0
         ds = DownloadState(total=100, progress=0)
         assert ds.percentage == 0.0
+
 
 class TestLanguageItem:
     @pytest.mark.gtk

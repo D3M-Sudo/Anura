@@ -1,7 +1,9 @@
 # tests/test_phase2_e.py
-from unittest.mock import patch
-
 import pytest
+
+pytest.importorskip("gi")
+
+from unittest.mock import patch
 
 from anura.language_manager import LanguageManager
 from anura.main import AnuraApplication
@@ -12,8 +14,10 @@ class TestLanguageManager:
     def test_init_tessdata(self, tmp_path):
         tessdata = tmp_path / "tessdata"
 
-        with patch("anura.language_manager.TESSDATA_DIR", str(tessdata)), \
-             patch("anura.language_manager.TESSDATA_SYSTEM_DIR", str(tmp_path / "system")):
+        with (
+            patch("anura.language_manager.TESSDATA_DIR", str(tessdata)),
+            patch("anura.language_manager.TESSDATA_SYSTEM_DIR", str(tmp_path / "system")),
+        ):
             lm = LanguageManager()
             lm.init_tessdata()
             assert tessdata.exists()
@@ -37,7 +41,8 @@ class TestLanguageManager:
     def test_get_language_code(self):
         lm = LanguageManager()
         assert lm.get_language_code("English") == "eng"
-        assert lm.get_language_code("Unknown") == "eng" # Default fallback
+        assert lm.get_language_code("Unknown") == "eng"  # Default fallback
+
 
 class TestAnuraApplication:
     @pytest.mark.gtk
@@ -46,6 +51,7 @@ class TestAnuraApplication:
         with patch("anura.main.Gio.Resource.load"):
             app = AnuraApplication()
             assert app.get_application_id() == "com.github.d3msudo.anura"
+
 
 class TestAnuraWindow:
     @pytest.mark.gtk
@@ -56,6 +62,7 @@ class TestAnuraWindow:
 
             from anura.services.screenshot_service import ScreenshotService
             from anura.window import AnuraWindow
+
             app = Adw.Application()
             backend = ScreenshotService()
             win = AnuraWindow(backend=backend, application=app)

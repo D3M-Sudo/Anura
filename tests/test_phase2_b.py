@@ -1,9 +1,12 @@
 # tests/test_phase2_b.py
+import pytest
+
+pytest.importorskip("gi")
+
 import threading
 import time
 
 from gi.repository import GLib, GObject
-import pytest
 
 from anura.gobject_worker import GObjectWorker
 from anura.utils.signal_manager import SignalManagerMixin
@@ -56,6 +59,7 @@ class TestGObjectWorker:
         assert len(error_container) == 1
         assert isinstance(error_container[0], ValueError)
 
+
 class TestSingleton:
     def test_singleton_identity(self):
         class MyService:
@@ -68,19 +72,23 @@ class TestSingleton:
     def test_singleton_reset(self):
         class MyService:
             pass
+
         s1 = get_instance(MyService)
         ThreadSafeSingleton.reset_for_testing()
         s2 = get_instance(MyService)
         assert s1 is not s2
 
+
 class TestSignalManager:
     @pytest.mark.gtk
     def test_signal_manager_cleanup(self):
         from typing import ClassVar
+
         class MockObject(GObject.GObject, SignalManagerMixin):
             __gsignals__: ClassVar[dict[str, tuple]] = {
                 "test-signal": (GObject.SignalFlags.RUN_FIRST, None, ()),
             }
+
             def __init__(self):
                 GObject.GObject.__init__(self)
                 SignalManagerMixin.__init__(self)
@@ -93,10 +101,11 @@ class TestSignalManager:
         obj.disconnect_all_signals()
         assert obj.get_tracked_signal_count() == 0
 
+
 class TestUriValidator:
     def test_uri_validator_basics(self):
         assert uri_validator("https://google.com") is True
         assert uri_validator("http://localhost:8080") is True
         assert uri_validator("file:///etc/passwd") is False
         assert uri_validator("javascript:alert(1)") is False
-        assert uri_validator("   https://google.com   ") is True # Should strip
+        assert uri_validator("   https://google.com   ") is True  # Should strip

@@ -1,7 +1,9 @@
 # tests/test_phase2_d.py
-from unittest.mock import patch
-
 import pytest
+
+pytest.importorskip("gi")
+
+from unittest.mock import patch
 
 from anura.services.clipboard_service import ClipboardService
 from anura.services.screenshot_service import ScreenshotService
@@ -37,6 +39,7 @@ class TestShareService:
         assert "subject=Extracted%20Text" in link
         assert "body=hello%20world" in link
 
+
 class TestTTSService:
     @pytest.mark.gtk
     def test_map_tesseract_to_gtts(self):
@@ -61,6 +64,7 @@ class TestTTSService:
         assert service.generate("") == ""
         assert service.generate("   ") == ""
 
+
 class TestSettings:
     @pytest.mark.gtk
     def test_settings_initialization(self):
@@ -69,6 +73,7 @@ class TestSettings:
             assert s is not None
         except RuntimeError as e:
             pytest.skip(f"GSettings schema not found: {e}")
+
 
 class TestScreenshotService:
     @pytest.mark.gtk
@@ -94,6 +99,7 @@ class TestScreenshotService:
         success, text, err = service._format_decode_result(None, None)
         assert success is False
         assert "No text found" in err
+
 
 class TestClipboardService:
     @pytest.mark.gtk

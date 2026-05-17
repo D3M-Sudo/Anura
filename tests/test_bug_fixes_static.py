@@ -173,10 +173,10 @@ def test_language_manager_remove_language_validates_code() -> None:
             and node.func.value.id == "re"
         ):
             # Check if LANG_CODE_PATTERN is passed to re.match
-                for arg in node.args:
-                    if isinstance(arg, ast.Name) and arg.id == "LANG_CODE_PATTERN":
-                        found_validation = True
-                        break
+            for arg in node.args:
+                if isinstance(arg, ast.Name) and arg.id == "LANG_CODE_PATTERN":
+                    found_validation = True
+                    break
     assert found_validation, (
         "LanguageManager.remove_language() must validate the code against "
         "LANG_CODE_PATTERN to prevent path traversal attacks."

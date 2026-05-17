@@ -15,13 +15,7 @@ class TestSecurityAudit:
         # Tesseract command: --tessdata-dir "{TESSDATA_DIR}" --psm 3 --oem 1
         # If we can inject something like 'eng" ; rm -rf / ; "'
 
-        malicious_codes = [
-            'eng" ; rm -rf /',
-            'eng --param value',
-            'eng$(whoami)',
-            '../../etc/passwd',
-            'eng\n\r'
-        ]
+        malicious_codes = ['eng" ; rm -rf /', "eng --param value", "eng$(whoami)", "../../etc/passwd", "eng\n\r"]
 
         for code in malicious_codes:
             assert not re.match(LANG_CODE_PATTERN, code), f"Malicious code '{code}' bypassed pattern!"
@@ -42,13 +36,7 @@ class TestSecurityAudit:
 
     def test_host_tool_name_validation(self):
         # Ensure tool names in fallback are strictly validated
-        malicious_tools = [
-            "gnome-screenshot; rm -rf /",
-            "scrot && touch /tmp/pwned",
-            "$(whoami)",
-            "import\n",
-            " tool"
-        ]
+        malicious_tools = ["gnome-screenshot; rm -rf /", "scrot && touch /tmp/pwned", "$(whoami)", "import\n", " tool"]
 
         for tool in malicious_tools:
             with pytest.raises(ValueError, match="unsafe tool name"):
