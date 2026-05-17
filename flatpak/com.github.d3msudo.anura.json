@@ -22,27 +22,16 @@
     "modules": [
         {
             "name": "zbar",
-            "buildsystem": "autotools",
+            "buildsystem": "simple",
             "cleanup": [
                 "/bin"
             ],
-            "config-opts": [
-                "--disable-static",
-                "--without-gtk",
-                "--without-python",
-                "--without-imagemagick",
-                "--without-dbus",
-                "--without-qt",
-                "--without-x",
-                "--disable-video",
-                "--disable-doc",
-                "--disable-introspection"
-            ],
-            "modules-configure-commands": [
+            "build-commands": [
                 "sed -i 's/AC_CHECK_LIB(\\[pthread\\], \\[main\\],/AC_CHECK_LIB([c], [pthread_create],/g' configure.ac",
-                "autoreconf -vfi"
-            ],
-            "post-install": [
+                "autoreconf -vfi",
+                "./configure --prefix=/app --disable-static --without-gtk --without-python --without-imagemagick --without-dbus --without-qt --without-x --disable-video --disable-doc --disable-introspection",
+                "make -j$(nproc)",
+                "make install",
                 "install -Dm0644 LICENSE.md $FLATPAK_DEST/share/licenses/com.github.d3msudo.anura/zbar/LICENSE.md"
             ],
             "sources": [
