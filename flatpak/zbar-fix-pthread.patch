@@ -1,13 +1,7 @@
-diff --git a/configure.ac b/configure.ac
-index a35b2e9..f872cc4 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -643,5 +643,5 @@ AS_IF([test "x$enable_pthread" != "xno"], [
-   AC_CHECK_HEADERS([pthread.h], [], [
-     AC_MSG_ERROR([required pthread headers not found])
+@@ -643,3 +643,3 @@
    ])
 -  AC_CHECK_LIB([pthread], [main], [], [
 +  AC_CHECK_LIB([c], [pthread_create], [], [
      AC_MSG_ERROR([Pthread library not found])
-   ])
- ])
