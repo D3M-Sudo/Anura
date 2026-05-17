@@ -1,7 +1,3 @@
-import pytest
-
-pytest.importorskip("gi")
-
 # tests/conftest.py
 #
 # Shared fixtures and setup for Anura test suite.
