@@ -50,19 +50,44 @@ class GObjectWorker:
                 result = cmd(*cmd_args)
                 # Return result to the UI thread safely
                 if cb:
-                    GLib.idle_add(cb, result)
+                    # Use a wrapper that ensures False is returned to GLib.idle_add
+                    # while passing the result to the actual callback.
+                    def cb_wrapper(res):
+                        try:
+                            cb(res)
+                        except Exception:
+                            logging.exception("Unhandled error in GObjectWorker success callback")
+                        return GLib.SOURCE_REMOVE
+
+                    GLib.idle_add(cb_wrapper, result, priority=GLib.PRIORITY_DEFAULT)
             except (KeyboardInterrupt, SystemExit):
                 # Re-raise to allow clean shutdown
                 raise
             except (OSError, ValueError, RuntimeError) as e:
                 # Handle expected operational errors (file I/O, invalid values, runtime issues)
                 tb_str = traceback.format_exc()
-                GLib.idle_add(eb, e, tb_str)
+
+                def eb_wrapper(error, tb):
+                    try:
+                        eb(error, tb)
+                    except Exception:
+                        logging.exception("Unhandled error in GObjectWorker error callback")
+                    return GLib.SOURCE_REMOVE
+
+                GLib.idle_add(eb_wrapper, e, tb_str, priority=GLib.PRIORITY_DEFAULT)
             except Exception as e:
                 # Handle truly unexpected errors (logical errors, system failures)
                 tb_str = traceback.format_exc()
                 logging.error(f"Unexpected error in GObjectWorker: {e}")
-                GLib.idle_add(eb, e, tb_str)
+
+                def eb_wrapper(error, tb):
+                    try:
+                        eb(error, tb)
+                    except Exception:
+                        logging.exception("Unhandled error in GObjectWorker fallback error callback")
+                    return GLib.SOURCE_REMOVE
+
+                GLib.idle_add(eb_wrapper, e, tb_str, priority=GLib.PRIORITY_DEFAULT)
 
         # Use default error handler if none provided
         if errorback is None:

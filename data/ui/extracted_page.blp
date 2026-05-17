@@ -1,18 +1,15 @@
 using Gtk 4.0;
 using Adw 1;
 
+translation-domain 'com.github.d3msudo.anura';
+
 template $ExtractedPage : Adw.NavigationPage {
-  title: "Extracted";
+  title: _("Extracted");
 
   Adw.ToolbarView {
 
     [top]
     Adw.HeaderBar headerbar {
-
-      [title]
-      Adw.WindowTitle window_title {
-        title: _("Extracted Text");
-      }
 
       // [start]
       // MenuButton lang_combo {
@@ -73,8 +70,6 @@ template $ExtractedPage : Adw.NavigationPage {
         StackPage {
           name: "spinner";
           child: Gtk.Spinner listen_spinner {
-            width-request: 34;
-            height-request: 34;
             halign: center;
             valign: center;
           };
@@ -151,6 +146,20 @@ template $ExtractedPage : Adw.NavigationPage {
         wrap-mode: word_char;
 
         buffer: TextBuffer buffer {};
+      }
+    }
+
+    [bottom]
+    Box {
+      styles ["footer"]
+
+      Label stats_label {
+        halign: end;
+        hexpand: true;
+        margin-end: 12;
+        margin-top: 6;
+        margin-bottom: 6;
+        styles ["dim-label"]
       }
     }
   }

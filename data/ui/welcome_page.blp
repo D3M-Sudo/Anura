@@ -1,6 +1,8 @@
 using Gtk 4.0;
 using Adw 1;
 
+translation-domain 'com.github.d3msudo.anura';
+
 template $WelcomePage : Adw.NavigationPage {
   title: _("Welcome");
 
@@ -11,7 +13,7 @@ template $WelcomePage : Adw.NavigationPage {
         
         [title]
         Adw.WindowTitle {
-          title: "Anura";
+          title: _("Anura");
         }
 
         [start]
@@ -31,11 +33,14 @@ template $WelcomePage : Adw.NavigationPage {
           icon-name: "open-menu-symbolic";
           menu-model: primary_menu;
           tooltip-text: _("Open menu");
+          accessibility {
+            label: _("Open menu");
+          }
         }
       }
 
       Adw.StatusPage welcome {
-        title: "Anura";
+        title: _("Anura");
         description: _("Extract text from anywhere");
         icon-name: "com.github.d3msudo.anura";
 
@@ -87,7 +92,7 @@ template $WelcomePage : Adw.NavigationPage {
                 spacing: 6;
                 Image { icon-name: "edit-paste-symbolic"; }
                 Label {
-                  label: _("Paste Image");
+                  label: _("_Paste Image");
                   use-underline: true;
                 }
               };
@@ -102,7 +107,7 @@ template $WelcomePage : Adw.NavigationPage {
                 spacing: 6;
                 Image { icon-name: "folder-drag-accept-symbolic"; }
                 Label {
-                  label: _("Drop Image");
+                  label: _("_Drop Image");
                   use-underline: true;
                 }
               };
