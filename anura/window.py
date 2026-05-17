@@ -399,8 +399,9 @@ class AnuraWindow(Adw.ApplicationWindow):
         """Process an image file directly from CLI."""
         try:
             # Validate file size to prevent memory issues with very large images
-            # Use lstat to not follow symlinks (security: prevent symlink bypass)
-            file_size = os.lstat(file_path).st_size
+            # We use getsize() which follows symlinks to ensure the actual
+            # file content doesn't exceed our 50MB limit (Denial of Service).
+            file_size = os.path.getsize(file_path)
             if file_size > self.MAX_IMAGE_SIZE_BYTES:
                 self.show_toast(
                     _("Image too large: {size}MB (max {max}MB)").format(
