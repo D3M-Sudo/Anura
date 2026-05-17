@@ -1,19 +1,54 @@
 import contextlib
 import gettext
+import locale
 import os
 import sys
 import threading
 
 
 # Initialize localization
+def _glib_bindtextdomain(domain: str, localedir: str) -> None:
+    """Bind the translation domain at the GLib/C-library level via ctypes.
+
+    GLib.bindtextdomain() è stato rimosso dalle PyGObject bindings in GLib 2.76+.
+    GtkBuilder usa g_dgettext() / dgettext() al livello C per risolvere le stringhe
+    translatable="yes" nei file .ui. La soluzione primaria è translation-domain in
+    ogni .blp; questa funzione è un fallback belt-and-suspenders for the C domain.
+    """
+    import ctypes
+    import ctypes.util
+
+    try:
+        # In Flatpak and Linux generally, libglib is accessible via soname
+        try:
+            _lib = ctypes.CDLL("libglib-2.0.so.0")
+        except OSError:
+            # Fallback to find_library (fails in Flatpak but works on host)
+            _libname = ctypes.util.find_library("glib-2.0") or ctypes.util.find_library("c")
+            if not _libname:
+                return
+            _lib = ctypes.CDLL(_libname)
+
+        _lib.bindtextdomain(domain.encode(), localedir.encode())
+        _lib.bind_textdomain_codeset(domain.encode(), b"UTF-8")
+        _lib.textdomain(domain.encode())
+    except (OSError, AttributeError):
+        # Non-fatal: the translation-domain in .blp is the primary mechanism
+        pass
+
+
 def _setup_i18n():
-    project_name = "anura"
+
+    from anura.config import APP_ID
+
+    project_name = APP_ID
     # Priority: standard installation -> Flatpak -> relative (dev)
     possible_localedirs = [
-        "/usr/share/locale",
-        "/usr/local/share/locale",
         "/app/share/locale",
+        os.path.join(os.path.dirname(__file__), "..", "builddir", "po"),
         os.path.join(os.path.dirname(__file__), "..", "po"),
+        "/usr/local/share/locale",
+        "/usr/share/locale",
     ]
 
     localedir = None
@@ -22,9 +57,39 @@ def _setup_i18n():
             localedir = path
             break
 
-    if localedir:
-        gettext.bindtextdomain(project_name, localedir)
-        gettext.textdomain(project_name)
+    # Step 1: C-level locale for GTK/Libadwaita
+    try:
+        locale.setlocale(locale.LC_ALL, "")
+    except locale.Error as e:
+        print(
+            f"Warning: locale.setlocale(LC_ALL, '') failed: {e}. "
+            "Continuing with the existing runtime locale environment.",
+            file=sys.stderr,
+        )
+
+    if not localedir:
+        return
+
+    # Step 2: Python gettext (used by _() in all .py files)
+    gettext.bindtextdomain(project_name, localedir)
+    gettext.textdomain(project_name)
+
+    # Step 3: C-level textdomain — separate from GLib block so that a
+    # GLib failure cannot mask a local setup failure.
+    # GtkBuilder falls back to dgettext(NULL, ...) which uses this domain when
+    # <interface> doesn't have an explicit domain attribute.
+    try:
+        locale.bindtextdomain(project_name, localedir)
+        locale.textdomain(project_name)
+        if hasattr(locale, "bind_textdomain_codeset"):
+            locale.bind_textdomain_codeset(project_name, "UTF-8")
+    except (AttributeError, OSError) as e:
+        print(f"Warning: C-level locale binding failed: {e}", file=sys.stderr)
+
+    # Step 4: GLib-level binding via ctypes (belt-and-suspenders).
+    # GLib.bindtextdomain() has been removed from PyGObject in GLib 2.76+.
+    # The primary fix is translation-domain in each .blp; this is the fallback.
+    _glib_bindtextdomain(project_name, localedir)
 
 
 _setup_i18n()
@@ -65,16 +130,6 @@ logger.add(
     colorize=True,
     catch=True,
 )
-from anura.language_manager import get_language_manager
-from anura.services.clipboard_service import get_clipboard_service
-from anura.services.notification_service import (
-    HAS_LIBNOTIFY,
-    NotificationService,
-)
-from anura.services.screenshot_service import ScreenshotService
-from anura.services.settings import settings
-from anura.utils import cleanup_orphaned_resources
-from anura.window import AnuraWindow
 
 
 def _load_gresource_bundle() -> bool:
@@ -89,7 +144,6 @@ def _load_gresource_bundle() -> bool:
     with contextlib.suppress(GLib.Error):
         # Try to lookup a known resource - if found, bundle is already loaded
         Gio.resources_lookup_data("/com/github/d3msudo/anura/window.ui", Gio.ResourceLookupFlags.NONE)
-        logger.debug("GResource bundle already registered (likely by anura.in)")
         return True
 
     # Determine possible paths for the gresource bundle
@@ -107,21 +161,31 @@ def _load_gresource_bundle() -> bool:
         if os.path.exists(path):
             try:
                 resource = Gio.Resource.load(path)
-                resource.register()
-                logger.debug(f"Loaded GResource bundle from {path}")
+                Gio.resources_register(resource)
                 return True
-            except Exception as e:
-                logger.warning(f"Failed to load GResource from {path}: {e}")
+            except Exception:
                 continue
 
-    logger.error("Could not find or load GResource bundle - UI files may not be available")
     return False
 
 
 # Load GResource before importing any widgets with @Gtk.Template decorators
 if not _load_gresource_bundle():
-    logger.critical("GResource bundle is required to run Anura. The application cannot start.")
+    # If logger isn't initialized yet, use print
+    print("CRITICAL: GResource bundle is required to run Anura. The application cannot start.", file=sys.stderr)
     sys.exit(1)
+
+
+from anura.language_manager import get_language_manager
+from anura.services.clipboard_service import get_clipboard_service
+from anura.services.notification_service import (
+    HAS_LIBNOTIFY,
+    NotificationService,
+)
+from anura.services.screenshot_service import ScreenshotService
+from anura.services.settings import settings
+from anura.utils import cleanup_orphaned_resources
+from anura.window import AnuraWindow
 
 
 class AnuraApplication(Adw.Application):
@@ -129,7 +193,7 @@ class AnuraApplication(Adw.Application):
 
     def __init__(self, version: str | None = None) -> None:
         super().__init__(application_id=APP_ID, flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
-        self.backend = None
+        self.backend: ScreenshotService | None = None
         self.version = version
         self.settings = settings
 
@@ -256,6 +320,12 @@ class AnuraApplication(Adw.Application):
         self.create_action("about", self.on_about)
         self.create_action("github_star", self.on_github_star)
         self.create_action("report_issue", self.on_report_issue)
+
+        # Register action for QR code notification clicks (Flatpak-safe Gio.Notification)
+        open_qr_action = Gio.SimpleAction.new("open-qr-url", GLib.VariantType.new("s"))
+        open_qr_action.connect("activate", self._on_open_qr_notification)
+        self.add_action(open_qr_action)
+        logger.debug("Anura: Registered action 'app.open-qr-url' for notification click handling")
 
     def do_activate(self) -> None:
         win = self.props.active_window
@@ -517,54 +587,74 @@ class AnuraApplication(Adw.Application):
 
     def on_about(self, _action: object, _param: object) -> None:
         window = self.props.active_window
+
+        # Adw.AboutDialog internally uses a GtkLabel with markup enabled for the copyright
+        # and license block (especially when combined with license links), so ampersands
+        # MUST be escaped to avoid Gtk-WARNING parsing errors.
+        _copyright = html.escape(
+            "© 2025-2026 D3M-Sudo & Anura Contributors\n"
+            "© 2022-2025 Frog OCR Contributors"
+        )
+
+        def _schedule_present() -> bool:
+            """Stage 2: Present the AboutDialog in a separate iteration.
+
+            This runs AFTER Stage 1 has completed, ensuring the popover's
+            internal teardown has fully propagated through the GTK event loop
+            before the AboutDialog causes a widget hierarchy update.
+            """
+            if window:
+                window.set_focus(None)
+
+            about_window = Adw.AboutDialog(
+                application_name="Anura",
+                application_icon=APP_ID,
+                version=self.version,
+                copyright=_copyright,
+                website="https://github.com/D3M-Sudo/Anura",
+                license_type=Gtk.License.MIT_X11,
+                developers=["D3M-Sudo"],
+                designers=["D3M-Sudo"],
+            )
+
+            # Add legal sections BEFORE presenting to prevent widget lifecycle warnings
+            about_window.add_legal_section(
+                _("Acknowledgements"),
+                "© 2022-2025 Andrey Maksimov (Frog OCR)",
+                Gtk.License.UNKNOWN,
+                _(
+                    "Built with Tesseract OCR, GTK4, Libadwaita, and other open source components."
+                ),
+            )
+            about_window.add_link(_("Changelog"), "https://github.com/D3M-Sudo/Anura/blob/main/CHANGELOG.md")
+            about_window.add_link(_("Report an Issue"), "https://github.com/D3M-Sudo/Anura/issues")
+
+            about_window.present(window)
+            return GLib.SOURCE_REMOVE
+
+        def _close_popovers() -> bool:
+            """Stage 1: Close open popovers and defer dialog presentation.
+
+            This runs first to pop down any visible popovers (primary menu,
+            share popup) before the AboutDialog is created. The popover's
+            internal state machine needs an iteration to complete teardown,
+            so we schedule the dialog presentation in a second idle callback.
+            """
+            if window and hasattr(window, "close_popovers"):
+                window.set_focus(None)
+                window.close_popovers()
+
+            # Schedule Stage 2 in a separate idle iteration to allow
+            # GTK to finish the popover teardown.
+            GLib.idle_add(_schedule_present)
+            return GLib.SOURCE_REMOVE
+
+        # Stage 0: Immediate focus release
         if window:
-            # Clear focus to prevent "Broken accounting of active state" warnings
-            # when the transient dialog takes over.
             window.set_focus(None)
 
-        about_window = Adw.AboutDialog(
-            application_name="Anura",
-            application_icon=APP_ID,
-            version=self.version,
-            copyright="© 2025-2026 D3M-Sudo &amp; Anura Contributors\n© 2022-2025 Frog OCR Contributors",
-            website="https://github.com/D3M-Sudo/Anura",
-            license_type=Gtk.License.MIT_X11,
-            license=(
-                "MIT License\n\n"
-                "Permission is hereby granted, free of charge, to any person obtaining a copy of "
-                'this software and associated documentation files (the "Software"), to deal in '
-                "the Software without restriction, including without limitation the rights to "
-                "use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of "
-                "the Software, and to permit persons to whom the Software is furnished to do so, "
-                "subject to the following conditions:\n\n"
-                "The above copyright notice and this permission notice shall be included in all "
-                "copies or substantial portions of the Software.\n\n"
-                'THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR '
-                "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, "
-                "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE "
-                "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER "
-                "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, "
-                "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE "
-                "SOFTWARE."
-            ),
-            developers=["Andrey Maksimov (Frog OCR)", "D3M-Sudo (Anura)"],
-            designers=["D3M-Sudo"],
-            release_notes=self._get_release_notes(),
-        )
-
-        # Add legal sections BEFORE presenting to prevent widget lifecycle warnings
-        about_window.add_legal_section(
-            _("Acknowledgements"),
-            "© 2022-2025 Andrey Maksimov",
-            Gtk.License.MIT_X11,
-            _(
-                "Anura is a fork of Frog OCR. This software uses Tesseract OCR, Leptonica, "
-                "GTK4, Libadwaita, gTTS, Pillow, PyZBar, and other open source components."
-            ),
-        )
-        about_window.add_link(_("Changelog"), "https://github.com/D3M-Sudo/Anura/blob/main/CHANGELOG.md")
-
-        about_window.present(window)
+        # Stage 1: Close popovers (first idle callback)
+        GLib.idle_add(_close_popovers)
 
     def on_github_star(self, _action: object, _param: object) -> None:
         """Open GitHub repository page in the default browser."""
@@ -666,10 +756,65 @@ class AnuraApplication(Adw.Application):
         clipboard_service_instance = get_clipboard_service()
         clipboard_service_instance.read_texture()
 
+    def _on_open_qr_notification(self, _action: Gio.SimpleAction, parameter: GLib.Variant | None) -> None:
+        """Handle QR code notification click — open the URL in the default browser.
+
+        Triggered when the user clicks a Gio.Notification sent via
+        send_notification_with_action(). The URL is extracted from the
+        action's target parameter, sanitized, validated, and launched.
+
+        This runs inside the Flatpak sandbox via Gio.SimpleAction, avoiding
+        libnotify callback sandbox issues.
+        """
+        if parameter is None:
+            logger.warning("Anura: open-qr-url action triggered without a URL parameter")
+            return
+
+        # Sanitize: strip all control characters and whitespace (defense in depth)
+        url = parameter.get_string().strip()
+        url = url.strip("\n\r\t\v\f")
+
+        if not url:
+            logger.warning("Anura: open-qr-url action triggered with empty URL")
+            return
+
+        # Security: validate URL before launching (defense in depth)
+        from anura.utils import uri_validator
+
+        if not uri_validator(url):
+            logger.warning(f"Anura: Blocked invalid URL from notification: {url}")
+            window = self.get_active_window()
+            if window and hasattr(window, "show_toast"):
+                window.show_toast(_("Invalid URL blocked for security"))
+            return
+
+        # Launch URL via Gtk.UriLauncher
+        window = self.get_active_window()
+        if window and hasattr(window, "_launch_uri"):
+            window._launch_uri(url)
+        else:
+            # Fallback: launch directly if no window available
+            launcher = Gtk.UriLauncher.new(url)
+
+            def on_launch_finish(_launcher: object, result: Gio.AsyncResult) -> None:
+                try:
+                    launcher.launch_finish(result)
+                except GLib.Error as e:
+                    logger.error(f"Anura: Failed to open URL from notification: {e.message}")
+
+            launcher.launch(None, None, on_launch_finish)
+
     def on_decoded(self, _sender: object, text: str, copy: bool) -> None:
+        # If a window is present, it handles the 'decoded' signal itself to
+        # provide UI feedback (toasts, page navigation, QR handling).
+        # We only proceed here if there is no active window (CLI/silent mode).
+        if self.props.active_window:
+            logger.debug("Anura: Application-level on_decoded skipped as window is active")
+            return
+
         if not text:
             self.notification_service.show_notification(
-                title="Anura OCR",
+                title=_("Anura OCR"),
                 body=_("No text found. Try to grab another region."),
             )
             return
@@ -678,13 +823,13 @@ class AnuraApplication(Adw.Application):
             clipboard_service_instance = get_clipboard_service()
             clipboard_service_instance.set(text)
             self.notification_service.show_notification(
-                title="Anura OCR",
+                title=_("Anura OCR"),
                 body=_("Text extracted and copied to clipboard."),
             )
         else:
             # Text extracted but not copied - show notification
             self.notification_service.show_notification(
-                title="Anura OCR",
+                title=_("Anura OCR"),
                 body=_("Text extracted successfully."),
             )
 
@@ -695,7 +840,7 @@ class AnuraApplication(Adw.Application):
             logger.info("Anura: Screenshot cancelled by user.")
             return
         # Real error - show notification
-        self.notification_service.show_notification(title="Anura OCR", body=message)
+        self.notification_service.show_notification(title=_("Anura OCR"), body=message)
 
     def on_listen(self, _sender: object, _event: object) -> None:
         window = self.get_active_window()

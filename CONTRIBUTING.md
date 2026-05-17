@@ -154,7 +154,7 @@ ruff format anura/
 2. If the feature has a UI, add its `.blp` file in `data/ui/` and update `data/meson.build`
 3. If the feature adds a new Python file to `anura/`, it will be picked up automatically by `install_subdir`
 4. All user-facing strings must use `_()` — never raw strings in UI code
-5. Run `./generate_pot.sh` after adding new translatable strings
+5. Run `cd po && ./update_potfiles.sh` after adding new translatable strings
 6. Update `AGENTS.md` → Module Reference if you add a new module
 
 ## Files You Must NOT Edit Directly
@@ -163,7 +163,7 @@ ruff format anura/
 | ---- | ------- |
 | `anura/_release_notes.py` | Generated at build time by Meson from CHANGELOG.md |
 | `data/ui/*.ui` | Compiled from `.blp` by blueprint-compiler — edit `.blp` instead |
-| `po/*.po` | Maintained by translators — use `./generate_pot.sh` to update |
+| `po/*.po` | Maintained by translators — use `cd po && ./update_potfiles.sh` to update |
 | `flatpak/com.github.d3msudo.anura.json` | Dependency versions are pinned with SHA — update via FEDC only |
 | `CHANGELOG.md` | Manual entries only — follows Keep a Changelog format |
 

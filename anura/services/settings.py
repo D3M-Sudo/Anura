@@ -7,6 +7,7 @@
 # to avoid ModuleNotFoundError in Flatpak sandbox.
 
 import threading
+from typing import Any
 
 import gi
 
@@ -58,7 +59,7 @@ class _LazySettings:
                     self._instance = Settings()
         return self._instance
 
-    def __getattr__(self, name: str) -> object:
+    def __getattr__(self, name: str) -> Any:
         """Delegate all attribute access to the actual Settings instance."""
         return getattr(self._get_instance(), name)
 

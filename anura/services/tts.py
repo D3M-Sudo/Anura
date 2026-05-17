@@ -287,7 +287,11 @@ class TTSService(GObject.GObject):
         self._bus = self.player.get_bus()
 
         # Thread-safety: schedule bus operations on main thread via idle_add
-        GLib.idle_add(self._setup_bus_watch)
+        def _on_setup_idle():
+            self._setup_bus_watch()
+            return GLib.SOURCE_REMOVE
+
+        GLib.idle_add(_on_setup_idle)
 
         logger.info("Anura TTSService: Setting GStreamer state to PLAYING")
         self.player.set_state(Gst.State.PLAYING)
@@ -341,7 +345,12 @@ class TTSService(GObject.GObject):
                         logger.warning("Anura TTS: Failed to cleanup temporary speech file")
                 elif filepath:
                     logger.debug("Anura TTS: Cleanup skipped, file already removed")
-            GLib.idle_add(self.emit, "stop", True)
+
+            def _on_stop_idle():
+                self.emit("stop", True)
+                return GLib.SOURCE_REMOVE
+
+            GLib.idle_add(_on_stop_idle)
             return
 
         elif message.type == Gst.MessageType.ERROR:
@@ -354,7 +363,12 @@ class TTSService(GObject.GObject):
                     with contextlib.suppress(GLib.Error, RuntimeError):
                         self._bus.remove_signal_watch()
                         self._bus_watch_active = False
-            GLib.idle_add(self.emit, "stop", False)
+
+            def _on_stop_idle():
+                self.emit("stop", False)
+                return GLib.SOURCE_REMOVE
+
+            GLib.idle_add(_on_stop_idle)
 
     def _cleanup_gst_resources(self) -> None:
         """Remove signal watcher and release player resources."""
@@ -402,21 +416,35 @@ class TTSService(GObject.GObject):
                 logger.debug("Anura TTS: Cleanup skipped on stop, file already removed")
 
             # Fix Bug 3: Emit stop signal to ensure proper UI cleanup
-            GLib.idle_add(self.emit, "stop", False)
+            def _on_stop_idle():
+                self.emit("stop", False)
+                return GLib.SOURCE_REMOVE
+
+            GLib.idle_add(_on_stop_idle)
 
     def pause(self) -> None:
         """Pauses the GStreamer player."""
         if self.player:
             logger.info("Anura TTSService: Setting GStreamer state to PAUSED")
             self.player.set_state(Gst.State.PAUSED)
-            GLib.idle_add(self.emit, "paused", True)
+
+            def _on_paused_idle():
+                self.emit("paused", True)
+                return GLib.SOURCE_REMOVE
+
+            GLib.idle_add(_on_paused_idle)
 
     def resume(self) -> None:
         """Resumes the GStreamer player."""
         if self.player:
             logger.info("Anura TTSService: Setting GStreamer state to PLAYING (resume)")
             self.player.set_state(Gst.State.PLAYING)
-            GLib.idle_add(self.emit, "paused", False)
+
+            def _on_resumed_idle():
+                self.emit("paused", False)
+                return GLib.SOURCE_REMOVE
+
+            GLib.idle_add(_on_resumed_idle)
 
     def is_playing(self) -> bool:
         """Returns True if the GStreamer player is in the PLAYING state."""

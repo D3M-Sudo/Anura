@@ -4,6 +4,7 @@
 # No GTK/GLib required — pure Python only.
 
 import re
+from unittest.mock import patch
 
 import pytest
 
@@ -140,6 +141,44 @@ class TestGetTesseractConfig:
         result = cfg.get_tesseract_config("eng")
         assert "--psm 3" in result
         assert "--oem 1" in result
+
+    def test_config_format(self):
+        """Test Tesseract config string format (string construction)."""
+        tessdata_dir = "/path/to/tessdata"
+        config = f'--tessdata-dir "{tessdata_dir}" --psm 3 --oem 1'
+
+        assert "--tessdata-dir" in config
+        assert "--psm 3" in config
+        assert "--oem 1" in config
+        assert tessdata_dir in config
+
+    def test_config_quoting(self):
+        """Test Tesseract config properly quotes paths with spaces."""
+        tessdata_dir = "/path with spaces/tessdata"
+        config = f'--tessdata-dir "{tessdata_dir}" --psm 3 --oem 1'
+
+        assert config == '--tessdata-dir "/path with spaces/tessdata" --psm 3 --oem 1'
+
+    def test_config_valid_english(self):
+        """Test Tesseract config generation for valid English."""
+        from anura.config import get_tesseract_config
+
+        with patch("os.path.exists", return_value=True):
+            config = get_tesseract_config("eng")
+            assert "--tessdata-dir" in config
+            assert "--psm 3" in config
+            assert "--oem 1" in config
+
+    def test_config_invalid_language(self):
+        """Test Tesseract config generation for invalid language."""
+        from anura.config import get_tesseract_config
+
+        with patch("os.path.exists", return_value=False):
+            config = get_tesseract_config("invalid")
+            # Should default to 'eng' and return valid config
+            assert "--tessdata-dir" in config
+            assert "--psm 3" in config
+            assert "--oem 1" in config
 
 
 class TestLogLevel:

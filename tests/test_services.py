@@ -1,7 +1,12 @@
 # tests/test_services.py
 #
 # Unit tests for Anura services
-# No GTK/GLib required — pure Python only with mocks
+#
+# NOTE: This file imports `anura.language_manager` which in turn imports `gi`
+# via `anura/__init__.py`. Consequently it requires PyGObject (python3-gi)
+# installed on the system. It is NOT marked @pytest.mark.gtk because it tests
+# pure-Python methods; however it will fail to import without `gi`.
+# Run with: $ GSETTINGS_SCHEMA_DIR=builddir uv run pytest tests/test_services.py -v
 
 
 class TestLanguageManagerBasics:

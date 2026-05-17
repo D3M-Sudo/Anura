@@ -5,6 +5,7 @@
 # Notification service with XDG Portal and libnotify fallback
 # Provides maximum compatibility across desktop environments
 
+import contextlib
 from itertools import count
 import time
 from typing import ClassVar
@@ -22,6 +23,14 @@ try:
     from gi.repository import GLib
 except ImportError:
     GLib = None
+
+try:
+    from gi.repository import Gio
+
+    HAS_GIO = True
+except ImportError:
+    HAS_GIO = False
+    Gio = None
 
 try:
     from gi.repository import Notify
@@ -46,6 +55,7 @@ class NotificationService:
 
     Primary: XDG Desktop Portal (preferred for Flatpak/Wayland)
     Fallback: libnotify (traditional, works on most systems)
+    Gio.Notification: Used for action-capable notifications (Flatpak-safe)
     """
 
     def __init__(self, app_id: str) -> None:
@@ -77,6 +87,14 @@ class NotificationService:
 
         if not HAS_PORTAL and not self.libnotify_initialized:
             logger.warning("NotificationService: No notification backend available")
+
+    def cleanup(self) -> None:
+        """Clean up the periodic timer to prevent resource leaks."""
+        if hasattr(self, "_cleanup_timeout_id") and self._cleanup_timeout_id:
+            with contextlib.suppress(GLib.Error):
+                GLib.source_remove(self._cleanup_timeout_id)
+            self._cleanup_timeout_id = None
+        self.cleanup_notifications()
 
     # Valid priority levels according to XDG Portal specification
     _VALID_PRIORITIES: ClassVar[set[str]] = {"low", "normal", "high", "urgent"}
@@ -132,6 +150,56 @@ class NotificationService:
             return self._show_libnotify_notification(title, body)
         logger.warning("NotificationService: No backend available for notification")
         return False
+
+    def send_notification_with_action(
+        self,
+        notification_id: str,
+        title: str,
+        body: str,
+        action_id: str,
+        action_target: GLib.Variant,
+        priority: str = "high",
+    ) -> None:
+        """
+        Send a notification via Gio.Application's notification system.
+
+        This is the Flatpak-safe approach — actions are handled in-process
+        via Gio.SimpleAction, avoiding libnotify callback sandbox issues.
+
+        Args:
+            notification_id: Unique ID (replacing any existing notification with same ID)
+            title: Notification title
+            body: Notification body text
+            action_id: Fully qualified action name, e.g. "app.open-qr-url"
+            action_target: GLib.Variant with the action's target parameter
+            priority: Notification priority ("low", "normal", "high", "urgent")
+        """
+        if not HAS_GIO:
+            logger.warning("NotificationService: Gio not available for action notification")
+            return
+
+        notification = Gio.Notification.new(title)
+        notification.set_body(body)
+        notification.set_default_action_and_target(action_id, action_target)
+
+        # Set priority if valid
+        if priority in self._VALID_PRIORITIES:
+            if priority == "high":
+                notification.set_priority(Gio.NotificationPriority.HIGH)
+            elif priority == "urgent":
+                notification.set_priority(Gio.NotificationPriority.URGENT)
+            elif priority == "low":
+                notification.set_priority(Gio.NotificationPriority.LOW)
+            else:
+                notification.set_priority(Gio.NotificationPriority.NORMAL)
+
+        # Get the application instance and send
+        app = Gio.Application.get_default()
+        if app:
+            app.send_notification(notification_id, notification)
+            logger.debug(f"NotificationService: Gio action notification sent: {title} (id={notification_id})")
+        else:
+            logger.warning("NotificationService: No Gio.Application instance for action notification")
 
     def _show_portal_notification(self, title: str, body: str, priority: str) -> bool:
         """Show notification via XDG Desktop Portal."""
@@ -216,3 +284,4 @@ class NotificationService:
         if self._active_notifications:
             logger.debug(f"NotificationService: Cleaning up {len(self._active_notifications)} tracked notifications")
             self._active_notifications.clear()
+

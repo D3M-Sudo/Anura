@@ -4,6 +4,7 @@
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
 import contextlib
+from gettext import gettext as _
 from mimetypes import guess_type
 import os
 
@@ -30,6 +31,7 @@ class WelcomePage(Adw.NavigationPage):
     drop_area_label: Gtk.Label = Gtk.Template.Child()
 
     _language_changed_handler_id: int | None = None
+    _drop_button_handler_id: int | None = None
 
     def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
@@ -43,7 +45,7 @@ class WelcomePage(Adw.NavigationPage):
             language_manager.get_language(current_lang_code),
         )
 
-        self.drop_button.connect("clicked", self._on_drop_button_clicked)
+        self._drop_button_handler_id = self.drop_button.connect("clicked", self._on_drop_button_clicked)
         self._setup_drop_target()
 
     def _setup_drop_target(self) -> None:
@@ -69,10 +71,13 @@ class WelcomePage(Adw.NavigationPage):
             actions=Gdk.DragAction.COPY,
         )
         self._drop_cancellable: Gio.Cancellable | None = None
-        self._drop_target.connect("drop", self._on_dnd_drop)
-        self._drop_target.connect("drag-enter", self._on_dnd_enter)
-        self._drop_target.connect("drag-leave", self._on_dnd_leave)
-        self.drop_area.add_controller(self._drop_target)
+
+        # Track internal drop target handlers for cleanup
+        self._dnd_drop_handler_id = self._drop_target.connect("drop", self._on_dnd_drop)
+        self._dnd_enter_handler_id = self._drop_target.connect("drag-enter", self._on_dnd_enter)
+        self._dnd_leave_handler_id = self._drop_target.connect("drag-leave", self._on_dnd_leave)
+
+        self.add_controller(self._drop_target)
 
     def _on_drop_button_clicked(self, _: Gtk.Button) -> None:
         """Toggle the visibility of the dedicated drop area."""
@@ -83,20 +88,22 @@ class WelcomePage(Adw.NavigationPage):
         else:
             self.drop_button.remove_css_class("suggested-action")
 
-    def _on_dnd_enter(
-        self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float
-    ) -> Gdk.DragAction:
+    def _on_dnd_enter(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float) -> Gdk.DragAction:
         """Visual feedback when drag enters the drop area."""
+        self.drop_area.set_visible(True)
         self.drop_area.add_css_class("drag-hover")
+        self.welcome.set_description(_("Drop image to extract text"))
         return Gdk.DragAction.COPY
 
     def _on_dnd_leave(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop) -> None:
         """Remove visual feedback when drag leaves the drop area."""
         self.drop_area.remove_css_class("drag-hover")
+        # Only hide if it wasn't already visible (user clicked button)
+        if not self.drop_button.has_css_class("suggested-action"):
+            self.drop_area.set_visible(False)
+        self.welcome.set_description(_("Extract text from anywhere"))
 
-    def _on_dnd_drop(
-        self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float
-    ) -> bool:
+    def _on_dnd_drop(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float) -> bool:
         """Handle drop signal. Initiates a fully async stream read.
 
         We start an async read of text/uri-list and return True immediately so GTK
@@ -156,8 +163,6 @@ class WelcomePage(Adw.NavigationPage):
         This is the end of the async chain. We call drop.finish() here (required),
         then process the first valid local image path.
         """
-        from gettext import gettext as _
-
         stream, drop = user_data
 
         try:
@@ -184,11 +189,7 @@ class WelcomePage(Adw.NavigationPage):
             text = raw.decode("latin-1", errors="replace")
 
         # Parse text/uri-list: skip comment lines (#) and empty lines
-        uris = [
-            line.strip()
-            for line in text.splitlines()
-            if line.strip() and not line.startswith("#")
-        ]
+        uris = [line.strip() for line in text.splitlines() if line.strip() and not line.startswith("#")]
 
         if not uris:
             logger.error("DnD: No valid URIs found in drop data")
@@ -206,9 +207,7 @@ class WelcomePage(Adw.NavigationPage):
 
         if not os.path.exists(local_path):
             logger.error(f"DnD: File not accessible: {local_path}")
-            self._show_error_toast(
-                _("File not accessible. Ensure Anura has permission to access this location.")
-            )
+            self._show_error_toast(_("File not accessible. Ensure Anura has permission to access this location."))
             return
 
         (mimetype, _encoding) = guess_type(local_path)
@@ -241,14 +240,10 @@ class WelcomePage(Adw.NavigationPage):
         if processing:
             self.drop_area.add_css_class("drag-processing")
             if self.drop_area_label:
-                from gettext import gettext as _
-
                 self.drop_area_label.set_label(_("Processing..."))
         else:
             self.drop_area.remove_css_class("drag-processing")
             if self.drop_area_label:
-                from gettext import gettext as _
-
                 self.drop_area_label.set_label(_("Drop image file here"))
 
     def reset_drop_area_state(self) -> None:
@@ -257,6 +252,7 @@ class WelcomePage(Adw.NavigationPage):
         self.hide_spinner()
         self.drop_area.set_visible(False)
         self.drop_button.remove_css_class("suggested-action")
+        self.welcome.set_description(_("Extract text from anywhere"))
 
     def hide_spinner(self) -> None:
         """Stop and hide the spinner."""
@@ -279,14 +275,28 @@ class WelcomePage(Adw.NavigationPage):
                 self.language_popover.disconnect(self._language_changed_handler_id)
             self._language_changed_handler_id = None
 
+        if self._drop_button_handler_id is not None:
+            with contextlib.suppress(Exception):
+                self.drop_button.disconnect(self._drop_button_handler_id)
+            self._drop_button_handler_id = None
+
         # Cancel any in-flight drop operation
-        if getattr(self, "_drop_cancellable", None):
-            self._drop_cancellable.cancel()
+        drop_cancellable = getattr(self, "_drop_cancellable", None)
+        if drop_cancellable:
+            drop_cancellable.cancel()
             self._drop_cancellable = None
 
-        # Remove drop target controller
+        # Remove drop target controller and disconnect its internal handlers
         if hasattr(self, "_drop_target") and self._drop_target:
-            self.drop_area.remove_controller(self._drop_target)
+            with contextlib.suppress(Exception):
+                if hasattr(self, "_dnd_drop_handler_id") and self._dnd_drop_handler_id:
+                    self._drop_target.disconnect(self._dnd_drop_handler_id)
+                if hasattr(self, "_dnd_enter_handler_id") and self._dnd_enter_handler_id:
+                    self._drop_target.disconnect(self._dnd_enter_handler_id)
+                if hasattr(self, "_dnd_leave_handler_id") and self._dnd_leave_handler_id:
+                    self._drop_target.disconnect(self._dnd_leave_handler_id)
+
+            self.remove_controller(self._drop_target)
             self._drop_target = None
 
         super().do_destroy()

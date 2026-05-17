@@ -5,6 +5,7 @@
     "sdk": "org.gnome.Sdk",
     "command": "anura",
     "branch": "main",
+    "separate-locales": false,
 
     "finish-args": [
         "--share=network",

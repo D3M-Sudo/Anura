@@ -4,7 +4,6 @@ from gettext import ngettext
 from io import BytesIO
 from mimetypes import guess_type
 import os
-import re
 
 import gi
 
@@ -61,7 +60,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             # Ultimate fallback - should never happen for built-in languages
             from anura.types.language_item import LanguageItem
 
-            item = LanguageItem(code="eng", title="English")
+            item = LanguageItem(code="eng", title=_("English"))
         language_manager_instance.active_language = item
 
         self._setup_geometry()
@@ -86,9 +85,9 @@ class AnuraWindow(Adw.ApplicationWindow):
         )
         # Banner's "button-clicked" fires when the user dismisses; hide until
         # the next backend failure re-reveals it.
-        self._handler_portal_banner = self.portal_banner.connect("button-clicked", self._on_portal_banner_dismissed)
+        self._handler_portal_banner = self.portal_banner.connect("button-clicked", self._on_portal_banner_dismissed)  # type: ignore[arg-type]
 
-        self._handler_go_back = self.extracted_page.connect("go-back", self.show_welcome_page)
+        self._handler_go_back = self.extracted_page.connect("go-back", self.show_welcome_page)  # type: ignore[arg-type]
         self._handler_clipboard = None
         self._handler_clipboard_error = None
         self._clipboard_service = None
@@ -159,6 +158,9 @@ class AnuraWindow(Adw.ApplicationWindow):
         self.hide()
 
         # Safety timeout: if portal doesn't respond within 30s, restore window
+        if self._screenshot_timeout_id is not None:
+            GLib.source_remove(self._screenshot_timeout_id)
+
         self._screenshot_timeout_id = GLib.timeout_add_seconds(30, self._on_screenshot_timeout)
 
         try:
@@ -197,27 +199,62 @@ class AnuraWindow(Adw.ApplicationWindow):
         try:
             self.extracted_page.extracted_text = text
 
-            if self.settings.get_boolean("autocopy") or copy:
-                clipboard_service_instance = get_clipboard_service()
-                clipboard_service_instance.set(text)
-                self.show_toast(_("Text copied to clipboard"))
+            # 1. Extract structured data (emails, URLs, phone numbers) from OCR text
+            preprocessor = get_text_preprocessor()
+            structured = preprocessor.extract_structured_data(text)
 
-            # Extract structured data (emails, URLs, phone numbers) from OCR text
-            try:
-                preprocessor = get_text_preprocessor()
-                structured = preprocessor.extract_structured_data(text)
+            # 2. Identify if the result is primarily a URL (e.g. from a QR code)
+            primary_url = None
+            if structured["urls"]:
+                # If the entire text is just a URL (allowing for whitespace/newlines)
+                candidate = structured["urls"][0]
+                if candidate.strip() == text.strip():
+                    primary_url = candidate
 
-                # Handle URL extraction (keep existing behaviour)
-                if structured["urls"]:
-                    extracted_url = structured["urls"][0]
-                    if uri_validator(extracted_url):
-                        if self.settings.get_boolean("autolinks"):
-                            self._launch_uri(extracted_url)
-                            self.show_toast(_("URL opened automatically"))
-                        else:
-                            self._show_url_toast(extracted_url)
+            # 3. Handle URL Flow (Mode A/B)
+            if primary_url:
+                # Security: strip all control characters and whitespace
+                primary_url = primary_url.strip().strip("\n\r\t\v\f")
 
-                # Show email toast if emails found
+                if uri_validator(primary_url):
+                    if self.settings.get_boolean("autolinks"):
+                        # Behavior A: Open directly in browser (toggle ON)
+                        self._launch_uri(primary_url)
+                        self.show_toast(_("URL opened automatically"))
+                    else:
+                        # Behavior B: Send desktop notification with clickable action
+                        # Do NOT copy URL to clipboard, do NOT open browser automatically
+                        target = GLib.Variant("s", primary_url)
+                        app = Gtk.Application.get_default()
+                        if app and hasattr(app, "notification_service"):
+                            app.notification_service.send_notification_with_action(
+                                notification_id="qr-url",
+                                title=_("QR Code URL Detected"),
+                                body=primary_url,
+                                action_id="app.open-qr-url",
+                                action_target=target,
+                                priority="high",
+                            )
+
+                # 4. Handle URL Clipboard (respecting global autocopy)
+                if self.settings.get_boolean("autocopy") or copy:
+                    clipboard_service_instance = get_clipboard_service()
+                    clipboard_service_instance.set(primary_url)
+                    # Only show "copied" toast if we didn't open the browser automatically
+                    # to avoid toast spam when both are ON.
+                    if not self.settings.get_boolean("autolinks"):
+                        self.show_toast(_("URL copied to clipboard"))
+
+                logger.debug("Anura: URL-primary result processed")
+
+            else:
+                # 4. Handle Regular Text Flow (Clipboard)
+                if (self.settings.get_boolean("autocopy") or copy):
+                    clipboard_service_instance = get_clipboard_service()
+                    clipboard_service_instance.set(text)
+                    self.show_toast(_("Text copied to clipboard"))
+
+                # Still show toasts for other structured data if found in mixed text
                 if structured["emails"]:
                     email_count = len(structured["emails"])
                     self.show_toast(
@@ -226,7 +263,6 @@ class AnuraWindow(Adw.ApplicationWindow):
                         ),
                     )
 
-                # Show phone toast if phone numbers found
                 if structured["phone_numbers"]:
                     phone_count = len(structured["phone_numbers"])
                     self.show_toast(
@@ -237,15 +273,11 @@ class AnuraWindow(Adw.ApplicationWindow):
                         ).format(n=phone_count),
                     )
 
-            except Exception as e:
-                logger.error(f"Anura: Error extracting structured data: {e}")
-                # Continue without structured data - don't crash the entire OCR flow
-
             # Defer navigation to ExtractedPage until window is properly mapped
             GLib.idle_add(self._navigate_to_extracted_page)
 
-        except (GLib.Error, RuntimeError, AttributeError) as e:
-            logger.error(f"Anura UI Error: {e}")
+        except Exception as e:
+            logger.error(f"Anura UI Error in on_shot_done: {e}")
 
     def on_shot_error(self, _sender: GObject.GObject, message: str) -> None:
         """Handle screenshot capture errors."""
@@ -285,9 +317,10 @@ class AnuraWindow(Adw.ApplicationWindow):
         dialog = Gtk.FileDialog()
         dialog.set_title(_("Choose an image for extraction"))
 
-        # Primary filter: All supported image formats
+        # Primary filter: All supported image formats (cumulative)
         all_img_filter = Gtk.FileFilter()
         all_img_filter.set_name(_("All supported images"))
+        # MIME types for portal-aware backends
         all_img_filter.add_mime_type("image/png")
         all_img_filter.add_mime_type("image/jpeg")
         all_img_filter.add_mime_type("image/webp")
@@ -295,20 +328,64 @@ class AnuraWindow(Adw.ApplicationWindow):
         all_img_filter.add_mime_type("image/tiff")
         all_img_filter.add_mime_type("image/bmp")
         all_img_filter.add_mime_type("image/gif")
+        # Explicit pattern-based matching for Flatpak portal fallback
+        all_img_filter.add_pattern("*.png")
+        all_img_filter.add_pattern("*.jpg")
+        all_img_filter.add_pattern("*.jpeg")
+        all_img_filter.add_pattern("*.webp")
+        all_img_filter.add_pattern("*.avif")
+        all_img_filter.add_pattern("*.tif")
+        all_img_filter.add_pattern("*.tiff")
+        all_img_filter.add_pattern("*.bmp")
+        all_img_filter.add_pattern("*.gif")
 
-        # Secondary filter: Specific common formats
+        # Secondary filters: Individual formats (MIME + patterns)
         png_filter = Gtk.FileFilter()
         png_filter.set_name(_("PNG images"))
         png_filter.add_mime_type("image/png")
+        png_filter.add_pattern("*.png")
 
         jpg_filter = Gtk.FileFilter()
         jpg_filter.set_name(_("JPEG images"))
         jpg_filter.add_mime_type("image/jpeg")
+        jpg_filter.add_pattern("*.jpg")
+        jpg_filter.add_pattern("*.jpeg")
+
+        webp_filter = Gtk.FileFilter()
+        webp_filter.set_name(_("WebP images"))
+        webp_filter.add_mime_type("image/webp")
+        webp_filter.add_pattern("*.webp")
+
+        avif_filter = Gtk.FileFilter()
+        avif_filter.set_name(_("AVIF images"))
+        avif_filter.add_mime_type("image/avif")
+        avif_filter.add_pattern("*.avif")
+
+        tiff_filter = Gtk.FileFilter()
+        tiff_filter.set_name(_("TIFF images"))
+        tiff_filter.add_mime_type("image/tiff")
+        tiff_filter.add_pattern("*.tif")
+        tiff_filter.add_pattern("*.tiff")
+
+        bmp_filter = Gtk.FileFilter()
+        bmp_filter.set_name(_("BMP images"))
+        bmp_filter.add_mime_type("image/bmp")
+        bmp_filter.add_pattern("*.bmp")
+
+        gif_filter = Gtk.FileFilter()
+        gif_filter.set_name(_("GIF images"))
+        gif_filter.add_mime_type("image/gif")
+        gif_filter.add_pattern("*.gif")
 
         filters = Gio.ListStore.new(Gtk.FileFilter)
         filters.append(all_img_filter)
         filters.append(png_filter)
         filters.append(jpg_filter)
+        filters.append(webp_filter)
+        filters.append(avif_filter)
+        filters.append(tiff_filter)
+        filters.append(bmp_filter)
+        filters.append(gif_filter)
         dialog.set_filters(filters)
         dialog.set_default_filter(all_img_filter)
 
@@ -421,76 +498,16 @@ class AnuraWindow(Adw.ApplicationWindow):
             logger.error(f"Failed to load file contents: {e}")
             self.show_toast(_("Failed to load image file"))
 
-    def _on_dnd_query_info_done(self, gfile: Gio.File, result: Gio.AsyncResult, item: object) -> None:
-        logger.debug(f"DnD: query_info_done gfile={gfile}, item={item}")
-        try:
-            info = gfile.query_info_finish(result)
-            if not info:
-                logger.error("DnD: query_info_finish returned None")
-                self.welcome_page.spinner.set_visible(False)
-                return
-
-            mimetype = info.get_content_type()
-            if not mimetype or not mimetype.startswith("image"):
-                self.welcome_page.spinner.set_visible(False)
-                self.show_toast(_("Unsupported file format."))
-                return
-
-            item.load_contents_async(None, self._on_dnd_file_contents_loaded)
-        except (GLib.Error, OSError, ValueError, RuntimeError) as e:
-            logger.error(f"DnD query_info failed: {e}")
-            self.welcome_page.spinner.set_visible(False)
-
-    def _on_dnd_file_contents_loaded(self, gfile: Gio.File, result: Gio.AsyncResult) -> None:
-        logger.debug(f"DnD: _on_dnd_file_contents_loaded called for {gfile.get_path()}")
-        try:
-            # See comment in _on_file_contents_loaded: do not unpack the etag
-            # into `_`, it would shadow the gettext alias used in error paths.
-            ok, contents, _etag = gfile.load_contents_finish(result)
-            if not ok:
-                logger.error(f"DnD: Failed to load dropped file contents for {gfile.get_path()}")
-                self.welcome_page.spinner.set_visible(False)
-                self.show_toast(_("Failed to load dropped file"))
-                return
-
-            # Validate file size
-            file_size = len(contents)
-            if file_size > self.MAX_IMAGE_SIZE_BYTES:
-                self.welcome_page.spinner.set_visible(False)
-                self.show_toast(
-                    _("Image too large: {size}MB (max {max}MB)").format(
-                        size=round(file_size / (1024 * 1024), 1),
-                        max=self.MAX_IMAGE_SIZE_MB,
-                    ),
-                )
-                return
-
-            stream = BytesIO(contents)
-            logger.debug("DnD: Reached GObjectWorker.call in _on_dnd_file_contents_loaded")
-            GObjectWorker.call(self.backend.decode_image, (self.get_language(), stream))
-        except (GLib.Error, OSError, ValueError, RuntimeError) as e:
-            self.welcome_page.spinner.set_visible(False)
-            logger.error(f"Failed to load dropped file: {e}")
-            self.show_toast(_("Failed to load dropped file"))
-
-    def on_copy_to_clipboard(self, _action: Gio.SimpleAction) -> None:
-        """Copy the current extracted text to the clipboard."""
-        return self._do_copy_to_clipboard()
-
     def _do_copy_to_clipboard(self) -> None:
         text = self.extracted_page.extracted_text
         if text:
             clipboard_service_instance = get_clipboard_service()
             clipboard_service_instance.set(text)
             self.show_toast(_("Text copied to clipboard"))
+            # Visual feedback on the button itself
+            self.extracted_page.show_copy_feedback()
         else:
             self.show_toast(_("No text to copy"))
-
-    def on_paste_from_clipboard(self, _action: Gio.SimpleAction) -> None:
-        """Read image from clipboard and perform OCR."""
-        self.welcome_page.show_spinner()
-        clipboard_service_instance = get_clipboard_service()
-        clipboard_service_instance.read_texture()
 
     def _on_paste_from_clipboard_texture(self, _service: GObject.GObject, texture: Gdk.Texture) -> None:
         self.welcome_page.show_spinner()
@@ -579,15 +596,21 @@ class AnuraWindow(Adw.ApplicationWindow):
                     pass  # Handler already disconnected or invalid
 
         # Connect to language manager signals and track handler IDs
+        def _on_downloaded_idle(_mgr, code):
+            GLib.idle_add(dialog.on_language_downloaded, code)
+
+        def _on_failed_idle(_mgr, code):
+            GLib.idle_add(dialog.on_language_download_failed, code)
+
         downloaded_handler = language_manager_instance.connect(
             "downloaded",
-            lambda _mgr, code: GLib.idle_add(dialog.on_language_downloaded, code),
+            _on_downloaded_idle,
         )
         signal_handlers.append(downloaded_handler)
 
         failed_handler = language_manager_instance.connect(
             "download-failed",
-            lambda _mgr, code: GLib.idle_add(dialog.on_language_download_failed, code),
+            _on_failed_idle,
         )
         signal_handlers.append(failed_handler)
 
@@ -644,16 +667,11 @@ class AnuraWindow(Adw.ApplicationWindow):
         """Show a toast notification to the user."""
         self.toast_overlay.add_toast(Adw.Toast(title=title, priority=priority))
 
-    def _show_url_toast(self, url: str) -> None:
-        toast = Adw.Toast(
-            title=_("Text contains a link"),
-            button_label=_("Open"),
-        )
-        toast.connect("button-clicked", lambda _: self._launch_uri(url))
-        self.toast_overlay.add_toast(toast)
-
     def _launch_uri(self, url: str) -> None:
         """Open a URI in the default system browser."""
+        # Clean URL to ensure no trailing control characters or whitespace
+        url = url.strip() if url else ""
+
         # Security: validate URL before launching (defense in depth)
         if not uri_validator(url):
             logger.warning(f"Anura: Blocked invalid URL launch: {url}")
@@ -670,27 +688,67 @@ class AnuraWindow(Adw.ApplicationWindow):
 
         launcher.launch(self, None, on_launch_finish)
 
-    # Maximum URL length to prevent issues with extremely long OCR results
-    MAX_URL_LENGTH = 2048
+    def close_popovers(self) -> None:
+        """Close all open popovers to prevent 'Broken accounting of active state' warnings.
 
-    def extract_url_from_text(self, text: str) -> str | None:
-        """Extract the first valid URL from OCR text using regex.
-
-        Returns the URL if found and valid, None otherwise.
+        Must be called before presenting modal dialogs (About, Preferences, etc.)
+        when a popover from the headerbar menu might still be visible. This ensures
+        the popover's internal state machine completes its teardown before the
+        widget hierarchy is updated by the new dialog.
         """
-        # Null check to prevent errors with None input
-        if text is None:
-            return None
-        # Regex to find URLs starting with http:// or https://
-        # Use * instead of + to apply quantifier to entire character class
-        url_pattern = re.compile(r'https?://[^\s<>"{}|\\^`\[\]]*')
-        match = url_pattern.search(text)
-        if match:
-            url = match.group(0).rstrip(".,;:")
-            # Length check to prevent issues with extremely long URLs
-            if len(url) > self.MAX_URL_LENGTH:
-                logger.warning(f"Anura: URL too long ({len(url)} chars), ignoring.")
-                return None
-            if uri_validator(url):
-                return url
-        return None
+        # 1. Close share button popover on extracted page
+        try:
+            share_popover = self.extracted_page.share_button.get_popover()
+            if share_popover and share_popover.get_visible():
+                share_popover.popdown()
+        except (AttributeError, RuntimeError, TypeError) as e:
+            logger.debug(f"Failed to close share popover: {e}")
+
+        # 2. Find and close any MenuButton popovers on both navigation pages
+        for page in (self.welcome_page, self.extracted_page):
+            if page is None:
+                continue
+            try:
+                self._close_page_menu_popovers(page)
+            except (AttributeError, RuntimeError, TypeError) as e:
+                logger.debug(f"Failed to close popovers on page {page}: {e}")
+
+    def _close_page_menu_popovers(self, page: Adw.NavigationPage) -> None:
+        """Traverse a NavigationPage's widget tree to close open MenuButton popovers.
+
+        GTK4 widget hierarchy:
+            Adw.NavigationPage → Adw.ToolbarView → Adw.HeaderBar → MenuButton(s)
+
+        The primary menu MenuButton is unnamed in the Blueprint template, so we
+        must locate it by walking the headerbar children.
+        """
+        # Walk from NavigationPage to ToolbarView to HeaderBar
+        child = page.get_first_child()
+        while child is not None:
+            if isinstance(child, Adw.ToolbarView):
+                self._close_toolbar_view_popovers(child)
+                return
+            child = child.get_next_sibling()
+
+    def _close_toolbar_view_popovers(self, toolbar_view: Adw.ToolbarView) -> None:
+        """Close MenuButton popovers within a ToolbarView."""
+        # ToolbarView contains HeaderBar(s) as children
+        child = toolbar_view.get_first_child()
+        while child is not None:
+            if isinstance(child, Adw.HeaderBar):
+                self._close_header_bar_popovers(child)
+                return
+            child = child.get_next_sibling()
+
+    def _close_header_bar_popovers(self, headerbar: Adw.HeaderBar) -> None:
+        """Close any visible MenuButton popovers in a HeaderBar."""
+        child = headerbar.get_first_child()
+        while child is not None:
+            if isinstance(child, Gtk.MenuButton):
+                try:
+                    popover = child.get_popover()
+                    if popover and popover.get_visible():
+                        popover.popdown()
+                except (AttributeError, RuntimeError, TypeError) as e:
+                    logger.debug(f"Failed to popdown menu button popover: {e}")
+            child = child.get_next_sibling()

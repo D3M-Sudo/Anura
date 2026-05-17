@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-## [0.1.4.3] - 2026-05-14 {version-0.1.4.3}
+## [0.1.4.3] - 2026-05-16 {version-0.1.4.3}
 
 ### Added
 
@@ -32,6 +32,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Optimized image thresholding using Look-Up Tables (LUT) for performance
 - Enhanced accessibility and Micro-UX improvements for the OCR results page
 - Persistent Drag-and-Drop controller for better stability
+- Clickable QR URL notifications via XDG Desktop Portal (Flatpak-safe)
+- Autocopy for QR-detected URLs with improved toast feedback
+- Pattern-based file filters for image selection dialog
+- Real-time word count status bar in OCR results page
+- Standardized localization infrastructure and Application ID
 
 ### Fixed
 
@@ -57,6 +62,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Improved error handling for browser launch and file filters
 - Fixed UI spinner animations and state management
 - Fixed missing trailing newline in anura/window.py
+- Fixed path traversal vulnerability in LanguageManager.remove_language (HIGH severity)
+- Fixed URL userinfo spoofing in uri_validator (security fix)
+- Fixed URL truncation during QR code extraction and hand-off
+- Fixed clipboard infinite fallback loop on image read failures
+- Fixed callback exception handling in clipboard service
+- Fixed Gio.Notification API usage for XDG Portal compatibility
+- Fixed i18n bindings in Flatpak and globalized autocopy behavior
+- Fixed Flatpak hybrid UI regression (i18n)
+- Fixed localization issues and cleaned up UI code
+- Fixed broken state warning on Acknowledgements page
+- Fixed navigation focus race condition
+- Removed compiled gresource from git tracking and updated .gitignore
+- Fixed line length violation in notification service tests
 
 ### Changed
 
@@ -70,6 +88,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Refactored Drag-and-Drop system for improved reliability
 - Optimized Flatpak build and updated dependencies (urllib3)
 - Improved OCR pipeline and image processing performance
+- Deep codebase audit and concurrency hardening across all services
+- Pre-compiled regex patterns and optimized PIL thresholding for performance
+- Optimized URI validation performance with compiled regex
+- Optimized image enhancement pipeline
+- Optimized QR code detection by restricting symbol scan
+- i18n: full audit and fixed hardcoded UI strings across the application
+- i18n: stabilized infrastructure and synchronized translations (Phase 1A)
+- i18n: finalized Italian localization and fixed navigation focus (Phase 1B)
+- Palette: UX and accessibility improvements across ExtractedPage
+- Refactored language API, removed dead code, improved test coverage
+- Standardized loading spinner size across the application
+- Updated testing documentation
 
 ## [0.1.4.2] - 2026-05-05 {version-0.1.4.2}
 

@@ -3,8 +3,8 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
+import contextlib
 from gettext import gettext as _
-from gettext import ngettext
 from typing import ClassVar
 
 import gi
@@ -37,7 +37,7 @@ class ExtractedPage(Adw.NavigationPage):
         "on-listen-stop": (GObject.SignalFlags.RUN_LAST, None, ()),
     }
 
-    window_title: Adw.WindowTitle = Gtk.Template.Child()
+    stats_label: Gtk.Label = Gtk.Template.Child()
     share_list_box: Gtk.ListBox = Gtk.Template.Child()
     grab_btn: Gtk.Button = Gtk.Template.Child()
     text_copy_btn: Gtk.Button = Gtk.Template.Child()
@@ -59,6 +59,8 @@ class ExtractedPage(Adw.NavigationPage):
         self._tts_service = None
         self._tts_stop_handler_id = None
         self._tts_paused_handler_id = None
+        self._buffer_handler_id = None
+        self._is_generating_tts = False
 
         super().__init__(**kwargs)
 
@@ -79,23 +81,53 @@ class ExtractedPage(Adw.NavigationPage):
         except (TypeError, RuntimeError, AttributeError) as e:
             logger.warning(f"Failed to connect TTS services: {e}")
 
-        self.buffer.connect("changed", self._on_buffer_changed)
+        self._buffer_handler_id = self.buffer.connect("changed", self._on_buffer_changed)
 
     def _on_buffer_changed(self, buffer: Gtk.TextBuffer) -> None:
-        """Update character and word count in the header subtitle."""
+        """Update character and word count in the status bar label."""
         text = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), False)
+        has_text = bool(text.strip()) if text else False
+
+        # Update action sensitivity based on text presence
+        if self.text_copy_btn:
+            self.text_copy_btn.set_sensitive(has_text)
+        if self.share_button:
+            self.share_button.set_sensitive(has_text)
+        if self.listen_btn:
+            self.listen_btn.set_sensitive(has_text)
+
         if not text:
-            self.window_title.set_subtitle("")
+            self.stats_label.set_text(_("Words: %d | Characters: %d") % (0, 0))
             return
 
         char_count = len(text)
         # Use split() to get words, filtering out empty strings from multiple whitespace
         word_count = len(text.split())
 
-        char_text = ngettext("{n} character", "{n} characters", char_count).format(n=char_count)
-        word_text = ngettext("{n} word", "{n} words", word_count).format(n=word_count)
+        self.stats_label.set_text(_("Words: %d | Characters: %d") % (word_count, char_count))
 
-        self.window_title.set_subtitle(f"{char_text}, {word_text}")
+    def show_copy_feedback(self) -> None:
+        """Temporarily change the copy button icon to a checkmark for UX feedback."""
+        if not self.text_copy_btn:
+            return
+
+        # Defensive: if already showing feedback, don't nested-capture the checkmark
+        if self.text_copy_btn.get_icon_name() == "emblem-ok-symbolic":
+            return
+
+        # Store original icon and switch to checkmark
+        original_icon = self.text_copy_btn.get_icon_name()
+        self.text_copy_btn.set_icon_name("emblem-ok-symbolic")
+
+        # Revert icon after 2 seconds
+        GLib.timeout_add_seconds(2, self._reset_copy_icon, original_icon)
+
+    def _reset_copy_icon(self, icon_name: str) -> bool:
+        """Helper to reset copy button icon."""
+        if self.text_copy_btn and self.text_copy_btn.get_icon_name() == "emblem-ok-symbolic":
+            # Only reset if it's still showing the checkmark (don't overwrite newer state)
+            self.text_copy_btn.set_icon_name(icon_name)
+        return GLib.SOURCE_REMOVE
 
     def do_hiding(self) -> None:
         """Handle widget hiding event."""
@@ -136,6 +168,12 @@ class ExtractedPage(Adw.NavigationPage):
             except (TypeError, RuntimeError) as e:
                 logger.warning(f"Failed to cleanup share service during dispose: {e}")
 
+        # Disconnect internal buffer handler
+        if self._buffer_handler_id:
+            with contextlib.suppress(TypeError, RuntimeError):
+                self.buffer.disconnect(self._buffer_handler_id)
+            self._buffer_handler_id = None
+
         super().do_dispose()
 
     @GObject.Property(type=str)
@@ -147,7 +185,7 @@ class ExtractedPage(Adw.NavigationPage):
             include_hidden_chars=False,
         )
 
-    @extracted_text.setter
+    @extracted_text.setter  # type: ignore[no-redef]
     def extracted_text(self, text: str) -> None:
         try:
             self.buffer.set_text(text)
@@ -156,6 +194,11 @@ class ExtractedPage(Adw.NavigationPage):
 
     def listen(self) -> None:
         """Start TTS playback for the extracted text."""
+        # Prevent concurrent TTS generation requests
+        if self._is_generating_tts:
+            logger.warning("Anura TTS: Generation already in progress, ignoring request.")
+            return
+
         tts_service_instance = get_tts_service()
 
         # Defensive check: ensure critical template components are loaded
@@ -167,6 +210,8 @@ class ExtractedPage(Adw.NavigationPage):
         if self._tts_service and self.listen_stack.get_visible_child_name() == "pause":
             self.listen_pause()
             return
+
+        self._is_generating_tts = True
 
         # X11 Constraint: Set UI to generating state (Spinner) immediately and keep it active
         # during entire generate phase until GStreamer reaches PLAYING state
@@ -201,9 +246,9 @@ class ExtractedPage(Adw.NavigationPage):
         )
 
     def _set_spinner_active(self, active: bool) -> None:
-        """X11 Constraint: Switch Stack between button and spinner with fixed dimensions."""
+        """X11 Constraint: Switch Stack between button and spinner."""
         if active:
-            # Ensure spinner has fixed dimensions to prevent UI shifting
+            # Ensure spinner is properly aligned to prevent UI shifting
             if self.listen_stack:
                 self.listen_stack.set_visible_child_name("spinner")
             # Explicitly start the spinner animation
@@ -223,6 +268,7 @@ class ExtractedPage(Adw.NavigationPage):
 
     def _on_generate_error(self, error: Exception, traceback_str: str | None = None) -> None:
         """Handle generation errors (called on main thread by GObjectWorker)."""
+        self._is_generating_tts = False
         # Force stack back to button state on error — the spinner must not persist.
         # We bypass _set_spinner_active + swap_controls here because swap_controls
         # intentionally refuses to switch away from "spinner" (to avoid conflicts
@@ -268,6 +314,7 @@ class ExtractedPage(Adw.NavigationPage):
             self.listen_pause_btn.set_icon_name(icon)
 
     def _on_generated(self, filepath: str | None) -> None:
+        self._is_generating_tts = False
         if not filepath:
             self._set_spinner_active(False)
             self.swap_controls(False)

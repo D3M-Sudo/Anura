@@ -16,6 +16,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 @pytest.fixture
 def setup_gtk_environment():
     """Setup GTK environment with GResource for GTK tests."""
+    pytest.importorskip("gi")
+
     import gi
 
     gi.require_version("Gtk", "4.0")

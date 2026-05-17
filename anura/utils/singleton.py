@@ -83,21 +83,6 @@ class ThreadSafeSingleton:
             cls._locks.clear()
 
 
-def singleton[T](wrapped_class: type[T]) -> type[T]:
-    """
-    Decorator to make a class a thread-safe singleton.
-
-    Usage:
-        @singleton
-        class MyService:
-            pass
-
-        # Both work:
-        service1 = MyService()
-        service2 = singleton(MyService)
-    """
-    return ThreadSafeSingleton(wrapped_class)
-
 
 def get_instance[T](wrapped_class: type[T]) -> T:
     """

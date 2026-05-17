@@ -8,7 +8,7 @@
 #
 # 🚀 DAILY DEVELOPMENT (always use this):
 #   uv run pytest tests/ -m "not gtk" -v
-#   Expected: 38 passed, 61 deselected ✅
+#   Expected: 148 passed, 9 skipped, 29 deselected ✅
 #
 # 🧪 GTK TESTING (two methods):
 #   Method A (Recommended): Flatpak Sandbox
@@ -22,9 +22,9 @@
 #         GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" \
 #         GSETTINGS_SCHEMA_DIR="builddir" pytest tests/ -m "gtk" -v
 #
-# ❌ NEVER USE THIS COMMAND:
+# ❌ NEVER USE THIS COMMAND (without GI_TYPELIB_PATH, tests that need gi will skip/fail):
 #   uv run pytest tests/ -v
-#   Result: 9 failed, 85 passed, 2 skipped, 3 errors
+#   Current result: 172 passed, 14 skipped (imports that need gi are skipped gracefully)
 #
 # === TECHNICAL DETAILS ===
 #

@@ -15,6 +15,7 @@ tests/__pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.gresource
 
 # Ruff / linting cache
 .ruff_cache/

@@ -66,7 +66,7 @@ anura/
 ### Internazionalizzazione (i18n)
 - `_("text {var}").format(var=value)` — MAI `_(f"...")`
 - `ngettext()` per plurali
-- Dopo nuove UI string → ricordare di eseguire `./generate_pot.sh`
+- Dopo nuove UI string → ricordare di eseguire `cd po && ./update_potfiles.sh`
 - Logger, eccezioni, GSettings keys NON devono essere tradotti
 
 ### Gestione errori — Early Return Pattern
