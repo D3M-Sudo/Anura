@@ -252,6 +252,37 @@ def test_window_tracks_portal_banner_handler_id() -> None:
     )
 
 
+# ---------------------------------------------------------------------------
+# Security: AnuraWindow.process_file() must use os.path.getsize() which
+# follows symlinks, instead of os.lstat() which doesn't, to correctly
+# enforce the 50MB file size limit.
+# ---------------------------------------------------------------------------
+
+
+def test_window_process_file_uses_getsize() -> None:
+    """AnuraWindow.process_file must use os.path.getsize() for size validation."""
+    tree, _ = _load_module_source("window.py")
+    process_file_fn = _find_method(tree, "AnuraWindow", "process_file")
+
+    found_getsize = False
+    for node in ast.walk(process_file_fn):
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "getsize"
+            and isinstance(node.func.value, ast.Attribute)
+            and node.func.value.attr == "path"
+            and isinstance(node.func.value.value, ast.Name)
+            and node.func.value.value.id == "os"
+        ):
+            found_getsize = True
+            break
+    assert found_getsize, (
+        "AnuraWindow.process_file() must use os.path.getsize() instead of os.lstat() "
+        "to correctly validate the actual file size when symbolic links are used."
+    )
+
+
 @pytest.mark.parametrize(
     "rel_path",
     [
