@@ -90,7 +90,7 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
     def _on_item_bind(self, factory: Gtk.SignalListItemFactory, list_item: Gtk.ListItem) -> None:
         row: LanguageRow = list_item.get_child()
         item: LanguageItem = list_item.get_item()
-        row.item = item
+        row.item = item  # type: ignore[method-assign]
 
     @Gtk.Template.Callback()
     def _on_add_language(self, sender: Gtk.Widget) -> None:

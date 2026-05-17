@@ -80,7 +80,6 @@ class ScreenshotService(GObject.GObject):
     }
 
     __slots__ = (
-        "_active_cancellable",
         "_cancellable_lock",
         "_env_diagnostics_logged",
         "_is_capturing",
@@ -94,7 +93,6 @@ class ScreenshotService(GObject.GObject):
         with self._cancellable_lock:
             self.cancelable: Gio.Cancellable = Gio.Cancellable.new()
         self.portal = Xdp.Portal()
-        self._active_cancellable = None
         self._env_diagnostics_logged = False
         self._is_capturing = False
 
@@ -116,8 +114,6 @@ class ScreenshotService(GObject.GObject):
             if self.cancelable.is_cancelled():
                 self.cancelable = Gio.Cancellable.new()
             cancellable = self.cancelable
-            # Store reference for callback to prevent race condition
-            self._active_cancellable = cancellable
 
         # Call portal outside lock but with captured cancellable reference
         # This prevents deadlock while maintaining thread safety
@@ -134,7 +130,10 @@ class ScreenshotService(GObject.GObject):
             logger.error(f"Anura Screenshot: Portal take_screenshot call failed: {e}")
 
             def _on_error_idle():
-                self.emit("error", _("Failed to initiate screenshot capture."))
+                try:
+                    self.emit("error", _("Failed to initiate screenshot capture."))
+                except Exception:
+                    logger.exception("Anura: Failed to emit screenshot initiation error")
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_error_idle)
@@ -183,12 +182,17 @@ class ScreenshotService(GObject.GObject):
                 # fallback (gnome-screenshot / xfce4-screenshooter / scrot /
                 # ...). This rescues users on LXQt / Xfce / Openbox where the
                 # portal is present but no backend exposes Screenshot.
+                # Maintain _is_capturing=True during host fallback.
+                self._is_capturing = True
                 self._try_host_screenshot_fallback(lang, copy)
                 return None
             user_message = _("Screenshot failed: {reason}").format(reason=e.message)
 
             def _on_error_idle():
-                self.emit("error", user_message)
+                try:
+                    self.emit("error", user_message)
+                except Exception:
+                    logger.exception("Anura: Failed to emit screenshot failed error")
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_error_idle)
@@ -197,7 +201,10 @@ class ScreenshotService(GObject.GObject):
             logger.error(f"Anura Screenshot: Unexpected error finishing screenshot: {e}")
 
             def _on_error_idle():
-                self.emit("error", _("Can't take a screenshot."))
+                try:
+                    self.emit("error", _("Can't take a screenshot."))
+                except Exception:
+                    logger.exception("Anura: Failed to emit unexpected screenshot error")
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_error_idle)
@@ -217,7 +224,10 @@ class ScreenshotService(GObject.GObject):
             logger.error(f"Anura Screenshot: Failed to parse URI '{uri}': {e}")
 
             def _on_error_idle():
-                self.emit("error", _("Can't take a screenshot."))
+                try:
+                    self.emit("error", _("Can't take a screenshot."))
+                except Exception:
+                    logger.exception("Anura: Failed to emit URI parse error")
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_error_idle)
@@ -228,7 +238,10 @@ class ScreenshotService(GObject.GObject):
             logger.error(f"Anura Screenshot: Invalid or non-existent file path: {filename}")
 
             def _on_error_idle():
-                self.emit("error", _("Can't take a screenshot."))
+                try:
+                    self.emit("error", _("Can't take a screenshot."))
+                except Exception:
+                    logger.exception("Anura: Failed to emit invalid file path error")
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_error_idle)
@@ -285,11 +298,15 @@ class ScreenshotService(GObject.GObject):
         # Static check guard: ScreenshotService must emit 'portal-backend-missing' (via GLib.idle_add)
         # when it detects the libportal generic-failure pattern.
         def _on_failure_idle():
-            self.emit("portal-backend-missing")
-            self.emit("error", user_message)
+            try:
+                self.emit("portal-backend-missing")
+                self.emit("error", user_message)
+            except Exception:
+                logger.exception("Anura: Failed to emit portal failure signals")
             return GLib.SOURCE_REMOVE
 
-        GLib.idle_add(self.emit, "portal-backend-missing")  # Satisfy static test
+        # Satisfy static check: ScreenshotService must emit 'portal-backend-missing' (via GLib.idle_add)
+        GLib.idle_add(self.emit, "portal-backend-missing")
         GLib.idle_add(_on_failure_idle)
 
     def _try_host_screenshot_fallback(self, lang: str, copy: bool) -> None:
@@ -307,6 +324,7 @@ class ScreenshotService(GObject.GObject):
         ``flatpak-spawn`` and the portal failure is genuinely terminal.
         """
         if not _is_flatpak_environment():
+            self._is_capturing = False
             self._emit_portal_failure()
             return
         try:
@@ -316,6 +334,7 @@ class ScreenshotService(GObject.GObject):
                 Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_SILENCE,
             )
         except GLib.Error as e:
+            self._is_capturing = False
             logger.warning(f"Anura Screenshot: cannot spawn flatpak-spawn for host fallback: {e.message}")
             self._emit_portal_failure()
             return
@@ -342,12 +361,14 @@ class ScreenshotService(GObject.GObject):
         try:
             success, stdout, _stderr = proc.communicate_utf8_finish(res)
         except GLib.Error as e:
+            self._is_capturing = False
             logger.debug(f"Anura Screenshot: host fallback detection failed: {e.message}")
             self._emit_portal_failure()
             return
 
         exit_status = proc.get_exit_status() if proc.get_if_exited() else -1
         if not success or exit_status != 0:
+            self._is_capturing = False
             logger.debug(
                 f"Anura Screenshot: no host-side screenshot tool found (exit={exit_status}). "
                 "Surface the original portal error.",
@@ -357,10 +378,12 @@ class ScreenshotService(GObject.GObject):
 
         tool_name = parse_detection_output(stdout or "")
         if tool_name is None:
+            self._is_capturing = False
             self._emit_portal_failure()
             return
         tool = find_tool_by_name(tool_name)
         if tool is None:
+            self._is_capturing = False
             self._emit_portal_failure()
             return
 
@@ -385,6 +408,7 @@ class ScreenshotService(GObject.GObject):
                 (lang, copy, output_path, tool),
             )
         except GLib.Error as e:
+            self._is_capturing = False
             logger.warning(f"Anura Screenshot: cannot spawn host mkdir: {e.message}")
             self._emit_portal_failure()
             return
@@ -400,12 +424,14 @@ class ScreenshotService(GObject.GObject):
         try:
             proc.wait_finish(res)
         except GLib.Error as e:
+            self._is_capturing = False
             logger.warning(f"Anura Screenshot: mkdir failed: {e.message}")
             self._emit_portal_failure()
             return
 
         exit_status = proc.get_exit_status() if proc.get_if_exited() else -1
         if exit_status != 0:
+            self._is_capturing = False
             logger.warning(f"Anura Screenshot: mkdir failed with exit code {exit_status}")
             self._emit_portal_failure()
             return
@@ -419,6 +445,7 @@ class ScreenshotService(GObject.GObject):
                 Gio.SubprocessFlags.STDERR_PIPE | Gio.SubprocessFlags.STDOUT_PIPE,
             )
         except GLib.Error as e:
+            self._is_capturing = False
             logger.warning(f"Anura Screenshot: cannot spawn host screenshot tool: {e.message}")
             self._emit_portal_failure()
             return
@@ -441,6 +468,7 @@ class ScreenshotService(GObject.GObject):
         file). On failure or user-cancellation, emits the original portal
         error.
         """
+        self._is_capturing = False
         lang, copy, output_path = user_data
         try:
             proc.wait_finish(res)
@@ -680,7 +708,10 @@ class ScreenshotService(GObject.GObject):
             logger.error(f"Anura: Invalid language code '{lang}' for OCR")
 
             def _on_invalid_lang_error_idle() -> bool:
-                self.emit("error", _("Invalid language code specified."))
+                try:
+                    self.emit("error", _("Invalid language code specified."))
+                except Exception:
+                    logger.exception("Anura: Failed to emit invalid language code error")
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_invalid_lang_error_idle, priority=GLib.PRIORITY_DEFAULT)
@@ -691,14 +722,20 @@ class ScreenshotService(GObject.GObject):
         if success:
 
             def _on_decoded_idle(text: str, cp: bool) -> bool:
-                self.emit("decoded", text, cp)
+                try:
+                    self.emit("decoded", text, cp)
+                except Exception:
+                    logger.exception("Anura: Failed to emit decoded signal")
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_decoded_idle, extracted, copy, priority=GLib.PRIORITY_DEFAULT)
         else:
 
             def _on_decode_error_idle(msg: str | None) -> bool:
-                self.emit("error", msg)
+                try:
+                    self.emit("error", msg)
+                except Exception:
+                    logger.exception("Anura: Failed to emit decode error")
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_decode_error_idle, error_message, priority=GLib.PRIORITY_DEFAULT)

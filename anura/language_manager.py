@@ -208,6 +208,14 @@ class LanguageManager(GObject.GObject):
         Ensures the tessdata directory exists and logs its status at startup.
         Also cleans up orphaned temporary files from interrupted downloads.
         """
+        # Hardening: verify Tesseract binary availability at startup
+        tess_bin = os.environ.get("TESSERACT_CMD", "tesseract")
+        if not shutil.which(tess_bin):
+            logger.critical(
+                f"Anura: Tesseract binary '{tess_bin}' not found. "
+                "OCR features will be unavailable. Please install Tesseract."
+            )
+
         # Use lock to prevent race condition when multiple threads try to create directory
         with self._cache_lock:
             if not os.path.exists(TESSDATA_DIR):
@@ -330,7 +338,10 @@ class LanguageManager(GObject.GObject):
             self.loading_languages[code] = DownloadState()
 
         def _on_added_idle(c):
-            self.emit("added", c)
+            try:
+                self.emit("added", c)
+            except Exception:
+                logger.exception(f"Anura: Failed to emit 'added' signal for {c}")
             return GLib.SOURCE_REMOVE
 
         GLib.idle_add(_on_added_idle, code, priority=GLib.PRIORITY_DEFAULT)
@@ -399,7 +410,10 @@ class LanguageManager(GObject.GObject):
                                         if progress != last_progress_value:
 
                                             def _on_progress_idle(c, p):
-                                                self.emit("downloading", c, p)
+                                                try:
+                                                    self.emit("downloading", c, p)
+                                                except Exception:
+                                                    logger.exception(f"Anura: Failed to emit 'downloading' for {c}")
                                                 return GLib.SOURCE_REMOVE
 
                                             GLib.idle_add(
@@ -412,7 +426,10 @@ class LanguageManager(GObject.GObject):
                                     else:
                                         # No content-length header, emit indeterminate progress
                                         def _on_progress_idle(c, p):
-                                            self.emit("downloading", c, p)
+                                            try:
+                                                self.emit("downloading", c, p)
+                                            except Exception:
+                                                logger.exception(f"Anura: Failed to emit 'downloading' for {c}")
                                             return GLib.SOURCE_REMOVE
 
                                         GLib.idle_add(
@@ -460,14 +477,20 @@ class LanguageManager(GObject.GObject):
             if result_code:
 
                 def _on_downloaded_idle(c):
-                    self.emit("downloaded", c)
+                    try:
+                        self.emit("downloaded", c)
+                    except Exception:
+                        logger.exception(f"Anura: Failed to emit 'downloaded' for {c}")
                     return GLib.SOURCE_REMOVE
 
                 GLib.idle_add(_on_downloaded_idle, result_code, priority=GLib.PRIORITY_DEFAULT)
             else:
 
                 def _on_failed_idle(c):
-                    self.emit("download-failed", c)
+                    try:
+                        self.emit("download-failed", c)
+                    except Exception:
+                        logger.exception(f"Anura: Failed to emit 'download-failed' for {c}")
                     return GLib.SOURCE_REMOVE
 
                 GLib.idle_add(_on_failed_idle, requested_code, priority=GLib.PRIORITY_DEFAULT)
@@ -490,7 +513,10 @@ class LanguageManager(GObject.GObject):
             logger.info(f"Anura: Model '{code}' removed successfully.")
 
             def _on_removed_idle(c):
-                self.emit("removed", c)
+                try:
+                    self.emit("removed", c)
+                except Exception:
+                    logger.exception(f"Anura: Failed to emit 'removed' for {c}")
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_removed_idle, code, priority=GLib.PRIORITY_DEFAULT)

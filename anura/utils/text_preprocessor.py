@@ -297,7 +297,7 @@ class TextPreprocessor:
         Returns:
             Dictionary of extracted structured data
         """
-        structured = {"emails": [], "urls": [], "phone_numbers": [], "dates": []}
+        structured: dict[str, list[str]] = {"emails": [], "urls": [], "phone_numbers": [], "dates": []}
 
         # Email pattern
         structured["emails"] = self._email_re.findall(text)
