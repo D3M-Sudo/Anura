@@ -4,6 +4,8 @@ from unittest.mock import patch
 import pytest
 import requests
 
+pytest.importorskip("gi")
+
 from anura.services.tts import TTSService
 
 
