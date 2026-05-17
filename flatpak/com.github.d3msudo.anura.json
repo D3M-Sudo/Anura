@@ -36,10 +36,14 @@
                 "--without-x",
                 "--disable-video",
                 "--disable-doc",
-                "--with-introspection=no"
+                "--disable-introspection"
+            ],
+            "modules-configure-commands": [
+                "sed -i 's/AC_CHECK_LIB(\\[pthread\\], \\[main\\],/AC_CHECK_LIB([c], [pthread_create],/g' configure.ac",
+                "autoreconf -vfi"
             ],
             "post-install": [
-                "install -Dm0644 LICENSE $FLATPAK_DEST/share/licenses/com.github.d3msudo.anura/zbar/LICENSE"
+                "install -Dm0644 LICENSE.md $FLATPAK_DEST/share/licenses/com.github.d3msudo.anura/zbar/LICENSE.md"
             ],
             "sources": [
                 {
@@ -51,13 +55,6 @@
                         "type": "git",
                         "tag-pattern": "^([\\d.]+)$"
                     }
-                },
-                {
-                    "type": "shell",
-                    "commands": [
-                        "sed -i 's/AC_CHECK_LIB(\\[pthread\\], \\[main\\],/AC_CHECK_LIB([c], [pthread_create],/g' configure.ac",
-                        "autoreconf -vfi"
-                    ]
                 }
             ]
         },
