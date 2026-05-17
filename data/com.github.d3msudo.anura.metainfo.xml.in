@@ -55,7 +55,7 @@
     </screenshot>
   </screenshots>
   <releases>
-    <release version="0.1.4.3" type="stable" date="2026-05-14">
+    <release version="0.1.4.3" type="stable" date="2026-05-16">
       <description>
         <p>Enhanced OCR preprocessing, modern keyboard shortcuts overlay, and robust screenshot fallback system.</p>
         <ul>
@@ -98,6 +98,35 @@
           <li>Optimized Flatpak build and updated dependencies.</li>
           <li>Improved OCR pipeline and image processing performance.</li>
           <li>Updated release notes generation logic with hybrid GitHub link display.</li>
+          <li>Added clickable QR URL notifications via XDG Desktop Portal (Flatpak-safe).</li>
+          <li>Added autocopy for QR-detected URLs with improved toast feedback.</li>
+          <li>Added pattern-based file filters for image selection dialog.</li>
+          <li>Added real-time word count status bar in OCR results page.</li>
+          <li>Added standardized localization infrastructure and Application ID.</li>
+          <li>Fixed path traversal vulnerability in LanguageManager.remove_language (HIGH severity).</li>
+          <li>Fixed URL userinfo spoofing in uri_validator (security fix).</li>
+          <li>Fixed URL truncation during QR code extraction and hand-off.</li>
+          <li>Fixed clipboard infinite fallback loop on image read failures.</li>
+          <li>Fixed callback exception handling in clipboard service.</li>
+          <li>Fixed Gio.Notification API usage for XDG Portal compatibility.</li>
+          <li>Fixed i18n bindings in Flatpak and globalized autocopy behavior.</li>
+          <li>Fixed Flatpak hybrid UI regression (i18n).</li>
+          <li>Fixed localization issues and cleaned up UI code.</li>
+          <li>Fixed broken state warning on Acknowledgements page.</li>
+          <li>Fixed navigation focus race condition.</li>
+          <li>Removed compiled gresource from git tracking and updated .gitignore.</li>
+          <li>Fixed line length violation in notification service tests.</li>
+          <li>Conducted deep codebase audit and concurrency hardening across all services.</li>
+          <li>Pre-compiled regex patterns and optimized PIL thresholding for performance.</li>
+          <li>Optimized URI validation performance with compiled regex.</li>
+          <li>Optimized image enhancement pipeline and QR code detection.</li>
+          <li>Performed full i18n audit and fixed hardcoded UI strings across the application.</li>
+          <li>Stabilized i18n infrastructure and synchronized translations (Phase 1A/1B).</li>
+          <li>Finalized Italian localization with navigation focus fixes.</li>
+          <li>Improved Palette UX and accessibility across ExtractedPage.</li>
+          <li>Refactored language API, removed dead code, and improved test coverage.</li>
+          <li>Standardized loading spinner size across the application.</li>
+          <li>Updated testing documentation.</li>
         </ul>
       </description>
     </release>
