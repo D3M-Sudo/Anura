@@ -265,7 +265,7 @@ Anura is translated via [Weblate](https://hosted.weblate.org/engage/anura/). Con
 for f in *.po; do msgmerge -U "$f" com.github.d3msudo.anura.pot --backup=none; done
 ```
 
-Then push `anura.pot`, `POTFILES`, and the updated `.po` files to keep Weblate in sync.
+Then push `com.github.d3msudo.anura.pot`, `POTFILES`, and the updated `.po` files to keep Weblate in sync.
 
 ---
 
@@ -283,5 +283,3 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines and workflow d
 Released under the **MIT** license. See [`LICENSE`](LICENSE) for details.
 
 ---
-
-*Fork of [Frog](https://github.com/freehck/frog) by Andrey Maksimov — adapted and maintained for the Anura ecosystem.*
