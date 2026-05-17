@@ -84,8 +84,8 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
     def _on_language_activate(self, _: Gtk.ListBox, row: LanguagePopoverRow) -> None:
         item: LanguageItem = row.lang
         self.emit("language-changed", item)
-        self.active_language = item.code
-        language_manager.active_language = item
+        self.active_language = item.code  # type: ignore[method-assign]
+        language_manager.active_language = item  # type: ignore[method-assign]
 
         self.settings.set_string("active-language", item.code)
         logger.debug(f"Anura: OCR language changed to '{item.code}'")
@@ -132,7 +132,7 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
             if current_code not in language_manager.get_downloaded_codes():
                 new_item = language_manager.get_language_item("eng")
                 if new_item and self.active_language != "eng":  # emit only if language actually changed
-                    self.active_language = "eng"
+                    self.active_language = "eng"  # type: ignore[method-assign]
                     self.settings.set_string("active-language", "eng")
                     self.emit("language-changed", new_item)
 

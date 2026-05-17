@@ -61,7 +61,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             from anura.types.language_item import LanguageItem
 
             item = LanguageItem(code="eng", title=_("English"))
-        language_manager_instance.active_language = item
+        language_manager_instance.active_language = item  # type: ignore[method-assign]
 
         self._setup_geometry()
         self._setup_controllers()
@@ -176,10 +176,13 @@ class AnuraWindow(Adw.ApplicationWindow):
 
     def _on_screenshot_timeout(self) -> bool:
         """Handle screenshot portal timeout."""
-        self._screenshot_timeout_id = None
-        self.present()
-        self.show_toast(_("Screenshot service did not respond."))
-        logger.warning("Anura Screenshot: Portal timeout - window restored.")
+        try:
+            self._screenshot_timeout_id = None
+            self.present()
+            self.show_toast(_("Screenshot service did not respond."))
+            logger.warning("Anura Screenshot: Portal timeout - window restored.")
+        except Exception:
+            logger.exception("Anura: Unexpected error in screenshot timeout handler")
         return False  # Don't repeat timeout
 
     def on_shot_done(self, _sender: GObject.GObject, text: str, copy: bool) -> None:
@@ -197,7 +200,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             return
 
         try:
-            self.extracted_page.extracted_text = text
+            self.extracted_page.extracted_text = text  # type: ignore[method-assign]
 
             # 1. Extract structured data (emails, URLs, phone numbers) from OCR text
             preprocessor = get_text_preprocessor()
@@ -300,9 +303,12 @@ class AnuraWindow(Adw.ApplicationWindow):
         visible until the user dismisses it or installs a backend.
         Uses detect_portal_advice to show desktop-specific install instructions.
         """
-        advice = detect_portal_advice()
-        self.portal_banner.set_title(advice.short_message)
-        self.portal_banner.set_revealed(True)
+        try:
+            advice = detect_portal_advice()
+            self.portal_banner.set_title(advice.short_message)
+            self.portal_banner.set_revealed(True)
+        except Exception:
+            logger.exception("Anura: Unexpected error handling portal backend missing")
 
     def _on_portal_banner_dismissed(self, _banner: Adw.Banner) -> None:
         """Hide the banner when the user clicks Dismiss.
@@ -586,7 +592,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         language_manager_instance = get_language_manager()
 
         # Track signal handler IDs for cleanup
-        signal_handlers = []
+        signal_handlers: list[int] = []
 
         def on_dialog_close(*args: object) -> None:
             """Clean up signal connections when dialog is closed."""
