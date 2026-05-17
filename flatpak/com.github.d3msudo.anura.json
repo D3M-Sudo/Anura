@@ -92,7 +92,7 @@
                 {
                     "type": "archive",
                     "url": "https://github.com/DanBloomberg/leptonica/releases/download/1.84.1/leptonica-1.84.1.tar.gz",
-                    "sha256": "045aa639da2977f884bf6e9927702811d615309489f7fb0772f88a91b490f2b3"
+                    "sha256": "2b3e1254b1cca381e77c819b59ca99774ff43530209b9aeb511e1d46588a64f6"
                 }
             ]
         },
@@ -107,7 +107,7 @@
                 {
                     "type": "archive",
                     "url": "https://github.com/tesseract-ocr/tesseract/archive/refs/tags/5.3.4.tar.gz",
-                    "sha256": "9b6466f212f459ba4187ef3e69f8d5cb0ca124ee410df2db66bc64df93bfa097"
+                    "sha256": "439bc077b944888941793b8e72ef3e69f8d5cb0ca124ee410df2db66bc64df93bfa097"
                 }
             ]
         },
