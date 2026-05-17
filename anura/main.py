@@ -621,7 +621,7 @@ class AnuraApplication(Adw.Application):
             about_window.add_legal_section(
                 _("Acknowledgements"),
                 "© 2022-2025 Andrey Maksimov (Frog OCR)",
-                Gtk.License.MIT_X11,
+                Gtk.License.UNKNOWN,
                 _(
                     "Built with Tesseract OCR, GTK4, Libadwaita, and other open source components."
                 ),
