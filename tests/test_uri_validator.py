@@ -79,6 +79,10 @@ class TestUriValidator:
         assert uri_validator("http://user:pass@example.com") is False
         assert uri_validator("https://admin:secret@localhost:8080") is False
 
+    def test_excessive_length_blocked(self):
+        long_url = "https://example.com/" + ("a" * 2050)
+        assert uri_validator(long_url) is False
+
     # ── Edge cases ────────────────────────────────────────────────────────────
 
     def test_empty_string(self):
