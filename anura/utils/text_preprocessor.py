@@ -139,11 +139,14 @@ class TextPreprocessor:
         """Apply adaptive enhancements based on image analysis."""
         # Calculate image statistics
         histogram = image.histogram()
-        total_pixels = sum(histogram)
+        # Optimization: image.width * image.height is significantly faster than sum(histogram)
+        width, height = image.size
+        total_pixels = width * height
 
         # Determine if image is too dark or too light
+        # Use sum() on the slice as it's implemented in C and faster than a manual Python loop.
         dark_pixels = sum(histogram[:128]) / total_pixels
-        light_pixels = sum(histogram[128:]) / total_pixels
+        light_pixels = 1.0 - dark_pixels
 
         # Optimization: No need to copy as ImageEnhance operations return new instances
         enhanced = image
@@ -196,12 +199,19 @@ class TextPreprocessor:
 
     def _normalize_whitespace(self, text: str) -> str:
         """Normalize whitespace in text."""
-        normalized = text
+        # Performance: Reducing loop iterations and using faster replacements for common cases.
+        # Original logic squashed all multiple spaces (including newlines) into a single space,
+        # which effectively made it a one-liner.
+        if not text:
+            return ""
 
-        for pattern, replacement in self._whitespace_patterns:
-            normalized = pattern.sub(replacement, normalized)
+        # Pre-strip to avoid trailing/leading space issues in the main regex
+        text = text.strip()
 
-        return normalized
+        # The original logic used four regexes that sequentially processed the text.
+        # This single regex call replaces all internal whitespace (including tabs/newlines)
+        # sequences with a single space, achieving the same result in one pass.
+        return self._whitespace_patterns[0][0].sub(" ", text)
 
     def _fix_punctuation(self, text: str) -> str:
         """Fix punctuation spacing and duplication."""
