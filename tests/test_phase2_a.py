@@ -1,11 +1,13 @@
 # tests/test_phase2_a.py
-import pytest
+import re
 from unittest.mock import patch
+
+import pytest
+
 import anura.config
 from anura.types.download_state import DownloadState
 from anura.types.language_item import LanguageItem
-import re
-import os
+
 
 class TestConfig:
     def test_lang_code_pattern(self):

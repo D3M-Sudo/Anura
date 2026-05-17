@@ -1,14 +1,14 @@
 # tests/test_phase2_d.py
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+
+from anura.services.clipboard_service import ClipboardService
+from anura.services.screenshot_service import ScreenshotService
+from anura.services.settings import Settings
 from anura.services.share_service import ShareService
 from anura.services.tts import TTSService
-from anura.services.settings import Settings
-from anura.services.screenshot_service import ScreenshotService
-from anura.services.clipboard_service import ClipboardService
-from gi.repository import GLib, Gst, Gio, Gdk
-import os
-import re
+
 
 class TestShareService:
     def setup_method(self):

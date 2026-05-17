@@ -1,9 +1,12 @@
 # tests/test_performance_benchmarks.py
-import pytest
-import time
 import os
+import time
+
 from PIL import Image
+import pytest
+
 from anura.utils.text_preprocessor import TextPreprocessor
+
 
 class TestPerformanceBenchmarks:
     def setup_method(self):
@@ -14,7 +17,7 @@ class TestPerformanceBenchmarks:
         img = Image.new("RGB", (3840, 2160), color="white")
 
         start = time.perf_counter()
-        enhanced = self.preprocessor.enhance_image(img)
+        self.preprocessor.enhance_image(img)
         end = time.perf_counter()
 
         duration = end - start
@@ -27,7 +30,7 @@ class TestPerformanceBenchmarks:
         large_text = "This is a TEST... " * 1000
 
         start = time.perf_counter()
-        cleaned = self.preprocessor.clean_extracted_text(large_text)
+        self.preprocessor.clean_extracted_text(large_text)
         end = time.perf_counter()
 
         duration = end - start
@@ -44,7 +47,7 @@ class TestPerformanceBenchmarks:
 
             img = Image.new("RGB", (1000, 1000), color="gray")
             for _ in range(50):
-                enhanced = self.preprocessor.enhance_image(img)
+                self.preprocessor.enhance_image(img)
 
             gc.collect()
             final_mem = process.memory_info().rss

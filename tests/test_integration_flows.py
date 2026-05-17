@@ -1,12 +1,13 @@
 # tests/test_integration_flows.py
+from unittest.mock import MagicMock, patch
+
+from gi.repository import GLib
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+
 from anura.services.screenshot_service import ScreenshotService
-from anura.services.tts import TTSService
 from anura.services.share_service import ShareService
-from gi.repository import GLib, GObject
-import os
-import time
+from anura.services.tts import TTSService
+
 
 class TestIntegrationFlows:
     @pytest.mark.gtk

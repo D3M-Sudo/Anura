@@ -1,10 +1,13 @@
 # tests/test_security_audit.py
-import pytest
 import re
 from unittest.mock import patch
+
+import pytest
+
 from anura.config import LANG_CODE_PATTERN
-from anura.utils.validators import uri_validator
 from anura.services.host_screenshot_fallback import _validate_tool_name
+from anura.utils.validators import uri_validator
+
 
 class TestSecurityAudit:
     def test_lang_code_injection_prevention(self):

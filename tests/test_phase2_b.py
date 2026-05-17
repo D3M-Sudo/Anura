@@ -1,12 +1,15 @@
 # tests/test_phase2_b.py
-import pytest
-from anura.gobject_worker import GObjectWorker
-from anura.utils.singleton import ThreadSafeSingleton, get_instance
-from anura.utils.signal_manager import SignalManagerMixin
-from anura.utils.validators import uri_validator
-from gi.repository import GLib, GObject
-import time
 import threading
+import time
+
+from gi.repository import GLib, GObject
+import pytest
+
+from anura.gobject_worker import GObjectWorker
+from anura.utils.signal_manager import SignalManagerMixin
+from anura.utils.singleton import ThreadSafeSingleton, get_instance
+from anura.utils.validators import uri_validator
+
 
 class TestGObjectWorker:
     @pytest.mark.gtk
@@ -73,8 +76,9 @@ class TestSingleton:
 class TestSignalManager:
     @pytest.mark.gtk
     def test_signal_manager_cleanup(self):
+        from typing import ClassVar
         class MockObject(GObject.GObject, SignalManagerMixin):
-            __gsignals__ = {
+            __gsignals__: ClassVar[dict[str, tuple]] = {
                 "test-signal": (GObject.SignalFlags.RUN_FIRST, None, ()),
             }
             def __init__(self):

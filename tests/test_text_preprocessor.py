@@ -1,7 +1,8 @@
 # tests/test_text_preprocessor.py
-import pytest
 from PIL import Image
-from anura.utils.text_preprocessor import get_text_preprocessor, TextPreprocessor
+
+from anura.utils.text_preprocessor import TextPreprocessor, get_text_preprocessor
+
 
 class TestTextPreprocessor:
     def setup_method(self):

@@ -1,17 +1,18 @@
 # tests/test_reliability_chaos.py
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import Mock, patch
+import requests
+
 from anura.services.screenshot_service import ScreenshotService
 from anura.services.tts import TTSService
-import requests
-import os
+
 
 class TestReliabilityChaos:
     @pytest.mark.gtk
     def test_ocr_missing_binary(self, monkeypatch):
         # Simulate tesseract missing from PATH
         monkeypatch.setenv("PATH", "")
-        service = ScreenshotService()
 
         # This shouldn't crash the app, but should log/emit error
         # We check the behavior of _configure_tesseract_path indirectly
@@ -45,5 +46,5 @@ class TestReliabilityChaos:
         with patch("gi.repository.Gio.SettingsSchemaSource.get_default") as mock_get:
             mock_get.return_value.lookup.return_value = None
             from anura.services.settings import Settings
-            with pytest.raises(RuntimeError, match="GSettings schema .* not found"):
+            with pytest.raises(RuntimeError, match=r"GSettings schema .* not found"):
                 Settings()

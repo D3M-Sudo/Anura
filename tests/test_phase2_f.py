@@ -1,11 +1,16 @@
 # tests/test_phase2_f.py
-import pytest
-from unittest.mock import Mock, patch
+
 import gi
+import pytest
+
+import os
+
+import gi
+
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Gtk, Adw, Gio
-import os
+
+from gi.repository import Gio
 
 # Load resources before importing widgets
 resource_path = os.path.join(os.path.dirname(__file__), "..", "data", "com.github.d3msudo.anura.gresource")
@@ -13,13 +18,11 @@ if os.path.exists(resource_path):
     res = Gio.Resource.load(resource_path)
     res._register()
 
-from anura.widgets.language_popover_row import LanguagePopoverRow
-from anura.widgets.share_row import ShareRow
-from anura.types.language_item import LanguageItem
-
 class TestWidgets:
     @pytest.mark.gtk
     def test_language_popover_row(self):
+        from anura.types.language_item import LanguageItem
+        from anura.widgets.language_popover_row import LanguagePopoverRow
         item = LanguageItem(code="fra", title="French")
         row = LanguagePopoverRow(item)
         assert row.get_child() is not None
@@ -28,6 +31,7 @@ class TestWidgets:
 
     @pytest.mark.gtk
     def test_share_row(self):
+        from anura.widgets.share_row import ShareRow
         row = ShareRow("email")
         # Check if row is created successfully
         assert row is not None
@@ -38,7 +42,7 @@ class TestWidgets:
         from anura.widgets.preferences_dialog import PreferencesDialog
         try:
             from gi.repository import Adw
-            app = Adw.Application()
+            _ = Adw.Application()
             dialog = PreferencesDialog(transient_for=None)
             assert dialog is not None
         except Exception as e:

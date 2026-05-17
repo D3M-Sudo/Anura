@@ -1,11 +1,11 @@
 # tests/test_phase2_e.py
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+
 from anura.language_manager import LanguageManager
 from anura.main import AnuraApplication
-from gi.repository import GLib, GObject, Gio
-import os
-import sys
+
 
 class TestLanguageManager:
     @pytest.mark.gtk
@@ -43,7 +43,7 @@ class TestAnuraApplication:
     @pytest.mark.gtk
     def test_app_init(self):
         # We need a GResource for Anura to start, but we can mock it or just check init
-        with patch("anura.main.Gio.Resource.load") as mock_load:
+        with patch("anura.main.Gio.Resource.load"):
             app = AnuraApplication()
             assert app.get_application_id() == "com.github.d3msudo.anura"
 
@@ -52,9 +52,10 @@ class TestAnuraWindow:
     def test_window_init(self):
         # Window needs compiled resources and UI files
         try:
-            from anura.window import AnuraWindow
-            from anura.services.screenshot_service import ScreenshotService
             from gi.repository import Adw
+
+            from anura.services.screenshot_service import ScreenshotService
+            from anura.window import AnuraWindow
             app = Adw.Application()
             backend = ScreenshotService()
             win = AnuraWindow(backend=backend, application=app)
