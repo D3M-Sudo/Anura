@@ -52,64 +52,48 @@ template $WelcomePage : Adw.NavigationPage {
 
             Button {
               action-name: "app.get_screenshot";
-              tooltip-text: C_("Welcome screen", "Take a Screenshot");
+              tooltip-text: C_("Welcome screen", "Take a Screenshot (Ctrl+G)");
               styles ["pill", "suggested-action"]
-              
-              child: Box {
-                halign: center;
-                spacing: 6;
-                Image { icon-name: "camera-photo-symbolic"; }
-                Label {
-                  label: _("_Take a Screenshot");
-                  use-underline: true;
-                }
+
+              child: Adw.ButtonContent {
+                icon-name: "camera-photo-symbolic";
+                label: _("_Take a Screenshot");
+                use-underline: true;
               };
             }
 
             Button {
               action-name: "app.open_image";
-              tooltip-text: C_("Welcome screen", "Open Image");
+              tooltip-text: C_("Welcome screen", "Open Image (Ctrl+O)");
               styles ["pill"]
 
-              child: Box {
-                halign: center;
-                spacing: 6;
-                Image { icon-name: "folder-open-symbolic"; }
-                Label {
-                  label: _("_Open Image");
-                  use-underline: true;
-                }
+              child: Adw.ButtonContent {
+                icon-name: "folder-open-symbolic";
+                label: _("_Open Image");
+                use-underline: true;
               };
             }
 
-             Button {
+            Button {
               action-name: "app.paste_from_clipboard";
-              tooltip-text: C_("Welcome screen", "Paste image from clipboard");
+              tooltip-text: C_("Welcome screen", "Paste Image from Clipboard (Ctrl+V)");
               styles ["pill"]
 
-              child: Box {
-                halign: center;
-                spacing: 6;
-                Image { icon-name: "edit-paste-symbolic"; }
-                Label {
-                  label: _("_Paste Image");
-                  use-underline: true;
-                }
+              child: Adw.ButtonContent {
+                icon-name: "edit-paste-symbolic";
+                label: _("_Paste Image");
+                use-underline: true;
               };
             }
 
             Button drop_button {
-              tooltip-text: C_("Welcome screen", "Drop image here");
+              tooltip-text: C_("Welcome screen", "Drop Image here");
               styles ["pill"]
 
-              child: Box {
-                halign: center;
-                spacing: 6;
-                Image { icon-name: "folder-drag-accept-symbolic"; }
-                Label {
-                  label: _("_Drop Image");
-                  use-underline: true;
-                }
+              child: Adw.ButtonContent {
+                icon-name: "folder-drag-accept-symbolic";
+                label: _("_Drop Image");
+                use-underline: true;
               };
             }
 

@@ -30,16 +30,36 @@ template $ShortcutsOverlay : Adw.Window {
 
       Gtk.SearchEntry search_entry {
         placeholder-text: _("Search shortcuts...");
+        accessibility {
+          label: _("Search shortcuts");
+        }
       }
 
-      Gtk.ScrolledWindow {
+      Gtk.Stack stack {
         vexpand: true;
-        hscrollbar-policy: never;
-        vscrollbar-policy: automatic;
+        transition-type: crossfade;
 
-        child: Gtk.ListBox shortcuts_list {
-          selection-mode: none;
-        };
+        Gtk.StackPage {
+          name: "shortcuts";
+          child: Gtk.ScrolledWindow {
+            hscrollbar-policy: never;
+            vscrollbar-policy: automatic;
+
+            child: Gtk.ListBox shortcuts_list {
+              selection-mode: none;
+            };
+          };
+        }
+
+        Gtk.StackPage {
+          name: "empty";
+          child: Adw.StatusPage {
+            icon-name: "system-search-symbolic";
+            title: _("No Results Found");
+            description: _("Try a different search term");
+            styles ["compact"]
+          };
+        }
       }
     }
   }
