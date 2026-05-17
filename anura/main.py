@@ -613,22 +613,21 @@ class AnuraApplication(Adw.Application):
                 copyright=_copyright,
                 website="https://github.com/D3M-Sudo/Anura",
                 license_type=Gtk.License.MIT_X11,
-                developers=["Andrey Maksimov (Frog OCR)", "D3M-Sudo (Anura)"],
+                developers=["D3M-Sudo"],
                 designers=["D3M-Sudo"],
-                release_notes=self._get_release_notes(),
             )
 
             # Add legal sections BEFORE presenting to prevent widget lifecycle warnings
             about_window.add_legal_section(
                 _("Acknowledgements"),
-                "© 2022-2025 Andrey Maksimov",
+                "© 2022-2025 Andrey Maksimov (Frog OCR)",
                 Gtk.License.MIT_X11,
                 _(
-                    "Anura is a fork of Frog OCR. This software uses Tesseract OCR, Leptonica, "
-                    "GTK4, Libadwaita, gTTS, Pillow, PyZBar, and other open source components."
+                    "Built with Tesseract OCR, GTK4, Libadwaita, and other open source components."
                 ),
             )
             about_window.add_link(_("Changelog"), "https://github.com/D3M-Sudo/Anura/blob/main/CHANGELOG.md")
+            about_window.add_link(_("Report an Issue"), "https://github.com/D3M-Sudo/Anura/issues")
 
             about_window.present(window)
             return GLib.SOURCE_REMOVE

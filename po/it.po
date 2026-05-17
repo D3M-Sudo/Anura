@@ -529,13 +529,13 @@ msgstr "Correzioni di bug e miglioramenti."
 msgid "Acknowledgements"
 msgstr "Ringraziamenti"
 
-#: anura/main.py:606
+#: anura/main.py:615
 msgid ""
-"Anura is a fork of Frog OCR. This software uses Tesseract OCR, Leptonica, "
-"GTK4, Libadwaita, gTTS, Pillow, PyZBar, and other open source components."
+"Built with Tesseract OCR, GTK4, Libadwaita, and other open source components."
 msgstr ""
+"Realizzato con Tesseract OCR, GTK4, Libadwaita e altri componenti open source."
 
-#: anura/main.py:610
+#: anura/main.py:620
 msgid "Changelog"
 msgstr "Cronologia modifiche"
 
@@ -1200,7 +1200,7 @@ msgstr "Scorciatoie da tastiera"
 msgid "About Anura"
 msgstr "Informazioni su Anura"
 
-#: data/ui/extracted_page.blp:189
+#: anura/main.py:621 data/ui/extracted_page.blp:189
 msgid "Report an Issue"
 msgstr "Segnala un problema"
 
