@@ -1360,7 +1360,7 @@ msgstr "Trascina l'immagine qui"
 
 #: data/ui/welcome_page.blp:108
 msgid "Drop Image"
-msgstr "Rilascia immagine"
+msgstr "Trascina immagine"
 
 #: data/ui/welcome_page.blp:159
 msgid "⭐ Star on GitHub"
