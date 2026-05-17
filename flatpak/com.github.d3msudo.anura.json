@@ -38,6 +38,10 @@
                 "--disable-doc",
                 "--with-introspection=no"
             ],
+            "post-patch": [
+                "sed -i 's/AC_CHECK_LIB(\\[pthread\\], \\[main\\],/AC_CHECK_LIB([c], [pthread_create],/g' configure.ac",
+                "autoreconf -vfi"
+            ],
             "post-install": [
                 "install -Dm0644 LICENSE $FLATPAK_DEST/share/licenses/com.github.d3msudo.anura/zbar/LICENSE"
             ],
@@ -51,16 +55,6 @@
                         "type": "git",
                         "tag-pattern": "^([\\d.]+)$"
                     }
-                },
-                {
-                    "type": "patch",
-                    "path": "zbar-fix-pthread.patch"
-                },
-                {
-                    "type": "shell",
-                    "commands": [
-                        "autoreconf -vfi"
-                    ]
                 }
             ]
         },
@@ -74,7 +68,7 @@
                 {
                     "type": "archive",
                     "url": "https://download.osgeo.org/libtiff/tiff-4.6.0.tar.gz",
-                    "sha256": "88b3979e6d5c7e32b50d7ec72fb15af724f6ab2cbf7e10880c360a77e4b5d99a"
+                    "sha256": "eec014aa27d4fcaf7dc477e39dcdfa16d043c5deecab9bb2d631df2cfda1dcda"
                 }
             ]
         },
@@ -92,7 +86,7 @@
                 {
                     "type": "archive",
                     "url": "https://github.com/DanBloomberg/leptonica/releases/download/1.84.1/leptonica-1.84.1.tar.gz",
-                    "sha256": "2b3e1254b1cca381e77c819b59ca99774ff43530209b9aeb511e1d46588a64f6"
+                    "sha256": "045aa639da2977f884bf6e9927702811d615309489f7fb0772f88a91b490f2b3"
                 }
             ]
         },
@@ -121,7 +115,7 @@
                 {
                     "type": "file",
                     "url": "https://github.com/tesseract-ocr/tessdata_fast/raw/main/ita.traineddata",
-                    "sha256": "b8f89e1e785118dac4d51ae042c029a64edb5c3ee42ef73027a6d412748d8827"
+                    "sha256": "e30da65cb33a6839352e00b84df46da6e6329c29f860fb7731a57c5e2ec72ccf"
                 }
             ]
         },
