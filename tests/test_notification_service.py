@@ -9,6 +9,10 @@
 # module-level `import gi` requires PyGObject (python3-gi) on the system.
 # Run with: $ uv run env GI_TYPELIB_PATH=... pytest tests/test_notification_service.py -v
 
+import pytest
+
+pytest.importorskip("gi")
+
 from unittest.mock import Mock, patch
 
 import gi
@@ -17,7 +21,7 @@ gi.require_version("GLib", "2.0")
 
 from gi.repository import GLib  # noqa: E402
 
-from anura.services.notification_service import HAS_LIBNOTIFY, NotificationService  # noqa: E402
+from anura.services.notification_service import HAS_LIBNOTIFY, NotificationService  # noqa: E402  # noqa: E402
 
 
 class TestNotificationService:
@@ -55,9 +59,7 @@ class TestNotificationService:
 
                     self.service.show_notification("Test title", "Test body")
 
-                    mock_notify.Notification.new.assert_called_once_with(
-                        "Test title", "Test body", self.service.app_id
-                    )
+                    mock_notify.Notification.new.assert_called_once_with("Test title", "Test body", self.service.app_id)
                     mock_notification.show.assert_called_once()
             else:
                 # Should not raise exception even without libnotify
@@ -133,9 +135,7 @@ class TestNotificationService:
 
             self.service.show_notification("Title", "Body")
 
-            mock_notify.Notification.new.assert_called_once_with(
-                "Title", "Body", self.service.app_id
-            )
+            mock_notify.Notification.new.assert_called_once_with("Title", "Body", self.service.app_id)
             mock_notification.show.assert_called_once()
 
     @patch("anura.services.notification_service.HAS_LIBNOTIFY", True)

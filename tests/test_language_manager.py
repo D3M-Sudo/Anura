@@ -6,6 +6,10 @@
 
 import pytest
 
+pytest.importorskip("gi")
+
+import pytest
+
 
 @pytest.mark.gtk
 class TestLanguageManager:
