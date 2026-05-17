@@ -44,13 +44,13 @@ class TestKeyboardShortcuts:
         pytest.importorskip("anura.main")
         try:
             # Import without executing GTK-dependent code
-            import anura.main
+            from anura.main import AnuraApplication
 
-            _ = anura.main.AnuraApplication._setup_actions.__doc__
+            _ = AnuraApplication._setup_actions.__doc__
 
             # Check method exists
-            assert hasattr(anura.main.AnuraApplication, "_setup_actions")
-            assert callable(anura.main.AnuraApplication._setup_actions)
+            assert hasattr(AnuraApplication, "_setup_actions")
+            assert callable(AnuraApplication._setup_actions)
 
         except ImportError as e:
             pytest.skip(f"Cannot import main module: {e}")
@@ -60,14 +60,14 @@ class TestKeyboardShortcuts:
         """Test that the source code contains the keyboard shortcut fixes."""
         pytest.importorskip("anura.main")
         try:
-            import anura.main
+            from anura.main import AnuraApplication
 
             # Get the source code of _setup_actions
-            _ = anura.main.AnuraApplication._setup_actions.__code__.co_code
+            _ = AnuraApplication._setup_actions.__code__.co_code
 
             # This is a basic check - in real scenarios we'd read the file
             # For now, we check the method exists and has proper signature
-            assert hasattr(anura.main.AnuraApplication, "_setup_actions")
+            assert hasattr(AnuraApplication, "_setup_actions")
 
         except ImportError as e:
             pytest.skip(f"Cannot import main module: {e}")
@@ -79,10 +79,10 @@ class TestKeyboardShortcuts:
         try:
             import inspect
 
-            import anura.main
+            from anura.main import AnuraApplication
 
             # Get the method
-            method = anura.main.AnuraApplication.on_paste_from_clipboard
+            method = AnuraApplication.on_paste_from_clipboard
 
             # Check signature
             sig = inspect.signature(method)
