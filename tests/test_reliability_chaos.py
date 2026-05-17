@@ -4,7 +4,6 @@ from unittest.mock import patch
 import pytest
 import requests
 
-from anura.services.screenshot_service import ScreenshotService
 from anura.services.tts import TTSService
 
 
