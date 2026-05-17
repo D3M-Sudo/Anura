@@ -4,6 +4,10 @@
 #
 # Regression test for BUG-01: AttributeError when accessing TTSService.player before play()
 
+import pytest
+
+pytest.importorskip("gi")
+
 from unittest.mock import patch
 
 from anura.services.tts import TTSService

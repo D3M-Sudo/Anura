@@ -3,6 +3,10 @@
 # Unit tests for anura/utils/cleanup.py
 # No GTK/GLib required — pure Python only.
 
+import pytest
+
+pytest.importorskip("gi")
+
 import os
 import tempfile
 import time

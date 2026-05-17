@@ -1,4 +1,8 @@
 # tests/test_text_preprocessor.py
+import pytest
+
+pytest.importorskip("gi")
+
 from PIL import Image
 
 from anura.utils.text_preprocessor import TextPreprocessor, get_text_preprocessor

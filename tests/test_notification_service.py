@@ -9,6 +9,10 @@
 # module-level `import gi` requires PyGObject (python3-gi) on the system.
 # Run with: $ uv run env GI_TYPELIB_PATH=... pytest tests/test_notification_service.py -v
 
+import pytest
+
+pytest.importorskip("gi")
+
 from unittest.mock import Mock, patch
 
 import gi
@@ -17,7 +21,7 @@ gi.require_version("GLib", "2.0")
 
 from gi.repository import GLib  # noqa: E402
 
-from anura.services.notification_service import HAS_LIBNOTIFY, NotificationService  # noqa: E402
+from anura.services.notification_service import HAS_LIBNOTIFY, NotificationService  # noqa: E402  # noqa: E402
 
 
 class TestNotificationService:

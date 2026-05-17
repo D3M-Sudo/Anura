@@ -3,6 +3,10 @@
 # Unit tests for ClipboardService
 # Tests clipboard read/write operations and error handling
 
+import pytest
+
+pytest.importorskip("gi")
+
 from gettext import gettext as _
 from unittest.mock import Mock, patch
 

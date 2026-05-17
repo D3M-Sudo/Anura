@@ -4,6 +4,10 @@
 
 import pytest
 
+pytest.importorskip("gi")
+
+import pytest
+
 from anura.utils.validators import uri_validator
 
 

@@ -3,6 +3,10 @@
 # Unit tests for TTSService
 # Tests language mapping, audio generation, and GStreamer integration
 
+import pytest
+
+pytest.importorskip("gi")
+
 from unittest.mock import Mock, patch
 
 import pytest

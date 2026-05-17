@@ -1,4 +1,8 @@
 # tests/test_performance_benchmarks.py
+import pytest
+
+pytest.importorskip("gi")
+
 import os
 import time
 
