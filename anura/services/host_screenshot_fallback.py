@@ -64,36 +64,33 @@ HOST_SCREENSHOT_TOOLS: tuple[HostScreenshotTool, ...] = (
 )
 
 
-def build_screenshot_argv(tool: HostScreenshotTool, output_path: str) -> list[str]:
-    """Build the ``flatpak-spawn --host`` argv that captures into ``output_path``.
+def build_screenshot_argv(tool: HostScreenshotTool, output_path: str, in_flatpak: bool = True) -> list[str]:
+    """Build the argv that captures into ``output_path``.
 
-    The output path must be addressable at the same string from inside the
-    sandbox and on the host. The simplest way to guarantee that is to use a
-    file under ``~/Downloads`` (mapped via ``--filesystem=xdg-download``).
+    If ``in_flatpak`` is True, uses ``flatpak-spawn --host`` to reach the host.
     """
-    return ["flatpak-spawn", "--host", tool.name, *tool.flags, output_path]
+    argv = [tool.name, *tool.flags, output_path]
+    if in_flatpak:
+        argv = ["flatpak-spawn", "--host"] + argv
+    return argv
 
 
 def build_detection_argv(
     tools: Sequence[HostScreenshotTool] = HOST_SCREENSHOT_TOOLS,
+    in_flatpak: bool = True,
 ) -> list[str]:
-    """Build a ``flatpak-spawn --host`` argv that prints the first available tool.
+    """Build an argv that prints the first available tool.
 
-    The returned command runs a tiny ``sh`` script on the host that walks the
-    given tool names and prints the first one for which ``command -v`` finds
-    an executable on ``$PATH``, then exits 0. If no tool is found, the script
-    exits non-zero and prints nothing.
-
-    The shell script is intentionally minimal — no quoting tricks, no eval —
-    so it is safe to construct from the hard-coded ``HOST_SCREENSHOT_TOOLS``
-    list. Tool names must therefore be plain identifiers (alphanumerics and
-    hyphens); ``_validate_tool_name`` enforces that.
+    If ``in_flatpak`` is True, uses ``flatpak-spawn --host``.
     """
     for tool in tools:
         _validate_tool_name(tool.name)
     tool_names = " ".join(tool.name for tool in tools)
     script = f'for t in {tool_names}; do if command -v "$t" >/dev/null 2>&1; then echo "$t"; exit 0; fi; done; exit 1'
-    return ["flatpak-spawn", "--host", "sh", "-c", script]
+
+    if in_flatpak:
+        return ["flatpak-spawn", "--host", "sh", "-c", script]
+    return ["sh", "-c", script]
 
 
 def _validate_tool_name(name: str) -> None:

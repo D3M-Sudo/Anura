@@ -287,6 +287,37 @@ class ScreenshotService(GObject.GObject):
             f"Anura Screenshot diagnostics: in_flatpak={in_flatpak}, {snapshot}",
         )
 
+    def _has_flatpak_spawn_permission(self) -> bool:
+        """Check if the app has permission to use flatpak-spawn --host.
+
+        This requires the org.freedesktop.Flatpak bus name to be talkable
+        via the --talk-name=org.freedesktop.Flatpak permission.
+        """
+        if not _is_flatpak_environment():
+            return False
+
+        try:
+            # Probe for the Flatpak bus name on the session bus.
+            # This is the name flatpak-spawn needs to communicate with.
+            bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+            # Use NameHasOwner to check if we can even see the bus name.
+            # If the permission is missing, we shouldn't be able to talk to it.
+            res = bus.call_sync(
+                "org.freedesktop.DBus",
+                "/org/freedesktop/DBus",
+                "org.freedesktop.DBus",
+                "NameHasOwner",
+                GLib.Variant("(s)", ("org.freedesktop.Flatpak",)),
+                None,
+                Gio.DBusCallFlags.NONE,
+                -1,
+                None,
+            )
+            return res.get_child_value(0).get_boolean()
+        except GLib.Error as e:
+            logger.debug(f"Anura Screenshot: flatpak-spawn permission probe failed: {e.message}")
+            return False
+
     def _emit_portal_failure(self) -> None:
         """Emit the user-facing failure UI for a missing portal backend.
 
@@ -317,21 +348,24 @@ class ScreenshotService(GObject.GObject):
 
         Triggered after ``xdg-desktop-portal`` returns the libportal generic
         ``Screenshot failed`` (no backend exposes the Screenshot interface
-        for the active session). Tries ``flatpak-spawn --host`` to invoke
-        a host-installed screenshot tool (gnome-screenshot, xfce4-screenshooter,
-        scrot, …). On success the captured PNG is fed into the same OCR
-        pipeline as portal screenshots; on failure ``_emit_portal_failure``
-        surfaces the original error.
-
-        Only runs in a Flatpak sandbox — outside Flatpak there is no
-        ``flatpak-spawn`` and the portal failure is genuinely terminal.
+        for the active session). Tries ``flatpak-spawn --host`` (in sandbox)
+        or direct tool execution (native) to invoke a screenshot tool
+        (gnome-screenshot, scrot, …).
         """
-        if not _is_flatpak_environment():
+        in_flatpak = _is_flatpak_environment()
+
+        if in_flatpak and not self._has_flatpak_spawn_permission():
+            logger.warning(
+                "Anura Screenshot: Portal failed and host fallback is disabled "
+                "(missing org.freedesktop.Flatpak permission). "
+                "This is expected in the official Flathub build for security compliance."
+            )
             self._is_capturing = False
             self._emit_portal_failure()
             return
+
         try:
-            argv = build_detection_argv()
+            argv = build_detection_argv(in_flatpak=in_flatpak)
             proc = Gio.Subprocess.new(
                 argv,
                 Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_SILENCE,
@@ -401,8 +435,11 @@ class ScreenshotService(GObject.GObject):
         env_snapshot = ", ".join(f"{k}={os.environ.get(k) or '<unset>'}" for k in env_vars)
         logger.debug(f"Anura Screenshot: host fallback env: {env_snapshot}")
 
-        # Create the directory on the host asynchronously to avoid blocking main thread
-        mkdir_argv = ["flatpak-spawn", "--host", "mkdir", "-p", str(output_dir)]
+        # Create the directory asynchronously to avoid blocking main thread
+        mkdir_argv = ["mkdir", "-p", str(output_dir)]
+        if _is_flatpak_environment():
+            mkdir_argv = ["flatpak-spawn", "--host"] + mkdir_argv
+
         try:
             mkdir_proc = Gio.Subprocess.new(mkdir_argv, Gio.SubprocessFlags.STDERR_SILENCE)
             mkdir_proc.wait_async(
@@ -441,7 +478,7 @@ class ScreenshotService(GObject.GObject):
 
         # Now proceed with screenshot capture
         try:
-            argv = build_screenshot_argv(tool, output_path)
+            argv = build_screenshot_argv(tool, output_path, in_flatpak=_is_flatpak_environment())
             logger.debug(f"Anura Screenshot: host fallback argv: {argv}")
             capture_proc = Gio.Subprocess.new(
                 argv,
