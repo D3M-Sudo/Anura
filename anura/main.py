@@ -1,7 +1,14 @@
+import os
+
+# Suppress a11y bus warnings in headless CI environments and ensure
+# they are set even when the app is launched without --env flags.
+# These must be set before ANY other import, especially 'gi', to be effective.
+os.environ.setdefault("NO_AT_BRIDGE", "1")
+os.environ.setdefault("GTK_A11Y", "none")
+
 import contextlib
 import gettext
 import locale
-import os
 import sys
 import threading
 from typing import Any
@@ -97,11 +104,6 @@ _setup_i18n()
 
 from gettext import gettext as _
 import html
-
-# Suppress a11y bus warnings in headless CI environments and ensure
-# they are set even when the app is launched without --env flags.
-os.environ.setdefault("NO_AT_BRIDGE", "1")
-os.environ.setdefault("GTK_A11Y", "none")
 
 import gi
 
