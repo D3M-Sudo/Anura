@@ -34,10 +34,12 @@ class TextPreprocessor:
         self._sentence_split_re = re.compile(r"((?<!\d)[.!?]+)\s*")
 
         # Pre-compiled regexes for artifacts removal
-        self._page_num_re = re.compile(r"^\s*\d+\s*$")
-        self._special_chars_re = re.compile(r"^[\s\-_+=*~`]+$|^[\.\-]{3,}$")
-        self._bullets_re = re.compile(r"^[\s•·▪▫◦‣]+\s*")
-        self._list_marker_re = re.compile(r"^-\s+")
+        # Optimization: use [ \t] instead of \s and re.MULTILINE to allow processing the
+        # entire text block at once while preserving line structure.
+        self._page_num_re = re.compile(r"^[ \t]*\d+[ \t]*\r?\n?", re.MULTILINE)
+        self._special_chars_re = re.compile(r"^(?:[ \t\-_+=*~`]+|[\.\-]{3,})\r?\n?", re.MULTILINE)
+        self._bullets_re = re.compile(r"^[ \t•·▪▫◦‣]+[ \t]*", re.MULTILINE)
+        self._list_marker_re = re.compile(r"^- +", re.MULTILINE)
 
         # Pre-compiled structured data patterns
         self._email_re = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b")
@@ -208,6 +210,8 @@ class TextPreprocessor:
             fixed = pattern.sub(replacement, fixed)
 
         # Fix spacing around parentheses and quotes
+        # Note: 4 separate passes are used as they are highly optimized in C and
+        # avoid Python lambda callback overhead, which can be slower on frequent matches.
         fixed = self._paren_open_re.sub(" (", fixed)
         fixed = self._paren_close_re.sub(") ", fixed)
         fixed = self._quote_double_re.sub(' "', fixed)
@@ -222,20 +226,21 @@ class TextPreprocessor:
 
         # Capitalize first letter of sentences.
         # re.split with a capturing group returns alternating [text, sep, text, sep, …].
-        # We join them with a space so the whitespace consumed by \s* is restored.
+        # We process and rebuild the list in a single pass to minimize string allocations.
         parts = self._sentence_split_re.split(text)
-        for i in range(0, len(parts), 2):
-            if parts[i].strip():
-                parts[i] = parts[i][0].upper() + parts[i][1:] if len(parts[i]) > 1 else parts[i].upper()
-
-        # Rebuild: interleave text and punctuation, adding a space after each punctuation
-        # block to replace the whitespace that the split consumed.
         rebuilt: list[str] = []
+
         for i, part in enumerate(parts):
-            if i % 2 == 1:  # punctuation capture group
+            if i % 2 == 0:  # text part
+                if part.strip():
+                    # Optimization: slice indexing [0:1] is safer/faster for capitalization
+                    # and handles empty strings gracefully.
+                    rebuilt.append(part[0:1].upper() + part[1:])
+                else:
+                    rebuilt.append(part)
+            else:  # punctuation part (capture group)
                 rebuilt.append(part + " ")
-            else:
-                rebuilt.append(part)
+
         fixed = "".join(rebuilt).strip()
 
         # Fix ALL CAPS words: words longer than 4 characters are likely not acronyms
@@ -254,27 +259,20 @@ class TextPreprocessor:
 
     def _remove_artifacts(self, text: str) -> str:
         """Remove common OCR artifacts."""
-        # Remove page numbers and headers/footers patterns
-        lines = text.split("\n")
-        cleaned_lines = []
+        # Optimization: Use multiline regex substitutions to process the entire
+        # text block at once, avoiding expensive Python-level line splitting
+        # and iteration.
 
-        for line in lines:
-            # Skip likely page numbers
-            if self._page_num_re.match(line):
-                continue
+        # Remove page numbers and lines with only special characters
+        cleaned = self._page_num_re.sub("", text)
+        cleaned = self._special_chars_re.sub("", cleaned)
 
-            # Skip lines with only special characters
-            if self._special_chars_re.match(line):
-                continue
+        # Remove leading Unicode bullet characters and markdown-style list markers
+        # re.MULTILINE ensures '^' matches the start of each line.
+        cleaned = self._bullets_re.sub("", cleaned, count=0)
+        cleaned = self._list_marker_re.sub("", cleaned, count=0)
 
-            # Remove leading Unicode bullet characters (never ambiguous)
-            line = self._bullets_re.sub("", line)
-            # Remove markdown-style list markers ("- ") only when followed by a space
-            line = self._list_marker_re.sub("", line)
-
-            cleaned_lines.append(line)
-
-        return "\n".join(cleaned_lines)
+        return cleaned
 
     def extract_structured_data(self, text: str) -> dict[str, list[str]]:
         """
