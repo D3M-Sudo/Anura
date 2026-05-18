@@ -399,6 +399,10 @@ class AnuraWindow(Adw.ApplicationWindow):
         gif_filter.add_mime_type("image/gif")
         gif_filter.add_pattern("*.gif")
 
+        all_files_filter = Gtk.FileFilter()
+        all_files_filter.set_name(_("All files (*)"))
+        all_files_filter.add_pattern("*")
+
         filters = Gio.ListStore.new(Gtk.FileFilter)
         filters.append(all_img_filter)
         filters.append(png_filter)
@@ -408,6 +412,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         filters.append(tiff_filter)
         filters.append(bmp_filter)
         filters.append(gif_filter)
+        filters.append(all_files_filter)
         dialog.set_filters(filters)
         dialog.set_default_filter(all_img_filter)
 
