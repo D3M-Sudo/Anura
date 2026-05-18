@@ -128,7 +128,10 @@ class ShareService(GObject.GObject):
             )
 
             def _on_share_idle(res):
-                self.emit("share", res)
+                try:
+                    self.emit("share", res)
+                except Exception:
+                    logger.exception("Anura: Failed to emit share status")
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_share_idle, False)
@@ -147,7 +150,10 @@ class ShareService(GObject.GObject):
                 else:
 
                     def _on_share_idle(res):
-                        self.emit("share", res)
+                        try:
+                            self.emit("share", res)
+                        except Exception:
+                            logger.exception("Anura: Failed to emit share status")
                         return GLib.SOURCE_REMOVE
 
                     GLib.idle_add(_on_share_idle, True)
@@ -185,7 +191,10 @@ class ShareService(GObject.GObject):
 
         # Connect response signal
         def _on_response(dlg, response):
-            self._on_mastodon_instance_selected(dlg, response, encoded_text)
+            try:
+                self._on_mastodon_instance_selected(dlg, response, encoded_text)
+            except Exception:
+                logger.exception("Anura: Unexpected error in Mastodon instance selection")
 
         dialog.connect("response", _on_response)
 
@@ -209,13 +218,19 @@ class ShareService(GObject.GObject):
                     if main_window and hasattr(main_window, "show_toast"):
 
                         def _on_toast_idle(msg):
-                            main_window.show_toast(msg)
+                            try:
+                                main_window.show_toast(msg)
+                            except Exception:
+                                logger.exception("Anura: Failed to show toast")
                             return GLib.SOURCE_REMOVE
 
                         GLib.idle_add(_on_toast_idle, _("Cannot show dialog without active window"))
 
                 def _on_share_idle(res):
-                    self.emit("share", res)
+                    try:
+                        self.emit("share", res)
+                    except Exception:
+                        logger.exception("Anura: Failed to emit share status")
                     return GLib.SOURCE_REMOVE
 
                 GLib.idle_add(_on_share_idle, False)
@@ -224,7 +239,10 @@ class ShareService(GObject.GObject):
             logger.error(f"Anura Share: Failed to show Mastodon instance dialog: {e}")
 
             def _on_share_idle(res):
-                self.emit("share", res)
+                try:
+                    self.emit("share", res)
+                except Exception:
+                    logger.exception("Anura: Failed to emit share status")
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_share_idle, False)
@@ -243,7 +261,10 @@ class ShareService(GObject.GObject):
                 logger.error(f"Anura Share: Failed to share via Mastodon instance {domain}: {e}")
 
                 def _on_share_idle(res):
-                    self.emit("share", res)
+                    try:
+                        self.emit("share", res)
+                    except Exception:
+                        logger.exception("Anura: Failed to emit share status")
                     return GLib.SOURCE_REMOVE
 
                 GLib.idle_add(_on_share_idle, False)
@@ -258,7 +279,10 @@ class ShareService(GObject.GObject):
             success = self.launcher.launch_finish(result)
 
             def _on_share_idle(res):
-                self.emit("share", res)
+                try:
+                    self.emit("share", res)
+                except Exception:
+                    logger.exception("Anura: Failed to emit share status")
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_share_idle, success)
@@ -266,7 +290,10 @@ class ShareService(GObject.GObject):
             logger.warning(f"Anura Share Warning: URI launch failed: {e}")
 
             def _on_share_idle(res):
-                self.emit("share", res)
+                try:
+                    self.emit("share", res)
+                except Exception:
+                    logger.exception("Anura: Failed to emit share status")
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_share_idle, False)

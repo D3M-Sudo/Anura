@@ -124,9 +124,12 @@ class ExtractedPage(Adw.NavigationPage):
 
     def _reset_copy_icon(self, icon_name: str) -> bool:
         """Helper to reset copy button icon."""
-        if self.text_copy_btn and self.text_copy_btn.get_icon_name() == "emblem-ok-symbolic":
-            # Only reset if it's still showing the checkmark (don't overwrite newer state)
-            self.text_copy_btn.set_icon_name(icon_name)
+        try:
+            if self.text_copy_btn and self.text_copy_btn.get_icon_name() == "emblem-ok-symbolic":
+                # Only reset if it's still showing the checkmark (don't overwrite newer state)
+                self.text_copy_btn.set_icon_name(icon_name)
+        except Exception:
+            logger.exception("Anura: Failed to reset copy icon")
         return GLib.SOURCE_REMOVE
 
     def do_hiding(self) -> None:
@@ -238,12 +241,18 @@ class ExtractedPage(Adw.NavigationPage):
         ocr_lang = self.settings.get_string("active-language")
         tts_lang = tts_service_instance.get_effective_language(ocr_lang)
 
-        GObjectWorker.call(
-            tts_service_instance.generate,
-            (self.extracted_text, tts_lang),
-            callback=self._on_generated,
-            errorback=self._on_generate_error,
-        )
+        try:
+            GObjectWorker.call(
+                tts_service_instance.generate,
+                (self.extracted_text, tts_lang),
+                callback=self._on_generated,
+                errorback=self._on_generate_error,
+            )
+        except Exception:
+            self._is_generating_tts = False
+            self._set_spinner_active(False)
+            self.swap_controls(False)
+            logger.exception("Anura TTS: Failed to initiate speech generation")
 
     def _set_spinner_active(self, active: bool) -> None:
         """X11 Constraint: Switch Stack between button and spinner."""

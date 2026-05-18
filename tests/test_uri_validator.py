@@ -4,6 +4,10 @@
 
 import pytest
 
+pytest.importorskip("gi")
+
+import pytest
+
 from anura.utils.validators import uri_validator
 
 
@@ -78,6 +82,10 @@ class TestUriValidator:
         assert uri_validator("http://google.com@evil.com") is False
         assert uri_validator("http://user:pass@example.com") is False
         assert uri_validator("https://admin:secret@localhost:8080") is False
+
+    def test_excessive_length_blocked(self):
+        long_url = "https://example.com/" + ("a" * 2050)
+        assert uri_validator(long_url) is False
 
     # ── Edge cases ────────────────────────────────────────────────────────────
 

@@ -3,6 +3,10 @@
 # Unit tests for ScreenshotService
 # Tests image validation, OCR processing, and QR decoding logic
 
+import pytest
+
+pytest.importorskip("gi")
+
 import os
 from unittest.mock import Mock, patch
 

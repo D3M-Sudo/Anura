@@ -3,6 +3,10 @@
 # Unit tests for anura/config.py
 # No GTK/GLib required — pure Python only.
 
+import pytest
+
+pytest.importorskip("gi")
+
 import re
 from unittest.mock import patch
 

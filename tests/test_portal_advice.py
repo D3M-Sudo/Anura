@@ -1,11 +1,15 @@
+from __future__ import annotations
+
 # tests/test_portal_advice.py
 #
 # Pure-Python tests for `anura.utils.portal_advice.detect_portal_advice`.
 # These run under `uv run pytest tests/ -m "not gtk"` because the helper
 # has zero GTK / Xdp / Gio dependencies — it only reads the host's
 # `XDG_CURRENT_DESKTOP` env var and returns a structured advice object.
+import pytest
 
-from __future__ import annotations
+pytest.importorskip("gi")
+
 
 from urllib.parse import urlparse
 

@@ -1,4 +1,8 @@
 # tests/test_services.py
+import pytest
+
+pytest.importorskip("gi")
+
 #
 # Unit tests for Anura services
 #

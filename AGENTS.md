@@ -440,21 +440,14 @@ pytest tests/ -v -m "not gtk"
 # Unit logic tests only
 pytest tests/test_unit_logic.py -v
 
-# Setup GSettings schema for GTK tests (required once)
-mkdir -p builddir
-cp data/com.github.d3msudo.anura.gschema.xml builddir/
-glib-compile-schemas builddir/
+# Setup GSettings schema and GResource for GTK tests (required once)
+./setup-gschema.sh
+./tests/setup_resources.sh
 
 # Service-specific tests (requires system gi + GSettings)
 export GSETTINGS_SCHEMA_DIR="builddir"
-pytest tests/test_screenshot_service.py -v
-pytest tests/test_clipboard_service.py -v
-pytest tests/test_share_service.py -v
-pytest tests/test_tts_service.py -v
-pytest tests/test_notification_service.py -v
-
-# Or use automated setup script
-./setup-gschema.sh
+export PYTHONPATH="/usr/lib/python3/dist-packages:."
+pytest tests/ -v
 
 # GTK tests (require Flatpak environment)
 flatpak run --devel --command=bash com.github.d3msudo.anura
