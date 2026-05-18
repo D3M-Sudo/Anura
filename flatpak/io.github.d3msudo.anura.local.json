@@ -90,6 +90,9 @@
                 "/bin"
             ],
             "config-opts": [
+                "--disable-static",
+                "--with-libpng",
+                "--with-jpeg",
                 "--with-libtiff",
                 "--with-zlib"
             ],
@@ -112,12 +115,17 @@
         },
         {
             "name": "tesseract",
-            "buildsystem": "autotools",
-            "cleanup": [
-                "/bin"
-            ],
-            "post-install": [
+            "buildsystem": "simple",
+            "build-commands": [
+                "./autogen.sh",
+                "./configure --prefix=/app --disable-graphics --disable-legacy --disable-training",
+                "make -j$(nproc)",
+                "make install",
                 "install -Dm0644 LICENSE $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/tesseract/LICENSE"
+            ],
+            "cleanup": [
+                "/include",
+                "/lib/pkgconfig"
             ],
             "sources": [
                 {

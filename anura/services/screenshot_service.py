@@ -46,22 +46,28 @@ from anura.utils.text_preprocessor import get_text_preprocessor  # noqa: E402
 
 def _is_flatpak_environment() -> bool:
     """Detect if running in Flatpak sandbox."""
-    return os.path.exists("/.flatpak-info")
+    return os.path.exists("/.flatpak-info") or "FLATPAK_ID" in os.environ
 
 
 def _configure_tesseract_path() -> None:
     """Configure Tesseract command path for Flatpak environment."""
-    if _is_flatpak_environment() and os.path.exists("/app/bin/tesseract"):
+    is_flatpak = _is_flatpak_environment()
+    flatpak_tess_bin = "/app/bin/tesseract"
+
+    if is_flatpak and os.path.exists(flatpak_tess_bin):
         # Force Tesseract to use Flatpak path
-        os.environ["TESSERACT_CMD"] = "/app/bin/tesseract"
-        logger.info("Anura OCR: Using Flatpak Tesseract at /app/bin/tesseract")
+        os.environ["TESSERACT_CMD"] = flatpak_tess_bin
+        pytesseract.pytesseract.tesseract_cmd = flatpak_tess_bin
+        logger.info(f"Anura OCR: Using Flatpak Tesseract at {flatpak_tess_bin}")
     else:
         # Use system Tesseract from PATH
         os.environ.pop("TESSERACT_CMD", None)
+        # Reset pytesseract.tesseract_cmd to default 'tesseract' to allow PATH search
+        pytesseract.pytesseract.tesseract_cmd = "tesseract"
         logger.debug("Anura OCR: Using system Tesseract from PATH")
 
     # Final validation: check if tesseract binary is actually reachable
-    tess_bin = os.environ.get("TESSERACT_CMD", "tesseract")
+    tess_bin = pytesseract.pytesseract.tesseract_cmd
     if not shutil.which(tess_bin):
         logger.error(f"Anura OCR: Tesseract binary '{tess_bin}' not found in PATH or configured location")
 
