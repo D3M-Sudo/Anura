@@ -134,23 +134,34 @@ jobs:
           echo "✓ All gresource.xml references resolved successfully"
 
       # 3. HEADLESS RUNTIME SMOKE TEST
+      - name: Install D-Bus for smoke test
+        run: |
+          apt-get update -qq
+          apt-get install -y --no-install-recommends dbus
+
       - name: Smoke Test - Headless Runtime
         run: |
           echo "=== Installing bundle for smoke test ==="
           flatpak install --user --noninteractive --bundle io.github.d3msudo.anura.flatpak
-          
+
           echo "=== Running smoke test with virtual display ==="
           # Test app launch with virtual display and isolated D-Bus session
           # --help exits immediately with code 0 if app starts correctly
           # Environment variables to suppress harmless warnings in headless CI:
           # - NO_AT_BRIDGE=1: disables a11y bus warnings
           # - GTK_A11Y=none: disables GTK accessibility entirely for headless mode
+          # - AT_SPI_BUS_ADDRESS=disabled: blocks GTK4 a11y bus lookup at runtime
           # - LIBGL_ALWAYS_SOFTWARE=1: forces software rendering, suppresses DRI3 warnings
-          if ! dbus-run-session xvfb-run -a flatpak run --env=NO_AT_BRIDGE=1 --env=GTK_A11Y=none --env=LIBGL_ALWAYS_SOFTWARE=1 io.github.d3msudo.anura --help; then
+          if ! dbus-run-session xvfb-run -a flatpak run \
+              --env=NO_AT_BRIDGE=1 \
+              --env=GTK_A11Y=none \
+              --env=AT_SPI_BUS_ADDRESS=disabled \
+              --env=LIBGL_ALWAYS_SOFTWARE=1 \
+              io.github.d3msudo.anura --help; then
             echo "✗ Smoke test failed - app failed to launch"
             exit 1
           fi
-          
+
           # Verify app is properly installed
           if ! flatpak list --user | grep -q io.github.d3msudo.anura; then
             echo "✗ Smoke test failed - app not found in installation"
