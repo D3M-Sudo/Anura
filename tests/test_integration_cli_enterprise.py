@@ -88,12 +88,19 @@ class TestCLIIntegrationEnterprise:
 
     def test_on_decoded_no_window(self, app):
         """Test application-level on_decoded when no GUI window is present."""
+        from gi.repository import GLib
+
         # active-window is a read-only GObject property, we need to mock the props object
         with patch.object(app, "props") as mock_props:
             mock_props.active_window = None
 
         # Case: No text found
         app.on_decoded(None, "", copy=False)
+
+        # Process the main loop to execute idle_add callbacks
+        while GLib.MainContext.default().iteration(False):
+            pass
+
         app.notification_service.show_notification.assert_called_with(
             title="Anura OCR", body="No text found. Try to grab another region."
         )
@@ -102,6 +109,11 @@ class TestCLIIntegrationEnterprise:
         with patch("anura.main.get_clipboard_service") as mock_get_cb:
             mock_cb = mock_get_cb.return_value
             app.on_decoded(None, "found text", copy=True)
+
+            # Process the main loop to execute idle_add callbacks
+            while GLib.MainContext.default().iteration(False):
+                pass
+
             mock_cb.set.assert_called_with("found text")
             app.notification_service.show_notification.assert_any_call(
                 title="Anura OCR", body="Text extracted and copied to clipboard."
