@@ -432,9 +432,7 @@ class LanguageManager(GObject.GObject):
                                                 logger.exception(f"Anura: Failed to emit 'downloading' for {c}")
                                             return GLib.SOURCE_REMOVE
 
-                                        GLib.idle_add(
-                                            _on_progress_idle, code, -1, priority=GLib.PRIORITY_DEFAULT
-                                        )
+                                        GLib.idle_add(_on_progress_idle, code, -1, priority=GLib.PRIORITY_DEFAULT)
                                     last_progress_time = now
 
                     # Use copy+delete for cross-filesystem compatibility

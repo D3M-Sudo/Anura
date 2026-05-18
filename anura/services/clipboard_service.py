@@ -270,6 +270,7 @@ class ClipboardService(GObject.GObject):
 
     def _emit_clipboard_error(self, message: str) -> None:
         """Emit the ``error`` signal from the main thread via idle_add."""
+
         def _on_error_idle():
             self.emit("error", message)
             return GLib.SOURCE_REMOVE
@@ -539,6 +540,7 @@ class ClipboardService(GObject.GObject):
                 raise ValueError("No valid text found in result.")
 
             logger.info("Anura Clipboard: Text retrieved from clipboard.")
+
             # For text reading, we might emit a different signal or handle differently
             # For now, just log the success
             def _on_success_idle(t):
@@ -595,6 +597,7 @@ class ClipboardService(GObject.GObject):
         if not active_cancellable.is_cancelled():
             logger.warning("Anura Clipboard: Read operation timed out after 10s, cancelling.")
             active_cancellable.cancel()
+
             # Emit error signal so UI can show user feedback
             def _on_error_idle():
                 self.emit("error", _("Clipboard read operation timed out."))
