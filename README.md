@@ -237,7 +237,8 @@ mkdir -p builddir
 cp data/io.github.d3msudo.anura.gschema.xml builddir/
 glib-compile-schemas builddir/
 export GSETTINGS_SCHEMA_DIR="builddir"
-pytest tests/test_screenshot_service.py tests/test_clipboard_service.py tests/test_tts_service.py -v
+export PYTHONPATH="/usr/lib/python3/dist-packages:."
+pytest tests/ -v
 ```
 
 > **Note:** Tests marked `@pytest.mark.gtk` require system GTK libraries and GSettings schema.  
