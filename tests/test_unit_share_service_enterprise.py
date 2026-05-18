@@ -5,7 +5,6 @@ import pytest
 
 pytest.importorskip("gi")
 
-
 from anura.services.share_service import ShareService
 
 

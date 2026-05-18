@@ -1,13 +1,13 @@
+import pytest
+
 # tests/test_unit_widgets_enterprise.py
+
+pytest.importorskip("gi")
 from unittest.mock import MagicMock, patch
 
 # We need to register resources and initialize Adw before importing widgets that use templates
 import gi
 from gi.repository import Adw, Gio
-import pytest
-
-pytest.importorskip("gi")
-
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
@@ -102,7 +102,6 @@ class TestExtractedPageEnterprise:
         # We don't want to wait 2 seconds in a unit test, so we just verify it set the icon.
         # The timeout logic is standard GLib.
 
-
 class TestWelcomePageEnterprise:
     """
     Enterprise-grade tests for WelcomePage widget.
@@ -160,7 +159,6 @@ class TestWelcomePageEnterprise:
         assert widget.drop_area.get_visible() is False
         assert widget.spinner.get_visible() is False
         assert not widget.drop_button.has_css_class("suggested-action")
-
 
 class TestLanguagePopoverEnterprise:
     """

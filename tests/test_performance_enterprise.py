@@ -7,7 +7,6 @@ import pytest
 
 pytest.importorskip("gi")
 
-
 from anura.utils.text_preprocessor import TextPreprocessor
 
 

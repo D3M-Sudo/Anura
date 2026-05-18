@@ -5,7 +5,6 @@ import pytest
 
 pytest.importorskip("gi")
 
-
 from anura.services.screenshot_service import ScreenshotService
 
 

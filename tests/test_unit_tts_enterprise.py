@@ -5,7 +5,6 @@ import pytest
 
 pytest.importorskip("gi")
 
-
 from anura.services.tts import TTSService
 
 

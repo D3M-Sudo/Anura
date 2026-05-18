@@ -6,7 +6,6 @@ import pytest
 
 pytest.importorskip("gi")
 
-
 from anura.language_manager import LanguageManager
 from anura.types.download_state import DownloadState
 

@@ -1,11 +1,11 @@
+import pytest
+
 # tests/test_integration_cli_enterprise.py
+
+pytest.importorskip("gi")
 from unittest.mock import MagicMock, patch
 
 from gi.repository import Gio
-import pytest
-
-pytest.importorskip("gi")
-
 
 from anura.main import AnuraApplication
 
