@@ -172,8 +172,8 @@ class TTSService(GObject.GObject):
         logger.debug("Anura TTSService: Initializing TTS service singleton")
         os.makedirs(self._speech_dir, exist_ok=True)
 
-        # Initialize all instance attributes (fixes BUG-1: __slots__ compliance,
-        # BUG-2: class-level state leaking between instances)
+        # Initialize all instance attributes (fixes class-level state
+        # leaking between instances)
         self._gtts_languages: dict | None = None
         self._bus_watch_active: bool = False
         self._bus_watch_setup_in_progress: bool = False
