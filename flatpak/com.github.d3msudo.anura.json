@@ -319,7 +319,7 @@
                     "type": "git",
                     "url": "https://github.com/flatpak/libportal.git",
                     "tag": "0.9.1",
-                    "commit": "3ee74f4b9fbba48ff79119106095940026e6f987"
+                    "commit": "8f5dc8d192f6e31dafe69e35219e3b707bde71ce"
                 }
             ]
         },
