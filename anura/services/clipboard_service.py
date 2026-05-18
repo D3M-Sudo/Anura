@@ -22,6 +22,7 @@ from gi.repository import Gdk, Gio, GLib, GObject  # noqa: E402
 from loguru import logger  # noqa: E402
 from PIL import Image  # noqa: E402
 
+from anura.config import MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB  # noqa: E402
 from anura.utils.singleton import get_instance  # noqa: E402
 
 # When the clipboard advertises a file URI list (e.g. user copied a PNG from
@@ -438,6 +439,23 @@ class ClipboardService(GObject.GObject):
 
     def _emit_texture_from_file(self, path: str) -> None:
         """Decode an image file with PIL → re-encode to PNG → Gdk.Texture."""
+        # Security Hardening: Validate file size before opening (DoS prevention)
+        try:
+            file_size = os.path.getsize(path)
+            if file_size > MAX_IMAGE_SIZE_BYTES:
+                logger.error(f"Anura Clipboard: Image too large ({file_size} bytes)")
+                self._emit_clipboard_error(
+                    _("Image too large: {size}MB (max {max}MB)").format(
+                        size=round(file_size / (1024 * 1024), 1),
+                        max=MAX_IMAGE_SIZE_MB,
+                    )
+                )
+                return
+        except OSError as e:
+            logger.warning(f"Anura Clipboard: Failed to check file size for {path!r}: {e}")
+            self._emit_clipboard_error(_("No image in clipboard"))
+            return
+
         try:
             with Image.open(path) as img:
                 img.load()
