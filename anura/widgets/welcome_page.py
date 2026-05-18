@@ -289,6 +289,8 @@ class WelcomePage(Adw.NavigationPage):
                 self.drop_button.disconnect(self._drop_button_handler_id)
             self._drop_button_handler_id = None
 
+        # Disconnect any other signals that might have been connected manually
+
         # Cancel any in-flight drop operation
         drop_cancellable = getattr(self, "_drop_cancellable", None)
         if drop_cancellable:

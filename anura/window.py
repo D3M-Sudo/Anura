@@ -120,6 +120,13 @@ class AnuraWindow(Adw.ApplicationWindow):
         logger.debug(f"DnD: Processing dropped file: {file_path}")
 
         try:
+            # Hardening: check for 0-byte physical files
+            if os.path.getsize(file_path) == 0:
+                logger.error(f"Anura OCR: Attempted to process 0-byte image file: {file_path}")
+                self.welcome_page.reset_drop_area_state()
+                self.show_toast(_("The selected image file is empty."))
+                return
+
             # Validate file size
             file_size = os.path.getsize(file_path)
             if file_size > MAX_IMAGE_SIZE_BYTES:
@@ -164,6 +171,15 @@ class AnuraWindow(Adw.ApplicationWindow):
         self._screenshot_timeout_id = GLib.timeout_add_seconds(30, self._on_screenshot_timeout)
 
         try:
+            # Check if backend is already capturing before hiding
+            if hasattr(self.backend, "_is_capturing") and self.backend._is_capturing:
+                logger.warning("Anura: Capture already in progress, not hiding window.")
+                if self._screenshot_timeout_id is not None:
+                    GLib.source_remove(self._screenshot_timeout_id)
+                    self._screenshot_timeout_id = None
+                self.present()
+                return
+
             self.backend.capture(lang, copy)
         except (GLib.Error, RuntimeError, OSError) as e:
             # Clean up timeout and restore window on error
@@ -400,6 +416,12 @@ class AnuraWindow(Adw.ApplicationWindow):
     def process_file(self, file_path: str) -> None:
         """Process an image file directly from CLI."""
         try:
+            # Hardening: check for 0-byte physical files
+            if os.path.getsize(file_path) == 0:
+                logger.error(f"Anura OCR: Attempted to process 0-byte image file: {file_path}")
+                self.show_toast(_("The selected image file is empty."))
+                return
+
             # Validate file size to prevent memory issues with very large images
             # We use getsize() which follows symlinks to ensure the actual
             # file content doesn't exceed our 50MB limit (Denial of Service).
