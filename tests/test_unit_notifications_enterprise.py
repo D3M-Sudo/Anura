@@ -3,6 +3,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+pytest.importorskip("gi")
+
+
 from anura.services.notification_service import NotificationService
 
 

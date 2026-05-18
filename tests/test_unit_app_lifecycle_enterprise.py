@@ -4,6 +4,9 @@ from unittest.mock import MagicMock, patch
 from gi.repository import GLib
 import pytest
 
+pytest.importorskip("gi")
+
+
 from anura.main import AnuraApplication
 
 

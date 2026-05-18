@@ -3,6 +3,9 @@ import os
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+pytest.importorskip("gi")
+
 import requests
 
 from anura.language_manager import LanguageManager

@@ -3,6 +3,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+pytest.importorskip("gi")
+
+
 from anura.services.clipboard_service import ClipboardService
 
 
