@@ -62,6 +62,35 @@
                     }
                 }
             ]
+        }
+    ],
+    "modules": [
+        {
+            "name": "zbar",
+            "buildsystem": "simple",
+            "cleanup": [
+                "/bin"
+            ],
+            "build-commands": [
+                "sed -i 's/AC_CHECK_LIB(\\[pthread\\], \\[main\\],/AC_CHECK_LIB([c], [pthread_create],/g' configure.ac",
+                "autoreconf -vfi",
+                "./configure --prefix=/app --disable-static --without-gtk --without-python --without-imagemagick --without-dbus --without-qt --without-x --disable-video --disable-doc --disable-introspection",
+                "make -j$(nproc)",
+                "make install",
+                "install -Dm0644 LICENSE.md $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/zbar/LICENSE.md"
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/mchehab/zbar.git",
+                    "tag": "0.23.93",
+                    "commit": "c022c6fbb8b60afcd9ad247016bd0df33e2ec722",
+                    "x-checker-data": {
+                        "type": "git",
+                        "tag-pattern": "^([\\d.]+)$"
+                    }
+                }
+            ]
         },
         {
             "name": "libtiff",
@@ -368,7 +397,7 @@
                 "/share/vala"
             ],
             "post-install": [
-                "install -Dm0644 ../COPYING $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/libportal/COPYING"
+                "install -Dm0644 COPYING $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/libportal/COPYING"
             ],
             "sources": [
                 {
