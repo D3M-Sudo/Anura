@@ -1,13 +1,14 @@
+import gi
+from gi.repository import Adw, Gio
 import pytest
+
+pytest.importorskip("gi")
 
 # tests/test_unit_widgets_enterprise.py
 
-pytest.importorskip("gi")
 from unittest.mock import MagicMock, patch
 
 # We need to register resources and initialize Adw before importing widgets that use templates
-import gi
-from gi.repository import Adw, Gio
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")

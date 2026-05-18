@@ -1,9 +1,8 @@
-# tests/test_unit_screenshot_service_enterprise.py
-from unittest.mock import patch
-
 import pytest
 
 pytest.importorskip("gi")
+# tests/test_unit_screenshot_service_enterprise.py
+from unittest.mock import patch
 
 from anura.services.screenshot_service import ScreenshotService
 

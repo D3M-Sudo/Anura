@@ -1,11 +1,10 @@
+import pytest
+
+pytest.importorskip("gi")
 # tests/test_unit_cleanup_enterprise.py
 import os
 import time
 from unittest.mock import patch
-
-import pytest
-
-pytest.importorskip("gi")
 
 from anura.utils.cleanup import cleanup_orphaned_resources, get_cache_info
 
