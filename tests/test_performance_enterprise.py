@@ -1,6 +1,8 @@
 import pytest
 
 pytest.importorskip("gi")
+
+
 # tests/test_performance_enterprise.py
 import os
 import time
