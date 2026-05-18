@@ -111,8 +111,8 @@
             "name": "tesseract",
             "buildsystem": "autotools",
             "cleanup": [
-                "/bin",
-                "/share/tessdata"
+                "/include",
+                "/lib/pkgconfig"
             ],
             "post-install": [
                 "install -Dm0644 LICENSE $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/tesseract/LICENSE"
