@@ -34,12 +34,7 @@ from anura.config import (  # noqa: E402
     MAX_IMAGE_SIZE_MB,
     get_tesseract_config,
 )
-from anura.services.host_screenshot_fallback import (  # noqa: E402
-    build_detection_argv,
-    build_screenshot_argv,
-    find_tool_by_name,
-    parse_detection_output,
-)
+from anura.services.host_screenshot_fallback import build_scrot_argv  # noqa: E402
 from anura.utils.portal_advice import detect_portal_advice  # noqa: E402
 from anura.utils.text_preprocessor import get_text_preprocessor  # noqa: E402
 
@@ -313,145 +308,50 @@ class ScreenshotService(GObject.GObject):
         GLib.idle_add(_on_failure_idle)
 
     def _try_host_screenshot_fallback(self, lang: str, copy: bool) -> None:
-        """Attempt to capture a screenshot via a host-side CLI tool.
+        """Attempt to capture a screenshot via bundled scrot on X11.
 
         Triggered after ``xdg-desktop-portal`` returns the libportal generic
         ``Screenshot failed`` (no backend exposes the Screenshot interface
-        for the active session). Tries ``flatpak-spawn --host`` to invoke
-        a host-installed screenshot tool (gnome-screenshot, xfce4-screenshooter,
-        scrot, …). On success the captured PNG is fed into the same OCR
-        pipeline as portal screenshots; on failure ``_emit_portal_failure``
-        surfaces the original error.
+        for the active session).
 
-        Only runs in a Flatpak sandbox — outside Flatpak there is no
-        ``flatpak-spawn`` and the portal failure is genuinely terminal.
+        Checks if running on X11. If so, uses the bundled ``scrot``.
+        If on Wayland, logs a technical error and fails gracefully.
         """
-        if not _is_flatpak_environment():
-            self._is_capturing = False
-            self._emit_portal_failure()
-            return
-        try:
-            argv = build_detection_argv()
-            proc = Gio.Subprocess.new(
-                argv,
-                Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_SILENCE,
-            )
-        except GLib.Error as e:
-            self._is_capturing = False
-            logger.warning(f"Anura Screenshot: cannot spawn flatpak-spawn for host fallback: {e.message}")
-            self._emit_portal_failure()
-            return
-        proc.communicate_utf8_async(
-            None,
-            self.cancelable,
-            self._on_host_detection_complete,
-            (lang, copy),
-        )
+        is_wayland = bool(os.environ.get("WAYLAND_DISPLAY"))
+        is_x11 = bool(os.environ.get("DISPLAY"))
 
-    def _on_host_detection_complete(
-        self,
-        proc: Gio.Subprocess,
-        res: Gio.AsyncResult,
-        user_data: tuple,
-    ) -> None:
-        """Handle the result of the host-tool detection probe.
-
-        On success, picks a tool from the probe's stdout and proceeds to
-        the capture step. On failure, falls back to the original portal
-        error UI.
-        """
-        lang, copy = user_data
-        try:
-            success, stdout, _stderr = proc.communicate_utf8_finish(res)
-        except GLib.Error as e:
+        if is_wayland:
             self._is_capturing = False
-            logger.debug(f"Anura Screenshot: host fallback detection failed: {e.message}")
-            self._emit_portal_failure()
-            return
-
-        exit_status = proc.get_exit_status() if proc.get_if_exited() else -1
-        if not success or exit_status != 0:
-            self._is_capturing = False
-            logger.debug(
-                f"Anura Screenshot: no host-side screenshot tool found (exit={exit_status}). "
-                "Surface the original portal error.",
+            logger.error(
+                "Anura Screenshot: Wayland security prohibits sandboxed screen capture "
+                "without a portal backend. Please ensure a portal backend for your "
+                "desktop environment is installed (e.g., xdg-desktop-portal-gtk)."
             )
             self._emit_portal_failure()
             return
 
-        tool_name = parse_detection_output(stdout or "")
-        if tool_name is None:
+        if not is_x11:
             self._is_capturing = False
-            self._emit_portal_failure()
-            return
-        tool = find_tool_by_name(tool_name)
-        if tool is None:
-            self._is_capturing = False
+            logger.error("Anura Screenshot: No display server detected (neither Wayland nor X11).")
             self._emit_portal_failure()
             return
 
-        # Pick a host-addressable temp path inside ~/Anura screenshots.
-        # This directory is created on the host via flatpak-spawn --host.
-        output_dir = Path.home() / "Anura screenshots"
-        output_path = str(output_dir / f"anura-shot-{uuid.uuid4().hex}.png")
+        # Running on X11 - attempt bundled scrot fallback
+        output_path = f"/tmp/anura-shot-{uuid.uuid4().hex}.png"
+        argv = build_scrot_argv(output_path)
 
-        logger.info(f"Anura Screenshot: portal failed, falling back to host '{tool_name}'.")
-        # Log environment for debugging display issues
-        env_vars = ["DISPLAY", "WAYLAND_DISPLAY", "XDG_SESSION_TYPE", "XDG_CURRENT_DESKTOP"]
-        env_snapshot = ", ".join(f"{k}={os.environ.get(k) or '<unset>'}" for k in env_vars)
-        logger.debug(f"Anura Screenshot: host fallback env: {env_snapshot}")
-
-        # Create the directory on the host asynchronously to avoid blocking main thread
-        mkdir_argv = ["flatpak-spawn", "--host", "mkdir", "-p", str(output_dir)]
+        logger.info("Anura Screenshot: portal failed on X11, falling back to bundled 'scrot'.")
         try:
-            mkdir_proc = Gio.Subprocess.new(mkdir_argv, Gio.SubprocessFlags.STDERR_SILENCE)
-            mkdir_proc.wait_async(
-                self.cancelable,
-                self._on_mkdir_complete,
-                (lang, copy, output_path, tool),
-            )
-        except GLib.Error as e:
-            self._is_capturing = False
-            logger.warning(f"Anura Screenshot: cannot spawn host mkdir: {e.message}")
-            self._emit_portal_failure()
-            return
-
-    def _on_mkdir_complete(
-        self,
-        proc: Gio.Subprocess,
-        res: Gio.AsyncResult,
-        user_data: tuple,
-    ) -> None:
-        """Handle mkdir completion and proceed with screenshot capture."""
-        lang, copy, output_path, tool = user_data
-        try:
-            proc.wait_finish(res)
-        except GLib.Error as e:
-            self._is_capturing = False
-            logger.warning(f"Anura Screenshot: mkdir failed: {e.message}")
-            self._emit_portal_failure()
-            return
-
-        exit_status = proc.get_exit_status() if proc.get_if_exited() else -1
-        if exit_status != 0:
-            self._is_capturing = False
-            logger.warning(f"Anura Screenshot: mkdir failed with exit code {exit_status}")
-            self._emit_portal_failure()
-            return
-
-        # Now proceed with screenshot capture
-        try:
-            argv = build_screenshot_argv(tool, output_path)
-            logger.debug(f"Anura Screenshot: host fallback argv: {argv}")
             capture_proc = Gio.Subprocess.new(
                 argv,
                 Gio.SubprocessFlags.STDERR_PIPE | Gio.SubprocessFlags.STDOUT_PIPE,
             )
         except GLib.Error as e:
             self._is_capturing = False
-            logger.warning(f"Anura Screenshot: cannot spawn host screenshot tool: {e.message}")
+            logger.warning(f"Anura Screenshot: cannot spawn bundled scrot: {e.message}")
             self._emit_portal_failure()
             return
+
         capture_proc.wait_async(
             self.cancelable,
             self._on_host_capture_complete,

@@ -7,7 +7,7 @@
     "finish-args": [
         "--share=network",
         "--share=ipc",
-        "--socket=fallback-x11",
+        "--socket=x11",
         "--socket=wayland",
         "--socket=pulseaudio",
         "--device=dri",
@@ -356,6 +356,35 @@
                     "type": "file",
                     "url": "https://files.pythonhosted.org/packages/f9/9b/335f9764261e915ed497fcdeb11df5dfd6f7bf257d4a6a2a686d80da4d54/requests-2.32.3-py3-none-any.whl",
                     "sha256": "70761cfe03c773ceb22aa2f671b4757976145175cdfca038c02654d061d6dcc6"
+                }
+            ]
+        },
+        {
+            "name": "imlib2",
+            "buildsystem": "autotools",
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://downloads.sourceforge.net/project/enlightenment/imlib2-src/1.12.1/imlib2-1.12.1.tar.gz",
+                    "sha256": "d35d746b245e64cd024833414eef148a8625f1bed720193cd5c2c33730188425"
+                }
+            ]
+        },
+        {
+            "name": "scrot",
+            "buildsystem": "simple",
+            "build-commands": [
+                "./autogen.sh",
+                "./configure --prefix=/app",
+                "make -j$(nproc)",
+                "make install",
+                "install -Dm0644 COPYING $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/scrot/COPYING"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://github.com/resurrecting-open-source-projects/scrot/archive/refs/tags/1.11.1.tar.gz",
+                    "sha256": "ea9949e80c3c60e335768402f66adad1b119b4c4e9b1daf90dff290f3c1114eb"
                 }
             ]
         },
