@@ -67,6 +67,7 @@ run_tests.py
 
 # Local development and temporary files
 .jules/
+cline/
 .env
 .env.*
 *.bak

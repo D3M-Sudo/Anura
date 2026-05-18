@@ -31,7 +31,7 @@ jobs:
           OUTPUT=$(flatpak-external-data-checker \
             --dry-run \
             --verbose \
-            flatpak/com.github.d3msudo.anura.json 2>&1)
+            flatpak/io.github.d3msudo.anura.json 2>&1)
           FEDC_EXIT_CODE=$?
           set -e
 
@@ -79,12 +79,12 @@ jobs:
             - Others - Verify runtime compatibility
 
             ### Files to update
-            - \`flatpak/com.github.d3msudo.anura.json\`
+            - \`flatpak/io.github.d3msudo.anura.json\`
 
             Run locally:
             \`\`\`bash
-            flatpak-external-data-checker --update flatpak/com.github.d3msudo.anura.json
-            flatpak-builder builddir flatpak/com.github.d3msudo.anura.json --force-clean
+            flatpak-external-data-checker --update flatpak/io.github.d3msudo.anura.json
+            flatpak-builder builddir flatpak/io.github.d3msudo.anura.json --force-clean
             \`\`\`
 
             _This issue was automatically created by the Flatpak dependency checker._`;
@@ -118,7 +118,7 @@ jobs:
           flatpak-external-data-checker \
             --update \
             --filter python3-certifi \
-            flatpak/com.github.d3msudo.anura.json
+            flatpak/io.github.d3msudo.anura.json
           FEDC_EXIT_CODE=$?
           set -e
 

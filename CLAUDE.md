@@ -6,7 +6,7 @@
 
 - **Linguaggio**: Python 3.12+
 - **Build**: Meson ≥ 1.5.0
-- **Distribuzione**: Flatpak (`com.github.d3msudo.anura`)
+- **Distribuzione**: Flatpak (`io.github.d3msudo.anura`)
 - **UI**: GTK4 + Libadwaita + Blueprint Compiler 0.16.0
 - **OCR**: pytesseract + Tesseract 5.5.0
 - **QR**: pyzbar + zbar
@@ -108,8 +108,8 @@ GSETTINGS_SCHEMA_DIR=builddir/data python3 -m anura.main
 
 ### Flatpak
 ```bash
-flatpak-builder --force-clean builddir flatpak/com.github.d3msudo.anura.json
-flatpak-builder --run builddir flatpak/com.github.d3msudo.anura.json anura
+flatpak-builder --force-clean builddir flatpak/io.github.d3msudo.anura.json
+flatpak-builder --run builddir flatpak/io.github.d3msudo.anura.json anura
 ```
 
 ## Testing
@@ -117,7 +117,7 @@ flatpak-builder --run builddir flatpak/com.github.d3msudo.anura.json anura
 ### Setup GSchema
 ```bash
 mkdir -p builddir
-cp data/com.github.d3msudo.anura.gschema.xml builddir/
+cp data/io.github.d3msudo.anura.gschema.xml builddir/
 glib-compile-schemas builddir/
 export GSETTINGS_SCHEMA_DIR="builddir"
 ```

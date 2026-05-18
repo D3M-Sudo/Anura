@@ -2,7 +2,7 @@
 Name=Anura
 GenericName=OCR Tool
 Comment=Extract text from any image, video, or web page
-Icon=com.github.d3msudo.anura
+Icon=io.github.d3msudo.anura
 Exec=anura
 Terminal=false
 Type=Application

@@ -29,7 +29,7 @@ class TestNotificationService:
 
     def setup_method(self):
         """Set up test fixtures."""
-        self.service = NotificationService("com.github.d3msudo.anura.test")
+        self.service = NotificationService("io.github.d3msudo.anura.test")
 
     def test_init(self):
         """Test service initialization."""
@@ -44,7 +44,7 @@ class TestNotificationService:
 
             mock_send.assert_called_once()
             pos_args = mock_send.call_args[0]
-            assert pos_args[0].startswith("com.github.d3msudo.anura")
+            assert pos_args[0].startswith("io.github.d3msudo.anura")
             notification = pos_args[1].unpack()
             assert notification["title"] == "Test title"
             assert notification["body"] == "Test body"
@@ -114,13 +114,13 @@ class TestNotificationService:
     @patch("anura.services.notification_service.HAS_LIBNOTIFY", True)
     def test_libnotify_fallback_available(self):
         """Test libnotify fallback when available."""
-        service = NotificationService("com.github.d3msudo.anura.test")
+        service = NotificationService("io.github.d3msudo.anura.test")
         assert service.libnotify_initialized is True
 
     @patch("anura.services.notification_service.HAS_LIBNOTIFY", False)
     def test_libnotify_fallback_unavailable(self):
         """Test libnotify fallback when unavailable."""
-        service = NotificationService("com.github.d3msudo.anura.test")
+        service = NotificationService("io.github.d3msudo.anura.test")
         assert service.libnotify_initialized is False
 
     @patch("anura.services.notification_service.HAS_LIBNOTIFY", True)
@@ -258,8 +258,8 @@ class TestNotificationService:
 
     def test_notification_service_singleton_behavior(self):
         """Test that service can be instantiated multiple times."""
-        service1 = NotificationService("com.github.d3msudo.anura.test")
-        service2 = NotificationService("com.github.d3msudo.anura.test")
+        service1 = NotificationService("io.github.d3msudo.anura.test")
+        service2 = NotificationService("io.github.d3msudo.anura.test")
 
         # Both should have portal instances
         assert service1._portal is not None

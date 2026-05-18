@@ -84,14 +84,6 @@ class ScreenshotService(GObject.GObject):
         "portal-backend-missing": (GObject.SignalFlags.RUN_FIRST, None, ()),
     }
 
-    __slots__ = (
-        "_cancellable_lock",
-        "_env_diagnostics_logged",
-        "_is_capturing",
-        "cancelable",
-        "portal",
-    )
-
     def __init__(self) -> None:
         GObject.GObject.__init__(self)
         self._cancellable_lock = threading.Lock()

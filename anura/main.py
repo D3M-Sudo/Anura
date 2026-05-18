@@ -1,7 +1,14 @@
+import os
+
+# Suppress a11y bus warnings in headless CI environments and ensure
+# they are set even when the app is launched without --env flags.
+# These must be set before ANY other import, especially 'gi', to be effective.
+os.environ.setdefault("NO_AT_BRIDGE", "1")
+os.environ.setdefault("GTK_A11Y", "none")
+
 import contextlib
 import gettext
 import locale
-import os
 import sys
 import threading
 from typing import Any
@@ -98,10 +105,6 @@ _setup_i18n()
 from gettext import gettext as _
 import html
 
-# Suppress a11y bus warnings in headless CI environments
-if not sys.stdin.isatty():
-    os.environ["NO_AT_BRIDGE"] = "1"
-
 import gi
 
 # Set GTK version requirements before imports
@@ -144,18 +147,18 @@ def _load_gresource_bundle() -> bool:
     # This prevents double registration when running via the standard entry point
     with contextlib.suppress(GLib.Error):
         # Try to lookup a known resource - if found, bundle is already loaded
-        Gio.resources_lookup_data("/com/github/d3msudo/anura/window.ui", Gio.ResourceLookupFlags.NONE)
+        Gio.resources_lookup_data("/io/github/d3msudo/anura/window.ui", Gio.ResourceLookupFlags.NONE)
         return True
 
     # Determine possible paths for the gresource bundle
     # Priority: Flatpak -> system -> user -> relative
     possible_paths = [
-        "/app/share/anura/com.github.d3msudo.anura.gresource",
-        "/usr/share/anura/com.github.d3msudo.anura.gresource",
-        "/usr/local/share/anura/com.github.d3msudo.anura.gresource",
-        os.path.expanduser("~/.local/share/anura/com.github.d3msudo.anura.gresource"),
+        "/app/share/anura/io.github.d3msudo.anura.gresource",
+        "/usr/share/anura/io.github.d3msudo.anura.gresource",
+        "/usr/local/share/anura/io.github.d3msudo.anura.gresource",
+        os.path.expanduser("~/.local/share/anura/io.github.d3msudo.anura.gresource"),
         # Development fallback: relative to this file
-        os.path.join(os.path.dirname(__file__), "..", "data", "com.github.d3msudo.anura.gresource"),
+        os.path.join(os.path.dirname(__file__), "..", "data", "io.github.d3msudo.anura.gresource"),
     ]
 
     for path in possible_paths:

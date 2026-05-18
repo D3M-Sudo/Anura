@@ -171,14 +171,14 @@ stub._restore_signal_handlers = types.MethodType(ns["_restore_signal_handlers"],
 
 3. **For `.blp` / `.py` template wiring (e.g. ShortcutsOverlay), do code-grounded static verification.** Read both files, confirm:
    - `Adw.Window` templates use `[content]`, never `[child]`. Every other `.blp` in this repo uses `[content]`; `[child]` will silently break the Blueprint compile.
-   - `@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/<name>.ui")` matches the gresource entry in `data/com.github.d3msudo.anura.gresource.xml` and the `.ui` filename produced by `data/meson.build`.
+   - `@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/<name>.ui")` matches the gresource entry in `data/io.github.d3msudo.anura.gresource.xml` and the `.ui` filename produced by `data/meson.build`.
    - `Gtk.Template.Child()` declarations match the IDs declared in the `.blp`.
    - Any `EventControllerKey`-based shortcut handler is constructed AND added with `self.add_controller(...)`. A handler defined but never attached is the BUG-6 shape.
 4. **For spinner / async error-handling regressions (BUG-9 shape), trace every `return` and `except` inside the relevant `_on_*_loaded` / async-callback method** and verify a `self.welcome_page.spinner.set_visible(False)` (or equivalent) precedes each. The success path is fine because `on_shot_done` / `on_shot_error` hide the spinner later — only error early-returns are at risk.
 
 ## Verifying gresource-bundled icons (e.g. share-*-symbolic.svg) outside Meson
 
-When a PR adds new files to `data/com.github.d3msudo.anura.gresource.xml`, the strongest *non-Meson* test is to actually compile the bundle and look up each new path through `Gio.resources_lookup_data`. Two pitfalls:
+When a PR adds new files to `data/io.github.d3msudo.anura.gresource.xml`, the strongest *non-Meson* test is to actually compile the bundle and look up each new path through `Gio.resources_lookup_data`. Two pitfalls:
 
 1. `glib-compile-resources` is **not** in `libglib2.0-bin` (only `gresource`, `gio`, `gsettings` are). Install `libglib2.0-dev-bin`:
 
@@ -186,11 +186,11 @@ When a PR adds new files to `data/com.github.d3msudo.anura.gresource.xml`, the s
    sudo apt-get install -y libglib2.0-dev-bin
    ```
 
-2. The full `data/com.github.d3msudo.anura.gresource.xml` references Meson-generated `.ui` files (compiled from `.blp` at build time) which are **absent from the source tree**, so compiling the manifest verbatim fails with `Failed to locate "window.ui" in any source directory.`. Build a **subset manifest** on the fly that includes only the files that actually exist on disk:
+2. The full `data/io.github.d3msudo.anura.gresource.xml` references Meson-generated `.ui` files (compiled from `.blp` at build time) which are **absent from the source tree**, so compiling the manifest verbatim fails with `Failed to locate "window.ui" in any source directory.`. Build a **subset manifest** on the fly that includes only the files that actually exist on disk:
 
    ```python
    import xml.etree.ElementTree as ET, subprocess
-   tree = ET.parse("data/com.github.d3msudo.anura.gresource.xml")
+   tree = ET.parse("data/io.github.d3msudo.anura.gresource.xml")
    svg_only = [(f.text, f.attrib) for f in tree.getroot().findall(".//file") if f.text.endswith(".svg")]
    prefix = tree.getroot().find("gresource").attrib["prefix"]
    with open("/tmp/svg_only.gresource.xml", "w") as fh:
@@ -250,7 +250,7 @@ gi.require_version('Gio', '2.0')
 from gi.repository import Gio, Gtk, Adw, Gdk, GLib
 
 # Register the resource file before importing Anura modules
-resource = Gio.Resource.load('builddir/data/com.github.d3msudo.anura.gresource')
+resource = Gio.Resource.load('builddir/data/io.github.d3msudo.anura.gresource')
 resource._register()
 ```
 

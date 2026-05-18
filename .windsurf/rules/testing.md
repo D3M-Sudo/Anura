@@ -90,13 +90,13 @@ sudo apt install gir1.2-xdpgtk4-1.0
 uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" pytest tests/ -v
 ```
 
-#### Error: `RuntimeError: GSettings schema 'com.github.d3msudo.anura' not found`
+#### Error: `RuntimeError: GSettings schema 'io.github.d3msudo.anura' not found`
 **Cause**: GSettings schema not compiled or not in schema path
 **Fix**: Compile the schema and set GSETTINGS_SCHEMA_DIR:
 ```bash
 # Create build directory and copy schema
 mkdir -p builddir
-cp data/com.github.d3msudo.anura.gschema.xml builddir/
+cp data/io.github.d3msudo.anura.gschema.xml builddir/
 
 # Compile the schema
 glib-compile-schemas builddir/
@@ -111,7 +111,7 @@ For full GTK testing environment setup:
 ```bash
 # 1. Compile GSettings schema
 mkdir -p builddir
-cp data/com.github.d3msudo.anura.gschema.xml builddir/
+cp data/io.github.d3msudo.anura.gschema.xml builddir/
 glib-compile-schemas builddir/
 
 # 2. Run all tests with full environment
@@ -207,7 +207,7 @@ gi.require_version('Gio', '2.0')
 from gi.repository import Gio, Gtk, Adw, Gdk, GLib
 
 # Register resources BEFORE importing Anura modules
-resource = Gio.Resource.load('builddir/data/com.github.d3msudo.anura.gresource')
+resource = Gio.Resource.load('builddir/data/io.github.d3msudo.anura.gresource')
 resource._register()
 ```
 

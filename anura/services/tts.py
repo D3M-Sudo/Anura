@@ -41,20 +41,6 @@ class TTSService(GObject.GObject):
         "error": (GObject.SignalFlags.RUN_LAST, None, (str,)),
     }
 
-    __slots__ = (
-        "_bus",
-        "_bus_message_handler_id",
-        "_bus_watch_active",
-        "_bus_watch_lock",
-        "_bus_watch_setup_in_progress",
-        "_cleanup_lock",
-        "_current_speech_file",
-        "_gtts_languages",
-        "_init_lock",
-        "_state_lock",
-        "player",
-    )
-
     _tld: str = "com"
 
     # Mapping Tesseract 3-letter → gTTS 2-letter ISO 639-1
@@ -188,8 +174,8 @@ class TTSService(GObject.GObject):
         logger.debug("Anura TTSService: Initializing TTS service singleton")
         os.makedirs(self._speech_dir, exist_ok=True)
 
-        # Initialize all instance attributes (fixes BUG-1: __slots__ compliance,
-        # BUG-2: class-level state leaking between instances)
+        # Initialize all instance attributes (fixes class-level state
+        # leaking between instances)
         self._gtts_languages: dict | None = None
         self._bus_watch_active: bool = False
         self._bus_watch_setup_in_progress: bool = False
@@ -387,7 +373,11 @@ class TTSService(GObject.GObject):
             GLib.idle_add(_on_error_idle, _("GStreamer playback error: {error}").format(error=error_msg))
 
     def _cleanup_gst_resources(self) -> None:
-        """Remove signal watcher and release player resources."""
+        """Remove signal watcher and release player resources.
+
+        Suppresses teardown errors (e.g. dbus bus connection failures in
+        sandboxed/CI environments where no dbus-daemon is available).
+        """
         if self.player:
             logger.debug("Anura TTSService: Starting GStreamer resource cleanup")
 
@@ -405,7 +395,10 @@ class TTSService(GObject.GObject):
                 self._bus_watch_active = False
                 self._bus = None
             logger.info("Anura TTSService: Setting GStreamer state to NULL")
-            self.player.set_state(Gst.State.NULL)
+            try:
+                self.player.set_state(Gst.State.NULL)
+            except Exception:
+                pass  # Suppress teardown errors in sandboxed/CI environments
             self.player = None
             logger.debug("Anura TTSService: GStreamer resource cleanup complete")
 
