@@ -1,13 +1,11 @@
-from gi.repository import GLib
 import pytest
 
 pytest.importorskip("gi")
 
-
-
 # tests/test_unit_app_lifecycle_enterprise.py
-
 from unittest.mock import MagicMock, patch
+
+from gi.repository import GLib
 
 from anura.main import AnuraApplication
 
