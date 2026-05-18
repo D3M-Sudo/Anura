@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # tests/test_host_screenshot_fallback.py
 #
 # Pure-Python tests for the host screenshot fallback command builders.
@@ -5,8 +7,10 @@
 # safe to run under `uv run pytest tests/ -m "not gtk"`. The actual
 # Gio.Subprocess execution that consumes these argvs lives in
 # screenshot_service.py and is exercised via integration tests.
+import pytest
 
-from __future__ import annotations
+pytest.importorskip("gi")
+
 
 import pytest
 

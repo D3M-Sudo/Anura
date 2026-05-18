@@ -31,6 +31,11 @@ def uri_validator(text: str) -> bool:
     if text is None:
         return False
 
+    # Defense-in-depth: limit URL length to prevent UI/notification issues
+    # and potential downstream buffer vulnerabilities.
+    if len(text) > 2048:
+        return False
+
     # Block control characters (0x00-0x1F) and DEL (0x7F) BEFORE strip
     # so that e.g. trailing \x1f (whitespace) is caught.
     if _CONTROL_CHARS_RE.search(text):

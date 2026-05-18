@@ -3,6 +3,10 @@
 # Unit tests for ShareService
 # Tests URL validation, provider logic, and Mastodon fallback
 
+import pytest
+
+pytest.importorskip("gi")
+
 from unittest.mock import Mock, patch
 
 import pytest

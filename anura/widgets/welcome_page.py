@@ -81,27 +81,36 @@ class WelcomePage(Adw.NavigationPage):
 
     def _on_drop_button_clicked(self, _: Gtk.Button) -> None:
         """Toggle the visibility of the dedicated drop area."""
-        is_visible = self.drop_area.get_visible()
-        self.drop_area.set_visible(not is_visible)
-        if not is_visible:
-            self.drop_button.add_css_class("suggested-action")
-        else:
-            self.drop_button.remove_css_class("suggested-action")
+        try:
+            is_visible = self.drop_area.get_visible()
+            self.drop_area.set_visible(not is_visible)
+            if not is_visible:
+                self.drop_button.add_css_class("suggested-action")
+            else:
+                self.drop_button.remove_css_class("suggested-action")
+        except Exception:
+            logger.exception("Anura: Failed to handle drop button click")
 
     def _on_dnd_enter(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float) -> Gdk.DragAction:
         """Visual feedback when drag enters the drop area."""
-        self.drop_area.set_visible(True)
-        self.drop_area.add_css_class("drag-hover")
-        self.welcome.set_description(_("Drop image to extract text"))
+        try:
+            self.drop_area.set_visible(True)
+            self.drop_area.add_css_class("drag-hover")
+            self.welcome.set_description(_("Drop image to extract text"))
+        except Exception:
+            logger.exception("Anura: Failed to handle DnD enter")
         return Gdk.DragAction.COPY
 
     def _on_dnd_leave(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop) -> None:
         """Remove visual feedback when drag leaves the drop area."""
-        self.drop_area.remove_css_class("drag-hover")
-        # Only hide if it wasn't already visible (user clicked button)
-        if not self.drop_button.has_css_class("suggested-action"):
-            self.drop_area.set_visible(False)
-        self.welcome.set_description(_("Extract text from anywhere"))
+        try:
+            self.drop_area.remove_css_class("drag-hover")
+            # Only hide if it wasn't already visible (user clicked button)
+            if not self.drop_button.has_css_class("suggested-action"):
+                self.drop_area.set_visible(False)
+            self.welcome.set_description(_("Extract text from anywhere"))
+        except Exception:
+            logger.exception("Anura: Failed to handle DnD leave")
 
     def _on_dnd_drop(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float) -> bool:
         """Handle drop signal. Initiates a fully async stream read.

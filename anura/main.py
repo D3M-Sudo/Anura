@@ -4,6 +4,7 @@ import locale
 import os
 import sys
 import threading
+from typing import Any
 
 
 # Initialize localization
@@ -330,6 +331,8 @@ class AnuraApplication(Adw.Application):
     def do_activate(self) -> None:
         win = self.props.active_window
         if not win:
+            if self.backend is None:
+                self.backend = ScreenshotService()
             win = AnuraWindow(application=self, backend=self.backend)
         win.present()
 
@@ -348,8 +351,12 @@ class AnuraApplication(Adw.Application):
     def _handle_extract_to_clipboard(self) -> int:
         """Handle extract to clipboard command line option."""
         logger.info("Anura: CLI Extraction triggered.")
-        self.backend.capture(self.settings.get_string("active-language"), copy=True)
-        return 0
+        if self.backend is not None:
+            self.backend.capture(self.settings.get_string("active-language"), copy=True)
+            return 0
+        else:
+            logger.error("Anura: Backend not initialized, cannot capture screenshot.")
+            return 1
 
     def _handle_file_option(self, file_path: str, is_silent: bool) -> int:
         """Handle file processing command line option."""
@@ -443,7 +450,7 @@ class AnuraApplication(Adw.Application):
         old_sigterm = sig.signal(sig.SIGTERM, on_signal)
         return {"sigint": old_sigint, "sigterm": old_sigterm}
 
-    def _restore_signal_handlers(self, signal_handlers: dict[str, object]) -> None:
+    def _restore_signal_handlers(self, signal_handlers: dict[str, Any]) -> None:
         """Restore original signal handlers."""
         import signal as sig
 
@@ -527,6 +534,8 @@ class AnuraApplication(Adw.Application):
 
     def _decode_image_synchronously(self, file_path: str) -> tuple[bool, str | None, str | None]:
         """Decode image synchronously for silent mode."""
+        if self.backend is None:
+            return False, None, "Backend not initialized"
         try:
             return self.backend.decode_image_sync(
                 self.settings.get_string("active-language"),
@@ -591,10 +600,7 @@ class AnuraApplication(Adw.Application):
         # Adw.AboutDialog internally uses a GtkLabel with markup enabled for the copyright
         # and license block (especially when combined with license links), so ampersands
         # MUST be escaped to avoid Gtk-WARNING parsing errors.
-        _copyright = html.escape(
-            "© 2025-2026 D3M-Sudo & Anura Contributors\n"
-            "© 2022-2025 Frog OCR Contributors"
-        )
+        _copyright = html.escape("© 2025-2026 D3M-Sudo & Anura Contributors\n© 2022-2025 Frog OCR Contributors")
 
         def _schedule_present() -> bool:
             """Stage 2: Present the AboutDialog in a separate iteration.
@@ -622,9 +628,7 @@ class AnuraApplication(Adw.Application):
                 _("Acknowledgements"),
                 "© 2022-2025 Andrey Maksimov (Frog OCR)",
                 Gtk.License.UNKNOWN,
-                _(
-                    "Built with Tesseract OCR, GTK4, Libadwaita, and other open source components."
-                ),
+                _("Built with Tesseract OCR, GTK4, Libadwaita, and other open source components."),
             )
             about_window.add_link(_("Changelog"), "https://github.com/D3M-Sudo/Anura/blob/main/CHANGELOG.md")
             about_window.add_link(_("Report an Issue"), "https://github.com/D3M-Sudo/Anura/issues")
@@ -766,43 +770,46 @@ class AnuraApplication(Adw.Application):
         This runs inside the Flatpak sandbox via Gio.SimpleAction, avoiding
         libnotify callback sandbox issues.
         """
-        if parameter is None:
-            logger.warning("Anura: open-qr-url action triggered without a URL parameter")
-            return
+        try:
+            if parameter is None:
+                logger.warning("Anura: open-qr-url action triggered without a URL parameter")
+                return
 
-        # Sanitize: strip all control characters and whitespace (defense in depth)
-        url = parameter.get_string().strip()
-        url = url.strip("\n\r\t\v\f")
+            # Sanitize: strip all control characters and whitespace (defense in depth)
+            url = parameter.get_string().strip()
+            url = url.strip("\n\r\t\v\f")
 
-        if not url:
-            logger.warning("Anura: open-qr-url action triggered with empty URL")
-            return
+            if not url:
+                logger.warning("Anura: open-qr-url action triggered with empty URL")
+                return
 
-        # Security: validate URL before launching (defense in depth)
-        from anura.utils import uri_validator
+            # Security: validate URL before launching (defense in depth)
+            from anura.utils import uri_validator
 
-        if not uri_validator(url):
-            logger.warning(f"Anura: Blocked invalid URL from notification: {url}")
+            if not uri_validator(url):
+                logger.warning(f"Anura: Blocked invalid URL from notification: {url}")
+                window = self.get_active_window()
+                if window and hasattr(window, "show_toast"):
+                    window.show_toast(_("Invalid URL blocked for security"))
+                return
+
+            # Launch URL via Gtk.UriLauncher
             window = self.get_active_window()
-            if window and hasattr(window, "show_toast"):
-                window.show_toast(_("Invalid URL blocked for security"))
-            return
+            if window and hasattr(window, "_launch_uri"):
+                window._launch_uri(url)
+            else:
+                # Fallback: launch directly if no window available
+                launcher = Gtk.UriLauncher.new(url)
 
-        # Launch URL via Gtk.UriLauncher
-        window = self.get_active_window()
-        if window and hasattr(window, "_launch_uri"):
-            window._launch_uri(url)
-        else:
-            # Fallback: launch directly if no window available
-            launcher = Gtk.UriLauncher.new(url)
+                def on_launch_finish(_launcher: object, result: Gio.AsyncResult) -> None:
+                    try:
+                        launcher.launch_finish(result)
+                    except GLib.Error as e:
+                        logger.error(f"Anura: Failed to open URL from notification: {e.message}")
 
-            def on_launch_finish(_launcher: object, result: Gio.AsyncResult) -> None:
-                try:
-                    launcher.launch_finish(result)
-                except GLib.Error as e:
-                    logger.error(f"Anura: Failed to open URL from notification: {e.message}")
-
-            launcher.launch(None, None, on_launch_finish)
+                launcher.launch(None, None, on_launch_finish)
+        except Exception:
+            logger.exception("Anura: Unexpected error handling QR notification click")
 
     def on_decoded(self, _sender: object, text: str, copy: bool) -> None:
         # If a window is present, it handles the 'decoded' signal itself to

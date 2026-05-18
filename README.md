@@ -233,11 +233,11 @@ ruff check --fix anura/
 pytest tests/ -m "not gtk" -v
 
 # Run GTK-dependent tests (requires setup)
-mkdir -p builddir
-cp data/com.github.d3msudo.anura.gschema.xml builddir/
-glib-compile-schemas builddir/
+./setup-gschema.sh
+./tests/setup_resources.sh
 export GSETTINGS_SCHEMA_DIR="builddir"
-pytest tests/test_screenshot_service.py tests/test_clipboard_service.py tests/test_tts_service.py -v
+export PYTHONPATH="/usr/lib/python3/dist-packages:."
+pytest tests/ -v
 ```
 
 > **Note:** Tests marked `@pytest.mark.gtk` require system GTK libraries and GSettings schema.  
@@ -265,7 +265,7 @@ Anura is translated via [Weblate](https://hosted.weblate.org/engage/anura/). Con
 for f in *.po; do msgmerge -U "$f" com.github.d3msudo.anura.pot --backup=none; done
 ```
 
-Then push `anura.pot`, `POTFILES`, and the updated `.po` files to keep Weblate in sync.
+Then push `com.github.d3msudo.anura.pot`, `POTFILES`, and the updated `.po` files to keep Weblate in sync.
 
 ---
 
@@ -283,5 +283,3 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines and workflow d
 Released under the **MIT** license. See [`LICENSE`](LICENSE) for details.
 
 ---
-
-*Fork of [Frog](https://github.com/freehck/frog) by Andrey Maksimov — adapted and maintained for the Anura ecosystem.*

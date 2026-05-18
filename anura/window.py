@@ -18,7 +18,7 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk  # noqa: E402
 from loguru import logger  # noqa: E402
 
-from anura.config import APP_ID, RESOURCE_PREFIX  # noqa: E402
+from anura.config import APP_ID, MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB, RESOURCE_PREFIX  # noqa: E402
 from anura.gobject_worker import GObjectWorker  # noqa: E402
 from anura.language_manager import get_language_manager  # noqa: E402
 from anura.services.clipboard_service import get_clipboard_service  # noqa: E402
@@ -61,7 +61,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             from anura.types.language_item import LanguageItem
 
             item = LanguageItem(code="eng", title=_("English"))
-        language_manager_instance.active_language = item
+        language_manager_instance.active_language = item  # type: ignore[method-assign]
 
         self._setup_geometry()
         self._setup_controllers()
@@ -122,12 +122,12 @@ class AnuraWindow(Adw.ApplicationWindow):
         try:
             # Validate file size
             file_size = os.path.getsize(file_path)
-            if file_size > self.MAX_IMAGE_SIZE_BYTES:
+            if file_size > MAX_IMAGE_SIZE_BYTES:
                 self.welcome_page.reset_drop_area_state()
                 self.show_toast(
                     _("Image too large: {size}MB (max {max}MB)").format(
                         size=round(file_size / (1024 * 1024), 1),
-                        max=self.MAX_IMAGE_SIZE_MB,
+                        max=MAX_IMAGE_SIZE_MB,
                     ),
                 )
                 return
@@ -176,10 +176,13 @@ class AnuraWindow(Adw.ApplicationWindow):
 
     def _on_screenshot_timeout(self) -> bool:
         """Handle screenshot portal timeout."""
-        self._screenshot_timeout_id = None
-        self.present()
-        self.show_toast(_("Screenshot service did not respond."))
-        logger.warning("Anura Screenshot: Portal timeout - window restored.")
+        try:
+            self._screenshot_timeout_id = None
+            self.present()
+            self.show_toast(_("Screenshot service did not respond."))
+            logger.warning("Anura Screenshot: Portal timeout - window restored.")
+        except Exception:
+            logger.exception("Anura: Unexpected error in screenshot timeout handler")
         return False  # Don't repeat timeout
 
     def on_shot_done(self, _sender: GObject.GObject, text: str, copy: bool) -> None:
@@ -197,7 +200,7 @@ class AnuraWindow(Adw.ApplicationWindow):
             return
 
         try:
-            self.extracted_page.extracted_text = text
+            self.extracted_page.extracted_text = text  # type: ignore[method-assign]
 
             # 1. Extract structured data (emails, URLs, phone numbers) from OCR text
             preprocessor = get_text_preprocessor()
@@ -249,7 +252,7 @@ class AnuraWindow(Adw.ApplicationWindow):
 
             else:
                 # 4. Handle Regular Text Flow (Clipboard)
-                if (self.settings.get_boolean("autocopy") or copy):
+                if self.settings.get_boolean("autocopy") or copy:
                     clipboard_service_instance = get_clipboard_service()
                     clipboard_service_instance.set(text)
                     self.show_toast(_("Text copied to clipboard"))
@@ -300,9 +303,12 @@ class AnuraWindow(Adw.ApplicationWindow):
         visible until the user dismisses it or installs a backend.
         Uses detect_portal_advice to show desktop-specific install instructions.
         """
-        advice = detect_portal_advice()
-        self.portal_banner.set_title(advice.short_message)
-        self.portal_banner.set_revealed(True)
+        try:
+            advice = detect_portal_advice()
+            self.portal_banner.set_title(advice.short_message)
+            self.portal_banner.set_revealed(True)
+        except Exception:
+            logger.exception("Anura: Unexpected error handling portal backend missing")
 
     def _on_portal_banner_dismissed(self, _banner: Adw.Banner) -> None:
         """Hide the banner when the user clicks Dismiss.
@@ -391,21 +397,18 @@ class AnuraWindow(Adw.ApplicationWindow):
 
         dialog.open(self, None, self._on_open_image_result)
 
-    # Maximum image file size: 50MB to prevent memory exhaustion
-    MAX_IMAGE_SIZE_MB = 50
-    MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024
-
     def process_file(self, file_path: str) -> None:
         """Process an image file directly from CLI."""
         try:
             # Validate file size to prevent memory issues with very large images
-            # Use lstat to not follow symlinks (security: prevent symlink bypass)
-            file_size = os.lstat(file_path).st_size
-            if file_size > self.MAX_IMAGE_SIZE_BYTES:
+            # We use getsize() which follows symlinks to ensure the actual
+            # file content doesn't exceed our 50MB limit (Denial of Service).
+            file_size = os.path.getsize(file_path)
+            if file_size > MAX_IMAGE_SIZE_BYTES:
                 self.show_toast(
                     _("Image too large: {size}MB (max {max}MB)").format(
                         size=round(file_size / (1024 * 1024), 1),
-                        max=self.MAX_IMAGE_SIZE_MB,
+                        max=MAX_IMAGE_SIZE_MB,
                     ),
                 )
                 return
@@ -446,12 +449,12 @@ class AnuraWindow(Adw.ApplicationWindow):
             if ok:
                 # Validate file size before processing (same check as DnD)
                 file_size = len(contents)
-                if file_size > self.MAX_IMAGE_SIZE_BYTES:
+                if file_size > MAX_IMAGE_SIZE_BYTES:
                     self.welcome_page.spinner.set_visible(False)
                     self.show_toast(
                         _("Image too large: {size}MB (max {max}MB)").format(
                             size=round(file_size / (1024 * 1024), 1),
-                            max=self.MAX_IMAGE_SIZE_MB,
+                            max=MAX_IMAGE_SIZE_MB,
                         ),
                     )
                     return
@@ -585,7 +588,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         language_manager_instance = get_language_manager()
 
         # Track signal handler IDs for cleanup
-        signal_handlers = []
+        signal_handlers: list[int] = []
 
         def on_dialog_close(*args: object) -> None:
             """Clean up signal connections when dialog is closed."""

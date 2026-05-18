@@ -33,6 +33,7 @@ class ShortcutsOverlay(Adw.Window):
 
     search_entry: Gtk.SearchEntry = Gtk.Template.Child()
     shortcuts_list: Gtk.ListBox = Gtk.Template.Child()
+    stack: Gtk.Stack = Gtk.Template.Child()
 
     def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
@@ -176,6 +177,7 @@ class ShortcutsOverlay(Adw.Window):
     def _on_search_changed(self, entry: Gtk.SearchEntry) -> None:
         """Handle search entry changes."""
         query = entry.get_text().lower()
+        any_visible = False
 
         for group, rows in self._groups:
             visible_count = 0
@@ -188,6 +190,13 @@ class ShortcutsOverlay(Adw.Window):
                     child_row.set_visible(False)
 
             group.set_visible(visible_count > 0)
+            if visible_count > 0:
+                any_visible = True
+
+        if any_visible:
+            self.stack.set_visible_child_name("results")
+        else:
+            self.stack.set_visible_child_name("no_results")
 
     def _on_close_request(self, _window: Gtk.Window) -> bool:
         """Handle window close request."""
