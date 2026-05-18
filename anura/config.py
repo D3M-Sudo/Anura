@@ -29,6 +29,11 @@ XDG_CACHE_HOME = os.getenv("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
 # Anura specific data directory for OCR models (user-downloaded)
 TESSDATA_DIR = os.path.join(XDG_DATA_HOME, "anura", "tessdata")
 
+# Maximum image file size (50MB) to prevent memory exhaustion (DoS)
+# Used for input validation across services and UI.
+MAX_IMAGE_SIZE_MB = 50
+MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024
+
 
 def _get_tessdata_system_dir() -> str:
     """

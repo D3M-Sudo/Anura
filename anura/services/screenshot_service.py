@@ -28,7 +28,12 @@ from PIL import Image  # noqa: E402
 import pytesseract  # noqa: E402
 from pyzbar.pyzbar import ZBarSymbol, decode  # noqa: E402
 
-from anura.config import LANG_CODE_PATTERN, get_tesseract_config  # noqa: E402
+from anura.config import (  # noqa: E402
+    LANG_CODE_PATTERN,
+    MAX_IMAGE_SIZE_BYTES,
+    MAX_IMAGE_SIZE_MB,
+    get_tesseract_config,
+)
 from anura.services.host_screenshot_fallback import (  # noqa: E402
     build_detection_argv,
     build_screenshot_argv,
@@ -542,6 +547,33 @@ class ScreenshotService(GObject.GObject):
             return validation_result
 
         is_physical_file = self._determine_file_type(file, remove_source)
+
+        # Security Hardening: Validate image size before processing (DoS prevention)
+        # This protects silent mode and other entry points from memory exhaustion.
+        file_size = 0
+        if is_physical_file:
+            file_size = os.path.getsize(file)  # type: ignore[arg-type]
+        elif hasattr(file, "getbuffer"):
+            # Handle BytesIO and similar stream-like objects
+            file_size = file.getbuffer().nbytes
+        elif hasattr(file, "seek") and hasattr(file, "tell"):
+            # General stream fallback
+            curr = file.tell()
+            file.seek(0, os.SEEK_END)
+            file_size = file.tell()
+            file.seek(curr, os.SEEK_SET)
+
+        if file_size > MAX_IMAGE_SIZE_BYTES:
+            logger.error(f"Anura OCR: Image too large ({file_size} bytes)")
+            return (
+                False,
+                "",
+                _("Image too large: {size}MB (max {max}MB)").format(
+                    size=round(file_size / (1024 * 1024), 1),
+                    max=MAX_IMAGE_SIZE_MB,
+                ),
+            )
+
         start_time = time.time()
 
         try:
