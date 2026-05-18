@@ -640,10 +640,7 @@ class ScreenshotService(GObject.GObject):
             max_side = max(width, height)
             if max_side > 1024:
                 scale = 1024 / max_side
-                small_img = img.resize(
-                    (int(width * scale), int(height * scale)),
-                    Image.Resampling.BILINEAR
-                )
+                small_img = img.resize((int(width * scale), int(height * scale)), Image.Resampling.BILINEAR)
                 qr_data = decode(small_img, symbols=[ZBarSymbol.QRCODE])
                 if len(qr_data) > 0:
                     extracted = qr_data[0].data.decode("utf-8").strip()

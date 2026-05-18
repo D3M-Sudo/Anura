@@ -600,10 +600,7 @@ class AnuraApplication(Adw.Application):
         # Adw.AboutDialog internally uses a GtkLabel with markup enabled for the copyright
         # and license block (especially when combined with license links), so ampersands
         # MUST be escaped to avoid Gtk-WARNING parsing errors.
-        _copyright = html.escape(
-            "© 2025-2026 D3M-Sudo & Anura Contributors\n"
-            "© 2022-2025 Frog OCR Contributors"
-        )
+        _copyright = html.escape("© 2025-2026 D3M-Sudo & Anura Contributors\n© 2022-2025 Frog OCR Contributors")
 
         def _schedule_present() -> bool:
             """Stage 2: Present the AboutDialog in a separate iteration.
@@ -631,9 +628,7 @@ class AnuraApplication(Adw.Application):
                 _("Acknowledgements"),
                 "© 2022-2025 Andrey Maksimov (Frog OCR)",
                 Gtk.License.UNKNOWN,
-                _(
-                    "Built with Tesseract OCR, GTK4, Libadwaita, and other open source components."
-                ),
+                _("Built with Tesseract OCR, GTK4, Libadwaita, and other open source components."),
             )
             about_window.add_link(_("Changelog"), "https://github.com/D3M-Sudo/Anura/blob/main/CHANGELOG.md")
             about_window.add_link(_("Report an Issue"), "https://github.com/D3M-Sudo/Anura/issues")

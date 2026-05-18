@@ -21,7 +21,7 @@ template $ExtractedPage : Adw.NavigationPage {
       [start]
       Adw.SplitButton grab_btn {
         action-name: "app.get_screenshot";
-        tooltip-text: _("Take a screenshot");
+        tooltip-text: _("Take a Screenshot (Ctrl+G)");
         accessibility {
           label: _("Take a screenshot");
         }
@@ -32,7 +32,7 @@ template $ExtractedPage : Adw.NavigationPage {
       [start]
       Button text_copy_btn {
         action-name: "app.copy_to_clipboard";
-        tooltip-text: C_("Extracted screen", "Copy extracted text to clipboard");
+        tooltip-text: C_("Extracted screen", "Copy Extracted Text to Clipboard (Ctrl+C)");
         accessibility {
           label: C_("Extracted screen", "Copy extracted text to clipboard");
         }
@@ -47,7 +47,7 @@ template $ExtractedPage : Adw.NavigationPage {
           name: "button";
           child: Button listen_btn {
             action-name: "app.listen";
-            tooltip-text: C_("Extracted screen", "Listen to text");
+            tooltip-text: C_("Extracted screen", "Listen to Text (Ctrl+L)");
             accessibility {
               label: C_("Extracted screen", "Listen to text");
             }

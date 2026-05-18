@@ -83,7 +83,6 @@ class ThreadSafeSingleton:
             cls._locks.clear()
 
 
-
 def get_instance[T](wrapped_class: type[T]) -> T:
     """
     Function to get singleton instance of a class.

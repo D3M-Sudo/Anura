@@ -252,7 +252,7 @@ class AnuraWindow(Adw.ApplicationWindow):
 
             else:
                 # 4. Handle Regular Text Flow (Clipboard)
-                if (self.settings.get_boolean("autocopy") or copy):
+                if self.settings.get_boolean("autocopy") or copy:
                     clipboard_service_instance = get_clipboard_service()
                     clipboard_service_instance.set(text)
                     self.show_toast(_("Text copied to clipboard"))
