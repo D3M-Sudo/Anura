@@ -78,6 +78,7 @@ class ExtractedPage(Adw.NavigationPage):
             self._tts_service = get_tts_service()
             self._tts_stop_handler_id = self._tts_service.connect("stop", self._on_listen_end)
             self._tts_paused_handler_id = self._tts_service.connect("paused", self._on_paused)
+            self._tts_error_handler_id = self._tts_service.connect("error", self._on_tts_error)
         except (TypeError, RuntimeError, AttributeError) as e:
             logger.warning(f"Failed to connect TTS services: {e}")
 
@@ -160,6 +161,9 @@ class ExtractedPage(Adw.NavigationPage):
                 if self._tts_paused_handler_id:
                     self._tts_service.disconnect(self._tts_paused_handler_id)
                     self._tts_paused_handler_id = None
+                if self._tts_error_handler_id:
+                    self._tts_service.disconnect(self._tts_error_handler_id)
+                    self._tts_error_handler_id = None
             except Exception as e:
                 logger.warning(f"Failed to cleanup TTS during dispose: {e}")
 
@@ -230,6 +234,8 @@ class ExtractedPage(Adw.NavigationPage):
                     self._tts_stop_handler_id = self._tts_service.connect("stop", self._on_listen_end)
                 if self._tts_paused_handler_id is None:
                     self._tts_paused_handler_id = self._tts_service.connect("paused", self._on_paused)
+                if self._tts_error_handler_id is None:
+                    self._tts_error_handler_id = self._tts_service.connect("error", self._on_tts_error)
             except (TypeError, RuntimeError, AttributeError) as e:
                 logger.warning(f"Failed to connect TTS signals during listen: {e}")
 
@@ -321,6 +327,13 @@ class ExtractedPage(Adw.NavigationPage):
         if self.listen_pause_btn:
             icon = "media-playback-start-symbolic" if is_paused else "media-playback-pause-symbolic"
             self.listen_pause_btn.set_icon_name(icon)
+
+    def _on_tts_error(self, _service: object, message: str) -> None:
+        """Handle TTS error signal."""
+        self._on_listen_end(_service, False)
+        window = self.get_root()
+        if window and hasattr(window, "show_toast"):
+            window.show_toast(message)
 
     def _on_generated(self, filepath: str | None) -> None:
         self._is_generating_tts = False

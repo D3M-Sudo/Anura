@@ -236,6 +236,10 @@ class AnuraApplication(Adw.Application):
 
     def do_startup(self, *args: object, **kwargs: object) -> None:
         Adw.init()
+        # Explicitly initialize StyleManager to ensure theme stability
+        style_manager = Adw.StyleManager.get_default()
+        logger.debug(f"Anura: StyleManager initialized, color-scheme: {style_manager.get_color_scheme()}")
+
         Adw.Application.do_startup(self)
 
         # Clean up orphaned resources from previous sessions
@@ -603,10 +607,7 @@ class AnuraApplication(Adw.Application):
         # Adw.AboutDialog internally uses a GtkLabel with markup enabled for the copyright
         # and license block (especially when combined with license links), so ampersands
         # MUST be escaped to avoid Gtk-WARNING parsing errors.
-        _copyright = html.escape(
-            "© 2025-2026 D3M-Sudo & Anura Contributors\n"
-            "© 2022-2025 Frog OCR Contributors"
-        )
+        _copyright = html.escape("© 2025-2026 D3M-Sudo & Anura Contributors\n© 2022-2025 Frog OCR Contributors")
 
         def _schedule_present() -> bool:
             """Stage 2: Present the AboutDialog in a separate iteration.
@@ -634,9 +635,7 @@ class AnuraApplication(Adw.Application):
                 _("Acknowledgements"),
                 "© 2022-2025 Andrey Maksimov (Frog OCR)",
                 Gtk.License.UNKNOWN,
-                _(
-                    "Built with Tesseract OCR, GTK4, Libadwaita, and other open source components."
-                ),
+                _("Built with Tesseract OCR, GTK4, Libadwaita, and other open source components."),
             )
             about_window.add_link(_("Changelog"), "https://github.com/D3M-Sudo/Anura/blob/main/CHANGELOG.md")
             about_window.add_link(_("Report an Issue"), "https://github.com/D3M-Sudo/Anura/issues")
@@ -828,25 +827,39 @@ class AnuraApplication(Adw.Application):
             return
 
         if not text:
-            self.notification_service.show_notification(
-                title=_("Anura OCR"),
-                body=_("No text found. Try to grab another region."),
-            )
+
+            def _on_empty_notification_idle():
+                self.notification_service.show_notification(
+                    title=_("Anura OCR"),
+                    body=_("No text found. Try to grab another region."),
+                )
+                return GLib.SOURCE_REMOVE
+
+            GLib.idle_add(_on_empty_notification_idle)
             return
 
         if copy:
             clipboard_service_instance = get_clipboard_service()
             clipboard_service_instance.set(text)
-            self.notification_service.show_notification(
-                title=_("Anura OCR"),
-                body=_("Text extracted and copied to clipboard."),
-            )
+
+            def _on_copied_notification_idle():
+                self.notification_service.show_notification(
+                    title=_("Anura OCR"),
+                    body=_("Text extracted and copied to clipboard."),
+                )
+                return GLib.SOURCE_REMOVE
+
+            GLib.idle_add(_on_copied_notification_idle)
         else:
             # Text extracted but not copied - show notification
-            self.notification_service.show_notification(
-                title=_("Anura OCR"),
-                body=_("Text extracted successfully."),
-            )
+            def _on_success_notification_idle():
+                self.notification_service.show_notification(
+                    title=_("Anura OCR"),
+                    body=_("Text extracted successfully."),
+                )
+                return GLib.SOURCE_REMOVE
+
+            GLib.idle_add(_on_success_notification_idle)
 
     def on_error(self, _sender: object, message: str) -> None:
         """Handle screenshot service errors, skipping cancellation messages."""
@@ -854,8 +867,14 @@ class AnuraApplication(Adw.Application):
             # User cancelled - no notification needed
             logger.info("Anura: Screenshot cancelled by user.")
             return
+
         # Real error - show notification
-        self.notification_service.show_notification(title=_("Anura OCR"), body=message)
+
+        def _on_error_notification_idle(msg: str):
+            self.notification_service.show_notification(title=_("Anura OCR"), body=msg)
+            return GLib.SOURCE_REMOVE
+
+        GLib.idle_add(_on_error_notification_idle, message)
 
     def on_listen(self, _sender: object, _event: object) -> None:
         window = self.get_active_window()

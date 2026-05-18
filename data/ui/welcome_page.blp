@@ -52,7 +52,7 @@ template $WelcomePage : Adw.NavigationPage {
 
             Button {
               action-name: "app.get_screenshot";
-              tooltip-text: C_("Welcome screen", "Take a Screenshot");
+              tooltip-text: C_("Welcome screen", "Take a Screenshot (Ctrl+G)");
               styles ["pill", "suggested-action"]
               
               child: Box {
@@ -68,7 +68,7 @@ template $WelcomePage : Adw.NavigationPage {
 
             Button {
               action-name: "app.open_image";
-              tooltip-text: C_("Welcome screen", "Open Image");
+              tooltip-text: C_("Welcome screen", "Open Image (Ctrl+O)");
               styles ["pill"]
 
               child: Box {
@@ -84,7 +84,7 @@ template $WelcomePage : Adw.NavigationPage {
 
              Button {
               action-name: "app.paste_from_clipboard";
-              tooltip-text: C_("Welcome screen", "Paste image from clipboard");
+              tooltip-text: C_("Welcome screen", "Paste Image from Clipboard (Ctrl+V)");
               styles ["pill"]
 
               child: Box {

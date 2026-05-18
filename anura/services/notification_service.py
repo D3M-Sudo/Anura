@@ -284,4 +284,3 @@ class NotificationService:
         if self._active_notifications:
             logger.debug(f"NotificationService: Cleaning up {len(self._active_notifications)} tracked notifications")
             self._active_notifications.clear()
-

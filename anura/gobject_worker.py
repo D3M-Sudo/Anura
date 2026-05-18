@@ -7,7 +7,6 @@
 #
 
 from collections.abc import Callable
-import logging
 import threading
 import traceback
 
@@ -17,6 +16,7 @@ import gi
 gi.require_version("GLib", "2.0")
 
 from gi.repository import GLib  # noqa: E402
+from loguru import logger  # noqa: E402
 
 
 class GObjectWorker:
@@ -56,7 +56,7 @@ class GObjectWorker:
                         try:
                             cb(res)
                         except Exception:
-                            logging.exception("Unhandled error in GObjectWorker success callback")
+                            logger.exception("Unhandled error in GObjectWorker success callback")
                         return GLib.SOURCE_REMOVE
 
                     GLib.idle_add(cb_wrapper, result, priority=GLib.PRIORITY_DEFAULT)
@@ -71,20 +71,20 @@ class GObjectWorker:
                     try:
                         eb(error, tb)
                     except Exception:
-                        logging.exception("Unhandled error in GObjectWorker error callback")
+                        logger.exception("Unhandled error in GObjectWorker error callback")
                     return GLib.SOURCE_REMOVE
 
                 GLib.idle_add(eb_wrapper, e, tb_str, priority=GLib.PRIORITY_DEFAULT)
             except Exception as e:
                 # Handle truly unexpected errors (logical errors, system failures)
                 tb_str = traceback.format_exc()
-                logging.error(f"Unexpected error in GObjectWorker: {e}")
+                logger.error(f"Unexpected error in GObjectWorker: {e}")
 
                 def eb_wrapper(error, tb):
                     try:
                         eb(error, tb)
                     except Exception:
-                        logging.exception("Unhandled error in GObjectWorker fallback error callback")
+                        logger.exception("Unhandled error in GObjectWorker fallback error callback")
                     return GLib.SOURCE_REMOVE
 
                 GLib.idle_add(eb_wrapper, e, tb_str, priority=GLib.PRIORITY_DEFAULT)
@@ -107,4 +107,6 @@ class GObjectWorker:
         """
         tb = traceback_str or getattr(error, "__traceback__", None)
         if tb:
-            logging.error("Anura Worker Error: Unhandled exception in background thread:\n%s", tb)
+            logger.error(f"Anura Worker Error: Unhandled exception in background thread:\n{tb}")
+        else:
+            logger.error(f"Anura Worker Error: {error}")

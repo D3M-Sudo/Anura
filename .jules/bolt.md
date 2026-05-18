@@ -23,3 +23,11 @@
 ## 2026-05-17 - Whitespace and Capitalization Optimization
 **Learning:** In Python, `" ".join(text.split())` is approximately 5x faster than using `re.sub(r"\s+", " ", text).strip()` for squashing internal whitespace and stripping leading/trailing ones. Additionally, `word.capitalize()` is more efficient and idiomatic than manual slicing for Title Case conversion.
 **Action:** Prefer built-in string methods like `split()`, `join()`, and `capitalize()` over regex or manual slicing for common text normalization tasks.
+
+## 2026-05-18 - QR Code Detection Downscaling Optimization
+**Learning:** For high-resolution images (e.g., 4K), pyzbar's decode operation is significantly slower (up to 23x) than on downscaled images (e.g., 1024px). QR codes are designed to be resilient and can usually be detected reliably at lower resolutions.
+**Action:** Implement a "fast path" for QR detection by downscaling high-resolution images before attempting decoding, while keeping the full-resolution detection as a fallback for cases where downscaling might lose critical detail.
+
+## 2026-05-19 - Multiline Regex and Lambda Callback Performance
+**Learning:** Replacing Python line-by-line loops with `re.sub` using `re.MULTILINE` can yield a ~2.7x speedup for artifact removal on large text blocks. However, when using `re.MULTILINE`, using `[ \t]` instead of `\s` is critical to avoid swallowing newlines. Furthermore, combining multiple simple `re.sub` calls into a single call with a lambda callback might not provide significant gains due to the overhead of Python callbacks, often making multiple C-optimized passes faster.
+**Action:** Prefer multiline regex for bulk text processing but avoid `\s` if line structure must be preserved. Use multiple `re.sub` calls for simple string replacements instead of a single call with a Python callback.

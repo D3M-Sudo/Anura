@@ -22,6 +22,7 @@ from gi.repository import Gdk, Gio, GLib, GObject  # noqa: E402
 from loguru import logger  # noqa: E402
 from PIL import Image  # noqa: E402
 
+from anura.config import MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB  # noqa: E402
 from anura.utils.singleton import get_instance  # noqa: E402
 
 # When the clipboard advertises a file URI list (e.g. user copied a PNG from
@@ -267,6 +268,7 @@ class ClipboardService(GObject.GObject):
 
     def _emit_clipboard_error(self, message: str) -> None:
         """Emit the ``error`` signal from the main thread via idle_add."""
+
         def _on_error_idle():
             self.emit("error", message)
             return GLib.SOURCE_REMOVE
@@ -436,6 +438,23 @@ class ClipboardService(GObject.GObject):
 
     def _emit_texture_from_file(self, path: str) -> None:
         """Decode an image file with PIL → re-encode to PNG → Gdk.Texture."""
+        # Security Hardening: Validate file size before opening (DoS prevention)
+        try:
+            file_size = os.path.getsize(path)
+            if file_size > MAX_IMAGE_SIZE_BYTES:
+                logger.error(f"Anura Clipboard: Image too large ({file_size} bytes)")
+                self._emit_clipboard_error(
+                    _("Image too large: {size}MB (max {max}MB)").format(
+                        size=round(file_size / (1024 * 1024), 1),
+                        max=MAX_IMAGE_SIZE_MB,
+                    )
+                )
+                return
+        except OSError as e:
+            logger.warning(f"Anura Clipboard: Failed to check file size for {path!r}: {e}")
+            self._emit_clipboard_error(_("No image in clipboard"))
+            return
+
         try:
             with Image.open(path) as img:
                 img.load()
@@ -519,6 +538,7 @@ class ClipboardService(GObject.GObject):
                 raise ValueError("No valid text found in result.")
 
             logger.info("Anura Clipboard: Text retrieved from clipboard.")
+
             # For text reading, we might emit a different signal or handle differently
             # For now, just log the success
             def _on_success_idle(t):
@@ -575,6 +595,7 @@ class ClipboardService(GObject.GObject):
         if not active_cancellable.is_cancelled():
             logger.warning("Anura Clipboard: Read operation timed out after 10s, cancelling.")
             active_cancellable.cancel()
+
             # Emit error signal so UI can show user feedback
             def _on_error_idle():
                 self.emit("error", _("Clipboard read operation timed out."))

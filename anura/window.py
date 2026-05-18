@@ -18,7 +18,7 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk  # noqa: E402
 from loguru import logger  # noqa: E402
 
-from anura.config import APP_ID, RESOURCE_PREFIX  # noqa: E402
+from anura.config import APP_ID, MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB, RESOURCE_PREFIX  # noqa: E402
 from anura.gobject_worker import GObjectWorker  # noqa: E402
 from anura.language_manager import get_language_manager  # noqa: E402
 from anura.services.clipboard_service import get_clipboard_service  # noqa: E402
@@ -120,14 +120,21 @@ class AnuraWindow(Adw.ApplicationWindow):
         logger.debug(f"DnD: Processing dropped file: {file_path}")
 
         try:
+            # Hardening: check for 0-byte physical files
+            if os.path.getsize(file_path) == 0:
+                logger.error(f"Anura OCR: Attempted to process 0-byte image file: {file_path}")
+                self.welcome_page.reset_drop_area_state()
+                self.show_toast(_("The selected image file is empty."))
+                return
+
             # Validate file size
             file_size = os.path.getsize(file_path)
-            if file_size > self.MAX_IMAGE_SIZE_BYTES:
+            if file_size > MAX_IMAGE_SIZE_BYTES:
                 self.welcome_page.reset_drop_area_state()
                 self.show_toast(
                     _("Image too large: {size}MB (max {max}MB)").format(
                         size=round(file_size / (1024 * 1024), 1),
-                        max=self.MAX_IMAGE_SIZE_MB,
+                        max=MAX_IMAGE_SIZE_MB,
                     ),
                 )
                 return
@@ -164,6 +171,15 @@ class AnuraWindow(Adw.ApplicationWindow):
         self._screenshot_timeout_id = GLib.timeout_add_seconds(30, self._on_screenshot_timeout)
 
         try:
+            # Check if backend is already capturing before hiding
+            if hasattr(self.backend, "_is_capturing") and self.backend._is_capturing:
+                logger.warning("Anura: Capture already in progress, not hiding window.")
+                if self._screenshot_timeout_id is not None:
+                    GLib.source_remove(self._screenshot_timeout_id)
+                    self._screenshot_timeout_id = None
+                self.present()
+                return
+
             self.backend.capture(lang, copy)
         except (GLib.Error, RuntimeError, OSError) as e:
             # Clean up timeout and restore window on error
@@ -252,7 +268,7 @@ class AnuraWindow(Adw.ApplicationWindow):
 
             else:
                 # 4. Handle Regular Text Flow (Clipboard)
-                if (self.settings.get_boolean("autocopy") or copy):
+                if self.settings.get_boolean("autocopy") or copy:
                     clipboard_service_instance = get_clipboard_service()
                     clipboard_service_instance.set(text)
                     self.show_toast(_("Text copied to clipboard"))
@@ -397,22 +413,24 @@ class AnuraWindow(Adw.ApplicationWindow):
 
         dialog.open(self, None, self._on_open_image_result)
 
-    # Maximum image file size: 50MB to prevent memory exhaustion
-    MAX_IMAGE_SIZE_MB = 50
-    MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024
-
     def process_file(self, file_path: str) -> None:
         """Process an image file directly from CLI."""
         try:
+            # Hardening: check for 0-byte physical files
+            if os.path.getsize(file_path) == 0:
+                logger.error(f"Anura OCR: Attempted to process 0-byte image file: {file_path}")
+                self.show_toast(_("The selected image file is empty."))
+                return
+
             # Validate file size to prevent memory issues with very large images
             # We use getsize() which follows symlinks to ensure the actual
             # file content doesn't exceed our 50MB limit (Denial of Service).
             file_size = os.path.getsize(file_path)
-            if file_size > self.MAX_IMAGE_SIZE_BYTES:
+            if file_size > MAX_IMAGE_SIZE_BYTES:
                 self.show_toast(
                     _("Image too large: {size}MB (max {max}MB)").format(
                         size=round(file_size / (1024 * 1024), 1),
-                        max=self.MAX_IMAGE_SIZE_MB,
+                        max=MAX_IMAGE_SIZE_MB,
                     ),
                 )
                 return
@@ -453,12 +471,12 @@ class AnuraWindow(Adw.ApplicationWindow):
             if ok:
                 # Validate file size before processing (same check as DnD)
                 file_size = len(contents)
-                if file_size > self.MAX_IMAGE_SIZE_BYTES:
+                if file_size > MAX_IMAGE_SIZE_BYTES:
                     self.welcome_page.spinner.set_visible(False)
                     self.show_toast(
                         _("Image too large: {size}MB (max {max}MB)").format(
                             size=round(file_size / (1024 * 1024), 1),
-                            max=self.MAX_IMAGE_SIZE_MB,
+                            max=MAX_IMAGE_SIZE_MB,
                         ),
                     )
                     return
