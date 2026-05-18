@@ -50,10 +50,10 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
 
     def _setup_extra_languages(self) -> None:
         downloaded_langs = language_manager.get_downloaded_languages()
+        self.extra_language_combo.set_model(Gtk.StringList.new(downloaded_langs))
+
         if not downloaded_langs:
             return
-
-        self.extra_language_combo.set_model(Gtk.StringList.new(downloaded_langs))
 
         # Connect the signal ALWAYS, regardless of current extra language setting
         self.connect_tracked(self.extra_language_combo, "notify::selected-item", self._on_extra_language_changed)
@@ -82,8 +82,14 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
         logger.debug(f"Anura: Extra language set to {lang_name} ({lang_code})")
         self.settings.set_string("extra-language", lang_code)
 
-    def _on_language_changed(self, _sender: object, _code: str) -> None:
+    def _on_language_changed(self, _sender: object, code: str) -> None:
         """Refresh the extra-language combo when models are installed or removed."""
+        # If the removed language was the current extra-language, reset it
+        current_extra = self.settings.get_string("extra-language")
+        if current_extra == code:
+            logger.info(f"Anura: Active extra-language '{code}' removed, resetting preference.")
+            self.settings.set_string("extra-language", "")
+
         # Disconnect old combo handler via SignalManagerMixin tracking to avoid
         # stale IDs accumulating in _signal_connections (BUG-4 fix).
         emitter = self.extra_language_combo

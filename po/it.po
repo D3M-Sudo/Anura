@@ -2071,3 +2071,9 @@ msgstr ""
 
 #~ msgid "Extracted Text from Anura"
 #~ msgstr "Estrai testo da dovunque"
+
+msgid "No results found"
+msgstr "Nessun risultato trovato"
+
+msgid "Try a different search term"
+msgstr "Prova con un termine di ricerca diverso"
