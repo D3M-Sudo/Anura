@@ -39,20 +39,6 @@ class TTSService(GObject.GObject):
         "paused": (GObject.SignalFlags.RUN_LAST, None, (bool,)),
     }
 
-    __slots__ = (
-        "_bus",
-        "_bus_message_handler_id",
-        "_bus_watch_active",
-        "_bus_watch_lock",
-        "_bus_watch_setup_in_progress",
-        "_cleanup_lock",
-        "_current_speech_file",
-        "_gtts_languages",
-        "_init_lock",
-        "_state_lock",
-        "player",
-    )
-
     _tld: str = "com"
 
     # Mapping Tesseract 3-letter → gTTS 2-letter ISO 639-1
@@ -371,7 +357,11 @@ class TTSService(GObject.GObject):
             GLib.idle_add(_on_stop_idle)
 
     def _cleanup_gst_resources(self) -> None:
-        """Remove signal watcher and release player resources."""
+        """Remove signal watcher and release player resources.
+
+        Suppresses teardown errors (e.g. dbus bus connection failures in
+        sandboxed/CI environments where no dbus-daemon is available).
+        """
         if self.player:
             logger.debug("Anura TTSService: Starting GStreamer resource cleanup")
 
@@ -389,7 +379,10 @@ class TTSService(GObject.GObject):
                 self._bus_watch_active = False
                 self._bus = None
             logger.info("Anura TTSService: Setting GStreamer state to NULL")
-            self.player.set_state(Gst.State.NULL)
+            try:
+                self.player.set_state(Gst.State.NULL)
+            except Exception:
+                pass  # Suppress teardown errors in sandboxed/CI environments
             self.player = None
             logger.debug("Anura TTSService: GStreamer resource cleanup complete")
 

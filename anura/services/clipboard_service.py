@@ -47,8 +47,6 @@ class ClipboardService(GObject.GObject):
         "error": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
     }
 
-    __slots__ = ("_cancellable", "_clipboard", "_clipboard_timeout_id", "_fallback_attempted", "_state_lock")
-
     # Timeout for clipboard read operations (seconds)
     CLIPBOARD_TIMEOUT_SECONDS = 10
 

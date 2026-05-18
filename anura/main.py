@@ -98,9 +98,10 @@ _setup_i18n()
 from gettext import gettext as _
 import html
 
-# Suppress a11y bus warnings in headless CI environments
-if not sys.stdin.isatty():
-    os.environ["NO_AT_BRIDGE"] = "1"
+# Suppress a11y bus warnings in headless CI environments and ensure
+# they are set even when the app is launched without --env flags.
+os.environ.setdefault("NO_AT_BRIDGE", "1")
+os.environ.setdefault("GTK_A11Y", "none")
 
 import gi
 
