@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schemalist gettext-domain="com.github.d3msudo.anura">
-  <schema id="com.github.d3msudo.anura" path="/com/github/d3msudo/anura/">
+<schemalist gettext-domain="io.github.d3msudo.anura">
+  <schema id="io.github.d3msudo.anura" path="/io/github/d3msudo/anura/">
     
     <key name="window-width" type="i">
       <default>-1</default>

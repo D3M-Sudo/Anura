@@ -14,7 +14,7 @@ Anura OCR is a GTK4/Libadwaita desktop application for GNOME that extracts text 
 - QR code via `pyzbar` + `zbar`
 - TTS via `gTTS` + GStreamer `playbin3`
 - Screenshots via XDG Desktop Portal (`libportal` / `Xdp`)
-- Distributed as Flatpak (`com.github.d3msudo.anura`) — GNOME 49 runtime
+- Distributed as Flatpak (`io.github.d3msudo.anura`) — GNOME 49 runtime
 - Internationalization with gettext: 25+ languages (see `po/LINGUAS`)
 - Build system: Meson ≥ 1.5.0
 - License: MIT
@@ -59,13 +59,13 @@ anura/
 │   ├── ui/                     Blueprint files (.blp) → compiled to .ui
 │   ├── icons/                  Scalable SVG icons + symbolic variants
 │   ├── screenshots/            Screenshots for Flathub/metainfo
-│   ├── com.github.d3msudo.anura.desktop.in
-│   ├── com.github.d3msudo.anura.gresource.xml
-│   ├── com.github.d3msudo.anura.gschema.xml
-│   ├── com.github.d3msudo.anura.metainfo.xml.in
+│   ├── io.github.d3msudo.anura.desktop.in
+│   ├── io.github.d3msudo.anura.gresource.xml
+│   ├── io.github.d3msudo.anura.gschema.xml
+│   ├── io.github.d3msudo.anura.metainfo.xml.in
 │   └── style.css
 ├── flatpak/
-│   └── com.github.d3msudo.anura.json   Flatpak manifest with all dependencies
+│   └── io.github.d3msudo.anura.json   Flatpak manifest with all dependencies
 ├── build-aux/
 │   ├── generate_release_notes.py   CHANGELOG.md parser → _release_notes.py
 │   └── meson/postinstall.py
@@ -108,13 +108,13 @@ GSETTINGS_SCHEMA_DIR=builddir/data python3 -m anura.main
 
 ```bash
 # Full build
-flatpak-builder --force-clean builddir flatpak/com.github.d3msudo.anura.json
+flatpak-builder --force-clean builddir flatpak/io.github.d3msudo.anura.json
 
 # Run the build
-flatpak-builder --run builddir flatpak/com.github.d3msudo.anura.json anura
+flatpak-builder --run builddir flatpak/io.github.d3msudo.anura.json anura
 
 # Install locally for testing
-flatpak-builder --install --user builddir flatpak/com.github.d3msudo.anura.json
+flatpak-builder --install --user builddir flatpak/io.github.d3msudo.anura.json
 ```
 
 ### Local Build with Meson (venv)
@@ -137,10 +137,10 @@ sudo apt install blueprint-compiler libportal-gtk4-dev
 
 ```bash
 # Check for available updates (dry-run)
-flatpak-external-data-checker --dry-run flatpak/com.github.d3msudo.anura.json
+flatpak-external-data-checker --dry-run flatpak/io.github.d3msudo.anura.json
 
 # Apply updates (requires manual verification for critical dependencies)
-flatpak-external-data-checker --update flatpak/com.github.d3msudo.anura.json
+flatpak-external-data-checker --update flatpak/io.github.d3msudo.anura.json
 ```
 
 ### Internationalization
@@ -150,7 +150,7 @@ flatpak-external-data-checker --update flatpak/com.github.d3msudo.anura.json
 cd po && ./update_potfiles.sh
 
 # Update existing .po files
-for lang in po/*.po; do msgmerge -U "$lang" po/com.github.d3msudo.anura.pot; done
+for lang in po/*.po; do msgmerge -U "$lang" po/io.github.d3msudo.anura.pot; done
 ```
 
 ## Dependency Management
@@ -189,7 +189,7 @@ pip install "meson>=1.5.0"
 
 ### Runtime Dependencies (Flatpak/System)
 
-**File:** `flatpak/com.github.d3msudo.anura.json`
+**File:** `flatpak/io.github.d3msudo.anura.json`
 
 Native dependencies compiled in the Flatpak:
 
@@ -393,7 +393,7 @@ Release notes for `Adw.AboutDialog` are generated from `CHANGELOG.md` during Mes
 |------|---------|
 | `pyproject.toml` | Python project config, dev deps (ruff, meson) |
 | `meson.build` | Main build system, generates `_release_notes.py` |
-| `flatpak/com.github.d3msudo.anura.json` | Flatpak manifest with all native dependencies |
+| `flatpak/io.github.d3msudo.anura.json` | Flatpak manifest with all native dependencies |
 | `build-aux/generate_release_notes.py` | CHANGELOG.md parser → `_release_notes.py` |
 | `CHANGELOG.md` | Versioned changelog (source for release notes) |
 
@@ -442,7 +442,7 @@ pytest tests/test_unit_logic.py -v
 
 # Setup GSettings schema for GTK tests (required once)
 mkdir -p builddir
-cp data/com.github.d3msudo.anura.gschema.xml builddir/
+cp data/io.github.d3msudo.anura.gschema.xml builddir/
 glib-compile-schemas builddir/
 
 # Service-specific tests (requires system gi + GSettings)
@@ -457,7 +457,7 @@ pytest tests/test_notification_service.py -v
 ./setup-gschema.sh
 
 # GTK tests (require Flatpak environment)
-flatpak run --devel --command=bash com.github.d3msudo.anura
+flatpak run --devel --command=bash io.github.d3msudo.anura
 python3 -m pytest tests/ -m "gtk" -v
 ```
 
@@ -498,14 +498,14 @@ def test_service_error(self):
 
 ### Common Testing Issues
 
-#### Error: `RuntimeError: GSettings schema 'com.github.d3msudo.anura' not found`
+#### Error: `RuntimeError: GSettings schema 'io.github.d3msudo.anura' not found`
 
 **Cause**: GSettings schema not compiled or not in schema path
 **Fix**:
 
 ```bash
 mkdir -p builddir
-cp data/com.github.d3msudo.anura.gschema.xml builddir/
+cp data/io.github.d3msudo.anura.gschema.xml builddir/
 glib-compile-schemas builddir/
 export GSETTINGS_SCHEMA_DIR="builddir"
 ```

@@ -6,7 +6,7 @@ trigger: always_on
 
 - Language: Python 3.12+
 - Build: Meson ≥ 1.5.0
-- Distribution: Flatpak (com.github.d3msudo.anura)
+- Distribution: Flatpak (io.github.d3msudo.anura)
 - UI: GTK4 + Libadwaita + Blueprint Compiler 0.16.0
 - OCR: pytesseract + Tesseract 5.5.0
 - QR: pyzbar + zbar

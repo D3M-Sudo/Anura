@@ -184,7 +184,7 @@ def test_language_manager_remove_language_validates_code() -> None:
 
 
 def test_metainfo_documents_portal_requirement() -> None:
-    metainfo = (PROJECT_ROOT / "data" / "com.github.d3msudo.anura.metainfo.xml.in").read_text()
+    metainfo = (PROJECT_ROOT / "data" / "io.github.d3msudo.anura.metainfo.xml.in").read_text()
     assert "xdg-desktop-portal" in metainfo, (
         "metainfo.xml.in must document the portal backend requirement so Flathub users see it before installing."
     )

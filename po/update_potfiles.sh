@@ -4,7 +4,7 @@
 # 
 # Technical script for Anura OCR to extract translatable strings.
 
-DOMAIN_EXTENSION="com.github"
+DOMAIN_EXTENSION="io.github"
 AUTHOR="d3msudo"
 APPNAME="anura"
 APPID="${DOMAIN_EXTENSION}.${AUTHOR}.${APPNAME}"

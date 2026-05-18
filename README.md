@@ -57,7 +57,7 @@ It also decodes **QR codes** in a single click, with full system integration on 
 Download the `.flatpak` bundle from the [Releases](https://github.com/D3M-Sudo/Anura/releases/latest) page, then install:
 
 ```bash
-flatpak install --user ~/Downloads/com.github.d3msudo.anura.flatpak
+flatpak install --user ~/Downloads/io.github.d3msudo.anura.flatpak
 ```
 
 ### Runtime requirements
@@ -118,13 +118,13 @@ Anura supports configurable logging levels via the `ANURA_LOG_LEVEL` environment
 
 ```bash
 # Default level (INFO)
-ANURA_LOG_LEVEL=INFO flatpak run com.github.d3msudo.anura
+ANURA_LOG_LEVEL=INFO flatpak run io.github.d3msudo.anura
 
 # Verbose debugging
-ANURA_LOG_LEVEL=DEBUG flatpak run com.github.d3msudo.anura
+ANURA_LOG_LEVEL=DEBUG flatpak run io.github.d3msudo.anura
 
 # Trace level (most detailed)
-ANURA_LOG_LEVEL=TRACE flatpak run com.github.d3msudo.anura
+ANURA_LOG_LEVEL=TRACE flatpak run io.github.d3msudo.anura
 ```
 
 Valid levels: `TRACE`, `DEBUG`, `INFO` (default), `WARNING`, `ERROR`, `CRITICAL`
@@ -138,7 +138,7 @@ Valid levels: `TRACE`, `DEBUG`, `INFO` (default), `WARNING`, `ERROR`, `CRITICAL`
 
 **Language models not downloading**
 - Check network connection
-- Verify `~/.var/app/com.github.d3msudo.anura/data/anura/tessdata/` exists
+- Verify `~/.var/app/io.github.d3msudo.anura/data/anura/tessdata/` exists
 - Set `ANURA_LOG_LEVEL=DEBUG` for detailed download logs
 
 **Text extraction shows no results**
@@ -207,7 +207,7 @@ sudo ninja -C builddir install
 
 ```bash
 flatpak-builder --force-clean build-flatpak \
-    flatpak/com.github.d3msudo.anura.json
+    flatpak/io.github.d3msudo.anura.json
 ```
 
 ---
@@ -234,7 +234,7 @@ pytest tests/ -m "not gtk" -v
 
 # Run GTK-dependent tests (requires setup)
 mkdir -p builddir
-cp data/com.github.d3msudo.anura.gschema.xml builddir/
+cp data/io.github.d3msudo.anura.gschema.xml builddir/
 glib-compile-schemas builddir/
 export GSETTINGS_SCHEMA_DIR="builddir"
 pytest tests/test_screenshot_service.py tests/test_clipboard_service.py tests/test_tts_service.py -v
@@ -262,10 +262,10 @@ Anura is translated via [Weblate](https://hosted.weblate.org/engage/anura/). Con
 ./update_potfiles.sh
 
 # Sync all locale files before committing
-for f in *.po; do msgmerge -U "$f" com.github.d3msudo.anura.pot --backup=none; done
+for f in *.po; do msgmerge -U "$f" io.github.d3msudo.anura.pot --backup=none; done
 ```
 
-Then push `com.github.d3msudo.anura.pot`, `POTFILES`, and the updated `.po` files to keep Weblate in sync.
+Then push `io.github.d3msudo.anura.pot`, `POTFILES`, and the updated `.po` files to keep Weblate in sync.
 
 ---
 

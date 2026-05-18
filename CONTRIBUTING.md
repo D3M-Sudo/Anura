@@ -72,7 +72,7 @@ uv run pytest tests/test_unit_logic.py -v
 **Method A: Flatpak Sandbox (Recommended)**
 ```bash
 # Enter Flatpak development environment
-flatpak run --devel --command=bash com.github.d3msudo.anura
+flatpak run --devel --command=bash io.github.d3msudo.anura
 
 # Inside sandbox, run GTK tests
 python3 -m pytest tests/ -m "gtk" -v
@@ -164,7 +164,7 @@ ruff format anura/
 | `anura/_release_notes.py` | Generated at build time by Meson from CHANGELOG.md |
 | `data/ui/*.ui` | Compiled from `.blp` by blueprint-compiler — edit `.blp` instead |
 | `po/*.po` | Maintained by translators — use `cd po && ./update_potfiles.sh` to update |
-| `flatpak/com.github.d3msudo.anura.json` | Dependency versions are pinned with SHA — update via FEDC only |
+| `flatpak/io.github.d3msudo.anura.json` | Dependency versions are pinned with SHA — update via FEDC only |
 | `CHANGELOG.md` | Manual entries only — follows Keep a Changelog format |
 
 ## Security Checklist (before every PR)

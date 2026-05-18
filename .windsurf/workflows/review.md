@@ -81,7 +81,7 @@ For every file in anura/:
 - Verify ngettext is used for all plural forms
 
 ### Review 8 — Flatpak & Build
-- Read flatpak/com.github.d3msudo.anura.json completely
+- Read flatpak/io.github.d3msudo.anura.json completely
 - Verify all sources have sha256 checksums
 - Verify finish-args are minimal (no over-permissions)
 - Read all meson.build files — verify all new source files are listed
