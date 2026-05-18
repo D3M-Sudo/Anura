@@ -601,6 +601,24 @@ class ScreenshotService(GObject.GObject):
     def _try_qr_detection(self, img: Image.Image, start_time: float) -> str | None:
         """Try to detect and decode QR codes from image."""
         try:
+            # Optimization: Fast path for high-res images.
+            # Attempt QR detection on a downscaled version first (~1024px).
+            # This is significantly faster for 4K+ images and usually sufficient for QR.
+            width, height = img.size
+            max_side = max(width, height)
+            if max_side > 1024:
+                scale = 1024 / max_side
+                small_img = img.resize(
+                    (int(width * scale), int(height * scale)),
+                    Image.Resampling.BILINEAR
+                )
+                qr_data = decode(small_img, symbols=[ZBarSymbol.QRCODE])
+                if len(qr_data) > 0:
+                    extracted = qr_data[0].data.decode("utf-8").strip()
+                    duration = time.time() - start_time
+                    logger.info(f"Anura OCR: QR code detected (fast path) in {duration:.3f}s")
+                    return extracted
+
             # Optimization: Restrict decoding to QR codes only.
             # By default, pyzbar tries to decode all supported barcode formats
             # (EAN13, Code128, etc.), which adds unnecessary overhead.

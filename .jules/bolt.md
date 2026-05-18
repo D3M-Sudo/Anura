@@ -23,3 +23,7 @@
 ## 2026-05-17 - Whitespace and Capitalization Optimization
 **Learning:** In Python, `" ".join(text.split())` is approximately 5x faster than using `re.sub(r"\s+", " ", text).strip()` for squashing internal whitespace and stripping leading/trailing ones. Additionally, `word.capitalize()` is more efficient and idiomatic than manual slicing for Title Case conversion.
 **Action:** Prefer built-in string methods like `split()`, `join()`, and `capitalize()` over regex or manual slicing for common text normalization tasks.
+
+## 2026-05-18 - QR Code Detection Downscaling Optimization
+**Learning:** For high-resolution images (e.g., 4K), pyzbar's decode operation is significantly slower (up to 23x) than on downscaled images (e.g., 1024px). QR codes are designed to be resilient and can usually be detected reliably at lower resolutions.
+**Action:** Implement a "fast path" for QR detection by downscaling high-resolution images before attempting decoding, while keeping the full-resolution detection as a fallback for cases where downscaling might lose critical detail.
