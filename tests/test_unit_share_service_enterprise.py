@@ -1,7 +1,10 @@
 # tests/test_unit_share_service_enterprise.py
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
+
 from anura.services.share_service import ShareService
+
 
 class TestShareServiceEnterprise:
     """
@@ -10,7 +13,7 @@ class TestShareServiceEnterprise:
 
     @pytest.fixture
     def service(self):
-        with patch('gi.repository.Gtk.UriLauncher', return_value=MagicMock()):
+        with patch("gi.repository.Gtk.UriLauncher", return_value=MagicMock()):
             return ShareService()
 
     def test_providers_list(self, service):
@@ -22,17 +25,20 @@ class TestShareServiceEnterprise:
         assert "x" in providers
         assert "mastodon" in providers
 
-    @pytest.mark.parametrize("provider, text, expected_part", [
-        ("telegram", "hello", "t.me/share/url?text=hello"),
-        ("x", "hello world", "x.com/intent/tweet?text=hello%20world"),
-        ("email", "hi", "mailto:?subject="),
-        ("mastodon", "test", "web+mastodon://share?text=test"),
-        ("bluesky", "blue", "bsky.app/intent/compose?text=blue"),
-        ("reddit", "short", "reddit.com/submit?title=short&selftext=short"),
-        ("reddit", "a" * 101, "reddit.com/submit?selftext=" + "a" * 101),
-        ("linkedin", "pro", "linkedin.com/sharing/share-offsite/"),
-        ("threads", "thread", "threads.net/intent/post?text=thread"),
-    ])
+    @pytest.mark.parametrize(
+        "provider, text, expected_part",
+        [
+            ("telegram", "hello", "t.me/share/url?text=hello"),
+            ("x", "hello world", "x.com/intent/tweet?text=hello%20world"),
+            ("email", "hi", "mailto:?subject="),
+            ("mastodon", "test", "web+mastodon://share?text=test"),
+            ("bluesky", "blue", "bsky.app/intent/compose?text=blue"),
+            ("reddit", "short", "reddit.com/submit?title=short&selftext=short"),
+            ("reddit", "a" * 101, "reddit.com/submit?selftext=" + "a" * 101),
+            ("linkedin", "pro", "linkedin.com/sharing/share-offsite/"),
+            ("threads", "thread", "threads.net/intent/post?text=thread"),
+        ],
+    )
     def test_link_generation_happy_path(self, service, provider, text, expected_part):
         """Test that link generation works correctly for various providers."""
         handler = getattr(service, f"get_link_{provider}")
@@ -47,31 +53,34 @@ class TestShareServiceEnterprise:
         assert handler("   ") == ""
         assert handler(None) == ""
 
-    @pytest.mark.parametrize("url, expected", [
-        ("mailto:test@example.com", True),
-        ("web+mastodon://share?text=hi", True),
-        ("https://google.com", True),
-        ("http://localhost", True),
-        ("ftp://evil.com", False),
-        ("file:///etc/passwd", False),
-        ("javascript:alert(1)", False),
-        ("", False),
-        (None, False),
-    ])
+    @pytest.mark.parametrize(
+        "url, expected",
+        [
+            ("mailto:test@example.com", True),
+            ("web+mastodon://share?text=hi", True),
+            ("https://google.com", True),
+            ("http://localhost", True),
+            ("ftp://evil.com", False),
+            ("file:///etc/passwd", False),
+            ("javascript:alert(1)", False),
+            ("", False),
+            (None, False),
+        ],
+    )
     def test_validate_share_url(self, url, expected):
         """Test share URL validation logic."""
         assert ShareService._validate_share_url(url) == expected
 
     def test_share_empty_text(self, service):
         """Test share method with empty text does nothing."""
-        with patch('loguru.logger.warning') as mock_log:
+        with patch("loguru.logger.warning") as mock_log:
             service.share("email", "")
             mock_log.assert_called_with("Anura Share: Attempted to share empty text.")
             service.launcher.launch.assert_not_called()
 
     def test_share_unknown_provider(self, service):
         """Test share method with unknown provider."""
-        with patch('loguru.logger.warning') as mock_log:
+        with patch("loguru.logger.warning") as mock_log:
             service.share("unknown", "some text")
             mock_log.assert_called_with("Anura Share: Unknown provider 'unknown' - no handler found")
             service.launcher.launch.assert_not_called()
@@ -79,7 +88,7 @@ class TestShareServiceEnterprise:
     def test_share_url_too_long(self, service):
         """Test share method with excessively long URL."""
         long_text = "a" * 3000
-        with patch('loguru.logger.warning') as mock_log:
+        with patch("loguru.logger.warning") as mock_log:
             service.share("email", long_text)
             # Check if warning was called with a message containing "too long"
             args, _ = mock_log.call_args
@@ -104,7 +113,7 @@ class TestShareServiceEnterprise:
         """Test Mastodon specific share flow with fallback."""
         # Test long URL path for Mastodon
         long_text = "a" * 2500
-        with patch('loguru.logger.warning') as mock_log:
+        with patch("loguru.logger.warning") as mock_log:
             service.share("mastodon", long_text)
             args, _ = mock_log.call_args
             assert "too long" in args[0]

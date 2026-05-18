@@ -1,18 +1,19 @@
 # tests/test_unit_widgets_enterprise.py
-import pytest
 from unittest.mock import MagicMock, patch
-from gi.repository import Gtk, GObject, Adw, Gio
 
 # We need to register resources and initialize Adw before importing widgets that use templates
 import gi
+from gi.repository import Adw, Gio
+import pytest
+
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 gi.require_version("Gio", "2.0")
-from gi.repository import Gio, Adw, Gtk
 Adw.init()
 
 # Load GResource bundle immediately at module level
-import os
+import os  # noqa: E402
+
 resource_path = os.path.join(os.path.dirname(__file__), "..", "data", "com.github.d3msudo.anura.gresource")
 if os.path.exists(resource_path):
     resource = Gio.Resource.load(resource_path)
@@ -20,10 +21,10 @@ if os.path.exists(resource_path):
 else:
     raise RuntimeError(f"GResource bundle not found at {resource_path}")
 
-from anura.widgets.extracted_page import ExtractedPage
-from anura.widgets.welcome_page import WelcomePage
-from anura.widgets.language_popover import LanguagePopover
-from anura.types.language_item import LanguageItem
+from anura.types.language_item import LanguageItem  # noqa: E402
+from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
+from anura.widgets.welcome_page import WelcomePage  # noqa: E402
+
 
 class TestExtractedPageEnterprise:
     """
@@ -32,8 +33,10 @@ class TestExtractedPageEnterprise:
 
     @pytest.fixture
     def widget(self):
-        with patch('anura.widgets.extracted_page.get_share_service'), \
-             patch('anura.widgets.extracted_page.get_tts_service'):
+        with (
+            patch("anura.widgets.extracted_page.get_share_service"),
+            patch("anura.widgets.extracted_page.get_tts_service"),
+        ):
             return ExtractedPage()
 
     @pytest.mark.gtk
@@ -49,7 +52,7 @@ class TestExtractedPageEnterprise:
     @pytest.mark.gtk
     def test_button_sensitivity(self, widget):
         """Test that action buttons are disabled when buffer is empty."""
-        widget.buffer.set_text("   ") # Whitespace only
+        widget.buffer.set_text("   ")  # Whitespace only
         assert widget.text_copy_btn.get_sensitive() is False
         assert widget.share_button.get_sensitive() is False
         assert widget.listen_btn.get_sensitive() is False
@@ -68,7 +71,7 @@ class TestExtractedPageEnterprise:
         widget.settings = MagicMock()
         widget.settings.get_string.return_value = "eng"
 
-        with patch('anura.widgets.extracted_page.GObjectWorker.call') as mock_worker:
+        with patch("anura.widgets.extracted_page.GObjectWorker.call"):
             widget.listen()
             # Should be in generating state (spinner)
             assert widget.listen_stack.get_visible_child_name() == "spinner"
@@ -96,6 +99,7 @@ class TestExtractedPageEnterprise:
         # We don't want to wait 2 seconds in a unit test, so we just verify it set the icon.
         # The timeout logic is standard GLib.
 
+
 class TestWelcomePageEnterprise:
     """
     Enterprise-grade tests for WelcomePage widget.
@@ -103,7 +107,7 @@ class TestWelcomePageEnterprise:
 
     @pytest.fixture
     def widget(self):
-        with patch('anura.widgets.welcome_page.language_manager') as mock_manager:
+        with patch("anura.widgets.welcome_page.language_manager") as mock_manager:
             mock_manager.get_language.return_value = "English"
             return WelcomePage()
 
@@ -154,6 +158,7 @@ class TestWelcomePageEnterprise:
         assert widget.spinner.get_visible() is False
         assert not widget.drop_button.has_css_class("suggested-action")
 
+
 class TestLanguagePopoverEnterprise:
     """
     Enterprise-grade tests for LanguagePopover widget.
@@ -167,10 +172,12 @@ class TestLanguagePopoverEnterprise:
         mock_manager = MagicMock()
         mock_manager.get_downloaded_codes.return_value = ["eng", "ita"]
         mock_manager.get_language.side_effect = lambda x: "English" if x == "eng" else "Italian"
-        mock_manager.get_language_item.side_effect = lambda x: LanguageItem(code=x, title="English" if x == "eng" else "Italian")
+        mock_manager.get_language_item.side_effect = lambda x: LanguageItem(
+            code=x, title="English" if x == "eng" else "Italian"
+        )
 
         # Monkeypatch the singleton in the widget module directly on the module object
-        monkeypatch.setattr(lp_mod, 'language_manager', mock_manager)
+        monkeypatch.setattr(lp_mod, "language_manager", mock_manager)
 
         popover = lp_mod.LanguagePopover()
         return popover
@@ -211,7 +218,7 @@ class TestLanguagePopoverEnterprise:
 
         assert row is not None
 
-        with patch.object(widget, 'emit') as mock_emit:
+        with patch.object(widget, "emit") as mock_emit:
             # GTK4 ListBox::row-activated
             widget.list_view.emit("row-activated", row)
 

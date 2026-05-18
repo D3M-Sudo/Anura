@@ -1,8 +1,11 @@
 # tests/test_integration_cli_enterprise.py
-import pytest
 from unittest.mock import MagicMock, patch
-from gi.repository import Gio, GLib
+
+from gi.repository import Gio
+import pytest
+
 from anura.main import AnuraApplication
+
 
 class TestCLIIntegrationEnterprise:
     """
@@ -11,10 +14,12 @@ class TestCLIIntegrationEnterprise:
 
     @pytest.fixture
     def app(self):
-        with patch('anura.main._load_gresource_bundle', return_value=True), \
-             patch('anura.main.ScreenshotService'), \
-             patch('anura.main.NotificationService'), \
-             patch('anura.main.get_clipboard_service'):
+        with (
+            patch("anura.main._load_gresource_bundle", return_value=True),
+            patch("anura.main.ScreenshotService"),
+            patch("anura.main.NotificationService"),
+            patch("anura.main.get_clipboard_service"),
+        ):
             app = AnuraApplication()
             # Mock settings to avoid GSettings dependency if possible,
             # or rely on builddir schema setup
@@ -33,10 +38,11 @@ class TestCLIIntegrationEnterprise:
     def test_handle_file_option_silent(self, app):
         """Test the -f --silent CLI flow."""
         file_path = "/tmp/test.png"
-        with patch('os.path.exists', return_value=True), \
-             patch('os.access', return_value=True), \
-             patch.object(app, '_run_silent_mode', return_value=0) as mock_silent:
-
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("os.access", return_value=True),
+            patch.object(app, "_run_silent_mode", return_value=0) as mock_silent,
+        ):
             exit_code = app._handle_file_option(file_path, is_silent=True)
             assert exit_code == 0
             mock_silent.assert_called_once_with(file_path)
@@ -44,10 +50,11 @@ class TestCLIIntegrationEnterprise:
     def test_handle_file_option_gui(self, app):
         """Test the -f (without --silent) CLI flow."""
         file_path = "/tmp/test.png"
-        with patch('os.path.exists', return_value=True), \
-             patch('os.access', return_value=True), \
-             patch.object(app, '_activate_window_and_process_file') as mock_gui:
-
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("os.access", return_value=True),
+            patch.object(app, "_activate_window_and_process_file") as mock_gui,
+        ):
             exit_code = app._handle_file_option(file_path, is_silent=False)
             assert exit_code == 0
             mock_gui.assert_called_once_with(file_path)
@@ -55,9 +62,7 @@ class TestCLIIntegrationEnterprise:
     def test_handle_inaccessible_file_silent(self, app):
         """Test handling of inaccessible files in silent mode."""
         file_path = "/root/secret.png"
-        with patch('os.path.exists', return_value=True), \
-             patch('os.access', return_value=False):
-
+        with patch("os.path.exists", return_value=True), patch("os.access", return_value=False):
             exit_code = app._handle_file_option(file_path, is_silent=True)
             assert exit_code == 1
 
@@ -68,20 +73,20 @@ class TestCLIIntegrationEnterprise:
 
         # Test -e
         cmd_line.get_options_dict().end().unpack.return_value = {"extract_to_clipboard": True}
-        with patch.object(app, '_handle_extract_to_clipboard', return_value=0) as mock_extract:
+        with patch.object(app, "_handle_extract_to_clipboard", return_value=0) as mock_extract:
             app.do_command_line(cmd_line)
             mock_extract.assert_called_once()
 
         # Test -f
         cmd_line.get_options_dict().end().unpack.return_value = {"file": "image.png"}
-        with patch.object(app, '_handle_file_option', return_value=0) as mock_file:
+        with patch.object(app, "_handle_file_option", return_value=0) as mock_file:
             app.do_command_line(cmd_line)
             mock_file.assert_called_once_with("image.png", False)
 
     def test_on_decoded_no_window(self, app):
         """Test application-level on_decoded when no GUI window is present."""
         # active-window is a read-only GObject property, we need to mock the props object
-        with patch.object(app, 'props') as mock_props:
+        with patch.object(app, "props") as mock_props:
             mock_props.active_window = None
 
         # Case: No text found
@@ -91,7 +96,7 @@ class TestCLIIntegrationEnterprise:
         )
 
         # Case: Success with copy
-        with patch('anura.main.get_clipboard_service') as mock_get_cb:
+        with patch("anura.main.get_clipboard_service") as mock_get_cb:
             mock_cb = mock_get_cb.return_value
             app.on_decoded(None, "found text", copy=True)
             mock_cb.set.assert_called_with("found text")

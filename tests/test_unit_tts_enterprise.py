@@ -1,7 +1,10 @@
 # tests/test_unit_tts_enterprise.py
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
+
 from anura.services.tts import TTSService
+
 
 class TestTTSServiceEnterprise:
     """
@@ -10,7 +13,7 @@ class TestTTSServiceEnterprise:
 
     @pytest.fixture
     def service(self):
-        with patch('gi.repository.Gst.init'):
+        with patch("gi.repository.Gst.init"):
             return TTSService()
 
     def test_map_tesseract_to_gtts_happy_path(self):
@@ -26,7 +29,7 @@ class TestTTSServiceEnterprise:
         assert TTSService.map_tesseract_to_gtts("unknown") == "en"
 
         # Test 2-char prefix matching
-        with patch.object(TTSService, 'get_supported_gtts_languages', return_value={"fr": "French"}):
+        with patch.object(TTSService, "get_supported_gtts_languages", return_value={"fr": "French"}):
             assert TTSService.map_tesseract_to_gtts("fra-new") == "fr"
 
     def test_generate_empty_text(self, service):
@@ -35,14 +38,14 @@ class TestTTSServiceEnterprise:
         assert service.generate("   ") == ""
         assert service.generate(None) == ""
 
-    @patch('gtts.gTTS')
-    @patch('os.makedirs')
+    @patch("gtts.gTTS")
+    @patch("os.makedirs")
     def test_generate_save_error(self, mock_makedirs, mock_gtts, service):
         """Test error handling during speech file generation."""
         mock_tts_instance = mock_gtts.return_value
         mock_tts_instance.save.side_effect = OSError("Disk full")
 
-        with patch('loguru.logger.error') as mock_log:
+        with patch("loguru.logger.error") as mock_log:
             result = service.generate("hello", "en")
             assert result == ""
             mock_log.assert_called()
@@ -50,11 +53,11 @@ class TestTTSServiceEnterprise:
     def test_get_effective_language(self, service):
         """Test determination of the effective TTS language."""
         # Case 1: User has set a specific TTS language
-        with patch('anura.services.tts.settings.get_string', return_value="de"):
+        with patch("anura.services.tts.settings.get_string", return_value="de"):
             assert service.get_effective_language("eng") == "de"
 
         # Case 2: No user preference, fallback to OCR mapping
-        with patch('anura.services.tts.settings.get_string', return_value=""):
+        with patch("anura.services.tts.settings.get_string", return_value=""):
             assert service.get_effective_language("ita") == "it"
 
     def test_is_playing_states(self, service):
@@ -77,8 +80,7 @@ class TestTTSServiceEnterprise:
         service.player = MagicMock()
         service._current_speech_file = "/tmp/test.mp3"
 
-        with patch('os.path.exists', return_value=True), \
-             patch('os.unlink') as mock_unlink:
+        with patch("os.path.exists", return_value=True), patch("os.unlink") as mock_unlink:
             service.stop_speaking()
             assert service.player is None
             assert service._current_speech_file is None

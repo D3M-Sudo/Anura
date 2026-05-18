@@ -1,7 +1,10 @@
 # tests/test_unit_notifications_enterprise.py
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
+
 from anura.services.notification_service import NotificationService
+
 
 class TestNotificationServiceEnterprise:
     """
@@ -11,15 +14,14 @@ class TestNotificationServiceEnterprise:
 
     @pytest.fixture
     def service(self):
-        with patch('gi.repository.Xdp.Portal'), \
-             patch('gi.repository.Notify.init'):
+        with patch("gi.repository.Xdp.Portal"), patch("gi.repository.Notify.init"):
             return NotificationService("test.app.id")
 
     def test_show_notification_portal_success(self, service):
         """Test notification via XDG Portal."""
         service._portal = MagicMock()
 
-        with patch.object(service, '_show_portal_notification', return_value=True) as mock_portal:
+        with patch.object(service, "_show_portal_notification", return_value=True) as mock_portal:
             res = service.show("Title", "Body")
             assert res is True
             mock_portal.assert_called_once_with("Title", "Body", "normal")
@@ -29,7 +31,7 @@ class TestNotificationServiceEnterprise:
         service._portal = None
         service.libnotify_initialized = True
 
-        with patch.object(service, '_show_libnotify_notification', return_value=True) as mock_libnotify:
+        with patch.object(service, "_show_libnotify_notification", return_value=True) as mock_libnotify:
             res = service.show("Title", "Body")
             assert res is True
             mock_libnotify.assert_called_once_with("Title", "Body")
@@ -37,16 +39,18 @@ class TestNotificationServiceEnterprise:
     def test_invalid_priority_fallback(self, service):
         """Test that invalid priorities are clamped to 'normal'."""
         service._portal = MagicMock()
-        with patch.object(service, '_show_portal_notification', return_value=True) as mock_portal:
+        with patch.object(service, "_show_portal_notification", return_value=True) as mock_portal:
             service.show("Title", "Body", priority="urgent-extremely")
             mock_portal.assert_called_with("Title", "Body", "normal")
 
     def test_send_notification_with_action(self, service):
         """Test sending a notification with a Gio action (Flatpak-safe)."""
-        from gi.repository import Gio, GLib
-        with patch('gi.repository.Gio.Notification.new') as mock_new, \
-             patch('gi.repository.Gio.Application.get_default') as mock_app_get:
+        from gi.repository import GLib
 
+        with (
+            patch("gi.repository.Gio.Notification.new") as mock_new,
+            patch("gi.repository.Gio.Application.get_default") as mock_app_get,
+        ):
             mock_notif = MagicMock()
             mock_new.return_value = mock_notif
             mock_app = MagicMock()

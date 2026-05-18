@@ -1,9 +1,10 @@
 # tests/test_unit_screenshot_service_enterprise.py
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import MagicMock, patch
-import os
-from gi.repository import GLib, Gio
+
 from anura.services.screenshot_service import ScreenshotService
+
 
 class TestScreenshotServiceEnterprise:
     """
@@ -13,8 +14,7 @@ class TestScreenshotServiceEnterprise:
 
     @pytest.fixture
     def service(self):
-        with patch('gi.repository.Xdp.Portal'), \
-             patch('anura.services.screenshot_service._configure_tesseract_path'):
+        with patch("gi.repository.Xdp.Portal"), patch("anura.services.screenshot_service._configure_tesseract_path"):
             return ScreenshotService()
 
     def test_validate_decode_inputs(self, service):
@@ -26,10 +26,10 @@ class TestScreenshotServiceEnterprise:
         assert invalid is False
         assert "Invalid language code" in err
 
-    @patch('anura.services.screenshot_service._is_flatpak_environment', return_value=True)
+    @patch("anura.services.screenshot_service._is_flatpak_environment", return_value=True)
     def test_try_host_screenshot_fallback_trigger(self, mock_flatpak, service):
         """Test that host fallback is triggered in Flatpak environment."""
-        with patch('gi.repository.Gio.Subprocess.new') as mock_sub:
+        with patch("gi.repository.Gio.Subprocess.new") as mock_sub:
             service._try_host_screenshot_fallback("eng", False)
             assert mock_sub.called
             # Verify it's trying to build detection argv
@@ -37,10 +37,10 @@ class TestScreenshotServiceEnterprise:
             assert "flatpak-spawn" in args
             assert "--host" in args
 
-    @patch('anura.services.screenshot_service._is_flatpak_environment', return_value=False)
+    @patch("anura.services.screenshot_service._is_flatpak_environment", return_value=False)
     def test_host_fallback_skipped_outside_flatpak(self, mock_flatpak, service):
         """Test that host fallback is not used outside Flatpak."""
-        with patch.object(service, '_emit_portal_failure') as mock_fail:
+        with patch.object(service, "_emit_portal_failure") as mock_fail:
             service._try_host_screenshot_fallback("eng", False)
             mock_fail.assert_called_once()
             assert service._is_capturing is False

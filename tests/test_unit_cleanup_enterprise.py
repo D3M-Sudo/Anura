@@ -1,9 +1,12 @@
 # tests/test_unit_cleanup_enterprise.py
-import pytest
 import os
 import time
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
+
+import pytest
+
 from anura.utils.cleanup import cleanup_orphaned_resources, get_cache_info
+
 
 class TestCleanupEnterprise:
     """
@@ -17,8 +20,10 @@ class TestCleanupEnterprise:
         tts_dir.mkdir(parents=True)
         tessdata_dir.mkdir()
 
-        with patch.dict(os.environ, {"XDG_CACHE_HOME": str(tmp_path / "cache")}), \
-             patch('anura.utils.cleanup.TESSDATA_DIR', str(tessdata_dir)):
+        with (
+            patch.dict(os.environ, {"XDG_CACHE_HOME": str(tmp_path / "cache")}),
+            patch("anura.utils.cleanup.TESSDATA_DIR", str(tessdata_dir)),
+        ):
             yield tts_dir, tessdata_dir
 
     def test_cleanup_orphaned_resources_happy_path(self, mock_dirs):
@@ -26,8 +31,8 @@ class TestCleanupEnterprise:
         tts_dir, tessdata_dir = mock_dirs
 
         # Create files
-        old_time = time.time() - 7200 # 2 hours ago
-        new_time = time.time() - 600 # 10 mins ago
+        old_time = time.time() - 7200  # 2 hours ago
+        new_time = time.time() - 600  # 10 mins ago
 
         old_mp3 = tts_dir / "old.mp3"
         new_mp3 = tts_dir / "new.mp3"
@@ -51,9 +56,11 @@ class TestCleanupEnterprise:
 
     def test_cleanup_handles_missing_dir(self, tmp_path):
         """Test cleanup doesn't crash when directories don't exist."""
-        with patch.dict(os.environ, {"XDG_CACHE_HOME": str(tmp_path / "nonexistent")}), \
-             patch('anura.utils.cleanup.TESSDATA_DIR', str(tmp_path / "nonexistent_tess")):
-            cleanup_orphaned_resources() # Should not raise
+        with (
+            patch.dict(os.environ, {"XDG_CACHE_HOME": str(tmp_path / "nonexistent")}),
+            patch("anura.utils.cleanup.TESSDATA_DIR", str(tmp_path / "nonexistent_tess")),
+        ):
+            cleanup_orphaned_resources()  # Should not raise
 
     def test_get_cache_info(self, mock_dirs):
         """Test cache info gathering."""
@@ -76,8 +83,7 @@ class TestCleanupEnterprise:
         old_time = time.time() - 7200
         os.utime(old_mp3, (old_time, old_time))
 
-        with patch('os.remove', side_effect=PermissionError("Denied")), \
-             patch('loguru.logger.warning') as mock_log:
+        with patch("os.remove", side_effect=PermissionError("Denied")), patch("loguru.logger.warning") as mock_log:
             cleanup_orphaned_resources()
             mock_log.assert_called()
             assert old_mp3.exists()

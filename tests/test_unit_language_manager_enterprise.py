@@ -1,11 +1,12 @@
 # tests/test_unit_language_manager_enterprise.py
-import pytest
 import os
-import shutil
 from unittest.mock import MagicMock, patch
-from anura.services.settings import settings
+
+import pytest
+
 from anura.language_manager import LanguageManager
 from anura.types.download_state import DownloadState
+
 
 class TestLanguageManagerEnterprise:
     """
@@ -15,8 +16,10 @@ class TestLanguageManagerEnterprise:
     @pytest.fixture
     def manager(self, tmp_path):
         # Patch TESSDATA_DIR to a temporary directory for each test
-        with patch('anura.language_manager.TESSDATA_DIR', str(tmp_path)), \
-             patch('anura.language_manager.TESSDATA_SYSTEM_DIR', str(tmp_path / "system")):
+        with (
+            patch("anura.language_manager.TESSDATA_DIR", str(tmp_path)),
+            patch("anura.language_manager.TESSDATA_SYSTEM_DIR", str(tmp_path / "system")),
+        ):
             os.makedirs(tmp_path / "system", exist_ok=True)
             yield LanguageManager()
 
@@ -62,16 +65,19 @@ class TestLanguageManagerEnterprise:
         assert not lang_file.exists()
         assert manager._need_update_cache is True
 
-    @pytest.mark.parametrize("invalid_code", [
-        "../../../etc/passwd",
-        "eng; rm -rf /",
-        "eng`whoami`",
-        "",
-        None,
-    ])
+    @pytest.mark.parametrize(
+        "invalid_code",
+        [
+            "../../../etc/passwd",
+            "eng; rm -rf /",
+            "eng`whoami`",
+            "",
+            None,
+        ],
+    )
     def test_remove_language_security(self, manager, invalid_code):
         """Test that remove_language rejects dangerous codes (path traversal, injection)."""
-        with patch('os.remove') as mock_remove:
+        with patch("os.remove") as mock_remove:
             manager.remove_language(invalid_code)
             mock_remove.assert_not_called()
 
@@ -80,37 +86,38 @@ class TestLanguageManagerEnterprise:
         orphan = tmp_path / "eng.traineddata.tmp"
         orphan.touch()
 
-        with patch('shutil.which', return_value="/usr/bin/tesseract"):
+        with patch("shutil.which", return_value="/usr/bin/tesseract"):
             manager.init_tessdata()
             assert not orphan.exists()
 
-    @patch('requests.get')
+    @patch("requests.get")
     def test_download_begin_success(self, mock_get, manager, tmp_path):
         """Test successful download path."""
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.headers = {'content-length': '100'}
+        mock_response.headers = {"content-length": "100"}
         mock_response.iter_content.return_value = [b"data"]
         mock_get.return_value = mock_response
 
-        with patch('shutil.which', return_value="/usr/bin/tesseract"):
+        with patch("shutil.which", return_value="/usr/bin/tesseract"):
             result = manager.download_begin("fra")
             assert result == "fra"
             assert (tmp_path / "fra.traineddata").exists()
 
-    @patch('requests.get')
+    @patch("requests.get")
     def test_download_begin_failure(self, mock_get, manager):
         """Test download failure handling."""
         import requests
+
         mock_get.side_effect = requests.RequestException("Connection refused")
 
-        with patch('shutil.which', return_value="/usr/bin/tesseract"):
+        with patch("shutil.which", return_value="/usr/bin/tesseract"):
             result = manager.download_begin("fra")
             assert result is None
 
     def test_download_duplicate_prevention(self, manager):
         """Test that multiple downloads for the same code are ignored."""
         manager.loading_languages["eng"] = DownloadState()
-        with patch('anura.gobject_worker.GObjectWorker.call') as mock_worker:
+        with patch("anura.gobject_worker.GObjectWorker.call") as mock_worker:
             manager.download("eng")
             mock_worker.assert_not_called()

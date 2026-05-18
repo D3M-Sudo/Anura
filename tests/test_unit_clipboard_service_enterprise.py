@@ -1,8 +1,10 @@
 # tests/test_unit_clipboard_service_enterprise.py
-import pytest
 from unittest.mock import MagicMock, patch
-from gi.repository import GLib, Gio
+
+import pytest
+
 from anura.services.clipboard_service import ClipboardService
+
 
 class TestClipboardServiceEnterprise:
     """
@@ -12,7 +14,7 @@ class TestClipboardServiceEnterprise:
 
     @pytest.fixture
     def service(self):
-        with patch('gi.repository.Gdk.Display.get_default') as mock_display_get:
+        with patch("gi.repository.Gdk.Display.get_default") as mock_display_get:
             mock_display = MagicMock()
             mock_display_get.return_value = mock_display
             mock_clipboard = MagicMock()
@@ -30,11 +32,12 @@ class TestClipboardServiceEnterprise:
     def test_copy_text_trigger(self, service):
         """Test that copy_text triggers clipboard operations."""
         from unittest.mock import PropertyMock
+
         # Mock the lazy clipboard property return value
         mock_clipboard = MagicMock()
-        with patch.object(ClipboardService, 'clipboard', new_callable=PropertyMock) as mock_cb_prop:
+        with patch.object(ClipboardService, "clipboard", new_callable=PropertyMock) as mock_cb_prop:
             mock_cb_prop.return_value = mock_clipboard
-            with patch('gi.repository.GLib.timeout_add_seconds') as mock_timeout:
+            with patch("gi.repository.GLib.timeout_add_seconds") as mock_timeout:
                 service.copy_text("Enterprise Audit")
                 mock_clipboard.set_text.assert_called_with("Enterprise Audit")
                 assert mock_timeout.called
@@ -46,7 +49,7 @@ class TestClipboardServiceEnterprise:
         service._cancellable = mock_cancellable
         service._clipboard_timeout_id = 1234
 
-        with patch('gi.repository.GLib.source_remove') as mock_remove:
+        with patch("gi.repository.GLib.source_remove") as mock_remove:
             service.cancel_pending_operations()
             mock_cancellable.cancel.assert_called_once()
             mock_remove.assert_called_with(1234)
@@ -57,9 +60,9 @@ class TestClipboardServiceEnterprise:
         """Test timeout handling."""
         mock_cancellable = MagicMock()
         mock_cancellable.is_cancelled.return_value = False
-        service._cancellable = mock_cancellable # Must be the same object for active timeout check
+        service._cancellable = mock_cancellable  # Must be the same object for active timeout check
 
-        with patch('gi.repository.GLib.idle_add') as mock_idle:
+        with patch("gi.repository.GLib.idle_add") as mock_idle:
             # result should be SOURCE_REMOVE (False)
             res = service._on_clipboard_timeout(mock_cancellable)
             assert res is False

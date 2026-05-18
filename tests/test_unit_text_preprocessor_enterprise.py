@@ -1,7 +1,9 @@
 # tests/test_unit_text_preprocessor_enterprise.py
-import pytest
 from PIL import Image
+import pytest
+
 from anura.utils.text_preprocessor import TextPreprocessor
+
 
 class TestTextPreprocessorEnterprise:
     """
@@ -38,16 +40,16 @@ class TestTextPreprocessorEnterprise:
         result = preprocessor._fix_capitalization(input_text)
         assert result.startswith("Hello")
         assert ". This" in result
-        assert "Shouting" in result # SHOUTING > 4 chars, should be fixed
+        assert "Shouting" in result  # SHOUTING > 4 chars, should be fixed
 
     def test_remove_artifacts(self, preprocessor):
         """Test removal of common OCR artifacts."""
         lines = [
-            "  123  ", # Page number
-            "---", # Separator
+            "  123  ",  # Page number
+            "---",  # Separator
             "• Bullet point",
             "- List item",
-            "Normal text"
+            "Normal text",
         ]
         text = "\n".join(lines)
         result = preprocessor._remove_artifacts(text)
@@ -69,24 +71,24 @@ class TestTextPreprocessorEnterprise:
 
     def test_enhance_image_smoke(self, preprocessor):
         """Smoke test for image enhancement (verifies it doesn't crash)."""
-        img = Image.new('RGB', (100, 100), color='white')
+        img = Image.new("RGB", (100, 100), color="white")
         enhanced = preprocessor.enhance_image(img)
         assert isinstance(enhanced, Image.Image)
         assert enhanced.mode == "L"
 
     def test_rescale_if_needed(self, preprocessor):
         """Test that small images are rescaled."""
-        small_img = Image.new('L', (100, 100))
+        small_img = Image.new("L", (100, 100))
         rescaled = preprocessor._rescale_if_needed(small_img)
         assert rescaled.size == (200, 200)
 
-        large_img = Image.new('L', (1200, 1200))
+        large_img = Image.new("L", (1200, 1200))
         not_rescaled = preprocessor._rescale_if_needed(large_img)
         assert not_rescaled.size == (1200, 1200)
 
     def test_apply_thresholding(self, preprocessor):
         """Test that thresholding produces near-binary results."""
-        img = Image.new('L', (2, 2))
+        img = Image.new("L", (2, 2))
         img.putdata([50, 200, 100, 150])
         thresholded = preprocessor._apply_thresholding(img)
         data = list(thresholded.getdata())
