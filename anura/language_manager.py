@@ -46,9 +46,7 @@ class LanguageManager(GObject.GObject):
     __gtype_name__ = "LanguageManager"
 
     # Mapping for language codes that have different filenames in tessdata repository
-    _TESSDATA_FILENAME_MAPPING: ClassVar[dict[str, str]] = {
-        "frk": "deu_frak",  # German Fraktur is stored as deu_frak.traineddata
-    }
+    _TESSDATA_FILENAME_MAPPING: ClassVar[dict[str, str]] = {}
 
     __gsignals__: ClassVar[dict[str, tuple]] = {
         "added": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
