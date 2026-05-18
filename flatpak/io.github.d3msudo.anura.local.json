@@ -13,7 +13,6 @@
         "--socket=wayland",
         "--socket=pulseaudio",
         "--device=dri",
-        "--filesystem=xdg-run/format-status:ro",
         "--talk-name=org.a11y.Bus",
         "--talk-name=org.freedesktop.Flatpak",
         "--talk-name=org.freedesktop.portal.Desktop",
