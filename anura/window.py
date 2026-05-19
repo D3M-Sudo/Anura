@@ -339,10 +339,14 @@ class AnuraWindow(Adw.ApplicationWindow):
         dialog = Gtk.FileDialog()
         dialog.set_title(_("Choose an image for extraction"))
 
+        # Catch-all filter (must be first for best portal compatibility)
+        all_files_filter = Gtk.FileFilter()
+        all_files_filter.set_name(_("All files (*)"))
+        all_files_filter.add_pattern("*")
+
         # Primary filter: All supported image formats (cumulative)
         all_img_filter = Gtk.FileFilter()
         all_img_filter.set_name(_("All supported images"))
-        # MIME types for portal-aware backends
         all_img_filter.add_mime_type("image/png")
         all_img_filter.add_mime_type("image/jpeg")
         all_img_filter.add_mime_type("image/webp")
@@ -350,6 +354,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         all_img_filter.add_mime_type("image/tiff")
         all_img_filter.add_mime_type("image/bmp")
         all_img_filter.add_mime_type("image/gif")
+
         # Secondary filters: Individual formats — MIME type only (no glob patterns).
         # Adding glob patterns alongside MIME types causes xdg-desktop-portal backends
         # to split each filter into two dropdown entries, duplicating every format.
@@ -381,11 +386,8 @@ class AnuraWindow(Adw.ApplicationWindow):
         gif_filter.set_name(_("GIF images"))
         gif_filter.add_mime_type("image/gif")
 
-        all_files_filter = Gtk.FileFilter()
-        all_files_filter.set_name(_("All files (*)"))
-        all_files_filter.add_pattern("*")
-
         filters = Gio.ListStore.new(Gtk.FileFilter)
+        filters.append(all_files_filter)  # Index 0
         filters.append(all_img_filter)
         filters.append(png_filter)
         filters.append(jpg_filter)
@@ -394,9 +396,9 @@ class AnuraWindow(Adw.ApplicationWindow):
         filters.append(tiff_filter)
         filters.append(bmp_filter)
         filters.append(gif_filter)
-        filters.append(all_files_filter)
+
         dialog.set_filters(filters)
-        dialog.set_default_filter(all_img_filter)
+        dialog.set_default_filter(all_files_filter)
 
         dialog.open(self, None, self._on_open_image_result)
 
