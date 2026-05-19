@@ -60,11 +60,13 @@ def _configure_tesseract_path() -> None:
         pytesseract.pytesseract.tesseract_cmd = flatpak_tess_bin
         logger.info(f"Anura OCR: Using Flatpak Tesseract at {flatpak_tess_bin}")
     else:
-        # Use system Tesseract from PATH
-        os.environ.pop("TESSERACT_CMD", None)
-        # Reset pytesseract.tesseract_cmd to default 'tesseract' to allow PATH search
-        pytesseract.pytesseract.tesseract_cmd = "tesseract"
-        logger.debug("Anura OCR: Using system Tesseract from PATH")
+        # Outside Flatpak: respect TESSERACT_CMD if already set, otherwise default to 'tesseract'
+        tess_cmd = os.environ.get("TESSERACT_CMD", "tesseract")
+        pytesseract.pytesseract.tesseract_cmd = tess_cmd
+        if tess_cmd != "tesseract":
+            logger.debug(f"Anura OCR: Using Tesseract path from TESSERACT_CMD: {tess_cmd}")
+        else:
+            logger.debug("Anura OCR: Using system Tesseract from PATH")
 
     # Final validation: check if tesseract binary is actually reachable
     tess_bin = pytesseract.pytesseract.tesseract_cmd
@@ -300,16 +302,23 @@ class ScreenshotService(GObject.GObject):
 
         # Static check guard: ScreenshotService must emit 'portal-backend-missing' (via GLib.idle_add)
         # when it detects the libportal generic-failure pattern.
-        def _on_failure_idle():
+        def _on_portal_missing_idle():
             try:
                 self.emit("portal-backend-missing")
+            except Exception:
+                logger.exception("Anura: Failed to emit portal-backend-missing signal")
+            return GLib.SOURCE_REMOVE
+
+        def _on_failure_idle():
+            try:
                 self.emit("error", user_message)
             except Exception:
                 logger.exception("Anura: Failed to emit portal failure signals")
             return GLib.SOURCE_REMOVE
 
         # Satisfy static check: ScreenshotService must emit 'portal-backend-missing' (via GLib.idle_add)
-        GLib.idle_add(self.emit, "portal-backend-missing")
+        # and ensure the callback returns GLib.SOURCE_REMOVE to avoid infinite loops.
+        GLib.idle_add(_on_portal_missing_idle)
         GLib.idle_add(_on_failure_idle)
 
     def _try_host_screenshot_fallback(self, lang: str, copy: bool) -> None:

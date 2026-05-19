@@ -124,7 +124,8 @@ def test_screenshot_service_declares_portal_backend_missing_signal() -> None:
         "signal so consumers can react to a missing host portal backend."
     )
     # And the signal must be emitted in the generic-backend-failure branch.
-    assert 'self.emit, "portal-backend-missing"' in text, (
+    # The check is loose to allow for safe wrappers that return GLib.SOURCE_REMOVE.
+    assert 'emit("portal-backend-missing"' in text, (
         "ScreenshotService must emit 'portal-backend-missing' (via GLib.idle_add) "
         "when it detects the libportal generic-failure pattern."
     )

@@ -98,14 +98,20 @@ class ExtractedPage(Adw.NavigationPage):
             self.listen_btn.set_sensitive(has_text)
 
         if not text:
-            self.stats_label.set_text(_("Words: %d | Characters: %d") % (0, 0))
+            words_text = ngettext("%d word", "%d words", 0) % 0
+            chars_text = ngettext("%d character", "%d characters", 0) % 0
+            self.stats_label.set_text(_("{words} | {chars}").format(words=words_text, chars=chars_text))
             return
 
         char_count = len(text)
         # Use split() to get words, filtering out empty strings from multiple whitespace
         word_count = len(text.split())
 
-        self.stats_label.set_text(_("Words: %d | Characters: %d") % (word_count, char_count))
+        words_text = ngettext("%d word", "%d words", word_count) % word_count
+        chars_text = ngettext("%d character", "%d characters", char_count) % char_count
+
+        # Use format() to allow translators to change the order of elements
+        self.stats_label.set_text(_("{words} | {chars}").format(words=words_text, chars=chars_text))
 
     def show_copy_feedback(self) -> None:
         """Temporarily change the copy button icon to a checkmark for UX feedback."""
@@ -338,6 +344,8 @@ class ExtractedPage(Adw.NavigationPage):
     def _on_generated(self, filepath: str | None) -> None:
         self._is_generating_tts = False
         if not filepath:
+            # TTSService.generate() already emitted 'error' signal if it failed.
+            # We just need to reset the UI state here.
             self._set_spinner_active(False)
             self.swap_controls(False)
             return

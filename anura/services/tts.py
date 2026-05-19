@@ -236,6 +236,21 @@ class TTSService(GObject.GObject):
                     os.remove(filepath)
                 except OSError:
                     logger.debug("Anura TTS: Failed to remove temporary speech file during cleanup")
+
+            def _on_error_idle(msg: str):
+                try:
+                    self.emit("error", msg)
+                except Exception:
+                    logger.exception("Anura TTS: Failed to emit generation error")
+                return GLib.SOURCE_REMOVE
+
+            if isinstance(e, requests.RequestException):
+                error_msg = _("Network error during speech generation. Please check your connection.")
+            else:
+                error_msg = _("Failed to save speech file. Please check disk space/permissions.")
+
+            GLib.idle_add(_on_error_idle, error_msg)
+
             # Don't re-raise: GObjectWorker.errorback handles exceptions from
             # the worker thread.  Let it catch the return value "" instead.
             return ""
@@ -246,7 +261,14 @@ class TTSService(GObject.GObject):
         with self._state_lock:
             self._current_speech_file = filepath
 
-        GLib.idle_add(self.emit, "speak", filepath)
+        def _on_speak_idle(f: str):
+            try:
+                self.emit("speak", f)
+            except Exception:
+                logger.exception("Anura TTS: Failed to emit speak signal")
+            return GLib.SOURCE_REMOVE
+
+        GLib.idle_add(_on_speak_idle, filepath)
         return filepath
 
     def get_effective_language(self, ocr_lang: str) -> str:
@@ -271,7 +293,15 @@ class TTSService(GObject.GObject):
         self.player = Gst.ElementFactory.make("playbin3", "player")
         if not self.player:
             logger.error("Anura TTS Error: Failed to create GStreamer playbin.")
-            GLib.idle_add(self.emit, "stop", False)
+
+            def _on_stop_idle():
+                try:
+                    self.emit("stop", False)
+                except Exception:
+                    logger.exception("Anura TTS: Failed to emit stop signal")
+                return GLib.SOURCE_REMOVE
+
+            GLib.idle_add(_on_stop_idle)
             return
 
         self.player.set_property("uri", f"file://{filepath}")

@@ -220,9 +220,12 @@ class LanguageManager(GObject.GObject):
                 logger.warning(
                     "Anura: tessdata directory not found. It will be created on first language download.",
                 )
-                with contextlib.suppress(FileExistsError):
-                    # Another thread created it between check and makedirs
+                try:
                     os.makedirs(TESSDATA_DIR, exist_ok=True)
+                except PermissionError:
+                    logger.critical(f"Anura: Permission denied creating tessdata directory at {TESSDATA_DIR}")
+                except OSError as e:
+                    logger.critical(f"Anura: Failed to create tessdata directory at {TESSDATA_DIR}: {e}")
 
         # Clean up orphaned temp files from crashed/interrupted downloads
         try:
