@@ -330,6 +330,11 @@ class LanguageManager(GObject.GObject):
 
     def download(self, code: str) -> None:
         """Thread-safe asynchronous download process."""
+        # Security: Validate lang_code before processing
+        if not code or not re.match(LANG_CODE_PATTERN, code):
+            logger.error(f"Anura: Blocked invalid language code download attempt: '{code}'")
+            return
+
         with self._cache_lock:
             if code in self.loading_languages:
                 return
@@ -353,6 +358,11 @@ class LanguageManager(GObject.GObject):
 
     def download_begin(self, code: str) -> str | None:
         """Performs the physical download of the .traineddata file atomically."""
+        # Security: Validate lang_code before processing
+        if not code or not re.match(LANG_CODE_PATTERN, code):
+            logger.error(f"Anura: Blocked invalid language code download attempt: '{code}'")
+            return None
+
         # Hardening: verify Tesseract binary availability before downloading models
         tess_bin = os.environ.get("TESSERACT_CMD", "tesseract")
         if not shutil.which(tess_bin):
