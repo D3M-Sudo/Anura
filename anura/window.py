@@ -115,16 +115,22 @@ class AnuraWindow(Adw.ApplicationWindow):
         # to ensure better isolation and resolve potential race conditions.
         pass
 
-    def process_dnd_file_sync(self, file_path: str) -> None:
-        """Process a dropped file synchronously following Frog's simple pattern."""
+    def process_dnd_file_sync(self, file_path: str | None) -> None:
+        """Process a dropped file synchronously with explicit path validation."""
+        if not file_path:
+            logger.error("DnD: process_dnd_file_sync called with invalid or null path (None).")
+            self.welcome_page.reset_drop_area_state()
+            self.show_toast(_("Failed to load dropped file (invalid path)."))
+            return
+
         logger.debug(f"DnD: Processing dropped file: {file_path}")
 
         try:
             # Hardening: check for 0-byte physical files
             if os.path.getsize(file_path) == 0:
-                logger.error(f"Anura OCR: Attempted to process 0-byte image file: {file_path}")
+                logger.warning(f"DnD: Selected file is empty (0 bytes): {file_path}")
                 self.welcome_page.reset_drop_area_state()
-                self.show_toast(_("The selected image file is empty."))
+                self.show_toast(_("The selected file is empty."))
                 return
 
             # Validate file size
@@ -143,10 +149,10 @@ class AnuraWindow(Adw.ApplicationWindow):
             lang = self.get_language()
             GObjectWorker.call(self.backend.decode_image, (lang, file_path))
 
-        except (OSError, RuntimeError) as e:
-            logger.error(f"DnD: Failed to process dropped file: {e}")
+        except (OSError, RuntimeError, TypeError) as e:
+            logger.error(f"DnD: Critical error accessing dropped file: {e}")
             self.welcome_page.reset_drop_area_state()
-            self.show_toast(_("Failed to load dropped file"))
+            self.show_toast(_("Failed to process the file."))
 
     def process_gfile(self, gfile: Gio.File) -> bool:
         """Legacy method - kept for compatibility but deprecated."""
@@ -339,25 +345,17 @@ class AnuraWindow(Adw.ApplicationWindow):
         dialog = Gtk.FileDialog()
         dialog.set_title(_("Choose an image for extraction"))
 
-        # Catch-all filter (must be first for best portal compatibility)
+        # 1. Universal Filter (All files) based on MIME standard for Portal
         all_files_filter = Gtk.FileFilter()
         all_files_filter.set_name(_("All files (*)"))
-        all_files_filter.add_pattern("*")
+        all_files_filter.add_mime_type("*/*")
 
-        # Primary filter: All supported image formats (cumulative)
+        # 2. Cumulative Image Filter (Generic wildcard)
         all_img_filter = Gtk.FileFilter()
         all_img_filter.set_name(_("All supported images"))
-        all_img_filter.add_mime_type("image/png")
-        all_img_filter.add_mime_type("image/jpeg")
-        all_img_filter.add_mime_type("image/webp")
-        all_img_filter.add_mime_type("image/avif")
-        all_img_filter.add_mime_type("image/tiff")
-        all_img_filter.add_mime_type("image/bmp")
-        all_img_filter.add_mime_type("image/gif")
+        all_img_filter.add_mime_type("image/*")
 
-        # Secondary filters: Individual formats — MIME type only (no glob patterns).
-        # Adding glob patterns alongside MIME types causes xdg-desktop-portal backends
-        # to split each filter into two dropdown entries, duplicating every format.
+        # 3. Explicit granular filters for individual formats
         png_filter = Gtk.FileFilter()
         png_filter.set_name(_("PNG images"))
         png_filter.add_mime_type("image/png")
@@ -370,35 +368,16 @@ class AnuraWindow(Adw.ApplicationWindow):
         webp_filter.set_name(_("WebP images"))
         webp_filter.add_mime_type("image/webp")
 
-        avif_filter = Gtk.FileFilter()
-        avif_filter.set_name(_("AVIF images"))
-        avif_filter.add_mime_type("image/avif")
-
-        tiff_filter = Gtk.FileFilter()
-        tiff_filter.set_name(_("TIFF images"))
-        tiff_filter.add_mime_type("image/tiff")
-
-        bmp_filter = Gtk.FileFilter()
-        bmp_filter.set_name(_("BMP images"))
-        bmp_filter.add_mime_type("image/bmp")
-
-        gif_filter = Gtk.FileFilter()
-        gif_filter.set_name(_("GIF images"))
-        gif_filter.add_mime_type("image/gif")
-
+        # Initialize ListStore in the correct hierarchical order
         filters = Gio.ListStore.new(Gtk.FileFilter)
-        filters.append(all_files_filter)  # Index 0
-        filters.append(all_img_filter)
+        filters.append(all_files_filter)  # Index 0: Universal fallback
+        filters.append(all_img_filter)    # Index 1: Aggregated image selection
         filters.append(png_filter)
         filters.append(jpg_filter)
         filters.append(webp_filter)
-        filters.append(avif_filter)
-        filters.append(tiff_filter)
-        filters.append(bmp_filter)
-        filters.append(gif_filter)
 
         dialog.set_filters(filters)
-        dialog.set_default_filter(all_files_filter)
+        dialog.set_default_filter(all_img_filter)  # Optimized UX for images
 
         dialog.open(self, None, self._on_open_image_result)
 
@@ -474,31 +453,26 @@ class AnuraWindow(Adw.ApplicationWindow):
                 try:
                     from gi.repository import GdkPixbuf
 
-                    # Try to create a pixbuf to validate the image
-                    GdkPixbuf.Pixbuf.new_from_stream_at_scale(
-                        Gio.MemoryInputStream.new_from_bytes(GLib.Bytes.new(contents)),
-                        -1,
-                        -1,
-                        False,
-                        None,
-                    )
+                    # Low-overhead variant: validate image header without scaling
+                    stream = Gio.MemoryInputStream.new_from_bytes(GLib.Bytes.new(contents))
+                    GdkPixbuf.Pixbuf.new_from_stream(stream, None)
                 except GLib.Error as e:
                     self.welcome_page.spinner.set_visible(False)
                     if e.matches(GdkPixbuf.pixbuf_error_quark(), GdkPixbuf.PixbufError.CORRUPT_IMAGE):
-                        logger.error(f"Anura: Corrupt image file: {e.message}")
+                        logger.error(f"Validation: Corrupt or unsupported image structure: {e.message}")
                         self.show_toast(_("Corrupt or unsupported image file"))
                         return
                     elif e.matches(GdkPixbuf.pixbuf_error_quark(), GdkPixbuf.PixbufError.UNKNOWN_TYPE):
-                        logger.error(f"Anura: Unknown image format: {e.message}")
+                        logger.error(f"Validation: Unknown image format: {e.message}")
                         self.show_toast(_("Unsupported image format"))
                         return
                     else:
-                        logger.error(f"Anura: Image validation error: {e.message}")
+                        logger.error(f"Validation: Image validation error: {e.message}")
                         self.show_toast(_("Failed to validate image file"))
                         return
-                except (ValueError, RuntimeError) as e:
+                except (ValueError, RuntimeError, TypeError) as e:
                     self.welcome_page.spinner.set_visible(False)
-                    logger.error(f"Anura: Unexpected image validation error: {e}")
+                    logger.error(f"Validation: Unexpected image validation error: {e}")
                     self.show_toast(_("Failed to validate image file"))
                     return
 
