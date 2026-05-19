@@ -185,7 +185,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed pytesseract-0.3.13-py3-none-any.whl",
-                "bash -c 'for f in /app/lib/python3.*/site-packages/pytesseract-*.dist-info/LICENSE*; do [ -e \"$f\" ] && install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/pytesseract/LICENSE\" && break; done'"
+                "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/pytesseract-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/pytesseract/LICENSE \\; -quit || true'"
             ],
             "sources": [
                 {
@@ -200,7 +200,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed click-8.1.7-py3-none-any.whl",
-                "bash -c 'for f in /app/lib/python3.*/site-packages/click-*.dist-info/LICENSE*; do [ -e \"$f\" ] && install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/click/LICENSE\" && break; done'"
+                "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/click-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/click/LICENSE \\; -quit || true'"
             ],
             "sources": [
                 {
@@ -215,7 +215,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed gTTS-2.5.1-py3-none-any.whl",
-                "bash -c 'for f in /app/lib/python3.*/site-packages/gTTS-*.dist-info/LICENSE*; do [ -e \"$f\" ] && install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/gTTS/LICENSE\" && break; done'"
+                "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/gtts-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/gTTS/LICENSE \\; -quit || true'"
             ],
             "sources": [
                 {
@@ -230,7 +230,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed six-1.16.0-py2.py3-none-any.whl",
-                "bash -c 'for f in /app/lib/python3.*/site-packages/six-*.dist-info/LICENSE*; do [ -e \"$f\" ] && install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/six/LICENSE\" && break; done'"
+                "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/six-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/six/LICENSE \\; -quit || true'"
             ],
             "sources": [
                 {
@@ -245,7 +245,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed python_dateutil-2.9.0.post0-py2.py3-none-any.whl",
-                "bash -c 'for f in /app/lib/python3.*/site-packages/python_dateutil-*.dist-info/LICENSE*; do [ -e \"$f\" ] && install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/dateutil/LICENSE\" && break; done'"
+                "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/python_dateutil-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/dateutil/LICENSE \\; -quit || true'"
             ],
             "sources": [
                 {
@@ -260,7 +260,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed loguru-0.7.2-py3-none-any.whl",
-                "bash -c 'for f in /app/lib/python3.*/site-packages/loguru-*.dist-info/LICENSE*; do [ -e \"$f\" ] && install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/loguru/LICENSE\" && break; done'"
+                "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/loguru-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/loguru/LICENSE \\; -quit || true'"
             ],
             "sources": [
                 {
@@ -275,7 +275,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed pyzbar-0.1.9-py2.py3-none-any.whl",
-                "bash -c 'for f in /app/lib/python3.*/site-packages/pyzbar-*.dist-info/LICENSE*; do [ -e \"$f\" ] && install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/pyzbar/LICENSE\" && break; done'"
+                "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/pyzbar-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/pyzbar/LICENSE \\; -quit || true'"
             ],
             "sources": [
                 {
@@ -290,7 +290,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed urllib3-2.2.3-py3-none-any.whl",
-                "bash -c 'for f in /app/lib/python3.*/site-packages/urllib3-*.dist-info/LICENSE*; do [ -e \"$f\" ] && install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/urllib3/LICENSE\" && break; done'"
+                "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/urllib3-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/urllib3/LICENSE \\; -quit || true'"
             ],
             "sources": [
                 {
@@ -305,7 +305,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed certifi-2025.1.31-py3-none-any.whl",
-                "bash -c 'for f in /app/lib/python3.*/site-packages/certifi-*.dist-info/LICENSE*; do [ -e \"$f\" ] && install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/certifi/LICENSE\" && break; done'"
+                "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/certifi-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/certifi/LICENSE \\; -quit || true'"
             ],
             "sources": [
                 {
@@ -320,7 +320,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed charset_normalizer-3.4.0-py3-none-any.whl",
-                "bash -c 'for f in /app/lib/python3.*/site-packages/charset_normalizer-*.dist-info/LICENSE*; do [ -e \"$f\" ] && install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/charset-normalizer/LICENSE\" && break; done'"
+                "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/charset_normalizer-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/charset-normalizer/LICENSE \\; -quit || true'"
             ],
             "sources": [
                 {
@@ -335,7 +335,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed idna-3.10-py3-none-any.whl",
-                "bash -c 'for f in /app/lib/python3.*/site-packages/idna-*.dist-info/LICENSE*; do [ -e \"$f\" ] && install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/idna/LICENSE\" && break; done'"
+                "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/idna-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/idna/LICENSE \\; -quit || true'"
             ],
             "sources": [
                 {
@@ -350,7 +350,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed requests-2.32.3-py3-none-any.whl",
-                "bash -c 'for f in /app/lib/python3.*/site-packages/requests-*.dist-info/LICENSE*; do [ -e \"$f\" ] && install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/requests/LICENSE\" && break; done'"
+                "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/requests-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/requests/LICENSE \\; -quit || true'"
             ],
             "sources": [
                 {
