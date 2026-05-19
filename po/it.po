@@ -155,47 +155,41 @@ msgstr[1] ""
 msgid "Choose an image for extraction"
 msgstr "Apri l'immagine per estrarre il testo"
 
-#: ../anura/window.py:322
-msgid "All supported images"
-msgstr ""
-
-#: ../anura/window.py:344
-msgid "PNG images"
-msgstr ""
-
 #: ../anura/window.py:349
-msgid "JPEG images"
-msgstr ""
-
-#: ../anura/window.py:355
-#, fuzzy
-#| msgid "Open image"
-msgid "WebP images"
-msgstr "Apri immagine"
+msgid "All supported images"
+msgstr "Tutte le immagini supportate"
 
 #: ../anura/window.py:360
-#, fuzzy
-#| msgid "Images"
+msgid "PNG images"
+msgstr "Immagini PNG"
+
+#: ../anura/window.py:364
+msgid "JPEG images"
+msgstr "Immagini JPEG"
+
+#: ../anura/window.py:368
+msgid "WebP images"
+msgstr "Immagini WebP"
+
+#: ../anura/window.py:372
 msgid "AVIF images"
-msgstr "Apri immagine"
-
-#: ../anura/window.py:365
-#, fuzzy
-#| msgid "Images"
-msgid "TIFF images"
-msgstr "Apri immagine"
-
-#: ../anura/window.py:371
-#, fuzzy
-#| msgid "Images"
-msgid "BMP images"
-msgstr "Apri immagine"
+msgstr "Immagini AVIF"
 
 #: ../anura/window.py:376
-#, fuzzy
-#| msgid "Images"
+msgid "TIFF images"
+msgstr "Immagini TIFF"
+
+#: ../anura/window.py:380
+msgid "BMP images"
+msgstr "Immagini BMP"
+
+#: ../anura/window.py:384
 msgid "GIF images"
-msgstr "Apri immagine"
+msgstr "Immagini GIF"
+
+#: ../anura/window.py:388
+msgid "All files (*)"
+msgstr "Tutti i file (*)"
 
 #: ../anura/window.py:415
 #, python-brace-format
