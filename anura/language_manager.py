@@ -45,7 +45,10 @@ class LanguageManager(GObject.GObject):
 
     __gtype_name__ = "LanguageManager"
 
-    # Mapping for language codes that have different filenames in tessdata repository
+    # Mapping for language codes whose Anura internal code differs from the actual
+    # filename in the tessdata/tessdata_best repositories. Format: {anura_code: repo_filename}.
+    # Currently empty because all codes in _languages match their repo filenames exactly.
+    # Add entries here if a future language code diverges (e.g. "foo": "foo_v2").
     _TESSDATA_FILENAME_MAPPING: ClassVar[dict[str, str]] = {}
 
     __gsignals__: ClassVar[dict[str, tuple]] = {
@@ -84,7 +87,9 @@ class LanguageManager(GObject.GObject):
             "ceb": _("Cebuano"),
             "ces": _("Czech"),
             "chi_sim": _("Chinese - Simplified"),
+            "chi_sim_vert": _("Chinese - Simplified (vertical)"),
             "chi_tra": _("Chinese - Traditional"),
+            "chi_tra_vert": _("Chinese - Traditional (vertical)"),
             "chr": _("Cherokee"),
             "cos": _("Corsican"),
             "cym": _("Welsh"),
@@ -95,7 +100,9 @@ class LanguageManager(GObject.GObject):
             "eng": _("English"),
             "enm": _("English, Middle"),
             "epo": _("Esperanto"),
-            "equ": _("Math / Equation Detection"),
+            # NOTE: equ (Math/Equation Detection) intentionally removed — it is a
+            # Tesseract internal utility module, not an OCR language model, and should
+            # not appear as a downloadable language in the UI.
             "est": _("Estonian"),
             "eus": _("Basque"),
             "fao": _("Faroese"),
@@ -103,7 +110,9 @@ class LanguageManager(GObject.GObject):
             "fil": _("Filipino"),
             "fin": _("Finnish"),
             "fra": _("French"),
-            "frk": _("German - Fraktur"),
+            # NOTE: frk (German - Fraktur) intentionally removed — the model file
+            # frk.traineddata is absent from both tessdata_best/main and tessdata/main,
+            # so every install attempt would silently fail with HTTP 404.
             "frm": _("French, Middle"),
             "fry": _("Western Frisian"),
             "gla": _("Scottish Gaelic"),
@@ -152,7 +161,9 @@ class LanguageManager(GObject.GObject):
             "nor": _("Norwegian"),
             "oci": _("Occitan"),
             "ori": _("Oriya"),
-            "osd": _("OSD Module"),
+            # NOTE: osd (Orientation/Script Detection) intentionally removed — it is a
+            # Tesseract internal utility module already excluded from get_downloaded_codes()
+            # via the startswith("osd") filter, but it was still showing in the install list.
             "pan": _("Panjabi"),
             "pol": _("Polish"),
             "por": _("Portuguese"),
