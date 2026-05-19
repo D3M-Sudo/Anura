@@ -3,7 +3,6 @@
 # Copyright 2021-2025 Andrey Maksimov
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
-import contextlib
 from gettext import gettext as _
 import os
 import re

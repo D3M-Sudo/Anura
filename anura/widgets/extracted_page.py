@@ -5,6 +5,7 @@
 
 import contextlib
 from gettext import gettext as _
+from gettext import ngettext
 from typing import ClassVar
 
 import gi
