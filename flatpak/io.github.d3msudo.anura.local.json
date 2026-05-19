@@ -43,6 +43,9 @@
             "cleanup": [
                 "/bin"
             ],
+            "build-options": {
+                "cflags": "-include setjmp.h"
+            },    
             "sources": [
                 {
                     "type": "git",
