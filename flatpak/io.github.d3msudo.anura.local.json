@@ -281,8 +281,8 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed pyzbar-0.1.9-py2.py3-none-any.whl",
-                "unzip pyzbar-0.1.9-py2.py3-none-any.whl 'pyzbar-0.1.9.dist-info/LICENSE'",
-                "install -Dm0644 pyzbar-0.1.9.dist-info/LICENSE $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/pyzbar/LICENSE"
+                "unzip -q pyzbar-0.1.9-py2.py3-none-any.whl '*dist-info/LICENSE*'",
+                "install -Dm0644 *dist-info/LICENSE* $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/pyzbar/LICENSE"
             ],
             "sources": [
                 {
