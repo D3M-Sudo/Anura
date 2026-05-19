@@ -102,6 +102,28 @@ class TestLanguageManager:
         codes = language_manager.get_downloaded_codes(force=True)
         assert "ita" in codes
 
+    def test_download_validates_code(self, language_manager, monkeypatch):
+        """download() rejects invalid language codes."""
+        from unittest.mock import MagicMock
+
+        # Mock GObjectWorker.call to ensure it's NOT called
+        mock_worker_call = MagicMock()
+        from anura.language_manager import GObjectWorker
+
+        monkeypatch.setattr(GObjectWorker, "call", mock_worker_call)
+
+        # Attempt download with invalid code
+        language_manager.download("../../evil")
+
+        # Verify worker was never called
+        mock_worker_call.assert_not_called()
+
+    def test_download_begin_validates_code(self, language_manager):
+        """download_begin() rejects invalid language codes."""
+        # download_begin should return None for invalid code
+        result = language_manager.download_begin("../../evil")
+        assert result is None
+
 
 @pytest.mark.gtk
 class TestLanguageManagerInitTessdata:
