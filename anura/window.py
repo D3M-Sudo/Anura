@@ -350,54 +350,36 @@ class AnuraWindow(Adw.ApplicationWindow):
         all_img_filter.add_mime_type("image/tiff")
         all_img_filter.add_mime_type("image/bmp")
         all_img_filter.add_mime_type("image/gif")
-        # Explicit pattern-based matching for Flatpak portal fallback
-        all_img_filter.add_pattern("*.png")
-        all_img_filter.add_pattern("*.jpg")
-        all_img_filter.add_pattern("*.jpeg")
-        all_img_filter.add_pattern("*.webp")
-        all_img_filter.add_pattern("*.avif")
-        all_img_filter.add_pattern("*.tif")
-        all_img_filter.add_pattern("*.tiff")
-        all_img_filter.add_pattern("*.bmp")
-        all_img_filter.add_pattern("*.gif")
-
-        # Secondary filters: Individual formats (MIME + patterns)
+        # Secondary filters: Individual formats — MIME type only (no glob patterns).
+        # Adding glob patterns alongside MIME types causes xdg-desktop-portal backends
+        # to split each filter into two dropdown entries, duplicating every format.
         png_filter = Gtk.FileFilter()
         png_filter.set_name(_("PNG images"))
         png_filter.add_mime_type("image/png")
-        png_filter.add_pattern("*.png")
 
         jpg_filter = Gtk.FileFilter()
         jpg_filter.set_name(_("JPEG images"))
         jpg_filter.add_mime_type("image/jpeg")
-        jpg_filter.add_pattern("*.jpg")
-        jpg_filter.add_pattern("*.jpeg")
 
         webp_filter = Gtk.FileFilter()
         webp_filter.set_name(_("WebP images"))
         webp_filter.add_mime_type("image/webp")
-        webp_filter.add_pattern("*.webp")
 
         avif_filter = Gtk.FileFilter()
         avif_filter.set_name(_("AVIF images"))
         avif_filter.add_mime_type("image/avif")
-        avif_filter.add_pattern("*.avif")
 
         tiff_filter = Gtk.FileFilter()
         tiff_filter.set_name(_("TIFF images"))
         tiff_filter.add_mime_type("image/tiff")
-        tiff_filter.add_pattern("*.tif")
-        tiff_filter.add_pattern("*.tiff")
 
         bmp_filter = Gtk.FileFilter()
         bmp_filter.set_name(_("BMP images"))
         bmp_filter.add_mime_type("image/bmp")
-        bmp_filter.add_pattern("*.bmp")
 
         gif_filter = Gtk.FileFilter()
         gif_filter.set_name(_("GIF images"))
         gif_filter.add_mime_type("image/gif")
-        gif_filter.add_pattern("*.gif")
 
         all_files_filter = Gtk.FileFilter()
         all_files_filter.set_name(_("All files (*)"))
