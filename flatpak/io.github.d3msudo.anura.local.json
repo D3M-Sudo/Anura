@@ -40,6 +40,7 @@
         {
             "name": "zbar",
             "buildsystem": "autotools",
+            "autogen-template": "autoreconf -vfi",
             "cleanup": [
                 "/bin"
             ],
