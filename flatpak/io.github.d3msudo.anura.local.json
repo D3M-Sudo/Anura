@@ -185,8 +185,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed pytesseract-0.3.13-py3-none-any.whl",
-                "unzip -q pytesseract-0.3.13-py3-none-any.whl 'pytesseract-0.3.13.dist-info/LICENSE'",
-                "install -Dm0644 pytesseract-0.3.13.dist-info/LICENSE $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/pytesseract/LICENSE"
+                "install -Dm0644 /app/lib/python3.*/site-packages/pytesseract-*.dist-info/LICENSE $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/pytesseract/LICENSE"
             ],
             "sources": [
                 {
@@ -201,8 +200,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed click-8.1.7-py3-none-any.whl",
-                "unzip -q click-8.1.7-py3-none-any.whl 'click-8.1.7.dist-info/LICENSE.txt'",
-                "install -Dm0644 click-8.1.7.dist-info/LICENSE.txt $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/click/LICENSE"
+                "install -Dm0644 /app/lib/python3.*/site-packages/click-*.dist-info/LICENSE* $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/click/LICENSE"
             ],
             "sources": [
                 {
@@ -217,8 +215,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed gTTS-2.5.1-py3-none-any.whl",
-                "unzip -q gTTS-2.5.1-py3-none-any.whl 'gTTS-2.5.1.dist-info/LICENSE'",
-                "install -Dm0644 gTTS-2.5.1.dist-info/LICENSE $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/gTTS/LICENSE"
+                "install -Dm0644 /app/lib/python3.*/site-packages/gTTS-*.dist-info/LICENSE* $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/gTTS/LICENSE"
             ],
             "sources": [
                 {
@@ -233,8 +230,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed six-1.16.0-py2.py3-none-any.whl",
-                "unzip -q six-1.16.0-py2.py3-none-any.whl 'six-1.16.0.dist-info/LICENSE'",
-                "install -Dm0644 six-1.16.0.dist-info/LICENSE $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/six/LICENSE"
+                "install -Dm0644 /app/lib/python3.*/site-packages/six-*.dist-info/LICENSE* $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/six/LICENSE"
             ],
             "sources": [
                 {
@@ -249,8 +245,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed python_dateutil-2.9.0.post0-py2.py3-none-any.whl",
-                "unzip -q python_dateutil-2.9.0.post0-py2.py3-none-any.whl 'python_dateutil-2.9.0.post0.dist-info/LICENSE'",
-                "install -Dm0644 python_dateutil-2.9.0.post0.dist-info/LICENSE $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/dateutil/LICENSE"
+                "install -Dm0644 /app/lib/python3.*/site-packages/python_dateutil-*.dist-info/LICENSE* $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/dateutil/LICENSE"
             ],
             "sources": [
                 {
@@ -265,8 +260,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed loguru-0.7.2-py3-none-any.whl",
-                "unzip -q loguru-0.7.2-py3-none-any.whl 'loguru-0.7.2.dist-info/LICENSE'",
-                "install -Dm0644 loguru-0.7.2.dist-info/LICENSE $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/loguru/LICENSE"
+                "install -Dm0644 /app/lib/python3.*/site-packages/loguru-*.dist-info/LICENSE* $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/loguru/LICENSE"
             ],
             "sources": [
                 {
@@ -281,8 +275,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed pyzbar-0.1.9-py2.py3-none-any.whl",
-                "unzip -q pyzbar-0.1.9-py2.py3-none-any.whl 'pyzbar-0.1.9.dist-info/LICENSE.txt'",
-                "install -Dm0644 pyzbar-0.1.9.dist-info/LICENSE.txt $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/pyzbar/LICENSE"
+                "install -Dm0644 /app/lib/python3.*/site-packages/pyzbar-*.dist-info/LICENSE* $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/pyzbar/LICENSE"
             ],
             "sources": [
                 {
@@ -297,8 +290,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed urllib3-2.2.3-py3-none-any.whl",
-                "unzip -q urllib3-2.2.3-py3-none-any.whl 'urllib3-2.2.3.dist-info/LICENSE.txt'",
-                "install -Dm0644 urllib3-2.2.3.dist-info/LICENSE.txt $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/urllib3/LICENSE"
+                "install -Dm0644 /app/lib/python3.*/site-packages/urllib3-*.dist-info/LICENSE* $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/urllib3/LICENSE"
             ],
             "sources": [
                 {
@@ -313,8 +305,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed certifi-2025.1.31-py3-none-any.whl",
-                "unzip -q certifi-2025.1.31-py3-none-any.whl 'certifi-2025.1.31.dist-info/LICENSE'",
-                "install -Dm0644 certifi-2025.1.31.dist-info/LICENSE $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/certifi/LICENSE"
+                "install -Dm0644 /app/lib/python3.*/site-packages/certifi-*.dist-info/LICENSE* $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/certifi/LICENSE"
             ],
             "sources": [
                 {
@@ -329,8 +320,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed charset_normalizer-3.4.0-py3-none-any.whl",
-                "unzip -q charset_normalizer-3.4.0-py3-none-any.whl 'charset_normalizer-3.4.0.dist-info/LICENSE'",
-                "install -Dm0644 charset_normalizer-3.4.0.dist-info/LICENSE $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/charset-normalizer/LICENSE"
+                "install -Dm0644 /app/lib/python3.*/site-packages/charset_normalizer-*.dist-info/LICENSE* $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/charset-normalizer/LICENSE"
             ],
             "sources": [
                 {
@@ -345,8 +335,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed idna-3.10-py3-none-any.whl",
-                "unzip -q idna-3.10-py3-none-any.whl 'idna-3.10.dist-info/LICENSE.md'",
-                "install -Dm0644 idna-3.10.dist-info/LICENSE.md $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/idna/LICENSE"
+                "install -Dm0644 /app/lib/python3.*/site-packages/idna-*.dist-info/LICENSE* $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/idna/LICENSE"
             ],
             "sources": [
                 {
@@ -361,8 +350,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed requests-2.32.3-py3-none-any.whl",
-                "unzip -q requests-2.32.3-py3-none-any.whl 'requests-2.32.3.dist-info/LICENSE'",
-                "install -Dm0644 requests-2.32.3.dist-info/LICENSE $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/requests/LICENSE"
+                "install -Dm0644 /app/lib/python3.*/site-packages/requests-*.dist-info/LICENSE* $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/requests/LICENSE"
             ],
             "sources": [
                 {
