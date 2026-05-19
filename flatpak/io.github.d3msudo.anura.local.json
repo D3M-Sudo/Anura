@@ -201,8 +201,8 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed click-8.1.7-py3-none-any.whl",
-                "unzip click-8.1.7-py3-none-any.whl 'click-8.1.7.dist-info/LICENSE'",
-                "install -Dm0644 click-8.1.7.dist-info/LICENSE $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/click/LICENSE"
+                "unzip -q click-8.1.7-py3-none-any.whl '*dist-info/LICENSE*'",
+                "install -Dm0644 *dist-info/LICENSE* $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/click/LICENSE"
             ],
             "sources": [
                 {
