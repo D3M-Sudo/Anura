@@ -5,7 +5,6 @@
 
 import ast
 from pathlib import Path
-import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 ANURA_PKG = PROJECT_ROOT / "anura"
@@ -48,7 +47,9 @@ def test_open_image_no_set_default_filter() -> None:
     for node in ast.walk(open_image_fn):
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
             if node.func.attr == "set_default_filter":
-                raise AssertionError("AnuraWindow.open_image must NOT call set_default_filter() - it causes glitches on LXQt.")
+                raise AssertionError(
+                    "AnuraWindow.open_image must NOT call set_default_filter() - it causes glitches on LXQt."
+                )
 
 def test_open_image_filters_structure() -> None:
     """Verify the specific MIME types and order of filters."""
