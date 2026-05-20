@@ -345,17 +345,23 @@ class AnuraWindow(Adw.ApplicationWindow):
         dialog = Gtk.FileDialog()
         dialog.set_title(_("Choose an image for extraction"))
 
-        # 1. Universal Filter (All files) based on MIME standard for Portal
-        all_files_filter = Gtk.FileFilter()
-        all_files_filter.set_name(_("All files (*)"))
-        all_files_filter.add_mime_type("*/*")
-
-        # 2. Cumulative Image Filter (Generic wildcard)
+        # Cumulative filter: list every concrete MIME type individually.
+        # NEVER use wildcard MIME types like "image/*" or "*/*" — xdg-desktop-portal
+        # cannot resolve them to display names and renders the entry as blank.
         all_img_filter = Gtk.FileFilter()
         all_img_filter.set_name(_("All supported images"))
-        all_img_filter.add_mime_type("image/*")
+        all_img_filter.add_mime_type("image/png")
+        all_img_filter.add_mime_type("image/jpeg")
+        all_img_filter.add_mime_type("image/webp")
+        all_img_filter.add_mime_type("image/avif")
+        all_img_filter.add_mime_type("image/tiff")
+        all_img_filter.add_mime_type("image/bmp")
+        all_img_filter.add_mime_type("image/gif")
 
-        # 3. Explicit granular filters for individual formats
+        # Individual format filters — one concrete MIME type each.
+        # Do NOT add add_pattern() calls alongside add_mime_type() on the same filter:
+        # mixing both causes the portal backend to split the filter into two separate
+        # dropdown entries, duplicating every format (the previous regression).
         png_filter = Gtk.FileFilter()
         png_filter.set_name(_("PNG images"))
         png_filter.add_mime_type("image/png")
@@ -368,16 +374,44 @@ class AnuraWindow(Adw.ApplicationWindow):
         webp_filter.set_name(_("WebP images"))
         webp_filter.add_mime_type("image/webp")
 
-        # Initialize ListStore in the correct hierarchical order
+        avif_filter = Gtk.FileFilter()
+        avif_filter.set_name(_("AVIF images"))
+        avif_filter.add_mime_type("image/avif")
+
+        tiff_filter = Gtk.FileFilter()
+        tiff_filter.set_name(_("TIFF images"))
+        tiff_filter.add_mime_type("image/tiff")
+
+        bmp_filter = Gtk.FileFilter()
+        bmp_filter.set_name(_("BMP images"))
+        bmp_filter.add_mime_type("image/bmp")
+
+        gif_filter = Gtk.FileFilter()
+        gif_filter.set_name(_("GIF images"))
+        gif_filter.add_mime_type("image/gif")
+
+        # Catch-all filter: MUST use add_pattern("*"), NOT add_mime_type("*/*").
+        # The portal D-Bus protocol accepts glob rules (type 0) for the universal
+        # wildcard; the MIME string "*/*" is not a valid concrete MIME type.
+        all_files_filter = Gtk.FileFilter()
+        all_files_filter.set_name(_("All files (*)"))
+        all_files_filter.add_pattern("*")
+
+        # Build the filter list: cumulative default first, then individual formats,
+        # catch-all last.
         filters = Gio.ListStore.new(Gtk.FileFilter)
-        filters.append(all_files_filter)  # Index 0: Universal fallback
-        filters.append(all_img_filter)    # Index 1: Aggregated image selection
+        filters.append(all_img_filter)
         filters.append(png_filter)
         filters.append(jpg_filter)
         filters.append(webp_filter)
+        filters.append(avif_filter)
+        filters.append(tiff_filter)
+        filters.append(bmp_filter)
+        filters.append(gif_filter)
+        filters.append(all_files_filter)
 
         dialog.set_filters(filters)
-        dialog.set_default_filter(all_img_filter)  # Optimized UX for images
+        dialog.set_default_filter(all_img_filter)
 
         dialog.open(self, None, self._on_open_image_result)
 
