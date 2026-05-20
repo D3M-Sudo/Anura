@@ -562,15 +562,29 @@ class ScreenshotService(GObject.GObject):
     def _try_ocr_extraction(self, img: Image.Image, lang: str, start_time: float) -> str | None:
         """Try to extract text using Tesseract OCR with preprocessing."""
         try:
+            from anura.services.settings import settings
+
+            mode = settings.get_string("ocr-preprocessing")
+
             # Apply image enhancement preprocessing
             preprocessor = get_text_preprocessor()
-            enhanced_img = preprocessor.enhance_image(img)
+            if mode != "off":
+                enhanced_img = preprocessor.enhance_image(img)
+            else:
+                enhanced_img = img
 
             # Extract text with Tesseract
             raw_text = pytesseract.image_to_string(enhanced_img, lang=lang, config=get_tesseract_config(lang))
 
-            # Clean and normalize the extracted text
-            cleaned_text = preprocessor.clean_extracted_text(raw_text.strip())
+            # Process the extracted text based on the selected mode
+            if mode == "full":
+                cleaned_text = preprocessor.clean_extracted_text(raw_text.strip())
+            elif mode == "image-only":
+                # In image-only mode, we only normalize whitespace (preserving line breaks)
+                cleaned_text = preprocessor._normalize_whitespace(raw_text.strip())
+            else:
+                # off mode: just strip leading/trailing whitespace
+                cleaned_text = raw_text.strip()
 
             duration = time.time() - start_time
             logger.info(f"Anura OCR: Text extraction completed in {duration:.3f}s")

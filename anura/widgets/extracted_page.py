@@ -247,6 +247,16 @@ class ExtractedPage(Adw.NavigationPage):
         ocr_lang = self.settings.get_string("active-language")
         tts_lang = tts_service_instance.get_effective_language(ocr_lang)
 
+        if not tts_lang:
+            self._is_generating_tts = False
+            self._set_spinner_active(False)
+            self.swap_controls(False)
+            msg = _("Text-to-speech is not available for this language")
+            window = self.get_root()
+            if window and hasattr(window, "show_toast"):
+                window.show_toast(msg)
+            return
+
         try:
             GObjectWorker.call(
                 tts_service_instance.generate,
