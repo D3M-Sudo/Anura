@@ -209,10 +209,15 @@ class ClipboardService(GObject.GObject):
     def read_texture(self) -> None:
         """
         Thread-safe asynchronous texture reading with 10-second timeout.
-
-        Prioritizes in-memory textures (read_texture_async) which is more reliable
-        in sandboxed environments. If that fails or isn't available, falls back to
-        Gdk.FileList (if available) or URI list.
+        Strategy (in priority order):
+        1. In-memory texture (read_texture_async) — bypasses filesystem entirely,
+           works for clipboard sources that put pixel data directly on the clipboard
+           (GIMP, screenshot tools, browsers, etc.).
+        2. text/uri-list (read_async) — for file manager copies (e.g. user copied
+           a PNG in PCManFM). Gdk.FileList is intentionally skipped: it invokes
+           application/vnd.portal.filetransfer which hangs silently when
+           xdg-desktop-portal is unavailable (VirtualBox/non-GNOME guests).
+        3. Final fallback: read_texture_async again for sources with no MIME info.
         """
         with self._state_lock:
             # Reset fallback flag for this fresh read attempt
