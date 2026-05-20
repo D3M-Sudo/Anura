@@ -19,8 +19,8 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Adw, Gio, GLib, GObject, Gtk  # noqa: E402
 from loguru import logger  # noqa: E402
 
-from anura.utils import uri_validator  # noqa: E402
 from anura.utils.singleton import get_instance  # noqa: E402
+from anura.utils.validators import is_safe_url_string, uri_validator  # noqa: E402
 
 
 class ShareService(GObject.GObject):
@@ -64,10 +64,14 @@ class ShareService(GObject.GObject):
         Validate URL for sharing using security checks.
         Returns True if URL is safe to share, False otherwise.
         """
-        # Strip whitespace first
-        url = url.strip() if url else ""
+        # Defense-in-depth: basic safety check for all schemes
+        if not is_safe_url_string(url):
+            return False
 
-        # Allow mailto and web+mastodon schemes without http/https validation
+        # Strip whitespace for scheme-specific checks
+        url = url.strip()
+
+        # Allow mailto and web+mastodon schemes without full domain validation
         if url.startswith("mailto:") or url.startswith("web+mastodon:"):
             return True
 
@@ -302,7 +306,7 @@ class ShareService(GObject.GObject):
     def get_link_telegram(text: str) -> str:
         if not text or not text.strip():
             return ""
-        encoded_text = quote(text.strip())
+        encoded_text = quote(text.strip(), safe="")
         return f"https://t.me/share/url?text={encoded_text}"
 
     @staticmethod
@@ -312,12 +316,12 @@ class ShareService(GObject.GObject):
         text = text.strip()
         # For short texts (< 100 char): use title + body for better visibility
         if len(text) < 100:
-            encoded_title = quote(text)
-            encoded_text = quote(text)
+            encoded_title = quote(text, safe="")
+            encoded_text = quote(text, safe="")
             return f"https://www.reddit.com/submit?title={encoded_title}&selftext={encoded_text}"
         else:
             # For long texts: use only body to avoid title truncation
-            encoded_text = quote(text)
+            encoded_text = quote(text, safe="")
             return f"https://www.reddit.com/submit?selftext={encoded_text}"
 
     @staticmethod
@@ -325,7 +329,7 @@ class ShareService(GObject.GObject):
         # Official web+mastodon:// scheme - primary method
         if not text or not text.strip():
             return ""
-        encoded_text = quote(text.strip())
+        encoded_text = quote(text.strip(), safe="")
         return f"web+mastodon://share?text={encoded_text}"
 
     @staticmethod
@@ -335,15 +339,15 @@ class ShareService(GObject.GObject):
         """
         if not text or not text.strip():
             return ""
-        encoded_text = quote(text.strip())
+        encoded_text = quote(text.strip(), safe="")
         return f"https://x.com/intent/tweet?text={encoded_text}"
 
     @staticmethod
     def get_link_email(text: str) -> str:
         if not text or not text.strip():
             return ""
-        subject = quote(_("Extracted Text"))
-        body = quote(text.strip())  # Properly encode body to prevent malformed mailto links
+        subject = quote(_("Extracted Text"), safe="")
+        body = quote(text.strip(), safe="")  # Properly encode body to prevent malformed mailto links
         return f"mailto:?subject={subject}&body={body}"
 
     @staticmethod
@@ -351,7 +355,7 @@ class ShareService(GObject.GObject):
         """Share to Bluesky with their web interface."""
         if not text or not text.strip():
             return ""
-        encoded_text = quote(text.strip())
+        encoded_text = quote(text.strip(), safe="")
         return f"https://bsky.app/intent/compose?text={encoded_text}"
 
     @staticmethod
@@ -359,7 +363,7 @@ class ShareService(GObject.GObject):
         """Share to Discord (opens status update dialog)."""
         if not text or not text.strip():
             return ""
-        encoded_text = quote(text.strip())
+        encoded_text = quote(text.strip(), safe="")
         return f"https://discord.com/channels/@me?content={encoded_text}"
 
     @staticmethod
@@ -367,8 +371,8 @@ class ShareService(GObject.GObject):
         """Share to LinkedIn with proper URL encoding."""
         if not text or not text.strip():
             return ""
-        encoded_text = quote(text.strip())
-        encoded_url = quote("https://github.com/D3M-Sudo/Anura")
+        encoded_text = quote(text.strip(), safe="")
+        encoded_url = quote("https://github.com/D3M-Sudo/Anura", safe="")
         return f"https://www.linkedin.com/sharing/share-offsite/?url={encoded_url}&summary={encoded_text}"
 
     @staticmethod
@@ -376,7 +380,7 @@ class ShareService(GObject.GObject):
         """Share to Threads (Instagram's text-based platform)."""
         if not text or not text.strip():
             return ""
-        encoded_text = quote(text.strip())
+        encoded_text = quote(text.strip(), safe="")
         return f"https://www.threads.net/intent/post?text={encoded_text}"
 
 
