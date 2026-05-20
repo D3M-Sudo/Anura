@@ -9,7 +9,7 @@ Includes image enhancement, text cleanup, and intelligent formatting.
 import re
 
 from loguru import logger
-from PIL import Image, ImageEnhance, ImageFilter, ImageOps, ImageStat
+from PIL import Image, ImageEnhance, ImageFilter, ImageStat
 
 
 class TextPreprocessor:
