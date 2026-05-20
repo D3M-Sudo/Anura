@@ -4,7 +4,8 @@
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
 import contextlib
-from gettext import gettext as _, ngettext
+from gettext import gettext as _
+from gettext import ngettext
 from typing import ClassVar
 
 import gi
