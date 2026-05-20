@@ -45,5 +45,16 @@
       <summary>TTS Language</summary>
       <description>Language code for text-to-speech. Empty means use the active OCR language.</description>
     </key>
+
+    <key name="ocr-preprocessing" type="s">
+      <choices>
+        <choice value="off"/>
+        <choice value="image-only"/>
+        <choice value="full"/>
+      </choices>
+      <default>"image-only"</default>
+      <summary>OCR Preprocessing Mode</summary>
+      <description>Level of image and text preprocessing before and after OCR.</description>
+    </key>
   </schema>
 </schemalist>

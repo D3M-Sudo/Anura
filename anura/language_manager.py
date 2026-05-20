@@ -69,6 +69,20 @@ class LanguageManager(GObject.GObject):
         self._need_update_cache = True
         self._cache_lock = threading.Lock()
 
+        # Networking session for downloads
+        self.session = requests.Session()
+        self.session.headers.update({"User-Agent": USER_AGENT})
+        # Set default timeout and retry logic
+        adapter = requests.adapters.HTTPAdapter(
+            max_retries=requests.adapters.Retry(
+                total=3,
+                backoff_factor=1,
+                status_forcelist=[429, 500, 502, 503, 504],
+            )
+        )
+        self.session.mount("https://", adapter)
+        self.session.mount("http://", adapter)
+
         # Full ISO 639-2 mapping (Tesseract compatible)
         self._languages = {
             "afr": _("Afrikaans"),
@@ -339,7 +353,7 @@ class LanguageManager(GObject.GObject):
                 return code
         return "eng"
 
-    def download(self, code: str) -> None:
+    def download(self, code: str, cancellable: gi.repository.Gio.Cancellable | None = None) -> None:
         """Thread-safe asynchronous download process."""
         with self._cache_lock:
             if code in self.loading_languages:
@@ -360,9 +374,14 @@ class LanguageManager(GObject.GObject):
         def download_done_wrapper(result_code: str | None) -> None:
             self.download_done(code, result_code)
 
-        GObjectWorker.call(self.download_begin, (code,), download_done_wrapper)
+        GObjectWorker.call(
+            self.download_begin,
+            (code, cancellable),
+            download_done_wrapper,
+            cancellable=cancellable,
+        )
 
-    def download_begin(self, code: str) -> str | None:
+    def download_begin(self, code: str, cancellable: gi.repository.Gio.Cancellable | None = None) -> str | None:
         """Performs the physical download of the .traineddata file atomically."""
         # Hardening: verify Tesseract binary availability before downloading models
         tess_bin = os.environ.get("TESSERACT_CMD", "tesseract")
@@ -392,8 +411,8 @@ class LanguageManager(GObject.GObject):
                     tmp_path = tmp.name
 
                 try:
-                    # Use requests with timeout instead of urlretrieve
-                    response = requests.get(url, timeout=REQUEST_TIMEOUT, stream=True)
+                    # Use central session with consistent headers and timeout
+                    response = self.session.get(url, timeout=REQUEST_TIMEOUT, stream=True)
                     response.raise_for_status()
 
                     total_size = int(response.headers.get("content-length", 0))
@@ -406,6 +425,9 @@ class LanguageManager(GObject.GObject):
 
                     with open(tmp_path, "wb") as f:
                         for chunk in response.iter_content(chunk_size=8192):
+                            if cancellable and cancellable.is_cancelled():
+                                logger.debug(f"Anura: Download of {code} cancelled")
+                                return None
                             if chunk:
                                 f.write(chunk)
                                 downloaded += len(chunk)

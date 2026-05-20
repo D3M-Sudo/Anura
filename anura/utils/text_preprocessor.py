@@ -193,14 +193,12 @@ class TextPreprocessor:
         return cleaned.strip()
 
     def _normalize_whitespace(self, text: str) -> str:
-        """Normalize whitespace in text."""
+        """Normalize whitespace in text while preserving line breaks."""
         if not text:
             return ""
 
-        # Optimization: " ".join(text.split()) is ~5x faster than regex-based squashing.
-        # It automatically handles multiple spaces, tabs, and newlines, and strips
-        # leading/trailing whitespace.
-        return " ".join(text.split())
+        # Use regex to squash horizontal whitespace while preserving vertical structure
+        return re.sub(r"[ \t]+", " ", text).strip()
 
     def _fix_punctuation(self, text: str) -> str:
         """Fix punctuation spacing and duplication."""
