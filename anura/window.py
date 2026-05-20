@@ -343,34 +343,31 @@ class AnuraWindow(Adw.ApplicationWindow):
     def open_image(self) -> None:
         """Open file dialog to select an image for OCR processing.
 
-        Uses a minimal number of filters (2) to avoid xdg-desktop-portal
-        D-Bus truncation issues. Earlier versions used 9 individual format
-        filters, which repeatedly caused:
+        Uses exactly 2 filters to ensure compatibility with xdg-desktop-portal
+        D-Bus serialization, particularly on LXQt/Flatpak environments.
 
-          - Missing "All supported images" entry
-          - Missing "All files" entry
-          - Duplicate entries for the same format
-
-        Root cause: xdg-desktop-portal converts each Gtk.FileFilter rule
-        into a separate D-Bus entry. With 9+ filters the combined D-Bus
-        message can exceed implicit limits in the portal backend (GNOME,
-        KDE, generic), causing filters to be silently dropped.
-
-        Solution: use only 2 broad filters — "All supported images" via
-        the union MIME type "image/*", and "All files" via the catch-all
-        glob "*". Both are understood natively by all portal backends.
+        Important for portal compatibility:
+          1. The "Image files" filter is added FIRST to become the implicit
+             default. We avoid calling set_default_filter() because it causes
+             UI glitches (empty filter lists) in non-GNOME portal backends.
+          2. We use a set of explicit MIME types (png, jpeg, webp, tiff, bmp)
+             instead of the broad "image/*" to ensure the filter is correctly
+             populated across different portal implementations.
+          3. The dialog is a local variable to prevent filter duplication
+             if the method is called multiple times.
         """
         dialog = Gtk.FileDialog()
         dialog.set_title(_("Choose an image for extraction"))
 
-        # Filter 1 — All supported image formats (cumulative).
-        # Uses add_mime_type("image/*") which xdg-desktop-portal translates
-        # to a single D-Bus rule with type=1 (MIME). The portal modern
-        # backends (GNOME 42+, KDE 5.25+) resolve "image/*" correctly to
-        # show all image MIME subtypes — no blank entries.
+        # Filter 1 — Supported image formats.
+        # Added first to become the implicit default.
         all_img_filter = Gtk.FileFilter()
-        all_img_filter.set_name(_("All supported images"))
-        all_img_filter.add_mime_type("image/*")
+        all_img_filter.set_name(_("Image files"))
+        all_img_filter.add_mime_type("image/png")
+        all_img_filter.add_mime_type("image/jpeg")
+        all_img_filter.add_mime_type("image/webp")
+        all_img_filter.add_mime_type("image/tiff")
+        all_img_filter.add_mime_type("image/bmp")
 
         # Filter 2 — Catch-all for any file type.
         # Uses add_pattern("*") which produces a D-Bus rule with type=0
@@ -387,7 +384,8 @@ class AnuraWindow(Adw.ApplicationWindow):
         filters.append(all_files_filter)
 
         dialog.set_filters(filters)
-        dialog.set_default_filter(all_img_filter)
+        # Note: we do NOT call dialog.set_default_filter() to avoid D-Bus
+        # serialization issues on LXQt. The first filter is the implicit default.
 
         dialog.open(self, None, self._on_open_image_result)
 
