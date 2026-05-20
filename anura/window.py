@@ -127,10 +127,14 @@ class AnuraWindow(Adw.ApplicationWindow):
 
         try:
             # Hardening: check for 0-byte physical files
-            if os.path.getsize(file_path) == 0:
-                logger.warning(f"DnD: Selected file is empty (0 bytes): {file_path}")
+            if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
+                logger.error(f"Anura OCR: Attempted to process missing or 0-byte image file: {file_path}")
                 self.welcome_page.reset_drop_area_state()
-                self.show_toast(_("The selected file is empty."))
+
+                # If path doesn't exist, it might be a host path in a Flatpak.
+                # Try to load it via Gio.File as a last resort.
+                gfile = Gio.File.new_for_path(file_path)
+                gfile.load_contents_async(None, self.welcome_page._on_dropped_file_contents_loaded)
                 return
 
             # Validate file size

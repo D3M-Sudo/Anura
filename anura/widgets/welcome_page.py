@@ -5,6 +5,7 @@
 
 import contextlib
 from gettext import gettext as _
+from io import BytesIO
 from mimetypes import guess_type
 import os
 
@@ -12,6 +13,7 @@ from gi.repository import Adw, Gdk, Gio, GLib, Gtk
 from loguru import logger
 
 from anura.config import RESOURCE_PREFIX
+from anura.gobject_worker import GObjectWorker
 from anura.language_manager import language_manager
 from anura.services.settings import settings
 from anura.types.language_item import LanguageItem
@@ -49,23 +51,22 @@ class WelcomePage(Adw.NavigationPage):
         self._setup_drop_target()
 
     def _setup_drop_target(self) -> None:
-        """Configure drop target with DropTargetAsync and explicit text/uri-list.
+        """Configure drop target with DropTargetAsync.
 
-        We deliberately request only 'text/uri-list' and NOT Gdk.FileList.
+        We request both 'text/uri-list' and Gdk.FileList.
 
-        Why: Gtk.DropTarget(Gdk.FileList) in a Flatpak causes GTK to prefer
-        'application/vnd.portal.filetransfer'. In VirtualBox guests (where VBoxClient
-        --draganddrop intercepts DnD), the portal transfer hangs because xdg-desktop-portal
-        is not properly available in non-GNOME (LXDE/XFCE) guests.
+        In a Flatpak sandbox, Gdk.FileList is essential for accessing host files
+        as it triggers the 'org.freedesktop.portal.FileTransfer' portal to map
+        files into the sandbox.
 
-        By requesting 'text/uri-list' explicitly, GDK uses the raw Xdnd protocol
-        (which PCManFM, Thunar and all standard file managers provide directly)
-        and bypasses the portal entirely.
-
-        The stream read is done fully asynchronously (read_bytes_async, NOT read_upto)
-        so the GTK main loop is never blocked.
+        We still support 'text/uri-list' for environments where the portal
+        might not be available or for non-file URIs.
         """
         formats = Gdk.ContentFormats.new(["text/uri-list"])
+        # Support Gdk.FileList for better portal integration in Flatpak
+        if hasattr(Gdk, "FileList"):
+            formats = formats.union(Gdk.ContentFormats.new_for_gtype(Gdk.FileList))
+
         self._drop_target = Gtk.DropTargetAsync(
             formats=formats,
             actions=Gdk.DragAction.COPY,
@@ -113,11 +114,10 @@ class WelcomePage(Adw.NavigationPage):
             logger.exception("Anura: Failed to handle DnD leave")
 
     def _on_dnd_drop(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float) -> bool:
-        """Handle drop signal. Initiates a fully async stream read.
+        """Handle drop signal. Initiates a fully async read.
 
-        We start an async read of text/uri-list and return True immediately so GTK
-        does not reject the drop. The actual processing happens in callbacks.
-        drop.finish() MUST be called in the final callback (Xdnd protocol requirement).
+        We prefer Gdk.FileList if available (especially important in Flatpak)
+        to allow portal-based file access. Fall back to text/uri-list.
         """
         self.drop_area.remove_css_class("drag-hover")
 
@@ -126,13 +126,23 @@ class WelcomePage(Adw.NavigationPage):
             self._drop_cancellable.cancel()
         self._drop_cancellable = Gio.Cancellable()
 
-        drop.read_async(
-            ["text/uri-list"],
-            GLib.PRIORITY_DEFAULT,
-            self._drop_cancellable,
-            self._on_drop_stream_ready,
-            drop,
-        )
+        formats = drop.get_formats()
+        if hasattr(Gdk, "FileList") and formats.contain_gtype(Gdk.FileList):
+            drop.read_value_async(
+                Gdk.FileList,
+                GLib.PRIORITY_DEFAULT,
+                self._drop_cancellable,
+                self._on_drop_file_list_ready,
+                drop,
+            )
+        else:
+            drop.read_async(
+                ["text/uri-list"],
+                GLib.PRIORITY_DEFAULT,
+                self._drop_cancellable,
+                self._on_drop_stream_ready,
+                drop,
+            )
         return True  # Accept the drop; we will finish() in the final callback
 
     def _on_drop_stream_ready(
@@ -216,11 +226,77 @@ class WelcomePage(Adw.NavigationPage):
 
         self._process_dropped_path(local_path)
 
+    def _on_drop_file_list_ready(
+        self,
+        source_object: Gdk.Drop,
+        result: Gio.AsyncResult,
+        drop: Gdk.Drop,
+    ) -> None:
+        """Called when Gdk.FileList is ready."""
+        try:
+            file_list = source_object.read_value_finish(result)
+        except GLib.Error as e:
+            logger.error(f"DnD: Failed to read FileList: {e}")
+            drop.finish(Gdk.DragAction.COPY)
+            return
+
+        # Xdnd protocol: always call finish BEFORE processing
+        drop.finish(Gdk.DragAction.COPY)
+
+        if not file_list:
+            logger.error("DnD: FileList is empty")
+            return
+
+        files = file_list.get_files()
+        if not files:
+            logger.error("DnD: No files in FileList")
+            return
+
+        # Anura processes one image at a time — take the first one
+        gfile = files[0]
+        local_path = gfile.get_path()
+
+        if local_path:
+            # If we have a path, use it (it might be a portal-mapped path)
+            self._process_dropped_path(local_path)
+        else:
+            # If no path, try loading contents directly
+            gfile.load_contents_async(None, self._on_dropped_file_contents_loaded)
+
+    def _on_dropped_file_contents_loaded(self, gfile: Gio.File, result: Gio.AsyncResult) -> None:
+        """Fallback for files without a local path (e.g. remote or virtual)."""
+        try:
+            ok, contents, _etag = gfile.load_contents_finish(result)
+            if not ok:
+                self._show_error_toast(_("Failed to load dropped file"))
+                return
+
+            window = self.get_root()
+            if not window or not hasattr(window, "backend"):
+                logger.error("DnD: Root window or backend missing")
+                self._show_error_toast(_("Failed to process dropped file"))
+                return
+
+            self._set_drop_area_processing_state(True)
+            self.show_spinner()
+
+            stream = BytesIO(contents)
+            lang = window.get_language()
+            GObjectWorker.call(window.backend.decode_image, (lang, stream))
+
+        except Exception as e:
+            logger.error(f"DnD: Failed to load file contents: {e}")
+            self._show_error_toast(_("Failed to load dropped file"))
+
     def _process_dropped_path(self, local_path: str) -> None:
         """Common logic for processing a verified local path from any DnD format."""
         if not os.path.exists(local_path):
             logger.error(f"DnD: File not accessible: {local_path}")
-            self._show_error_toast(_("File not accessible. Ensure Anura has permission to access this location."))
+
+            # If path doesn't exist, it might be a host path in a Flatpak.
+            # Try to load it via Gio.File as a last resort.
+            gfile = Gio.File.new_for_path(local_path)
+            gfile.load_contents_async(None, self._on_dropped_file_contents_loaded)
             return
 
         (mimetype, _encoding) = guess_type(local_path)
