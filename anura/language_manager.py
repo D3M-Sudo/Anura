@@ -30,6 +30,7 @@ from anura.config import (  # noqa: E402
     TESSDATA_DIR,
     TESSDATA_SYSTEM_DIR,
     TESSDATA_URL,
+    USER_AGENT,
 )
 from anura.gobject_worker import GObjectWorker  # noqa: E402
 from anura.types.download_state import DownloadState  # noqa: E402
@@ -72,7 +73,8 @@ class LanguageManager(GObject.GObject):
         # Networking session for downloads
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": USER_AGENT})
-        # Set default timeout and retry logic
+        self.session.timeout = REQUEST_TIMEOUT  # Set default timeout here
+        # Set retry logic
         adapter = requests.adapters.HTTPAdapter(
             max_retries=requests.adapters.Retry(
                 total=3,
