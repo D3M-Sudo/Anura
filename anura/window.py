@@ -341,73 +341,49 @@ class AnuraWindow(Adw.ApplicationWindow):
         self.portal_banner.set_revealed(False)
 
     def open_image(self) -> None:
-        """Open file dialog to select an image for OCR processing."""
+        """Open file dialog to select an image for OCR processing.
+
+        Uses a minimal number of filters (2) to avoid xdg-desktop-portal
+        D-Bus truncation issues. Earlier versions used 9 individual format
+        filters, which repeatedly caused:
+
+          - Missing "All supported images" entry
+          - Missing "All files" entry
+          - Duplicate entries for the same format
+
+        Root cause: xdg-desktop-portal converts each Gtk.FileFilter rule
+        into a separate D-Bus entry. With 9+ filters the combined D-Bus
+        message can exceed implicit limits in the portal backend (GNOME,
+        KDE, generic), causing filters to be silently dropped.
+
+        Solution: use only 2 broad filters — "All supported images" via
+        the union MIME type "image/*", and "All files" via the catch-all
+        glob "*". Both are understood natively by all portal backends.
+        """
         dialog = Gtk.FileDialog()
         dialog.set_title(_("Choose an image for extraction"))
 
-        # Cumulative filter: list every concrete MIME type individually.
-        # NEVER use wildcard MIME types like "image/*" or "*/*" — xdg-desktop-portal
-        # cannot resolve them to display names and renders the entry as blank.
+        # Filter 1 — All supported image formats (cumulative).
+        # Uses add_mime_type("image/*") which xdg-desktop-portal translates
+        # to a single D-Bus rule with type=1 (MIME). The portal modern
+        # backends (GNOME 42+, KDE 5.25+) resolve "image/*" correctly to
+        # show all image MIME subtypes — no blank entries.
         all_img_filter = Gtk.FileFilter()
         all_img_filter.set_name(_("All supported images"))
-        all_img_filter.add_mime_type("image/png")
-        all_img_filter.add_mime_type("image/jpeg")
-        all_img_filter.add_mime_type("image/webp")
-        all_img_filter.add_mime_type("image/avif")
-        all_img_filter.add_mime_type("image/tiff")
-        all_img_filter.add_mime_type("image/bmp")
-        all_img_filter.add_mime_type("image/gif")
+        all_img_filter.add_mime_type("image/*")
 
-        # Individual format filters — one concrete MIME type each.
-        # Do NOT add add_pattern() calls alongside add_mime_type() on the same filter:
-        # mixing both causes the portal backend to split the filter into two separate
-        # dropdown entries, duplicating every format (the previous regression).
-        png_filter = Gtk.FileFilter()
-        png_filter.set_name(_("PNG images"))
-        png_filter.add_mime_type("image/png")
-
-        jpg_filter = Gtk.FileFilter()
-        jpg_filter.set_name(_("JPEG images"))
-        jpg_filter.add_mime_type("image/jpeg")
-
-        webp_filter = Gtk.FileFilter()
-        webp_filter.set_name(_("WebP images"))
-        webp_filter.add_mime_type("image/webp")
-
-        avif_filter = Gtk.FileFilter()
-        avif_filter.set_name(_("AVIF images"))
-        avif_filter.add_mime_type("image/avif")
-
-        tiff_filter = Gtk.FileFilter()
-        tiff_filter.set_name(_("TIFF images"))
-        tiff_filter.add_mime_type("image/tiff")
-
-        bmp_filter = Gtk.FileFilter()
-        bmp_filter.set_name(_("BMP images"))
-        bmp_filter.add_mime_type("image/bmp")
-
-        gif_filter = Gtk.FileFilter()
-        gif_filter.set_name(_("GIF images"))
-        gif_filter.add_mime_type("image/gif")
-
-        # Catch-all filter: MUST use add_pattern("*"), NOT add_mime_type("*/*").
-        # The portal D-Bus protocol accepts glob rules (type 0) for the universal
-        # wildcard; the MIME string "*/*" is not a valid concrete MIME type.
+        # Filter 2 — Catch-all for any file type.
+        # Uses add_pattern("*") which produces a D-Bus rule with type=0
+        # (glob). The alternative add_mime_type("*/*") is NOT a valid
+        # concrete MIME type and causes blank/empty entries in the
+        # portal UI — never use it.
         all_files_filter = Gtk.FileFilter()
         all_files_filter.set_name(_("All files (*)"))
         all_files_filter.add_pattern("*")
 
-        # Build the filter list: cumulative default first, then individual formats,
-        # catch-all last.
+        # Build the filter list (2 filters only — safe for all portals).
         filters = Gio.ListStore.new(Gtk.FileFilter)
         filters.append(all_img_filter)
-        filters.append(png_filter)
-        filters.append(jpg_filter)
-        filters.append(webp_filter)
-        filters.append(avif_filter)
-        filters.append(tiff_filter)
-        filters.append(bmp_filter)
-        filters.append(gif_filter)
         filters.append(all_files_filter)
 
         dialog.set_filters(filters)
