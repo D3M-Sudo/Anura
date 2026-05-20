@@ -4,10 +4,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: anura\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-15 17:00+0000\n"
+"POT-Creation-Date: 2026-05-20 07:42+0000\n"
 "PO-Revision-Date: 2023-09-09 21:50+0000\n"
 "Last-Translator: gallegonovato <fran-carro@hotmail.es>\n"
-"Language-Team: Spanish <https://hosted.weblate.org/projects/anura/default/es/>\n"
+"Language-Team: Spanish <https://hosted.weblate.org/projects/anura/default/es/"
+">\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -91,9 +92,17 @@ msgstr "Checo"
 msgid "Chinese - Simplified"
 msgstr "Chino - Simplificado"
 
+#: anura/language_manager.py:90
+msgid "Chinese - Simplified (vertical)"
+msgstr ""
+
 #: anura/language_manager.py:91
 msgid "Chinese - Traditional"
 msgstr "Chino - Tradicional"
+
+#: anura/language_manager.py:92
+msgid "Chinese - Traditional (vertical)"
+msgstr ""
 
 #: anura/language_manager.py:93
 msgid "Cherokee"
@@ -132,6 +141,9 @@ msgstr "Inglés, Medio (1100-1500)"
 msgid "Esperanto"
 msgstr "Esperanto"
 
+#. NOTE: equ (Math/Equation Detection) intentionally removed — it is a
+#. Tesseract internal utility module, not an OCR language model, and should
+#. not appear as a downloadable language in the UI.
 #: anura/language_manager.py:106
 msgid "Estonian"
 msgstr "Estonio"
@@ -160,6 +172,9 @@ msgstr "Finés"
 msgid "French"
 msgstr "Francés"
 
+#. NOTE: frk (German - Fraktur) intentionally removed — the model file
+#. frk.traineddata is absent from both tessdata_best/main and tessdata/main,
+#. so every install attempt would silently fail with HTTP 404.
 #: anura/language_manager.py:116
 #, fuzzy
 msgid "French, Middle"
@@ -354,6 +369,9 @@ msgstr "Occitano"
 msgid "Oriya"
 msgstr "Oriya"
 
+#. NOTE: osd (Orientation/Script Detection) intentionally removed — it is a
+#. Tesseract internal utility module already excluded from get_downloaded_codes()
+#. via the startswith("osd") filter, but it was still showing in the install list.
 #: anura/language_manager.py:167
 #, fuzzy
 msgid "Panjabi"
@@ -527,8 +545,17 @@ msgstr ""
 msgid "Acknowledgements"
 msgstr ""
 
+#: anura/main.py:638
+msgid ""
+"Built with Tesseract OCR, GTK4, Libadwaita, and other open source components."
+msgstr ""
+
 #: anura/main.py:640
 msgid "Changelog"
+msgstr ""
+
+#: anura/main.py:641 data/ui/extracted_page.blp:191
+msgid "Report an Issue"
 msgstr ""
 
 #: anura/main.py:683 anura/main.py:703
@@ -545,12 +572,16 @@ msgstr ""
 msgid "OK"
 msgstr ""
 
-#: anura/main.py:737 anura/window.py:284 anura/window.py:532
+#: anura/main.py:737 anura/window.py:280 anura/window.py:528
 msgid "Text copied to clipboard"
 msgstr "Texto copiado al portapapeles"
 
 #: anura/main.py:744
 msgid "No text available to copy"
+msgstr ""
+
+#: anura/main.py:800 anura/window.py:700
+msgid "Invalid URL blocked for security"
 msgstr ""
 
 #: anura/main.py:833 anura/main.py:847 anura/main.py:857 anura/main.py:874
@@ -576,22 +607,30 @@ msgstr "Cancelado"
 #: anura/services/clipboard_service.py:170
 #: anura/services/clipboard_service.py:186
 #: anura/services/clipboard_service.py:204
+#: anura/services/clipboard_service.py:377
+#: anura/services/clipboard_service.py:407
+#: anura/services/clipboard_service.py:421
+#: anura/services/clipboard_service.py:433
 #: anura/services/clipboard_service.py:441
-#: anura/services/clipboard_service.py:471
-#: anura/services/clipboard_service.py:485
-#: anura/services/clipboard_service.py:497
-#: anura/services/clipboard_service.py:529
-#: anura/services/clipboard_service.py:543
-#: anura/services/clipboard_service.py:555
+#: anura/services/clipboard_service.py:462
+#: anura/services/clipboard_service.py:476
+#: anura/services/clipboard_service.py:488
 msgid "No image in clipboard"
 msgstr "No hay imágenes en el portapapeles"
 
-#: anura/services/clipboard_service.py:633
-#: anura/services/clipboard_service.py:642
+#: anura/services/clipboard_service.py:454
+#: anura/services/screenshot_service.py:468 anura/window.py:141
+#: anura/window.py:433 anura/window.py:479
+#, python-brace-format
+msgid "Image too large: {size}MB (max {max}MB)"
+msgstr "Imagen demasiado grande: {size}MB (máx {max}MB)"
+
+#: anura/services/clipboard_service.py:566
+#: anura/services/clipboard_service.py:575
 msgid "No text in clipboard"
 msgstr ""
 
-#: anura/services/clipboard_service.py:675
+#: anura/services/clipboard_service.py:608
 msgid "Clipboard read operation timed out."
 msgstr ""
 
@@ -615,7 +654,7 @@ msgstr "No puedo hacer una captura de pantalla."
 msgid "Invalid language code specified."
 msgstr "Código de idioma especificado no válido."
 
-#: anura/services/screenshot_service.py:509 anura/window.py:428
+#: anura/services/screenshot_service.py:509 anura/window.py:424
 msgid "The selected image file is empty."
 msgstr ""
 
@@ -670,9 +709,9 @@ msgstr ""
 #: anura/utils/portal_advice.py:88
 msgid ""
 "On LXQt, install xdg-desktop-portal-kde, then create ~/.config/xdg-desktop-"
-"portal/lxqt-portals.conf with [preferred] "
-"org.freedesktop.impl.portal.Screenshot=kde, and restart the portal "
-"(systemctl --user restart xdg-desktop-portal.service)."
+"portal/lxqt-portals.conf with [preferred] org.freedesktop.impl.portal."
+"Screenshot=kde, and restart the portal (systemctl --user restart xdg-desktop-"
+"portal.service)."
 msgstr ""
 
 #: anura/utils/portal_advice.py:99
@@ -712,14 +751,13 @@ msgstr ""
 
 #: anura/utils/portal_advice.py:126
 msgid ""
-"Screenshot portal unavailable. Install xdg-desktop-portal-gnome and re-"
-"login."
+"Screenshot portal unavailable. Install xdg-desktop-portal-gnome and re-login."
 msgstr ""
 
 #: anura/utils/portal_advice.py:128
 msgid ""
-"Screenshot failed. On GNOME / Ubuntu, install xdg-desktop-portal-gnome (e.g."
-" sudo apt install xdg-desktop-portal-gnome) and log out and back in."
+"Screenshot failed. On GNOME / Ubuntu, install xdg-desktop-portal-gnome (e.g. "
+"sudo apt install xdg-desktop-portal-gnome) and log out and back in."
 msgstr ""
 
 #: anura/utils/portal_advice.py:147
@@ -775,14 +813,15 @@ msgstr ""
 msgid "TTS playback volume level: {percentage:.0f}%"
 msgstr "Nivel de volumen de reproducción TTS: {percentage:.0f}%"
 
+#. Create list: "Auto (follow OCR)" + all supported languages
 #: anura/widgets/preferences_general_page.py:132
 msgid "Auto (follow OCR language)"
 msgstr "Automático (seguir idioma OCR)"
 
 #: anura/widgets/preferences_languages_page.py:70
+#: data/ui/preferences_languages.blp:30
 msgid "OCR models unreachable. Please check your internet connection."
-msgstr ""
-"Modelos OCR inaccesibles. Por favor, compruebe su conexión a Internet."
+msgstr "Modelos OCR inaccesibles. Por favor, compruebe su conexión a Internet."
 
 #: anura/widgets/preferences_languages_page.py:75
 msgid "Metered connection detected. Model downloads may incur data costs."
@@ -880,215 +919,583 @@ msgstr ""
 msgid "Open application menu"
 msgstr ""
 
-#: anura/widgets/welcome_page.py:100
+#: anura/widgets/welcome_page.py:101
 #, fuzzy
 msgid "Drop image to extract text"
 msgstr "Abrir imagen para extraer texto"
 
-#: anura/widgets/welcome_page.py:112 anura/widgets/welcome_page.py:344
+#: anura/widgets/welcome_page.py:113 anura/widgets/welcome_page.py:269
+#: data/ui/welcome_page.blp:44
 msgid "Extract text from anywhere"
 msgstr "Extraer texto de cualquier lugar"
 
-#: anura/widgets/welcome_page.py:202
+#: anura/widgets/welcome_page.py:193
 msgid "No file data received from drop"
 msgstr ""
 
-#: anura/widgets/welcome_page.py:215
+#: anura/widgets/welcome_page.py:206
 msgid "No valid file found in drop"
 msgstr ""
 
-#: anura/widgets/welcome_page.py:224
+#: anura/widgets/welcome_page.py:215
 msgid "Only local files can be dropped"
 msgstr ""
 
-#: anura/widgets/welcome_page.py:306
+#: anura/widgets/welcome_page.py:224
+msgid ""
+"File not accessible. Ensure Anura has permission to access this location."
+msgstr ""
+
+#: anura/widgets/welcome_page.py:231
 msgid "Only images can be processed that way."
 msgstr ""
 
-#: anura/widgets/welcome_page.py:277 anura/widgets/welcome_page.py:312
+#: anura/widgets/welcome_page.py:237
 msgid "Failed to process dropped file"
 msgstr ""
 
-#: anura/widgets/welcome_page.py:332
+#: anura/widgets/welcome_page.py:257
 msgid "Processing..."
 msgstr ""
 
-#: anura/widgets/welcome_page.py:336
+#: anura/widgets/welcome_page.py:261 data/ui/welcome_page.blp:125
 msgid "Drop image file here"
-msgstr ""
-
-#: anura/services/clipboard_service.py:521
-#: anura/services/screenshot_service.py:468 anura/window.py:145
-#: anura/window.py:437 anura/window.py:483
-#, python-brace-format
-msgid "Image too large: {size}MB (max {max}MB)"
-msgstr "Imagen demasiado grande: {size}MB (máx {max}MB)"
-
-#: anura/widgets/welcome_page.py:271 anura/widgets/welcome_page.py:289
-msgid "Failed to load dropped file"
-msgstr "Error al cargar archivo arrastrado"
-
-#: anura/window.py:201
-#, fuzzy
-msgid "Failed to capture screenshot"
-msgstr "Tomar una foto"
-
-#: anura/window.py:208
-msgid "Screenshot service did not respond."
-msgstr "El servicio de captura de pantalla no respondió."
-
-#: anura/window.py:252
-msgid "URL opened automatically"
-msgstr "URL abierto automáticamente"
-
-#: anura/window.py:290
-#, python-brace-format
-msgid "{n} email found in text"
-msgid_plural "{n} emails found in text"
-msgstr[0] ""
-msgstr[1] ""
-
-#: anura/window.py:299
-#, python-brace-format
-msgid "{n} phone number found in text"
-msgid_plural "{n} phone numbers found in text"
-msgstr[0] ""
-msgstr[1] ""
-
-#: anura/window.py:350
-#, fuzzy
-msgid "Choose an image for extraction"
-msgstr "Abrir imagen para extraer texto"
-
-#: anura/window.py:356
-msgid "All supported images"
-msgstr ""
-
-#: anura/window.py:370
-msgid "PNG images"
-msgstr ""
-
-#: anura/window.py:374
-msgid "JPEG images"
-msgstr ""
-
-#: anura/window.py:446
-#, python-brace-format
-msgid "Unsupported file format: {path}"
-msgstr "Formato de archivo no compatible: {path}"
-
-#: anura/window.py:452
-#, python-brace-format
-msgid "File not found: {path}"
-msgstr "Archivo no encontrado: {path}"
-
-#: anura/window.py:454
-#, python-brace-format
-msgid "Permission denied: {path}"
-msgstr "Permiso denegado: {path}"
-
-#: anura/window.py:457
-#, python-brace-format
-msgid "Cannot access file: {path}"
-msgstr "No se puede acceder al archivo: {path}"
-
-#: anura/window.py:501
-msgid "Corrupt or unsupported image file"
-msgstr ""
-
-#: anura/window.py:505
-#, fuzzy
-msgid "Unsupported image format"
-msgstr "Formato de archivo no compatible."
-
-#: anura/window.py:509 anura/window.py:514
-#, fuzzy
-msgid "Failed to validate image file"
-msgstr "Error al cargar archivo de imagen"
-
-#: anura/window.py:521 anura/window.py:525
-msgid "Failed to load image file"
-msgstr "Error al cargar archivo de imagen"
-
-#: anura/window.py:536
-#, fuzzy
-msgid "No text to copy"
-msgstr "No hay texto para compartir."
-
-#: anura/window.py:688
-msgid "No text to share."
-msgstr "No hay texto para compartir."
-
-#: anura/main.py:800 anura/window.py:704
-msgid "Invalid URL blocked for security"
-msgstr ""
-
-#: anura/window.py:713
-msgid "Failed to open link"
-msgstr ""
-
-#: anura/main.py:641
-msgid "Report an Issue"
-msgstr ""
-
-#: anura/language_manager.py:90
-msgid "Chinese - Simplified (vertical)"
-msgstr ""
-
-#: anura/language_manager.py:92
-msgid "Chinese - Traditional (vertical)"
-msgstr ""
-
-#: anura/main.py:638
-msgid ""
-"Built with Tesseract OCR, GTK4, Libadwaita, and other open source "
-"components."
 msgstr ""
 
 #: anura/window.py:123
 msgid "Failed to load dropped file (invalid path)."
 msgstr ""
 
-#: anura/window.py:159
+#: anura/window.py:133
+msgid "File not accessible or empty."
+msgstr ""
+
+#: anura/window.py:155
 msgid "Failed to process the file."
 msgstr ""
 
-#: anura/window.py:261
+#: anura/window.py:197
+#, fuzzy
+msgid "Failed to capture screenshot"
+msgstr "Tomar una foto"
+
+#: anura/window.py:204
+msgid "Screenshot service did not respond."
+msgstr "El servicio de captura de pantalla no respondió."
+
+#: anura/window.py:248
+msgid "URL opened automatically"
+msgstr "URL abierto automáticamente"
+
+#: anura/window.py:257
 msgid "QR Code URL Detected"
 msgstr ""
 
-#: anura/window.py:275
+#: anura/window.py:271
 msgid "URL copied to clipboard"
 msgstr ""
 
-#: anura/window.py:378
+#: anura/window.py:286
+#, python-brace-format
+msgid "{n} email found in text"
+msgid_plural "{n} emails found in text"
+msgstr[0] ""
+msgstr[1] ""
+
+#: anura/window.py:295
+#, python-brace-format
+msgid "{n} phone number found in text"
+msgid_plural "{n} phone numbers found in text"
+msgstr[0] ""
+msgstr[1] ""
+
+#: anura/window.py:346
+#, fuzzy
+msgid "Choose an image for extraction"
+msgstr "Abrir imagen para extraer texto"
+
+#: anura/window.py:352
+msgid "All supported images"
+msgstr ""
+
+#: anura/window.py:366
+msgid "PNG images"
+msgstr ""
+
+#: anura/window.py:370
+msgid "JPEG images"
+msgstr ""
+
+#: anura/window.py:374
 msgid "WebP images"
 msgstr ""
 
-#: anura/window.py:382
+#: anura/window.py:378
 msgid "AVIF images"
 msgstr ""
 
-#: anura/window.py:386
+#: anura/window.py:382
 msgid "TIFF images"
 msgstr ""
 
-#: anura/window.py:390
+#: anura/window.py:386
 msgid "BMP images"
 msgstr ""
 
-#: anura/window.py:394
+#: anura/window.py:390
 msgid "GIF images"
 msgstr ""
 
-#: anura/window.py:401
+#: anura/window.py:397
 msgid "All files (*)"
 msgstr ""
 
-#: anura/services/tts.py:373
+#: anura/window.py:442
 #, python-brace-format
-msgid "GStreamer playback error: {error}"
+msgid "Unsupported file format: {path}"
+msgstr "Formato de archivo no compatible: {path}"
+
+#: anura/window.py:448
+#, python-brace-format
+msgid "File not found: {path}"
+msgstr "Archivo no encontrado: {path}"
+
+#: anura/window.py:450
+#, python-brace-format
+msgid "Permission denied: {path}"
+msgstr "Permiso denegado: {path}"
+
+#: anura/window.py:453
+#, python-brace-format
+msgid "Cannot access file: {path}"
+msgstr "No se puede acceder al archivo: {path}"
+
+#: anura/window.py:497
+msgid "Corrupt or unsupported image file"
 msgstr ""
+
+#: anura/window.py:501
+#, fuzzy
+msgid "Unsupported image format"
+msgstr "Formato de archivo no compatible."
+
+#: anura/window.py:505 anura/window.py:510
+#, fuzzy
+msgid "Failed to validate image file"
+msgstr "Error al cargar archivo de imagen"
+
+#: anura/window.py:517 anura/window.py:521
+msgid "Failed to load image file"
+msgstr "Error al cargar archivo de imagen"
+
+#: anura/window.py:532
+#, fuzzy
+msgid "No text to copy"
+msgstr "No hay texto para compartir."
+
+#: anura/window.py:684
+msgid "No text to share."
+msgstr "No hay texto para compartir."
+
+#: anura/window.py:709
+msgid "Failed to open link"
+msgstr ""
+
+#: data/io.github.d3msudo.anura.desktop.in:3
+#: data/io.github.d3msudo.anura.metainfo.xml.in:6 data/ui/welcome_page.blp:16
+#: data/ui/welcome_page.blp:43
+#, fuzzy
+msgid "Anura"
+msgstr "Anura"
+
+#: data/io.github.d3msudo.anura.desktop.in:4
+msgid "OCR Tool"
+msgstr "Herramienta OCR"
+
+#: data/io.github.d3msudo.anura.desktop.in:5
+#, fuzzy
+msgid "Extract text from any image, video, or web page"
+msgstr "Extraer texto de cualquier imagen, vídeo o página web"
+
+#: data/io.github.d3msudo.anura.desktop.in:11
+#, fuzzy
+msgid "OCR;Text;Extraction;Reader;QR;Scanner;"
+msgstr "OCR;Text;Extraction;Texto;Extracción;"
+
+#: data/io.github.d3msudo.anura.desktop.in:17
+#, fuzzy
+msgid "Extract Text to Clipboard"
+msgstr "Extraer texto al portapapeles"
+
+#: data/io.github.d3msudo.anura.metainfo.xml.in:7
+#, fuzzy
+msgid "Extract text from anywhere on your screen"
+msgstr "Extraer texto de cualquier lugar"
+
+#: data/io.github.d3msudo.anura.metainfo.xml.in:9
+msgid ""
+"Anura is an intuitive text extraction tool (OCR) designed for the GNOME "
+"desktop. It allows you to quickly grab text from any source on your screen, "
+"including videos, PDFs, images, or protected web pages."
+msgstr ""
+"Anura es una herramienta intuitiva de extracción de texto (OCR) diseñada "
+"para el escritorio GNOME. Le permite capturar rápidamente texto de cualquier "
+"fuente en su pantalla, incluyendo videos, PDFs, imágenes o páginas web "
+"protegidas."
+
+#: data/io.github.d3msudo.anura.metainfo.xml.in:14
+msgid "Key features include:"
+msgstr "Las características clave incluyen:"
+
+#: data/io.github.d3msudo.anura.metainfo.xml.in:16
+msgid "High-accuracy OCR powered by Tesseract."
+msgstr "OCR de alta precisión impulsado por Tesseract."
+
+#: data/io.github.d3msudo.anura.metainfo.xml.in:17
+msgid "Built-in QR code decoding and link following."
+msgstr "Decodificación de códigos QR integrada y seguimiento de enlaces."
+
+#: data/io.github.d3msudo.anura.metainfo.xml.in:18
+msgid "Support for multiple languages with on-demand model download."
+msgstr "Soporte para múltiples idiomas con descarga de modelos bajo demanda."
+
+#: data/io.github.d3msudo.anura.metainfo.xml.in:19
+msgid "Privacy-focused: no telemetry and no anonymous data collection."
+msgstr ""
+"Enfocado en la privacidad: sin telemetría ni recopilación de datos anónimos."
+
+#: data/io.github.d3msudo.anura.metainfo.xml.in:20
+msgid ""
+"Modern GTK4 / Libadwaita interface following GNOME Human Interface "
+"Guidelines."
+msgstr ""
+"Interfaz moderna GTK4 / Libadwaita siguiendo las Directrices de Interfaz "
+"Humana de GNOME."
+
+#: data/io.github.d3msudo.anura.metainfo.xml.in:22
+msgid ""
+"Network access is used exclusively for two purposes: downloading Tesseract "
+"OCR language models on demand (sourced from GitHub), and the optional text-"
+"to-speech feature powered by Google TTS. No user data or extracted text is "
+"ever transmitted externally."
+msgstr ""
+
+#: data/io.github.d3msudo.anura.metainfo.xml.in:28
+msgid ""
+"Screenshot capture uses the XDG Desktop Portal interface, which requires a "
+"portal backend to be installed on the host. GNOME and KDE typically ship one "
+"by default (xdg-desktop-portal-gnome / xdg-desktop-portal-kde). On other "
+"desktops you may need to install a backend explicitly: xdg-desktop-portal-"
+"gtk on LXQt / Xfce / MATE, xdg-desktop-portal-wlr on wlroots-based "
+"compositors. Without a backend the system cannot grant Anura access to the "
+"screen and the \"Take a screenshot\" action will fail."
+msgstr ""
+
+#: data/io.github.d3msudo.anura.metainfo.xml.in:38
+msgid ""
+"When the portal backend is unavailable or fails, Anura automatically falls "
+"back to host-side screenshot tools via flatpak-spawn. To enable this "
+"fallback, install at least one screenshot tool on the host system: gnome-"
+"screenshot (recommended), xfce4-screenshooter, spectacle, scrot, maim, or "
+"ImageMagick import. Anura tries them in order and uses the first available "
+"tool."
+msgstr ""
+
+#: data/io.github.d3msudo.anura.metainfo.xml.in:50
+msgid "Main interface showing the text extraction screen (dark theme)"
+msgstr ""
+"Interfaz principal mostrando la pantalla de extracción de texto (tema oscuro)"
+
+#: data/io.github.d3msudo.anura.metainfo.xml.in:54
+msgid "Extracted text displayed after OCR recognition"
+msgstr "Texto extraído mostrado después del reconocimiento OCR"
+
+#: data/ui/extracted_page.blp:7
+msgid "Extracted"
+msgstr "Extraído"
+
+#: data/ui/extracted_page.blp:24
+#, fuzzy
+msgid "Take a Screenshot (Ctrl+G)"
+msgstr "_Hacer una captura de pantalla"
+
+#: data/ui/extracted_page.blp:26
+msgid "Take a screenshot"
+msgstr "Tomar una foto"
+
+#: data/ui/extracted_page.blp:35
+#, fuzzy
+msgctxt "Extracted screen"
+msgid "Copy Extracted Text to Clipboard (Ctrl+C)"
+msgstr "Extraer texto al portapapeles"
+
+#: data/ui/extracted_page.blp:37
+msgctxt "Extracted screen"
+msgid "Copy extracted text to clipboard"
+msgstr ""
+
+#: data/ui/extracted_page.blp:50
+msgctxt "Extracted screen"
+msgid "Listen to Text (Ctrl+L)"
+msgstr ""
+
+#: data/ui/extracted_page.blp:52
+msgctxt "Extracted screen"
+msgid "Listen to text"
+msgstr ""
+
+#: data/ui/extracted_page.blp:62 data/ui/extracted_page.blp:64
+msgctxt "Extracted screen"
+msgid "Cancel listening to text"
+msgstr ""
+
+#: data/ui/extracted_page.blp:85
+msgctxt "Extracted screen"
+msgid "Pause/Resume listening"
+msgstr ""
+
+#: data/ui/extracted_page.blp:87
+msgctxt "Extracted screen"
+msgid "Pause or resume listening"
+msgstr ""
+
+#: data/ui/extracted_page.blp:94 data/ui/extracted_page.blp:96
+msgctxt "Extracted screen"
+msgid "Stop listening"
+msgstr ""
+
+#: data/ui/extracted_page.blp:107 data/ui/extracted_page.blp:109
+msgctxt "Extracted screen"
+msgid "Open menu"
+msgstr ""
+
+#: data/ui/extracted_page.blp:117
+msgctxt "Extracted screen"
+msgid "Share To"
+msgstr ""
+
+#: data/ui/extracted_page.blp:119
+msgctxt "Extracted screen"
+msgid "Share text to other applications"
+msgstr ""
+
+#: data/ui/extracted_page.blp:171 data/ui/preferences_dialog.blp:7
+#: data/ui/welcome_page.blp:142
+msgid "Preferences"
+msgstr "Preferencias"
+
+#: data/ui/extracted_page.blp:179 data/ui/shortcuts_overlay.blp:7
+#: data/ui/shortcuts_overlay.blp:19 data/ui/welcome_page.blp:149
+msgid "Keyboard Shortcuts"
+msgstr "Atajos del teclado"
+
+#: data/ui/extracted_page.blp:185 data/ui/welcome_page.blp:154
+#, fuzzy
+msgid "About Anura"
+msgstr "Acerca de anura"
+
+#: data/ui/extracted_page.blp:200
+msgid "Open image"
+msgstr "Abrir una imagen"
+
+#: data/ui/extracted_page.blp:201
+msgid "Paste from clipboard"
+msgstr "Pegar desde el portapapeles"
+
+#: data/ui/language_popover.blp:21 data/ui/preferences_languages.blp:21
+#, fuzzy
+msgid "Search Languages"
+msgstr "Buscar idiomas…"
+
+#: data/ui/language_popover.blp:24 data/ui/preferences_languages.blp:25
+msgid "Search Languages…"
+msgstr "Buscar idiomas…"
+
+#: data/ui/language_popover.blp:73 data/ui/preferences_languages.blp:109
+msgid "No Results Found"
+msgstr "No hay resultados"
+
+#: data/ui/language_popover.blp:80
+msgid "Add Language"
+msgstr "Añadir un idioma"
+
+#: data/ui/language_row.blp:23
+msgctxt "Preferences Language Row"
+msgid "Install language"
+msgstr ""
+
+#: data/ui/language_row.blp:32
+msgctxt "Preferences Language Row"
+msgid "Remove language"
+msgstr ""
+
+#: data/ui/preferences_general.blp:7
+msgid "_General"
+msgstr "_General"
+
+#: data/ui/preferences_general.blp:12
+#, fuzzy
+msgid "Text Extraction"
+msgstr "Extracción del texto"
+
+#: data/ui/preferences_general.blp:15
+#, fuzzy
+msgid "_Secondary Language"
+msgstr "_Idioma secundario"
+
+#: data/ui/preferences_general.blp:17
+msgid "Additional language used in text recognition"
+msgstr "Idioma adicional utilizado en el reconocimiento del texto"
+
+#: data/ui/preferences_general.blp:22
+msgid "Behavior"
+msgstr "Comportamiento"
+
+#: data/ui/preferences_general.blp:25
+#, fuzzy
+msgid "_Copy to Clipboard"
+msgstr "_Copiar al portapapeles"
+
+#: data/ui/preferences_general.blp:27
+#, fuzzy
+msgid "Automatically copy the extracted text after detection"
+msgstr "Copia automáticamente el texto extraído en el portapapeles"
+
+#: data/ui/preferences_general.blp:31
+#, fuzzy
+msgid "_Open QR-code Links"
+msgstr "_Abrir los enlaces del código QR"
+
+#: data/ui/preferences_general.blp:33
+msgid ""
+"Open QR code URLs directly in browser. Otherwise, a clickable notification "
+"is shown."
+msgstr ""
+
+#: data/ui/preferences_general.blp:44
+msgid "Text-to-Speech"
+msgstr "Texto a voz"
+
+#: data/ui/preferences_general.blp:47
+msgid "Volume"
+msgstr "Volumen"
+
+#: data/ui/preferences_general.blp:48
+msgid "TTS playback volume level (0-100%)"
+msgstr "Nivel de volumen de reproducción TTS (0-100%)"
+
+#: data/ui/preferences_general.blp:57
+msgid "TTS Language"
+msgstr "Idioma TTS"
+
+#: data/ui/preferences_general.blp:58
+msgid "Language for speech synthesis. Uses OCR language if not set."
+msgstr "Idioma para síntesis de voz. Usa el idioma OCR si no está configurado."
+
+#: data/ui/preferences_languages.blp:8
+msgid "_Languages"
+msgstr "_Idiomas"
+
+#: data/ui/preferences_languages.blp:32
+msgid "Retry"
+msgstr "Reintentar"
+
+#: data/ui/preferences_languages.blp:48
+#, fuzzy
+msgid "Installed Languages"
+msgstr "Idiomas instalados"
+
+#: data/ui/preferences_languages.blp:57
+#, fuzzy
+msgid "Add language"
+msgstr "Añadir un idioma"
+
+#: data/ui/shortcuts_overlay.blp:32
+msgid "Search shortcuts..."
+msgstr ""
+
+#: data/ui/shortcuts_overlay.blp:55
+#, fuzzy
+msgid "No results found"
+msgstr "No hay resultados"
+
+#: data/ui/shortcuts_overlay.blp:56
+msgid "Try a different search term"
+msgstr ""
+
+#: data/ui/welcome_page.blp:7
+msgid "Welcome"
+msgstr "Bienvenido"
+
+#: data/ui/welcome_page.blp:21
+msgid "Language"
+msgstr "Idioma"
+
+#: data/ui/welcome_page.blp:22
+msgid "Select language to extract"
+msgstr "Seleccione el idioma a extraer"
+
+#: data/ui/welcome_page.blp:35 data/ui/welcome_page.blp:37
+msgid "Open menu"
+msgstr "Abrir el menú"
+
+#: data/ui/welcome_page.blp:55
+#, fuzzy
+msgctxt "Welcome screen"
+msgid "Take a Screenshot (Ctrl+G)"
+msgstr "_Hacer una captura de pantalla"
+
+#: data/ui/welcome_page.blp:63
+msgid "_Take a Screenshot"
+msgstr "_Hacer una captura de pantalla"
+
+#: data/ui/welcome_page.blp:71
+#, fuzzy
+msgctxt "Welcome screen"
+msgid "Open Image (Ctrl+O)"
+msgstr "_Abrir una imagen"
+
+#: data/ui/welcome_page.blp:79
+msgid "_Open Image"
+msgstr "_Abrir una imagen"
+
+#: data/ui/welcome_page.blp:87
+#, fuzzy
+msgctxt "Welcome screen"
+msgid "Paste Image from Clipboard (Ctrl+V)"
+msgstr "Pegar desde el portapapeles"
+
+#: data/ui/welcome_page.blp:95
+#, fuzzy
+msgid "_Paste Image"
+msgstr "Pegar imagen"
+
+#: data/ui/welcome_page.blp:102
+msgctxt "Welcome screen"
+msgid "Drop image here"
+msgstr ""
+
+#: data/ui/welcome_page.blp:110
+#, fuzzy
+msgid "_Drop Image"
+msgstr "_Abrir una imagen"
+
+#: data/ui/welcome_page.blp:161
+msgid "⭐ Star on GitHub"
+msgstr "⭐ Estrella en GitHub"
+
+#: data/ui/window.blp:21
+msgid ""
+"Screenshot portal unavailable. Install xdg-desktop-portal-gtk (or the "
+"backend matching your desktop) and re-login."
+msgstr ""
+
+#: data/ui/window.blp:22
+msgid "Dismiss"
+msgstr ""
+
+#~ msgid "Failed to load dropped file"
+#~ msgstr "Error al cargar archivo arrastrado"
 
 #, fuzzy
 #~ msgid "Math / Equation Detection"
@@ -1100,15 +1507,6 @@ msgstr ""
 #~ msgid "OSD Module"
 #~ msgstr "Módulo OSD"
 
-#~ msgid ""
-#~ "Anura is a fork of Frog OCR. This software uses Tesseract OCR, Leptonica, "
-#~ "GTK4, Libadwaita, gTTS, Pillow, PyZBar, and other open source components."
-#~ msgstr ""
-
-#~ msgid ""
-#~ "File not accessible. Ensure Anura has permission to access this location."
-#~ msgstr ""
-
 #~ msgid "Text contains a link"
 #~ msgstr "El texto contiene un enlace"
 
@@ -1116,286 +1514,8 @@ msgstr ""
 #~ msgstr "Abrir"
 
 #, fuzzy
-#~ msgid "Anura"
-#~ msgstr "Anura"
-
-#~ msgid "OCR Tool"
-#~ msgstr "Herramienta OCR"
-
-#, fuzzy
-#~ msgid "Extract text from any image, video, or web page"
-#~ msgstr "Extraer texto de cualquier imagen, vídeo o página web"
-
-#, fuzzy
-#~ msgid "OCR;Text;Extraction;Reader;QR;Scanner;"
-#~ msgstr "OCR;Text;Extraction;Texto;Extracción;"
-
-#, fuzzy
-#~ msgid "Extract Text to Clipboard"
-#~ msgstr "Extraer texto al portapapeles"
-
-#, fuzzy
-#~ msgid "Extract text from anywhere on your screen"
-#~ msgstr "Extraer texto de cualquier lugar"
-
-#~ msgid ""
-#~ "Anura is an intuitive text extraction tool (OCR) designed for the GNOME "
-#~ "desktop. It allows you to quickly grab text from any source on your screen, "
-#~ "including videos, PDFs, images, or protected web pages."
-#~ msgstr ""
-#~ "Anura es una herramienta intuitiva de extracción de texto (OCR) diseñada "
-#~ "para el escritorio GNOME. Le permite capturar rápidamente texto de cualquier"
-#~ " fuente en su pantalla, incluyendo videos, PDFs, imágenes o páginas web "
-#~ "protegidas."
-
-#~ msgid "Key features include:"
-#~ msgstr "Las características clave incluyen:"
-
-#~ msgid "High-accuracy OCR powered by Tesseract."
-#~ msgstr "OCR de alta precisión impulsado por Tesseract."
-
-#~ msgid "Built-in QR code decoding and link following."
-#~ msgstr "Decodificación de códigos QR integrada y seguimiento de enlaces."
-
-#~ msgid "Support for multiple languages with on-demand model download."
-#~ msgstr "Soporte para múltiples idiomas con descarga de modelos bajo demanda."
-
-#~ msgid "Privacy-focused: no telemetry and no anonymous data collection."
-#~ msgstr ""
-#~ "Enfocado en la privacidad: sin telemetría ni recopilación de datos anónimos."
-
-#~ msgid ""
-#~ "Modern GTK4 / Libadwaita interface following GNOME Human Interface "
-#~ "Guidelines."
-#~ msgstr ""
-#~ "Interfaz moderna GTK4 / Libadwaita siguiendo las Directrices de Interfaz "
-#~ "Humana de GNOME."
-
-#~ msgid ""
-#~ "Network access is used exclusively for two purposes: downloading Tesseract "
-#~ "OCR language models on demand (sourced from GitHub), and the optional text-"
-#~ "to-speech feature powered by Google TTS. No user data or extracted text is "
-#~ "ever transmitted externally."
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Screenshot capture uses the XDG Desktop Portal interface, which requires a "
-#~ "portal backend to be installed on the host. GNOME and KDE typically ship one"
-#~ " by default (xdg-desktop-portal-gnome / xdg-desktop-portal-kde). On other "
-#~ "desktops you may need to install a backend explicitly: xdg-desktop-portal-"
-#~ "gtk on LXQt / Xfce / MATE, xdg-desktop-portal-wlr on wlroots-based "
-#~ "compositors. Without a backend the system cannot grant Anura access to the "
-#~ "screen and the \"Take a screenshot\" action will fail."
-#~ msgstr ""
-
-#~ msgid ""
-#~ "When the portal backend is unavailable or fails, Anura automatically falls "
-#~ "back to host-side screenshot tools via flatpak-spawn. To enable this "
-#~ "fallback, install at least one screenshot tool on the host system: gnome-"
-#~ "screenshot (recommended), xfce4-screenshooter, spectacle, scrot, maim, or "
-#~ "ImageMagick import. Anura tries them in order and uses the first available "
-#~ "tool."
-#~ msgstr ""
-
-#~ msgid "Main interface showing the text extraction screen (dark theme)"
-#~ msgstr ""
-#~ "Interfaz principal mostrando la pantalla de extracción de texto (tema "
-#~ "oscuro)"
-
-#~ msgid "Extracted text displayed after OCR recognition"
-#~ msgstr "Texto extraído mostrado después del reconocimiento OCR"
-
-#~ msgid "Extracted"
-#~ msgstr "Extraído"
-
-#~ msgid "Take a screenshot"
-#~ msgstr "Tomar una foto"
-
-#~ msgctxt "Extracted screen"
-#~ msgid "Copy extracted text to clipboard"
-#~ msgstr ""
-
-#~ msgctxt "Extracted screen"
-#~ msgid "Listen to text"
-#~ msgstr ""
-
-#~ msgctxt "Extracted screen"
-#~ msgid "Cancel listening to text"
-#~ msgstr ""
-
-#~ msgctxt "Extracted screen"
-#~ msgid "Pause/Resume listening"
-#~ msgstr ""
-
-#~ msgctxt "Extracted screen"
-#~ msgid "Pause or resume listening"
-#~ msgstr ""
-
-#~ msgctxt "Extracted screen"
-#~ msgid "Stop listening"
-#~ msgstr ""
-
-#~ msgctxt "Extracted screen"
-#~ msgid "Open menu"
-#~ msgstr ""
-
-#~ msgctxt "Extracted screen"
-#~ msgid "Share To"
-#~ msgstr ""
-
-#~ msgctxt "Extracted screen"
-#~ msgid "Share text to other applications"
-#~ msgstr ""
-
-#~ msgid "Preferences"
-#~ msgstr "Preferencias"
-
-#~ msgid "Keyboard Shortcuts"
-#~ msgstr "Atajos del teclado"
-
-#, fuzzy
-#~ msgid "About Anura"
-#~ msgstr "Acerca de anura"
-
-#~ msgid "Open image"
-#~ msgstr "Abrir una imagen"
-
-#~ msgid "Paste from clipboard"
-#~ msgstr "Pegar desde el portapapeles"
-
-#~ msgid "Search Languages…"
-#~ msgstr "Buscar idiomas…"
-
-#~ msgid "No Results Found"
-#~ msgstr "No hay resultados"
-
-#~ msgid "Add Language"
-#~ msgstr "Añadir un idioma"
-
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Install language"
-#~ msgstr ""
-
-#~ msgctxt "Preferences Language Row"
-#~ msgid "Remove language"
-#~ msgstr ""
-
-#~ msgid "_General"
-#~ msgstr "_General"
-
-#, fuzzy
-#~ msgid "Text Extraction"
-#~ msgstr "Extracción del texto"
-
-#, fuzzy
-#~ msgid "_Secondary Language"
-#~ msgstr "_Idioma secundario"
-
-#~ msgid "Additional language used in text recognition"
-#~ msgstr "Idioma adicional utilizado en el reconocimiento del texto"
-
-#~ msgid "Behavior"
-#~ msgstr "Comportamiento"
-
-#, fuzzy
-#~ msgid "_Copy to Clipboard"
-#~ msgstr "_Copiar al portapapeles"
-
-#, fuzzy
-#~ msgid "Automatically copy the extracted text after detection"
-#~ msgstr "Copia automáticamente el texto extraído en el portapapeles"
-
-#, fuzzy
-#~ msgid "_Open QR-code Links"
-#~ msgstr "_Abrir los enlaces del código QR"
-
-#, fuzzy
 #~ msgid "Automatically open links extracted from QR codes"
 #~ msgstr "Abrir automáticamente los enlaces desde los códigos QR"
-
-#~ msgid "Text-to-Speech"
-#~ msgstr "Texto a voz"
-
-#~ msgid "Volume"
-#~ msgstr "Volumen"
-
-#~ msgid "TTS playback volume level (0-100%)"
-#~ msgstr "Nivel de volumen de reproducción TTS (0-100%)"
-
-#~ msgid "TTS Language"
-#~ msgstr "Idioma TTS"
-
-#~ msgid "Language for speech synthesis. Uses OCR language if not set."
-#~ msgstr ""
-#~ "Idioma para síntesis de voz. Usa el idioma OCR si no está configurado."
-
-#~ msgid "_Languages"
-#~ msgstr "_Idiomas"
-
-#~ msgid "Retry"
-#~ msgstr "Reintentar"
-
-#, fuzzy
-#~ msgid "Installed Languages"
-#~ msgstr "Idiomas instalados"
-
-#, fuzzy
-#~ msgid "Add language"
-#~ msgstr "Añadir un idioma"
-
-#~ msgid "Search shortcuts..."
-#~ msgstr ""
-
-#~ msgid "Welcome"
-#~ msgstr "Bienvenido"
-
-#~ msgid "Language"
-#~ msgstr "Idioma"
-
-#~ msgid "Select language to extract"
-#~ msgstr "Seleccione el idioma a extraer"
-
-#~ msgid "Open menu"
-#~ msgstr "Abrir el menú"
-
-#~ msgctxt "Welcome screen"
-#~ msgid "Take a Screenshot"
-#~ msgstr ""
-
-#~ msgid "_Take a Screenshot"
-#~ msgstr "_Hacer una captura de pantalla"
-
-#~ msgctxt "Welcome screen"
-#~ msgid "Open Image"
-#~ msgstr ""
-
-#~ msgid "_Open Image"
-#~ msgstr "_Abrir una imagen"
-
-#~ msgctxt "Welcome screen"
-#~ msgid "Paste image from clipboard"
-#~ msgstr ""
-
-#~ msgid "Paste Image"
-#~ msgstr "Pegar imagen"
-
-#~ msgctxt "Welcome screen"
-#~ msgid "Drop image here"
-#~ msgstr ""
-
-#~ msgid "Drop Image"
-#~ msgstr ""
-
-#~ msgid "⭐ Star on GitHub"
-#~ msgstr "⭐ Estrella en GitHub"
-
-#~ msgid ""
-#~ "Screenshot portal unavailable. Install xdg-desktop-portal-gtk (or the "
-#~ "backend matching your desktop) and re-login."
-#~ msgstr ""
-
-#~ msgid "Dismiss"
-#~ msgstr ""
 
 #~ msgid "Unsupported file format."
 #~ msgstr "Formato de archivo no compatible."
