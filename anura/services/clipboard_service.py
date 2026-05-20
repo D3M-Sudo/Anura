@@ -241,27 +241,16 @@ class ClipboardService(GObject.GObject):
 
         mimes = self._available_clipboard_mimes()
 
-        # Strategy: Prefer direct textures (in-memory) first, as they bypass filesystem issues.
-        # This is especially important in Flatpak.
+        # Strategy: Prefer direct in-memory textures first (bypass filesystem entirely).
         texture_available = any(m.startswith("image/") for m in mimes)
-
         if texture_available:
             self.clipboard.read_texture_async(cancellable=cancellable, callback=self._on_read_texture)
             return
 
-        # Next preference: FileList (better portal support in Flatpak)
-        if hasattr(Gdk, "FileList"):
-            formats = self.clipboard.get_formats()
-            if formats and formats.contain_gtype(Gdk.FileList):
-                self.clipboard.read_value_async(
-                    Gdk.FileList,
-                    GLib.PRIORITY_DEFAULT,
-                    cancellable,
-                    self._on_read_file_list,
-                )
-                return
-
-        # Fallback to URI list
+        # Direct URI list read — bypasses portal entirely (same rationale as DnD fix).
+        # Gdk.FileList is intentionally skipped: on VirtualBox/non-GNOME guests,
+        # read_value_async(Gdk.FileList) invokes application/vnd.portal.filetransfer
+        # which hangs silently when xdg-desktop-portal is unavailable.
         if _CLIPBOARD_TEXT_URI_LIST in mimes:
             self.clipboard.read_async(
                 [_CLIPBOARD_TEXT_URI_LIST],
@@ -271,7 +260,7 @@ class ClipboardService(GObject.GObject):
             )
             return
 
-        # Final attempt: try reading texture anyway
+        # Final fallback: try texture anyway (handles cases with no MIME info)
         self.clipboard.read_texture_async(cancellable=cancellable, callback=self._on_read_texture)
 
     def _available_clipboard_mimes(self) -> list[str]:
@@ -305,59 +294,6 @@ class ClipboardService(GObject.GObject):
             self._clipboard_timeout_id = None
             if timeout_id and timeout_id > 0:
                 GLib.source_remove(timeout_id)
-
-    def _on_read_file_list(self, _sender: Gdk.Clipboard, result: Gio.AsyncResult) -> None:
-        """Callback for Gdk.FileList clipboard reads."""
-        self._clear_active_timeout()
-
-        try:
-            file_list = self.clipboard.read_value_finish(result)
-        except GLib.Error as e:
-            if e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED):
-                logger.debug("Anura Clipboard: FileList read cancelled.")
-                return
-            logger.warning(f"Anura Clipboard: FileList read failed ({e.message}); falling back.")
-            self._fallback_to_texture_read()
-            return
-
-        if not file_list:
-            logger.warning("Anura Clipboard: FileList is empty; falling back.")
-            self._fallback_to_texture_read()
-            return
-
-        files = file_list.get_files()
-        if not files:
-            logger.warning("Anura Clipboard: No files in FileList; falling back.")
-            self._fallback_to_texture_read()
-            return
-
-        # Load the first file
-        gfile = files[0]
-        local_path = gfile.get_path()
-
-        if local_path and os.path.exists(local_path):
-            self._emit_texture_from_file(local_path)
-        else:
-            # Fallback for files without a directly accessible path
-            gfile.load_contents_async(self._cancellable, self._on_file_contents_loaded)
-
-    def _on_file_contents_loaded(self, gfile: Gio.File, result: Gio.AsyncResult) -> None:
-        """Callback for Gio.File.load_contents_async."""
-        try:
-            ok, contents, _etag = gfile.load_contents_finish(result)
-            if not ok:
-                raise ValueError("Failed to load file contents.")
-        except (GLib.Error, ValueError) as e:
-            logger.warning(f"Anura Clipboard: Failed to load file contents ({e}); falling back.")
-            self._fallback_to_texture_read()
-            return
-
-        try:
-            texture = Gdk.Texture.new_from_bytes(GLib.Bytes.new(contents))
-            self.emit("paste_from_clipboard", texture)
-        except GLib.Error as e:
-            logger.warning(f"Anura Clipboard: Gdk.Texture.new_from_bytes failed: {e.message}")
-            self._fallback_to_texture_read()
 
     def _on_read_uri_list(self, _sender: GObject.GObject, result: Gio.AsyncResult) -> None:
         """Callback for ``text/uri-list`` clipboard reads (file paths)."""
@@ -502,10 +438,7 @@ class ClipboardService(GObject.GObject):
 
         if not path or not os.path.exists(path):
             logger.warning(f"Anura Clipboard: file does not exist or inaccessible: {path!r}")
-
-            # Try to load it via Gio.File as a last resort (might be a portal path)
-            gfile = Gio.File.new_for_uri(file_uri)
-            gfile.load_contents_async(self._cancellable, self._on_file_contents_loaded)
+            self._emit_clipboard_error(_("No image in clipboard"))
             return
 
         self._emit_texture_from_file(path)
