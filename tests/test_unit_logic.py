@@ -15,31 +15,36 @@ class TestShareServiceLogic:
     """Test ShareService URL construction logic (pure Python, no gi needed)."""
 
     def test_url_encoding(self):
-        """Test URL encoding for share links."""
-        text = "Hello world! @#$%"
+        """Test URL encoding for share links, ensuring forward slashes are encoded."""
+        text = "Hello/world! @#$%"
         encoded = quote(text, safe="")
-        assert encoded == "Hello%20world%21%20%40%23%24%25"
+        assert encoded == "Hello%2Fworld%21%20%40%23%24%25"
 
     def test_email_link_generation(self):
-        """Test email link generation logic."""
-        text = "Hello world"
+        """Test email link generation logic with special characters."""
+        text = "Hello/world"
         encoded = quote(text, safe="")
+        # Verify that even the subject's spaces are encoded in our usage
         expected = f"mailto:?subject=Extracted%20Text&body={encoded}"
-        assert expected == "mailto:?subject=Extracted%20Text&body=Hello%20world"
+        assert "%2F" in encoded
+        assert expected == "mailto:?subject=Extracted%20Text&body=Hello%2Fworld".replace("Text", "Text").replace(
+            " ", "%20"
+        )
 
     def test_reddit_link_generation(self):
-        """Test Reddit link generation logic."""
-        text = "Hello world"
+        """Test Reddit link generation logic with special characters."""
+        text = "Hello/world"
         encoded = quote(text, safe="")
         expected = f"https://www.reddit.com/submit?selftext={encoded}"
-        assert expected == "https://www.reddit.com/submit?selftext=Hello%20world"
+        assert "%2F" in expected
+        assert expected == "https://www.reddit.com/submit?selftext=Hello%2Fworld"
 
     def test_telegram_link_generation(self):
         """Test Telegram link generation logic."""
         text = "Hello world"
         encoded = quote(text, safe="")
         expected = f"https://t.me/share/url?text={encoded}"
-        assert expected == "https://t.me/share/url?text=Hello%20world"
+        assert expected == "https://t.me/share/url?text=Hello%20world".replace(" ", "%20")
 
     def test_x_link_generation(self):
         """Test X (Twitter) link generation logic."""
@@ -54,8 +59,22 @@ class TestShareServiceLogic:
         assert expected == "web+mastodon://share?text=Hello%20world"
 
 
-class TestUrlLengthValidation:
-    """Test URL length validation for sharing."""
+class TestUrlSafetyValidation:
+    """Test URL safety validation for sharing."""
+
+    def test_is_safe_url_string(self):
+        """Test is_safe_url_string helper."""
+        from anura.utils.validators import is_safe_url_string
+
+        # Valid strings
+        assert is_safe_url_string("https://example.com") is True
+        assert is_safe_url_string("mailto:test@example.com") is True
+
+        # Invalid strings
+        assert is_safe_url_string(None) is False
+        assert is_safe_url_string("a" * 3000) is False
+        assert is_safe_url_string("https://example.com\x1f") is False  # Control char
+        assert is_safe_url_string("https://exampłe.com") is False  # Non-ASCII
 
     def test_url_length_validation(self):
         """Test URL length limits for sharing."""
