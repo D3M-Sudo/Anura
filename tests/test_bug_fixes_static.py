@@ -132,12 +132,15 @@ def test_screenshot_service_declares_portal_backend_missing_signal() -> None:
 
 def test_window_wires_portal_banner_and_signal_handler() -> None:
     text = (PROJECT_ROOT / "anura" / "window.py").read_text()
+    ocr_text = (PROJECT_ROOT / "anura" / "window_mixins" / "ocr_mixin.py").read_text()
+    combined_text = text + ocr_text
+
     assert "portal_banner: Adw.Banner = Gtk.Template.Child()" in text, (
         "AnuraWindow must declare portal_banner as a Gtk.Template.Child mapping to the Adw.Banner in window.blp."
     )
-    assert '"portal-backend-missing"' in text, "AnuraWindow must connect to the new ScreenshotService signal."
-    assert "set_revealed(True)" in text and "set_revealed(False)" in text, (
-        "AnuraWindow must reveal the banner on the signal and hide it when the user dismisses it."
+    assert '"portal-backend-missing"' in combined_text, "AnuraWindow (or its OCR mixin) must connect to the new ScreenshotService signal."
+    assert "set_revealed(True)" in combined_text and "set_revealed(False)" in combined_text, (
+        "AnuraWindow (or its OCR mixin) must reveal the banner on the signal and hide it when the user dismisses it."
     )
 
 
@@ -235,7 +238,8 @@ def test_window_disconnects_portal_banner_signal() -> None:
     """AnuraWindow.do_destroy must disconnect the portal_banner signal handler."""
     text = (ANURA_PKG / "window.py").read_text()
     # Check that do_destroy contains disconnect for portal_banner
-    assert "self.portal_banner.disconnect(self._handler_portal_banner)" in text, (
+    # Since Issue 4 refactor, do_destroy remains in window.py but uses getattr to be safe with mixins
+    assert "self.portal_banner.disconnect(handler_id)" in text or "self.portal_banner.disconnect(self._handler_portal_banner)" in text, (
         "AnuraWindow.do_destroy must disconnect the portal_banner signal handler "
         "(_handler_portal_banner) to prevent memory leaks."
     )
@@ -244,11 +248,14 @@ def test_window_disconnects_portal_banner_signal() -> None:
 def test_window_tracks_portal_banner_handler_id() -> None:
     """AnuraWindow must track the portal_banner handler ID for cleanup."""
     text = (ANURA_PKG / "window.py").read_text()
-    assert "_handler_portal_banner" in text, (
+    ocr_text = (PROJECT_ROOT / "anura" / "window_mixins" / "ocr_mixin.py").read_text()
+    combined_text = text + ocr_text
+
+    assert "_handler_portal_banner" in combined_text, (
         "AnuraWindow must track the portal_banner signal handler ID (_handler_portal_banner) for cleanup in do_destroy."
     )
-    assert "_handler_portal_banner = self.portal_banner.connect" in text, (
-        "AnuraWindow must store the portal_banner connect() return value in _handler_portal_banner."
+    assert "_handler_portal_banner = self.portal_banner.connect" in combined_text, (
+        "AnuraWindow (or its OCR mixin) must store the portal_banner connect() return value in _handler_portal_banner."
     )
 
 

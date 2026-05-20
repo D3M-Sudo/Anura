@@ -129,7 +129,7 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
 
             # Fallback to English if current language was removed, emitting only on actual change
             current_code = self.active_language
-            if current_code not in language_manager.get_downloaded_codes():
+            if current_code not in downloaded_codes:
                 new_item = language_manager.get_language_item("eng")
                 if new_item and self.active_language != "eng":  # emit only if language actually changed
                     self.active_language = "eng"  # type: ignore[method-assign]

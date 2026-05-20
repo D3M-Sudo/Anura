@@ -243,7 +243,8 @@ class AnuraApplication(Adw.Application):
         Adw.Application.do_startup(self)
 
         # Clean up orphaned resources from previous sessions
-        cleanup_orphaned_resources()
+        active_lang = self.settings.get_string("active-language")
+        cleanup_orphaned_resources(active_lang)
 
         self.backend = ScreenshotService()
         self._backend_decoded_handler_id = self.backend.connect("decoded", self.on_decoded)
