@@ -5,6 +5,7 @@
 
 import contextlib
 from gettext import gettext as _
+from gettext import ngettext
 from typing import ClassVar
 
 import gi
@@ -98,14 +99,18 @@ class ExtractedPage(Adw.NavigationPage):
             self.listen_btn.set_sensitive(has_text)
 
         if not text:
-            self.stats_label.set_text(_("Words: %d | Characters: %d") % (0, 0))
+            words_text = ngettext("{n} word", "{n} words", 0).format(n=0)
+            chars_text = ngettext("{n} character", "{n} characters", 0).format(n=0)
+            self.stats_label.set_text(_("{words} | {chars}").format(words=words_text, chars=chars_text))
             return
 
         char_count = len(text)
         # Use split() to get words, filtering out empty strings from multiple whitespace
         word_count = len(text.split())
 
-        self.stats_label.set_text(_("Words: %d | Characters: %d") % (word_count, char_count))
+        words_text = ngettext("{n} word", "{n} words", word_count).format(n=word_count)
+        chars_text = ngettext("{n} character", "{n} characters", char_count).format(n=char_count)
+        self.stats_label.set_text(_("{words} | {chars}").format(words=words_text, chars=chars_text))
 
     def show_copy_feedback(self) -> None:
         """Temporarily change the copy button icon to a checkmark for UX feedback."""

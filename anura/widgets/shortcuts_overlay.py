@@ -40,6 +40,8 @@ class ShortcutsOverlay(Adw.Window):
 
         # Title, modal, default size, etc. are declared in shortcuts_overlay.blp.
 
+        self.search_entry.set_placeholder_text(_("Search shortcuts…"))
+
         self._setup_shortcuts_data()
         self._populate_shortcuts_list()
         self._connect_signals()

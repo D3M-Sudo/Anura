@@ -259,6 +259,8 @@ class AnuraWindow(Adw.ApplicationWindow):
                 if self.settings.get_boolean("autocopy") or copy:
                     clipboard_service_instance = get_clipboard_service()
                     clipboard_service_instance.set(primary_url)
+                    # Visual feedback on the button itself
+                    self.extracted_page.show_copy_feedback()
                     # Only show "copied" toast if we didn't open the browser automatically
                     # to avoid toast spam when both are ON.
                     if not self.settings.get_boolean("autolinks"):
@@ -271,6 +273,8 @@ class AnuraWindow(Adw.ApplicationWindow):
                 if self.settings.get_boolean("autocopy") or copy:
                     clipboard_service_instance = get_clipboard_service()
                     clipboard_service_instance.set(text)
+                    # Visual feedback on the button itself
+                    self.extracted_page.show_copy_feedback()
                     self.show_toast(_("Text copied to clipboard"))
 
                 # Still show toasts for other structured data if found in mixed text
