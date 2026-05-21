@@ -8,6 +8,9 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
   <requires lib="gtk" version="4.0"/>
   <template class="ExtractedPage" parent="AdwNavigationPage">
     <property name="title" translatable="true">Extracted</property>
+    <style>
+      <class name="extracted-page"/>
+    </style>
     <child>
       <object class="AdwToolbarView">
         <child type="top">
@@ -151,15 +154,18 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
           <object class="GtkScrolledWindow" id="text_scrollview">
             <property name="hexpand">true</property>
             <property name="vexpand">true</property>
+            <property name="hscrollbar-policy">2</property>
+            <property name="width-request">150</property>
             <child>
               <object class="GtkTextView" id="text_view">
-                <property name="left-margin">12</property>
-                <property name="right-margin">12</property>
+                <property name="hexpand">true</property>
+                <property name="wrap-mode">2</property>
+                <property name="left-margin">14</property>
+                <property name="right-margin">14</property>
                 <property name="top-margin">12</property>
                 <property name="bottom-margin">12</property>
                 <property name="pixels-above-lines">4</property>
                 <property name="pixels-below-lines">4</property>
-                <property name="wrap-mode">3</property>
                 <property name="buffer">
                   <object class="GtkTextBuffer" id="buffer"></object>
                 </property>
