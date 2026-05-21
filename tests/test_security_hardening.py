@@ -1,12 +1,14 @@
 
-import sys
 import os
+import sys
+
 import pytest
 
 # Add project root to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from anura.utils.validators import is_safe_url_string, uri_validator
+
 
 class TestSecurityHardeningLogic:
     def test_is_safe_url_string_basic(self):
@@ -23,8 +25,8 @@ class TestSecurityHardeningLogic:
 
     def test_is_safe_url_string_ascii(self):
         assert is_safe_url_string("https://google.com/path") is True
-        # Homograph attack (cyrillic 'а')
-        assert is_safe_url_string("https://gооgle.com") is False
+        # Homograph attack (cyrillic 'o')
+        assert is_safe_url_string("https://g\u043e\u043e\u0433le.com") is False
 
     def test_uri_validator_integration(self):
         # uri_validator uses is_safe_url_string internally
