@@ -12,7 +12,7 @@
 #
 # 🧪 GTK TESTING (two methods):
 #   Method A (Recommended): Flatpak Sandbox
-#     flatpak run --devel --command=bash com.github.d3msudo.anura
+#     flatpak run --devel --command=bash io.github.d3msudo.anura
 #     python3 -m pytest tests/ -m "gtk" -v
 #
 #   Method B (Host System): Requires setup

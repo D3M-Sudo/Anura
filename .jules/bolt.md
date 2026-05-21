@@ -31,3 +31,7 @@
 ## 2026-05-19 - Multiline Regex and Lambda Callback Performance
 **Learning:** Replacing Python line-by-line loops with `re.sub` using `re.MULTILINE` can yield a ~2.7x speedup for artifact removal on large text blocks. However, when using `re.MULTILINE`, using `[ \t]` instead of `\s` is critical to avoid swallowing newlines. Furthermore, combining multiple simple `re.sub` calls into a single call with a lambda callback might not provide significant gains due to the overhead of Python callbacks, often making multiple C-optimized passes faster.
 **Action:** Prefer multiline regex for bulk text processing but avoid `\s` if line structure must be preserved. Use multiple `re.sub` calls for simple string replacements instead of a single call with a Python callback.
+
+## 2026-05-20 - Combined Image Enhancement LUT Optimization
+**Learning:** Consolidating multiple sequential image processing steps (Brightness, Contrast, Autocontrast, Thresholding) into single-pass Look-Up Tables (LUTs) significantly reduces total pixel traversals. Combining Brightness and Contrast into one linear formula and simulating Autocontrast via histogram bounds for Thresholding yields a measurable speedup (~28% on 4K-like images).
+**Action:** When performing sequential linear or threshold-based image transformations, derive a single mathematical mapping and apply it via `image.point(lut)` to minimize processing overhead.

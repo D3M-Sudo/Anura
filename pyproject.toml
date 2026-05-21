@@ -68,7 +68,7 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 # Markers for GTK-dependent tests that require a display
 markers = [
-    "gtk: tests that require a running GTK/GLib environment",
+    "gtk: tests that require a live GTK/Wayland display",
     "network: tests that require network access",
 ]
 # Skip GTK tests in CI unless DISPLAY or WAYLAND_DISPLAY is set
@@ -79,5 +79,8 @@ dev = [
     "meson>=1.11.1",
     "ninja>=1.13.0",
     "pytest>=9.0.3",
+    "pytest-cov>=6.0.0",
+    "pytest-timeout>=2.3.1",
+    "ruff>=0.15.12",
     "ruff>=0.15.13",
 ]

@@ -13,7 +13,7 @@ gi.require_version("Adw", "1")
 from gi.repository import Gio  # noqa: E402
 
 # Load resources before importing widgets
-resource_path = os.path.join(os.path.dirname(__file__), "..", "data", "com.github.d3msudo.anura.gresource")
+resource_path = os.path.join(os.path.dirname(__file__), "..", "data", "io.github.d3msudo.anura.gresource")
 if os.path.exists(resource_path):
     res = Gio.Resource.load(resource_path)
     res._register()

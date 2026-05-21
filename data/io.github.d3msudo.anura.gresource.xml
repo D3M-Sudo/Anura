@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
-    <gresource prefix="/com/github/d3msudo/anura">
+    <gresource prefix="/io/github/d3msudo/anura">
         <file preprocess="xml-stripblanks">window.ui</file>
         <file preprocess="xml-stripblanks">welcome_page.ui</file>
         <file preprocess="xml-stripblanks">extracted_page.ui</file>
@@ -14,7 +14,7 @@
         <file preprocess="xml-stripblanks">share_row.ui</file>
 
         <file>style.css</file>
-        <file>icons/com.github.d3msudo.anura.svg</file>
+        <file>icons/io.github.d3msudo.anura.svg</file>
 
         <file>icons/scalable/actions/share-mastodon-symbolic.svg</file>
         <file>icons/scalable/actions/share-telegram-symbolic.svg</file>

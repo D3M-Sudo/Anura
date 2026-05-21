@@ -68,10 +68,10 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
         return text.lower() in proposal.title.lower()
 
     def _on_language_downloaded(self, _sender: GObject.GObject, _lang_code: str) -> None:
-        self.populate_model()
+        self.populate_model(force=True)
 
     def _on_language_removed(self, _sender: GObject.GObject, _lang_code: str) -> None:
-        self.populate_model()
+        self.populate_model(force=True)
 
     @Gtk.Template.Callback()
     def _on_search_activate(self, entry: Gtk.SearchEntry) -> None:
@@ -103,7 +103,7 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
 
     @Gtk.Template.Callback()
     def _on_popover_show(self, _: object) -> None:
-        self.populate_model()
+        self.populate_model(force=False)
         self.entry.grab_focus()
 
     @Gtk.Template.Callback()
@@ -115,12 +115,12 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
         self.activate_action("app.preferences")
         self.popdown()
 
-    def populate_model(self) -> None:
+    def populate_model(self, force: bool = False) -> None:
         """Populate the language model with available languages."""
         try:
             self.lang_list.remove_all()
 
-            downloaded_codes = language_manager.get_downloaded_codes(force=True)
+            downloaded_codes = language_manager.get_downloaded_codes(force=force)
             for code in downloaded_codes:
                 title = language_manager.get_language(code)
 
@@ -129,7 +129,7 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
 
             # Fallback to English if current language was removed, emitting only on actual change
             current_code = self.active_language
-            if current_code not in language_manager.get_downloaded_codes():
+            if current_code not in downloaded_codes:
                 new_item = language_manager.get_language_item("eng")
                 if new_item and self.active_language != "eng":  # emit only if language actually changed
                     self.active_language = "eng"  # type: ignore[method-assign]

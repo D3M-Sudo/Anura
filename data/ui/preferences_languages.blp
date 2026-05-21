@@ -2,17 +2,18 @@ using Gtk 4.0;
 using Gio 2.0;
 using Adw 1;
 
-translation-domain 'com.github.d3msudo.anura';
+translation-domain 'io.github.d3msudo.anura';
 
 template $PreferencesLanguagesPage : Adw.PreferencesPage {
   title: _("_Languages");
   use-underline: true;
   icon-name: "preferences-desktop-locale-symbolic";
 
-  Box {
-    orientation: vertical;
+  Adw.PreferencesGroup {
+    Box {
+      orientation: vertical;
 
-    SearchBar search_bar {
+      SearchBar search_bar {
       show-close-button: true;
 
       SearchEntry language_search_entry {
@@ -62,52 +63,53 @@ template $PreferencesLanguagesPage : Adw.PreferencesPage {
       }
     }
 
-    ScrolledWindow {
-      vexpand: true;
-      margin-bottom: 12;
-
-      Adw.PreferencesGroup languages_list_group {
-        margin-top: 12;
-        margin-start: 12;
-        margin-end: 12;
+      ScrolledWindow {
+        vexpand: true;
         margin-bottom: 12;
 
-        Adw.Clamp {
-          maximum-size: 600;
+        Adw.PreferencesGroup languages_list_group {
+          margin-top: 12;
+          margin-start: 12;
+          margin-end: 12;
+          margin-bottom: 12;
 
-          Stack views {
-            vexpand: true;
+          Adw.Clamp {
+            maximum-size: 600;
 
-            StackPage {
-              name: 'languages_state';
-              child: ListView list_view {
-                name: "lang_list";
-                enable-rubberband: false;
+            Stack views {
+              vexpand: true;
 
-                model: NoSelection selection {
-                  model: FilterListModel model {
-                    model: Gio.ListStore list_store {
-                      item-type: typeof<$LanguageItem>;
+              StackPage {
+                name: 'languages_state';
+                child: ListView list_view {
+                  name: "lang_list";
+                  enable-rubberband: false;
+
+                  model: NoSelection selection {
+                    model: FilterListModel model {
+                      model: Gio.ListStore list_store {
+                        item-type: typeof<$LanguageItem>;
+                      };
                     };
                   };
-                };
-                
-                factory: SignalListItemFactory factory {
-                  setup => $_on_item_setup();
-                  bind => $_on_item_bind();
-                };
 
-                styles ["boxed-list", "card"]
-              };
-            }
+                  factory: SignalListItemFactory factory {
+                    setup => $_on_item_setup();
+                    bind => $_on_item_bind();
+                  };
 
-            StackPage {
-              name: 'empty_state';
-              child: Adw.StatusPage {
-                icon-name: "system-search-symbolic";
-                title: _("No Results Found");
-                styles ["compact"]
-              };
+                  styles ["boxed-list", "card"]
+                };
+              }
+
+              StackPage {
+                name: 'empty_state';
+                child: Adw.StatusPage {
+                  icon-name: "system-search-symbolic";
+                  title: _("No Results Found");
+                  styles ["compact"]
+                };
+              }
             }
           }
         }

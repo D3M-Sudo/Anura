@@ -24,8 +24,8 @@ if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$'; then
     exit 1
 fi
 
-MANIFEST_FILE="flatpak/com.github.d3msudo.anura.json"
-METAINFO_FILE="data/com.github.d3msudo.anura.metainfo.xml.in"
+MANIFEST_FILE="flatpak/io.github.d3msudo.anura.json"
+METAINFO_FILE="data/io.github.d3msudo.anura.metainfo.xml.in"
 MESON_BUILD_FILE="meson.build"
 DATE=$(date +%Y-%m-%d)
 

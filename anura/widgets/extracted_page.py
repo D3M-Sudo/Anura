@@ -5,6 +5,7 @@
 
 import contextlib
 from gettext import gettext as _
+from gettext import ngettext
 from typing import ClassVar
 
 import gi
@@ -78,6 +79,7 @@ class ExtractedPage(Adw.NavigationPage):
             self._tts_service = get_tts_service()
             self._tts_stop_handler_id = self._tts_service.connect("stop", self._on_listen_end)
             self._tts_paused_handler_id = self._tts_service.connect("paused", self._on_paused)
+            self._tts_error_handler_id = self._tts_service.connect("error", self._on_tts_error)
         except (TypeError, RuntimeError, AttributeError) as e:
             logger.warning(f"Failed to connect TTS services: {e}")
 
@@ -96,15 +98,15 @@ class ExtractedPage(Adw.NavigationPage):
         if self.listen_btn:
             self.listen_btn.set_sensitive(has_text)
 
-        if not text:
-            self.stats_label.set_text(_("Words: %d | Characters: %d") % (0, 0))
-            return
+        char_count = len(text) if text else 0
+        word_count = len(text.split()) if text else 0
 
-        char_count = len(text)
-        # Use split() to get words, filtering out empty strings from multiple whitespace
-        word_count = len(text.split())
+        words_text = ngettext("%d word", "%d words", word_count) % word_count
+        chars_text = ngettext("%d character", "%d characters", char_count) % char_count
 
-        self.stats_label.set_text(_("Words: %d | Characters: %d") % (word_count, char_count))
+        # Construct the stats label using a single translatable string to ensure
+        # translators can adjust the ordering and separator if necessary.
+        self.stats_label.set_text(_("{words} | {chars}").format(words=words_text, chars=chars_text))
 
     def show_copy_feedback(self) -> None:
         """Temporarily change the copy button icon to a checkmark for UX feedback."""
@@ -160,6 +162,9 @@ class ExtractedPage(Adw.NavigationPage):
                 if self._tts_paused_handler_id:
                     self._tts_service.disconnect(self._tts_paused_handler_id)
                     self._tts_paused_handler_id = None
+                if self._tts_error_handler_id:
+                    self._tts_service.disconnect(self._tts_error_handler_id)
+                    self._tts_error_handler_id = None
             except Exception as e:
                 logger.warning(f"Failed to cleanup TTS during dispose: {e}")
 
@@ -230,6 +235,8 @@ class ExtractedPage(Adw.NavigationPage):
                     self._tts_stop_handler_id = self._tts_service.connect("stop", self._on_listen_end)
                 if self._tts_paused_handler_id is None:
                     self._tts_paused_handler_id = self._tts_service.connect("paused", self._on_paused)
+                if self._tts_error_handler_id is None:
+                    self._tts_error_handler_id = self._tts_service.connect("error", self._on_tts_error)
             except (TypeError, RuntimeError, AttributeError) as e:
                 logger.warning(f"Failed to connect TTS signals during listen: {e}")
 
@@ -240,6 +247,16 @@ class ExtractedPage(Adw.NavigationPage):
         # its parent window.
         ocr_lang = self.settings.get_string("active-language")
         tts_lang = tts_service_instance.get_effective_language(ocr_lang)
+
+        if not tts_lang:
+            self._is_generating_tts = False
+            self._set_spinner_active(False)
+            self.swap_controls(False)
+            msg = _("Text-to-speech is not available for this language")
+            window = self.get_root()
+            if window and hasattr(window, "show_toast"):
+                window.show_toast(msg)
+            return
 
         try:
             GObjectWorker.call(
@@ -321,6 +338,13 @@ class ExtractedPage(Adw.NavigationPage):
         if self.listen_pause_btn:
             icon = "media-playback-start-symbolic" if is_paused else "media-playback-pause-symbolic"
             self.listen_pause_btn.set_icon_name(icon)
+
+    def _on_tts_error(self, _service: object, message: str) -> None:
+        """Handle TTS error signal."""
+        self._on_listen_end(_service, False)
+        window = self.get_root()
+        if window and hasattr(window, "show_toast"):
+            window.show_toast(message)
 
     def _on_generated(self, filepath: str | None) -> None:
         self._is_generating_tts = False

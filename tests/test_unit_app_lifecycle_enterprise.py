@@ -37,8 +37,14 @@ class TestAppLifecycleEnterprise:
             mock_notif.assert_not_called()
 
             # Case: Real error
-            app.on_error(None, "Fatal Crash")
-            mock_notif.assert_called_with(title="Anura OCR", body="Fatal Crash")
+            with patch("gi.repository.GLib.idle_add") as mock_idle:
+                app.on_error(None, "Fatal Crash")
+                # Error is now wrapped in idle_add
+                assert mock_idle.called
+                # Execute the callback passed to idle_add
+                callback = mock_idle.call_args[0][0]
+                callback(mock_idle.call_args[0][1])
+                mock_notif.assert_called_with(title="Anura OCR", body="Fatal Crash")
 
     def test_decode_image_synchronously_success(self, app):
         """Test synchronous decoding used in silent mode."""

@@ -5,7 +5,7 @@ permissions:
 
 on:
   push:
-    branches: [ "main", "development", "testing" ]
+    branches: [ "main", "development", "testing", "flathub-testing" ]
     tags: [ "v*" ]
   pull_request:
     branches: [ "main", "development", "testing" ]
@@ -24,11 +24,55 @@ jobs:
           # Strict linting with enforcement - no automatic fixes in CI
           args: check --select E,F,W,I --target-version py312
 
-      - name: Run Unit Tests
+      - name: Run tests with coverage
         run: |
           pip install uv
           uv sync --dev
-          uv run pytest tests/ -m "not gtk" --tb=short
+          uv run pytest tests/ -m "not gtk" \
+            --cov=anura --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.xml
+          fail_ci_if_error: false
+
+  gtk-tests:
+    name: GTK Integration Tests
+    runs-on: ubuntu-latest
+    needs: python-quality
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y \
+            python3-gi python3-gi-cairo gir1.2-gtk-4.0 \
+            gir1.2-adw-1 libadwaita-1-dev \
+            tesseract-ocr tesseract-ocr-eng \
+            weston xwayland
+
+      - name: Install Python dependencies
+        run: pip install uv && uv sync --dev
+
+      - name: Compile GResources
+        run: |
+          glib-compile-resources \
+            data/io.github.d3msudo.anura.gresource.xml \
+            --sourcedir=data \
+            --sourcedir=data/ui \
+            --target=anura.gresource
+
+
+      - name: Run GTK tests (Wayland headless)
+        run: |
+          weston --backend=headless-backend.so --socket=wayland-test &
+          sleep 1
+          WAYLAND_DISPLAY=wayland-test \
+            uv run pytest tests/ -m gtk -v --timeout=30
+        env:
+          DISPLAY: ""
 
   # JOB 2: Flatpak build and optional release
   flatpak-builder:
@@ -37,11 +81,11 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     # Using the specialized container to handle GNOME runtimes and permissions.
-    # Both CI and production target GNOME 49 (current stable).
+    # Both CI and production target GNOME 50 (current stable).
     # When upgrading to a newer runtime, update both the manifest runtime-version
     # and this container tag to the same version.
     container:
-      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-49
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-50
       options: --privileged
 
     steps:
@@ -64,15 +108,15 @@ jobs:
       - name: Validate Flatpak Manifest
         run: |
           echo "=== Validating manifest syntax and permissions ==="
-          flatpak-builder --show-manifest flatpak/com.github.d3msudo.anura.json > /dev/null
+          flatpak-builder --show-manifest flatpak/io.github.d3msudo.anura.local.json > /dev/null
           echo "✓ Manifest validation passed"
 
       # 2. BUILD (con test unitari pytest eseguiti nel step precedente)
       - name: Build Anura Flatpak
         uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:
-          bundle: com.github.d3msudo.anura.flatpak
-          manifest-path: flatpak/com.github.d3msudo.anura.json
+          bundle: io.github.d3msudo.anura.flatpak
+          manifest-path: flatpak/io.github.d3msudo.anura.local.json
           # Explicitly disable action-level cache
           cache: false
           # Keep build directories for the verification step
@@ -84,7 +128,7 @@ jobs:
       - name: Verify Blueprint and Resource Structure
         run: |
           echo "=== Verifying generated UI files ==="
-          GRESOURCE_XML="data/com.github.d3msudo.anura.gresource.xml"
+          GRESOURCE_XML="data/io.github.d3msudo.anura.gresource.xml"
           
           # Find the actual build directory (flatpak-builder adds numeric suffixes like anura-1)
           BUILD_ROOT=$(find .flatpak-builder/build -maxdepth 1 -type d -name 'anura*' | head -1)
@@ -137,22 +181,28 @@ jobs:
       - name: Smoke Test - Headless Runtime
         run: |
           echo "=== Installing bundle for smoke test ==="
-          flatpak install --user --noninteractive --bundle com.github.d3msudo.anura.flatpak
-          
+          flatpak install --user --noninteractive --bundle io.github.d3msudo.anura.flatpak
+
           echo "=== Running smoke test with virtual display ==="
-          # Test app launch with virtual display and isolated D-Bus session
+          # Test app launch with virtual display
           # --help exits immediately with code 0 if app starts correctly
           # Environment variables to suppress harmless warnings in headless CI:
           # - NO_AT_BRIDGE=1: disables a11y bus warnings
           # - GTK_A11Y=none: disables GTK accessibility entirely for headless mode
+          # - AT_SPI_BUS_ADDRESS=disabled: blocks GTK4 a11y bus lookup at runtime
           # - LIBGL_ALWAYS_SOFTWARE=1: forces software rendering, suppresses DRI3 warnings
-          if ! dbus-run-session xvfb-run -a flatpak run --env=NO_AT_BRIDGE=1 --env=GTK_A11Y=none --env=LIBGL_ALWAYS_SOFTWARE=1 com.github.d3msudo.anura --help; then
+          if ! xvfb-run -a flatpak run \
+              --env=NO_AT_BRIDGE=1 \
+              --env=GTK_A11Y=none \
+              --env=AT_SPI_BUS_ADDRESS=disabled \
+              --env=LIBGL_ALWAYS_SOFTWARE=1 \
+              io.github.d3msudo.anura --help; then
             echo "✗ Smoke test failed - app failed to launch"
             exit 1
           fi
-          
+
           # Verify app is properly installed
-          if ! flatpak list --user | grep -q com.github.d3msudo.anura; then
+          if ! flatpak list --user | grep -q io.github.d3msudo.anura; then
             echo "✗ Smoke test failed - app not found in installation"
             exit 1
           fi
@@ -163,14 +213,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: com.github.d3msudo.anura-flatpak-${{ github.run_id }}
-          path: com.github.d3msudo.anura.flatpak
+          name: io.github.d3msudo.anura-flatpak-${{ github.run_id }}
+          path: io.github.d3msudo.anura.flatpak
           retention-days: 7
 
       - name: Upload Flatpak Bundle to Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v3
         with:
-          files: com.github.d3msudo.anura.flatpak
+          files: io.github.d3msudo.anura.flatpak
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

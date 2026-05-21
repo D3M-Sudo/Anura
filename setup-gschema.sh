@@ -13,7 +13,7 @@ mkdir -p builddir
 
 # Copy schema file
 echo "📄 Copying schema file..."
-cp data/com.github.d3msudo.anura.gschema.xml builddir/
+cp data/io.github.d3msudo.anura.gschema.xml builddir/
 
 # Compile schema
 echo "🔨 Compiling GSettings schema..."

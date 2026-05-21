@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>com.github.d3msudo.anura</id>
+  <id>io.github.d3msudo.anura</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
   <name>Anura</name>
@@ -207,14 +207,14 @@
       </description>
     </release>
   </releases>
-  <developer id="com.github.d3msudo">
+  <developer id="io.github.d3msudo">
     <name>D3M-Sudo</name>
   </developer>
-  <launchable type="desktop-id">com.github.d3msudo.anura.desktop</launchable>
+  <launchable type="desktop-id">io.github.d3msudo.anura.desktop</launchable>
   <translation type="gettext">anura</translation>
   <provides>
     <binary>anura</binary>
-    <id>com.github.d3msudo.anura.desktop</id>
+    <id>io.github.d3msudo.anura.desktop</id>
   </provides>
   <categories>
     <category>Graphics</category>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schemalist gettext-domain="com.github.d3msudo.anura">
-  <schema id="com.github.d3msudo.anura" path="/com/github/d3msudo/anura/">
+<schemalist gettext-domain="io.github.d3msudo.anura">
+  <schema id="io.github.d3msudo.anura" path="/io/github/d3msudo/anura/">
     
     <key name="window-width" type="i">
       <default>-1</default>
@@ -44,6 +44,17 @@
       <default>""</default>
       <summary>TTS Language</summary>
       <description>Language code for text-to-speech. Empty means use the active OCR language.</description>
+    </key>
+
+    <key name="ocr-preprocessing" type="s">
+      <choices>
+        <choice value="off"/>
+        <choice value="image-only"/>
+        <choice value="full"/>
+      </choices>
+      <default>"image-only"</default>
+      <summary>OCR Preprocessing Mode</summary>
+      <description>Level of image and text preprocessing before and after OCR.</description>
     </key>
   </schema>
 </schemalist>

@@ -53,17 +53,18 @@ class WelcomePage(Adw.NavigationPage):
 
         We deliberately request only 'text/uri-list' and NOT Gdk.FileList.
 
-        Why: Gtk.DropTarget(Gdk.FileList) in a Flatpak causes GTK to prefer
-        'application/vnd.portal.filetransfer'. In VirtualBox guests (where VBoxClient
-        --draganddrop intercepts DnD), the portal transfer hangs because xdg-desktop-portal
-        is not properly available in non-GNOME (LXDE/XFCE) guests.
+        Why: including Gdk.FileList causes GTK to prefer
+        'application/vnd.portal.filetransfer' as transfer channel. In VirtualBox
+        guests with non-GNOME sessions (LXQt, XFCE, LXDE), xdg-desktop-portal is
+        not available — the portal call hangs silently and the callback is NEVER
+        invoked (no GLib.Error is raised, making it impossible to detect or recover).
 
-        By requesting 'text/uri-list' explicitly, GDK uses the raw Xdnd protocol
-        (which PCManFM, Thunar and all standard file managers provide directly)
-        and bypasses the portal entirely.
+        By requesting 'text/uri-list' exclusively, GDK uses the raw Xdnd protocol
+        which PCManFM, Thunar and all standard file managers provide directly,
+        bypassing the portal entirely.
 
-        The stream read is done fully asynchronously (read_bytes_async, NOT read_upto)
-        so the GTK main loop is never blocked.
+        The stream read is fully asynchronous (read_bytes_async) so the GTK
+        main loop is never blocked.
         """
         formats = Gdk.ContentFormats.new(["text/uri-list"])
         self._drop_target = Gtk.DropTargetAsync(
@@ -72,7 +73,6 @@ class WelcomePage(Adw.NavigationPage):
         )
         self._drop_cancellable: Gio.Cancellable | None = None
 
-        # Track internal drop target handlers for cleanup
         self._dnd_drop_handler_id = self._drop_target.connect("drop", self._on_dnd_drop)
         self._dnd_enter_handler_id = self._drop_target.connect("drag-enter", self._on_dnd_enter)
         self._dnd_leave_handler_id = self._drop_target.connect("drag-leave", self._on_dnd_leave)
@@ -113,15 +113,14 @@ class WelcomePage(Adw.NavigationPage):
             logger.exception("Anura: Failed to handle DnD leave")
 
     def _on_dnd_drop(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float) -> bool:
-        """Handle drop signal. Initiates a fully async stream read.
+        """Handle drop signal. Initiates a fully async stream read of text/uri-list.
 
-        We start an async read of text/uri-list and return True immediately so GTK
-        does not reject the drop. The actual processing happens in callbacks.
+        We always read text/uri-list (never Gdk.FileList) to bypass the
+        xdg-desktop-portal which is unavailable in VirtualBox/non-GNOME guests.
         drop.finish() MUST be called in the final callback (Xdnd protocol requirement).
         """
         self.drop_area.remove_css_class("drag-hover")
 
-        # Cancel any previous in-flight drop
         if self._drop_cancellable:
             self._drop_cancellable.cancel()
         self._drop_cancellable = Gio.Cancellable()
@@ -133,7 +132,7 @@ class WelcomePage(Adw.NavigationPage):
             self._on_drop_stream_ready,
             drop,
         )
-        return True  # Accept the drop; we will finish() in the final callback
+        return True  # Accept the drop; finish() will be called in _on_drop_bytes_ready
 
     def _on_drop_stream_ready(
         self,
@@ -214,6 +213,10 @@ class WelcomePage(Adw.NavigationPage):
             self._show_error_toast(_("Only local files can be dropped"))
             return
 
+        self._process_dropped_path(local_path)
+
+    def _process_dropped_path(self, local_path: str) -> None:
+        """Common logic for processing a verified local path from any DnD format."""
         if not os.path.exists(local_path):
             logger.error(f"DnD: File not accessible: {local_path}")
             self._show_error_toast(_("File not accessible. Ensure Anura has permission to access this location."))
@@ -288,6 +291,8 @@ class WelcomePage(Adw.NavigationPage):
             with contextlib.suppress(Exception):
                 self.drop_button.disconnect(self._drop_button_handler_id)
             self._drop_button_handler_id = None
+
+        # Disconnect any other signals that might have been connected manually
 
         # Cancel any in-flight drop operation
         drop_cancellable = getattr(self, "_drop_cancellable", None)
