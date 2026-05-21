@@ -83,27 +83,27 @@ class GObjectWorker:
                 # Handle expected operational errors (file I/O, invalid values, runtime issues)
                 tb_str = traceback.format_exc()
 
-                def eb_wrapper(error, tb):
+                def _operational_eb_wrapper(error, tb):
                     try:
                         eb(error, tb)
                     except Exception:
                         logger.exception("Unhandled error in GObjectWorker error callback")
                     return GLib.SOURCE_REMOVE
 
-                GLib.idle_add(eb_wrapper, e, tb_str, priority=GLib.PRIORITY_DEFAULT)
+                GLib.idle_add(_operational_eb_wrapper, e, tb_str, priority=GLib.PRIORITY_DEFAULT)
             except Exception as e:
                 # Handle truly unexpected errors (logical errors, system failures)
                 tb_str = traceback.format_exc()
                 logger.error(f"Unexpected error in GObjectWorker: {e}")
 
-                def eb_wrapper(error, tb):
+                def _unexpected_eb_wrapper(error, tb):
                     try:
                         eb(error, tb)
                     except Exception:
                         logger.exception("Unhandled error in GObjectWorker fallback error callback")
                     return GLib.SOURCE_REMOVE
 
-                GLib.idle_add(eb_wrapper, e, tb_str, priority=GLib.PRIORITY_DEFAULT)
+                GLib.idle_add(_unexpected_eb_wrapper, e, tb_str, priority=GLib.PRIORITY_DEFAULT)
 
         # Use default error handler if none provided
         if errorback is None:

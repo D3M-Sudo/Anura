@@ -9,19 +9,20 @@ import time
 
 from loguru import logger
 
-from anura.config import TESSDATA_DIR
+from anura.config import TESSDATA_DIR, TESSDATA_POOL_DIR
 
 
-def cleanup_orphaned_resources() -> None:
+def cleanup_orphaned_resources(active_lang_code: str = "eng") -> None:
     """
     Clean up orphaned temporary files from previous sessions.
 
     This function safely removes stale temporary files from:
     - TTS cache directory (~/.cache/anura/*.mp3)
     - Tessdata directory (~/.local/share/anura/tessdata/*.tmp)
+    - Tessdata pool directory (~/.cache/anura/tessdata_pool/*.traineddata)
 
-    Only files older than 1 hour are removed to avoid conflicts with
-    currently running operations.
+    Only files older than 1 hour are removed for general temp files.
+    The pool is cleaned based on currently needed models.
     """
     current_time = time.time()
     one_hour_ago = current_time - 3600  # 1 hour in seconds
@@ -31,6 +32,9 @@ def cleanup_orphaned_resources() -> None:
 
     # Clean up tessdata temporary files
     _cleanup_tessdata_temp_files(one_hour_ago)
+
+    # Clean up stale models from the pool
+    _cleanup_tessdata_pool(active_lang_code)
 
 
 def _cleanup_tts_cache(cutoff_time: float) -> None:
@@ -65,6 +69,39 @@ def _cleanup_tts_cache(cutoff_time: float) -> None:
 
     except OSError as e:
         logger.error(f"Anura Cleanup: Error accessing TTS cache directory: {e}")
+
+
+def _cleanup_tessdata_pool(active_lang_code: str) -> None:
+    """
+    Remove stale models from the pool that are not needed for the active language.
+
+    Args:
+        active_lang_code: The currently active language code (e.g. 'eng' or 'eng+ita')
+    """
+    if not os.path.exists(TESSDATA_POOL_DIR):
+        return
+
+    try:
+        needed_codes = set(active_lang_code.split("+"))
+        removed_count = 0
+
+        for filename in os.listdir(TESSDATA_POOL_DIR):
+            if filename.endswith(".traineddata"):
+                stem = filename[:-12]  # Remove .traineddata
+                if stem not in needed_codes:
+                    file_path = os.path.join(TESSDATA_POOL_DIR, filename)
+                    try:
+                        os.unlink(file_path)
+                        removed_count += 1
+                        logger.debug(f"Anura Cleanup: Removed stale pool model: {filename}")
+                    except OSError as e:
+                        logger.warning(f"Anura Cleanup: Failed to remove stale model {filename}: {e}")
+
+        if removed_count > 0:
+            logger.info(f"Anura Cleanup: Removed {removed_count} stale pool models")
+
+    except OSError as e:
+        logger.error(f"Anura Cleanup: Error scanning tessdata pool directory: {e}")
 
 
 def _cleanup_tessdata_temp_files(cutoff_time: float) -> None:

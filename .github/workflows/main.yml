@@ -24,11 +24,52 @@ jobs:
           # Strict linting with enforcement - no automatic fixes in CI
           args: check --select E,F,W,I --target-version py312
 
-      - name: Run Unit Tests
+      - name: Run tests with coverage
         run: |
           pip install uv
           uv sync --dev
-          uv run pytest tests/ -m "not gtk" --tb=short
+          uv run pytest tests/ -m "not gtk" \
+            --cov=anura --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.xml
+          fail_ci_if_error: false
+
+  gtk-tests:
+    name: GTK Integration Tests
+    runs-on: ubuntu-latest
+    needs: python-quality
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y \
+            python3-gi python3-gi-cairo gir1.2-gtk-4.0 \
+            gir1.2-adw-1 libadwaita-1-dev \
+            tesseract-ocr tesseract-ocr-eng \
+            weston xwayland
+
+      - name: Install Python dependencies
+        run: pip install uv && uv sync --dev
+
+      - name: Compile GResources
+        run: |
+          glib-compile-resources \
+            data/io.github.d3msudo.anura.gresource.xml \
+            --sourcedir=data --target=anura.gresource
+
+      - name: Run GTK tests (Wayland headless)
+        run: |
+          weston --backend=headless-backend.so --socket=wayland-test &
+          sleep 1
+          WAYLAND_DISPLAY=wayland-test \
+            uv run pytest tests/ -m gtk -v --timeout=30
+        env:
+          DISPLAY: ""
 
   # JOB 2: Flatpak build and optional release
   flatpak-builder:
