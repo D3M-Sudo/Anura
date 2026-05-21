@@ -108,6 +108,46 @@ class TTSService(GObject.GObject):
         "lao": "lo",
         "mya": "my",
         "khm": "km",
+        "afr": "af",
+        "amh": "am",
+        "aze_cyrl": "az",
+        "bel": "be",
+        "bod": "bo",
+        "bos": "bs",
+        "bre": "br",
+        "ceb": "ceb",
+        "cos": "co",
+        "cym": "cy",
+        "epo": "eo",
+        "fas": "fa",
+        "fil": "tl",
+        "gla": "gd",
+        "gle": "ga",
+        "hat": "ht",
+        "iku": "iu",
+        "isl": "is",
+        "jav": "jw",
+        "kat_old": "ka",
+        "ltz": "lb",
+        "mlt": "mt",
+        "mon": "mn",
+        "mri": "mi",
+        "msa": "ms",
+        "oci": "oc",
+        "pus": "ps",
+        "que": "qu",
+        "san": "sa",
+        "snd": "sd",
+        "sqi": "sq",
+        "srp_latn": "sr",
+        "sun": "su",
+        "swa": "sw",
+        "tat": "tt",
+        "tir": "ti",
+        "uig": "ug",
+        "uzb_cyrl": "uz",
+        "yid": "yi",
+        "yor": "yo",
         # Historical/specialty variants (fallback to modern equivalent)
         "lat": "la",
         "grc": "el",  # Ancient Greek → Modern Greek
@@ -137,8 +177,11 @@ class TTSService(GObject.GObject):
         return cls._gtts_cache
 
     @staticmethod
-    def map_tesseract_to_gtts(tess_code: str) -> str:
-        """Map Tesseract language code to gTTS-compatible ISO 639-1 code."""
+    def map_tesseract_to_gtts(tess_code: str) -> str | None:
+        """
+        Map Tesseract language code to gTTS-compatible ISO 639-1 code.
+        Returns None if no mapping or fallback is available.
+        """
         if tess_code is None:
             return "en"  # Default to English
 
@@ -159,9 +202,9 @@ class TTSService(GObject.GObject):
             if len(two_char) == 2 and two_char.isalpha() and two_char.islower() and two_char in supported:
                 return two_char
 
-        # 3. Fallback to English
-        logger.warning(f"Anura TTS: No mapping for '{tess_code}', falling back to 'en'")
-        return "en"
+        # 3. Fallback: log warning and return None for explicit UI handling
+        logger.warning(f"Anura TTS: No mapping for '{tess_code}'")
+        return None
 
     # Use XDG_CACHE_HOME for temporary files (not XDG_DATA_HOME).
     # Cache dir is the correct location for ephemeral data; data dir is for
@@ -249,7 +292,7 @@ class TTSService(GObject.GObject):
         GLib.idle_add(self.emit, "speak", filepath)
         return filepath
 
-    def get_effective_language(self, ocr_lang: str) -> str:
+    def get_effective_language(self, ocr_lang: str) -> str | None:
         """Return TTS language: user preference or fallback to OCR language."""
         tts_lang = settings.get_string("tts-language")
         if tts_lang:

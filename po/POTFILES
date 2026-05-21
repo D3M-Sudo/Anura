@@ -3,6 +3,7 @@ anura/main.py
 anura/services/clipboard_service.py
 anura/services/screenshot_service.py
 anura/services/share_service.py
+anura/services/tts.py
 anura/utils/portal_advice.py
 anura/widgets/extracted_page.py
 anura/widgets/preferences_general_page.py

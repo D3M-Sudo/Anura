@@ -209,11 +209,15 @@ class ClipboardService(GObject.GObject):
     def read_texture(self) -> None:
         """
         Thread-safe asynchronous texture reading with 10-second timeout.
-
-        Tries to read a file URI list first (e.g. user copied a PNG file in
-        their file manager) and falls back to the in-memory texture path for
-        sources that put pixel data directly on the clipboard (GIMP,
-        screenshot tools, browsers, etc.).
+        Strategy (in priority order):
+        1. In-memory texture (read_texture_async) — bypasses filesystem entirely,
+           works for clipboard sources that put pixel data directly on the clipboard
+           (GIMP, screenshot tools, browsers, etc.).
+        2. text/uri-list (read_async) — for file manager copies (e.g. user copied
+           a PNG in PCManFM). Gdk.FileList is intentionally skipped: it invokes
+           application/vnd.portal.filetransfer which hangs silently when
+           xdg-desktop-portal is unavailable (VirtualBox/non-GNOME guests).
+        3. Final fallback: read_texture_async again for sources with no MIME info.
         """
         with self._state_lock:
             # Reset fallback flag for this fresh read attempt
@@ -240,7 +244,19 @@ class ClipboardService(GObject.GObject):
                 cancellable,
             )
 
-        if _CLIPBOARD_TEXT_URI_LIST in self._available_clipboard_mimes():
+        mimes = self._available_clipboard_mimes()
+
+        # Strategy: Prefer direct in-memory textures first (bypass filesystem entirely).
+        texture_available = any(m.startswith("image/") for m in mimes)
+        if texture_available:
+            self.clipboard.read_texture_async(cancellable=cancellable, callback=self._on_read_texture)
+            return
+
+        # Direct URI list read — bypasses portal entirely (same rationale as DnD fix).
+        # Gdk.FileList is intentionally skipped: on VirtualBox/non-GNOME guests,
+        # read_value_async(Gdk.FileList) invokes application/vnd.portal.filetransfer
+        # which hangs silently when xdg-desktop-portal is unavailable.
+        if _CLIPBOARD_TEXT_URI_LIST in mimes:
             self.clipboard.read_async(
                 [_CLIPBOARD_TEXT_URI_LIST],
                 GLib.PRIORITY_DEFAULT,
@@ -249,6 +265,7 @@ class ClipboardService(GObject.GObject):
             )
             return
 
+        # Final fallback: try texture anyway (handles cases with no MIME info)
         self.clipboard.read_texture_async(cancellable=cancellable, callback=self._on_read_texture)
 
     def _available_clipboard_mimes(self) -> list[str]:
@@ -425,13 +442,8 @@ class ClipboardService(GObject.GObject):
             return
 
         if not path or not os.path.exists(path):
-            logger.warning(f"Anura Clipboard: file does not exist: {path!r}")
-
-            def _on_error_idle():
-                self.emit("error", _("No image in clipboard"))
-                return GLib.SOURCE_REMOVE
-
-            GLib.idle_add(_on_error_idle)
+            logger.warning(f"Anura Clipboard: file does not exist or inaccessible: {path!r}")
+            self._emit_clipboard_error(_("No image in clipboard"))
             return
 
         self._emit_texture_from_file(path)
