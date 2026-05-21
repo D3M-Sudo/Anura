@@ -1,7 +1,14 @@
+import os
+
+# Suppress a11y bus warnings in headless CI environments and ensure
+# they are set even when the app is launched without --env flags.
+# These must be set before ANY other import, especially 'gi', to be effective.
+os.environ.setdefault("NO_AT_BRIDGE", "1")
+os.environ.setdefault("GTK_A11Y", "none")
+
 import contextlib
 import gettext
 import locale
-import os
 import sys
 import threading
 from typing import Any
@@ -98,10 +105,6 @@ _setup_i18n()
 from gettext import gettext as _
 import html
 
-# Suppress a11y bus warnings in headless CI environments
-if not sys.stdin.isatty():
-    os.environ["NO_AT_BRIDGE"] = "1"
-
 import gi
 
 # Set GTK version requirements before imports
@@ -144,18 +147,18 @@ def _load_gresource_bundle() -> bool:
     # This prevents double registration when running via the standard entry point
     with contextlib.suppress(GLib.Error):
         # Try to lookup a known resource - if found, bundle is already loaded
-        Gio.resources_lookup_data("/com/github/d3msudo/anura/window.ui", Gio.ResourceLookupFlags.NONE)
+        Gio.resources_lookup_data("/io/github/d3msudo/anura/window.ui", Gio.ResourceLookupFlags.NONE)
         return True
 
     # Determine possible paths for the gresource bundle
     # Priority: Flatpak -> system -> user -> relative
     possible_paths = [
-        "/app/share/anura/com.github.d3msudo.anura.gresource",
-        "/usr/share/anura/com.github.d3msudo.anura.gresource",
-        "/usr/local/share/anura/com.github.d3msudo.anura.gresource",
-        os.path.expanduser("~/.local/share/anura/com.github.d3msudo.anura.gresource"),
+        "/app/share/anura/io.github.d3msudo.anura.gresource",
+        "/usr/share/anura/io.github.d3msudo.anura.gresource",
+        "/usr/local/share/anura/io.github.d3msudo.anura.gresource",
+        os.path.expanduser("~/.local/share/anura/io.github.d3msudo.anura.gresource"),
         # Development fallback: relative to this file
-        os.path.join(os.path.dirname(__file__), "..", "data", "com.github.d3msudo.anura.gresource"),
+        os.path.join(os.path.dirname(__file__), "..", "data", "io.github.d3msudo.anura.gresource"),
     ]
 
     for path in possible_paths:
@@ -233,10 +236,15 @@ class AnuraApplication(Adw.Application):
 
     def do_startup(self, *args: object, **kwargs: object) -> None:
         Adw.init()
+        # Explicitly initialize StyleManager to ensure theme stability
+        style_manager = Adw.StyleManager.get_default()
+        logger.debug(f"Anura: StyleManager initialized, color-scheme: {style_manager.get_color_scheme()}")
+
         Adw.Application.do_startup(self)
 
         # Clean up orphaned resources from previous sessions
-        cleanup_orphaned_resources()
+        active_lang = self.settings.get_string("active-language")
+        cleanup_orphaned_resources(active_lang)
 
         self.backend = ScreenshotService()
         self._backend_decoded_handler_id = self.backend.connect("decoded", self.on_decoded)
@@ -820,25 +828,39 @@ class AnuraApplication(Adw.Application):
             return
 
         if not text:
-            self.notification_service.show_notification(
-                title=_("Anura OCR"),
-                body=_("No text found. Try to grab another region."),
-            )
+
+            def _on_empty_notification_idle():
+                self.notification_service.show_notification(
+                    title=_("Anura OCR"),
+                    body=_("No text found. Try to grab another region."),
+                )
+                return GLib.SOURCE_REMOVE
+
+            GLib.idle_add(_on_empty_notification_idle)
             return
 
         if copy:
             clipboard_service_instance = get_clipboard_service()
             clipboard_service_instance.set(text)
-            self.notification_service.show_notification(
-                title=_("Anura OCR"),
-                body=_("Text extracted and copied to clipboard."),
-            )
+
+            def _on_copied_notification_idle():
+                self.notification_service.show_notification(
+                    title=_("Anura OCR"),
+                    body=_("Text extracted and copied to clipboard."),
+                )
+                return GLib.SOURCE_REMOVE
+
+            GLib.idle_add(_on_copied_notification_idle)
         else:
             # Text extracted but not copied - show notification
-            self.notification_service.show_notification(
-                title=_("Anura OCR"),
-                body=_("Text extracted successfully."),
-            )
+            def _on_success_notification_idle():
+                self.notification_service.show_notification(
+                    title=_("Anura OCR"),
+                    body=_("Text extracted successfully."),
+                )
+                return GLib.SOURCE_REMOVE
+
+            GLib.idle_add(_on_success_notification_idle)
 
     def on_error(self, _sender: object, message: str) -> None:
         """Handle screenshot service errors, skipping cancellation messages."""
@@ -846,8 +868,14 @@ class AnuraApplication(Adw.Application):
             # User cancelled - no notification needed
             logger.info("Anura: Screenshot cancelled by user.")
             return
+
         # Real error - show notification
-        self.notification_service.show_notification(title=_("Anura OCR"), body=message)
+
+        def _on_error_notification_idle(msg: str):
+            self.notification_service.show_notification(title=_("Anura OCR"), body=msg)
+            return GLib.SOURCE_REMOVE
+
+        GLib.idle_add(_on_error_notification_idle, message)
 
     def on_listen(self, _sender: object, _event: object) -> None:
         window = self.get_active_window()

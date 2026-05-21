@@ -30,6 +30,7 @@ from anura.config import (  # noqa: E402
     TESSDATA_DIR,
     TESSDATA_SYSTEM_DIR,
     TESSDATA_URL,
+    USER_AGENT,
 )
 from anura.gobject_worker import GObjectWorker  # noqa: E402
 from anura.types.download_state import DownloadState  # noqa: E402
@@ -45,10 +46,11 @@ class LanguageManager(GObject.GObject):
 
     __gtype_name__ = "LanguageManager"
 
-    # Mapping for language codes that have different filenames in tessdata repository
-    _TESSDATA_FILENAME_MAPPING: ClassVar[dict[str, str]] = {
-        "frk": "deu_frak",  # German Fraktur is stored as deu_frak.traineddata
-    }
+    # Mapping for language codes whose Anura internal code differs from the actual
+    # filename in the tessdata/tessdata_best repositories. Format: {anura_code: repo_filename}.
+    # Currently empty because all codes in _languages match their repo filenames exactly.
+    # Add entries here if a future language code diverges (e.g. "foo": "foo_v2").
+    _TESSDATA_FILENAME_MAPPING: ClassVar[dict[str, str]] = {}
 
     __gsignals__: ClassVar[dict[str, tuple]] = {
         "added": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
@@ -68,6 +70,21 @@ class LanguageManager(GObject.GObject):
         self._need_update_cache = True
         self._cache_lock = threading.Lock()
 
+        # Networking session for downloads
+        self.session = requests.Session()
+        self.session.headers.update({"User-Agent": USER_AGENT})
+        self.session.timeout = REQUEST_TIMEOUT  # Set default timeout here
+        # Set retry logic
+        adapter = requests.adapters.HTTPAdapter(
+            max_retries=requests.adapters.Retry(
+                total=3,
+                backoff_factor=1,
+                status_forcelist=[429, 500, 502, 503, 504],
+            )
+        )
+        self.session.mount("https://", adapter)
+        self.session.mount("http://", adapter)
+
         # Full ISO 639-2 mapping (Tesseract compatible)
         self._languages = {
             "afr": _("Afrikaans"),
@@ -86,7 +103,9 @@ class LanguageManager(GObject.GObject):
             "ceb": _("Cebuano"),
             "ces": _("Czech"),
             "chi_sim": _("Chinese - Simplified"),
+            "chi_sim_vert": _("Chinese - Simplified (vertical)"),
             "chi_tra": _("Chinese - Traditional"),
+            "chi_tra_vert": _("Chinese - Traditional (vertical)"),
             "chr": _("Cherokee"),
             "cos": _("Corsican"),
             "cym": _("Welsh"),
@@ -97,7 +116,9 @@ class LanguageManager(GObject.GObject):
             "eng": _("English"),
             "enm": _("English, Middle"),
             "epo": _("Esperanto"),
-            "equ": _("Math / Equation Detection"),
+            # NOTE: equ (Math/Equation Detection) intentionally removed — it is a
+            # Tesseract internal utility module, not an OCR language model, and should
+            # not appear as a downloadable language in the UI.
             "est": _("Estonian"),
             "eus": _("Basque"),
             "fao": _("Faroese"),
@@ -105,7 +126,9 @@ class LanguageManager(GObject.GObject):
             "fil": _("Filipino"),
             "fin": _("Finnish"),
             "fra": _("French"),
-            "frk": _("German - Fraktur"),
+            # NOTE: frk (German - Fraktur) intentionally removed — the model file
+            # frk.traineddata is absent from both tessdata_best/main and tessdata/main,
+            # so every install attempt would silently fail with HTTP 404.
             "frm": _("French, Middle"),
             "fry": _("Western Frisian"),
             "gla": _("Scottish Gaelic"),
@@ -154,7 +177,9 @@ class LanguageManager(GObject.GObject):
             "nor": _("Norwegian"),
             "oci": _("Occitan"),
             "ori": _("Oriya"),
-            "osd": _("OSD Module"),
+            # NOTE: osd (Orientation/Script Detection) intentionally removed — it is a
+            # Tesseract internal utility module already excluded from get_downloaded_codes()
+            # via the startswith("osd") filter, but it was still showing in the install list.
             "pan": _("Panjabi"),
             "pol": _("Polish"),
             "por": _("Portuguese"),
@@ -330,7 +355,7 @@ class LanguageManager(GObject.GObject):
                 return code
         return "eng"
 
-    def download(self, code: str) -> None:
+    def download(self, code: str, cancellable: gi.repository.Gio.Cancellable | None = None) -> None:
         """Thread-safe asynchronous download process."""
         with self._cache_lock:
             if code in self.loading_languages:
@@ -351,9 +376,14 @@ class LanguageManager(GObject.GObject):
         def download_done_wrapper(result_code: str | None) -> None:
             self.download_done(code, result_code)
 
-        GObjectWorker.call(self.download_begin, (code,), download_done_wrapper)
+        GObjectWorker.call(
+            self.download_begin,
+            (code, cancellable),
+            download_done_wrapper,
+            cancellable=cancellable,
+        )
 
-    def download_begin(self, code: str) -> str | None:
+    def download_begin(self, code: str, cancellable: gi.repository.Gio.Cancellable | None = None) -> str | None:
         """Performs the physical download of the .traineddata file atomically."""
         # Hardening: verify Tesseract binary availability before downloading models
         tess_bin = os.environ.get("TESSERACT_CMD", "tesseract")
@@ -383,8 +413,8 @@ class LanguageManager(GObject.GObject):
                     tmp_path = tmp.name
 
                 try:
-                    # Use requests with timeout instead of urlretrieve
-                    response = requests.get(url, timeout=REQUEST_TIMEOUT, stream=True)
+                    # Use central session with consistent headers and timeout
+                    response = self.session.get(url, timeout=REQUEST_TIMEOUT, stream=True)
                     response.raise_for_status()
 
                     total_size = int(response.headers.get("content-length", 0))
@@ -397,6 +427,9 @@ class LanguageManager(GObject.GObject):
 
                     with open(tmp_path, "wb") as f:
                         for chunk in response.iter_content(chunk_size=8192):
+                            if cancellable and cancellable.is_cancelled():
+                                logger.debug(f"Anura: Download of {code} cancelled")
+                                return None
                             if chunk:
                                 f.write(chunk)
                                 downloaded += len(chunk)

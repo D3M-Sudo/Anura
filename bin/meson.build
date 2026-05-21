@@ -12,8 +12,8 @@ conf.set('VERSION', meson.project_version())
 conf.set('projectname', meson.project_name())
 
 # Explicit Application ID - Must match the GSettings schema and GResource name
-# Standard: com.github.d3msudo.anura
-conf.set('appid', 'com.github.d3msudo.anura')
+# Standard: io.github.d3msudo.anura
+conf.set('appid', 'io.github.d3msudo.anura')
 
 # Path configurations for system stability
 # Ensure localization and package data are correctly mapped

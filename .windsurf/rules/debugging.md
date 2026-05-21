@@ -25,7 +25,7 @@ Establish deterministic failing command. No repro → no hypotheses. Hard rule.
 GSETTINGS_SCHEMA_DIR=builddir/data python3 -m anura.main
 uv run pytest tests/ -m "not gtk" -v
 uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" pytest tests/ -v
-flatpak-builder --run builddir flatpak/com.github.d3msudo.anura.json anura
+flatpak-builder --run builddir flatpak/io.github.d3msudo.anura.json anura
 ```
 
 ### 2. Localize + Debug

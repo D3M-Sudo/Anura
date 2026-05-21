@@ -1,6 +1,5 @@
 import contextlib
 from gettext import gettext as _
-from gettext import ngettext
 from io import BytesIO
 from mimetypes import guess_type
 import os
@@ -25,15 +24,16 @@ from anura.services.clipboard_service import get_clipboard_service  # noqa: E402
 from anura.services.screenshot_service import ScreenshotService  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
 from anura.utils import uri_validator  # noqa: E402
-from anura.utils.portal_advice import detect_portal_advice  # noqa: E402
-from anura.utils.text_preprocessor import get_text_preprocessor  # noqa: E402
 from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
 from anura.widgets.preferences_dialog import PreferencesDialog  # noqa: E402
 from anura.widgets.welcome_page import WelcomePage  # noqa: E402
+from anura.window_mixins.dnd_mixin import WindowDnDMixin  # noqa: E402
+from anura.window_mixins.ocr_mixin import WindowOCRMixin  # noqa: E402
+from anura.window_mixins.tts_mixin import WindowTTSMixin  # noqa: E402
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/window.ui")
-class AnuraWindow(Adw.ApplicationWindow):
+class AnuraWindow(WindowDnDMixin, WindowOCRMixin, WindowTTSMixin, Adw.ApplicationWindow):
     __gtype_name__ = "AnuraWindow"
 
     toast_overlay: Adw.ToastOverlay = Gtk.Template.Child()
@@ -77,15 +77,7 @@ class AnuraWindow(Adw.ApplicationWindow):
         self.add_action(share_action)
 
         self.backend = backend
-        self._handler_decoded = self.backend.connect("decoded", self.on_shot_done)
-        self._handler_error = self.backend.connect("error", self.on_shot_error)
-        self._handler_portal_missing = self.backend.connect(
-            "portal-backend-missing",
-            self._on_portal_backend_missing,
-        )
-        # Banner's "button-clicked" fires when the user dismisses; hide until
-        # the next backend failure re-reveals it.
-        self._handler_portal_banner = self.portal_banner.connect("button-clicked", self._on_portal_banner_dismissed)  # type: ignore[arg-type]
+        self._connect_ocr_signals()
 
         self._handler_go_back = self.extracted_page.connect("go-back", self.show_welcome_page)  # type: ignore[arg-type]
         self._handler_clipboard = None
@@ -109,44 +101,6 @@ class AnuraWindow(Adw.ApplicationWindow):
         height = max(300, self.settings.get_int("window-height"))  # Min 300px
         self.set_default_size(width, height)
 
-    def _setup_controllers(self) -> None:
-        """Centralized event controller setup."""
-        # Note: Drag and drop is now handled within the WelcomePage widget
-        # to ensure better isolation and resolve potential race conditions.
-        pass
-
-    def process_dnd_file_sync(self, file_path: str) -> None:
-        """Process a dropped file synchronously following Frog's simple pattern."""
-        logger.debug(f"DnD: Processing dropped file: {file_path}")
-
-        try:
-            # Validate file size
-            file_size = os.path.getsize(file_path)
-            if file_size > MAX_IMAGE_SIZE_BYTES:
-                self.welcome_page.reset_drop_area_state()
-                self.show_toast(
-                    _("Image too large: {size}MB (max {max}MB)").format(
-                        size=round(file_size / (1024 * 1024), 1),
-                        max=MAX_IMAGE_SIZE_MB,
-                    ),
-                )
-                return
-
-            # Process image following Frog's pattern - pass path directly to decode_image
-            lang = self.get_language()
-            GObjectWorker.call(self.backend.decode_image, (lang, file_path))
-
-        except (OSError, RuntimeError) as e:
-            logger.error(f"DnD: Failed to process dropped file: {e}")
-            self.welcome_page.reset_drop_area_state()
-            self.show_toast(_("Failed to load dropped file"))
-
-    def process_gfile(self, gfile: Gio.File) -> bool:
-        """Legacy method - kept for compatibility but deprecated."""
-        logger.warning("DnD: process_gfile called, use process_dnd_file_sync instead")
-        self.process_dnd_file_sync(gfile.get_path())
-        return GLib.SOURCE_REMOVE
-
     def get_language(self) -> str:
         """Get current language code from settings or language manager."""
         language_manager_instance = get_language_manager()
@@ -164,6 +118,15 @@ class AnuraWindow(Adw.ApplicationWindow):
         self._screenshot_timeout_id = GLib.timeout_add_seconds(30, self._on_screenshot_timeout)
 
         try:
+            # Check if backend is already capturing before hiding
+            if hasattr(self.backend, "_is_capturing") and self.backend._is_capturing:
+                logger.warning("Anura: Capture already in progress, not hiding window.")
+                if self._screenshot_timeout_id is not None:
+                    GLib.source_remove(self._screenshot_timeout_id)
+                    self._screenshot_timeout_id = None
+                self.present()
+                return
+
             self.backend.capture(lang, copy)
         except (GLib.Error, RuntimeError, OSError) as e:
             # Clean up timeout and restore window on error
@@ -174,235 +137,38 @@ class AnuraWindow(Adw.ApplicationWindow):
             logger.error(f"Anura: Screenshot capture failed: {e}")
             self.show_toast(_("Failed to capture screenshot"))
 
-    def _on_screenshot_timeout(self) -> bool:
-        """Handle screenshot portal timeout."""
-        try:
-            self._screenshot_timeout_id = None
-            self.present()
-            self.show_toast(_("Screenshot service did not respond."))
-            logger.warning("Anura Screenshot: Portal timeout - window restored.")
-        except Exception:
-            logger.exception("Anura: Unexpected error in screenshot timeout handler")
-        return False  # Don't repeat timeout
-
-    def on_shot_done(self, _sender: GObject.GObject, text: str, copy: bool) -> None:
-        """Handle successful screenshot capture and OCR processing."""
-        # Cancel safety timeout if screenshot succeeded
-        if self._screenshot_timeout_id is not None:
-            GLib.source_remove(self._screenshot_timeout_id)
-            self._screenshot_timeout_id = None
-
-        self.present()
-        # Clean up DnD processing state and spinner
-        self.welcome_page.reset_drop_area_state()
-
-        if not text:
-            return
-
-        try:
-            self.extracted_page.extracted_text = text  # type: ignore[method-assign]
-
-            # 1. Extract structured data (emails, URLs, phone numbers) from OCR text
-            preprocessor = get_text_preprocessor()
-            structured = preprocessor.extract_structured_data(text)
-
-            # 2. Identify if the result is primarily a URL (e.g. from a QR code)
-            primary_url = None
-            if structured["urls"]:
-                # If the entire text is just a URL (allowing for whitespace/newlines)
-                candidate = structured["urls"][0]
-                if candidate.strip() == text.strip():
-                    primary_url = candidate
-
-            # 3. Handle URL Flow (Mode A/B)
-            if primary_url:
-                # Security: strip all control characters and whitespace
-                primary_url = primary_url.strip().strip("\n\r\t\v\f")
-
-                if uri_validator(primary_url):
-                    if self.settings.get_boolean("autolinks"):
-                        # Behavior A: Open directly in browser (toggle ON)
-                        self._launch_uri(primary_url)
-                        self.show_toast(_("URL opened automatically"))
-                    else:
-                        # Behavior B: Send desktop notification with clickable action
-                        # Do NOT copy URL to clipboard, do NOT open browser automatically
-                        target = GLib.Variant("s", primary_url)
-                        app = Gtk.Application.get_default()
-                        if app and hasattr(app, "notification_service"):
-                            app.notification_service.send_notification_with_action(
-                                notification_id="qr-url",
-                                title=_("QR Code URL Detected"),
-                                body=primary_url,
-                                action_id="app.open-qr-url",
-                                action_target=target,
-                                priority="high",
-                            )
-
-                # 4. Handle URL Clipboard (respecting global autocopy)
-                if self.settings.get_boolean("autocopy") or copy:
-                    clipboard_service_instance = get_clipboard_service()
-                    clipboard_service_instance.set(primary_url)
-                    # Only show "copied" toast if we didn't open the browser automatically
-                    # to avoid toast spam when both are ON.
-                    if not self.settings.get_boolean("autolinks"):
-                        self.show_toast(_("URL copied to clipboard"))
-
-                logger.debug("Anura: URL-primary result processed")
-
-            else:
-                # 4. Handle Regular Text Flow (Clipboard)
-                if self.settings.get_boolean("autocopy") or copy:
-                    clipboard_service_instance = get_clipboard_service()
-                    clipboard_service_instance.set(text)
-                    self.show_toast(_("Text copied to clipboard"))
-
-                # Still show toasts for other structured data if found in mixed text
-                if structured["emails"]:
-                    email_count = len(structured["emails"])
-                    self.show_toast(
-                        ngettext("{n} email found in text", "{n} emails found in text", email_count).format(
-                            n=email_count,
-                        ),
-                    )
-
-                if structured["phone_numbers"]:
-                    phone_count = len(structured["phone_numbers"])
-                    self.show_toast(
-                        ngettext(
-                            "{n} phone number found in text",
-                            "{n} phone numbers found in text",
-                            phone_count,
-                        ).format(n=phone_count),
-                    )
-
-            # Defer navigation to ExtractedPage until window is properly mapped
-            GLib.idle_add(self._navigate_to_extracted_page)
-
-        except Exception as e:
-            logger.error(f"Anura UI Error in on_shot_done: {e}")
-
-    def on_shot_error(self, _sender: GObject.GObject, message: str) -> None:
-        """Handle screenshot capture errors."""
-        # Cancel safety timeout if screenshot failed
-        if self._screenshot_timeout_id is not None:
-            GLib.source_remove(self._screenshot_timeout_id)
-            self._screenshot_timeout_id = None
-
-        self.present()
-        self.welcome_page.reset_drop_area_state()
-        if message:
-            self.show_toast(message)
-
-    def _on_portal_backend_missing(self, _sender: GObject.GObject) -> None:
-        """Reveal the persistent install hint banner with desktop-aware message.
-
-        Fires when ScreenshotService detects the libportal generic-failure
-        pattern (host's xdg-desktop-portal backend missing or broken). The
-        toast emitted via "error" disappears in seconds; this banner stays
-        visible until the user dismisses it or installs a backend.
-        Uses detect_portal_advice to show desktop-specific install instructions.
-        """
-        try:
-            advice = detect_portal_advice()
-            self.portal_banner.set_title(advice.short_message)
-            self.portal_banner.set_revealed(True)
-        except Exception:
-            logger.exception("Anura: Unexpected error handling portal backend missing")
-
-    def _on_portal_banner_dismissed(self, _banner: Adw.Banner) -> None:
-        """Hide the banner when the user clicks Dismiss.
-
-        It will reappear automatically the next time a screenshot fails with
-        the same generic-failure pattern.
-        """
-        self.portal_banner.set_revealed(False)
-
     def open_image(self) -> None:
         """Open file dialog to select an image for OCR processing."""
         dialog = Gtk.FileDialog()
         dialog.set_title(_("Choose an image for extraction"))
 
-        # Primary filter: All supported image formats (cumulative)
         all_img_filter = Gtk.FileFilter()
-        all_img_filter.set_name(_("All supported images"))
-        # MIME types for portal-aware backends
+        all_img_filter.set_name(_("Image files"))
         all_img_filter.add_mime_type("image/png")
         all_img_filter.add_mime_type("image/jpeg")
         all_img_filter.add_mime_type("image/webp")
-        all_img_filter.add_mime_type("image/avif")
         all_img_filter.add_mime_type("image/tiff")
         all_img_filter.add_mime_type("image/bmp")
-        all_img_filter.add_mime_type("image/gif")
-        # Explicit pattern-based matching for Flatpak portal fallback
-        all_img_filter.add_pattern("*.png")
-        all_img_filter.add_pattern("*.jpg")
-        all_img_filter.add_pattern("*.jpeg")
-        all_img_filter.add_pattern("*.webp")
-        all_img_filter.add_pattern("*.avif")
-        all_img_filter.add_pattern("*.tif")
-        all_img_filter.add_pattern("*.tiff")
-        all_img_filter.add_pattern("*.bmp")
-        all_img_filter.add_pattern("*.gif")
 
-        # Secondary filters: Individual formats (MIME + patterns)
-        png_filter = Gtk.FileFilter()
-        png_filter.set_name(_("PNG images"))
-        png_filter.add_mime_type("image/png")
-        png_filter.add_pattern("*.png")
-
-        jpg_filter = Gtk.FileFilter()
-        jpg_filter.set_name(_("JPEG images"))
-        jpg_filter.add_mime_type("image/jpeg")
-        jpg_filter.add_pattern("*.jpg")
-        jpg_filter.add_pattern("*.jpeg")
-
-        webp_filter = Gtk.FileFilter()
-        webp_filter.set_name(_("WebP images"))
-        webp_filter.add_mime_type("image/webp")
-        webp_filter.add_pattern("*.webp")
-
-        avif_filter = Gtk.FileFilter()
-        avif_filter.set_name(_("AVIF images"))
-        avif_filter.add_mime_type("image/avif")
-        avif_filter.add_pattern("*.avif")
-
-        tiff_filter = Gtk.FileFilter()
-        tiff_filter.set_name(_("TIFF images"))
-        tiff_filter.add_mime_type("image/tiff")
-        tiff_filter.add_pattern("*.tif")
-        tiff_filter.add_pattern("*.tiff")
-
-        bmp_filter = Gtk.FileFilter()
-        bmp_filter.set_name(_("BMP images"))
-        bmp_filter.add_mime_type("image/bmp")
-        bmp_filter.add_pattern("*.bmp")
-
-        gif_filter = Gtk.FileFilter()
-        gif_filter.set_name(_("GIF images"))
-        gif_filter.add_mime_type("image/gif")
-        gif_filter.add_pattern("*.gif")
+        all_files_filter = Gtk.FileFilter()
+        all_files_filter.set_name(_("All files (*)"))
+        all_files_filter.add_pattern("*")
 
         filters = Gio.ListStore.new(Gtk.FileFilter)
         filters.append(all_img_filter)
-        filters.append(png_filter)
-        filters.append(jpg_filter)
-        filters.append(webp_filter)
-        filters.append(avif_filter)
-        filters.append(tiff_filter)
-        filters.append(bmp_filter)
-        filters.append(gif_filter)
-        dialog.set_filters(filters)
-        dialog.set_default_filter(all_img_filter)
+        filters.append(all_files_filter)
 
+        dialog.set_filters(filters)
         dialog.open(self, None, self._on_open_image_result)
 
     def process_file(self, file_path: str) -> None:
         """Process an image file directly from CLI."""
         try:
-            # Validate file size to prevent memory issues with very large images
-            # We use getsize() which follows symlinks to ensure the actual
-            # file content doesn't exceed our 50MB limit (Denial of Service).
+            if os.path.getsize(file_path) == 0:
+                logger.error(f"Anura OCR: Attempted to process 0-byte image file: {file_path}")
+                self.show_toast(_("The selected image file is empty."))
+                return
+
             file_size = os.path.getsize(file_path)
             if file_size > MAX_IMAGE_SIZE_BYTES:
                 self.show_toast(
@@ -428,86 +194,12 @@ class AnuraWindow(Adw.ApplicationWindow):
             logger.error(f"Error accessing file {file_path}: {e}")
             self.show_toast(_("Cannot access file: {path}").format(path=file_path))
 
-    def _on_open_image_result(self, dialog: Gtk.FileDialog, result: Gio.AsyncResult) -> None:
-        try:
-            file = dialog.open_finish(result)
-            if file:
-                self.welcome_page.show_spinner()
-                file.load_contents_async(None, self._on_file_contents_loaded)
-        except (GLib.Error, RuntimeError, OSError) as e:
-            logger.debug(f"File selection cancelled or failed: {e}")
-            # Ensure spinner is hidden on error to prevent UI inconsistency
-            self.welcome_page.hide_spinner()
-
-    def _on_file_contents_loaded(self, gfile: Gio.File, result: Gio.AsyncResult) -> None:
-        try:
-            # NOTE: do not unpack the etag into `_` — that rebinds the
-            # module-level gettext alias for the rest of this function and
-            # causes every later `_("…")` call (toast messages on the error
-            # paths below) to raise `TypeError: 'bytes' object is not callable`.
-            ok, contents, _etag = gfile.load_contents_finish(result)
-            if ok:
-                # Validate file size before processing (same check as DnD)
-                file_size = len(contents)
-                if file_size > MAX_IMAGE_SIZE_BYTES:
-                    self.welcome_page.spinner.set_visible(False)
-                    self.show_toast(
-                        _("Image too large: {size}MB (max {max}MB)").format(
-                            size=round(file_size / (1024 * 1024), 1),
-                            max=MAX_IMAGE_SIZE_MB,
-                        ),
-                    )
-                    return
-
-                # Validate image format before passing to OCR
-                try:
-                    from gi.repository import GdkPixbuf
-
-                    # Try to create a pixbuf to validate the image
-                    GdkPixbuf.Pixbuf.new_from_stream_at_scale(
-                        Gio.MemoryInputStream.new_from_bytes(GLib.Bytes.new(contents)),
-                        -1,
-                        -1,
-                        False,
-                        None,
-                    )
-                except GLib.Error as e:
-                    self.welcome_page.spinner.set_visible(False)
-                    if e.matches(GdkPixbuf.pixbuf_error_quark(), GdkPixbuf.PixbufError.CORRUPT_IMAGE):
-                        logger.error(f"Anura: Corrupt image file: {e.message}")
-                        self.show_toast(_("Corrupt or unsupported image file"))
-                        return
-                    elif e.matches(GdkPixbuf.pixbuf_error_quark(), GdkPixbuf.PixbufError.UNKNOWN_TYPE):
-                        logger.error(f"Anura: Unknown image format: {e.message}")
-                        self.show_toast(_("Unsupported image format"))
-                        return
-                    else:
-                        logger.error(f"Anura: Image validation error: {e.message}")
-                        self.show_toast(_("Failed to validate image file"))
-                        return
-                except (ValueError, RuntimeError) as e:
-                    self.welcome_page.spinner.set_visible(False)
-                    logger.error(f"Anura: Unexpected image validation error: {e}")
-                    self.show_toast(_("Failed to validate image file"))
-                    return
-
-                stream = BytesIO(contents)
-                GObjectWorker.call(self.backend.decode_image, (self.get_language(), stream))
-            else:
-                self.welcome_page.spinner.set_visible(False)
-                self.show_toast(_("Failed to load image file"))
-        except (GLib.Error, OSError, ValueError, RuntimeError) as e:
-            self.welcome_page.spinner.set_visible(False)
-            logger.error(f"Failed to load file contents: {e}")
-            self.show_toast(_("Failed to load image file"))
-
     def _do_copy_to_clipboard(self) -> None:
         text = self.extracted_page.extracted_text
         if text:
             clipboard_service_instance = get_clipboard_service()
             clipboard_service_instance.set(text)
             self.show_toast(_("Text copied to clipboard"))
-            # Visual feedback on the button itself
             self.extracted_page.show_copy_feedback()
         else:
             self.show_toast(_("No text to copy"))
@@ -533,37 +225,26 @@ class AnuraWindow(Adw.ApplicationWindow):
 
     def do_destroy(self) -> None:
         """Clean up signal handlers and timeouts to prevent memory leaks."""
-        # Cancel screenshot timeout if active
         if self._screenshot_timeout_id is not None:
             GLib.source_remove(self._screenshot_timeout_id)
             self._screenshot_timeout_id = None
 
-        # Cancel any pending clipboard operations before disconnecting handler
         clipboard_service_instance = get_clipboard_service()
         clipboard_service_instance.cancel_pending_operations()
 
-        # Disconnect backend signal handlers
         if self.backend:
-            if self._handler_decoded:
-                with contextlib.suppress(TypeError, RuntimeError):
-                    # Handler already disconnected or object disposed
-                    self.backend.disconnect(self._handler_decoded)
-                self._handler_decoded = None
-            if self._handler_error:
-                with contextlib.suppress(TypeError, RuntimeError):
-                    self.backend.disconnect(self._handler_error)
-                self._handler_error = None
-            if self._handler_portal_missing:
-                with contextlib.suppress(TypeError, RuntimeError):
-                    self.backend.disconnect(self._handler_portal_missing)
-                self._handler_portal_missing = None
+            for attr in ("_handler_decoded", "_handler_error", "_handler_portal_missing"):
+                handler_id = getattr(self, attr, None)
+                if handler_id:
+                    with contextlib.suppress(TypeError, RuntimeError):
+                        self.backend.disconnect(handler_id)
+                    setattr(self, attr, None)
 
-        # Disconnect widget signal handlers
         if self._handler_go_back:
             with contextlib.suppress(TypeError, RuntimeError):
                 self.extracted_page.disconnect(self._handler_go_back)
             self._handler_go_back = None
-        if self._handler_portal_banner:
+        if hasattr(self, "_handler_portal_banner") and self._handler_portal_banner:
             with contextlib.suppress(TypeError, RuntimeError):
                 self.portal_banner.disconnect(self._handler_portal_banner)
             self._handler_portal_banner = None
@@ -576,51 +257,31 @@ class AnuraWindow(Adw.ApplicationWindow):
                 self._clipboard_service.disconnect(self._handler_clipboard_error)
             self._handler_clipboard_error = None
 
-        # Chain up to parent class
         super().do_destroy()
 
     def show_preferences(self) -> None:
         """Show the preferences dialog for application settings."""
         self.set_focus(None)
         dialog = PreferencesDialog()
-
-        # Get service instances
         language_manager_instance = get_language_manager()
-
-        # Track signal handler IDs for cleanup
         signal_handlers: list[int] = []
 
         def on_dialog_close(*args: object) -> None:
-            """Clean up signal connections when dialog is closed."""
             for handler_id in signal_handlers:
                 try:
                     language_manager_instance.disconnect(handler_id)
                 except (TypeError, RuntimeError):
-                    pass  # Handler already disconnected or invalid
+                    pass
 
-        # Connect to language manager signals and track handler IDs
         def _on_downloaded_idle(_mgr, code):
             GLib.idle_add(dialog.on_language_downloaded, code)
 
         def _on_failed_idle(_mgr, code):
             GLib.idle_add(dialog.on_language_download_failed, code)
 
-        downloaded_handler = language_manager_instance.connect(
-            "downloaded",
-            _on_downloaded_idle,
-        )
-        signal_handlers.append(downloaded_handler)
-
-        failed_handler = language_manager_instance.connect(
-            "download-failed",
-            _on_failed_idle,
-        )
-        signal_handlers.append(failed_handler)
-
-        # Connect cleanup to dialog close signal.
-        # Adw.PreferencesDialog → Adw.Dialog: emits "closed", not "close-request".
+        signal_handlers.append(language_manager_instance.connect("downloaded", _on_downloaded_idle))
+        signal_handlers.append(language_manager_instance.connect("download-failed", _on_failed_idle))
         dialog.connect("closed", on_dialog_close)
-
         dialog.present(self)
 
     def show_shortcuts(self) -> None:
@@ -633,29 +294,10 @@ class AnuraWindow(Adw.ApplicationWindow):
         except (ImportError, RuntimeError) as e:
             logger.error(f"Failed to show shortcuts overlay: {e}")
 
-    def _navigate_to_extracted_page(self) -> bool:
-        """Navigate to the extracted text page after OCR."""
-        self.split_view.set_show_content(True)
-        # Focus the text view to allow immediate keyboard interaction
-        self.extracted_page.text_view.grab_focus()
-        return GLib.SOURCE_REMOVE
-
     def show_welcome_page(self, *_args: object) -> None:
         """Show the welcome page and hide the extracted content."""
         self.split_view.set_show_content(False)
         self.extracted_page._on_listen_stop()
-
-    def on_listen(self) -> None:
-        """Start TTS playback for the currently extracted text."""
-        self.extracted_page.listen()
-
-    def on_listen_cancel(self) -> None:
-        """Stop any active TTS playback."""
-        self.extracted_page._on_listen_stop()
-
-    def on_listen_pause(self) -> None:
-        """Pause/Resume any active TTS playback."""
-        self.extracted_page.listen_pause()
 
     def _on_share(self, _action: Gio.SimpleAction, variant: GLib.Variant) -> None:
         """Dispatch share action to the correct provider."""
@@ -672,10 +314,7 @@ class AnuraWindow(Adw.ApplicationWindow):
 
     def _launch_uri(self, url: str) -> None:
         """Open a URI in the default system browser."""
-        # Clean URL to ensure no trailing control characters or whitespace
         url = url.strip() if url else ""
-
-        # Security: validate URL before launching (defense in depth)
         if not uri_validator(url):
             logger.warning(f"Anura: Blocked invalid URL launch: {url}")
             self.show_toast(_("Invalid URL blocked for security"))
@@ -692,40 +331,19 @@ class AnuraWindow(Adw.ApplicationWindow):
         launcher.launch(self, None, on_launch_finish)
 
     def close_popovers(self) -> None:
-        """Close all open popovers to prevent 'Broken accounting of active state' warnings.
-
-        Must be called before presenting modal dialogs (About, Preferences, etc.)
-        when a popover from the headerbar menu might still be visible. This ensures
-        the popover's internal state machine completes its teardown before the
-        widget hierarchy is updated by the new dialog.
-        """
-        # 1. Close share button popover on extracted page
+        """Close all open popovers."""
         try:
             share_popover = self.extracted_page.share_button.get_popover()
             if share_popover and share_popover.get_visible():
                 share_popover.popdown()
-        except (AttributeError, RuntimeError, TypeError) as e:
-            logger.debug(f"Failed to close share popover: {e}")
+        except (AttributeError, RuntimeError, TypeError):
+            pass
 
-        # 2. Find and close any MenuButton popovers on both navigation pages
         for page in (self.welcome_page, self.extracted_page):
-            if page is None:
-                continue
-            try:
+            if page:
                 self._close_page_menu_popovers(page)
-            except (AttributeError, RuntimeError, TypeError) as e:
-                logger.debug(f"Failed to close popovers on page {page}: {e}")
 
     def _close_page_menu_popovers(self, page: Adw.NavigationPage) -> None:
-        """Traverse a NavigationPage's widget tree to close open MenuButton popovers.
-
-        GTK4 widget hierarchy:
-            Adw.NavigationPage → Adw.ToolbarView → Adw.HeaderBar → MenuButton(s)
-
-        The primary menu MenuButton is unnamed in the Blueprint template, so we
-        must locate it by walking the headerbar children.
-        """
-        # Walk from NavigationPage to ToolbarView to HeaderBar
         child = page.get_first_child()
         while child is not None:
             if isinstance(child, Adw.ToolbarView):
@@ -734,8 +352,6 @@ class AnuraWindow(Adw.ApplicationWindow):
             child = child.get_next_sibling()
 
     def _close_toolbar_view_popovers(self, toolbar_view: Adw.ToolbarView) -> None:
-        """Close MenuButton popovers within a ToolbarView."""
-        # ToolbarView contains HeaderBar(s) as children
         child = toolbar_view.get_first_child()
         while child is not None:
             if isinstance(child, Adw.HeaderBar):
@@ -744,14 +360,11 @@ class AnuraWindow(Adw.ApplicationWindow):
             child = child.get_next_sibling()
 
     def _close_header_bar_popovers(self, headerbar: Adw.HeaderBar) -> None:
-        """Close any visible MenuButton popovers in a HeaderBar."""
         child = headerbar.get_first_child()
         while child is not None:
             if isinstance(child, Gtk.MenuButton):
-                try:
+                with contextlib.suppress(AttributeError, RuntimeError, TypeError):
                     popover = child.get_popover()
                     if popover and popover.get_visible():
                         popover.popdown()
-                except (AttributeError, RuntimeError, TypeError) as e:
-                    logger.debug(f"Failed to popdown menu button popover: {e}")
             child = child.get_next_sibling()

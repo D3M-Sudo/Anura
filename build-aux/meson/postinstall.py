@@ -39,6 +39,6 @@ if not destdir:
     run_or_fail(["update-desktop-database", "-q", os.path.join(datadir, "applications")], "Desktop database update")
 
     # Compile GSettings XML schemas into gschemas.compiled
-    # This must match the APP_ID: com.github.d3msudo.anura
+    # This must match the APP_ID: io.github.d3msudo.anura
     print("Anura: Compiling GSettings schemas...")
     run_or_fail(["glib-compile-schemas", os.path.join(datadir, "glib-2.0", "schemas")], "GSettings schema compilation")

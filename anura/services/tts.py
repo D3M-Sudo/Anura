@@ -4,6 +4,7 @@
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
 import contextlib
+from gettext import gettext as _
 import os
 import threading
 import time
@@ -37,21 +38,8 @@ class TTSService(GObject.GObject):
         "speak": (GObject.SignalFlags.RUN_LAST, None, (str,)),
         "stop": (GObject.SignalFlags.RUN_LAST, None, (bool,)),
         "paused": (GObject.SignalFlags.RUN_LAST, None, (bool,)),
+        "error": (GObject.SignalFlags.RUN_LAST, None, (str,)),
     }
-
-    __slots__ = (
-        "_bus",
-        "_bus_message_handler_id",
-        "_bus_watch_active",
-        "_bus_watch_lock",
-        "_bus_watch_setup_in_progress",
-        "_cleanup_lock",
-        "_current_speech_file",
-        "_gtts_languages",
-        "_init_lock",
-        "_state_lock",
-        "player",
-    )
 
     _tld: str = "com"
 
@@ -120,6 +108,46 @@ class TTSService(GObject.GObject):
         "lao": "lo",
         "mya": "my",
         "khm": "km",
+        "afr": "af",
+        "amh": "am",
+        "aze_cyrl": "az",
+        "bel": "be",
+        "bod": "bo",
+        "bos": "bs",
+        "bre": "br",
+        "ceb": "ceb",
+        "cos": "co",
+        "cym": "cy",
+        "epo": "eo",
+        "fas": "fa",
+        "fil": "tl",
+        "gla": "gd",
+        "gle": "ga",
+        "hat": "ht",
+        "iku": "iu",
+        "isl": "is",
+        "jav": "jw",
+        "kat_old": "ka",
+        "ltz": "lb",
+        "mlt": "mt",
+        "mon": "mn",
+        "mri": "mi",
+        "msa": "ms",
+        "oci": "oc",
+        "pus": "ps",
+        "que": "qu",
+        "san": "sa",
+        "snd": "sd",
+        "sqi": "sq",
+        "srp_latn": "sr",
+        "sun": "su",
+        "swa": "sw",
+        "tat": "tt",
+        "tir": "ti",
+        "uig": "ug",
+        "uzb_cyrl": "uz",
+        "yid": "yi",
+        "yor": "yo",
         # Historical/specialty variants (fallback to modern equivalent)
         "lat": "la",
         "grc": "el",  # Ancient Greek → Modern Greek
@@ -149,8 +177,11 @@ class TTSService(GObject.GObject):
         return cls._gtts_cache
 
     @staticmethod
-    def map_tesseract_to_gtts(tess_code: str) -> str:
-        """Map Tesseract language code to gTTS-compatible ISO 639-1 code."""
+    def map_tesseract_to_gtts(tess_code: str) -> str | None:
+        """
+        Map Tesseract language code to gTTS-compatible ISO 639-1 code.
+        Returns None if no mapping or fallback is available.
+        """
         if tess_code is None:
             return "en"  # Default to English
 
@@ -171,9 +202,9 @@ class TTSService(GObject.GObject):
             if len(two_char) == 2 and two_char.isalpha() and two_char.islower() and two_char in supported:
                 return two_char
 
-        # 3. Fallback to English
-        logger.warning(f"Anura TTS: No mapping for '{tess_code}', falling back to 'en'")
-        return "en"
+        # 3. Fallback: log warning and return None for explicit UI handling
+        logger.warning(f"Anura TTS: No mapping for '{tess_code}'")
+        return None
 
     # Use XDG_CACHE_HOME for temporary files (not XDG_DATA_HOME).
     # Cache dir is the correct location for ephemeral data; data dir is for
@@ -186,8 +217,8 @@ class TTSService(GObject.GObject):
         logger.debug("Anura TTSService: Initializing TTS service singleton")
         os.makedirs(self._speech_dir, exist_ok=True)
 
-        # Initialize all instance attributes (fixes BUG-1: __slots__ compliance,
-        # BUG-2: class-level state leaking between instances)
+        # Initialize all instance attributes (fixes class-level state
+        # leaking between instances)
         self._gtts_languages: dict | None = None
         self._bus_watch_active: bool = False
         self._bus_watch_setup_in_progress: bool = False
@@ -216,6 +247,15 @@ class TTSService(GObject.GObject):
 
     def generate(self, text: str, lang: str = "en") -> str:
         """Thread-safe MP3 generation with proper state management."""
+        # Clean up any previously orphaned file from this instance before starting new generation
+        with self._state_lock:
+            if self._current_speech_file and os.path.exists(self._current_speech_file):
+                try:
+                    os.unlink(self._current_speech_file)
+                except OSError:
+                    pass
+            self._current_speech_file = None
+
         # Input validation: avoid unnecessary gTTS calls for empty/whitespace text
         if not text or not text.strip():
             logger.debug("Anura TTS: Empty text provided, returning empty path")
@@ -252,7 +292,7 @@ class TTSService(GObject.GObject):
         GLib.idle_add(self.emit, "speak", filepath)
         return filepath
 
-    def get_effective_language(self, ocr_lang: str) -> str:
+    def get_effective_language(self, ocr_lang: str) -> str | None:
         """Return TTS language: user preference or fallback to OCR language."""
         tts_lang = settings.get_string("tts-language")
         if tts_lang:
@@ -355,7 +395,8 @@ class TTSService(GObject.GObject):
 
         elif message.type == Gst.MessageType.ERROR:
             err, _debug = message.parse_error()
-            logger.error(f"Anura TTS Error: GStreamer playback error: {err}")
+            error_msg = f"{err}"
+            logger.error(f"Anura TTS Error: GStreamer playback error: {error_msg}")
             with self._cleanup_lock:
                 self._cleanup_gst_resources()
                 # Ensure bus watch is cleaned up on error
@@ -364,14 +405,22 @@ class TTSService(GObject.GObject):
                         self._bus.remove_signal_watch()
                         self._bus_watch_active = False
 
-            def _on_stop_idle():
-                self.emit("stop", False)
+            def _on_error_idle(msg: str):
+                try:
+                    self.emit("error", msg)
+                    self.emit("stop", False)
+                except Exception:
+                    logger.exception("Anura TTS: Failed to emit playback error")
                 return GLib.SOURCE_REMOVE
 
-            GLib.idle_add(_on_stop_idle)
+            GLib.idle_add(_on_error_idle, _("GStreamer playback error: {error}").format(error=error_msg))
 
     def _cleanup_gst_resources(self) -> None:
-        """Remove signal watcher and release player resources."""
+        """Remove signal watcher and release player resources.
+
+        Suppresses teardown errors (e.g. dbus bus connection failures in
+        sandboxed/CI environments where no dbus-daemon is available).
+        """
         if self.player:
             logger.debug("Anura TTSService: Starting GStreamer resource cleanup")
 
@@ -389,7 +438,10 @@ class TTSService(GObject.GObject):
                 self._bus_watch_active = False
                 self._bus = None
             logger.info("Anura TTSService: Setting GStreamer state to NULL")
-            self.player.set_state(Gst.State.NULL)
+            try:
+                self.player.set_state(Gst.State.NULL)
+            except Exception:
+                pass  # Suppress teardown errors in sandboxed/CI environments
             self.player = None
             logger.debug("Anura TTSService: GStreamer resource cleanup complete")
 
@@ -482,6 +534,19 @@ class TTSService(GObject.GObject):
                     logger.debug("Anura TTS: Cleaned up temporary speech file on shutdown")
                 except OSError:
                     logger.debug("Anura TTS: Failed to cleanup temporary speech file on shutdown")
+
+        # Also cleanup the speech directory from old files (best effort)
+        try:
+            if os.path.exists(self._speech_dir):
+                for f in os.listdir(self._speech_dir):
+                    if f.startswith("speech_") and f.endswith(".mp3"):
+                        file_path = os.path.join(self._speech_dir, f)
+                        # Only delete files older than 1 hour to avoid deleting active files from other instances
+                        if time.time() - os.path.getmtime(file_path) > 3600:
+                            with contextlib.suppress(OSError):
+                                os.unlink(file_path)
+        except Exception as e:
+            logger.debug(f"Anura TTS: Error during directory cleanup: {e}")
 
 
 # Thread-safe singleton instance for global app access
