@@ -138,7 +138,9 @@ def test_window_wires_portal_banner_and_signal_handler() -> None:
     assert "portal_banner: Adw.Banner = Gtk.Template.Child()" in text, (
         "AnuraWindow must declare portal_banner as a Gtk.Template.Child mapping to the Adw.Banner in window.blp."
     )
-    assert '"portal-backend-missing"' in combined_text, "AnuraWindow (or its OCR mixin) must connect to the new ScreenshotService signal."
+    assert '"portal-backend-missing"' in combined_text, (
+        "AnuraWindow (or its OCR mixin) must connect to the new ScreenshotService signal."
+    )
     assert "set_revealed(True)" in combined_text and "set_revealed(False)" in combined_text, (
         "AnuraWindow (or its OCR mixin) must reveal the banner on the signal and hide it when the user dismisses it."
     )
@@ -239,7 +241,9 @@ def test_window_disconnects_portal_banner_signal() -> None:
     text = (ANURA_PKG / "window.py").read_text()
     # Check that do_destroy contains disconnect for portal_banner
     # Since Issue 4 refactor, do_destroy remains in window.py but uses getattr to be safe with mixins
-    assert "self.portal_banner.disconnect(handler_id)" in text or "self.portal_banner.disconnect(self._handler_portal_banner)" in text, (
+    assert "self.portal_banner.disconnect(handler_id)" in text or (
+        "self.portal_banner.disconnect(self._handler_portal_banner)"
+    ) in text, (
         "AnuraWindow.do_destroy must disconnect the portal_banner signal handler "
         "(_handler_portal_banner) to prevent memory leaks."
     )
