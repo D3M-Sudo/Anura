@@ -9,7 +9,7 @@ Includes image enhancement, text cleanup, and intelligent formatting.
 import re
 
 from loguru import logger
-from PIL import Image, ImageEnhance, ImageFilter, ImageOps
+from PIL import Image, ImageEnhance, ImageFilter, ImageOps, ImageStat
 
 
 class TextPreprocessor:
@@ -112,56 +112,87 @@ class TextPreprocessor:
         return image
 
     def _apply_thresholding(self, image: Image.Image) -> Image.Image:
-        """Apply thresholding for better text/background separation."""
+        """
+        Apply thresholding for better text/background separation.
+        Optimized to combine autocontrast-like logic and thresholding into a single pass.
+        """
         try:
-            # Use ImageOps for automatic contrast and normalization
-            # This helps in separating text from background in various lighting
-            image = ImageOps.autocontrast(image, cutoff=2)
+            # Optimization: Calculate threshold based on 2% histogram cutoff to simulate
+            # autocontrast without a separate pixel traversal pass.
+            hist = image.histogram()
+            width, height = image.size
+            total_pixels = width * height
+            cutoff = int(total_pixels * 0.02)
 
-            # Use a simple but effective PIL-based thresholding.
-            # Optimization: Using a LUT (Look-Up Table) instead of a lambda is faster
-            # for the Image.point() operation as it avoids Python callback overhead.
-            # Performance: image.point(lut, "L") is ~1.6x faster than .point(lut, "1").convert("L")
-            # because it avoids the intermediate 1-bit mode conversion.
-            threshold = 128
-            lut = [0 if i < threshold else 255 for i in range(256)]
+            # Find low/high bounds similar to ImageOps.autocontrast
+            low = 0
+            temp_sum = 0
+            for i in range(256):
+                temp_sum += hist[i]
+                if temp_sum > cutoff:
+                    low = i
+                    break
+
+            high = 255
+            temp_sum = 0
+            for i in range(255, -1, -1):
+                temp_sum += hist[i]
+                if temp_sum > cutoff:
+                    high = i
+                    break
+
+            # If image is completely uniform, fallback to simple threshold
+            if high <= low:
+                lut = [0 if i < 128 else 255 for i in range(256)]
+                return image.point(lut, "L")
+
+            # Calculate mid-point threshold between detected bounds
+            threshold_val = low + (high - low) * 0.5
+            lut = [0 if i < threshold_val else 255 for i in range(256)]
             return image.point(lut, "L")
+
         except Exception as e:
             logger.warning(f"Thresholding failed: {e}")
             return image
 
     def _apply_adaptive_enhancements(self, image: Image.Image) -> Image.Image:
-        """Apply adaptive enhancements based on image analysis."""
-        # Calculate image statistics
+        """
+        Apply adaptive enhancements based on image analysis.
+        Optimized to use a single LUT pass for combined brightness and contrast.
+        """
+        # Calculate image statistics from histogram
         histogram = image.histogram()
-        # Optimization: image.width * image.height is significantly faster than sum(histogram)
         width, height = image.size
         total_pixels = width * height
 
-        # Determine if image is too dark or too light
-        # Use sum() on the slice as it's implemented in C and faster than a manual Python loop.
         dark_pixels = sum(histogram[:128]) / total_pixels
         light_pixels = 1.0 - dark_pixels
 
-        # Optimization: No need to copy as ImageEnhance operations return new instances
-        enhanced = image
-
+        brightness_factor = 1.0
         contrast_factor = 1.2
+
         if dark_pixels > 0.7:  # Image is too dark
             logger.debug("Applying brightness enhancement for dark image")
-            enhancer = ImageEnhance.Brightness(enhanced)
-            enhanced = enhancer.enhance(1.3)
+            brightness_factor = 1.3
 
         elif light_pixels > 0.8:  # Image is too light
             logger.debug("Applying combined contrast enhancement for light image")
             # Optimization: Combined 1.4x (light) and 1.2x (mandatory) contrast pass
             contrast_factor = 1.68
 
-        # Always apply contrast enhancement for better text definition
-        enhancer = ImageEnhance.Contrast(enhanced)
-        enhanced = enhancer.enhance(contrast_factor)
+        # Optimization: Combined single-pass LUT for Brightness and Contrast.
+        # Uses ImageStat.Stat(image).mean for efficient contrast pivot calculation.
+        # Formula: new_pixel = brightness_factor * ((pixel - mean) * contrast_factor + mean)
+        # Simplified: new_pixel = pixel * (b * c) + (b * mean * (1 - c))
+        stat = ImageStat.Stat(image)
+        mean = stat.mean[0]
 
-        return enhanced
+        factor = brightness_factor * contrast_factor
+        offset = brightness_factor * mean * (1 - contrast_factor)
+
+        # Pre-calculate 256-value LUT to avoid redundant math per pixel
+        lut = [max(0, min(255, int(i * factor + offset))) for i in range(256)]
+        return image.point(lut)
 
     def clean_extracted_text(self, text: str) -> str:
         """
