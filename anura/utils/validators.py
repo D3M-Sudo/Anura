@@ -12,6 +12,32 @@ from urllib.parse import urlparse
 _CONTROL_CHARS_RE = re.compile(r"[\x00-\x1f\x7f]")
 
 
+def is_safe_url_string(text: str) -> bool:
+    """
+    Perform fundamental security checks on a URL string.
+    Checks for length, control characters, and ASCII-only characters.
+    """
+    if text is None:
+        return False
+
+    # Defense-in-depth: limit URL length to prevent UI/notification issues
+    # and potential downstream buffer vulnerabilities.
+    if len(text) > 2048:
+        return False
+
+    # Block control characters (0x00-0x1F) and DEL (0x7F) BEFORE strip
+    # so that e.g. trailing \x1f (whitespace) is caught.
+    if _CONTROL_CHARS_RE.search(text):
+        return False
+
+    # Ensure URL is ASCII-only (prevent Unicode homograph attacks).
+    # str.isascii() is significantly faster than encoding to ascii and catching exceptions.
+    if not text.strip().isascii():
+        return False
+
+    return True
+
+
 def uri_validator(text: str) -> bool:
     """
     Centralized URI validation for Anura OCR.
@@ -28,25 +54,10 @@ def uri_validator(text: str) -> bool:
     Returns:
         True if the URL is safe to use, False otherwise.
     """
-    if text is None:
-        return False
-
-    # Defense-in-depth: limit URL length to prevent UI/notification issues
-    # and potential downstream buffer vulnerabilities.
-    if len(text) > 2048:
-        return False
-
-    # Block control characters (0x00-0x1F) and DEL (0x7F) BEFORE strip
-    # so that e.g. trailing \x1f (whitespace) is caught.
-    if _CONTROL_CHARS_RE.search(text):
+    if not is_safe_url_string(text):
         return False
 
     url = text.strip()
-
-    # Ensure URL is ASCII-only (prevent Unicode homograph attacks).
-    # str.isascii() is significantly faster than encoding to ascii and catching exceptions.
-    if not url.isascii():
-        return False
 
     try:
         res = urlparse(url)
