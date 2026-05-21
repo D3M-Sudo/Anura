@@ -60,7 +60,10 @@ jobs:
         run: |
           glib-compile-resources \
             data/io.github.d3msudo.anura.gresource.xml \
-            --sourcedir=data --target=anura.gresource
+            --sourcedir=data \
+            --sourcedir=data/ui \
+            --target=anura.gresource
+
 
       - name: Run GTK tests (Wayland headless)
         run: |
