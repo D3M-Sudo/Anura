@@ -5,6 +5,7 @@ translation-domain 'io.github.d3msudo.anura';
 
 template $ExtractedPage : Adw.NavigationPage {
   title: _("Extracted");
+  styles ["extracted-page"]
 
   Adw.ToolbarView {
 
@@ -135,8 +136,10 @@ template $ExtractedPage : Adw.NavigationPage {
     ScrolledWindow text_scrollview {
       hexpand: true;
       vexpand: true;
+      hscrollbar-policy: never;
 
       TextView text_view {
+        hexpand: true;
         left-margin: 12;
         right-margin: 12;
         top-margin: 12;
