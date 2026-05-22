@@ -630,7 +630,7 @@ class ClipboardService(GObject.GObject):
                 self._cancellable.cancel()
                 self._cancellable = None
 
-            if self._clipboard_timeout_id > 0:
+            if self._clipboard_timeout_id is not None and self._clipboard_timeout_id > 0:
                 GLib.source_remove(self._clipboard_timeout_id)
                 self._clipboard_timeout_id = None
 

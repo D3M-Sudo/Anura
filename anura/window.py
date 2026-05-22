@@ -101,6 +101,15 @@ class AnuraWindow(WindowDnDMixin, WindowOCRMixin, WindowTTSMixin, Adw.Applicatio
         height = max(300, self.settings.get_int("window-height"))  # Min 300px
         self.set_default_size(width, height)
 
+        # Connect to surface scale changes to handle multi-monitor DPI scaling
+        self.connect("notify::scale-factor", self._on_scale_factor_changed)
+
+    def _on_scale_factor_changed(self, _window: Gtk.Window, _pspec: GObject.ParamSpec) -> None:
+        scale = self.get_scale_factor()
+        logger.debug(f"Anura: Window scale factor changed to {scale}")
+        # Ensure the window is properly resized/redrawn if needed
+        self.queue_resize()
+
     def get_language(self) -> str:
         """Get current language code from settings or language manager."""
         language_manager_instance = get_language_manager()
@@ -136,30 +145,6 @@ class AnuraWindow(WindowDnDMixin, WindowOCRMixin, WindowTTSMixin, Adw.Applicatio
             self.present()
             logger.error(f"Anura: Screenshot capture failed: {e}")
             self.show_toast(_("Failed to capture screenshot"))
-
-    def open_image(self) -> None:
-        """Open file dialog to select an image for OCR processing."""
-        dialog = Gtk.FileDialog()
-        dialog.set_title(_("Choose an image for extraction"))
-
-        all_img_filter = Gtk.FileFilter()
-        all_img_filter.set_name(_("Image files"))
-        all_img_filter.add_mime_type("image/png")
-        all_img_filter.add_mime_type("image/jpeg")
-        all_img_filter.add_mime_type("image/webp")
-        all_img_filter.add_mime_type("image/tiff")
-        all_img_filter.add_mime_type("image/bmp")
-
-        all_files_filter = Gtk.FileFilter()
-        all_files_filter.set_name(_("All files (*)"))
-        all_files_filter.add_pattern("*")
-
-        filters = Gio.ListStore.new(Gtk.FileFilter)
-        filters.append(all_img_filter)
-        filters.append(all_files_filter)
-
-        dialog.set_filters(filters)
-        dialog.open(self, None, self._on_open_image_result)
 
     def process_file(self, file_path: str) -> None:
         """Process an image file directly from CLI."""

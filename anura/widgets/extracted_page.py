@@ -60,6 +60,7 @@ class ExtractedPage(Adw.NavigationPage):
         self._tts_service = None
         self._tts_stop_handler_id = None
         self._tts_paused_handler_id = None
+        self._tts_error_handler_id = None
         self._buffer_handler_id = None
         self._is_generating_tts = False
 
@@ -84,6 +85,24 @@ class ExtractedPage(Adw.NavigationPage):
             logger.warning(f"Failed to connect TTS services: {e}")
 
         self._buffer_handler_id = self.buffer.connect("changed", self._on_buffer_changed)
+        # GTK4 Layout Fix: Force reflow when widget is mapped to ensure correct Pango layout
+        self.text_view.connect("map", lambda _: self._force_reflow())
+
+    def _force_reflow(self) -> None:
+        """Force the TextView to recalculate its layout and reflow text.
+
+        This addresses a GTK4/Pango issue where programmatic text injection
+        doesn't always trigger a re-layout until manual interaction occurs.
+        """
+        if not self.text_view:
+            return
+
+        # Strategy: Toggle wrap-mode to invalidate Pango cache and force re-layout.
+        # This is more reliable in GTK4 than queue_resize() alone for programmatic text injection.
+        current_wrap = self.text_view.get_wrap_mode()
+        self.text_view.set_wrap_mode(Gtk.WrapMode.NONE)
+        self.text_view.set_wrap_mode(current_wrap)
+        self.text_view.queue_resize()
 
     def _on_buffer_changed(self, buffer: Gtk.TextBuffer) -> None:
         """Update character and word count in the status bar label."""
@@ -101,8 +120,8 @@ class ExtractedPage(Adw.NavigationPage):
         char_count = len(text) if text else 0
         word_count = len(text.split()) if text else 0
 
-        words_text = ngettext("%d word", "%d words", word_count) % word_count
-        chars_text = ngettext("%d character", "%d characters", char_count) % char_count
+        words_text = ngettext("{n} word", "{n} words", word_count).format(n=word_count)
+        chars_text = ngettext("{n} character", "{n} characters", char_count).format(n=char_count)
 
         # Construct the stats label using a single translatable string to ensure
         # translators can adjust the ordering and separator if necessary.
@@ -197,6 +216,7 @@ class ExtractedPage(Adw.NavigationPage):
     def extracted_text(self, text: str) -> None:
         try:
             self.buffer.set_text(text)
+            self._force_reflow()
         except (GLib.Error, ValueError) as e:
             logger.error(f"Error setting extracted text: {e}")
 

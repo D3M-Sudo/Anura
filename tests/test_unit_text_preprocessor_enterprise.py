@@ -3,10 +3,6 @@ import pytest
 pytest.importorskip("gi")
 
 
-
-
-
-
 # tests/test_unit_text_preprocessor_enterprise.py
 from PIL import Image
 

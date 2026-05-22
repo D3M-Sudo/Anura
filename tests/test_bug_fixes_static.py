@@ -241,9 +241,10 @@ def test_window_disconnects_portal_banner_signal() -> None:
     text = (ANURA_PKG / "window.py").read_text()
     # Check that do_destroy contains disconnect for portal_banner
     # Since Issue 4 refactor, do_destroy remains in window.py but uses getattr to be safe with mixins
-    assert "self.portal_banner.disconnect(handler_id)" in text or (
-        "self.portal_banner.disconnect(self._handler_portal_banner)"
-    ) in text, (
+    assert (
+        "self.portal_banner.disconnect(handler_id)" in text
+        or ("self.portal_banner.disconnect(self._handler_portal_banner)") in text
+    ), (
         "AnuraWindow.do_destroy must disconnect the portal_banner signal handler "
         "(_handler_portal_banner) to prevent memory leaks."
     )

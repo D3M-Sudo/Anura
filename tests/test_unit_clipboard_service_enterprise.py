@@ -3,10 +3,6 @@ import pytest
 pytest.importorskip("gi")
 
 
-
-
-
-
 # tests/test_unit_clipboard_service_enterprise.py
 from unittest.mock import MagicMock, patch
 

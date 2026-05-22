@@ -1,11 +1,11 @@
 ---
 name: testing-anura
-description: Verify changes to the Anura GTK4 OCR app. Use when running lint, pytest, and end-to-end checks on this repo, especially when the host machine lacks GTK4 / libadwaita 1.6 / blueprint-compiler 0.16 / GNOME 49 dev packages.
+description: Verify changes to the Anura GTK4 OCR app. Use when running lint, pytest, and end-to-end checks on this repo, especially when the host machine lacks GTK4 / libadwaita 1.6 / blueprint-compiler 0.16 / GNOME 50 dev packages.
 ---
 
 # Testing Anura
 
-Anura is a GTK4 + Libadwaita app distributed as a Flatpak against the GNOME 49 runtime. The full GUI test stack is heavy (meson, ninja, pkg-config, libadwaita-1-dev ≥ 1.6, libportal-1-dev, blueprint-compiler 0.16, GNOME 49 runtime). Most generic Ubuntu / Devin VMs **do not** have all of these, and the system `blueprint-compiler` is usually too old to parse this project's `.blp` syntax. This skill describes what to do in that situation.
+Anura is a GTK4 + Libadwaita app distributed as a Flatpak against the GNOME 50 runtime. The full GUI test stack is heavy (meson, ninja, pkg-config, libadwaita-1-dev ≥ 1.6, libportal-1-dev, blueprint-compiler 0.16, GNOME 50 runtime). Most generic Ubuntu / Devin VMs **do not** have all of these, and the system `blueprint-compiler` is usually too old to parse this project's `.blp` syntax. This skill describes what to do in that situation.
 
 ## Always run first (works on every VM)
 
@@ -130,11 +130,11 @@ If any of these are true, a *live* GUI pass on this VM is not realistic:
 - `libadwaita-1-dev` missing or < 1.6
 - `libportal-1-dev` missing
 - `blueprint-compiler --help | head` says version `0~20220302-3` (or anything that can't parse `template $Name : Type` — you'll see an error on line 4 of any `.blp`)
-- no GNOME 49 runtime
+- no GNOME 50 runtime
 
 In that case:
 
-1. **Trust the live `flatpak-builder` CI on the PR.** It builds against `ghcr.io/flathub-infra/flatpak-github-actions:gnome-49`, which is the real production target. If it's green, the `.blp` files compiled, the `.ui` resources bundled, the `@Gtk.Template` widgets bind, and the app launches. Always quote the CI status in your test report.
+1. **Trust the live `flatpak-builder` CI on the PR.** It builds against `ghcr.io/flathub-infra/flatpak-github-actions:gnome-50`, which is the real production target. If it's green, the `.blp` files compiled, the `.ui` resources bundled, the `@Gtk.Template` widgets bind, and the app launches. Always quote the CI status in your test report.
 2. **For changed Python production code paths, use AST extraction to bypass gi.** Most of the interesting bits in `anura/services/share_service.py`, `anura/main.py`, `anura/utils/text_preprocessor.py`, `anura/window.py` are pure functions (URL builders, signal-handler helpers, text cleanup) that don't actually touch GTK at runtime — they just live inside a class that inherits from `GObject.Object`. Extract them with `ast.parse`, drop the `@staticmethod` / type-annotation decorations, and `exec` them in a clean namespace. Pattern:
 
 ```python

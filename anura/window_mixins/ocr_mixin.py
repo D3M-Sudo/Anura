@@ -30,9 +30,7 @@ class WindowOCRMixin:
         )
         # Banner's "button-clicked" fires when the user dismisses; hide until
         # the next backend failure re-reveals it.
-        self._handler_portal_banner = self.portal_banner.connect(
-            "button-clicked", self._on_portal_banner_dismissed
-        )
+        self._handler_portal_banner = self.portal_banner.connect("button-clicked", self._on_portal_banner_dismissed)
 
     def on_shot_done(self, _sender: GObject.GObject, text: str, copy: bool) -> None:
         """Handle successful screenshot capture and OCR processing."""
@@ -167,28 +165,132 @@ class WindowOCRMixin:
             logger.exception("Anura: Unexpected error in screenshot timeout handler")
         return False  # Don't repeat timeout
 
+    def open_image(self) -> None:
+        """Open file dialog to select an image for OCR processing."""
+        dialog = Gtk.FileDialog()
+        dialog.set_title(_("Choose an image for extraction"))
+
+        # Filtro cumulativo "Tutte le immagini supportate".
+        # Usa add_pattern() per ogni variante case (minuscolo + maiuscolo)
+        # di ogni estensione, garantendo compatibilità cross-desktop
+        # (GTK, LXQt/KDE) e case-insensitivity su filesystem Linux.
+        all_img_filter = Gtk.FileFilter()
+        all_img_filter.set_name(_("All supported images"))
+
+        _ALL_EXTENSIONS = [
+            "png",
+            "jpg",
+            "jpeg",
+            "jpe",
+            "jfif",
+            "webp",
+            "avif",
+            "avifs",
+            "tif",
+            "tiff",
+            "bmp",
+            "dib",
+            "gif",
+        ]
+
+        for ext in _ALL_EXTENSIONS:
+            all_img_filter.add_pattern(f"*.{ext}")
+            all_img_filter.add_pattern(f"*.{ext.upper()}")
+
+        # Helper per creare un filtro individuale per formato
+        def _make_format_filter(display_name: str, extensions: list[str]) -> Gtk.FileFilter:
+            """Crea un Gtk.FileFilter con nome pulito e pattern case-insensitive.
+
+            Args:
+                display_name: Nome localizzato da mostrare nel dropdown
+                             (es. "PNG images (*.png)").
+                extensions: Lista di estensioni (minuscole) da abbinare.
+
+            Returns:
+                Gtk.FileFilter configurato.
+            """
+            filt = Gtk.FileFilter()
+            filt.set_name(display_name)
+            for ext in extensions:
+                filt.add_pattern(f"*.{ext}")
+                filt.add_pattern(f"*.{ext.upper()}")
+            return filt
+
+        png_filter = _make_format_filter(_("PNG images (*.png)"), ["png"])
+
+        jpg_filter = _make_format_filter(
+            _("JPEG images (*.jpg)"),
+            ["jpg", "jpeg", "jpe", "jfif"],
+        )
+
+        webp_filter = _make_format_filter(_("WebP images (*.webp)"), ["webp"])
+
+        avif_filter = _make_format_filter(
+            _("AVIF images (*.avif)"),
+            ["avif", "avifs"],
+        )
+
+        tiff_filter = _make_format_filter(
+            _("TIFF images (*.tif)"),
+            ["tif", "tiff"],
+        )
+
+        bmp_filter = _make_format_filter(
+            _("BMP images (*.bmp)"),
+            ["bmp", "dib"],
+        )
+
+        gif_filter = _make_format_filter(_("GIF images (*.gif)"), ["gif"])
+
+        # Catch-all — mostra tutti i file.
+        all_files_filter = Gtk.FileFilter()
+        all_files_filter.set_name(_("All files (*)"))
+        all_files_filter.add_pattern("*")
+
+        # Ordine: cumulativo (default) → individuali per formato → catch-all.
+        filters = Gio.ListStore.new(Gtk.FileFilter)
+        filters.append(all_img_filter)
+        filters.append(png_filter)
+        filters.append(jpg_filter)
+        filters.append(webp_filter)
+        filters.append(avif_filter)
+        filters.append(tiff_filter)
+        filters.append(bmp_filter)
+        filters.append(gif_filter)
+        filters.append(all_files_filter)
+
+        dialog.set_filters(filters)
+        dialog.set_default_filter(all_img_filter)
+        dialog.open(self, None, self._on_open_image_result)
+
     def _on_open_image_result(self, dialog: Gtk.FileDialog, result: Gio.AsyncResult) -> None:
         """Handle image selection result."""
         try:
             file = dialog.open_finish(result)
             if file:
                 self.welcome_page.show_spinner()
-                file.load_contents_async(None, self._on_file_contents_loaded)
+                # Security Hardening: Query file info for size validation before loading contents
+                # This prevents memory exhaustion (DoS) from extremely large files.
+                file.query_info_async(
+                    Gio.FILE_ATTRIBUTE_STANDARD_SIZE,
+                    Gio.FileQueryInfoFlags.NONE,
+                    GLib.PRIORITY_DEFAULT,
+                    None,
+                    self._on_open_image_info_ready,
+                )
         except (GLib.Error, RuntimeError, OSError) as e:
             logger.debug(f"File selection cancelled or failed: {e}")
             # Ensure spinner is hidden on error to prevent UI inconsistency
             self.welcome_page.hide_spinner()
 
-    def _on_file_contents_loaded(self, gfile: Gio.File, result: Gio.AsyncResult) -> None:
-        """Handle file contents loading result."""
+    def _on_open_image_info_ready(self, gfile: Gio.File, result: Gio.AsyncResult) -> None:
+        """Handle file info result and validate size before loading content."""
         try:
-            # NOTE: do not unpack the etag into `_` — that rebinds the
-            # module-level gettext alias for the rest of this function.
-            ok, contents, _etag = gfile.load_contents_finish(result)
-            if ok:
-                # Validate file size before processing
-                file_size = len(contents)
+            info = gfile.query_info_finish(result)
+            if info:
+                file_size = info.get_size()
                 if file_size > MAX_IMAGE_SIZE_BYTES:
+                    logger.error(f"Anura OCR: Image too large ({file_size} bytes)")
                     self.welcome_page.spinner.set_visible(False)
                     self.show_toast(
                         _("Image too large: {size}MB (max {max}MB)").format(
@@ -197,6 +299,26 @@ class WindowOCRMixin:
                         ),
                     )
                     return
+
+                # Size is valid, proceed to load contents
+                gfile.load_contents_async(None, self._on_file_contents_loaded)
+            else:
+                self.welcome_page.spinner.set_visible(False)
+                self.show_toast(_("Failed to load image file info"))
+        except (GLib.Error, OSError, RuntimeError) as e:
+            self.welcome_page.spinner.set_visible(False)
+            logger.error(f"Failed to query file info: {e}")
+            self.show_toast(_("Failed to load image file"))
+
+    def _on_file_contents_loaded(self, gfile: Gio.File, result: Gio.AsyncResult) -> None:
+        """Handle file contents loading result."""
+        try:
+            # NOTE: do not unpack the etag into `_` — that rebinds the
+            # module-level gettext alias for the rest of this function.
+            ok, contents, _etag = gfile.load_contents_finish(result)
+            if ok:
+                # Size validation is now performed in _on_open_image_info_ready
+                # before loading contents to prevent memory exhaustion DoS.
 
                 # Validate image format before passing to OCR
                 try:

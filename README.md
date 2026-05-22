@@ -47,6 +47,9 @@ It also decodes **QR codes** in a single click, with full system integration on 
 | 🔒 **Privacy-first** | All processing happens locally — no data leaves your machine |
 | 🎨 **Native GTK4** | Designed for GNOME, built with Libadwaita |
 | 🚀 **Async D&D** | Smooth, non-blocking drag-and-drop experience |
+| ✨ **Smart OCR Cleanup** | Automatic image enhancement and text normalisation for better accuracy |
+| ⌨️ **Keyboard Shortcuts** | Full shortcut overlay with searchable cheat sheet |
+| 🔗 **Share Anywhere** | Share extracted text to 9 platforms: Telegram, Reddit, Mastodon, X, Email, Bluesky, Discord, LinkedIn, Threads |
 
 ---
 
@@ -77,36 +80,23 @@ Anura captures screenshots through the **XDG Desktop Portal**. The portal fronte
 
 After installing, **log out and back in** so the portal D-Bus service reloads. If the screenshot still fails, capture an `anura_debug.log` and the `domain=…, code=…` line will narrow down the cause.
 
-#### Host screenshot fallback (Flatpak only)
+#### Host screenshot fallback (Flatpak + X11 only)
 
 Some desktop sessions ship a portal frontend but no backend that exposes the
-`Screenshot` interface for the active session — most notably **LXQt / Xfce /
-Openbox on Ubuntu 24.04+**, where `xdg-desktop-portal-gtk` 1.15.x removed
-Screenshot upstream and `xdg-desktop-portal-kde` 5.27.x only registers it
-when KWin is the window manager.
+`Screenshot` interface — most notably **LXQt / Xfce / Openbox on Ubuntu 24.04+**,
+where `xdg-desktop-portal-gtk` 1.15.x removed Screenshot upstream and
+`xdg-desktop-portal-kde` 5.27.x only registers it when KWin is the window manager.
 
-When the portal returns the libportal generic `Screenshot failed` error,
-Anura's Flatpak transparently falls back to a host-side screenshot CLI via
-`flatpak-spawn --host`. To enable that path, install **at least one** of
-the following tools on the host:
+On **X11 sessions**, when the portal returns a `Screenshot failed` error, Anura
+automatically falls back to a **bundled `scrot`** that runs directly inside the
+Flatpak sandbox (via the `--socket=x11` permission). No additional tools need to
+be installed on the host — the fallback is self-contained.
 
-```bash
-# Recommended — GTK-based UI, works on every X11 desktop:
-sudo apt install gnome-screenshot
+> **Wayland sessions**: the X11 fallback is not available. Install the appropriate
+> portal backend for your compositor (see table above).
 
-# Optional fallback — tiny, CLI-driven (~200 KB):
-sudo apt install scrot
-```
-
-Anura tries them in this order: `gnome-screenshot` →
-`xfce4-screenshooter` → `spectacle` → `scrot` → `maim` → ImageMagick
-`import`. The first installed tool runs its native region-selection UI,
-writes a PNG into `~/Downloads/.anura-shot-<uuid>.png`, and Anura OCRs the
-result and deletes the temp file. If no tool is installed, Anura surfaces
-the original portal-failure banner so you know what to install.
-
-Outside the Flatpak (e.g. when running from source), the host fallback is
-not used; the portal is the only path.
+Outside the Flatpak (e.g. when running from source), the fallback is not used;
+the portal is the only path.
 
 ---
 
@@ -134,7 +124,7 @@ Valid levels: `TRACE`, `DEBUG`, `INFO` (default), `WARNING`, `ERROR`, `CRITICAL`
 **Screenshot fails with "No portal backend found"**
 - Install the appropriate portal backend for your desktop (see table above)
 - Log out and back in to reload portal services
-- If still failing, install host screenshot tools (gnome-screenshot or scrot)
+- On X11 sessions inside the Flatpak, Anura falls back to the bundled `scrot` automatically
 
 **Language models not downloading**
 - Check network connection
@@ -160,6 +150,7 @@ Valid levels: `TRACE`, `DEBUG`, `INFO` (default), `WARNING`, `ERROR`, `CRITICAL`
 | Tesseract OCR | ≥ 5.0 |
 | ZBar | any |
 | Blueprint Compiler | ≥ 0.16.0 |
+| uv | latest |
 
 **Fedora:**
 
@@ -214,35 +205,35 @@ flatpak-builder --force-clean build-flatpak \
 
 ## Code Quality
 
-Anura uses [Ruff](https://docs.astral.sh/ruff/) for linting and formatting, and [pytest](https://pytest.org) for testing.
+Anura uses [Ruff](https://docs.astral.sh/ruff/) for linting and formatting, and [pytest](https://pytest.org) for testing. The project uses **uv** for dependency management.
 
 ```bash
-# Activate the virtual environment first
-source .venv/bin/activate
+# Install dependencies
+uv sync --dev
 
 # Lint
-ruff check anura/ build-aux/
+uv run ruff check anura/ build-aux/
 
 # Format
-ruff format anura/
+uv run ruff format anura/
 
 # Auto-fix
-ruff check --fix anura/
+uv run ruff check --fix anura/
 
-# Run tests (no GTK required)
-pytest tests/ -m "not gtk" -v
+# Run unit tests (no GTK required)
+uv run pytest tests/ -m "not gtk" -v
 
-# Run GTK-dependent tests (requires setup)
+# Run GTK-dependent tests (requires GSettings schema)
 mkdir -p builddir
 cp data/io.github.d3msudo.anura.gschema.xml builddir/
 glib-compile-schemas builddir/
 export GSETTINGS_SCHEMA_DIR="builddir"
 export PYTHONPATH="/usr/lib/python3/dist-packages:."
-pytest tests/ -v
+uv run pytest tests/ -v
 ```
 
-> **Note:** Tests marked `@pytest.mark.gtk` require system GTK libraries and GSettings schema.  
-> See `.windsurf/rules/testing.md` for complete setup instructions.
+> **Note:** Tests marked `@pytest.mark.gtk` require system GTK libraries and a compiled GSettings schema.  
+> See `CONTRIBUTING.md` for the complete testing setup and workflow.
 
 ---
 

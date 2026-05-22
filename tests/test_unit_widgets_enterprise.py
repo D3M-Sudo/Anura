@@ -18,7 +18,7 @@ Adw.init()
 # Load GResource bundle immediately at module level
 import os  # noqa: E402
 
-resource_path = os.path.join(os.path.dirname(__file__), "..", "data", "com.github.d3msudo.anura.gresource")
+resource_path = os.path.join(os.path.dirname(__file__), "..", "data", "io.github.d3msudo.anura.gresource")
 if os.path.exists(resource_path):
     resource = Gio.Resource.load(resource_path)
     resource._register()
@@ -103,6 +103,7 @@ class TestExtractedPageEnterprise:
         # We don't want to wait 2 seconds in a unit test, so we just verify it set the icon.
         # The timeout logic is standard GLib.
 
+
 class TestWelcomePageEnterprise:
     """
     Enterprise-grade tests for WelcomePage widget.
@@ -160,6 +161,7 @@ class TestWelcomePageEnterprise:
         assert widget.drop_area.get_visible() is False
         assert widget.spinner.get_visible() is False
         assert not widget.drop_button.has_css_class("suggested-action")
+
 
 class TestLanguagePopoverEnterprise:
     """

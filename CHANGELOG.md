@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- Added keyboard shortcut hints and empty search state in the language selector
+- Added 'All files (*)' filter to the image selection dialog
+- Improved pluralization and internationalization support for text statistics
+
+### Fixed
+- Resolved layout reflow issues in the extracted text page to ensure better window responsiveness
+- Improved file selection dialog reliability by using standard extension filtering
+- Fixed critical startup crashes and resolved Flatpak build environment issues
+- Fixed FileDialog filter glitch on LXQt/Flatpak environments
+- Fixed missing Tesseract binary preventing app launch inside Flatpak
+- Fixed translation regression causing broken localisation on non-English locales
+- Fixed keyboard shortcuts to use universal key names (F1, K) for cross-layout compatibility
+- Fixed ExtractedPage missing _tts_error_handler_id attribute declaration
+- Fixed LanguageRow idle callback widget validity check to prevent crashes
+- Fixed ClipboardService timeout cleanup with explicit None check
+- Removed redundant pytest import in test file
+
+### Security
+- Implemented protection against Denial of Service (DoS) by validating image file sizes before loading
+- Hardened URL validation and encoding in ShareService against injection attacks
+
+### Changed
+- Renamed application ID from com.github.d3msudo.anura to io.github.d3msudo.anura
+- Screenshot fallback now uses a bundled scrot binary inside the sandbox instead of host-side tools
+
 ## [0.1.4.3] - 2026-05-16 {version-0.1.4.3}
 
 ### Added
