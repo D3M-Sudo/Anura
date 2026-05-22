@@ -15,14 +15,20 @@ import gi
 gi.require_version("GLib", "2.0")
 gi.require_version("Gio", "2.0")
 
-from gi.repository import GLib, Gio  # noqa: E402
+from gi.repository import Gio, GLib  # noqa: E402
 from loguru import logger  # noqa: E402
 
 
 class AtomicTaskResult:
     """Wrapper for task results with versioning metadata."""
 
-    def __init__(self, task_id: str, data: object = None, error: Exception = None, traceback_str: str = None) -> None:
+    def __init__(
+        self,
+        task_id: str,
+        data: object = None,
+        error: Exception | None = None,
+        traceback_str: str | None = None,
+    ) -> None:
         self.task_id = task_id
         self.data = data
         self.error = error

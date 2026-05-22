@@ -4,8 +4,9 @@
 # SPDX-License-Identifier: MIT
 
 from abc import ABC, abstractmethod
-from PIL import Image, ImageEnhance, ImageFilter, ImageStat
+
 from loguru import logger
+from PIL import Image, ImageEnhance, ImageFilter, ImageStat
 
 
 class ImageFilterBase(ABC):
@@ -132,7 +133,7 @@ class SharpeningFilter(ImageFilterBase):
 class FilterChain:
     """Orchestrates a list of image filters."""
 
-    def __init__(self, filters: list[ImageFilterBase] = None) -> None:
+    def __init__(self, filters: list[ImageFilterBase] | None = None) -> None:
         self._filters = filters or []
 
     def add_filter(self, img_filter: ImageFilterBase) -> None:

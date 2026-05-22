@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-import math
-from loguru import logger
 
 
 class StructuralReconstructor:
@@ -87,11 +85,11 @@ class StructuralReconstructor:
             if self._should_merge(prev_line, curr_line):
                 current_paragraph.append(curr_line)
             else:
-                paragraphs.append(" ".join([l["text"] for l in current_paragraph]))
+                paragraphs.append(" ".join([line["text"] for line in current_paragraph]))
                 current_paragraph = [curr_line]
 
         if current_paragraph:
-            paragraphs.append(" ".join([l["text"] for l in current_paragraph]))
+            paragraphs.append(" ".join([line["text"] for line in current_paragraph]))
 
         return "\n\n".join(paragraphs)
 
@@ -125,10 +123,7 @@ class StructuralReconstructor:
 
         # Horizontal alignment check (start of lines)
         h_diff = abs(line1["left"] - line2["left"])
-        if h_diff > avg_height * 3:  # Indentation or major shift
-            return False
-
-        return True
+        return h_diff <= avg_height * 3
 
 
 # Global singleton instance
