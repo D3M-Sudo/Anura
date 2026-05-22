@@ -27,8 +27,8 @@ def _find_method(tree: ast.Module, class_name: str, method_name: str) -> ast.Fun
 
 def test_open_image_dialog_is_local() -> None:
     """Verify Gtk.FileDialog is a local variable to prevent filter duplication."""
-    tree, _ = _load_module_source("window.py")
-    open_image_fn = _find_method(tree, "AnuraWindow", "open_image")
+    tree, _ = _load_module_source("window_mixins/ocr_mixin.py")
+    open_image_fn = _find_method(tree, "WindowOCRMixin", "open_image")
 
     found_local_dialog = False
     for node in ast.walk(open_image_fn):
@@ -50,8 +50,8 @@ def test_open_image_dialog_is_local() -> None:
 
 def test_open_image_set_default_filter() -> None:
     """Verify set_default_filter() is called to ensure cumulative filter is selected."""
-    tree, _ = _load_module_source("window.py")
-    open_image_fn = _find_method(tree, "AnuraWindow", "open_image")
+    tree, _ = _load_module_source("window_mixins/ocr_mixin.py")
+    open_image_fn = _find_method(tree, "WindowOCRMixin", "open_image")
 
     found_default = False
     for node in ast.walk(open_image_fn):
@@ -106,8 +106,8 @@ def _collect_add_pattern_nodes(target_fn: ast.FunctionDef) -> dict:
 
 def test_open_image_filters_structure() -> None:
     """Verify filters use only add_pattern() with proper extension coverage."""
-    tree, _ = _load_module_source("window.py")
-    open_image_fn = _find_method(tree, "AnuraWindow", "open_image")
+    tree, _ = _load_module_source("window_mixins/ocr_mixin.py")
+    open_image_fn = _find_method(tree, "WindowOCRMixin", "open_image")
 
     info = _collect_add_pattern_nodes(open_image_fn)
 
