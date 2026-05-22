@@ -18,6 +18,8 @@ gi.require_version("Gio", "2.0")
 from gi.repository import Gio, GLib  # noqa: E402
 from loguru import logger  # noqa: E402
 
+from anura.utils.singleton import get_instance  # noqa: E402
+
 
 class AtomicTaskResult:
     """Wrapper for task results with versioning metadata."""
@@ -42,25 +44,11 @@ class AtomicTaskManager:
     and UI micro-stutters.
     """
 
-    _instance = None
-    _lock = threading.Lock()
-
-    def __new__(cls):
-        with cls._lock:
-            if cls._instance is None:
-                cls._instance = super().__new__(cls)
-                cls._instance._initialized = False
-            return cls._instance
-
     def __init__(self) -> None:
-        if self._initialized:
-            return
-
         self._current_task_id: str | None = None
         self._cancellable: Gio.Cancellable | None = None
         self._executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="AnuraAtomicWorker")
         self._state_lock = threading.Lock()
-        self._initialized = True
         logger.debug("AtomicTaskManager: Initialized with single-worker pool")
 
     def execute(
@@ -167,12 +155,10 @@ class AtomicTaskManager:
         self._executor.shutdown(wait=False)
 
 
-# Global singleton instance accessor
-_atomic_manager: AtomicTaskManager | None = None
-
-
 def get_atomic_manager() -> AtomicTaskManager:
-    global _atomic_manager
-    if _atomic_manager is None:
-        _atomic_manager = AtomicTaskManager()
-    return _atomic_manager
+    """Get the thread-safe AtomicTaskManager singleton.
+
+    Returns:
+        The singleton AtomicTaskManager instance.
+    """
+    return get_instance(AtomicTaskManager)

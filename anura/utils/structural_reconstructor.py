@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: MIT
 
+from anura.utils.singleton import get_instance
 
 
 class StructuralReconstructor:
@@ -126,12 +127,10 @@ class StructuralReconstructor:
         return h_diff <= avg_height * 3
 
 
-# Global singleton instance
-_structural_reconstructor = None
-
-
 def get_structural_reconstructor() -> StructuralReconstructor:
-    global _structural_reconstructor
-    if _structural_reconstructor is None:
-        _structural_reconstructor = StructuralReconstructor()
-    return _structural_reconstructor
+    """Get the thread-safe StructuralReconstructor singleton.
+
+    Returns:
+        The singleton StructuralReconstructor instance.
+    """
+    return get_instance(StructuralReconstructor)
