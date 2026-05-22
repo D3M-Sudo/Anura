@@ -166,9 +166,6 @@ msgstr "பின்னிச்"
 msgid "French"
 msgstr "பிரஞ்சு"
 
-#. NOTE: frk (German - Fraktur) intentionally removed — the model file
-#. frk.traineddata is absent from both tessdata_best/main and tessdata/main,
-#. so every install attempt would silently fail with HTTP 404.
 #: anura/language_manager.py:132
 msgid "French, Middle"
 msgstr "பிரஞ்சு, நடுத்தர (Ca.1400-1600)"
@@ -1418,8 +1415,6 @@ msgstr ""
 #~ msgid "Math / Equation Detection"
 #~ msgstr "கணிதம் / சமன்பாடு கண்டறிதல் தொகுதி"
 
-#~ msgid "German - Fraktur"
-#~ msgstr "செர்மன் - எலும்பு முறிவு"
 
 #~ msgid "Open"
 #~ msgstr "திற"

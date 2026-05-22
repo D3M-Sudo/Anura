@@ -171,9 +171,6 @@ msgstr "Фінська"
 msgid "French"
 msgstr "Французька"
 
-#. NOTE: frk (German - Fraktur) intentionally removed — the model file
-#. frk.traineddata is absent from both tessdata_best/main and tessdata/main,
-#. so every install attempt would silently fail with HTTP 404.
 #: anura/language_manager.py:132
 msgid "French, Middle"
 msgstr "Французька, Середньовіччя (1400-1600)"
@@ -1424,8 +1421,6 @@ msgstr ""
 #~ msgid "Math / Equation Detection"
 #~ msgstr "Математичні вирази"
 
-#~ msgid "German - Fraktur"
-#~ msgstr "Німецька - Фрактура"
 
 #~ msgid "Open"
 #~ msgstr "Відкрити"

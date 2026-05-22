@@ -111,6 +111,7 @@ class LanguageManager(GObject.GObject):
             "cym": _("Welsh"),
             "dan": _("Danish"),
             "deu": _("German"),
+            "deu_latf": _("German - Fraktur"),  # Correct code for Fraktur, available in tessdata_best
             "dzo": _("Dzongkha"),
             "ell": _("Greek"),
             "eng": _("English"),
@@ -126,9 +127,6 @@ class LanguageManager(GObject.GObject):
             "fil": _("Filipino"),
             "fin": _("Finnish"),
             "fra": _("French"),
-            # NOTE: frk (German - Fraktur) intentionally removed — the model file
-            # frk.traineddata is absent from both tessdata_best/main and tessdata/main,
-            # so every install attempt would silently fail with HTTP 404.
             "frm": _("French, Middle"),
             "fry": _("Western Frisian"),
             "gla": _("Scottish Gaelic"),
