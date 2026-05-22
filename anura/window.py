@@ -151,11 +151,17 @@ class AnuraWindow(WindowDnDMixin, WindowOCRMixin, WindowTTSMixin, Adw.Applicatio
 
         _ALL_EXTENSIONS = [
             "png",
-            "jpg", "jpeg", "jpe", "jfif",
+            "jpg",
+            "jpeg",
+            "jpe",
+            "jfif",
             "webp",
-            "avif", "avifs",
-            "tif", "tiff",
-            "bmp", "dib",
+            "avif",
+            "avifs",
+            "tif",
+            "tiff",
+            "bmp",
+            "dib",
             "gif",
         ]
 

@@ -2,6 +2,7 @@
 #
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
+
 class WindowTTSMixin:
     """Mixin class for AnuraWindow to handle TTS playback logic."""
 

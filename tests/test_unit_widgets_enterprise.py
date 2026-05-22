@@ -103,6 +103,7 @@ class TestExtractedPageEnterprise:
         # We don't want to wait 2 seconds in a unit test, so we just verify it set the icon.
         # The timeout logic is standard GLib.
 
+
 class TestWelcomePageEnterprise:
     """
     Enterprise-grade tests for WelcomePage widget.
@@ -160,6 +161,7 @@ class TestWelcomePageEnterprise:
         assert widget.drop_area.get_visible() is False
         assert widget.spinner.get_visible() is False
         assert not widget.drop_button.has_css_class("suggested-action")
+
 
 class TestLanguagePopoverEnterprise:
     """

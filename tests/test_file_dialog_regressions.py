@@ -9,10 +9,12 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 ANURA_PKG = PROJECT_ROOT / "anura"
 
+
 def _load_module_source(rel_path: str) -> tuple[ast.Module, str]:
     path = ANURA_PKG / rel_path
     text = path.read_text()
     return ast.parse(text), text
+
 
 def _find_method(tree: ast.Module, class_name: str, method_name: str) -> ast.FunctionDef:
     for node in ast.walk(tree):
@@ -21,6 +23,7 @@ def _find_method(tree: ast.Module, class_name: str, method_name: str) -> ast.Fun
                 if isinstance(item, ast.FunctionDef) and item.name == method_name:
                     return item
     raise AssertionError(f"{class_name}.{method_name} not found")
+
 
 def test_open_image_dialog_is_local() -> None:
     """Verify Gtk.FileDialog is a local variable to prevent filter duplication."""
@@ -31,13 +34,19 @@ def test_open_image_dialog_is_local() -> None:
     for node in ast.walk(open_image_fn):
         if isinstance(node, ast.Assign):
             for target in node.targets:
-                if isinstance(target, ast.Name) and target.id == "dialog":
-                    if isinstance(node.value, ast.Call) and isinstance(node.value.func, ast.Attribute):
-                        if node.value.func.attr == "FileDialog" and node.value.func.value.id == "Gtk":
-                            found_local_dialog = True
-                            break
+                if (
+                    isinstance(target, ast.Name)
+                    and target.id == "dialog"
+                    and isinstance(node.value, ast.Call)
+                    and isinstance(node.value.func, ast.Attribute)
+                    and node.value.func.attr == "FileDialog"
+                    and node.value.func.value.id == "Gtk"
+                ):
+                    found_local_dialog = True
+                    break
 
     assert found_local_dialog, "Gtk.FileDialog must be instantiated as a local variable 'dialog'."
+
 
 def test_open_image_set_default_filter() -> None:
     """Verify set_default_filter() is called to ensure cumulative filter is selected."""
@@ -46,11 +55,15 @@ def test_open_image_set_default_filter() -> None:
 
     found_default = False
     for node in ast.walk(open_image_fn):
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
-            if node.func.attr == "set_default_filter":
-                found_default = True
-                break
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "set_default_filter"
+        ):
+            found_default = True
+            break
     assert found_default, "AnuraWindow.open_image should call set_default_filter()."
+
 
 def _find_nested_function_def(open_image_fn: ast.FunctionDef, name: str) -> ast.FunctionDef | None:
     """Find a function definition nested inside open_image."""
@@ -58,6 +71,7 @@ def _find_nested_function_def(open_image_fn: ast.FunctionDef, name: str) -> ast.
         if isinstance(node, ast.FunctionDef) and node.name == name:
             return node
     return None
+
 
 def _collect_add_pattern_nodes(target_fn: ast.FunctionDef) -> dict:
     """Collect all add_pattern / add_suffix / add_mime_type calls."""
@@ -79,9 +93,8 @@ def _collect_add_pattern_nodes(target_fn: ast.FunctionDef) -> dict:
         elif attr == "add_mime_type":
             if node.args and isinstance(node.args[0], (ast.Constant, ast.JoinedStr)):
                 mime_types_found.append(node.args[0].value if isinstance(node.args[0], ast.Constant) else "<fstring>")
-        elif attr == "add_suffix":
-            if node.args and isinstance(node.args[0], (ast.Constant, ast.JoinedStr)):
-                suffixes_found.append(node.args[0].value if isinstance(node.args[0], ast.Constant) else "<fstring>")
+        elif attr == "add_suffix" and node.args and isinstance(node.args[0], (ast.Constant, ast.JoinedStr)):
+            suffixes_found.append(node.args[0].value if isinstance(node.args[0], ast.Constant) else "<fstring>")
 
     return {
         "patterns_literal": patterns_literal,
@@ -89,6 +102,7 @@ def _collect_add_pattern_nodes(target_fn: ast.FunctionDef) -> dict:
         "mime_types_found": mime_types_found,
         "suffixes_found": suffixes_found,
     }
+
 
 def test_open_image_filters_structure() -> None:
     """Verify filters use only add_pattern() with proper extension coverage."""
@@ -122,9 +136,9 @@ def test_open_image_filters_structure() -> None:
     # Count filters created via _make_format_filter() and the all_img_filter
     # (7 individual format filters + the cumulative all_img_filter)
     make_filter_calls = sum(
-        1 for node in ast.walk(open_image_fn)
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
-        and node.func.id == "_make_format_filter"
+        1
+        for node in ast.walk(open_image_fn)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "_make_format_filter"
     )
     assert make_filter_calls == 7, (
         f"Expected 7 calls to _make_format_filter() (one per format), got {make_filter_calls}."

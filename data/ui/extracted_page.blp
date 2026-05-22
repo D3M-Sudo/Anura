@@ -137,10 +137,13 @@ template $ExtractedPage : Adw.NavigationPage {
       hexpand: true;
       vexpand: true;
       hscrollbar-policy: never;
+      propagate-natural-width: false;
       width-request: 150; // Consente il rimpicciolimento fluido sotto la dimensione ideale del testo
 
       TextView text_view {
         hexpand: true;
+        vexpand: true;
+        width-request: 100;
         wrap-mode: word; // Sostituisce word_char per evitare di troncare le parole a metà
 
         // Margini interni nativi di GtkTextView per il testo

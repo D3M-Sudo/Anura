@@ -26,6 +26,7 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
             </child>
             <child>
               <object class="AdwNavigationSplitView" id="split_view">
+                <property name="hexpand">true</property>
                 <property name="vexpand">true</property>
                 <property name="collapsed">true</property>
                 <child type="sidebar">

@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 # To prevent leaking mocks of system modules like 'gi' into other tests,
 # we perform all GTK-dependent testing inside a context that patches sys.modules.
 
+
 class TestSecurityDoS(unittest.TestCase):
     def setUp(self):
         # Create persistent mocks for the system modules we need to fake
@@ -19,23 +20,27 @@ class TestSecurityDoS(unittest.TestCase):
         self.mock_glib.PRIORITY_DEFAULT = 0
 
         # Create a mapping of module names to our mocks
-        self.module_patcher = patch.dict(sys.modules, {
-            "gi": self.mock_gi,
-            "gi.repository": MagicMock(),
-            "gi.repository.Adw": self.mock_adw,
-            "gi.repository.Gio": self.mock_gio,
-            "gi.repository.GLib": self.mock_glib,
-            "gi.repository.GObject": MagicMock(),
-            "gi.repository.Gtk": self.mock_gtk,
-            "gi.repository.Gdk": MagicMock(),
-            "gi.repository.GdkPixbuf": MagicMock(),
-            "loguru": MagicMock(),
-        })
+        self.module_patcher = patch.dict(
+            sys.modules,
+            {
+                "gi": self.mock_gi,
+                "gi.repository": MagicMock(),
+                "gi.repository.Adw": self.mock_adw,
+                "gi.repository.Gio": self.mock_gio,
+                "gi.repository.GLib": self.mock_glib,
+                "gi.repository.GObject": MagicMock(),
+                "gi.repository.Gtk": self.mock_gtk,
+                "gi.repository.Gdk": MagicMock(),
+                "gi.repository.GdkPixbuf": MagicMock(),
+                "loguru": MagicMock(),
+            },
+        )
         self.module_patcher.start()
 
         # Add mock gettext functions to sys.modules['builtins'] manually
         # patch.multiple("builtins", ...) fails if the attribute doesn't exist.
         import builtins
+
         self._orig_gettext = getattr(builtins, "_", None)
         self._orig_ngettext = getattr(builtins, "ngettext", None)
         builtins._ = lambda s: s
@@ -43,9 +48,11 @@ class TestSecurityDoS(unittest.TestCase):
 
         # Now we can safely import the mixin from within the isolated environment.
         # We also mock internal service getters to avoid complex service initialization.
-        with patch("anura.services.clipboard_service.get_clipboard_service"), \
-             patch("anura.utils.text_preprocessor.get_text_preprocessor"), \
-             patch("anura.utils.portal_advice.detect_portal_advice"):
+        with (
+            patch("anura.services.clipboard_service.get_clipboard_service"),
+            patch("anura.utils.text_preprocessor.get_text_preprocessor"),
+            patch("anura.utils.portal_advice.detect_portal_advice"),
+        ):
             from anura.window_mixins.ocr_mixin import WindowOCRMixin
 
         class TestWindow(WindowOCRMixin):
@@ -63,6 +70,7 @@ class TestSecurityDoS(unittest.TestCase):
 
     def tearDown(self):
         import builtins
+
         if self._orig_gettext is None:
             del builtins._
         else:

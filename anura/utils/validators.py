@@ -32,10 +32,7 @@ def is_safe_url_string(text: str) -> bool:
 
     # Ensure URL is ASCII-only (prevent Unicode homograph attacks).
     # str.isascii() is significantly faster than encoding to ascii and catching exceptions.
-    if not text.strip().isascii():
-        return False
-
-    return True
+    return text.strip().isascii()
 
 
 def uri_validator(text: str) -> bool:

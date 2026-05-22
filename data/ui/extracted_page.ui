@@ -155,10 +155,13 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
             <property name="hexpand">true</property>
             <property name="vexpand">true</property>
             <property name="hscrollbar-policy">2</property>
+            <property name="propagate-natural-width">false</property>
             <property name="width-request">150</property>
             <child>
               <object class="GtkTextView" id="text_view">
                 <property name="hexpand">true</property>
+                <property name="vexpand">true</property>
+                <property name="width-request">100</property>
                 <property name="wrap-mode">2</property>
                 <property name="left-margin">14</property>
                 <property name="right-margin">14</property>

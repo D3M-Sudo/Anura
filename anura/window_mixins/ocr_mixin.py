@@ -30,9 +30,7 @@ class WindowOCRMixin:
         )
         # Banner's "button-clicked" fires when the user dismisses; hide until
         # the next backend failure re-reveals it.
-        self._handler_portal_banner = self.portal_banner.connect(
-            "button-clicked", self._on_portal_banner_dismissed
-        )
+        self._handler_portal_banner = self.portal_banner.connect("button-clicked", self._on_portal_banner_dismissed)
 
     def on_shot_done(self, _sender: GObject.GObject, text: str, copy: bool) -> None:
         """Handle successful screenshot capture and OCR processing."""
