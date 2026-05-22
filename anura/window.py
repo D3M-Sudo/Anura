@@ -142,67 +142,73 @@ class AnuraWindow(WindowDnDMixin, WindowOCRMixin, WindowTTSMixin, Adw.Applicatio
         dialog = Gtk.FileDialog()
         dialog.set_title(_("Choose an image for extraction"))
 
-        # Filtro cumulativo — DEVE usare add_suffix(), MAI add_mime_type().
-        # add_suffix() serializza come regola glob (tipo D-Bus 0), che tutti
-        # i portal backend (GNOME, KDE, LXQt) rendono come una singola voce
-        # con il nome fornito da set_name(). Al contrario, add_mime_type()
-        # su xdg-desktop-portal-lxqt genera una voce separata per ogni MIME
-        # type, ignorando set_name() e duplicando il dropdown.
+        # Filtro cumulativo "Tutte le immagini supportate".
+        # Usa add_pattern() per ogni variante case (minuscolo + maiuscolo)
+        # di ogni estensione, garantendo compatibilità cross-desktop
+        # (GTK, LXQt/KDE) e case-insensitivity su filesystem Linux.
         all_img_filter = Gtk.FileFilter()
         all_img_filter.set_name(_("All supported images"))
-        all_img_filter.add_suffix("png")
-        all_img_filter.add_suffix("jpg")
-        all_img_filter.add_suffix("jpeg")
-        all_img_filter.add_suffix("jpe")
-        all_img_filter.add_suffix("jfif")
-        all_img_filter.add_suffix("webp")
-        all_img_filter.add_suffix("avif")
-        all_img_filter.add_suffix("avifs")
-        all_img_filter.add_suffix("tif")
-        all_img_filter.add_suffix("tiff")
-        all_img_filter.add_suffix("bmp")
-        all_img_filter.add_suffix("dib")
-        all_img_filter.add_suffix("gif")
 
-        # Filtri individuali per formato — stesso principio: add_suffix() unico.
-        # Non usare add_mime_type(), non mescolare i due tipi sullo stesso filtro.
-        png_filter = Gtk.FileFilter()
-        png_filter.set_name(_("PNG images"))
-        png_filter.add_suffix("png")
+        _ALL_EXTENSIONS = [
+            "png",
+            "jpg", "jpeg", "jpe", "jfif",
+            "webp",
+            "avif", "avifs",
+            "tif", "tiff",
+            "bmp", "dib",
+            "gif",
+        ]
 
-        jpg_filter = Gtk.FileFilter()
-        jpg_filter.set_name(_("JPEG images"))
-        jpg_filter.add_suffix("jpg")
-        jpg_filter.add_suffix("jpeg")
-        jpg_filter.add_suffix("jpe")
-        jpg_filter.add_suffix("jfif")
+        for ext in _ALL_EXTENSIONS:
+            all_img_filter.add_pattern(f"*.{ext}")
+            all_img_filter.add_pattern(f"*.{ext.upper()}")
 
-        webp_filter = Gtk.FileFilter()
-        webp_filter.set_name(_("WebP images"))
-        webp_filter.add_suffix("webp")
+        # Helper per creare un filtro individuale per formato
+        def _make_format_filter(display_name: str, extensions: list[str]) -> Gtk.FileFilter:
+            """Crea un Gtk.FileFilter con nome pulito e pattern case-insensitive.
 
-        avif_filter = Gtk.FileFilter()
-        avif_filter.set_name(_("AVIF images"))
-        avif_filter.add_suffix("avif")
-        avif_filter.add_suffix("avifs")
+            Args:
+                display_name: Nome localizzato da mostrare nel dropdown
+                             (es. "PNG images (*.png)").
+                extensions: Lista di estensioni (minuscole) da abbinare.
 
-        tiff_filter = Gtk.FileFilter()
-        tiff_filter.set_name(_("TIFF images"))
-        tiff_filter.add_suffix("tif")
-        tiff_filter.add_suffix("tiff")
+            Returns:
+                Gtk.FileFilter configurato.
+            """
+            filt = Gtk.FileFilter()
+            filt.set_name(display_name)
+            for ext in extensions:
+                filt.add_pattern(f"*.{ext}")
+                filt.add_pattern(f"*.{ext.upper()}")
+            return filt
 
-        bmp_filter = Gtk.FileFilter()
-        bmp_filter.set_name(_("BMP images"))
-        bmp_filter.add_suffix("bmp")
-        bmp_filter.add_suffix("dib")
+        png_filter = _make_format_filter(_("PNG images (*.png)"), ["png"])
 
-        gif_filter = Gtk.FileFilter()
-        gif_filter.set_name(_("GIF images"))
-        gif_filter.add_suffix("gif")
+        jpg_filter = _make_format_filter(
+            _("JPEG images (*.jpg)"),
+            ["jpg", "jpeg", "jpe", "jfif"],
+        )
 
-        # Catch-all — DEVE usare add_pattern("*"), non add_mime_type("*/*").
-        # È l'unico filtro a cui è concesso usare add_pattern(); non mescolare
-        # con add_mime_type() o add_suffix().
+        webp_filter = _make_format_filter(_("WebP images (*.webp)"), ["webp"])
+
+        avif_filter = _make_format_filter(
+            _("AVIF images (*.avif)"),
+            ["avif", "avifs"],
+        )
+
+        tiff_filter = _make_format_filter(
+            _("TIFF images (*.tif)"),
+            ["tif", "tiff"],
+        )
+
+        bmp_filter = _make_format_filter(
+            _("BMP images (*.bmp)"),
+            ["bmp", "dib"],
+        )
+
+        gif_filter = _make_format_filter(_("GIF images (*.gif)"), ["gif"])
+
+        # Catch-all — mostra tutti i file.
         all_files_filter = Gtk.FileFilter()
         all_files_filter.set_name(_("All files (*)"))
         all_files_filter.add_pattern("*")
