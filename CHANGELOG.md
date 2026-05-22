@@ -18,6 +18,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fixed FileDialog filter glitch on LXQt/Flatpak environments
 - Fixed missing Tesseract binary preventing app launch inside Flatpak
 - Fixed translation regression causing broken localisation on non-English locales
+- Fixed keyboard shortcuts to use universal key names (F1, K) for cross-layout compatibility
+- Fixed ExtractedPage missing _tts_error_handler_id attribute declaration
+- Fixed LanguageRow idle callback widget validity check to prevent crashes
+- Fixed ClipboardService timeout cleanup with explicit None check
+- Removed redundant pytest import in test file
 
 ### Security
 - Implemented protection against Denial of Service (DoS) by validating image file sizes before loading
