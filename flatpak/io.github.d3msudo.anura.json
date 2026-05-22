@@ -99,8 +99,8 @@
             "sources": [
                 {
                     "type": "archive",
-                    "url": "https://files.pythonhosted.org/packages/b9/7a/df6a26df77cdfe0b9d9df3c965c4fae9f6de3ee0f9ea1db9786a3b2b8006/zxing-cpp-2.3.0.tar.gz",
-                    "sha256": "43b17409f584e09cb469bc72d73379b3df9441a5477cb36f01900139bc6dfcf7",
+                    "url": "https://files.pythonhosted.org/packages/d9/f2/b781bf6119abe665069777e3c0f154752cf924fe8a55fca027243abbc555/zxing_cpp-2.3.0.tar.gz",
+                    "sha256": "3babedb67a4c15c9de2c2b4c42d70af83a6c85780c1b2d9803ac64c6ae69f14e",
                     "x-checker-data": {
                         "type": "pypi",
                         "name": "zxing-cpp"
