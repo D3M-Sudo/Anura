@@ -142,23 +142,85 @@ class AnuraWindow(WindowDnDMixin, WindowOCRMixin, WindowTTSMixin, Adw.Applicatio
         dialog = Gtk.FileDialog()
         dialog.set_title(_("Choose an image for extraction"))
 
+        # Filtro cumulativo — DEVE usare add_suffix(), MAI add_mime_type().
+        # add_suffix() serializza come regola glob (tipo D-Bus 0), che tutti
+        # i portal backend (GNOME, KDE, LXQt) rendono come una singola voce
+        # con il nome fornito da set_name(). Al contrario, add_mime_type()
+        # su xdg-desktop-portal-lxqt genera una voce separata per ogni MIME
+        # type, ignorando set_name() e duplicando il dropdown.
         all_img_filter = Gtk.FileFilter()
-        all_img_filter.set_name(_("Image files"))
-        all_img_filter.add_mime_type("image/png")
-        all_img_filter.add_mime_type("image/jpeg")
-        all_img_filter.add_mime_type("image/webp")
-        all_img_filter.add_mime_type("image/tiff")
-        all_img_filter.add_mime_type("image/bmp")
+        all_img_filter.set_name(_("All supported images"))
+        all_img_filter.add_suffix("png")
+        all_img_filter.add_suffix("jpg")
+        all_img_filter.add_suffix("jpeg")
+        all_img_filter.add_suffix("jpe")
+        all_img_filter.add_suffix("jfif")
+        all_img_filter.add_suffix("webp")
+        all_img_filter.add_suffix("avif")
+        all_img_filter.add_suffix("avifs")
+        all_img_filter.add_suffix("tif")
+        all_img_filter.add_suffix("tiff")
+        all_img_filter.add_suffix("bmp")
+        all_img_filter.add_suffix("dib")
+        all_img_filter.add_suffix("gif")
 
+        # Filtri individuali per formato — stesso principio: add_suffix() unico.
+        # Non usare add_mime_type(), non mescolare i due tipi sullo stesso filtro.
+        png_filter = Gtk.FileFilter()
+        png_filter.set_name(_("PNG images"))
+        png_filter.add_suffix("png")
+
+        jpg_filter = Gtk.FileFilter()
+        jpg_filter.set_name(_("JPEG images"))
+        jpg_filter.add_suffix("jpg")
+        jpg_filter.add_suffix("jpeg")
+        jpg_filter.add_suffix("jpe")
+        jpg_filter.add_suffix("jfif")
+
+        webp_filter = Gtk.FileFilter()
+        webp_filter.set_name(_("WebP images"))
+        webp_filter.add_suffix("webp")
+
+        avif_filter = Gtk.FileFilter()
+        avif_filter.set_name(_("AVIF images"))
+        avif_filter.add_suffix("avif")
+        avif_filter.add_suffix("avifs")
+
+        tiff_filter = Gtk.FileFilter()
+        tiff_filter.set_name(_("TIFF images"))
+        tiff_filter.add_suffix("tif")
+        tiff_filter.add_suffix("tiff")
+
+        bmp_filter = Gtk.FileFilter()
+        bmp_filter.set_name(_("BMP images"))
+        bmp_filter.add_suffix("bmp")
+        bmp_filter.add_suffix("dib")
+
+        gif_filter = Gtk.FileFilter()
+        gif_filter.set_name(_("GIF images"))
+        gif_filter.add_suffix("gif")
+
+        # Catch-all — DEVE usare add_pattern("*"), non add_mime_type("*/*").
+        # È l'unico filtro a cui è concesso usare add_pattern(); non mescolare
+        # con add_mime_type() o add_suffix().
         all_files_filter = Gtk.FileFilter()
         all_files_filter.set_name(_("All files (*)"))
         all_files_filter.add_pattern("*")
 
+        # Ordine: cumulativo (default) → individuali per formato → catch-all.
         filters = Gio.ListStore.new(Gtk.FileFilter)
         filters.append(all_img_filter)
+        filters.append(png_filter)
+        filters.append(jpg_filter)
+        filters.append(webp_filter)
+        filters.append(avif_filter)
+        filters.append(tiff_filter)
+        filters.append(bmp_filter)
+        filters.append(gif_filter)
         filters.append(all_files_filter)
 
         dialog.set_filters(filters)
+        dialog.set_default_filter(all_img_filter)
         dialog.open(self, None, self._on_open_image_result)
 
     def process_file(self, file_path: str) -> None:
