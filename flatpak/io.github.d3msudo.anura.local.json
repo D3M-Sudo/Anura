@@ -71,12 +71,36 @@
             ]
         },
         {
+            "name": "python3-pybind11",
+            "buildsystem": "simple",
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app .",
+                "install -Dm0644 LICENSE $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/pybind11/LICENSE"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://files.pythonhosted.org/packages/d2/c1/72b9622fcb32ff98b054f724e213c7f70d6898baa714f4516288456ceaba/pybind11-2.13.6.tar.gz",
+                    "sha256": "ba6af10348c12b24e92fa086b39cfba0eff619b61ac77c406167d813b096d39a",
+                    "x-checker-data": {
+                        "type": "pypi",
+                        "name": "pybind11"
+                    }
+                }
+            ]
+        },
+        {
             "name": "python3-zxing-cpp",
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app .",
                 "install -Dm0644 LICENSE $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/zxing-cpp/LICENSE"
             ],
+            "build-options": {
+                "env": {
+                    "pybind11_DIR": "/app/lib/python3.13/site-packages/pybind11/share/cmake/pybind11"
+                }
+            },
             "sources": [
                 {
                     "type": "archive",
