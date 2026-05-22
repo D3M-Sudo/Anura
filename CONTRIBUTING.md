@@ -9,10 +9,8 @@
 # 1. Clone and enter the repo
 git clone https://github.com/d3msudo/anura && cd anura
 
-# 2. Create virtualenv and install dev tools
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
+# 2. Setup environment and install dev tools
+uv sync --dev
 
 # 3. Install system dependencies (Ubuntu/Debian)
 sudo apt install python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 \
@@ -21,8 +19,8 @@ sudo apt install python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 \
     gstreamer1.0-plugins-good gstreamer1.0-pulseaudio
 
 # 4. Build with Meson
-.venv/bin/meson setup builddir
-.venv/bin/meson compile -C builddir
+uv run meson setup builddir
+uv run meson compile -C builddir
 
 # 5. Run from source (no install needed)
 GSETTINGS_SCHEMA_DIR=builddir/data python3 -m anura.main
@@ -34,8 +32,8 @@ GSETTINGS_SCHEMA_DIR=builddir/data python3 -m anura.main
 
 Anura has two categories of tests:
 
-1. **Unit Tests** - Pure Python logic without GTK dependencies (148 tests)
-2. **Integration Tests** - Require GTK/GLib environment (47 tests)
+1. **Unit Tests** - Pure Python logic without GTK dependencies (383 tests)
+2. **Integration Tests** - Require GTK/GLib environment (44 tests)
 
 ### 🚀 QUICK START - Daily Development
 
@@ -45,7 +43,7 @@ uv sync --dev
 
 # 2. Run unit tests (ALWAYS use this for daily development)
 uv run pytest tests/ -m "not gtk" -v
-# Expected: 148 passed, 47 deselected ✅
+# Expected: 383 passed, 44 deselected ✅
 ```
 
 ### 📋 COMPLETE TEST COMMANDS
@@ -100,16 +98,16 @@ uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" GI_TYPELIB_PA
 ```bash
 # ❌ NEVER run this - it will fail!
 uv run pytest tests/ -v
-# Result: 9 failed, 85 passed, 2 skipped, 3 errors
+# Result: will fail — many GTK tests require a live display
 ```
 
 ### 📊 Expected Results
 
 | Command | Expected Result | Use Case |
 |---------|----------------|----------|
-| `uv run pytest tests/ -m "not gtk" -v` | `148 passed, 47 deselected` | Daily development |
-| `python3 -m pytest tests/ -m "gtk" -v` (in Flatpak) | `47 passed, 148 deselected` | Full GTK testing |
-| `uv run pytest tests/ -v` | `9 failed, 85 passed, 2 skipped, 3 errors` | ❌ Never use |
+| `uv run pytest tests/ -m "not gtk" -v` | `383 passed, 44 deselected` | Daily development |
+| `python3 -m pytest tests/ -m "gtk" -v` (in Flatpak) | `44 passed, 383 deselected` | Full GTK testing |
+| `uv run pytest tests/ -v` | `will fail — many GTK tests require a live display` | ❌ Never use |
 
 ### Test Architecture
 

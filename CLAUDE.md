@@ -32,10 +32,10 @@ anura/
 ├── window.py         ← AnuraWindow (DnD, FileDialog, paste)
 ├── config.py         ← Costanti, APP_ID, lang_code validation
 ├── language_manager.py  ← Download/gestione modelli tessdata
-├── services/         ← clipboard, screenshot, notification, tts, share, settings
+├── services/         ← clipboard, screenshot, notification, tts, share, settings, host_screenshot_fallback
 ├── types/            ← Dataclass/enum: download_state, language_item
-├── utils/            ← validators, cleanup, signal_manager
-└── widgets/          ← extracted_page, welcome_page, preferences, ...
+├── utils/            ← validators, cleanup, signal_manager, portal_advice, text_preprocessor, singleton
+└── widgets/          ← extracted_page, welcome_page, preferences, shortcuts_overlay, ...
 ```
 
 ### Naming conventions
@@ -97,8 +97,8 @@ uv sync --dev
 
 ### Build (Meson)
 ```bash
-.venv/bin/meson setup builddir
-.venv/bin/meson compile -C builddir
+uv run meson setup builddir
+uv run meson compile -C builddir
 ```
 
 ### Run da source

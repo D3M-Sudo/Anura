@@ -14,7 +14,7 @@ Anura OCR is a GTK4/Libadwaita desktop application for GNOME that extracts text 
 - QR code via `pyzbar` + `zbar`
 - TTS via `gTTS` + GStreamer `playbin3`
 - Screenshots via XDG Desktop Portal (`libportal` / `Xdp`)
-- Distributed as Flatpak (`com.github.d3msudo.anura`) — GNOME 49 runtime
+- Distributed as Flatpak (`io.github.d3msudo.anura`) — GNOME 50 runtime
 - Internationalization with gettext: 25+ languages (see `po/LINGUAS`)
 - Build system: Meson ≥ 1.5.0
 - License: MIT
@@ -31,10 +31,11 @@ anura/
 │   ├── language_manager.py     Tessdata model download/management (singleton)
 │   ├── services/
 │   │   ├── screenshot_service.py   Screenshot capture via Xdp.Portal
+│   │   ├── host_screenshot_fallback.py Sandboxed X11 screenshot fallback using scrot
 │   │   ├── clipboard_service.py    Clipboard read/write (Gdk.Clipboard)
 │   │   ├── notification_service.py Notifications: XDG Portal → libnotify fallback
 │   │   ├── tts.py                  Text-to-speech via gTTS + GStreamer
-│   │   ├── share_service.py        Social sharing (5 providers)
+│   │   ├── share_service.py        Social sharing (9 providers)
 │   │   └── settings.py             GSettings singleton wrapper
 │   ├── types/
 │   │   ├── download_state.py       DownloadState enum
@@ -42,6 +43,9 @@ anura/
 │   ├── utils/
 │   │   ├── __init__.py
 │   │   ├── validators.py          URI validation utilities
+│   │   ├── portal_advice.py       Desktop-specific advice for missing portal backends
+│   │   ├── text_preprocessor.py   Image enhancement, text cleanup, and structured data extraction
+│   │   ├── singleton.py           Thread-safe lazy singleton pattern
 │   │   ├── cleanup.py             Resource cleanup utilities
 │   │   └── signal_manager.py      GLib signal management
 │   ├── widgets/
@@ -49,23 +53,23 @@ anura/
 │   │   ├── language_popover.py     Language selector with search
 │   │   ├── language_popover_row.py Language row in popover
 │   │   ├── language_row.py         Language row in preferences page
-│   │   ├── list_menu_row.py        Generic menu row
 │   │   ├── preferences_dialog.py   Preferences dialog (Adw.PreferencesDialog)
 │   │   ├── preferences_general_page.py   General preferences page
 │   │   ├── preferences_languages_page.py Language management/download page
 │   │   ├── share_row.py            Share provider row
+│   │   ├── shortcuts_overlay.py    Keyboard shortcuts cheat sheet widget
 │   │   └── welcome_page.py         Welcome page
 ├── data/
 │   ├── ui/                     Blueprint files (.blp) → compiled to .ui
 │   ├── icons/                  Scalable SVG icons + symbolic variants
 │   ├── screenshots/            Screenshots for Flathub/metainfo
-│   ├── com.github.d3msudo.anura.desktop.in
-│   ├── com.github.d3msudo.anura.gresource.xml
-│   ├── com.github.d3msudo.anura.gschema.xml
-│   ├── com.github.d3msudo.anura.metainfo.xml.in
+│   ├── io.github.d3msudo.anura.desktop.in
+│   ├── io.github.d3msudo.anura.gresource.xml
+│   ├── io.github.d3msudo.anura.gschema.xml
+│   ├── io.github.d3msudo.anura.metainfo.xml.in
 │   └── style.css
 ├── flatpak/
-│   └── com.github.d3msudo.anura.json   Flatpak manifest with all dependencies
+│   └── io.github.d3msudo.anura.json   Flatpak manifest with all dependencies
 ├── build-aux/
 │   ├── generate_release_notes.py   CHANGELOG.md parser → _release_notes.py
 │   └── meson/postinstall.py
@@ -93,8 +97,8 @@ sudo apt install python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 \
     tesseract-ocr python3-pil python3-pip \
     gstreamer1.0-plugins-good gstreamer1.0-pulseaudio
 
-# Python dependencies
-pip install pytesseract gtts pyzbar loguru pillow requests
+# Python runtime and dev dependencies
+uv sync --dev
 
 # Build with Meson (local development)
 meson setup builddir
@@ -108,16 +112,16 @@ GSETTINGS_SCHEMA_DIR=builddir/data python3 -m anura.main
 
 ```bash
 # Full build
-flatpak-builder --force-clean builddir flatpak/com.github.d3msudo.anura.json
+flatpak-builder --force-clean builddir flatpak/io.github.d3msudo.anura.json
 
 # Run the build
-flatpak-builder --run builddir flatpak/com.github.d3msudo.anura.json anura
+flatpak-builder --run builddir flatpak/io.github.d3msudo.anura.json anura
 
 # Install locally for testing
-flatpak-builder --install --user builddir flatpak/com.github.d3msudo.anura.json
+flatpak-builder --install --user builddir flatpak/io.github.d3msudo.anura.json
 ```
 
-### Local Build with Meson (venv)
+### Local Build with Meson (uv)
 
 To test the build system without Flatpak:
 
@@ -125,22 +129,22 @@ To test the build system without Flatpak:
 # System requirements needed:
 sudo apt install blueprint-compiler libportal-gtk4-dev
 
-# Setup and build using venv meson
-.venv/bin/meson setup builddir
-.venv/bin/meson compile -C builddir
+# Setup and build using uv
+uv run meson setup builddir
+uv run meson compile -C builddir
 
 # Full local install (optional)
-.venv/bin/meson install -C builddir --destdir /tmp/install-test
+uv run meson install -C builddir --destdir /tmp/install-test
 ```
 
 ### Flatpak Dependency Updates
 
 ```bash
 # Check for available updates (dry-run)
-flatpak-external-data-checker --dry-run flatpak/com.github.d3msudo.anura.json
+flatpak-external-data-checker --dry-run flatpak/io.github.d3msudo.anura.json
 
 # Apply updates (requires manual verification for critical dependencies)
-flatpak-external-data-checker --update flatpak/com.github.d3msudo.anura.json
+flatpak-external-data-checker --update flatpak/io.github.d3msudo.anura.json
 ```
 
 ### Internationalization
@@ -150,35 +154,39 @@ flatpak-external-data-checker --update flatpak/com.github.d3msudo.anura.json
 cd po && ./update_potfiles.sh
 
 # Update existing .po files
-for lang in po/*.po; do msgmerge -U "$lang" po/com.github.d3msudo.anura.pot; done
+for lang in po/*.po; do msgmerge -U "$lang" po/io.github.d3msudo.anura.pot; done
 ```
 
 ## Dependency Management
 
-Anura uses a hybrid dependency system: Python packages via pip/venv for dev tools, and native dependencies via Flatpak for runtime.
+Anura uses a hybrid dependency system: Python packages via `uv` for development, and native dependencies via Flatpak for runtime.
 
 ### Python Dependencies (Development Tools)
 
 **File:** `pyproject.toml`
 
-Development dependencies (linter, build system):
+Development dependencies (linter, build system, testing):
 
 ```toml
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
-    "ruff>=0.15.0",      # Linter and formatter
-    "meson>=1.5.0",      # Build system (optional, for local testing)
+    "meson>=1.11.1",
+    "ninja>=1.13.0",
+    "pytest>=9.0.3",
+    "pytest-cov>=6.0.0",
+    "pytest-timeout>=2.3.1",
+    "ruff>=0.15.13",
 ]
 ```
 
-**Virtual Environment:** `.venv/` (already present in repo, not committed)
+**Environment Management:** `uv`
 
 ```bash
-# Install all dev dependencies
-pip install -e ".[dev]"
+# Install all dependencies and setup environment
+uv sync --dev
 
 # Or specifically meson for local build testing
-pip install "meson>=1.5.0"
+uv run pip install "meson>=1.5.0"
 # Automatically installs ninja if needed
 
 # Typical venv packages for testing:
@@ -189,7 +197,7 @@ pip install "meson>=1.5.0"
 
 ### Runtime Dependencies (Flatpak/System)
 
-**File:** `flatpak/com.github.d3msudo.anura.json`
+**File:** `flatpak/io.github.d3msudo.anura.json`
 
 Native dependencies compiled in the Flatpak:
 
@@ -380,10 +388,15 @@ Release notes for `Adw.AboutDialog` are generated from `CHANGELOG.md` during Mes
 | `anura/config.py` | App constants and configuration |
 | `anura/language_manager.py` | Tessdata download/management (singleton) |
 | `anura/services/screenshot_service.py` | XDG Portal screenshot + OCR/QR |
+| `anura/services/host_screenshot_fallback.py` | Sandboxed X11 screenshot fallback using scrot |
 | `anura/services/notification_service.py` | Notifications with fallback |
 | `anura/services/tts.py` | Text-to-speech via gTTS + GStreamer |
 | `anura/services/share_service.py` | Social sharing providers |
 | `anura/utils/validators.py` | URI validation and security utilities |
+| `anura/utils/portal_advice.py` | Desktop-specific advice for missing portal backends |
+| `anura/utils/text_preprocessor.py` | Image enhancement, text cleanup, and structured data extraction |
+| `anura/utils/singleton.py` | Thread-safe lazy singleton for service classes |
+| `anura/widgets/shortcuts_overlay.py` | Keyboard shortcuts cheat sheet widget |
 | `anura/utils/cleanup.py` | Resource cleanup utilities |
 | `anura/utils/signal_manager.py` | GLib signal management |
 
@@ -393,7 +406,7 @@ Release notes for `Adw.AboutDialog` are generated from `CHANGELOG.md` during Mes
 |------|---------|
 | `pyproject.toml` | Python project config, dev deps (ruff, meson) |
 | `meson.build` | Main build system, generates `_release_notes.py` |
-| `flatpak/com.github.d3msudo.anura.json` | Flatpak manifest with all native dependencies |
+| `flatpak/io.github.d3msudo.anura.json` | Flatpak manifest with all native dependencies |
 | `build-aux/generate_release_notes.py` | CHANGELOG.md parser → `_release_notes.py` |
 | `CHANGELOG.md` | Versioned changelog (source for release notes) |
 
@@ -450,7 +463,7 @@ export PYTHONPATH="/usr/lib/python3/dist-packages:."
 pytest tests/ -v
 
 # GTK tests (require Flatpak environment)
-flatpak run --devel --command=bash com.github.d3msudo.anura
+flatpak run --devel --command=bash io.github.d3msudo.anura
 python3 -m pytest tests/ -m "gtk" -v
 ```
 
@@ -491,14 +504,14 @@ def test_service_error(self):
 
 ### Common Testing Issues
 
-#### Error: `RuntimeError: GSettings schema 'com.github.d3msudo.anura' not found`
+#### Error: `RuntimeError: GSettings schema 'io.github.d3msudo.anura' not found`
 
 **Cause**: GSettings schema not compiled or not in schema path
 **Fix**:
 
 ```bash
 mkdir -p builddir
-cp data/com.github.d3msudo.anura.gschema.xml builddir/
+cp data/io.github.d3msudo.anura.gschema.xml builddir/
 glib-compile-schemas builddir/
 export GSETTINGS_SCHEMA_DIR="builddir"
 ```
