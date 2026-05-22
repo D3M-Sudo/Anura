@@ -1,7 +1,8 @@
-# test_share_service.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Unit tests for ShareService
-# Tests URL validation, provider logic, and Mastodon fallback
+# SPDX-License-Identifier: MIT
 
 import pytest
 

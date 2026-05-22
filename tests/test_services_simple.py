@@ -1,7 +1,8 @@
-# test_services_simple.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Simple unit tests for core services without GTK dependencies
-# Tests business logic and utility functions
+# SPDX-License-Identifier: MIT
 
 import pytest
 

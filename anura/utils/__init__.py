@@ -1,6 +1,8 @@
-# utils/__init__.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Copyright 2026 D3M-Sudo (Anura fork and modifications)
+# SPDX-License-Identifier: MIT
 
 from anura.utils.cleanup import cleanup_orphaned_resources, get_cache_info
 from anura.utils.portal_advice import PortalAdvice, detect_portal_advice

@@ -1,7 +1,8 @@
-# tests/test_file_dialog_regressions.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Static regression checks for FileDialog configuration in window.py.
-# These tests verify the fix for the LXQt/Flatpak filter glitch.
+# SPDX-License-Identifier: MIT
 
 import ast
 from pathlib import Path

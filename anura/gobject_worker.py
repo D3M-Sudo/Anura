@@ -1,10 +1,8 @@
-# gobject_worker.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# MIT License
-#
-# Copyright (c) 2020 Andrey Maksimov <meamka@ya.ru>
-# Copyright 2026 D3M-Sudo (Anura fork and modifications)
-#
+# SPDX-License-Identifier: MIT
 
 from collections.abc import Callable
 import threading

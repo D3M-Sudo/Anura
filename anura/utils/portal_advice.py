@@ -1,8 +1,9 @@
-# portal_advice.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Copyright 2026 D3M-Sudo (Anura fork and modifications)
-#
-# MIT License
+# SPDX-License-Identifier: MIT
+
 """Desktop-aware install advice for missing xdg-desktop-portal Screenshot backend.
 
 This module provides actionable, desktop-specific error messages when the

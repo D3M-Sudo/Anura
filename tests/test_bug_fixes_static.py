@@ -1,10 +1,8 @@
-# test_bug_fixes_static.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Static (AST / source-text) regression checks for the bug fixes that follow
-# PR #25. These tests do NOT import GTK / Xdp / GStreamer (which are unavailable
-# on the host CI runner outside the Flatpak sandbox). Instead they parse the
-# source files and verify the structural invariants that prevent each bug from
-# regressing.
+# SPDX-License-Identifier: MIT
 
 import ast
 from pathlib import Path

@@ -1,7 +1,8 @@
-# test_unit_logic.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Unit tests for core business logic without GTK dependencies
-# Tests individual functions and classes directly
+# SPDX-License-Identifier: MIT
 
 import os
 import sys

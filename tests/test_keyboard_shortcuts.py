@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
+#
+# SPDX-License-Identifier: MIT
+
 """
 Test keyboard shortcuts functionality using pytest framework.
 Tests action registration and accelerator mapping with proper GTK environment setup.
