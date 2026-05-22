@@ -25,7 +25,6 @@ from gi.repository import Gio, GLib, GObject, Xdp  # noqa: E402
 from loguru import logger  # noqa: E402
 from PIL import Image  # noqa: E402
 import pytesseract  # noqa: E402
-from pyzbar.pyzbar import ZBarSymbol, decode  # noqa: E402
 
 from anura.config import (  # noqa: E402
     LANG_CODE_PATTERN,
@@ -530,6 +529,9 @@ class ScreenshotService(GObject.GObject):
     def _try_qr_detection(self, img: Image.Image, start_time: float) -> str | None:
         """Try to detect and decode QR codes from image."""
         try:
+            # Lazy import to avoid crash on systems without libzbar shared library
+            from pyzbar.pyzbar import ZBarSymbol, decode
+
             # Optimization: Fast path for high-res images.
             # Attempt QR detection on a downscaled version first (~1024px).
             # This is significantly faster for 4K+ images and usually sufficient for QR.
@@ -555,8 +557,8 @@ class ScreenshotService(GObject.GObject):
                 duration = time.time() - start_time
                 logger.info(f"Anura OCR: QR code detected in {duration:.3f}s")
                 return extracted
-        except Exception as e:
-            logger.debug(f"Anura OCR: QR detection failed: {e}")
+        except (ImportError, Exception) as e:
+            logger.debug(f"Anura OCR: QR detection unavailable or failed: {e}")
         return None
 
     def _try_ocr_extraction(self, img: Image.Image, lang: str, start_time: float) -> str | None:

@@ -1,43 +1,53 @@
-import builtins
 import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
-# Mock GI modules before they are imported to allow running without GTK
-mock_gi = MagicMock()
-sys.modules["gi"] = mock_gi
-sys.modules["gi.repository"] = MagicMock()
-sys.modules["gi.repository.Adw"] = MagicMock()
-sys.modules["gi.repository.Gdk"] = MagicMock()
-sys.modules["gi.repository.Gio"] = MagicMock()
-sys.modules["gi.repository.GLib"] = MagicMock()
-sys.modules["gi.repository.GObject"] = MagicMock()
-sys.modules["gi.repository.Gtk"] = MagicMock()
-sys.modules["gi.repository.GdkPixbuf"] = MagicMock()
-
-# Mock loguru
-sys.modules["loguru"] = MagicMock()
-
-
-# Mock gettext
-def mock_gettext(s):
-    return s
-
-
-builtins.__dict__["_"] = mock_gettext
-builtins.__dict__["ngettext"] = lambda s, p, n: s if n == 1 else p
-
-# Now import the mixin
-# We need to bypass the actual imports in the file if possible or mock them all
-with patch("anura.services.clipboard_service.get_clipboard_service"), patch(
-    "anura.utils.text_preprocessor.get_text_preprocessor"
-), patch("anura.utils.portal_advice.detect_portal_advice"):
-    from anura.window_mixins.ocr_mixin import WindowOCRMixin
-
+# To prevent leaking mocks of system modules like 'gi' into other tests,
+# we perform all GTK-dependent testing inside a context that patches sys.modules.
 
 class TestSecurityDoS(unittest.TestCase):
     def setUp(self):
-        # Create a class that implements the mixin
+        # Create persistent mocks for the system modules we need to fake
+        self.mock_gi = MagicMock()
+        self.mock_adw = MagicMock()
+        self.mock_gio = MagicMock()
+        self.mock_glib = MagicMock()
+        self.mock_gtk = MagicMock()
+
+        # Setup Gio constants needed by the code under test
+        self.mock_gio.FILE_ATTRIBUTE_STANDARD_SIZE = "standard::size"
+        self.mock_glib.PRIORITY_DEFAULT = 0
+
+        # Create a mapping of module names to our mocks
+        self.module_patcher = patch.dict(sys.modules, {
+            "gi": self.mock_gi,
+            "gi.repository": MagicMock(),
+            "gi.repository.Adw": self.mock_adw,
+            "gi.repository.Gio": self.mock_gio,
+            "gi.repository.GLib": self.mock_glib,
+            "gi.repository.GObject": MagicMock(),
+            "gi.repository.Gtk": self.mock_gtk,
+            "gi.repository.Gdk": MagicMock(),
+            "gi.repository.GdkPixbuf": MagicMock(),
+            "loguru": MagicMock(),
+        })
+        self.module_patcher.start()
+
+        # Add mock gettext functions to sys.modules['builtins'] manually
+        # patch.multiple("builtins", ...) fails if the attribute doesn't exist.
+        import builtins
+        self._orig_gettext = getattr(builtins, "_", None)
+        self._orig_ngettext = getattr(builtins, "ngettext", None)
+        builtins._ = lambda s: s
+        builtins.ngettext = lambda s, p, n: s if n == 1 else p
+
+        # Now we can safely import the mixin from within the isolated environment.
+        # We also mock internal service getters to avoid complex service initialization.
+        with patch("anura.services.clipboard_service.get_clipboard_service"), \
+             patch("anura.utils.text_preprocessor.get_text_preprocessor"), \
+             patch("anura.utils.portal_advice.detect_portal_advice"):
+            from anura.window_mixins.ocr_mixin import WindowOCRMixin
+
         class TestWindow(WindowOCRMixin):
             def __init__(self):
                 self.welcome_page = MagicMock()
@@ -50,6 +60,20 @@ class TestSecurityDoS(unittest.TestCase):
                 self.split_view = MagicMock()
 
         self.win = TestWindow()
+
+    def tearDown(self):
+        import builtins
+        if self._orig_gettext is None:
+            del builtins._
+        else:
+            builtins._ = self._orig_gettext
+
+        if self._orig_ngettext is None:
+            del builtins.ngettext
+        else:
+            builtins.ngettext = self._orig_ngettext
+
+        self.module_patcher.stop()
 
     @patch("anura.window_mixins.ocr_mixin.MAX_IMAGE_SIZE_BYTES", 100)
     @patch("anura.window_mixins.ocr_mixin.MAX_IMAGE_SIZE_MB", 1)
