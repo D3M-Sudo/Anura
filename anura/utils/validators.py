@@ -12,6 +12,26 @@ from urllib.parse import urlparse
 _CONTROL_CHARS_RE = re.compile(r"[\x00-\x1f\x7f]")
 
 
+def sanitize_text(text: str) -> str:
+    """
+    Sanitize text using heuristics to correct common OCR errors and remove artifacts.
+    Inspired by NormCap's cleaning logic.
+    """
+    if not text:
+        return ""
+
+    # 1. Normalize whitespace (squash multiple spaces/tabs)
+    text = re.sub(r"[ \t]+", " ", text)
+
+    # 2. Fix common OCR mistakes in URLs/Emails if they look like them
+    # e.g. "http: //" -> "http://"
+    text = re.sub(r"(https?|ftp|file):\s+/{2}", r"\1://", text)
+
+    # 3. Remove known artifacts (e.g. single trailing characters from layout)
+    # This is a basic version, TextPreprocessor has more advanced logic.
+
+    return text.strip()
+
 def is_safe_url_string(text: str) -> bool:
     """
     Perform fundamental security checks on a URL string.
@@ -19,6 +39,9 @@ def is_safe_url_string(text: str) -> bool:
     """
     if text is None:
         return False
+
+    # Clean text first
+    text = sanitize_text(text)
 
     # Defense-in-depth: limit URL length to prevent UI/notification issues
     # and potential downstream buffer vulnerabilities.

@@ -39,30 +39,6 @@
     },
     "modules": [
         {
-            "name": "zbar",
-            "buildsystem": "autotools",
-            "cleanup": ["/bin"],
-            "build-options": {
-                "cflags": "-include setjmp.h"
-            },
-            "sources": [
-                {
-                    "type": "git",
-                    "url": "https://github.com/mchehab/zbar.git",
-                    "tag": "0.23.93",
-                    "commit": "c022c6fbb8b60afcd9ad247016bd0df33e2ec722"
-                },
-                {"type": "file", "path": "patches/autogen.sh"},
-                {"type": "patch", "path": "patches/zbar-pthread.patch"}
-            ],
-            "config-opts": [
-                "--disable-static", "--without-gtk", "--without-python", "--without-imagemagick",
-                "--without-dbus", "--without-qt", "--without-x", "--disable-video",
-                "--disable-doc", "--disable-introspection"
-            ],
-            "post-install": ["install -Dm0644 LICENSE.md $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/zbar/LICENSE.md"]
-        },
-        {
             "name": "leptonica",
             "buildsystem": "autotools",
             "cleanup": ["/bin"],
@@ -73,6 +49,25 @@
                     "type": "archive",
                     "url": "https://github.com/DanBloomberg/leptonica/releases/download/1.84.1/leptonica-1.84.1.tar.gz",
                     "sha256": "2b3e1254b1cca381e77c819b59ca99774ff43530209b9aeb511e1d46588a64f6"
+                }
+            ]
+        },
+        {
+            "name": "python3-zxing-cpp",
+            "buildsystem": "simple",
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app .",
+                "install -Dm0644 LICENSE $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/zxing-cpp/LICENSE"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://files.pythonhosted.org/packages/b9/7a/df6a26df77cdfe0b9d9df3c965c4fae9f6de3ee0f9ea1db9786a3b2b8006/zxing-cpp-2.3.0.tar.gz",
+                    "sha256": "43b17409f584e09cb469bc72d73379b3df9441a5477cb36f01900139bc6dfcf7",
+                    "x-checker-data": {
+                        "type": "pypi",
+                        "name": "zxing-cpp"
+                    }
                 }
             ]
         },
@@ -166,15 +161,6 @@
                 "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/loguru-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/loguru/LICENSE \\; -quit || true'"
             ],
             "sources": [{"type": "file", "url": "https://files.pythonhosted.org/packages/03/0a/4f6fed21aa246c6b49b561ca55facacc2a44b87d65b8b92362a8e99ba202/loguru-0.7.2-py3-none-any.whl", "sha256": "003d71e3d3ed35f0f8984898359d65b79e5b21943f78af86aa5491210429b8eb"}]
-        },
-        {
-            "name": "python3-pyzbar",
-            "buildsystem": "simple",
-            "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed pyzbar-0.1.9-py2.py3-none-any.whl",
-                "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/pyzbar-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/pyzbar/LICENSE \\; -quit || true'"
-            ],
-            "sources": [{"type": "file", "url": "https://files.pythonhosted.org/packages/6d/24/81ebe6a1c00760471a3028a23cbe0b94e5fa2926e5ba47adc895920887bc/pyzbar-0.1.9-py2.py3-none-any.whl", "sha256": "4559628b8192feb25766d954b36a3753baaf5c97c03135aec7e4a026036b475d"}]
         },
         {
             "name": "python3-urllib3",
