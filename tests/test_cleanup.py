@@ -1,7 +1,8 @@
-# tests/test_cleanup.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Unit tests for anura/utils/cleanup.py
-# No GTK/GLib required — pure Python only.
+# SPDX-License-Identifier: MIT
 
 import pytest
 

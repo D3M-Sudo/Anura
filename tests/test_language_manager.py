@@ -1,8 +1,8 @@
-# tests/test_language_manager.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Unit tests for anura/language_manager.py
-# Focused on pure-Python logic: language mapping, ISO code lookups.
-# GTK, network, and file I/O operations are excluded.
+# SPDX-License-Identifier: MIT
 
 import pytest
 

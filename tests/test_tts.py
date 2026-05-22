@@ -1,8 +1,8 @@
-# tests/test_tts.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Unit tests for anura/services/tts.py
-# Focused on pure-Python logic: language mapping, fallbacks.
-# GStreamer playback tests are excluded (require audio hardware + display).
+# SPDX-License-Identifier: MIT
 
 import pytest
 

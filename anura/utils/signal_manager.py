@@ -1,9 +1,8 @@
-# signal_manager.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Copyright 2026 D3M-Sudo (Anura fork and modifications)
-#
-# Centralized signal management mixin to prevent memory leaks from
-# forgotten signal disconnections.
+# SPDX-License-Identifier: MIT
 
 from collections.abc import Callable
 from typing import Any

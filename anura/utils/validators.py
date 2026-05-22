@@ -1,6 +1,8 @@
-# validators.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Copyright 2026 D3M-Sudo (Anura fork and modifications)
+# SPDX-License-Identifier: MIT
 
 import contextlib
 import ipaddress

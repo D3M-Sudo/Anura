@@ -1,7 +1,8 @@
-# tests/test_config.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Unit tests for anura/config.py
-# No GTK/GLib required — pure Python only.
+# SPDX-License-Identifier: MIT
 
 import pytest
 

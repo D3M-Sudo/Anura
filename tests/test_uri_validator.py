@@ -1,6 +1,8 @@
-# tests/test_uri_validator.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Tests for anura.utils.validators.uri_validator() — the security layer before Gtk.UriLauncher.
+# SPDX-License-Identifier: MIT
 
 import pytest
 

@@ -1,13 +1,8 @@
-# test_notification_service.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Unit tests for NotificationService
-# Tests XDG Portal and libnotify fallback functionality
-#
-# NOTE: This file imports `anura.services.notification_service` which in turn
-# imports `gi` and uses `Xdp.Portal()`. It is NOT marked @pytest.mark.gtk
-# because the tests mock the portal and libnotify entirely; however the
-# module-level `import gi` requires PyGObject (python3-gi) on the system.
-# Run with: $ uv run env GI_TYPELIB_PATH=... pytest tests/test_notification_service.py -v
+# SPDX-License-Identifier: MIT
 
 import pytest
 
