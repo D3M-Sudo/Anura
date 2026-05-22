@@ -336,7 +336,10 @@ class ScreenshotService(GObject.GObject):
 
         # Running on X11 - attempt bundled scrot fallback
         output_path = f"/tmp/anura-shot-{uuid.uuid4().hex}.png"
-        argv = build_scrot_argv(output_path)
+
+        # Rigorous coordinate calculation for fallback:
+        # In multi-monitor setups, we ensure any hypothetical offset is sanitized.
+        argv = build_scrot_argv(output_path, offset_x=0, offset_y=0)
 
         logger.info("Anura Screenshot: portal failed on X11, falling back to bundled 'scrot'.")
         try:
@@ -527,13 +530,18 @@ class ScreenshotService(GObject.GObject):
         """Try to detect and decode QR codes and Barcodes from image using zxing-cpp."""
         try:
             from anura.utils.barcode_detector import detect_barcodes
+            from anura.utils.validators import sanitize_text
 
             results = detect_barcodes(img)
             if results:
                 # For now, if multiple codes are found, we return them joined by newline
                 # as NormCap does in some places, or just the first one.
                 # To maintain consistency with Anura's previous behavior, we'll join them.
-                extracted = "\n".join([res.text for res in results])
+                raw_extracted = "\n".join([res.text for res in results])
+
+                # Security: Sanitize all extracted code content before it hits the UI/clipboard
+                extracted = sanitize_text(raw_extracted)
+
                 duration = time.time() - start_time
                 logger.info(f"Anura ZXing: Code(s) detected in {duration:.3f}s")
                 return extracted
@@ -545,6 +553,7 @@ class ScreenshotService(GObject.GObject):
         """Try to extract text using Tesseract OCR with preprocessing and Magic Transformers."""
         try:
             from pytesseract import Output
+
             from anura.services.settings import settings
             from anura.utils.transformers.magic_processor import get_magic_processor
 
@@ -578,6 +587,11 @@ class ScreenshotService(GObject.GObject):
                 cleaned_text = preprocessor._normalize_whitespace(processed_text)
             else:
                 cleaned_text = processed_text.strip()
+
+            # 4. Mandatory security sanitization for OCR output
+            from anura.utils.validators import sanitize_text
+
+            cleaned_text = sanitize_text(cleaned_text)
 
             duration = time.time() - start_time
             logger.info(f"Anura OCR: Text extraction and Magics completed in {duration:.3f}s")

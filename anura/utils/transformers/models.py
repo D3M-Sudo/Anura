@@ -5,9 +5,10 @@
 # MIT License
 """Models for the Magic Transformer pattern."""
 
-import enum
 from dataclasses import dataclass, field
+import enum
 from typing import Protocol
+
 
 class TransformerType(str, enum.Enum):
     SINGLE_LINE = "SINGLE_LINE"

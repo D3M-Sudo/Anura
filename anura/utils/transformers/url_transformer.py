@@ -5,6 +5,7 @@
 # MIT License
 
 import re
+
 from anura.utils.transformers.models import OcrResult, TransformerProtocol
 
 # Simplified TLD check for standalone version

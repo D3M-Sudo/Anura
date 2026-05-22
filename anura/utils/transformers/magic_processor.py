@@ -4,12 +4,13 @@
 #
 # MIT License
 
-import logging
 from loguru import logger
-from anura.utils.transformers.models import OcrResult, TransformerType, TransformerProtocol
-from anura.utils.transformers.base_transformers import SingleLineTransformer, MultiLineTransformer, ParagraphTransformer
-from anura.utils.transformers.url_transformer import UrlTransformer
+
+from anura.utils.transformers.base_transformers import MultiLineTransformer, ParagraphTransformer, SingleLineTransformer
 from anura.utils.transformers.email_transformer import EmailTransformer
+from anura.utils.transformers.models import OcrResult, TransformerProtocol, TransformerType
+from anura.utils.transformers.url_transformer import UrlTransformer
+
 
 class MagicProcessor:
     def __init__(self) -> None:

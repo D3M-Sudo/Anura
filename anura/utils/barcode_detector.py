@@ -9,9 +9,11 @@ Provides high-performance and robust decoding for various code formats.
 """
 
 from typing import NamedTuple
-import zxingcpp
-from PIL import Image
+
 from loguru import logger
+from PIL import Image
+import zxingcpp
+
 
 class BarcodeResult(NamedTuple):
     """Result of a barcode/QR code detection."""

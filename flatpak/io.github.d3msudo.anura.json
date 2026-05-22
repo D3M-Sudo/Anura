@@ -53,25 +53,6 @@
             ]
         },
         {
-            "name": "python3-zxing-cpp",
-            "buildsystem": "simple",
-            "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app .",
-                "install -Dm0644 LICENSE $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/zxing-cpp/LICENSE"
-            ],
-            "sources": [
-                {
-                    "type": "archive",
-                    "url": "https://files.pythonhosted.org/packages/b9/7a/df6a26df77cdfe0b9d9df3c965c4fae9f6de3ee0f9ea1db9786a3b2b8006/zxing-cpp-2.3.0.tar.gz",
-                    "sha256": "43b17409f584e09cb469bc72d73379b3df9441a5477cb36f01900139bc6dfcf7",
-                    "x-checker-data": {
-                        "type": "pypi",
-                        "name": "zxing-cpp"
-                    }
-                }
-            ]
-        },
-        {
             "name": "tesseract",
             "buildsystem": "autotools",
             "cleanup": ["/include", "/lib/pkgconfig"],
@@ -106,6 +87,25 @@
             ],
             "sources": [
                 {"type": "archive", "url": "https://files.pythonhosted.org/packages/af/cb/bb5c01fcd2a69335b86c22142b2bccfc3464087efb7fd382eee5ffc7fdf7/pillow-11.2.1.tar.gz", "sha256": "a64dd61998416367b7ef979b73d3a85853ba9bec4c2925f74e588879a58716b6"}
+            ]
+        },
+        {
+            "name": "python3-zxing-cpp",
+            "buildsystem": "simple",
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app .",
+                "install -Dm0644 LICENSE $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/zxing-cpp/LICENSE"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://files.pythonhosted.org/packages/b9/7a/df6a26df77cdfe0b9d9df3c965c4fae9f6de3ee0f9ea1db9786a3b2b8006/zxing-cpp-2.3.0.tar.gz",
+                    "sha256": "43b17409f584e09cb469bc72d73379b3df9441a5477cb36f01900139bc6dfcf7",
+                    "x-checker-data": {
+                        "type": "pypi",
+                        "name": "zxing-cpp"
+                    }
+                }
             ]
         },
         {

@@ -6,6 +6,7 @@
 
 from anura.utils.transformers.models import OcrResult, TransformerProtocol
 
+
 class SingleLineTransformer(TransformerProtocol):
     def score(self, ocr_result: OcrResult) -> float:
         if not ocr_result.words:
