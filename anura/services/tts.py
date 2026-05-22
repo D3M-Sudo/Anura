@@ -280,7 +280,7 @@ class TTSService(GObject.GObject):
                     os.remove(filepath)
                 except OSError:
                     logger.debug("Anura TTS: Failed to remove temporary speech file during cleanup")
-            # Don't re-raise: AtomicTaskManager errorback handles exceptions from
+            # Don't re-raise: GObjectWorker.errorback handles exceptions from
             # the worker thread.  Let it catch the return value "" instead.
             return ""
 

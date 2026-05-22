@@ -1,0 +1,126 @@
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
+#
+# SPDX-License-Identifier: MIT
+
+from collections.abc import Callable
+import threading
+import traceback
+
+import gi
+
+# Set GTK version requirements before imports
+gi.require_version("GLib", "2.0")
+
+from gi.repository import GLib  # noqa: E402
+from loguru import logger  # noqa: E402
+
+
+class GObjectWorker:
+    """
+    Asynchronous task execution utility for Anura.
+    Offloads blocking operations to a background thread and returns
+    execution to the GLib main loop via idle_add.
+    """
+
+    @staticmethod
+    def call(
+        command: Callable,
+        args: tuple = (),
+        callback: Callable | None = None,
+        errorback: Callable | None = None,
+        cancellable: gi.repository.Gio.Cancellable | None = None,
+    ) -> None:
+        """
+        Executes a command in a separate thread with optional cancellation.
+
+        Args:
+            command: The function to execute.
+            args: Arguments for the command.
+            callback: Function to call on the main thread upon success.
+            errorback: Function to call on the main thread upon failure.
+            cancellable: Optional Gio.Cancellable for task interruption.
+        """
+
+        def run(data: tuple) -> None:
+            cmd, cmd_args, cb, eb, can = data
+            try:
+                # If cancellable is provided and already cancelled, skip
+                if can and can.is_cancelled():
+                    logger.debug("GObjectWorker: Task cancelled before start")
+                    return
+
+                # Inject cancellable into args if the command supports it.
+                # However, to preserve retrocompatibility, we pass it as a separate
+                # logic check in the command itself if needed.
+
+                # Execute the heavy task
+                result = cmd(*cmd_args)
+
+                # Final check before returning to UI thread
+                if can and can.is_cancelled():
+                    logger.debug("GObjectWorker: Task cancelled after execution")
+                    return
+                # Return result to the UI thread safely
+                if cb:
+                    # Use a wrapper that ensures False is returned to GLib.idle_add
+                    # while passing the result to the actual callback.
+                    def cb_wrapper(res):
+                        try:
+                            cb(res)
+                        except Exception:
+                            logger.exception("Unhandled error in GObjectWorker success callback")
+                        return GLib.SOURCE_REMOVE
+
+                    GLib.idle_add(cb_wrapper, result, priority=GLib.PRIORITY_DEFAULT)
+            except (KeyboardInterrupt, SystemExit):
+                # Re-raise to allow clean shutdown
+                raise
+            except (OSError, ValueError, RuntimeError) as e:
+                # Handle expected operational errors (file I/O, invalid values, runtime issues)
+                tb_str = traceback.format_exc()
+
+                def _operational_eb_wrapper(error, tb):
+                    try:
+                        eb(error, tb)
+                    except Exception:
+                        logger.exception("Unhandled error in GObjectWorker error callback")
+                    return GLib.SOURCE_REMOVE
+
+                GLib.idle_add(_operational_eb_wrapper, e, tb_str, priority=GLib.PRIORITY_DEFAULT)
+            except Exception as e:
+                # Handle truly unexpected errors (logical errors, system failures)
+                tb_str = traceback.format_exc()
+                logger.error(f"Unexpected error in GObjectWorker: {e}")
+
+                def _unexpected_eb_wrapper(error, tb):
+                    try:
+                        eb(error, tb)
+                    except Exception:
+                        logger.exception("Unhandled error in GObjectWorker fallback error callback")
+                    return GLib.SOURCE_REMOVE
+
+                GLib.idle_add(_unexpected_eb_wrapper, e, tb_str, priority=GLib.PRIORITY_DEFAULT)
+
+        # Use default error handler if none provided
+        if errorback is None:
+            errorback = GObjectWorker._default_errorback
+
+        thread_data = (command, args, callback, errorback, cancellable)
+        worker_thread = threading.Thread(target=run, args=(thread_data,))
+
+        # Set as daemon so it doesn't prevent app exit
+        worker_thread.daemon = True
+        worker_thread.start()
+
+    @staticmethod
+    def _default_errorback(error: Exception, traceback_str: str | None = None) -> None:
+        """
+        Standardized error logging for worker thread failures.
+        """
+        tb = traceback_str or getattr(error, "__traceback__", None)
+        if tb:
+            logger.error(f"Anura Worker Error: Unhandled exception in background thread:\n{tb}")
+        else:
+            logger.error(f"Anura Worker Error: {error}")
