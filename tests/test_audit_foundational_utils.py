@@ -13,15 +13,15 @@ import time
 
 from gi.repository import GLib, GObject
 
-from anura.gobject_worker import GObjectWorker
+from anura.atomic_task_manager import get_atomic_manager
 from anura.utils.signal_manager import SignalManagerMixin
 from anura.utils.singleton import ThreadSafeSingleton, get_instance
 from anura.utils.validators import uri_validator
 
 
-class TestGObjectWorker:
+class TestAtomicTaskManager:
     @pytest.mark.gtk
-    def test_gobject_worker_success(self):
+    def test_atomic_task_manager_success(self):
         result_container = []
         event = threading.Event()
 
@@ -32,7 +32,7 @@ class TestGObjectWorker:
             result_container.append(res)
             event.set()
 
-        GObjectWorker.call(command, args=(21,), callback=callback)
+        get_atomic_manager().execute(command, args=(21,), callback=callback)
 
         # We need the GLib main loop to run to process idle_add
         ctx = GLib.MainContext.default()
@@ -43,7 +43,7 @@ class TestGObjectWorker:
         assert result_container == [42]
 
     @pytest.mark.gtk
-    def test_gobject_worker_error(self):
+    def test_atomic_task_manager_error(self):
         error_container = []
         event = threading.Event()
 
@@ -54,7 +54,7 @@ class TestGObjectWorker:
             error_container.append(err)
             event.set()
 
-        GObjectWorker.call(command, errorback=errorback)
+        get_atomic_manager().execute(command, errorback=errorback)
 
         ctx = GLib.MainContext.default()
         start_time = time.time()

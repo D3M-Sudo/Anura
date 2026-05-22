@@ -12,7 +12,7 @@ from gi.repository import Adw, Gio, GLib, GObject, Gtk
 from loguru import logger
 
 from anura.config import MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB
-from anura.gobject_worker import GObjectWorker
+from anura.atomic_task_manager import get_atomic_manager
 from anura.services.clipboard_service import get_clipboard_service
 from anura.utils import uri_validator
 from anura.utils.portal_advice import detect_portal_advice
@@ -350,7 +350,9 @@ class WindowOCRMixin:
                     return
 
                 stream = BytesIO(contents)
-                GObjectWorker.call(self.backend.decode_image, (self.get_language(), stream))
+                from anura.atomic_task_manager import get_atomic_manager
+
+                get_atomic_manager().execute(self.backend.decode_image, (self.get_language(), stream))
             else:
                 self.welcome_page.spinner.set_visible(False)
                 self.show_toast(_("Failed to load image file"))

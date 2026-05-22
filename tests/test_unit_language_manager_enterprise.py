@@ -127,6 +127,8 @@ class TestLanguageManagerEnterprise:
     def test_download_duplicate_prevention(self, manager):
         """Test that multiple downloads for the same code are ignored."""
         manager.loading_languages["eng"] = DownloadState()
-        with patch("anura.gobject_worker.GObjectWorker.call") as mock_worker:
+        with patch("anura.atomic_task_manager.get_atomic_manager") as mock_get_mgr:
+            mock_manager = MagicMock()
+            mock_get_mgr.return_value = mock_manager
             manager.download("eng")
-            mock_worker.assert_not_called()
+            mock_manager.execute.assert_not_called()

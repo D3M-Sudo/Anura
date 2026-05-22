@@ -22,7 +22,6 @@ from loguru import logger  # noqa: E402
 import requests  # noqa: E402
 
 from anura.config import RESOURCE_PREFIX  # noqa: E402
-from anura.gobject_worker import GObjectWorker  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
 from anura.services.tts import get_tts_service  # noqa: E402
@@ -280,7 +279,9 @@ class ExtractedPage(Adw.NavigationPage):
             return
 
         try:
-            GObjectWorker.call(
+            from anura.atomic_task_manager import get_atomic_manager
+
+            get_atomic_manager().execute(
                 tts_service_instance.generate,
                 (self.extracted_text, tts_lang),
                 callback=self._on_generated,
@@ -314,7 +315,7 @@ class ExtractedPage(Adw.NavigationPage):
             popover.popdown()
 
     def _on_generate_error(self, error: Exception, traceback_str: str | None = None) -> None:
-        """Handle generation errors (called on main thread by GObjectWorker)."""
+        """Handle generation errors (called on main thread by AtomicTaskManager)."""
         self._is_generating_tts = False
         # Force stack back to button state on error — the spinner must not persist.
         # We bypass _set_spinner_active + swap_controls here because swap_controls

@@ -244,9 +244,9 @@ class ScreenshotService(GObject.GObject):
             GLib.idle_add(_on_error_idle)
             return None
 
-        from anura.gobject_worker import GObjectWorker
+        from anura.atomic_task_manager import get_atomic_manager
 
-        GObjectWorker.call(self.decode_image, (lang, filename, copy, True))
+        get_atomic_manager().execute(self.decode_image, (lang, filename, copy, True))
 
     # Environment variables surfaced when the portal screenshot fails. These
     # tell us which desktop/session backend should be answering the portal
@@ -551,16 +551,16 @@ class ScreenshotService(GObject.GObject):
         return None
 
     def _try_ocr_extraction(self, img: Image.Image, lang: str, start_time: float) -> str | None:
-        """Try to extract text using Tesseract OCR with preprocessing and Magic Transformers."""
+        """Try to extract text using Tesseract OCR with Filter Chain and Structural Reconstructor."""
         try:
             from pytesseract import Output
 
             from anura.services.settings import settings
-            from anura.utils.transformers.magic_processor import get_magic_processor
+            from anura.utils.structural_reconstructor import get_structural_reconstructor
 
             mode = settings.get_string("ocr-preprocessing")
 
-            # Apply image enhancement preprocessing
+            # Apply image enhancement via modular Filter Chain
             preprocessor = get_text_preprocessor()
             if mode != "off":
                 enhanced_img = preprocessor.enhance_image(img)
@@ -568,18 +568,13 @@ class ScreenshotService(GObject.GObject):
                 enhanced_img = img
 
             # 1. Extract raw data with layout information (image_to_data)
-            # This is the core of the Magics pattern migration.
             ocr_data = pytesseract.image_to_data(
-                enhanced_img,
-                lang=lang,
-                config=get_tesseract_config(lang),
-                output_type=Output.DICT
+                enhanced_img, lang=lang, config=get_tesseract_config(lang), output_type=Output.DICT
             )
 
-            # 2. Process data through Magic Transformers (Chain of Responsibility)
-            # This happens in the worker thread.
-            magic_processor = get_magic_processor()
-            processed_text = magic_processor.process(ocr_data)
+            # 2. Reconstruct structure based on geometry
+            reconstructor = get_structural_reconstructor()
+            processed_text = reconstructor.reconstruct(ocr_data)
 
             # 3. Final cleanup based on user settings
             if mode == "full":
@@ -595,11 +590,11 @@ class ScreenshotService(GObject.GObject):
             cleaned_text = sanitize_text(cleaned_text)
 
             duration = time.time() - start_time
-            logger.info(f"Anura OCR: Text extraction and Magics completed in {duration:.3f}s")
+            logger.info(f"Anura OCR: Extraction with Structural Reconstructor completed in {duration:.3f}s")
 
             return cleaned_text
         except Exception as e:
-            logger.debug(f"Anura OCR: OCR extraction or Magic processing failed: {e}")
+            logger.debug(f"Anura OCR: OCR extraction or structural reconstruction failed: {e}")
             return None
 
     def _handle_decode_exception(self, e: Exception) -> tuple[str | None, str | None]:
