@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- Added keyboard shortcut hints and empty search state in the language selector
+- Added 'All files (*)' filter to the image selection dialog
+- Improved pluralization and internationalization support for text statistics
+
+### Fixed
+- Resolved layout reflow issues in the extracted text page to ensure better window responsiveness
+- Improved file selection dialog reliability by using standard extension filtering
+- Fixed critical startup crashes and resolved Flatpak build environment issues
+
+### Security
+- Implemented protection against Denial of Service (DoS) by validating image file sizes before loading
+
 ## [0.1.4.3] - 2026-05-16 {version-0.1.4.3}
 
 ### Added
