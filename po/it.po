@@ -785,14 +785,16 @@ msgid ""
 msgstr ""
 
 #: anura/widgets/extracted_page.py:104
-msgid "%d word"
-msgid_plural "%d words"
+#, fuzzy, python-brace-format
+msgid "{n} word"
+msgid_plural "{n} words"
 msgstr[0] "{n} parola"
 msgstr[1] "{n} parole"
 
 #: anura/widgets/extracted_page.py:105
-msgid "%d character"
-msgid_plural "%d characters"
+#, fuzzy, python-brace-format
+msgid "{n} character"
+msgid_plural "{n} characters"
 msgstr[0] "{n} carattere"
 msgstr[1] "{n} caratteri"
 

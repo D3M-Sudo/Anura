@@ -101,8 +101,8 @@ class ExtractedPage(Adw.NavigationPage):
         char_count = len(text) if text else 0
         word_count = len(text.split()) if text else 0
 
-        words_text = ngettext("%d word", "%d words", word_count) % word_count
-        chars_text = ngettext("%d character", "%d characters", char_count) % char_count
+        words_text = ngettext("{n} word", "{n} words", word_count).format(n=word_count)
+        chars_text = ngettext("{n} character", "{n} characters", char_count).format(n=char_count)
 
         # Construct the stats label using a single translatable string to ensure
         # translators can adjust the ordering and separator if necessary.
