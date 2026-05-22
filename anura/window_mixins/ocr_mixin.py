@@ -173,22 +173,28 @@ class WindowOCRMixin:
             file = dialog.open_finish(result)
             if file:
                 self.welcome_page.show_spinner()
-                file.load_contents_async(None, self._on_file_contents_loaded)
+                # Security Hardening: Query file info for size validation before loading contents
+                # This prevents memory exhaustion (DoS) from extremely large files.
+                file.query_info_async(
+                    Gio.FILE_ATTRIBUTE_STANDARD_SIZE,
+                    Gio.FileQueryInfoFlags.NONE,
+                    GLib.PRIORITY_DEFAULT,
+                    None,
+                    self._on_open_image_info_ready,
+                )
         except (GLib.Error, RuntimeError, OSError) as e:
             logger.debug(f"File selection cancelled or failed: {e}")
             # Ensure spinner is hidden on error to prevent UI inconsistency
             self.welcome_page.hide_spinner()
 
-    def _on_file_contents_loaded(self, gfile: Gio.File, result: Gio.AsyncResult) -> None:
-        """Handle file contents loading result."""
+    def _on_open_image_info_ready(self, gfile: Gio.File, result: Gio.AsyncResult) -> None:
+        """Handle file info result and validate size before loading content."""
         try:
-            # NOTE: do not unpack the etag into `_` — that rebinds the
-            # module-level gettext alias for the rest of this function.
-            ok, contents, _etag = gfile.load_contents_finish(result)
-            if ok:
-                # Validate file size before processing
-                file_size = len(contents)
+            info = gfile.query_info_finish(result)
+            if info:
+                file_size = info.get_size()
                 if file_size > MAX_IMAGE_SIZE_BYTES:
+                    logger.error(f"Anura OCR: Image too large ({file_size} bytes)")
                     self.welcome_page.spinner.set_visible(False)
                     self.show_toast(
                         _("Image too large: {size}MB (max {max}MB)").format(
@@ -197,6 +203,26 @@ class WindowOCRMixin:
                         ),
                     )
                     return
+
+                # Size is valid, proceed to load contents
+                gfile.load_contents_async(None, self._on_file_contents_loaded)
+            else:
+                self.welcome_page.spinner.set_visible(False)
+                self.show_toast(_("Failed to load image file info"))
+        except (GLib.Error, OSError, RuntimeError) as e:
+            self.welcome_page.spinner.set_visible(False)
+            logger.error(f"Failed to query file info: {e}")
+            self.show_toast(_("Failed to load image file"))
+
+    def _on_file_contents_loaded(self, gfile: Gio.File, result: Gio.AsyncResult) -> None:
+        """Handle file contents loading result."""
+        try:
+            # NOTE: do not unpack the etag into `_` — that rebinds the
+            # module-level gettext alias for the rest of this function.
+            ok, contents, _etag = gfile.load_contents_finish(result)
+            if ok:
+                # Size validation is now performed in _on_open_image_info_ready
+                # before loading contents to prevent memory exhaustion DoS.
 
                 # Validate image format before passing to OCR
                 try:
