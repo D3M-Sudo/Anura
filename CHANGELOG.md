@@ -15,9 +15,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Resolved layout reflow issues in the extracted text page to ensure better window responsiveness
 - Improved file selection dialog reliability by using standard extension filtering
 - Fixed critical startup crashes and resolved Flatpak build environment issues
+- Fixed FileDialog filter glitch on LXQt/Flatpak environments
+- Fixed missing Tesseract binary preventing app launch inside Flatpak
+- Fixed translation regression causing broken localisation on non-English locales
 
 ### Security
 - Implemented protection against Denial of Service (DoS) by validating image file sizes before loading
+- Hardened URL validation and encoding in ShareService against injection attacks
+
+### Changed
+- Renamed application ID from com.github.d3msudo.anura to io.github.d3msudo.anura
+- Screenshot fallback now uses a bundled scrot binary inside the sandbox instead of host-side tools
 
 ## [0.1.4.3] - 2026-05-16 {version-0.1.4.3}
 
