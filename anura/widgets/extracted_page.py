@@ -60,6 +60,7 @@ class ExtractedPage(Adw.NavigationPage):
         self._tts_service = None
         self._tts_stop_handler_id = None
         self._tts_paused_handler_id = None
+        self._tts_error_handler_id = None
         self._buffer_handler_id = None
         self._is_generating_tts = False
 

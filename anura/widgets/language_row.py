@@ -52,6 +52,9 @@ class LanguageRow(Gtk.Overlay):
 
     def _idle_update_ui(self) -> bool:
         """One-shot idle callback: runs update_ui and prunes itself from tracking."""
+        # Check widget validity before accessing attributes to prevent crash if widget destroyed
+        if not self.get_parent() or not self._item:
+            return GLib.SOURCE_REMOVE
         self.update_ui()
         # Prune: this source has fired and auto-removed; discard the stale ID
         # (the ID was added in __init__ or on_downloaded)

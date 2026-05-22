@@ -11,7 +11,6 @@ from gettext import gettext as _
 from unittest.mock import Mock, patch
 
 from loguru import logger
-import pytest
 
 from anura.services.clipboard_service import ClipboardService
 
