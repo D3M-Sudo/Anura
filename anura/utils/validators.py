@@ -40,22 +40,20 @@ def is_safe_url_string(text: str) -> bool:
     if text is None:
         return False
 
-    # Clean text first
-    text = sanitize_text(text)
-
-    # Defense-in-depth: limit URL length to prevent UI/notification issues
-    # and potential downstream buffer vulnerabilities.
+    # Defense-in-depth: limit URL length BEFORE processing
     if len(text) > 2048:
         return False
 
-    # Block control characters (0x00-0x1F) and DEL (0x7F) BEFORE strip
-    # so that e.g. trailing \x1f (whitespace) is caught.
+    # Block control characters (0x00-0x1F) and DEL (0x7F) BEFORE strip/sanitize
+    # to catch malicious trailing characters.
     if _CONTROL_CHARS_RE.search(text):
         return False
 
+    # Clean and normalize text using heuristics
+    text = sanitize_text(text)
+
     # Ensure URL is ASCII-only (prevent Unicode homograph attacks).
-    # str.isascii() is significantly faster than encoding to ascii and catching exceptions.
-    return text.strip().isascii()
+    return text.isascii()
 
 
 def uri_validator(text: str) -> bool:
