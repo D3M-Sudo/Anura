@@ -7,11 +7,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- Replaced `pyzbar` with `zxing-cpp` for more robust and reliable barcode and QR code detection
+- Expanded the test suite with comprehensive unit and integration tests, including security-focused DoS prevention and structural UI verification
+- Added support for Tesseract multi-language pooling in `~/.cache/anura/tessdata_pool/` to aggregate models for simultaneous multi-language OCR
 - Added keyboard shortcut hints and empty search state in the language selector
 - Added 'All files (*)' filter to the image selection dialog
 - Improved pluralization and internationalization support for text statistics
 
 ### Fixed
+- Fixed `Gtk.FileFilter` regression to prevent duplicate entries on portal backends like LXQt and GNOME
+- Corrected `Gio.File.query_info_async` implementation by providing the exact number of required positional arguments
+- Resolved layout reflow issues where `Gtk.TextView` content was clipped or prevented window shrinking in GTK4
+- Fixed `__slots__` conflict and potential `AttributeError` in `ClipboardService`
+- Improved error handling for missing Tesseract languages by providing visual `Adw.Toast` feedback
 - Resolved layout reflow issues in the extracted text page to ensure better window responsiveness
 - Improved file selection dialog reliability by using standard extension filtering
 - Fixed critical startup crashes and resolved Flatpak build environment issues
@@ -29,8 +37,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Hardened URL validation and encoding in ShareService against injection attacks
 
 ### Changed
+- Standardized file headers across the entire repository for project-wide consistency and compliance
+- Updated Tesseract language identifier for German Fraktur to the correct `deu_latf` code
+- Optimized multi-monitor support with improved DPI scaling and rendering logic when moving between displays
+- Standardized UI placeholders and messages with Unicode ellipses (…) following GNOME HIG
 - Renamed application ID from com.github.d3msudo.anura to io.github.d3msudo.anura
 - Screenshot fallback now uses a bundled scrot binary inside the sandbox instead of host-side tools
+
+### Removed
+- Deleted the legacy `po/com.github.d3msudo.anura.pot` file in favor of the new standardized localization infrastructure
 
 ## [0.1.4.3] - 2026-05-16 {version-0.1.4.3}
 
