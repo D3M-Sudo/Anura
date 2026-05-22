@@ -336,7 +336,10 @@ class ScreenshotService(GObject.GObject):
 
         # Running on X11 - attempt bundled scrot fallback
         output_path = f"/tmp/anura-shot-{uuid.uuid4().hex}.png"
-        argv = build_scrot_argv(output_path)
+
+        # Rigorous coordinate calculation for fallback:
+        # In multi-monitor setups, we ensure any hypothetical offset is sanitized.
+        argv = build_scrot_argv(output_path, offset_x=0, offset_y=0)
 
         logger.info("Anura Screenshot: portal failed on X11, falling back to bundled 'scrot'.")
         try:
@@ -511,60 +514,48 @@ class ScreenshotService(GObject.GObject):
             image_size = img.size
             logger.debug(f"Anura OCR: Processing image size: {image_size[0]}x{image_size[1]}")
 
-            # Optimization: Pre-convert to "L" (grayscale) once.
-            # Benchmarks show that pyzbar's internal conversion is ~2x slower than Pillow's
-            # on 4K images. Additionally, OCR preprocessing starts with grayscale conversion.
-            if img.mode != "L":
-                img = img.convert("L")
+            # Try QR/Barcode detection first (Short-circuit)
+            extracted = self._try_barcode_detection(img, start_time)
 
-            # Try QR code detection first
-            extracted = self._try_qr_detection(img, start_time)
-
-            # If no QR code found, try OCR
+            # If no code found, proceed with OCR
             if extracted is None:
+                # Optimization: Pre-convert to "L" (grayscale) once for OCR.
+                if img.mode != "L":
+                    img = img.convert("L")
                 extracted = self._try_ocr_extraction(img, lang, start_time)
 
         return extracted, error_message
 
-    def _try_qr_detection(self, img: Image.Image, start_time: float) -> str | None:
-        """Try to detect and decode QR codes from image."""
+    def _try_barcode_detection(self, img: Image.Image, start_time: float) -> str | None:
+        """Try to detect and decode QR codes and Barcodes from image using zxing-cpp."""
         try:
-            # Lazy import to avoid crash on systems without libzbar shared library
-            from pyzbar.pyzbar import ZBarSymbol, decode
+            from anura.utils.barcode_detector import detect_barcodes
+            from anura.utils.validators import sanitize_text
 
-            # Optimization: Fast path for high-res images.
-            # Attempt QR detection on a downscaled version first (~1024px).
-            # This is significantly faster for 4K+ images and usually sufficient for QR.
-            width, height = img.size
-            max_side = max(width, height)
-            if max_side > 1024:
-                scale = 1024 / max_side
-                small_img = img.resize((int(width * scale), int(height * scale)), Image.Resampling.BILINEAR)
-                qr_data = decode(small_img, symbols=[ZBarSymbol.QRCODE])
-                if len(qr_data) > 0:
-                    extracted = qr_data[0].data.decode("utf-8").strip()
-                    duration = time.time() - start_time
-                    logger.info(f"Anura OCR: QR code detected (fast path) in {duration:.3f}s")
-                    return extracted
+            results = detect_barcodes(img)
+            if results:
+                # For now, if multiple codes are found, we return them joined by newline
+                # as NormCap does in some places, or just the first one.
+                # To maintain consistency with Anura's previous behavior, we'll join them.
+                raw_extracted = "\n".join([res.text for res in results])
 
-            # Optimization: Restrict decoding to QR codes only.
-            # By default, pyzbar tries to decode all supported barcode formats
-            # (EAN13, Code128, etc.), which adds unnecessary overhead.
-            qr_data = decode(img, symbols=[ZBarSymbol.QRCODE])
-            if len(qr_data) > 0:
-                # Security/Robustness: Strip leading/trailing whitespace and control characters
-                extracted = qr_data[0].data.decode("utf-8").strip()
+                # Security: Sanitize all extracted code content before it hits the UI/clipboard
+                extracted = sanitize_text(raw_extracted)
+
                 duration = time.time() - start_time
-                logger.info(f"Anura OCR: QR code detected in {duration:.3f}s")
+                logger.info(f"Anura ZXing: Code(s) detected in {duration:.3f}s")
                 return extracted
-        except (ImportError, Exception) as e:
-            logger.debug(f"Anura OCR: QR detection unavailable or failed: {e}")
+        except Exception as e:
+            logger.debug(f"Anura ZXing: Detection failed: {e}")
         return None
 
     def _try_ocr_extraction(self, img: Image.Image, lang: str, start_time: float) -> str | None:
-        """Try to extract text using Tesseract OCR with preprocessing."""
+        """Try to extract text using Tesseract OCR with preprocessing and Magic Transformers."""
         try:
+            from pytesseract import Output
+
             from anura.services.settings import settings
+            from anura.utils.transformers.magic_processor import get_magic_processor
 
             mode = settings.get_string("ocr-preprocessing")
 
@@ -575,29 +566,39 @@ class ScreenshotService(GObject.GObject):
             else:
                 enhanced_img = img
 
-            # Extract text with Tesseract
-            raw_text = pytesseract.image_to_string(enhanced_img, lang=lang, config=get_tesseract_config(lang))
+            # 1. Extract raw data with layout information (image_to_data)
+            # This is the core of the Magics pattern migration.
+            ocr_data = pytesseract.image_to_data(
+                enhanced_img,
+                lang=lang,
+                config=get_tesseract_config(lang),
+                output_type=Output.DICT
+            )
 
-            # Process the extracted text based on the selected mode
+            # 2. Process data through Magic Transformers (Chain of Responsibility)
+            # This happens in the worker thread.
+            magic_processor = get_magic_processor()
+            processed_text = magic_processor.process(ocr_data)
+
+            # 3. Final cleanup based on user settings
             if mode == "full":
-                cleaned_text = preprocessor.clean_extracted_text(raw_text.strip())
+                cleaned_text = preprocessor.clean_extracted_text(processed_text)
             elif mode == "image-only":
-                # In image-only mode, we only normalize whitespace (preserving line breaks)
-                cleaned_text = preprocessor._normalize_whitespace(raw_text.strip())
+                cleaned_text = preprocessor._normalize_whitespace(processed_text)
             else:
-                # off mode: just strip leading/trailing whitespace
-                cleaned_text = raw_text.strip()
+                cleaned_text = processed_text.strip()
+
+            # 4. Mandatory security sanitization for OCR output
+            from anura.utils.validators import sanitize_text
+
+            cleaned_text = sanitize_text(cleaned_text)
 
             duration = time.time() - start_time
-            logger.info(f"Anura OCR: Text extraction completed in {duration:.3f}s")
-
-            # Log if preprocessing improved results
-            if cleaned_text != raw_text.strip():
-                logger.debug("Anura OCR: Text preprocessing improved OCR results")
+            logger.info(f"Anura OCR: Text extraction and Magics completed in {duration:.3f}s")
 
             return cleaned_text
         except Exception as e:
-            logger.debug(f"Anura OCR: OCR extraction failed: {e}")
+            logger.debug(f"Anura OCR: OCR extraction or Magic processing failed: {e}")
             return None
 
     def _handle_decode_exception(self, e: Exception) -> tuple[str | None, str | None]:

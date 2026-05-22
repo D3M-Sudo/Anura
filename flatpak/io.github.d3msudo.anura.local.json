@@ -41,51 +41,6 @@
     },
     "modules": [
         {
-            "name": "zbar",
-            "buildsystem": "autotools",
-            "cleanup": [
-                "/bin"
-            ],
-            "build-options": {
-                "cflags": "-include setjmp.h"
-            },    
-            "sources": [
-                {
-                    "type": "git",
-                    "url": "https://github.com/mchehab/zbar.git",
-                    "tag": "0.23.93",
-                    "commit": "c022c6fbb8b60afcd9ad247016bd0df33e2ec722",
-                    "x-checker-data": {
-                        "type": "git",
-                        "tag-pattern": "^([\\d.]+)$"
-                    }
-                },
-                {
-                    "type": "file",
-                    "path": "patches/autogen.sh"
-                },
-                {
-                    "type": "patch",
-                    "path": "patches/zbar-pthread.patch"
-                }
-            ],
-            "config-opts": [
-                "--disable-static",
-                "--without-gtk",
-                "--without-python",
-                "--without-imagemagick",
-                "--without-dbus",
-                "--without-qt",
-                "--without-x",
-                "--disable-video",
-                "--disable-doc",
-                "--disable-introspection"
-            ],
-            "post-install": [
-                "install -Dm0644 LICENSE.md $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/zbar/LICENSE.md"
-            ]
-        },
-        {
             "name": "leptonica",
             "buildsystem": "autotools",
             "cleanup": [
@@ -111,6 +66,49 @@
                         "project-id": 1549,
                         "stable-only": true,
                         "url-template": "https://github.com/DanBloomberg/leptonica/releases/download/$version/leptonica-$version.tar.gz"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "python3-pybind11",
+            "buildsystem": "simple",
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app .",
+                "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/pybind11-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/pybind11/LICENSE \\; -quit || true'"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://files.pythonhosted.org/packages/d2/c1/72b9622fcb32ff98b054f724e213c7f70d6898baa714f4516288456ceaba/pybind11-2.13.6.tar.gz",
+                    "sha256": "ba6af10348c12b24e92fa086b39cfba0eff619b61ac77c406167d813b096d39a",
+                    "x-checker-data": {
+                        "type": "pypi",
+                        "name": "pybind11"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "python3-zxing-cpp",
+            "buildsystem": "simple",
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app .",
+                "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/zxing_cpp-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/zxing-cpp/LICENSE \\; -quit || true'"
+            ],
+            "build-options": {
+                "env": {
+                    "pybind11_DIR": "/app/lib/python3.13/site-packages/pybind11/share/cmake/pybind11"
+                }
+            },
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://files.pythonhosted.org/packages/d9/f2/b781bf6119abe665069777e3c0f154752cf924fe8a55fca027243abbc555/zxing_cpp-2.3.0.tar.gz",
+                    "sha256": "3babedb67a4c15c9de2c2b4c42d70af83a6c85780c1b2d9803ac64c6ae69f14e",
+                    "x-checker-data": {
+                        "type": "pypi",
+                        "name": "zxing-cpp"
                     }
                 }
             ]
@@ -270,21 +268,6 @@
                     "type": "file",
                     "url": "https://files.pythonhosted.org/packages/03/0a/4f6fed21aa246c6b49b561ca55facacc2a44b87d65b8b92362a8e99ba202/loguru-0.7.2-py3-none-any.whl",
                     "sha256": "003d71e3d3ed35f0f8984898359d65b79e5b21943f78af86aa5491210429b8eb"
-                }
-            ]
-        },
-        {
-            "name": "python3-pyzbar",
-            "buildsystem": "simple",
-            "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed pyzbar-0.1.9-py2.py3-none-any.whl",
-                "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/pyzbar-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/pyzbar/LICENSE \\; -quit || true'"
-            ],
-            "sources": [
-                {
-                    "type": "file",
-                    "url": "https://files.pythonhosted.org/packages/6d/24/81ebe6a1c00760471a3028a23cbe0b94e5fa2926e5ba47adc895920887bc/pyzbar-0.1.9-py2.py3-none-any.whl",
-                    "sha256": "4559628b8192feb25766d954b36a3753baaf5c97c03135aec7e4a026036b475d"
                 }
             ]
         },

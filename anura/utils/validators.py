@@ -12,6 +12,26 @@ from urllib.parse import urlparse
 _CONTROL_CHARS_RE = re.compile(r"[\x00-\x1f\x7f]")
 
 
+def sanitize_text(text: str) -> str:
+    """
+    Sanitize text using heuristics to correct common OCR errors and remove artifacts.
+    Inspired by NormCap's cleaning logic.
+    """
+    if not text:
+        return ""
+
+    # 1. Normalize whitespace (squash multiple spaces/tabs)
+    text = re.sub(r"[ \t]+", " ", text)
+
+    # 2. Fix common OCR mistakes in URLs/Emails if they look like them
+    # e.g. "http: //" -> "http://"
+    text = re.sub(r"(https?|ftp|file):\s+/{2}", r"\1://", text)
+
+    # 3. Remove known artifacts (e.g. single trailing characters from layout)
+    # This is a basic version, TextPreprocessor has more advanced logic.
+
+    return text.strip()
+
 def is_safe_url_string(text: str) -> bool:
     """
     Perform fundamental security checks on a URL string.
@@ -20,19 +40,20 @@ def is_safe_url_string(text: str) -> bool:
     if text is None:
         return False
 
-    # Defense-in-depth: limit URL length to prevent UI/notification issues
-    # and potential downstream buffer vulnerabilities.
+    # Defense-in-depth: limit URL length BEFORE processing
     if len(text) > 2048:
         return False
 
-    # Block control characters (0x00-0x1F) and DEL (0x7F) BEFORE strip
-    # so that e.g. trailing \x1f (whitespace) is caught.
+    # Block control characters (0x00-0x1F) and DEL (0x7F) BEFORE strip/sanitize
+    # to catch malicious trailing characters.
     if _CONTROL_CHARS_RE.search(text):
         return False
 
+    # Clean and normalize text using heuristics
+    text = sanitize_text(text)
+
     # Ensure URL is ASCII-only (prevent Unicode homograph attacks).
-    # str.isascii() is significantly faster than encoding to ascii and catching exceptions.
-    return text.strip().isascii()
+    return text.isascii()
 
 
 def uri_validator(text: str) -> bool:

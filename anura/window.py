@@ -101,6 +101,15 @@ class AnuraWindow(WindowDnDMixin, WindowOCRMixin, WindowTTSMixin, Adw.Applicatio
         height = max(300, self.settings.get_int("window-height"))  # Min 300px
         self.set_default_size(width, height)
 
+        # Connect to surface scale changes to handle multi-monitor DPI scaling
+        self.connect("notify::scale-factor", self._on_scale_factor_changed)
+
+    def _on_scale_factor_changed(self, _window: Gtk.Window, _pspec: GObject.ParamSpec) -> None:
+        scale = self.get_scale_factor()
+        logger.debug(f"Anura: Window scale factor changed to {scale}")
+        # Ensure the window is properly resized/redrawn if needed
+        self.queue_resize()
+
     def get_language(self) -> str:
         """Get current language code from settings or language manager."""
         language_manager_instance = get_language_manager()
