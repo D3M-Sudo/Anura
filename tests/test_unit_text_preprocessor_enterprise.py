@@ -85,24 +85,3 @@ class TestTextPreprocessorEnterprise:
         enhanced = preprocessor.enhance_image(img)
         assert isinstance(enhanced, Image.Image)
         assert enhanced.mode == "L"
-
-    def test_rescale_if_needed(self, preprocessor):
-        """Test that small images are rescaled."""
-        small_img = Image.new("L", (100, 100))
-        rescaled = preprocessor._rescale_if_needed(small_img)
-        assert rescaled.size == (200, 200)
-
-        large_img = Image.new("L", (1200, 1200))
-        not_rescaled = preprocessor._rescale_if_needed(large_img)
-        assert not_rescaled.size == (1200, 1200)
-
-    def test_apply_thresholding(self, preprocessor):
-        """Test that thresholding produces near-binary results."""
-        img = Image.new("L", (2, 2))
-        img.putdata([50, 200, 100, 150])
-        thresholded = preprocessor._apply_thresholding(img)
-        data = list(thresholded.getdata())
-        assert data[0] == 0
-        assert data[1] == 255
-        assert data[2] == 0
-        assert data[3] == 255

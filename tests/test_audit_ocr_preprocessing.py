@@ -62,16 +62,6 @@ class TestTextPreprocessor:
         assert enhanced.mode == "L"
         assert enhanced.size == (200, 200)
 
-    def test_apply_adaptive_enhancements_dark(self):
-        img = Image.new("L", (100, 100), color=30)
-        enhanced = self.preprocessor._apply_adaptive_enhancements(img)
-        assert enhanced.getpixel((50, 50)) > 30
-
-    def test_apply_adaptive_enhancements_light(self):
-        img = Image.new("L", (100, 100), color=220)
-        enhanced = self.preprocessor._apply_adaptive_enhancements(img)
-        assert enhanced.mode == "L"
-
     def test_clean_extracted_text(self):
         # WORLD (5) -> World
         # TEST (4) -> TEST

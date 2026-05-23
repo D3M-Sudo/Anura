@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: MIT
 
 from abc import ABC, abstractmethod
+import threading
 
 from loguru import logger
 from PIL import Image, ImageEnhance, ImageFilter, ImageStat
@@ -40,7 +41,7 @@ class RescaleFilter(ImageFilterBase):
         return image
 
 
-class AdaptiveEnhancementFilter(ImageFilterBase):
+class ContrastEnhancementFilter(ImageFilterBase):
     """Applies combined brightness and contrast enhancement."""
 
     def apply(self, image: Image.Image) -> Image.Image:
@@ -82,7 +83,7 @@ class NoiseReductionFilter(ImageFilterBase):
         return image.filter(ImageFilter.MedianFilter(size=3))
 
 
-class ThresholdingFilter(ImageFilterBase):
+class AdaptiveThresholdFilter(ImageFilterBase):
     """Applies intelligent thresholding based on histogram cutoff."""
 
     def apply(self, image: Image.Image) -> Image.Image:
@@ -144,3 +145,26 @@ class FilterChain:
         for img_filter in self._filters:
             result = img_filter.apply(result)
         return result
+
+
+_default_chain: FilterChain | None = None
+_default_chain_lock = threading.Lock()
+
+
+def get_default_filter_chain() -> FilterChain:
+    """Build and cache the default OCR preprocessing filter chain.
+
+    Returns:
+        Singleton FilterChain configured for OCR preprocessing.
+    """
+    global _default_chain
+    if _default_chain is None:
+        with _default_chain_lock:
+            if _default_chain is None:
+                _default_chain = FilterChain([
+                    GrayscaleFilter(),
+                    RescaleFilter(),
+                    ContrastEnhancementFilter(),
+                    AdaptiveThresholdFilter(),
+                ])
+    return _default_chain

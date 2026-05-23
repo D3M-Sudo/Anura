@@ -35,6 +35,7 @@ from anura.config import (  # noqa: E402
 )
 from anura.services.host_screenshot_fallback import build_scrot_argv  # noqa: E402
 from anura.utils.portal_advice import detect_portal_advice  # noqa: E402
+from anura.utils.structural_reconstructor import get_structural_reconstructor  # noqa: E402
 from anura.utils.text_preprocessor import get_text_preprocessor  # noqa: E402
 
 
@@ -562,13 +563,9 @@ class ScreenshotService(GObject.GObject):
 
             # Apply image enhancement preprocessing
             preprocessor = get_text_preprocessor()
-            if mode != "off":
-                enhanced_img = preprocessor.enhance_image(img)
-            else:
-                enhanced_img = img
+            enhanced_img = preprocessor.enhance_image(img) if mode != "off" else img
 
             # 1. Extract raw data with layout information (image_to_data)
-            # This is the core of the Magics pattern migration.
             ocr_data = pytesseract.image_to_data(
                 enhanced_img,
                 lang=lang,
@@ -576,12 +573,20 @@ class ScreenshotService(GObject.GObject):
                 output_type=Output.DICT
             )
 
-            # 2. Process data through Magic Transformers (Chain of Responsibility)
-            # This happens in the worker thread.
+            # 2. Structural reconstruction — preserves paragraph layout from bounding boxes
+            reconstructor = get_structural_reconstructor()
+            spatially_reconstructed = reconstructor.reconstruct(ocr_data)
+
+            # 3. Magic processor classifies and applies semantic transforms
             magic_processor = get_magic_processor()
             processed_text = magic_processor.process(ocr_data)
 
-            # 3. Final cleanup based on user settings
+            # 4. If structural reconstruction produced richer output, prefer it
+            # (MagicProcessor operates on raw ocr_data; reconstructor uses spatial info)
+            if spatially_reconstructed.strip() and len(spatially_reconstructed) >= len(processed_text):
+                processed_text = spatially_reconstructed
+
+            # 5. Final cleanup based on user settings
             if mode == "full":
                 cleaned_text = preprocessor.clean_extracted_text(processed_text)
             elif mode == "image-only":

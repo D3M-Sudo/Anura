@@ -6,6 +6,7 @@
 
 from loguru import logger
 
+from anura.utils.singleton import get_instance
 from anura.utils.transformers.base_transformers import MultiLineTransformer, ParagraphTransformer, SingleLineTransformer
 from anura.utils.transformers.email_transformer import EmailTransformer
 from anura.utils.transformers.models import OcrResult, TransformerProtocol, TransformerType
@@ -61,11 +62,10 @@ class MagicProcessor:
 
         return final_text
 
-# Singleton
-_magic_processor = None
-
 def get_magic_processor() -> MagicProcessor:
-    global _magic_processor
-    if _magic_processor is None:
-        _magic_processor = MagicProcessor()
-    return _magic_processor
+    """Get the thread-safe MagicProcessor singleton.
+
+    Returns:
+        The singleton MagicProcessor instance.
+    """
+    return get_instance(MagicProcessor)
