@@ -4,8 +4,10 @@
 # SPDX-License-Identifier: MIT
 
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from anura.types.context import ApplicationContext
+
 
 class TestCapabilityAudit(unittest.TestCase):
 

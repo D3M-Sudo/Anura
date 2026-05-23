@@ -35,8 +35,8 @@ from anura.config import (  # noqa: E402
 )
 from anura.services.host_screenshot_fallback import build_scrot_argv  # noqa: E402
 from anura.services.result_dispatcher import get_result_dispatcher  # noqa: E402
+from anura.types.ocr import OcrResult  # noqa: E402
 from anura.utils import validate_image_resource  # noqa: E402
-from anura.types.ocr import OcrResult
 from anura.utils.portal_advice import detect_portal_advice  # noqa: E402
 from anura.utils.structural_reconstructor import get_structural_reconstructor  # noqa: E402
 from anura.utils.text_preprocessor import get_text_preprocessor  # noqa: E402

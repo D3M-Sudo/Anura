@@ -3,9 +3,11 @@
 #
 # SPDX-License-Identifier: MIT
 
-from gi.repository import GObject, GLib
+from gi.repository import GObject
 from loguru import logger
+
 from anura.services.tts import get_tts_service
+
 
 class TtsController(GObject.GObject):
     """

@@ -4,10 +4,12 @@
 # SPDX-License-Identifier: MIT
 
 from dataclasses import dataclass
-import shutil
 import importlib
 import os
+import shutil
+
 from loguru import logger
+
 
 @dataclass(frozen=True, slots=True)
 class ApplicationContext:

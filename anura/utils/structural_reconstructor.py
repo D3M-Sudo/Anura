@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: MIT
 
+from typing import Any
+
 from anura.types.ocr import OcrResult
 from anura.utils.singleton import get_instance
 
@@ -73,9 +75,9 @@ class StructuralReconstructor:
         if current_paragraph:
             paragraphs.append(" ".join([line["text"] for line in current_paragraph]))
 
-        return "\n\n".join(paragraphs), avg_conf
+        return "\n\n".join(paragraphs), ocr_result.avg_confidence
 
-    def _process_line(self, words: list[Any]) -> dict:
+    def _process_line(self, words: tuple[Any, ...]) -> dict:
         """Calculate line geometry from its words."""
         text = " ".join([w.text for w in words])
         left = min([w.left for w in words])

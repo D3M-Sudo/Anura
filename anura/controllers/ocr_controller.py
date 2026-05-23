@@ -3,10 +3,12 @@
 #
 # SPDX-License-Identifier: MIT
 
-from gi.repository import GObject, GLib, Gtk, Gio
+from gi.repository import Gio, GLib, GObject, Gtk
 from loguru import logger
+
 from anura.services.result_dispatcher import get_result_dispatcher
 from anura.utils.portal_advice import detect_portal_advice
+
 
 class OcrController(GObject.GObject):
     """
@@ -98,9 +100,10 @@ class OcrController(GObject.GObject):
     def open_image(self) -> None:
         """Open file dialog to select an image for OCR processing."""
         from gettext import gettext as _
+        from io import BytesIO
+
         from anura.config import MAX_IMAGE_SIZE_BYTES
         from anura.utils import validate_image_resource
-        from io import BytesIO
 
         dialog = Gtk.FileDialog()
         dialog.set_title(_("Choose an image for extraction"))

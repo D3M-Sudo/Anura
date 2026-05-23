@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: MIT
 
 import unittest
-from anura.types.ocr import OcrResult, OcrWord
+
+from anura.types.ocr import OcrResult
+
 
 class TestOcrDataModel(unittest.TestCase):
     def setUp(self):

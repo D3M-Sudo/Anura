@@ -24,19 +24,19 @@ from loguru import logger  # noqa: E402
 
 from anura.atomic_task_manager import get_atomic_manager  # noqa: E402
 from anura.config import APP_ID, RESOURCE_PREFIX  # noqa: E402
+from anura.controllers.dnd_controller import DndController  # noqa: E402
+from anura.controllers.ocr_controller import OcrController  # noqa: E402
+from anura.controllers.tts_controller import TtsController  # noqa: E402
 from anura.language_manager import get_language_manager  # noqa: E402
 from anura.services.clipboard_service import get_clipboard_service  # noqa: E402
 from anura.services.screenshot_service import ScreenshotService  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
+from anura.types.context import get_app_context  # noqa: E402
 from anura.utils import uri_validator, validate_image_resource  # noqa: E402
 from anura.utils.signal_manager import SignalManagerMixin  # noqa: E402
 from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
 from anura.widgets.preferences_dialog import PreferencesDialog  # noqa: E402
 from anura.widgets.welcome_page import WelcomePage  # noqa: E402
-from anura.controllers.ocr_controller import OcrController  # noqa: E402
-from anura.controllers.dnd_controller import DndController  # noqa: E402
-from anura.controllers.tts_controller import TtsController  # noqa: E402
-from anura.types.context import get_app_context  # noqa: E402
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/window.ui")

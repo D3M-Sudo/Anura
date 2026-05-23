@@ -3,10 +3,11 @@
 #
 # SPDX-License-Identifier: MIT
 
-from gi.repository import GLib, Gio
 from loguru import logger
+
 from anura.atomic_task_manager import get_atomic_manager
 from anura.utils import validate_image_resource
+
 
 class DndController:
     """
