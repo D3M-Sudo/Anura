@@ -160,13 +160,9 @@ Contributions in any language are welcome.
 
 
 <p align="center">
-
-  <a href="https://hosted.weblate.org/engage/anura/">
-
-    <img src="https://hosted.weblate.org/widgets/anura/-/horizontal-auto.svg" alt="Translation status" />
-
-  </a>
-
+ <a href="https://hosted.weblate.org/engage/anura/">
+  <img src="https://hosted.weblate.org/widgets/anura/-/horizontal-auto.svg" alt="Translation status" />
+ </a>
 </p>
 
 **For maintainers** — update translatable strings:
