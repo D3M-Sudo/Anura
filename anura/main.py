@@ -678,31 +678,13 @@ class AnuraApplication(Adw.Application):
         """Open GitHub repository page in the default browser."""
         from anura.utils.validators import launch_uri
 
-        def _on_error(msg):
-            window = self.props.active_window
-            if window:
-                dialog = Adw.AlertDialog()
-                dialog.set_heading(_("Failed to Open Browser"))
-                dialog.set_body(_("No web browser could be launched. Please open the link manually."))
-                dialog.add_response("ok", _("OK"))
-                dialog.present(window)
-
-        launch_uri(self.props.active_window, "https://github.com/D3M-Sudo/Anura", _on_error)
+        launch_uri(self.props.active_window, "https://github.com/D3M-Sudo/Anura")
 
     def on_report_issue(self, _action: object, _param: object) -> None:
         """Open GitHub issues page in the default browser."""
         from anura.utils.validators import launch_uri
 
-        def _on_error(msg):
-            window = self.props.active_window
-            if window:
-                dialog = Adw.AlertDialog()
-                dialog.set_heading(_("Failed to Open Browser"))
-                dialog.set_body(_("No web browser could be launched. Please open the link manually."))
-                dialog.add_response("ok", _("OK"))
-                dialog.present(window)
-
-        launch_uri(self.props.active_window, "https://github.com/D3M-Sudo/Anura/issues", _on_error)
+        launch_uri(self.props.active_window, "https://github.com/D3M-Sudo/Anura/issues")
 
     def on_shortcuts(self, _action: object, _param: object) -> None:
         window = self.get_active_window()
@@ -790,13 +772,7 @@ class AnuraApplication(Adw.Application):
             # Security: validate URL before launching (defense in depth)
             from anura.utils.validators import launch_uri
 
-            window = self.get_active_window()
-
-            def _on_error(msg):
-                if window and hasattr(window, "show_toast"):
-                    window.show_toast(_(msg))
-
-            launch_uri(window, url, _on_error)
+            launch_uri(self.get_active_window(), url)
         except Exception:
             logger.exception("Anura: Unexpected error handling QR notification click")
 

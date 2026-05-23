@@ -132,19 +132,42 @@ def launch_uri(window: object | None, url: str, error_callback: Callable | None 
     Args:
         window: The parent window (Gtk.Window) for the launcher and error dialogs.
         url: The URL to launch.
-        error_callback: Optional callback for error messages.
+        error_callback: Optional callback for error messages. If provided,
+                       the caller is responsible for UI feedback.
+                       If None, a default AlertDialog/Toast is shown on the window.
     """
     url = url.strip() if url else ""
-    if not uri_validator(url):
-        logger.warning(f"Anura Security: Blocked invalid URL launch: {url}")
-        if error_callback:
-            error_callback("Invalid URL blocked for security")
-        return
 
     import gi
 
     gi.require_version("Gtk", "4.0")
-    from gi.repository import Gio, GLib, Gtk
+    gi.require_version("Adw", "1")
+    from gi.repository import Adw, Gio, GLib, Gtk
+
+    def _show_default_error(msg: str):
+        if not window:
+            logger.error(f"Anura: URI launch error without window: {msg}")
+            return
+
+        # Use Adw.Toast if available (AnuraWindow uses it), otherwise AlertDialog
+        if hasattr(window, "show_toast"):
+            window.show_toast(msg)
+        elif isinstance(window, Gtk.Window):
+            from gettext import gettext as _
+
+            dialog = Adw.AlertDialog()
+            dialog.set_heading(_("Error"))
+            dialog.set_body(_(msg))
+            dialog.add_response("ok", _("OK"))
+            dialog.present(window)
+
+    if not uri_validator(url):
+        logger.warning(f"Anura Security: Blocked invalid URL launch: {url}")
+        if error_callback:
+            error_callback("Invalid URL blocked for security")
+        else:
+            _show_default_error("Invalid URL blocked for security")
+        return
 
     launcher = Gtk.UriLauncher.new(url)
 
@@ -155,5 +178,7 @@ def launch_uri(window: object | None, url: str, error_callback: Callable | None 
             logger.error(f"Anura: Failed to launch URI: {e.message}")
             if error_callback:
                 error_callback("Failed to open link")
+            else:
+                _show_default_error("Failed to open link")
 
     launcher.launch(window, None, on_launch_finish)

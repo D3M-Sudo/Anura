@@ -53,14 +53,14 @@ For bugs that require *actual* GTK semantics — e.g. action dispatch, signal co
 sudo apt-get install -y \
   gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-xdp-1.0 \
   libgirepository1.0-dev libzbar0 tesseract-ocr
-sudo ldconfig            # so pyzbar's ctypes loader sees libzbar.so.0
+sudo ldconfig            # so shared libraries are visible
 ```
 
 **System-py3 user-site project deps** (so `/usr/bin/python3` can `import anura.services.*` without crashing on third-party imports):
 
 ```bash
 /usr/bin/python3 -m pip install --user \
-  loguru pytesseract pillow pyzbar requests gtts
+  loguru pytesseract pillow zxing-cpp requests gtts
 ```
 
 **Run the harness** with `DISPLAY=:0` so `Adw.ApplicationWindow.present()` doesn't crash the X bridge:
@@ -226,7 +226,6 @@ When a PR adds new files to `data/io.github.d3msudo.anura.gresource.xml`, the st
 - `pytest.mark.gtk` tests that look like "unit tests" still need PyGObject — collection alone imports the module under test.
 - Don't try to install `python3-pytesseract` from apt; it's not packaged. Install via `uv add pytesseract` for the project, or skip the harness if you don't need it.
 - `glib-compile-resources` is in **`libglib2.0-dev-bin`**, not `libglib2.0-bin`. The latter ships only the runtime CLI helpers (`gresource`, `gio`, `gsettings`). Forgetting this wastes a debug cycle.
-- After installing `libzbar0`, run `sudo ldconfig` once — `pyzbar.zbar_library.load()` uses ctypes / `find_library` and a missing ldconfig refresh produces `ImportError: Unable to find zbar shared library` even though the file is right there in `/usr/lib/x86_64-linux-gnu/libzbar.so.0`.
 
 ## Testing Drag-and-Drop Functionality
 

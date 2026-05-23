@@ -71,7 +71,7 @@ uv sync --script script.py
 
 ```bash
 # Core OCR dependencies
-uv add pytesseract Pillow pyzbar
+uv add pytesseract Pillow zxing-cpp
 
 # UI dependencies  
 uv add PyGObject gi-adw1

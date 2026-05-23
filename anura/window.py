@@ -306,10 +306,7 @@ class AnuraWindow(WindowDnDMixin, WindowOCRMixin, WindowTTSMixin, Adw.Applicatio
         """Open a URI in the default system browser."""
         from anura.utils.validators import launch_uri
 
-        def _on_error(msg):
-            self.show_toast(_(msg))
-
-        launch_uri(self, url, _on_error)
+        launch_uri(self, url)
 
     def close_popovers(self) -> None:
         """Close all open popovers."""

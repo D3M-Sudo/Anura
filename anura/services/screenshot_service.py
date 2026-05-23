@@ -663,6 +663,7 @@ class ScreenshotService(GObject.GObject):
         file: str | Image.Image | object,
         copy: bool = False,
         remove_source: bool = False,
+        task_id: str | None = None,
     ) -> bool:
         """
         Asynchronously decodes the image and emits GObject signals.
@@ -683,7 +684,17 @@ class ScreenshotService(GObject.GObject):
             GLib.idle_add(_on_invalid_lang_error_idle, priority=GLib.PRIORITY_DEFAULT)
             return False
 
+        # Cooperative cancellation check before starting
+        if task_id and get_atomic_manager().is_cancelled(task_id):
+            logger.debug(f"Anura OCR: Task {task_id} cancelled before starting decode.")
+            return False
+
         success, extracted, error_message = self.decode_image_sync(lang, file, remove_source)
+
+        # Cooperative cancellation check after sync decode
+        if task_id and get_atomic_manager().is_cancelled(task_id):
+            logger.debug(f"Anura OCR: Task {task_id} cancelled after sync decode.")
+            return False
 
         if success:
 

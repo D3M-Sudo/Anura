@@ -50,7 +50,7 @@ This policy will be updated as the project matures.
 
 | Issue | Description |
 | ------- | ----------- |
-| **Denial of Service** | Crashes or resource exhaustion from malformed images (Pillow, pyzbar, pytesseract) |
+| **Denial of Service** | Crashes or resource exhaustion from malformed images (Pillow, zxing-cpp, pytesseract) |
 | **Race Conditions** | TOCTOU vulnerabilities in temporary file operations |
 | **Symlink Attacks** | Improper symlink handling in download or cache paths |
 | **URI Injection** | Bypass of `uri_validator()` in `utils/validators.py` (homograph attacks, control chars, disallowed schemes) |

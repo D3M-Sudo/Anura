@@ -91,8 +91,14 @@ class AtomicTaskManager:
                 if current_cancellable.is_cancelled():
                     return
 
-                # Execute the actual work
-                result_data = command(*args)
+                # Inject task_id if the command accepts it for cooperative cancellation
+                import inspect
+                sig = inspect.signature(command)
+                if "task_id" in sig.parameters:
+                    kwargs = {"task_id": new_task_id}
+                    result_data = command(*args, **kwargs)
+                else:
+                    result_data = command(*args)
 
                 # Post-execution check for cancellation
                 if current_cancellable.is_cancelled():
@@ -149,6 +155,17 @@ class AtomicTaskManager:
             logger.error(f"AtomicTaskManager Error: {tb}")
         else:
             logger.error(f"AtomicTaskManager Error: {error}")
+
+    def is_cancelled(self, task_id: str) -> bool:
+        """Check if a specific task has been invalidated/cancelled.
+
+        Useful for long-running commands to check their status and
+        exit early.
+        """
+        with self._state_lock:
+            return task_id != self._current_task_id or (
+                self._cancellable is not None and self._cancellable.is_cancelled()
+            )
 
     def shutdown(self) -> None:
         """Shut down the executor."""

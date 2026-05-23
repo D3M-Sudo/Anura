@@ -9,7 +9,7 @@ trigger: always_on
 - Distribution: Flatpak (io.github.d3msudo.anura)
 - UI: GTK4 + Libadwaita + Blueprint Compiler 0.16.0
 - OCR: pytesseract + Tesseract 5.5.0
-- QR: pyzbar + zbar
+- QR: zxing-cpp
 - TTS: gTTS + GStreamer playbin3
 - Screenshots: Xdp.Portal (libportal)
 - Settings: GSettings singleton → anura/services/settings.py

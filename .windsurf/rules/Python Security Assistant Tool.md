@@ -37,7 +37,7 @@ trigger: always_on
 - `cryptography` for symmetric/asymmetric operations (if needed)
 - `Pillow` for image processing and validation
 - `pytesseract` for OCR operations
-- `pyzbar` for QR code processing
+- `zxing-cpp` for QR code processing
 - `requests` for HTTP operations (tessdata downloads)
 - `gi.repository.Gtk` and `gi.repository.Adw` for UI
 - `gi.repository.GLib` for main loop and threading
