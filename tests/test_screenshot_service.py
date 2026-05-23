@@ -40,14 +40,24 @@ class TestScreenshotService:
         test_file = tmp_path / "test.png"
         img.save(test_file)
 
-        # Mock pytesseract to return known text
-        with patch("pytesseract.image_to_string") as mock_ocr:
-            mock_ocr.return_value = "Sample extracted text"
+        # Mock pytesseract to return known data
+        with patch("pytesseract.image_to_data") as mock_ocr:
+            mock_ocr.return_value = {
+                "text": ["Sample", "extracted", "text"],
+                "left": [0, 10, 20],
+                "top": [0, 0, 0],
+                "width": [5, 5, 5],
+                "height": [10, 10, 10],
+                "line_num": [1, 1, 1],
+                "block_num": [1, 1, 1],
+                "par_num": [1, 1, 1],
+            }
 
             success, result, error = self.service.decode_image_sync("eng", str(test_file), False)
 
             assert success is True
-            assert result == "Sample extracted text"
+            # StructuralReconstructor will join them
+            assert "Sample extracted text" in result
             assert error is None
             mock_ocr.assert_called_once()
 
@@ -58,12 +68,10 @@ class TestScreenshotService:
         test_file = tmp_path / "test.png"
         img.save(test_file)
 
-        # Mock pyzbar decode to return QR data
-        with patch("anura.services.screenshot_service.decode") as mock_decode:
-            mock_qr = Mock()
-            mock_qr.data = b"https://example.com"
-            mock_qr.type = "QRCODE"
-            mock_decode.return_value = [mock_qr]
+        # Mock detect_barcodes to return QR data
+        with patch("anura.services.screenshot_service.detect_barcodes") as mock_detect:
+            from anura.utils.barcode_detector import BarcodeResult
+            mock_detect.return_value = [BarcodeResult(text="https://example.com", format="QRCode")]
 
             success, result, error = self.service.decode_image_sync("eng", str(test_file), False)
 
@@ -77,8 +85,8 @@ class TestScreenshotService:
         test_file = tmp_path / "test.png"
         img.save(test_file)
 
-        with patch("pytesseract.image_to_string") as mock_ocr:
-            mock_ocr.return_value = ""
+        with patch("pytesseract.image_to_data") as mock_ocr:
+            mock_ocr.return_value = {"text": []}
 
             success, result, error = self.service.decode_image_sync("invalid@lang", str(test_file), False)
 
@@ -112,7 +120,7 @@ class TestScreenshotService:
         test_file = tmp_path / "test.png"
         img.save(test_file)
 
-        with patch("pytesseract.image_to_string") as mock_ocr:
+        with patch("pytesseract.image_to_data") as mock_ocr:
             mock_ocr.side_effect = pytesseract.TesseractError("Test error", "Test error")
 
             success, result, error = self.service.decode_image_sync("eng", str(test_file), False)
@@ -127,8 +135,17 @@ class TestScreenshotService:
         test_file = tmp_path / "test.png"
         img.save(test_file)
 
-        with patch("pytesseract.image_to_string") as mock_ocr:
-            mock_ocr.return_value = "test text"
+        with patch("pytesseract.image_to_data") as mock_ocr:
+            mock_ocr.return_value = {
+                "text": ["test", "text"],
+                "left": [0, 10],
+                "top": [0, 0],
+                "width": [5, 5],
+                "height": [10, 10],
+                "line_num": [1, 1],
+                "block_num": [1, 1],
+                "par_num": [1, 1],
+            }
 
             success, _, _ = self.service.decode_image_sync(
                 "eng",
@@ -147,8 +164,17 @@ class TestScreenshotService:
         test_file = tmp_path / "test.png"
         img.save(test_file)
 
-        with patch("pytesseract.image_to_string") as mock_ocr:
-            mock_ocr.return_value = "portal text"
+        with patch("pytesseract.image_to_data") as mock_ocr:
+            mock_ocr.return_value = {
+                "text": ["portal", "text"],
+                "left": [0, 10],
+                "top": [0, 0],
+                "width": [5, 5],
+                "height": [10, 10],
+                "line_num": [1, 1],
+                "block_num": [1, 1],
+                "par_num": [1, 1],
+            }
 
             # Simulate portal file path
             portal_file = f"/tmp/.portal-{os.getpid()}-test.png"
@@ -160,7 +186,7 @@ class TestScreenshotService:
                 )
 
                 assert success is True
-                assert result == "portal text"
+                assert "portal text" in result
                 # Portal temp file should be removed
                 mock_remove.assert_called_once_with(portal_file)
 
@@ -170,8 +196,8 @@ class TestScreenshotService:
         test_file = tmp_path / "test.png"
         img.save(test_file)
 
-        with patch("pytesseract.image_to_string") as mock_ocr:
-            mock_ocr.return_value = ""  # Empty result
+        with patch("pytesseract.image_to_data") as mock_ocr:
+            mock_ocr.return_value = {"text": []}  # Empty result
 
             success, result, error = self.service.decode_image_sync("eng", str(test_file), False)
 

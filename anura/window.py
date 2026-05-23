@@ -29,7 +29,6 @@ from anura.language_manager import get_language_manager  # noqa: E402
 from anura.services.clipboard_service import get_clipboard_service  # noqa: E402
 from anura.services.screenshot_service import ScreenshotService  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
-from anura.utils import uri_validator  # noqa: E402
 from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
 from anura.widgets.preferences_dialog import PreferencesDialog  # noqa: E402
 from anura.widgets.welcome_page import WelcomePage  # noqa: E402
@@ -305,21 +304,12 @@ class AnuraWindow(WindowDnDMixin, WindowOCRMixin, WindowTTSMixin, Adw.Applicatio
 
     def _launch_uri(self, url: str) -> None:
         """Open a URI in the default system browser."""
-        url = url.strip() if url else ""
-        if not uri_validator(url):
-            logger.warning(f"Anura: Blocked invalid URL launch: {url}")
-            self.show_toast(_("Invalid URL blocked for security"))
-            return
-        launcher = Gtk.UriLauncher.new(url)
+        from anura.utils.validators import launch_uri
 
-        def on_launch_finish(_launcher: object, result: Gio.AsyncResult) -> None:
-            try:
-                launcher.launch_finish(result)
-            except GLib.Error as e:
-                logger.error(f"Anura: Failed to launch URI: {e.message}")
-                self.show_toast(_("Failed to open link"))
+        def _on_error(msg):
+            self.show_toast(_(msg))
 
-        launcher.launch(self, None, on_launch_finish)
+        launch_uri(self, url, _on_error)
 
     def close_popovers(self) -> None:
         """Close all open popovers."""

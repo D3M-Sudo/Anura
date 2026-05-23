@@ -676,43 +676,33 @@ class AnuraApplication(Adw.Application):
 
     def on_github_star(self, _action: object, _param: object) -> None:
         """Open GitHub repository page in the default browser."""
-        launcher = Gtk.UriLauncher.new("https://github.com/D3M-Sudo/Anura")
+        from anura.utils.validators import launch_uri
 
-        def on_launch_finish(_launcher: object, result: Gio.AsyncResult) -> None:
-            try:
-                launcher.launch_finish(result)
-            except GLib.Error as e:
-                logger.error(f"Anura: Failed to open browser: {e.message}")
-                # Show error dialog to user using Adw.AlertDialog
-                window = self.props.active_window
-                if window:
-                    dialog = Adw.AlertDialog()
-                    dialog.set_heading(_("Failed to Open Browser"))
-                    dialog.set_body(_("No web browser could be launched. Please open the link manually."))
-                    dialog.add_response("ok", _("OK"))
-                    dialog.present(window)
+        def _on_error(msg):
+            window = self.props.active_window
+            if window:
+                dialog = Adw.AlertDialog()
+                dialog.set_heading(_("Failed to Open Browser"))
+                dialog.set_body(_("No web browser could be launched. Please open the link manually."))
+                dialog.add_response("ok", _("OK"))
+                dialog.present(window)
 
-        launcher.launch(self.props.active_window, None, on_launch_finish)
+        launch_uri(self.props.active_window, "https://github.com/D3M-Sudo/Anura", _on_error)
 
     def on_report_issue(self, _action: object, _param: object) -> None:
         """Open GitHub issues page in the default browser."""
-        launcher = Gtk.UriLauncher.new("https://github.com/D3M-Sudo/Anura/issues")
+        from anura.utils.validators import launch_uri
 
-        def on_launch_finish(_launcher: object, result: Gio.AsyncResult) -> None:
-            try:
-                launcher.launch_finish(result)
-            except GLib.Error as e:
-                logger.error(f"Anura: Failed to open browser: {e.message}")
-                # Show error dialog to user using Adw.AlertDialog
-                window = self.props.active_window
-                if window:
-                    dialog = Adw.AlertDialog()
-                    dialog.set_heading(_("Failed to Open Browser"))
-                    dialog.set_body(_("No web browser could be launched. Please open the link manually."))
-                    dialog.add_response("ok", _("OK"))
-                    dialog.present(window)
+        def _on_error(msg):
+            window = self.props.active_window
+            if window:
+                dialog = Adw.AlertDialog()
+                dialog.set_heading(_("Failed to Open Browser"))
+                dialog.set_body(_("No web browser could be launched. Please open the link manually."))
+                dialog.add_response("ok", _("OK"))
+                dialog.present(window)
 
-        launcher.launch(self.props.active_window, None, on_launch_finish)
+        launch_uri(self.props.active_window, "https://github.com/D3M-Sudo/Anura/issues", _on_error)
 
     def on_shortcuts(self, _action: object, _param: object) -> None:
         window = self.get_active_window()
@@ -798,30 +788,15 @@ class AnuraApplication(Adw.Application):
                 return
 
             # Security: validate URL before launching (defense in depth)
-            from anura.utils import uri_validator
+            from anura.utils.validators import launch_uri
 
-            if not uri_validator(url):
-                logger.warning(f"Anura: Blocked invalid URL from notification: {url}")
-                window = self.get_active_window()
-                if window and hasattr(window, "show_toast"):
-                    window.show_toast(_("Invalid URL blocked for security"))
-                return
-
-            # Launch URL via Gtk.UriLauncher
             window = self.get_active_window()
-            if window and hasattr(window, "_launch_uri"):
-                window._launch_uri(url)
-            else:
-                # Fallback: launch directly if no window available
-                launcher = Gtk.UriLauncher.new(url)
 
-                def on_launch_finish(_launcher: object, result: Gio.AsyncResult) -> None:
-                    try:
-                        launcher.launch_finish(result)
-                    except GLib.Error as e:
-                        logger.error(f"Anura: Failed to open URL from notification: {e.message}")
+            def _on_error(msg):
+                if window and hasattr(window, "show_toast"):
+                    window.show_toast(_(msg))
 
-                launcher.launch(None, None, on_launch_finish)
+            launch_uri(window, url, _on_error)
         except Exception:
             logger.exception("Anura: Unexpected error handling QR notification click")
 

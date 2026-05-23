@@ -169,7 +169,7 @@
         <ul>
           <li>Fixed critical thread-safety issues and race conditions in language manager and screenshot service.</li>
           <li>Fixed memory leaks in widget lifecycle management and GStreamer bus watch.</li>
-          <li>Fixed all Flatpak manifest dependencies (requests, urllib3, certifi, hatchling, pyzbar).</li>
+          <li>Fixed all Flatpak manifest dependencies (requests, urllib3, certifi, hatchling, zxing-cpp).</li>
           <li>Fixed blueprint compiler output directory for Flatpak builds.</li>
           <li>Fixed gresource bundle loading with correct UI file paths.</li>
           <li>Fixed filesystem permissions for Open Image and Drag &amp; Drop in sandbox.</li>

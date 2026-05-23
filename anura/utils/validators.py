@@ -4,11 +4,14 @@
 #
 # SPDX-License-Identifier: MIT
 
+from collections.abc import Callable
 import contextlib
 import ipaddress
 import re
 import unicodedata
 from urllib.parse import urlparse
+
+from loguru import logger
 
 # Pre-compiled regex for control characters (0x00-0x1F) and DEL (0x7F)
 # Using a regex is ~13x faster than a manual loop for control character detection.
@@ -121,3 +124,36 @@ def uri_validator(text: str) -> bool:
         return False
     except ValueError:
         return False
+
+def launch_uri(window: object | None, url: str, error_callback: Callable | None = None) -> None:
+    """
+    Centralized URI launcher with security validation and error handling.
+
+    Args:
+        window: The parent window (Gtk.Window) for the launcher and error dialogs.
+        url: The URL to launch.
+        error_callback: Optional callback for error messages.
+    """
+    url = url.strip() if url else ""
+    if not uri_validator(url):
+        logger.warning(f"Anura Security: Blocked invalid URL launch: {url}")
+        if error_callback:
+            error_callback("Invalid URL blocked for security")
+        return
+
+    import gi
+
+    gi.require_version("Gtk", "4.0")
+    from gi.repository import Gio, GLib, Gtk
+
+    launcher = Gtk.UriLauncher.new(url)
+
+    def on_launch_finish(_launcher: object, result: Gio.AsyncResult) -> None:
+        try:
+            launcher.launch_finish(result)
+        except GLib.Error as e:
+            logger.error(f"Anura: Failed to launch URI: {e.message}")
+            if error_callback:
+                error_callback("Failed to open link")
+
+    launcher.launch(window, None, on_launch_finish)

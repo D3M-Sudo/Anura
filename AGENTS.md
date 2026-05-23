@@ -11,7 +11,7 @@ Anura OCR is a GTK4/Libadwaita desktop application for GNOME that extracts text 
 - Python 3.12+ required
 - GTK4 + Libadwaita + Blueprint Compiler for declarative UI
 - OCR via `pytesseract` (Tesseract 5.x wrapper)
-- QR code via `pyzbar` + `zbar`
+- QR code via `zxing-cpp`
 - TTS via `gTTS` + GStreamer `playbin3`
 - Screenshots via XDG Desktop Portal (`libportal` / `Xdp`)
 - Distributed as Flatpak (`io.github.d3msudo.anura`) — GNOME 50 runtime
@@ -193,7 +193,7 @@ uv run pip install "meson>=1.5.0"
 - `meson` — Build system
 - `ninja` — Build tool (meson dependency)
 - `ruff` — Linter
-- `pytesseract`, `Pillow`, `pyzbar` — For local OCR testing (requires system tesseract)
+- `pytesseract`, `Pillow`, `zxing-cpp` — For local OCR testing (requires system tesseract)
 
 ### Runtime Dependencies (Flatpak/System)
 
@@ -207,11 +207,11 @@ Native dependencies compiled in the Flatpak:
 | tesseract | 5.5.0 | OCR engine |
 | tessdata-fast | pinned | Language models (eng, ita) |
 | libportal | 0.9.1 | XDG Desktop Portal API |
-| zbar | 0.23.93 | QR code decoding |
+| zxing-cpp | 2.3.0 | QR code decoding |
 | blueprint-compiler | 0.16.0 | UI compilation .blp → .ui |
 
 Python runtime dependencies (installed in Flatpak):
-- pytesseract, Pillow, pyzbar, gTTS, loguru, requests, etc.
+- pytesseract, Pillow, zxing-cpp, gTTS, loguru, requests, etc.
 
 ### Build System Configuration
 
