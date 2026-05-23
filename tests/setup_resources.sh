@@ -1,24 +1,20 @@
 #!/bin/bash
-# tests/setup_resources.sh
-# Programmatically compile Blueprint files and GResource bundle for testing
+# setup_resources.sh
+#
+# Copyright 2026 D3M-Sudo (Anura)
+#
+# MIT License
 
 set -e
 
-PROJECT_ROOT=$(pwd)
-DATA_DIR="$PROJECT_ROOT/data"
-UI_DIR="$DATA_DIR/ui"
+# Path to the data directory containing gresource.xml
+DATA_DIR="data"
 
-echo "🔧 Compiling Blueprint files..."
-for f in "$UI_DIR"/*.blp; do
-    if [ -f "$f" ]; then
-        blueprint-compiler compile "$f" --output "$UI_DIR/$(basename "$f" .blp).ui"
-    fi
-done
-
-echo "🔨 Compiling GResource bundle..."
-glib-compile-resources "$DATA_DIR/com.github.d3msudo.anura.gresource.xml" \
-    --target="$DATA_DIR/com.github.d3msudo.anura.gresource" \
+# Compile resources using the correct application ID
+glib-compile-resources "$DATA_DIR/io.github.d3msudo.anura.gresource.xml" \
     --sourcedir="$DATA_DIR" \
-    --sourcedir="$UI_DIR"
+    --sourcedir="$DATA_DIR/ui" \
+    --target="$DATA_DIR/io.github.d3msudo.anura.gresource" \
+    --xml-stripblanks
 
-echo "✅ Resources ready for testing."
+echo "Resources compiled successfully at $DATA_DIR/io.github.d3msudo.anura.gresource"
