@@ -11,8 +11,8 @@ from io import BytesIO
 from gi.repository import Adw, Gio, GLib, GObject, Gtk
 from loguru import logger
 
-from anura.config import MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB
 from anura.atomic_task_manager import get_atomic_manager
+from anura.config import MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB
 from anura.services.clipboard_service import get_clipboard_service
 from anura.utils import uri_validator
 from anura.utils.portal_advice import detect_portal_advice

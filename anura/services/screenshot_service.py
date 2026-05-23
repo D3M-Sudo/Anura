@@ -27,6 +27,7 @@ from loguru import logger  # noqa: E402
 from PIL import Image  # noqa: E402
 import pytesseract  # noqa: E402
 
+from anura.atomic_task_manager import get_atomic_manager  # noqa: E402
 from anura.config import (  # noqa: E402
     LANG_CODE_PATTERN,
     MAX_IMAGE_SIZE_BYTES,
@@ -36,7 +37,6 @@ from anura.config import (  # noqa: E402
 from anura.services.host_screenshot_fallback import build_scrot_argv  # noqa: E402
 from anura.utils.portal_advice import detect_portal_advice  # noqa: E402
 from anura.utils.text_preprocessor import get_text_preprocessor  # noqa: E402
-from anura.atomic_task_manager import get_atomic_manager  # noqa: E402
 
 
 def _is_flatpak_environment() -> bool:

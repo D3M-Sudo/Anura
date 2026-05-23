@@ -7,8 +7,8 @@
 from gi.repository import Gio, GLib
 from loguru import logger
 
-from anura.config import MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB
 from anura.atomic_task_manager import get_atomic_manager
+from anura.config import MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB
 
 
 class WindowDnDMixin:

@@ -4,10 +4,7 @@
 # Tests run directly in CI without xvfb-run.
 
 import threading
-import time
 import uuid
-
-import pytest
 
 from anura.atomic_task_manager import AtomicTaskManager, AtomicTaskResult, get_atomic_manager
 from anura.utils.singleton import ThreadSafeSingleton
