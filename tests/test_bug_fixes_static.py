@@ -267,27 +267,23 @@ def test_window_tracks_portal_banner_handler_id() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_window_process_file_uses_getsize() -> None:
-    """AnuraWindow.process_file must use os.path.getsize() for size validation."""
+def test_window_process_file_uses_validate_image_resource() -> None:
+    """AnuraWindow.process_file must use validate_image_resource() for size validation."""
     tree, _ = _load_module_source("window.py")
     process_file_fn = _find_method(tree, "AnuraWindow", "process_file")
 
-    found_getsize = False
+    found_validation = False
     for node in ast.walk(process_file_fn):
         if (
             isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Attribute)
-            and node.func.attr == "getsize"
-            and isinstance(node.func.value, ast.Attribute)
-            and node.func.value.attr == "path"
-            and isinstance(node.func.value.value, ast.Name)
-            and node.func.value.value.id == "os"
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "validate_image_resource"
         ):
-            found_getsize = True
+            found_validation = True
             break
-    assert found_getsize, (
-        "AnuraWindow.process_file() must use os.path.getsize() instead of os.lstat() "
-        "to correctly validate the actual file size when symbolic links are used."
+    assert found_validation, (
+        "AnuraWindow.process_file() must use validate_image_resource() "
+        "to correctly validate the actual file size and properties."
     )
 
 

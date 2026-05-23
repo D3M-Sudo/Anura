@@ -6,9 +6,14 @@
 
 import contextlib
 import ipaddress
+import os
 import re
 import unicodedata
 from urllib.parse import urlparse
+
+from loguru import logger
+
+from anura.config import MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB
 
 # Pre-compiled regex for control characters (0x00-0x1F) and DEL (0x7F)
 # Using a regex is ~13x faster than a manual loop for control character detection.
@@ -65,6 +70,60 @@ def is_safe_url_string(text: str) -> bool:
 
     # Ensure URL is ASCII-only (prevent Unicode homograph attacks).
     return text.isascii()
+
+
+def validate_image_resource(
+    resource: str | bytes | object,
+) -> tuple[bool, int, str | None]:
+    """
+    Centralized validation for image resources.
+    Checks for existence, accessibility, and size to prevent DoS and crashes.
+
+    Args:
+        resource: File path (str), raw bytes, or stream-like object.
+
+    Returns:
+        tuple: (is_valid, size_in_bytes, error_message)
+    """
+    size = 0
+
+    try:
+        if isinstance(resource, str):
+            if not os.path.exists(resource):
+                return False, 0, "File not found"
+            if not os.access(resource, os.R_OK):
+                return False, 0, "Permission denied"
+            size = os.path.getsize(resource)
+        elif isinstance(resource, bytes):
+            size = len(resource)
+        elif hasattr(resource, "getbuffer"):
+            # Handle BytesIO and similar
+            size = resource.getbuffer().nbytes
+        elif hasattr(resource, "seek") and hasattr(resource, "tell"):
+            # General stream fallback
+            curr = resource.tell()
+            resource.seek(0, os.SEEK_END)
+            size = resource.tell()
+            resource.seek(curr, os.SEEK_SET)
+        else:
+            return False, 0, "Unsupported resource type"
+
+        if size == 0:
+            return False, 0, "Image file is empty"
+
+        if size > MAX_IMAGE_SIZE_BYTES:
+            mb_size = round(size / (1024 * 1024), 1)
+            return (
+                False,
+                size,
+                f"Image too large: {mb_size}MB (max {MAX_IMAGE_SIZE_MB}MB)",
+            )
+
+        return True, size, None
+
+    except Exception as e:
+        logger.error(f"Validation: Unexpected error: {e}")
+        return False, 0, f"Validation error: {e}"
 
 
 def uri_validator(text: str) -> bool:

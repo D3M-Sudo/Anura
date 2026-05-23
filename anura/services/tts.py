@@ -439,15 +439,22 @@ class TTSService(GObject.GObject):
 
             if self._bus_watch_active and self._bus:
                 with contextlib.suppress(GLib.Error, RuntimeError):
+                    # Explicitly flush the bus to prevent stale messages from firing
+                    # callbacks during rapid teardown or navigation.
+                    self._bus.set_flushing(True)
                     self._bus.remove_signal_watch()
-                    logger.debug("Anura TTSService: Removed signal watch")
+                    logger.debug("Anura TTSService: Bus flushed and signal watch removed")
                 self._bus_watch_active = False
                 self._bus = None
+
             logger.info("Anura TTSService: Setting GStreamer state to NULL")
             try:
+                # Use synchronous state change to ensure pipeline is fully stopped
+                # before returning, preventing race conditions with rapid restarts.
                 self.player.set_state(Gst.State.NULL)
-            except Exception:
-                pass  # Suppress teardown errors in sandboxed/CI environments
+                self.player.get_state(Gst.CLOCK_TIME_NONE)
+            except Exception as e:
+                logger.debug(f"Anura TTSService: Suppressed GStreamer NULL state error: {e}")
             self.player = None
             logger.debug("Anura TTSService: GStreamer resource cleanup complete")
 

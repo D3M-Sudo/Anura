@@ -5,7 +5,6 @@
 # SPDX-License-Identifier: MIT
 
 from gettext import gettext as _
-from gettext import ngettext
 from io import BytesIO
 
 from gi.repository import Adw, Gio, GLib, GObject, Gtk
@@ -13,17 +12,26 @@ from loguru import logger
 
 from anura.atomic_task_manager import get_atomic_manager
 from anura.config import MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB
-from anura.services.clipboard_service import get_clipboard_service
-from anura.utils import uri_validator
+from anura.services.result_dispatcher import get_result_dispatcher
+from anura.utils import validate_image_resource
 from anura.utils.portal_advice import detect_portal_advice
-from anura.utils.text_preprocessor import get_text_preprocessor
 
 
 class WindowOCRMixin:
-    """Mixin class for AnuraWindow to handle OCR backend signal wiring and processing."""
+    """Mixin class for AnuraWindow to handle OCR backend signal wiring and processing.
+
+    Requires the following template children on the main window:
+    - welcome_page (WelcomePage): The page shown before OCR results are available.
+    - extracted_page (ExtractedPage): The page used to display extracted text.
+    - portal_banner (Adw.Banner): The banner used for portal-specific advice.
+    """
 
     def _connect_ocr_signals(self) -> None:
         """Connect OCR backend signals."""
+        self._dispatcher = get_result_dispatcher()
+        self.connect_tracked(self._dispatcher, "toast-requested", lambda _, msg: self.show_toast(msg))
+        self.connect_tracked(self._dispatcher, "uri-launch-requested", lambda _, uri: self._launch_uri(uri))
+
         self.connect_tracked(self.backend, "decoded", self.on_shot_done)
         self.connect_tracked(self.backend, "error", self.on_shot_error)
         self.connect_tracked(
@@ -52,79 +60,8 @@ class WindowOCRMixin:
         try:
             self.extracted_page.extracted_text = text  # type: ignore[method-assign]
 
-            # 1. Extract structured data (emails, URLs, phone numbers) from OCR text
-            preprocessor = get_text_preprocessor()
-            structured = preprocessor.extract_structured_data(text)
-
-            # 2. Identify if the result is primarily a URL (e.g. from a QR code)
-            primary_url = None
-            if structured["urls"]:
-                # If the entire text is just a URL (allowing for whitespace/newlines)
-                candidate = structured["urls"][0]
-                if candidate.strip() == text.strip():
-                    primary_url = candidate
-
-            # 3. Handle URL Flow (Mode A/B)
-            if primary_url:
-                # Security: strip all control characters and whitespace
-                primary_url = primary_url.strip().strip("\n\r\t\v\f")
-
-                if uri_validator(primary_url):
-                    if self.settings.get_boolean("autolinks"):
-                        # Behavior A: Open directly in browser (toggle ON)
-                        self._launch_uri(primary_url)
-                        self.show_toast(_("URL opened automatically"))
-                    else:
-                        # Behavior B: Send desktop notification with clickable action
-                        # Do NOT copy URL to clipboard, do NOT open browser automatically
-                        target = GLib.Variant("s", primary_url)
-                        app = Gtk.Application.get_default()
-                        if app and hasattr(app, "notification_service"):
-                            app.notification_service.send_notification_with_action(
-                                notification_id="qr-url",
-                                title=_("QR Code URL Detected"),
-                                body=primary_url,
-                                action_id="app.open-qr-url",
-                                action_target=target,
-                                priority="high",
-                            )
-
-                # 4. Handle URL Clipboard (respecting global autocopy)
-                if self.settings.get_boolean("autocopy") or copy:
-                    clipboard_service_instance = get_clipboard_service()
-                    clipboard_service_instance.set(primary_url)
-                    # Only show "copied" toast if we didn't open the browser automatically
-                    # to avoid toast spam when both are ON.
-                    if not self.settings.get_boolean("autolinks"):
-                        self.show_toast(_("URL copied to clipboard"))
-
-                logger.debug("Anura: URL-primary result processed")
-
-            else:
-                # 4. Handle Regular Text Flow (Clipboard)
-                if self.settings.get_boolean("autocopy") or copy:
-                    clipboard_service_instance = get_clipboard_service()
-                    clipboard_service_instance.set(text)
-                    self.show_toast(_("Text copied to clipboard"))
-
-                # Still show toasts for other structured data if found in mixed text
-                if structured["emails"]:
-                    email_count = len(structured["emails"])
-                    self.show_toast(
-                        ngettext("{n} email found in text", "{n} emails found in text", email_count).format(
-                            n=email_count,
-                        ),
-                    )
-
-                if structured["phone_numbers"]:
-                    phone_count = len(structured["phone_numbers"])
-                    self.show_toast(
-                        ngettext(
-                            "{n} phone number found in text",
-                            "{n} phone numbers found in text",
-                            phone_count,
-                        ).format(n=phone_count),
-                    )
+            # Use centralized dispatcher for handling the result
+            self._dispatcher.dispatch(text, copy)
 
             # Defer navigation to ExtractedPage until window is properly mapped
             GLib.idle_add(self._navigate_to_extracted_page)
@@ -322,6 +259,13 @@ class WindowOCRMixin:
             if ok:
                 # Size validation is now performed in _on_open_image_info_ready
                 # before loading contents to prevent memory exhaustion DoS.
+
+                # Validate image content
+                is_valid, _size, error = validate_image_resource(contents)
+                if not is_valid:
+                    self.welcome_page.spinner.set_visible(False)
+                    self.show_toast(_(error) if error else _("Invalid image file"))
+                    return
 
                 # Validate image format before passing to OCR
                 try:

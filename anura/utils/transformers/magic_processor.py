@@ -23,9 +23,10 @@ class MagicProcessor:
             TransformerType.URL: UrlTransformer(),
         }
 
-    def process(self, ocr_data: dict) -> str:
+    def process(self, ocr_data: dict) -> tuple[str, float]:
         """
-        Process raw Tesseract data (from image_to_data) and return transformed text.
+        Process raw Tesseract data (from image_to_data) and return transformed text
+        along with the average confidence score.
         """
         # Convert Tesseract dict (lists) to list of dicts for easier processing
         words = []
@@ -41,6 +42,10 @@ class MagicProcessor:
 
         # Base text for scoring
         raw_text = " ".join([w['text'] for w in words if w['text'].strip()])
+
+        # Calculate average confidence
+        valid_confs = [w['conf'] for w in words if w['conf'] >= 0]
+        avg_conf = sum(valid_confs) / len(valid_confs) if valid_confs else 0.0
 
         result = OcrResult(words=words, text=raw_text)
 
@@ -60,7 +65,7 @@ class MagicProcessor:
         else:
             final_text = result.add_linebreaks()
 
-        return final_text
+        return final_text, avg_conf
 
 def get_magic_processor() -> MagicProcessor:
     """Get the thread-safe MagicProcessor singleton.

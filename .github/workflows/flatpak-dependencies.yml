@@ -45,8 +45,8 @@ jobs:
           echo "$OUTPUT"
           
           # Filter Python dependencies (excluding certifi which is auto-updated)
-          PYTHON_UPDATES=$(echo "$OUTPUT" | grep -E "python3-(pillow|pytesseract|click|gTTS|six|dateutil|loguru|pyzbar|urllib3|charset-normalizer|idna|requests|certifi)" || true)
-          
+          PYTHON_UPDATES=$(echo "$OUTPUT" | grep -E "python3-(pillow|pytesseract|click|gTTS|six|dateutil|loguru|zxing-cpp|urllib3|charset-normalizer|idna|requests|certifi)" || true)
+
           # Check if there are any manual updates needed
           if [ -n "$PYTHON_UPDATES" ]; then
             echo "has_updates=true" >> $GITHUB_OUTPUT
