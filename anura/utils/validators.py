@@ -7,6 +7,7 @@
 import contextlib
 import ipaddress
 import re
+import unicodedata
 from urllib.parse import urlparse
 
 # Pre-compiled regex for control characters (0x00-0x1F) and DEL (0x7F)
@@ -17,20 +18,28 @@ _CONTROL_CHARS_RE = re.compile(r"[\x00-\x1f\x7f]")
 def sanitize_text(text: str) -> str:
     """
     Sanitize text using heuristics to correct common OCR errors and remove artifacts.
-    Inspired by NormCap's cleaning logic.
+    Also strips dangerous control and format characters to prevent terminal injection
+    and spoofing attacks.
     """
     if not text:
         return ""
 
-    # 1. Normalize whitespace (squash multiple spaces/tabs)
+    # 1. Defense-in-depth: Strip non-printable Unicode Control (Cc) and Format (Cf)
+    # characters, but preserve legitimate formatting like \n, \r, and \t.
+    # This prevents Null byte injection, Bell characters, and RTL override spoofing.
+    text = "".join(
+        ch
+        for ch in text
+        if unicodedata.category(ch) not in ("Cc", "Cf") or ch in "\n\r\t"
+    )
+
+    # 2. Normalize horizontal whitespace (squash multiple spaces/tabs)
+    # Note: \n and \r are preserved by the [ \t]+ pattern.
     text = re.sub(r"[ \t]+", " ", text)
 
-    # 2. Fix common OCR mistakes in URLs/Emails if they look like them
+    # 3. Fix common OCR mistakes in URLs/Emails if they look like them
     # e.g. "http: //" -> "http://"
     text = re.sub(r"(https?|ftp|file):\s+/{2}", r"\1://", text)
-
-    # 3. Remove known artifacts (e.g. single trailing characters from layout)
-    # This is a basic version, TextPreprocessor has more advanced logic.
 
     return text.strip()
 
