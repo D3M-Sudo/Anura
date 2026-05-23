@@ -169,16 +169,18 @@ class TTSService(GObject.GObject):
     @classmethod
     def get_supported_gtts_languages(cls) -> dict:
         """Cache of gTTS supported languages (class-level fallback)."""
-        if not hasattr(cls, "_gtts_cache"):
+        if not hasattr(cls, "_gtts_cache") or not cls._gtts_cache:
             try:
+                # Use a background task or initialize early to avoid blocking UI.
+                # Here we ensure it's at least initialized if accessed.
                 cls._gtts_cache = gtts.lang.tts_langs()
-            except (requests.RequestException, ValueError, OSError):
-                # Network or API error - fallback to empty dict
+            except (requests.RequestException, ValueError, OSError) as e:
+                logger.debug(f"Anura TTS: Failed to fetch gTTS languages: {e}")
                 cls._gtts_cache = {}
         return cls._gtts_cache
 
-    @staticmethod
-    def map_tesseract_to_gtts(tess_code: str) -> str | None:
+    @classmethod
+    def map_tesseract_to_gtts(cls, tess_code: str) -> str | None:
         """
         Map Tesseract language code to gTTS-compatible ISO 639-1 code.
         Returns None if no mapping or fallback is available.
@@ -216,6 +218,9 @@ class TTSService(GObject.GObject):
     def __init__(self) -> None:
         super().__init__()
         logger.debug("Anura TTSService: Initializing TTS service singleton")
+
+        # Pre-cache supported languages in background to avoid UI hang during first use
+        threading.Thread(target=self.get_supported_gtts_languages, daemon=True).start()
         os.makedirs(self._speech_dir, exist_ok=True)
 
         # Initialize all instance attributes (fixes class-level state

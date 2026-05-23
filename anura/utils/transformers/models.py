@@ -10,7 +10,7 @@ import enum
 from typing import Protocol
 
 
-class TransformerType(str, enum.Enum):
+class TransformerType(enum.StrEnum):
     SINGLE_LINE = "SINGLE_LINE"
     MULTI_LINE = "MULTI_LINE"
     PARAGRAPH = "PARAGRAPH"

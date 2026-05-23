@@ -30,6 +30,7 @@ from anura.services.clipboard_service import get_clipboard_service  # noqa: E402
 from anura.services.screenshot_service import ScreenshotService  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
 from anura.utils import uri_validator  # noqa: E402
+from anura.utils.signal_manager import SignalManagerMixin  # noqa: E402
 from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
 from anura.widgets.preferences_dialog import PreferencesDialog  # noqa: E402
 from anura.widgets.welcome_page import WelcomePage  # noqa: E402
@@ -39,7 +40,7 @@ from anura.window_mixins.tts_mixin import WindowTTSMixin  # noqa: E402
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/window.ui")
-class AnuraWindow(WindowDnDMixin, WindowOCRMixin, WindowTTSMixin, Adw.ApplicationWindow):
+class AnuraWindow(WindowDnDMixin, WindowOCRMixin, WindowTTSMixin, Adw.ApplicationWindow, SignalManagerMixin):
     __gtype_name__ = "AnuraWindow"
 
     toast_overlay: Adw.ToastOverlay = Gtk.Template.Child()
@@ -50,6 +51,7 @@ class AnuraWindow(WindowDnDMixin, WindowOCRMixin, WindowTTSMixin, Adw.Applicatio
 
     def __init__(self, backend: ScreenshotService, **kwargs: object) -> None:
         super().__init__(**kwargs)
+        SignalManagerMixin.__init__(self)
 
         app = Gtk.Application.get_default()
         if app is None:
@@ -79,23 +81,23 @@ class AnuraWindow(WindowDnDMixin, WindowOCRMixin, WindowTTSMixin, Adw.Applicatio
         # Use shared singleton instance
         self.share_service = get_share_service()
         share_action = Gio.SimpleAction.new("share", GLib.VariantType.new("s"))
-        share_action.connect("activate", self._on_share)
+        self.connect_tracked(share_action, "activate", self._on_share)
         self.add_action(share_action)
 
         self.backend = backend
         self._connect_ocr_signals()
 
-        self._handler_go_back = self.extracted_page.connect("go-back", self.show_welcome_page)  # type: ignore[arg-type]
-        self._handler_clipboard = None
-        self._handler_clipboard_error = None
+        self.connect_tracked(self.extracted_page, "go-back", self.show_welcome_page)  # type: ignore[arg-type]
         self._clipboard_service = None
         try:
             self._clipboard_service = get_clipboard_service()
-            self._handler_clipboard = self._clipboard_service.connect(
+            self.connect_tracked(
+                self._clipboard_service,
                 "paste_from_clipboard",
                 self._on_paste_from_clipboard_texture,
             )
-            self._handler_clipboard_error = self._clipboard_service.connect(
+            self.connect_tracked(
+                self._clipboard_service,
                 "error",
                 self._on_clipboard_error,
             )
@@ -223,30 +225,7 @@ class AnuraWindow(WindowDnDMixin, WindowOCRMixin, WindowTTSMixin, Adw.Applicatio
         clipboard_service_instance = get_clipboard_service()
         clipboard_service_instance.cancel_pending_operations()
 
-        if self.backend:
-            for attr in ("_handler_decoded", "_handler_error", "_handler_portal_missing"):
-                handler_id = getattr(self, attr, None)
-                if handler_id:
-                    with contextlib.suppress(TypeError, RuntimeError):
-                        self.backend.disconnect(handler_id)
-                    setattr(self, attr, None)
-
-        if self._handler_go_back:
-            with contextlib.suppress(TypeError, RuntimeError):
-                self.extracted_page.disconnect(self._handler_go_back)
-            self._handler_go_back = None
-        if hasattr(self, "_handler_portal_banner") and self._handler_portal_banner:
-            with contextlib.suppress(TypeError, RuntimeError):
-                self.portal_banner.disconnect(self._handler_portal_banner)
-            self._handler_portal_banner = None
-        if self._handler_clipboard and self._clipboard_service:
-            with contextlib.suppress(TypeError, RuntimeError):
-                self._clipboard_service.disconnect(self._handler_clipboard)
-            self._handler_clipboard = None
-        if self._handler_clipboard_error and self._clipboard_service:
-            with contextlib.suppress(TypeError, RuntimeError):
-                self._clipboard_service.disconnect(self._handler_clipboard_error)
-            self._handler_clipboard_error = None
+        self.disconnect_all_signals()
 
         super().do_destroy()
 

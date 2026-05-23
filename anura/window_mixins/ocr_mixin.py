@@ -24,15 +24,16 @@ class WindowOCRMixin:
 
     def _connect_ocr_signals(self) -> None:
         """Connect OCR backend signals."""
-        self._handler_decoded = self.backend.connect("decoded", self.on_shot_done)
-        self._handler_error = self.backend.connect("error", self.on_shot_error)
-        self._handler_portal_missing = self.backend.connect(
+        self.connect_tracked(self.backend, "decoded", self.on_shot_done)
+        self.connect_tracked(self.backend, "error", self.on_shot_error)
+        self.connect_tracked(
+            self.backend,
             "portal-backend-missing",
             self._on_portal_backend_missing,
         )
         # Banner's "button-clicked" fires when the user dismisses; hide until
         # the next backend failure re-reveals it.
-        self._handler_portal_banner = self.portal_banner.connect("button-clicked", self._on_portal_banner_dismissed)
+        self.connect_tracked(self.portal_banner, "button-clicked", self._on_portal_banner_dismissed)
 
     def on_shot_done(self, _sender: GObject.GObject, text: str, copy: bool) -> None:
         """Handle successful screenshot capture and OCR processing."""

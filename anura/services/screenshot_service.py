@@ -4,6 +4,7 @@
 #
 # SPDX-License-Identifier: MIT
 
+import contextlib
 from gettext import gettext as _
 import os
 import re
@@ -384,8 +385,24 @@ class ScreenshotService(GObject.GObject):
 
         exit_status = proc.get_exit_status() if proc.get_if_exited() else -1
 
+        if exit_status != 0:
+            # User pressed Esc / closed the host tool's selection dialog.
+            logger.info(f"Anura Screenshot: host tool exited non-zero ({exit_status}); user likely cancelled.")
+            # Best-effort cleanup: tool may still have created an empty file.
+            if os.path.exists(output_path):
+                with contextlib.suppress(OSError):
+                    os.unlink(output_path)
+            self._emit_portal_failure()
+            return
+
+        # Use AtomicTaskManager to avoid blocking the main thread during file verification and OCR.
+        get_atomic_manager().execute(self._decode_host_capture, (lang, output_path, copy))
+
+    def _decode_host_capture(self, lang: str, output_path: str, copy: bool) -> bool:
+        """Background worker for host capture: verifies file existence and triggers OCR."""
         # Retry loop for file existence check - handles race condition where
         # the filesystem hasn't flushed the file yet after process exit.
+        # This is now safe to run here as we are in a background thread.
         file_exists = False
         file_size = 0
         max_retries = 10
@@ -400,31 +417,17 @@ class ScreenshotService(GObject.GObject):
             if attempt < max_retries - 1:
                 time.sleep(retry_delay_ms / 1000.0)
 
-        if exit_status != 0:
-            # User pressed Esc / closed the host tool's selection dialog.
-            logger.info(
-                f"Anura Screenshot: host tool exited non-zero ({exit_status}); "
-                f"user likely cancelled. file_exists={file_exists}, file_size={file_size}"
-            )
-            # Best-effort cleanup: tool may still have created an empty file.
-            if file_exists:
-                try:
-                    os.unlink(output_path)
-                except OSError as e:
-                    logger.debug(f"Anura Screenshot: cleanup failed: {e}")
-            self._emit_portal_failure()
-            return
-
         if not file_exists or file_size == 0:
             logger.warning(
-                f"Anura Screenshot: host tool exited 0 but produced no output after {max_retries} retries. "
+                f"Anura Screenshot: host tool produced no output after {max_retries} retries. "
                 f"path={output_path}, exists={file_exists}, size={file_size}"
             )
             self._emit_portal_failure()
-            return
+            return False
 
         # Same OCR path as a successful portal screenshot.
-        self.decode_image(lang, output_path, copy, True)
+        # decode_image already handles its own internal idle_add emissions.
+        return self.decode_image(lang, output_path, copy, remove_source=True)
 
     def decode_image_sync(
         self,

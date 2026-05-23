@@ -238,13 +238,13 @@ def test_window_disconnects_portal_banner_signal() -> None:
     """AnuraWindow.do_destroy must disconnect the portal_banner signal handler."""
     text = (ANURA_PKG / "window.py").read_text()
     # Check that do_destroy contains disconnect for portal_banner
-    # Since Issue 4 refactor, do_destroy remains in window.py but uses getattr to be safe with mixins
+    # Since Issue 4 refactor, we use SignalManagerMixin for automated cleanup.
     assert (
         "self.portal_banner.disconnect(handler_id)" in text
-        or ("self.portal_banner.disconnect(self._handler_portal_banner)") in text
+        or "self.portal_banner.disconnect(self._handler_portal_banner)" in text
+        or "self.disconnect_all_signals()" in text
     ), (
-        "AnuraWindow.do_destroy must disconnect the portal_banner signal handler "
-        "(_handler_portal_banner) to prevent memory leaks."
+        "AnuraWindow.do_destroy must disconnect signals to prevent memory leaks."
     )
 
 
@@ -254,11 +254,9 @@ def test_window_tracks_portal_banner_handler_id() -> None:
     ocr_text = (PROJECT_ROOT / "anura" / "window_mixins" / "ocr_mixin.py").read_text()
     combined_text = text + ocr_text
 
-    assert "_handler_portal_banner" in combined_text, (
-        "AnuraWindow must track the portal_banner signal handler ID (_handler_portal_banner) for cleanup in do_destroy."
-    )
-    assert "_handler_portal_banner = self.portal_banner.connect" in combined_text, (
-        "AnuraWindow (or its OCR mixin) must store the portal_banner connect() return value in _handler_portal_banner."
+    # Accept either manual tracking or SignalManagerMixin's connect_tracked
+    assert "_handler_portal_banner" in combined_text or "connect_tracked(self.portal_banner" in combined_text, (
+        "AnuraWindow must track the portal_banner signal handler for cleanup in do_destroy."
     )
 
 
