@@ -1,7 +1,11 @@
-# tests/test_atomic_task_manager_unit.py
+# tests/test_gi_atomic_task_manager_unit.py
 #
 # Unit tests for AtomicTaskManager — no GTK display required.
 # Tests run directly in CI without xvfb-run.
+
+import pytest
+
+pytest.importorskip("gi")
 
 import threading
 import uuid
