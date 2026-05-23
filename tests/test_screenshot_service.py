@@ -145,9 +145,7 @@ class TestScreenshotService:
             )
 
             assert success is True
-            # File should still exist since it's not a portal temp file
-            # Actually ScreenshotService logic for cleanup depends on is_physical_file
-            # and remove_source.
+            # Verification: physical file is removed when remove_source=True
             assert not test_file.exists()
 
     def test_decode_image_with_portal_file(self, tmp_path):
