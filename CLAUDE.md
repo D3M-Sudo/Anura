@@ -11,7 +11,7 @@
 - **OCR**: pytesseract + Tesseract 5.5.0
 - **QR/Barcode**: zxing-cpp 2.3.0 (replaces pyzbar)
 - **TTS**: gTTS + GStreamer playbin3
-- **Screenshots**: Xdp.Portal (libportal)
+- **Screenshots**: Xdp.Portal (libportal) + fallback **scrot** (X11)
 - **Settings**: GSettings singleton → `anura/services/settings.py`
 - **Linter**: **ruff** solo — mai flake8, pylint o black
 

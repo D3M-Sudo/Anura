@@ -14,6 +14,7 @@ Anura OCR is a GTK4/Libadwaita desktop application for GNOME that extracts text 
 - Barcode/QR code via `zxing-cpp` (replaces legacy `pyzbar`)
 - TTS via `gTTS` + GStreamer `playbin3`
 - Screenshots via XDG Desktop Portal (`libportal` / `Xdp`)
+- **Fallback**: Bundled `scrot` for X11 sessions when portal backends are missing
 - Distributed as Flatpak (`io.github.d3msudo.anura`) — GNOME 50 runtime
 - Internationalization with gettext: 25+ languages (see `po/LINGUAS`)
 - Build system: Meson ≥ 1.5.0
@@ -35,7 +36,7 @@ anura/
 │   ├── language_manager.py     Tessdata model download/management (singleton)
 │   ├── services/
 │   │   ├── screenshot_service.py   Screenshot capture via Xdp.Portal
-│   │   ├── host_screenshot_fallback.py Sandboxed X11 screenshot fallback using scrot
+│   │   ├── host_screenshot_fallback.py X11 fallback using bundled scrot
 │   │   ├── clipboard_service.py    Clipboard read/write (Gdk.Clipboard)
 │   │   ├── notification_service.py Notifications: XDG Portal → libnotify fallback
 │   │   ├── tts.py                  Text-to-speech via gTTS + GStreamer

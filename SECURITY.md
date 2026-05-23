@@ -50,6 +50,7 @@
 | `anura/atomic_task_manager.py` | Concurrency and task versioning logic |
 | `anura/services/screenshot_service.py` | Image size validation (DoS prevention) and Tesseract hand-off |
 | `anura/language_manager.py` | Tessdata model download and atomic writing |
+| `anura/services/host_screenshot_fallback.py` | Command building for the bundled `scrot` fallback |
 
 ---
 
@@ -61,6 +62,7 @@
 | **Text Sanitization** | `validators.sanitize_text` strips Unicode Control (Cc) and Format (Cf) categories. |
 | **URI Validation** | `uri_validator()` blocks homograph attacks and disallowed schemes. |
 | **Atomic Task Management** | `AtomicTaskManager` prevents race conditions via single-slot execution and UUID versioning. |
+| **X11 Fallback Security** | Bundled `scrot` fallback used only when Portals fail on X11; Wayland strictly enforces Portal security. |
 | **Atomic tessdata writes** | `tempfile` + `shutil.move` prevents partial file corruption. |
 | **Flatpak sandbox** | Filesystem isolation with `--filesystem=xdg-download`. |
 | **Privacy by design** | No telemetry, tracking, or analytics of any kind. |
