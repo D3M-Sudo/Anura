@@ -7,45 +7,47 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- Implemented **Deep Codebase Audit & Reliability Hardening** (v0.1.5 architecture)
+- Replaced legacy `GObjectWorker` with `AtomicTaskManager` for single-slot task execution with UUID-based result validation
+- Migrated `AnuraWindow` to a modular architecture using **Naked Mixins** (`WindowOCRMixin`, `WindowTTSMixin`, `WindowDnDMixin`)
+- Implemented automated signal lifecycle management via `SignalManagerMixin` across all core widgets and services
+- Added modular **Image Filter Chain** (`anura/utils/image_filters.py`) for extensible OCR preprocessing
+- Integrated `StructuralReconstructor` for spatial layout analysis and paragraph merging
 - Replaced `pyzbar` with `zxing-cpp` for more robust and reliable barcode and QR code detection
-- Expanded the test suite with comprehensive unit and integration tests, including security-focused DoS prevention and structural UI verification
-- Added support for Tesseract multi-language pooling in `~/.cache/anura/tessdata_pool/` to aggregate models for simultaneous multi-language OCR
+- Expanded the test suite to **437 tests**, including 393 unit tests (Non-GTK) and 44 integration tests (GTK)
+- Added comprehensive security-focused tests for DoS prevention and structural UI verification
+- Added support for Tesseract multi-language pooling in `~/.cache/anura/tessdata_pool/`
 - Added keyboard shortcut hints and empty search state in the language selector
 - Added 'All files (*)' filter to the image selection dialog
 - Improved pluralization and internationalization support for text statistics
 
 ### Fixed
+- Fixed critical race conditions in OCR processing by invalidating stale tasks in `AtomicTaskManager`
+- Resolved memory leaks by ensuring automated signal disconnection via `connect_tracked()`
 - Fixed `Gtk.FileFilter` regression to prevent duplicate entries on portal backends like LXQt and GNOME
-- Corrected `Gio.File.query_info_async` implementation by providing the exact number of required positional arguments
-- Resolved layout reflow issues where `Gtk.TextView` content was clipped or prevented window shrinking in GTK4
+- Corrected `Gio.File.query_info_async` implementation by providing exact positional arguments
+- Resolved layout reflow issues where `Gtk.TextView` content was clipped in GTK4
 - Fixed `__slots__` conflict and potential `AttributeError` in `ClipboardService`
-- Improved error handling for missing Tesseract languages by providing visual `Adw.Toast` feedback
-- Resolved layout reflow issues in the extracted text page to ensure better window responsiveness
-- Improved file selection dialog reliability by using standard extension filtering
-- Fixed critical startup crashes and resolved Flatpak build environment issues
-- Fixed FileDialog filter glitch on LXQt/Flatpak environments
-- Fixed missing Tesseract binary preventing app launch inside Flatpak
-- Fixed translation regression causing broken localisation on non-English locales
+- Improved error handling for missing Tesseract languages with `Adw.Toast` feedback
 - Fixed keyboard shortcuts to use universal key names (F1, K) for cross-layout compatibility
-- Fixed ExtractedPage missing _tts_error_handler_id attribute declaration
-- Fixed LanguageRow idle callback widget validity check to prevent crashes
-- Fixed ClipboardService timeout cleanup with explicit None check
-- Removed redundant pytest import in test file
+- Resolved navigation focus race conditions and spinner animation states
 
 ### Security
-- Implemented protection against Denial of Service (DoS) by validating image file sizes before loading
-- Hardened URL validation and encoding in ShareService against injection attacks
+- Implemented **Resource-based DoS Protection** by validating image file sizes (`MAX_IMAGE_SIZE_BYTES`) before processing
+- Hardened text extraction with `validators.sanitize_text`, stripping Unicode Control (Cc) and Format (Cf) characters
+- Hardened URL validation and encoding in `ShareService` against injection and RTL spoofing attacks
 
 ### Changed
-- Standardized file headers across the entire repository for project-wide consistency and compliance
+- Standardized file headers across the entire repository for project-wide consistency
 - Updated Tesseract language identifier for German Fraktur to the correct `deu_latf` code
-- Optimized multi-monitor support with improved DPI scaling and rendering logic when moving between displays
+- Optimized multi-monitor support with improved DPI scaling (`notify::scale-factor`)
 - Standardized UI placeholders and messages with Unicode ellipses (…) following GNOME HIG
 - Renamed application ID from com.github.d3msudo.anura to io.github.d3msudo.anura
-- Screenshot fallback now uses a bundled scrot binary inside the sandbox instead of host-side tools
+- Updated GitHub Actions to major versions (checkout@v6, upload-artifact@v7) for CI reliability
 
 ### Removed
-- Deleted the legacy `po/com.github.d3msudo.anura.pot` file in favor of the new standardized localization infrastructure
+- Removed legacy `gobject_worker.py` and all direct `GLib.idle_add` emissions for task results
+- Deleted the legacy `po/com.github.d3msudo.anura.pot` file
 
 ## [0.1.4.3] - 2026-05-16 {version-0.1.4.3}
 
