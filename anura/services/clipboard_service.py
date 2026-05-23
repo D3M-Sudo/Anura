@@ -91,18 +91,12 @@ class ClipboardService(GObject.GObject):
 
     def set(self, value: str) -> None:
         """
-        Sets text to the system clipboard.
+        Sets text to the system clipboard with robust timeout handling.
         """
-        if value:
-            self.clipboard.set(value)
-            logger.debug("Anura Clipboard: Text successfully copied.")
-        else:
+        if not value:
             logger.warning("Anura Clipboard: Attempted to copy empty string.")
+            return
 
-    def copy_text(self, text: str) -> None:
-        """
-        Copy text to clipboard with timeout handling.
-        """
         with self._state_lock:
             # Cancel any previous timeout to prevent accumulation
             if self._clipboard_timeout_id and self._clipboard_timeout_id > 0:
@@ -115,9 +109,9 @@ class ClipboardService(GObject.GObject):
                 self._cancellable = None
 
         # Set the text directly
-        self.clipboard.set_text(text)
+        self.clipboard.set_text(value)
 
-        # Set timeout as expected by tests
+        # Set timeout as expected by tests and for robustness
         with self._state_lock:
             self._clipboard_timeout_id = GLib.timeout_add_seconds(
                 self.CLIPBOARD_TIMEOUT_SECONDS,
@@ -125,7 +119,11 @@ class ClipboardService(GObject.GObject):
                 None,
             )
 
-        logger.debug(f"Anura Clipboard: Text copied: {text[:50]}...")
+        logger.debug(f"Anura Clipboard: Text successfully copied: {value[:50]}...")
+
+    def copy_text(self, text: str) -> None:
+        """Legacy alias for set(text)."""
+        self.set(text)
 
     def _on_read_texture(self, _sender: GObject.GObject, result: Gio.AsyncResult) -> None:
         """
