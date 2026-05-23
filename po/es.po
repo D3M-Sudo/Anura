@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: anura\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-05-15 17:00+0000\n"
-"PO-Revision-Date: 2026-05-22 17:54+0000\n"
+"PO-Revision-Date: 2026-05-24 22:13+0000\n"
 "Last-Translator: Libre <6n0n1m0s@proton.me>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/anura/anura/es/>"
 "\n"
@@ -48,9 +48,8 @@ msgid "Azerbaijani"
 msgstr "Azerí"
 
 #: anura/language_manager.py:79
-#, fuzzy
 msgid "Azerbaijani - Cyrillic"
-msgstr "Azerí - cirílico"
+msgstr "Azerbaiyano - cirílico"
 
 #: anura/language_manager.py:80
 msgid "Belarusian"
@@ -267,9 +266,8 @@ msgid "Central Khmer"
 msgstr "Jémer Central"
 
 #: anura/language_manager.py:142
-#, fuzzy
 msgid "Kirghiz"
-msgstr "Kirghiz; Kirguís"
+msgstr "Kirguistán"
 
 #: anura/language_manager.py:143
 msgid "Kurmanji"
@@ -410,7 +408,6 @@ msgid "Spanish"
 msgstr "Español"
 
 #: anura/language_manager.py:180
-#, fuzzy
 msgid "Spanish - Old"
 msgstr "Español; Castellano - Antiguo"
 
@@ -492,7 +489,6 @@ msgid "Uzbek"
 msgstr "Uzbeko"
 
 #: anura/language_manager.py:200
-#, fuzzy
 msgid "Uzbek - Cyrillic"
 msgstr "Uzbeko - Cirílico"
 
