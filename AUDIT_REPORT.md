@@ -27,5 +27,10 @@
 - **Audit**: Race Conditions.
   - **Observation**: `AtomicTaskManager`'s UUID-based task versioning effectively prevents stale background results from affecting the UI during rapid user actions.
 
+## Pass 4: CI Maintenance
+- **Requirement**: GitHub Actions must use the latest major versions (e.g., `actions/checkout@v6`) to align with dependency management standards.
+  - **Action**: Restored all action versions to their latest stable tags in `.github/workflows/`.
+  - **Adjustment**: Updated `tests/test_bug_fixes_static.py` to recognize `SignalManagerMixin` automated cleanup, ensuring CI pass with modernized architecture.
+
 ## Conclusion
-The Anura codebase is now more robust against UI hangs, memory leaks, and race conditions. All major architectural components follow the "Atomic Edition" principles of thread isolation and safe UI updates.
+The Anura codebase is now more robust against UI hangs, memory leaks, and race conditions. All major architectural components follow the "Atomic Edition" principles of thread isolation and safe UI updates. The CI pipeline is fully aligned with the latest GitHub Action standards.
