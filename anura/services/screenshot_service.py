@@ -36,6 +36,7 @@ from anura.config import (  # noqa: E402
 from anura.services.host_screenshot_fallback import build_scrot_argv  # noqa: E402
 from anura.services.result_dispatcher import get_result_dispatcher  # noqa: E402
 from anura.utils import validate_image_resource  # noqa: E402
+from anura.types.ocr import OcrResult
 from anura.utils.portal_advice import detect_portal_advice  # noqa: E402
 from anura.utils.structural_reconstructor import get_structural_reconstructor  # noqa: E402
 from anura.utils.text_preprocessor import get_text_preprocessor  # noqa: E402
@@ -568,13 +569,16 @@ class ScreenshotService(GObject.GObject):
                 output_type=Output.DICT
             )
 
-            # 2. Structural reconstruction — preserves paragraph layout from bounding boxes
-            reconstructor = get_structural_reconstructor()
-            spatially_reconstructed, recon_conf = reconstructor.reconstruct(ocr_data)
+            # 2. Immutable Data Modeling — Parse Tesseract dictionary ONCE
+            ocr_result = OcrResult.from_tesseract_dict(ocr_data)
 
-            # 3. Magic processor classifies and applies semantic transforms
+            # 3. Structural reconstruction — preserves paragraph layout from bounding boxes
+            reconstructor = get_structural_reconstructor()
+            spatially_reconstructed, recon_conf = reconstructor.reconstruct(ocr_result)
+
+            # 4. Magic processor classifies and applies semantic transforms
             magic_processor = get_magic_processor()
-            processed_text, magic_conf = magic_processor.process(ocr_data)
+            processed_text, magic_conf = magic_processor.process(ocr_result)
 
             # 4. Confidence-Weighted Selection:
             # We prefer StructuralReconstructor if its output is significant and

@@ -25,12 +25,12 @@ Anura OCR is a GTK4/Libadwaita desktop application for GNOME that extracts text 
 ```text
 anura/
 ├── anura/                      Python application source
-│   ├── main.py                 AnuraApplication (Adw.Application) + CLI + AboutDialog
-│   ├── window.py               AnuraWindow — Core window management
-│   ├── window_mixins/          Extracted Window logic (Naked mixins)
-│   │   ├── ocr_mixin.py        OCR signal handling and processing
-│   │   ├── tts_mixin.py        TTS lifecycle and audio management
-│   │   └── dnd_mixin.py        Asynchronous Drag-and-Drop support
+│   ├── main.py                 AnuraApplication (Adw.Application) + CLI + Capability Audit
+│   ├── window.py               AnuraWindow — Core UI shell (Composition-based)
+│   ├── controllers/            Business Logic Controllers
+│   │   ├── ocr_controller.py   OCR coordination and signal handling
+│   │   ├── tts_controller.py   TTS lifecycle and UI state management
+│   │   └── dnd_controller.py   Asynchronous Drag-and-Drop coordination
 │   ├── config.py               Constants APP_ID, tessdata URL, lang_code validation
 │   ├── atomic_task_manager.py  Single-slot thread pool with UUID versioning
 │   ├── language_manager.py     Tessdata model download/management (singleton)
@@ -43,6 +43,8 @@ anura/
 │   │   ├── share_service.py        Social sharing (9 providers)
 │   │   └── settings.py             GSettings singleton wrapper
 │   ├── types/
+│   │   ├── ocr.py                  Immutable OcrResult and OcrWord dataclasses
+│   │   ├── context.py              ApplicationContext capability audit
 │   │   ├── download_state.py       DownloadState enum
 │   │   └── language_item.py        LanguageItem dataclass
 │   ├── utils/
@@ -141,6 +143,21 @@ Anura uses `uv` for Python development and native dependencies via Flatpak.
 
 ## Code Patterns & Conventions
 
+### Controller Pattern (Composition)
+
+**Rule:** `AnuraWindow` must remain a clean UI shell. All business logic and signal coordination must be moved to standalone controllers (e.g., `OcrController`).
+
+#### Controller Lifecycle & GObject Signal Safety
+
+**Tassative Directive:** Every controller must implement a `.cleanup()` method. This method MUST be connected to the `destroy` signal of the host widget/window (or explicitly called during its teardown). The cleanup logic is responsible for:
+1.  Calling `self.disconnect_all_signals()` (if using `SignalManagerMixin`).
+2.  Nullifying references to the host window (`self._window = None`) to break potential circular dependencies.
+Failure to do so results in latent GObject memory leaks where the Python instance is kept alive by active signal connections in the native GLib layer.
+
+### Memory Safety & Weak References
+
+**Rule:** When connecting to long-lived native signals (e.g., GStreamer Bus), always use `weakref` closures to prevent reference cycles and ensure objects can be correctly finalized.
+
 ### Thread Safety & Atomic Execution
 
 **Rule:** Never modify GTK widgets from secondary threads. Use `AtomicTaskManager` for all background tasks.
@@ -159,17 +176,17 @@ get_atomic_manager().execute(
 
 `AtomicTaskManager` manages a single-worker `ThreadPoolExecutor` and uses UUIDs to discard results from stale/cancelled tasks.
 
-### Signal Management Mixin
+### Immutable Data Models
 
-Classes should inherit from `SignalManagerMixin` and use `connect_tracked()` to ensure signals are automatically disconnected during `do_destroy()`.
+**Rule:** OCR recognized data should be encapsulated in immutable `frozen` dataclasses (`OcrResult`, `OcrWord`) to ensure data integrity across the transformation pipeline.
+
+### Capability Audit (Feature Toggling)
+
+**Rule:** Perform a boot-time system audit (`ApplicationContext`) to detect available binaries and libraries. Bind UI sensitivity to these capability flags to prevent runtime failures.
 
 ### Text Sanitization
 
 Always use `validators.sanitize_text` to strip Unicode Control/Format characters and prevent RTL spoofing or terminal injection.
-
-### Logical Proposal Strategy
-
-When proposing major architectural changes, provide a reference implementation in a new module (e.g., `anura/utils/new_feature.py`) before refactoring core classes. Use a dedicated branch (`feature/...`) for submission.
 
 ## Testing
 
@@ -200,4 +217,4 @@ uv run pytest tests/ -v
 4. **No Telemetry**: Absolute privacy by design.
 
 ---
-*For AI Agents: Read BEFORE operation. Follow Atomic Cancellation and Signal Management patterns strictly.*
+*For AI Agents: Read BEFORE operation. Follow Controller-Composition, Memory Safety, and Capability Audit patterns strictly.*

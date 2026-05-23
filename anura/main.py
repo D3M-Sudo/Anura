@@ -762,8 +762,8 @@ class AnuraApplication(Adw.Application):
 
     def open_image(self, _action: object, _param: object) -> None:
         window = self.get_active_window()
-        if window:
-            window.open_image()
+        if window and hasattr(window, "ocr_controller"):
+            window.ocr_controller.open_image()
 
     def on_paste_from_clipboard(self, _action: Gio.SimpleAction, _param: object) -> None:
         """Read image from clipboard and perform OCR."""
@@ -909,5 +909,9 @@ class AnuraApplication(Adw.Application):
 
 
 def main(version: str) -> int:
+    # Perform boot-time capability audit
+    from anura.types.context import get_app_context
+    get_app_context()
+
     app = AnuraApplication(version)
     return app.run(sys.argv)

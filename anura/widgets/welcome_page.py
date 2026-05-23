@@ -231,14 +231,14 @@ class WelcomePage(Adw.NavigationPage):
             return
 
         window = self.get_root()
-        if not window or not hasattr(window, "process_dnd_file_sync"):
+        if not window or not hasattr(window, "dnd_controller"):
             logger.error("DnD: Root window missing process_dnd_file_sync")
             self._show_error_toast(_("Failed to process dropped file"))
             return
 
         self._set_drop_area_processing_state(True)
         self.show_spinner()
-        window.process_dnd_file_sync(local_path)
+        window.dnd_controller.process_dnd_file_sync(local_path)
 
     def _show_error_toast(self, message: str) -> None:
         """Show error toast to user."""
