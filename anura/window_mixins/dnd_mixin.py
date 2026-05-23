@@ -8,7 +8,7 @@ from gi.repository import Gio, GLib
 from loguru import logger
 
 from anura.config import MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB
-from anura.gobject_worker import GObjectWorker
+from anura.atomic_task_manager import get_atomic_manager
 
 
 class WindowDnDMixin:
@@ -55,7 +55,7 @@ class WindowDnDMixin:
 
             # Process image following Frog's pattern - pass path directly to decode_image
             lang = self.get_language()
-            GObjectWorker.call(self.backend.decode_image, (lang, file_path))
+            get_atomic_manager().execute(self.backend.decode_image, (lang, file_path))
 
         except (OSError, RuntimeError, TypeError) as e:
             logger.error(f"DnD: Critical error accessing dropped file: {e}")

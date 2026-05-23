@@ -33,7 +33,7 @@ from anura.config import (  # noqa: E402
     TESSDATA_URL,
     USER_AGENT,
 )
-from anura.gobject_worker import GObjectWorker  # noqa: E402
+from anura.atomic_task_manager import get_atomic_manager  # noqa: E402
 from anura.types.download_state import DownloadState  # noqa: E402
 from anura.types.language_item import LanguageItem  # noqa: E402
 from anura.utils.singleton import get_instance  # noqa: E402
@@ -375,11 +375,10 @@ class LanguageManager(GObject.GObject):
         def download_done_wrapper(result_code: str | None) -> None:
             self.download_done(code, result_code)
 
-        GObjectWorker.call(
+        get_atomic_manager().execute(
             self.download_begin,
             (code, cancellable),
             download_done_wrapper,
-            cancellable=cancellable,
         )
 
     def download_begin(self, code: str, cancellable: gi.repository.Gio.Cancellable | None = None) -> str | None:

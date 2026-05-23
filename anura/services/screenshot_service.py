@@ -36,6 +36,7 @@ from anura.config import (  # noqa: E402
 from anura.services.host_screenshot_fallback import build_scrot_argv  # noqa: E402
 from anura.utils.portal_advice import detect_portal_advice  # noqa: E402
 from anura.utils.text_preprocessor import get_text_preprocessor  # noqa: E402
+from anura.atomic_task_manager import get_atomic_manager  # noqa: E402
 
 
 def _is_flatpak_environment() -> bool:
@@ -244,9 +245,7 @@ class ScreenshotService(GObject.GObject):
             GLib.idle_add(_on_error_idle)
             return None
 
-        from anura.gobject_worker import GObjectWorker
-
-        GObjectWorker.call(self.decode_image, (lang, filename, copy, True))
+        get_atomic_manager().execute(self.decode_image, (lang, filename, copy, True))
 
     # Environment variables surfaced when the portal screenshot fails. These
     # tell us which desktop/session backend should be answering the portal

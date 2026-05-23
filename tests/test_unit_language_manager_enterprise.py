@@ -99,7 +99,7 @@ class TestLanguageManagerEnterprise:
             manager.init_tessdata()
             assert not orphan.exists()
 
-    @patch("requests.get")
+    @patch("requests.Session.get")
     def test_download_begin_success(self, mock_get, manager, tmp_path):
         """Test successful download path."""
         mock_response = MagicMock()
@@ -113,7 +113,7 @@ class TestLanguageManagerEnterprise:
             assert result == "fra"
             assert (tmp_path / "fra.traineddata").exists()
 
-    @patch("requests.get")
+    @patch("requests.Session.get")
     def test_download_begin_failure(self, mock_get, manager):
         """Test download failure handling."""
         import requests
@@ -127,6 +127,8 @@ class TestLanguageManagerEnterprise:
     def test_download_duplicate_prevention(self, manager):
         """Test that multiple downloads for the same code are ignored."""
         manager.loading_languages["eng"] = DownloadState()
-        with patch("anura.gobject_worker.GObjectWorker.call") as mock_worker:
+        with patch("anura.atomic_task_manager.get_atomic_manager") as mock_get_manager:
+            mock_manager = MagicMock()
+            mock_get_manager.return_value = mock_manager
             manager.download("eng")
-            mock_worker.assert_not_called()
+            mock_manager.execute.assert_not_called()
