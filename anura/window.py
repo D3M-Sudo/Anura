@@ -8,7 +8,6 @@ import contextlib
 from gettext import gettext as _
 from io import BytesIO
 from mimetypes import guess_type
-import os
 
 import gi
 
@@ -24,12 +23,12 @@ from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk  # noqa: E402
 from loguru import logger  # noqa: E402
 
 from anura.atomic_task_manager import get_atomic_manager  # noqa: E402
-from anura.config import APP_ID, MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB, RESOURCE_PREFIX  # noqa: E402
+from anura.config import APP_ID, RESOURCE_PREFIX  # noqa: E402
 from anura.language_manager import get_language_manager  # noqa: E402
 from anura.services.clipboard_service import get_clipboard_service  # noqa: E402
 from anura.services.screenshot_service import ScreenshotService  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
-from anura.utils import uri_validator  # noqa: E402
+from anura.utils import uri_validator, validate_image_resource  # noqa: E402
 from anura.utils.signal_manager import SignalManagerMixin  # noqa: E402
 from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
 from anura.widgets.preferences_dialog import PreferencesDialog  # noqa: E402
@@ -157,19 +156,10 @@ class AnuraWindow(WindowDnDMixin, WindowOCRMixin, WindowTTSMixin, Adw.Applicatio
     def process_file(self, file_path: str) -> None:
         """Process an image file directly from CLI."""
         try:
-            if os.path.getsize(file_path) == 0:
-                logger.error(f"Anura OCR: Attempted to process 0-byte image file: {file_path}")
-                self.show_toast(_("The selected image file is empty."))
-                return
-
-            file_size = os.path.getsize(file_path)
-            if file_size > MAX_IMAGE_SIZE_BYTES:
-                self.show_toast(
-                    _("Image too large: {size}MB (max {max}MB)").format(
-                        size=round(file_size / (1024 * 1024), 1),
-                        max=MAX_IMAGE_SIZE_MB,
-                    ),
-                )
+            is_valid, _size, error = validate_image_resource(file_path)
+            if not is_valid:
+                logger.error(f"Anura OCR: {error}")
+                self.show_toast(_(error) if error else _("Invalid image file"))
                 return
 
             mimetype, _encoding = guess_type(file_path)

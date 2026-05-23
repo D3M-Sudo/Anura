@@ -31,11 +31,11 @@ import pytesseract  # noqa: E402
 from anura.atomic_task_manager import get_atomic_manager  # noqa: E402
 from anura.config import (  # noqa: E402
     LANG_CODE_PATTERN,
-    MAX_IMAGE_SIZE_BYTES,
-    MAX_IMAGE_SIZE_MB,
     get_tesseract_config,
 )
 from anura.services.host_screenshot_fallback import build_scrot_argv  # noqa: E402
+from anura.services.result_dispatcher import get_result_dispatcher  # noqa: E402
+from anura.utils import validate_image_resource  # noqa: E402
 from anura.utils.portal_advice import detect_portal_advice  # noqa: E402
 from anura.utils.structural_reconstructor import get_structural_reconstructor  # noqa: E402
 from anura.utils.text_preprocessor import get_text_preprocessor  # noqa: E402
@@ -89,6 +89,9 @@ class ScreenshotService(GObject.GObject):
 
     def __init__(self) -> None:
         GObject.GObject.__init__(self)
+        self._dispatcher = get_result_dispatcher()
+        self._dispatcher.connect("notification-requested", self._on_notification_requested)
+
         self._cancellable_lock = threading.Lock()
         with self._cancellable_lock:
             self.cancelable: Gio.Cancellable = Gio.Cancellable.new()
@@ -98,6 +101,15 @@ class ScreenshotService(GObject.GObject):
 
         # Configure Tesseract path for Flatpak environment
         _configure_tesseract_path()
+
+    def _on_notification_requested(self, _dispatcher, title, body):
+        """Bridge notification requests from dispatcher to main thread."""
+
+        def _emit_error_idle():
+            self.emit("error", body)
+            return GLib.SOURCE_REMOVE
+
+        GLib.idle_add(_emit_error_idle)
 
     def capture(self, lang: str, copy: bool = False) -> None:
         """Requests a screenshot from the system portal."""
@@ -453,29 +465,11 @@ class ScreenshotService(GObject.GObject):
 
         # Security Hardening: Validate image size before processing (DoS prevention)
         # This protects silent mode and other entry points from memory exhaustion.
-        file_size = 0
-        if is_physical_file:
-            file_size = os.path.getsize(file)  # type: ignore[arg-type]
-        elif hasattr(file, "getbuffer"):
-            # Handle BytesIO and similar stream-like objects
-            file_size = file.getbuffer().nbytes
-        elif hasattr(file, "seek") and hasattr(file, "tell"):
-            # General stream fallback
-            curr = file.tell()
-            file.seek(0, os.SEEK_END)
-            file_size = file.tell()
-            file.seek(curr, os.SEEK_SET)
-
-        if file_size > MAX_IMAGE_SIZE_BYTES:
-            logger.error(f"Anura OCR: Image too large ({file_size} bytes)")
-            return (
-                False,
-                "",
-                _("Image too large: {size}MB (max {max}MB)").format(
-                    size=round(file_size / (1024 * 1024), 1),
-                    max=MAX_IMAGE_SIZE_MB,
-                ),
-            )
+        if not isinstance(file, Image.Image):
+            is_valid, _size, error = validate_image_resource(file)
+            if not is_valid:
+                logger.error(f"Anura OCR: {error}")
+                return False, "", _(error) if error else _("Invalid image file")
 
         start_time = time.time()
 
@@ -539,8 +533,7 @@ class ScreenshotService(GObject.GObject):
             results = detect_barcodes(img)
             if results:
                 # For now, if multiple codes are found, we return them joined by newline
-                # as NormCap does in some places, or just the first one.
-                # To maintain consistency with Anura's previous behavior, we'll join them.
+                # to maintain consistency with Anura's previous behavior.
                 raw_extracted = "\n".join([res.text for res in results])
 
                 # Security: Sanitize all extracted code content before it hits the UI/clipboard
@@ -577,15 +570,21 @@ class ScreenshotService(GObject.GObject):
 
             # 2. Structural reconstruction — preserves paragraph layout from bounding boxes
             reconstructor = get_structural_reconstructor()
-            spatially_reconstructed = reconstructor.reconstruct(ocr_data)
+            spatially_reconstructed, recon_conf = reconstructor.reconstruct(ocr_data)
 
             # 3. Magic processor classifies and applies semantic transforms
             magic_processor = get_magic_processor()
-            processed_text = magic_processor.process(ocr_data)
+            processed_text, magic_conf = magic_processor.process(ocr_data)
 
-            # 4. If structural reconstruction produced richer output, prefer it
-            # (MagicProcessor operates on raw ocr_data; reconstructor uses spatial info)
-            if spatially_reconstructed.strip() and len(spatially_reconstructed) >= len(processed_text):
+            # 4. Confidence-Weighted Selection:
+            # We prefer StructuralReconstructor if its output is significant and
+            # it maintains comparable or better confidence than MagicProcessor.
+            # In Tesseract's case, confidence is the same raw data, but the processing
+            # might filter out low-confidence words differently.
+            if spatially_reconstructed.strip() and (
+                (len(spatially_reconstructed) > len(processed_text) * 1.2 and recon_conf >= magic_conf * 0.95)
+                or recon_conf > magic_conf
+            ):
                 processed_text = spatially_reconstructed
 
             # 5. Final cleanup based on user settings
@@ -689,12 +688,18 @@ class ScreenshotService(GObject.GObject):
         success, extracted, error_message = self.decode_image_sync(lang, file, remove_source)
 
         if success:
-
+            # Handle silent mode dispatching via ResultDispatcher
+            # We use idle_add to ensure dispatching happens on the main thread
             def _on_decoded_idle(text: str, cp: bool) -> bool:
                 try:
+                    # Emit decoded for UI listeners (like AnuraWindow)
                     self.emit("decoded", text, cp)
+                    # If there's no active window, the dispatcher handles notifications/clipboard
+                    app = Gio.Application.get_default()
+                    if app and not app.get_active_window():
+                        self._dispatcher.dispatch(text, cp)
                 except Exception:
-                    logger.exception("Anura: Failed to emit decoded signal")
+                    logger.exception("Anura: Failed to emit decoded signal or dispatch result")
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_decoded_idle, extracted, copy, priority=GLib.PRIORITY_DEFAULT)

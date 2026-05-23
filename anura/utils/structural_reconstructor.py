@@ -19,7 +19,7 @@ class StructuralReconstructor:
         """
         self.proximity_threshold = proximity_threshold
 
-    def reconstruct(self, ocr_data: dict) -> str:
+    def reconstruct(self, ocr_data: dict) -> tuple[str, float]:
         """
         Reconstructs text from raw Tesseract data using spatial analysis.
 
@@ -27,7 +27,7 @@ class StructuralReconstructor:
             ocr_data: Dictionary from pytesseract.image_to_data(..., output_type=Output.DICT)
 
         Returns:
-            Reconstructed text string.
+            tuple: (Reconstructed text string, Average confidence score)
         """
         words = []
         n_boxes = len(ocr_data["text"])
@@ -47,11 +47,16 @@ class StructuralReconstructor:
                     "line_num": ocr_data["line_num"][i],
                     "block_num": ocr_data["block_num"][i],
                     "par_num": ocr_data["par_num"][i],
+                    "conf": ocr_data["conf"][i],
                 }
             )
 
         if not words:
-            return ""
+            return "", 0.0
+
+        # Calculate average confidence
+        valid_confs = [w["conf"] for w in words if w["conf"] >= 0]
+        avg_conf = sum(valid_confs) / len(valid_confs) if valid_confs else 0.0
 
         # Group words into lines
         lines = []
@@ -92,7 +97,7 @@ class StructuralReconstructor:
         if current_paragraph:
             paragraphs.append(" ".join([line["text"] for line in current_paragraph]))
 
-        return "\n\n".join(paragraphs)
+        return "\n\n".join(paragraphs), avg_conf
 
     def _process_line(self, words: list[dict]) -> dict:
         """Calculate line geometry from its words."""

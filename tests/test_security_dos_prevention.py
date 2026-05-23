@@ -55,7 +55,7 @@ class TestSecurityDoS(unittest.TestCase):
         # Now we can safely import the mixin from within the isolated environment.
         # We also mock internal service getters to avoid complex service initialization.
         with (
-            patch("anura.services.clipboard_service.get_clipboard_service"),
+            patch("anura.services.result_dispatcher.get_result_dispatcher"),
             patch("anura.utils.text_preprocessor.get_text_preprocessor"),
             patch("anura.utils.portal_advice.detect_portal_advice"),
         ):

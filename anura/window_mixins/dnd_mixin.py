@@ -8,11 +8,15 @@ from gi.repository import Gio, GLib
 from loguru import logger
 
 from anura.atomic_task_manager import get_atomic_manager
-from anura.config import MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB
+from anura.utils import validate_image_resource
 
 
 class WindowDnDMixin:
-    """Mixin class for AnuraWindow to handle drag-and-drop logic."""
+    """Mixin class for AnuraWindow to handle drag-and-drop logic.
+
+    Requires the following template children on the main window:
+    - welcome_page (WelcomePage): The page containing the drop target area.
+    """
 
     def _setup_controllers(self) -> None:
         """Centralized event controller setup."""
@@ -23,7 +27,6 @@ class WindowDnDMixin:
     def process_dnd_file_sync(self, file_path: str | None) -> None:
         """Process a dropped file synchronously with explicit path validation."""
         from gettext import gettext as _
-        import os
 
         if not file_path:
             logger.error("DnD: process_dnd_file_sync called with invalid or null path (None).")
@@ -34,26 +37,15 @@ class WindowDnDMixin:
         logger.debug(f"DnD: Processing dropped file: {file_path}")
 
         try:
-            # Hardening: check for missing or 0-byte physical files
-            if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
-                logger.error(f"Anura OCR: File missing or empty: {file_path}")
+            # Security Hardening: Centralized validation for dropped files
+            is_valid, _size, error = validate_image_resource(file_path)
+            if not is_valid:
+                logger.error(f"Anura OCR: {error}")
                 self.welcome_page.reset_drop_area_state()
-                self.show_toast(_("File not accessible or empty."))
+                self.show_toast(_(error) if error else _("Invalid image file"))
                 return
 
-            # Validate file size
-            file_size = os.path.getsize(file_path)
-            if file_size > MAX_IMAGE_SIZE_BYTES:
-                self.welcome_page.reset_drop_area_state()
-                self.show_toast(
-                    _("Image too large: {size}MB (max {max}MB)").format(
-                        size=round(file_size / (1024 * 1024), 1),
-                        max=MAX_IMAGE_SIZE_MB,
-                    ),
-                )
-                return
-
-            # Process image following Frog's pattern - pass path directly to decode_image
+            # Process image - pass path directly to decode_image
             lang = self.get_language()
             get_atomic_manager().execute(self.backend.decode_image, (lang, file_path))
 

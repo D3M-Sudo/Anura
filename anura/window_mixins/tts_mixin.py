@@ -5,7 +5,11 @@
 # SPDX-License-Identifier: MIT
 
 class WindowTTSMixin:
-    """Mixin class for AnuraWindow to handle TTS playback logic."""
+    """Mixin class for AnuraWindow to handle TTS playback logic.
+
+    Requires the following template children on the main window:
+    - extracted_page (ExtractedPage): The page containing TTS controls.
+    """
 
     def on_listen(self) -> None:
         """Start TTS playback for the currently extracted text."""
