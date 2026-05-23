@@ -27,6 +27,7 @@ from loguru import logger  # noqa: E402
 from PIL import Image  # noqa: E402
 import pytesseract  # noqa: E402
 
+from anura.atomic_task_manager import get_atomic_manager  # noqa: E402
 from anura.config import (  # noqa: E402
     LANG_CODE_PATTERN,
     MAX_IMAGE_SIZE_BYTES,
@@ -245,9 +246,7 @@ class ScreenshotService(GObject.GObject):
             GLib.idle_add(_on_error_idle)
             return None
 
-        from anura.gobject_worker import GObjectWorker
-
-        GObjectWorker.call(self.decode_image, (lang, filename, copy, True))
+        get_atomic_manager().execute(self.decode_image, (lang, filename, copy, True))
 
     # Environment variables surfaced when the portal screenshot fails. These
     # tell us which desktop/session backend should be answering the portal

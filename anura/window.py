@@ -23,8 +23,8 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk  # noqa: E402
 from loguru import logger  # noqa: E402
 
+from anura.atomic_task_manager import get_atomic_manager  # noqa: E402
 from anura.config import APP_ID, MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB, RESOURCE_PREFIX  # noqa: E402
-from anura.gobject_worker import GObjectWorker  # noqa: E402
 from anura.language_manager import get_language_manager  # noqa: E402
 from anura.services.clipboard_service import get_clipboard_service  # noqa: E402
 from anura.services.screenshot_service import ScreenshotService  # noqa: E402
@@ -176,7 +176,7 @@ class AnuraWindow(WindowDnDMixin, WindowOCRMixin, WindowTTSMixin, Adw.Applicatio
                 return
 
             self.welcome_page.show_spinner()
-            GObjectWorker.call(self.backend.decode_image, (self.get_language(), file_path))
+            get_atomic_manager().execute(self.backend.decode_image, (self.get_language(), file_path))
         except FileNotFoundError:
             self.show_toast(_("File not found: {path}").format(path=file_path))
         except PermissionError:
@@ -198,7 +198,7 @@ class AnuraWindow(WindowDnDMixin, WindowOCRMixin, WindowTTSMixin, Adw.Applicatio
     def _on_paste_from_clipboard_texture(self, _service: GObject.GObject, texture: Gdk.Texture) -> None:
         self.welcome_page.show_spinner()
         png_bytes = BytesIO(texture.save_to_png_bytes().get_data())
-        GObjectWorker.call(self.backend.decode_image, (self.get_language(), png_bytes))
+        get_atomic_manager().execute(self.backend.decode_image, (self.get_language(), png_bytes))
 
     def _on_clipboard_error(self, _service: GObject.GObject, message: str) -> None:
         """Handle clipboard service errors."""

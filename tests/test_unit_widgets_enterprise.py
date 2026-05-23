@@ -81,7 +81,9 @@ class TestExtractedPageEnterprise:
         widget.settings = MagicMock()
         widget.settings.get_string.return_value = "eng"
 
-        with patch("anura.widgets.extracted_page.GObjectWorker.call"):
+        with patch("anura.widgets.extracted_page.get_atomic_manager") as mock_get_manager:
+            mock_manager = MagicMock()
+            mock_get_manager.return_value = mock_manager
             widget.listen()
             # Should be in generating state (spinner)
             assert widget.listen_stack.get_visible_child_name() == "spinner"
