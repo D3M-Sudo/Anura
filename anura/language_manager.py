@@ -4,6 +4,7 @@
 #
 # SPDX-License-Identifier: MIT
 
+from concurrent.futures import ThreadPoolExecutor
 import contextlib
 from gettext import gettext as _
 import os
@@ -12,7 +13,6 @@ import shutil
 import tempfile
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor
 from typing import ClassVar
 
 import gi
@@ -25,7 +25,6 @@ from gi.repository import GLib, GObject  # noqa: E402
 from loguru import logger  # noqa: E402
 import requests  # noqa: E402
 
-from anura.atomic_task_manager import get_atomic_manager  # noqa: E402
 from anura.config import (  # noqa: E402
     LANG_CODE_PATTERN,
     REQUEST_TIMEOUT,
