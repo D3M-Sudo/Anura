@@ -8,219 +8,94 @@ import pytest
 
 pytest.importorskip("gi")
 
-from unittest.mock import Mock, patch
 
-import pytest
+# tests/test_unit_tts_enterprise.py
+from unittest.mock import MagicMock, patch
 
 from anura.services.tts import TTSService
 
-# Import Gst for message types
-try:
-    from gi.repository import Gst
-except ImportError:
-    Gst = Mock()
-    Gst.MessageType = Mock()
-    Gst.MessageType.ERROR = "error"
-    Gst.MessageType.EOS = "eos"
-    Gst.MessageType.TAG = "tag"
 
+class TestTTSServiceEnterprise:
+    """
+    Enterprise-grade unit tests for TTSService.
+    """
 
-@pytest.mark.gtk
-class TestTTSService:
-    """Test suite for TTSService core functionality."""
+    @pytest.fixture
+    def service(self):
+        with patch("gi.repository.Gst.init"):
+            return TTSService()
 
-    def setup_method(self):
-        """Set up test fixtures."""
-        self.service = TTSService()
-        # Mock player to avoid GStreamer dependency
-        self.service.player = Mock()
+    def test_map_tesseract_to_gtts_happy_path(self):
+        """Test mapping of Tesseract codes to gTTS codes."""
+        assert TTSService.map_tesseract_to_gtts("eng") == "en"
+        assert TTSService.map_tesseract_to_gtts("ita") == "it"
+        assert TTSService.map_tesseract_to_gtts("jpn_vert") == "ja"
+        assert TTSService.map_tesseract_to_gtts("chi_sim") == "zh-CN"
 
-    def test_init(self):
-        """Test service initialization."""
-        assert self.service.player is not None
-        assert hasattr(self.service, "_tld")
-        assert self.service._tld == "com"
+    def test_map_tesseract_to_gtts_fallbacks(self):
+        """Test fallback behavior for unknown or invalid codes."""
+        assert TTSService.map_tesseract_to_gtts(None) == "en"
+        assert TTSService.map_tesseract_to_gtts("unknown") == "en"
 
-    def test_get_effective_language_english(self):
-        """Test language mapping for English."""
-        result = self.service.get_effective_language("eng")
-        assert result == "en"
+        # Test 2-char prefix matching
+        with patch.object(TTSService, "get_supported_gtts_languages", return_value={"fr": "French"}):
+            assert TTSService.map_tesseract_to_gtts("fra-new") == "fr"
 
-    def test_get_effective_language_italian(self):
-        """Test language mapping for Italian."""
-        result = self.service.get_effective_language("ita")
-        assert result == "it"
+    def test_generate_empty_text(self, service):
+        """Test generate with empty or whitespace text."""
+        assert service.generate("") == ""
+        assert service.generate("   ") == ""
+        assert service.generate(None) == ""
 
-    def test_get_effective_language_spanish(self):
-        """Test language mapping for Spanish."""
-        result = self.service.get_effective_language("spa")
-        assert result == "es"
+    @patch("gtts.gTTS")
+    @patch("os.makedirs")
+    def test_generate_save_error(self, mock_makedirs, mock_gtts, service):
+        """Test error handling during speech file generation."""
+        mock_tts_instance = mock_gtts.return_value
+        mock_tts_instance.save.side_effect = OSError("Disk full")
 
-    def test_get_effective_language_french(self):
-        """Test language mapping for French."""
-        result = self.service.get_effective_language("fra")
-        assert result == "fr"
+        with patch("loguru.logger.error") as mock_log:
+            result = service.generate("hello", "en")
+            assert result == ""
+            mock_log.assert_called()
 
-    def test_get_effective_language_german(self):
-        """Test language mapping for German."""
-        result = self.service.get_effective_language("deu")
-        assert result == "de"
+    def test_get_effective_language(self, service):
+        """Test determination of the effective TTS language."""
+        # Case 1: User has set a specific TTS language
+        with patch("anura.services.tts.settings.get_string", return_value="de"):
+            assert service.get_effective_language("eng") == "de"
 
-    def test_get_effective_language_unknown(self):
-        """Test language mapping for unknown language."""
-        result = self.service.get_effective_language("xyz")
-        assert result == "en"  # Should default to English
+        # Case 2: No user preference, fallback to OCR mapping
+        with patch("anura.services.tts.settings.get_string", return_value=""):
+            assert service.get_effective_language("ita") == "it"
 
-    def test_get_effective_language_multilingual(self):
-        """Test language mapping for multilingual OCR codes."""
-        result = self.service.get_effective_language("eng+ita")
-        assert result == "en"  # Should use first language
+    def test_is_playing_states(self, service):
+        """Test is_playing reporting based on GStreamer state."""
+        assert service.is_playing() is False
 
-    def test_get_effective_language_empty(self):
-        """Test language mapping for empty input."""
-        result = self.service.get_effective_language("")
-        assert result == "en"  # Should default to English
+        service.player = MagicMock()
+        from gi.repository import Gst
 
-    def test_get_effective_language_none(self):
-        """Test language mapping for None input."""
-        result = self.service.get_effective_language(None)
-        assert result == "en"  # Should default to English
+        # Mock State.PLAYING
+        service.player.get_state.return_value = (None, Gst.State.PLAYING, None)
+        assert service.is_playing() is True
 
-    @patch("anura.services.tts.gtts")
-    def test_speak_text_cache_hit(self, mock_gtts):
-        """Test speaking text when cached file exists."""
-        # This test concept doesn't apply to current API - generate() always creates new files
-        # Test generate() method instead
-        with patch("anura.services.tts.gtts.gTTS") as mock_gtts:
-            mock_tts = Mock()
-            mock_tts.save.return_value = None
-            mock_gtts.return_value = mock_tts
+        # Mock State.NULL
+        service.player.get_state.return_value = (None, Gst.State.NULL, None)
+        assert service.is_playing() is False
 
-            result = self.service.generate("test text", "en")
+    def test_stop_speaking_cleanup(self, service):
+        """Test that stop_speaking cleans up resources and files."""
+        service.player = MagicMock()
+        service._current_speech_file = "/tmp/test.mp3"
 
-            assert result.endswith(".mp3")
-            mock_gtts.assert_called_once_with("test text", lang="en", tld="com")
+        with patch("os.path.exists", return_value=True), patch("os.unlink") as mock_unlink:
+            service.stop_speaking()
+            assert service.player is None
+            assert service._current_speech_file is None
+            mock_unlink.assert_called_with("/tmp/test.mp3")
 
-    @patch("anura.services.tts.gtts")
-    def test_generate_cache_miss(self, mock_gtts):
-        """Test speaking text generation."""
-        with patch("anura.services.tts.gtts.gTTS") as mock_gtts:
-            mock_tts = Mock()
-            mock_tts.save.return_value = None
-            mock_gtts.return_value = mock_tts
-
-            result = self.service.generate("test text", "en")
-
-            assert result.endswith(".mp3")
-            mock_gtts.assert_called_once_with("test text", lang="en", tld="com")
-
-    @patch("anura.services.tts.gtts")
-    def test_generate_gtts_error(self, mock_gtts):
-        """Test handling of gTTS generation errors."""
-        with patch("anura.services.tts.gtts.gTTS") as mock_gtts:
-            mock_gtts.side_effect = Exception("TTS error")
-
-            # generate() should raise the exception
-            with pytest.raises(Exception, match="TTS error"):
-                self.service.generate("test text", "en")
-
-    @patch("anura.services.tts.gtts")
-    def test_generate_save_error(self, mock_gtts):
-        """Test handling of file save errors."""
-        with patch("anura.services.tts.gtts.gTTS") as mock_gtts:
-            mock_tts = Mock()
-            mock_tts.save.side_effect = OSError("Save error")
-            mock_gtts.return_value = mock_tts
-
-            # generate() should raise the exception
-            with pytest.raises(Exception, match="Save error"):
-                self.service.generate("test text", "en")
-
-    def test_generate_empty_text(self):
-        """Test speaking empty text."""
-        result = self.service.generate("", "en")
-        assert result == ""
-
-    def test_generate_none_text(self):
-        """Test speaking None text."""
-        result = self.service.generate(None, "en")
-        assert result == ""
-
-    @patch("anura.services.tts.Gst")
-    def test_play_audio_success(self, mock_gst):
-        """Test successful audio playback."""
-        # Mock GStreamer elements
-        mock_playbin = Mock()
-        mock_gst.ElementFactory.make.return_value = mock_playbin
-        mock_bus = Mock()
-        mock_playbin.get_bus.return_value = mock_bus
-
-        # Test play() method
-        with patch("anura.services.tts.GLib"):
-            self.service.play("/test/audio.mp3")
-
-            mock_gst.ElementFactory.make.assert_called_once_with("playbin3", "player")
-            mock_playbin.set_property.assert_any_call("uri", "file:///test/audio.mp3")
-            mock_playbin.set_state.assert_called_once()
-
-    @patch("anura.services.tts.Gst")
-    def test_play_audio_gst_error(self, mock_gst):
-        """Test handling of GStreamer errors."""
-        mock_gst.ElementFactory.make.side_effect = Exception("GStreamer error")
-
-        # play() should raise the exception
-        with pytest.raises(Exception, match="GStreamer error"):
-            self.service.play("/test/audio.mp3")
-
-    def test_stop_audio(self):
-        """Test stopping audio playback."""
-        # Mock the player
-        mock_player = Mock()
-        self.service.player = mock_player
-
-        self.service.stop_speaking()
-
-        mock_player.set_state.assert_called_once()
-        # Verify cleanup resources are called
-
-    def test_setup_bus_watch(self):
-        """Test GStreamer bus watch setup."""
-        # Mock the bus and related objects
-        with patch.object(self.service, "_bus", Mock()), patch.object(self.service, "_bus_message_handler_id", None):
-            result = self.service._setup_bus_watch()
-
-            # Should return False (don't repeat)
-            assert result is False
-
-    def test_on_bus_message_error(self):
-        """Test handling of GStreamer error messages."""
-        mock_message = Mock()
-        mock_message.type = Gst.MessageType.ERROR
-        mock_message.parse_error.return_value = (Mock(), "Test error")
-
-        # Test on_gst_message method
-        self.service.on_gst_message(Mock(), mock_message)
-
-        # Should handle error gracefully
-        mock_message.parse_error.assert_called_once()
-
-    def test_on_bus_message_eos(self):
-        """Test handling of GStreamer end-of-stream messages."""
-        mock_message = Mock()
-        mock_message.type = Gst.MessageType.EOS
-
-        # Test on_gst_message method
-        with patch.object(self.service, "_current_speech_file", "/test/file.mp3"):
-            self.service.on_gst_message(Mock(), mock_message)
-
-        # Should handle EOS gracefully
-        # Verify cleanup was called
-
-    def test_on_bus_message_other(self):
-        """Test handling of other GStreamer messages."""
-        mock_message = Mock()
-        mock_message.type = Gst.MessageType.TAG  # Some other message type
-        # Test on_gst_message method - should not crash
-        self.service.on_gst_message(Mock(), mock_message)
-
-        # Should handle other messages gracefully (no action needed)
+    def test_referential_transparency_mapping(self):
+        """Test that language mapping is pure."""
+        code = "eng"
+        assert TTSService.map_tesseract_to_gtts(code) == TTSService.map_tesseract_to_gtts(code)

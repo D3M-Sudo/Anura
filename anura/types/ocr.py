@@ -22,6 +22,19 @@ class OcrWord:
 
 
 @dataclass(frozen=True, slots=True)
+class ExtractionResult:
+    """Immutable encapsulation of processed extraction results for UI consumption."""
+    text: str
+    raw_text: str
+    urls: tuple[str, ...]
+    emails: tuple[str, ...]
+    phone_numbers: tuple[str, ...]
+    avg_confidence: float
+    bounding_box: tuple[int, int, int, int] = (0, 0, 0, 0)
+    is_primary_url: bool = False
+
+
+@dataclass(frozen=True, slots=True)
 class OcrResult:
     """Immutable encapsulation of recognized text and layout information."""
     words: tuple[OcrWord, ...]

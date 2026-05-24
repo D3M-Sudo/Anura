@@ -15,6 +15,7 @@ from loguru import logger
 from PIL import Image
 
 from anura.utils.image_filters import get_default_filter_chain
+from anura.utils.validators import sanitize_text
 
 
 class TextPreprocessor:
@@ -94,10 +95,8 @@ class TextPreprocessor:
         if not text:
             return ""
 
-        cleaned = text
-
-        # Normalize whitespace
-        cleaned = self._normalize_whitespace(cleaned)
+        # Use security-focused sanitization as the first step (handles Unicode & whitespace)
+        cleaned = sanitize_text(text)
 
         # Fix punctuation
         cleaned = self._fix_punctuation(cleaned)
@@ -109,14 +108,6 @@ class TextPreprocessor:
         cleaned = self._remove_artifacts(cleaned)
 
         return cleaned.strip()
-
-    def _normalize_whitespace(self, text: str) -> str:
-        """Normalize whitespace in text while preserving line breaks."""
-        if not text:
-            return ""
-
-        # Use regex to squash horizontal whitespace while preserving vertical structure
-        return re.sub(r"[ \t]+", " ", text).strip()
 
     def _fix_punctuation(self, text: str) -> str:
         """Fix punctuation spacing and duplication."""

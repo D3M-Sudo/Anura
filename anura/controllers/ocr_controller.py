@@ -3,10 +3,16 @@
 #
 # SPDX-License-Identifier: MIT
 
+from gettext import gettext as _
+from gettext import ngettext
+
 from gi.repository import Gio, GLib, GObject, Gtk
 from loguru import logger
 
+from anura.services.clipboard_service import get_clipboard_service
 from anura.services.result_dispatcher import get_result_dispatcher
+from anura.services.settings import settings
+from anura.utils import uri_validator
 from anura.utils.portal_advice import detect_portal_advice
 
 
@@ -34,14 +40,6 @@ class OcrController(GObject.GObject):
         return handler_id
 
     def _setup_connections(self):
-        # UI Requests from Dispatcher
-        self.connect_tracked(self._dispatcher, "toast-requested",
-                           lambda _, msg: self._window.show_toast(msg))
-        self.connect_tracked(self._dispatcher, "uri-launch-requested",
-                           lambda _, uri: self._window._launch_uri(uri))
-        self.connect_tracked(self._dispatcher, "notification-requested",
-                           self._on_notification_requested)
-
         # Backend Responses
         backend = self._window.backend
         self.connect_tracked(backend, "decoded", self._on_shot_done)
@@ -58,7 +56,7 @@ class OcrController(GObject.GObject):
         if app and hasattr(app, "notification_service"):
             app.notification_service.show_notification(title=title, body=body)
 
-    def _on_shot_done(self, _sender, text, copy):
+    def _on_shot_done(self, _sender, text, copy, ocr_result):
         """Handle successful screenshot capture and OCR processing."""
         if hasattr(self._window, "_screenshot_timeout_id") and self._window._screenshot_timeout_id is not None:
             GLib.source_remove(self._window._screenshot_timeout_id)
@@ -68,14 +66,97 @@ class OcrController(GObject.GObject):
         self._window.welcome_page.reset_drop_area_state()
 
         if not text:
+            self._on_notification_requested(
+                None, _("Anura OCR"), _("No text found. Try to grab another region.")
+            )
             return
 
         try:
             self._window.extracted_page.extracted_text = text
-            self._dispatcher.dispatch(text, copy)
+            extraction_result = self._dispatcher.dispatch(text, ocr_result)
+            self._handle_extraction_result(extraction_result, copy)
             GLib.idle_add(self._navigate_to_extracted_page)
         except Exception as e:
             logger.error(f"OcrController: UI Error in _on_shot_done: {e}")
+
+    def _handle_extraction_result(self, result, copy_requested: bool):
+        """Handle the extraction result, applying settings and triggering side effects."""
+        if result.is_primary_url:
+            self._handle_url_flow(result.urls[0], copy_requested)
+        else:
+            self._handle_text_flow(result, copy_requested)
+
+    def _handle_url_flow(self, url: str, copy_requested: bool):
+        """Handle dispatching for URL-primary results."""
+        url = url.strip().strip("\n\r\t\v\f")
+
+        if not uri_validator(url):
+            # Fallback to text flow if URL is invalid
+            from anura.types.ocr import ExtractionResult
+            fake_result = ExtractionResult(
+                text=url, raw_text=url, urls=(), emails=(), phone_numbers=(),
+                avg_confidence=0.0, is_primary_url=False
+            )
+            self._handle_text_flow(fake_result, copy_requested)
+            return
+
+        if settings.get_boolean("autolinks"):
+            # Behavior A: Open directly in browser
+            self._window._launch_uri(url)
+            self._window.show_toast(_("URL opened automatically"))
+        else:
+            # Behavior B: Send desktop notification with clickable action
+            target = GLib.Variant("s", url)
+            app = Gtk.Application.get_default()
+            if app and hasattr(app, "notification_service"):
+                app.notification_service.send_notification_with_action(
+                    notification_id="qr-url",
+                    title=_("QR Code URL Detected"),
+                    body=url,
+                    action_id="app.open-qr-url",
+                    action_target=target,
+                    priority="high",
+                )
+            else:
+                self._on_notification_requested(None, _("QR Code URL Detected"), url)
+
+        # Handle URL Clipboard (respecting global autocopy or explicit request)
+        if settings.get_boolean("autocopy") or copy_requested:
+            get_clipboard_service().set(url)
+            # Only show "copied" toast if we didn't open the browser automatically
+            if not settings.get_boolean("autolinks"):
+                self._window.show_toast(_("URL copied to clipboard"))
+
+    def _handle_text_flow(self, result, copy_requested: bool):
+        """Handle dispatching for regular text results."""
+        is_window_active = bool(Gtk.Application.get_default().get_active_window())
+        text = result.text
+
+        if settings.get_boolean("autocopy") or copy_requested:
+            get_clipboard_service().set(text)
+            self._window.show_toast(_("Text copied to clipboard"))
+            if not is_window_active:
+                self._on_notification_requested(
+                    None, _("Anura OCR"), _("Text extracted and copied to clipboard.")
+                )
+        else:
+            if not is_window_active:
+                self._on_notification_requested(
+                    None, _("Anura OCR"), _("Text extracted successfully.")
+                )
+
+        # Show toasts for other structured data found in text
+        if result.emails:
+            count = len(result.emails)
+            self._window.show_toast(
+                ngettext("{n} email found in text", "{n} emails found in text", count).format(n=count)
+            )
+
+        if result.phone_numbers:
+            count = len(result.phone_numbers)
+            self._window.show_toast(
+                ngettext("{n} phone number found in text", "{n} phone numbers found in text", count).format(n=count)
+            )
 
     def _on_shot_error(self, _sender, message):
         """Handle screenshot capture errors."""
