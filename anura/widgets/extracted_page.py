@@ -79,11 +79,8 @@ class ExtractedPage(Adw.NavigationPage):
 
         try:
             self._tts_service = get_tts_service()
-            self._tts_stop_handler_id = self._tts_service.connect("stop", self._on_listen_end)
-            self._tts_paused_handler_id = self._tts_service.connect("paused", self._on_paused)
-            self._tts_error_handler_id = self._tts_service.connect("error", self._on_tts_error)
         except (TypeError, RuntimeError, AttributeError) as e:
-            logger.warning(f"Failed to connect TTS services: {e}")
+            logger.warning(f"Failed to initialize TTS service: {e}")
 
         self._buffer_handler_id = self.buffer.connect("changed", self._on_buffer_changed)
         # GTK4 Layout Fix: Force reflow when widget is mapped to ensure correct Pango layout
@@ -175,16 +172,6 @@ class ExtractedPage(Adw.NavigationPage):
         if self._tts_service:
             try:
                 self._tts_service.stop_speaking()
-                # Disconnect signal handlers
-                if self._tts_stop_handler_id:
-                    self._tts_service.disconnect(self._tts_stop_handler_id)
-                    self._tts_stop_handler_id = None
-                if self._tts_paused_handler_id:
-                    self._tts_service.disconnect(self._tts_paused_handler_id)
-                    self._tts_paused_handler_id = None
-                if self._tts_error_handler_id:
-                    self._tts_service.disconnect(self._tts_error_handler_id)
-                    self._tts_error_handler_id = None
             except Exception as e:
                 logger.warning(f"Failed to cleanup TTS during dispose: {e}")
 
@@ -250,16 +237,6 @@ class ExtractedPage(Adw.NavigationPage):
         # Store reference for cleanup if not already stored
         if self._tts_service is None:
             self._tts_service = tts_service_instance
-            # Only connect handlers if they are not already connected from __init__
-            try:
-                if self._tts_stop_handler_id is None:
-                    self._tts_stop_handler_id = self._tts_service.connect("stop", self._on_listen_end)
-                if self._tts_paused_handler_id is None:
-                    self._tts_paused_handler_id = self._tts_service.connect("paused", self._on_paused)
-                if self._tts_error_handler_id is None:
-                    self._tts_error_handler_id = self._tts_service.connect("error", self._on_tts_error)
-            except (TypeError, RuntimeError, AttributeError) as e:
-                logger.warning(f"Failed to connect TTS signals during listen: {e}")
 
         # Resolve TTS language: explicit user preference (tts-language) wins,
         # otherwise map the OCR language (Tesseract 3-letter, e.g. "ita") to
@@ -360,6 +337,15 @@ class ExtractedPage(Adw.NavigationPage):
             icon = "media-playback-start-symbolic" if is_paused else "media-playback-pause-symbolic"
             self.listen_pause_btn.set_icon_name(icon)
 
+    def update_tts_state(self, playing: bool = False, paused: bool = False) -> None:
+        """Update the TTS UI state (called from TtsController)."""
+        if playing:
+            self.swap_controls("playing")
+        elif paused:
+            self._on_paused(None, True)
+        else:
+            self.swap_controls("stopped")
+
     def _on_tts_error(self, _service: object, message: str) -> None:
         """Handle TTS error signal."""
         self._on_listen_end(_service, False)
@@ -393,15 +379,18 @@ class ExtractedPage(Adw.NavigationPage):
         if self.listen_pause_btn:
             self.listen_pause_btn.set_icon_name("media-playback-pause-symbolic")
 
-    def swap_controls(self, state: bool = False) -> None:
+    def swap_controls(self, state: bool | str = False) -> None:
         """Enable or disable interactive controls during TTS playback."""
+        # Handle both legacy boolean state and new descriptive string states
+        is_playing = state is True or state == "playing"
+
         if self.grab_btn:
-            self.grab_btn.set_sensitive(not state)
+            self.grab_btn.set_sensitive(not is_playing)
         if self.text_copy_btn:
-            self.text_copy_btn.set_sensitive(not state)
+            self.text_copy_btn.set_sensitive(not is_playing)
         if self.listen_stack:
             # Unified stack management: handle both pause/play and spinner states
-            if state:
+            if is_playing:
                 self.listen_stack.set_visible_child_name("pause")
             else:
                 # Check if spinner is active before switching to button

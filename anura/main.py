@@ -277,10 +277,16 @@ class AnuraApplication(Adw.Application):
         Adw.Application.do_shutdown(self)
 
     def _cleanup_backend_signals(self) -> None:
-        """Clean up backend signal handlers."""
+        """Clean up backend signal handlers and services."""
         if self.backend is not None:
             self._disconnect_signal_handler(self._backend_decoded_handler_id)
             self._disconnect_signal_handler(self._backend_error_handler_id)
+
+        try:
+            from anura.language_manager import get_language_manager
+            get_language_manager().shutdown()
+        except Exception as e:
+            logger.debug(f"Failed to shutdown LanguageManager: {e}")
 
     def _disconnect_signal_handler(self, handler_id: int | None) -> None:
         """Safely disconnect a signal handler."""

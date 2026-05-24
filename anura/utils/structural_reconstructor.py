@@ -43,7 +43,7 @@ class StructuralReconstructor:
 
         for word in words:
             # Simple grouping by line_num and par_num/block_num
-            line_id = (word["block_num"], word["par_num"], word["line_num"])
+            line_id = (word.block_num, word.par_num, word.line_num)
             if line_id != last_line_id:
                 if current_line:
                     lines.append(self._process_line(current_line))
@@ -58,7 +58,7 @@ class StructuralReconstructor:
         # Merge lines into paragraphs based on geometry
         paragraphs = []
         if not lines:
-            return ""
+            return ("", 0.0)
 
         current_paragraph = [lines[0]]
 
@@ -77,7 +77,7 @@ class StructuralReconstructor:
 
         return "\n\n".join(paragraphs), ocr_result.avg_confidence
 
-    def _process_line(self, words: tuple[Any, ...]) -> dict:
+    def _process_line(self, words: list[Any]) -> dict:
         """Calculate line geometry from its words."""
         text = " ".join([w.text for w in words])
         left = min([w.left for w in words])

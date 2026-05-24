@@ -474,12 +474,14 @@ class ScreenshotService(GObject.GObject):
 
         return self._format_decode_result(extracted, error_message, ocr_result)
 
-    def _validate_decode_inputs(self, lang: str) -> tuple[bool, str | None, str | None]:
+    def _validate_decode_inputs(
+        self, lang: str
+    ) -> tuple[bool, str | None, str | None, OcrResult | None]:
         """Validate language code for OCR processing."""
         if not lang or not re.match(LANG_CODE_PATTERN, lang):
             logger.error(f"Anura: Invalid language code '{lang}' for OCR")
-            return (False, "", _("Invalid language code specified."))
-        return (True, None, None)
+            return (False, "", _("Invalid language code specified."), None)
+        return (True, None, None, None)
 
     def _determine_file_type(self, file: str | Image.Image | object, _remove_source: bool) -> bool:
         """Determine if file is a physical file."""

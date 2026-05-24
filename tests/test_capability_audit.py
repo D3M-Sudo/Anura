@@ -20,7 +20,10 @@ class TestCapabilityAudit(unittest.TestCase):
         mock_find_spec.return_value = MagicMock()
         mock_which.return_value = "/usr/bin/executable"
 
-        ctx = ApplicationContext.perform_audit()
+        # Mock gi modules to simulate presence in headless environment
+        mock_gi = MagicMock()
+        with patch.dict("sys.modules", {"gi": mock_gi, "gi.repository": MagicMock()}):
+            ctx = ApplicationContext.perform_audit()
 
         self.assertTrue(ctx.has_ocr)
         self.assertTrue(ctx.has_barcode)

@@ -72,7 +72,6 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         language_manager_instance.active_language = item  # type: ignore[method-assign]
 
         self._setup_geometry()
-        self._setup_controllers()
         self._apply_capability_constraints()
         self.set_icon_name(APP_ID)
 
@@ -128,8 +127,8 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         # If TTS is missing, disable listen button on extracted page
         if not ctx.has_tts:
             logger.warning("Anura: TTS capability missing. Disabling Listen UI.")
-            self.extracted_page.listen_button.set_sensitive(False)
-            self.extracted_page.listen_button.set_tooltip_text(_("TTS dependencies (gTTS/GStreamer) missing"))
+            self.extracted_page.listen_btn.set_sensitive(False)
+            self.extracted_page.listen_btn.set_tooltip_text(_("TTS dependencies (gTTS/GStreamer) missing"))
 
     def _on_scale_factor_changed(self, _window: Gtk.Window, _pspec: GObject.ParamSpec) -> None:
         scale = self.get_scale_factor()
@@ -141,6 +140,14 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         """Get current language code from settings or language manager."""
         language_manager_instance = get_language_manager()
         return self.settings.get_string("active-language") or language_manager_instance.active_language.code
+
+    def _on_screenshot_timeout(self) -> bool:
+        """Restore window if portal screenshot doesn't respond within 30s."""
+        self._screenshot_timeout_id = None
+        self.present()
+        self.show_toast(_("Screenshot timed out. Please try again."))
+        logger.warning("Anura: Screenshot portal timeout — restoring window.")
+        return GLib.SOURCE_REMOVE
 
     def get_screenshot(self, copy: bool = False) -> None:
         """Capture screenshot and process it for OCR."""
@@ -303,6 +310,18 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         """Open a URI in the default system browser."""
         from anura.utils.validators import launch_uri
         launch_uri(url, window=self, error_callback=lambda msg: self.show_toast(msg))
+
+    def on_listen(self) -> None:
+        """Trigger TTS playback on the extracted page."""
+        self.extracted_page.listen()
+
+    def on_listen_cancel(self) -> None:
+        """Cancel TTS playback."""
+        self.extracted_page.listen_cancel()
+
+    def on_listen_pause(self) -> None:
+        """Toggle TTS pause/resume."""
+        self.extracted_page.listen_pause()
 
     def close_popovers(self) -> None:
         """Close all open popovers."""
