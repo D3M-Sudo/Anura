@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: MIT
 
+from typing import Any
+
+from anura.types.ocr import OcrResult
 from anura.utils.singleton import get_instance
 
 
@@ -19,46 +22,21 @@ class StructuralReconstructor:
         """
         self.proximity_threshold = proximity_threshold
 
-    def reconstruct(self, ocr_data: dict) -> tuple[str, float]:
+    def reconstruct(self, ocr_result: OcrResult) -> tuple[str, float]:
         """
-        Reconstructs text from raw Tesseract data using spatial analysis.
+        Reconstructs text from OcrResult using spatial analysis.
 
         Args:
-            ocr_data: Dictionary from pytesseract.image_to_data(..., output_type=Output.DICT)
+            ocr_result: Immutable OcrResult containing parsed Tesseract data.
 
         Returns:
             tuple: (Reconstructed text string, Average confidence score)
         """
-        words = []
-        n_boxes = len(ocr_data["text"])
-        for i in range(n_boxes):
-            # Skip empty entries or low confidence if needed
-            text = ocr_data["text"][i].strip()
-            if not text:
-                continue
-
-            words.append(
-                {
-                    "text": text,
-                    "left": ocr_data["left"][i],
-                    "top": ocr_data["top"][i],
-                    "width": ocr_data["width"][i],
-                    "height": ocr_data["height"][i],
-                    "line_num": ocr_data["line_num"][i],
-                    "block_num": ocr_data["block_num"][i],
-                    "par_num": ocr_data["par_num"][i],
-                    "conf": ocr_data["conf"][i],
-                }
-            )
-
-        if not words:
+        if not ocr_result.words:
             return "", 0.0
 
-        # Calculate average confidence
-        valid_confs = [w["conf"] for w in words if w["conf"] >= 0]
-        avg_conf = sum(valid_confs) / len(valid_confs) if valid_confs else 0.0
-
         # Group words into lines
+        words = ocr_result.words
         lines = []
         current_line = []
         last_line_id = -1
@@ -97,15 +75,15 @@ class StructuralReconstructor:
         if current_paragraph:
             paragraphs.append(" ".join([line["text"] for line in current_paragraph]))
 
-        return "\n\n".join(paragraphs), avg_conf
+        return "\n\n".join(paragraphs), ocr_result.avg_confidence
 
-    def _process_line(self, words: list[dict]) -> dict:
+    def _process_line(self, words: tuple[Any, ...]) -> dict:
         """Calculate line geometry from its words."""
-        text = " ".join([w["text"] for w in words])
-        left = min([w["left"] for w in words])
-        top = min([w["top"] for w in words])
-        right = max([w["left"] + w["width"] for w in words])
-        bottom = max([w["top"] + w["height"] for w in words])
+        text = " ".join([w.text for w in words])
+        left = min([w.left for w in words])
+        top = min([w.top for w in words])
+        right = max([w.left + w.width for w in words])
+        bottom = max([w.top + w.height for w in words])
 
         return {
             "text": text,
@@ -116,6 +94,7 @@ class StructuralReconstructor:
             "height": bottom - top,
             "width": right - left,
         }
+
 
     def _should_merge(self, line1: dict, line2: dict) -> bool:
         """Determine if two lines should be merged into a paragraph."""

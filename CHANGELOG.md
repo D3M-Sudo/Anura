@@ -6,7 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-06-15 {version-0.1.5-architectural-milestone}
+
 ### Added
+- Implemented **Controller-based Composition Architecture**; dismantled legacy mixins for OCR, TTS, and DnD
+- Introduced immutable **OcrResult** and **OcrWord** dataclasses with `slots=True` for optimized memory and performance
+- Added boot-time **Capability Audit** (`ApplicationContext`) to detect system dependencies (Tesseract, ZXing, GStreamer)
+- Implemented proactive **UI Sensitivity Binding** to prevent runtime failures on unsupported environments
 - Implemented **Deep Codebase Audit & Reliability Hardening** (v0.1.5 architecture)
 - Replaced legacy `GObjectWorker` with `AtomicTaskManager` for single-slot task execution with UUID-based result validation
 - Migrated `AnuraWindow` to a modular architecture using **Naked Mixins** (`WindowOCRMixin`, `WindowTTSMixin`, `WindowDnDMixin`)
@@ -22,6 +28,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Improved pluralization and internationalization support for text statistics
 
 ### Fixed
+- Fixed **GStreamer Bus Memory Safety** using `weakref` closures to prevent reference cycles in `TTSService`
+- Fixed silent scanning failures by implementing explicit **Dependency Fail-Fast** propagation
 - Fixed critical race conditions in OCR processing by invalidating stale tasks in `AtomicTaskManager`
 - Resolved memory leaks by ensuring automated signal disconnection via `connect_tracked()`
 - Fixed `Gtk.FileFilter` regression to prevent duplicate entries on portal backends like LXQt and GNOME
@@ -38,6 +46,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Hardened URL validation and encoding in `ShareService` against injection and RTL spoofing attacks
 
 ### Changed
+- Optimized OCR pipeline by unifying Tesseract parsing into a single $O(N)$ pass
 - Standardized file headers across the entire repository for project-wide consistency
 - Updated Tesseract language identifier for German Fraktur to the correct `deu_latf` code
 - Optimized multi-monitor support with improved DPI scaling (`notify::scale-factor`)

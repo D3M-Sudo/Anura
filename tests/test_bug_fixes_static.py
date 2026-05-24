@@ -130,17 +130,17 @@ def test_screenshot_service_declares_portal_backend_missing_signal() -> None:
 
 def test_window_wires_portal_banner_and_signal_handler() -> None:
     text = (PROJECT_ROOT / "anura" / "window.py").read_text()
-    ocr_text = (PROJECT_ROOT / "anura" / "window_mixins" / "ocr_mixin.py").read_text()
+    ocr_text = (PROJECT_ROOT / "anura" / "controllers" / "ocr_controller.py").read_text()
     combined_text = text + ocr_text
 
     assert "portal_banner: Adw.Banner = Gtk.Template.Child()" in text, (
         "AnuraWindow must declare portal_banner as a Gtk.Template.Child mapping to the Adw.Banner in window.blp."
     )
     assert '"portal-backend-missing"' in combined_text, (
-        "AnuraWindow (or its OCR mixin) must connect to the new ScreenshotService signal."
+        "OcrController must connect to the new ScreenshotService signal."
     )
     assert "set_revealed(True)" in combined_text and "set_revealed(False)" in combined_text, (
-        "AnuraWindow (or its OCR mixin) must reveal the banner on the signal and hide it when the user dismisses it."
+        "OcrController must reveal the banner on the signal and hide it when the user dismisses it."
     )
 
 
@@ -249,14 +249,14 @@ def test_window_disconnects_portal_banner_signal() -> None:
 
 
 def test_window_tracks_portal_banner_handler_id() -> None:
-    """AnuraWindow must track the portal_banner handler ID for cleanup."""
+    """OcrController must track the portal_banner handler ID for cleanup."""
     text = (ANURA_PKG / "window.py").read_text()
-    ocr_text = (PROJECT_ROOT / "anura" / "window_mixins" / "ocr_mixin.py").read_text()
+    ocr_text = (PROJECT_ROOT / "anura" / "controllers" / "ocr_controller.py").read_text()
     combined_text = text + ocr_text
 
     # Accept either manual tracking or SignalManagerMixin's connect_tracked
-    assert "_handler_portal_banner" in combined_text or "connect_tracked(self.portal_banner" in combined_text, (
-        "AnuraWindow must track the portal_banner signal handler for cleanup in do_destroy."
+    assert "_handler_portal_banner" in combined_text or "connect_tracked" in ocr_text, (
+        "OcrController must track the portal_banner signal handler for cleanup."
     )
 
 

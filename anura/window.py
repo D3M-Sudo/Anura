@@ -24,22 +24,23 @@ from loguru import logger  # noqa: E402
 
 from anura.atomic_task_manager import get_atomic_manager  # noqa: E402
 from anura.config import APP_ID, RESOURCE_PREFIX  # noqa: E402
+from anura.controllers.dnd_controller import DndController  # noqa: E402
+from anura.controllers.ocr_controller import OcrController  # noqa: E402
+from anura.controllers.tts_controller import TtsController  # noqa: E402
 from anura.language_manager import get_language_manager  # noqa: E402
 from anura.services.clipboard_service import get_clipboard_service  # noqa: E402
 from anura.services.screenshot_service import ScreenshotService  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
+from anura.types.context import get_app_context  # noqa: E402
 from anura.utils import uri_validator, validate_image_resource  # noqa: E402
 from anura.utils.signal_manager import SignalManagerMixin  # noqa: E402
 from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
 from anura.widgets.preferences_dialog import PreferencesDialog  # noqa: E402
 from anura.widgets.welcome_page import WelcomePage  # noqa: E402
-from anura.window_mixins.dnd_mixin import WindowDnDMixin  # noqa: E402
-from anura.window_mixins.ocr_mixin import WindowOCRMixin  # noqa: E402
-from anura.window_mixins.tts_mixin import WindowTTSMixin  # noqa: E402
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/window.ui")
-class AnuraWindow(WindowDnDMixin, WindowOCRMixin, WindowTTSMixin, Adw.ApplicationWindow, SignalManagerMixin):
+class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     __gtype_name__ = "AnuraWindow"
 
     toast_overlay: Adw.ToastOverlay = Gtk.Template.Child()
@@ -72,6 +73,7 @@ class AnuraWindow(WindowDnDMixin, WindowOCRMixin, WindowTTSMixin, Adw.Applicatio
 
         self._setup_geometry()
         self._setup_controllers()
+        self._apply_capability_constraints()
         self.set_icon_name(APP_ID)
 
         # Safety timeout for portal screenshot (prevents hidden window on D-Bus hang)
@@ -84,7 +86,9 @@ class AnuraWindow(WindowDnDMixin, WindowOCRMixin, WindowTTSMixin, Adw.Applicatio
         self.add_action(share_action)
 
         self.backend = backend
-        self._connect_ocr_signals()
+        self.ocr_controller = OcrController(self)
+        self.tts_controller = TtsController(self)
+        self.dnd_controller = DndController(self)
 
         self.connect_tracked(self.extracted_page, "go-back", self.show_welcome_page)  # type: ignore[arg-type]
         self._clipboard_service = None
@@ -110,6 +114,22 @@ class AnuraWindow(WindowDnDMixin, WindowOCRMixin, WindowTTSMixin, Adw.Applicatio
 
         # Connect to surface scale changes to handle multi-monitor DPI scaling
         self.connect("notify::scale-factor", self._on_scale_factor_changed)
+
+    def _apply_capability_constraints(self) -> None:
+        """Apply UI sensitivity constraints based on the boot-time capability audit."""
+        ctx = get_app_context()
+
+        # If OCR is missing, disable core capture actions
+        if not ctx.has_ocr:
+            logger.warning("Anura: OCR capability missing. Disabling capture UI.")
+            self.welcome_page.screenshot_button.set_sensitive(False)
+            self.welcome_page.screenshot_button.set_tooltip_text(_("Tesseract OCR not found on system"))
+
+        # If TTS is missing, disable listen button on extracted page
+        if not ctx.has_tts:
+            logger.warning("Anura: TTS capability missing. Disabling Listen UI.")
+            self.extracted_page.listen_button.set_sensitive(False)
+            self.extracted_page.listen_button.set_tooltip_text(_("TTS dependencies (gTTS/GStreamer) missing"))
 
     def _on_scale_factor_changed(self, _window: Gtk.Window, _pspec: GObject.ParamSpec) -> None:
         scale = self.get_scale_factor()
@@ -214,6 +234,14 @@ class AnuraWindow(WindowDnDMixin, WindowOCRMixin, WindowTTSMixin, Adw.Applicatio
 
         clipboard_service_instance = get_clipboard_service()
         clipboard_service_instance.cancel_pending_operations()
+
+        # Clean up decoupled controllers
+        if hasattr(self, "ocr_controller"):
+            self.ocr_controller.cleanup()
+        if hasattr(self, "tts_controller"):
+            self.tts_controller.cleanup()
+        if hasattr(self, "dnd_controller"):
+            self.dnd_controller.cleanup()
 
         self.disconnect_all_signals()
 

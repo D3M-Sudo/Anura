@@ -6,6 +6,7 @@
 
 from loguru import logger
 
+from anura.types.ocr import OcrResult as OcrData
 from anura.utils.singleton import get_instance
 from anura.utils.transformers.base_transformers import MultiLineTransformer, ParagraphTransformer, SingleLineTransformer
 from anura.utils.transformers.email_transformer import EmailTransformer
@@ -23,31 +24,25 @@ class MagicProcessor:
             TransformerType.URL: UrlTransformer(),
         }
 
-    def process(self, ocr_data: dict) -> tuple[str, float]:
+    def process(self, ocr_data: OcrData) -> tuple[str, float]:
         """
-        Process raw Tesseract data (from image_to_data) and return transformed text
+        Process OcrData and return transformed text
         along with the average confidence score.
         """
-        # Convert Tesseract dict (lists) to list of dicts for easier processing
+        # Compatibility layer: convert OcrData back to words for legacy Transformer logic
+        # (Transformer refactoring will happen in a future phase)
         words = []
-        n_boxes = len(ocr_data['text'])
-        for i in range(n_boxes):
+        for w in ocr_data.words:
             words.append({
-                'text': ocr_data['text'][i],
-                'block_num': ocr_data['block_num'][i],
-                'par_num': ocr_data['par_num'][i],
-                'line_num': ocr_data['line_num'][i],
-                'conf': ocr_data['conf'][i]
+                'text': w.text,
+                'block_num': w.block_num,
+                'par_num': w.par_num,
+                'line_num': w.line_num,
+                'conf': w.conf
             })
 
-        # Base text for scoring
-        raw_text = " ".join([w['text'] for w in words if w['text'].strip()])
-
-        # Calculate average confidence
-        valid_confs = [w['conf'] for w in words if w['conf'] >= 0]
-        avg_conf = sum(valid_confs) / len(valid_confs) if valid_confs else 0.0
-
-        result = OcrResult(words=words, text=raw_text)
+        result = OcrResult(words=words, text=ocr_data.raw_text)
+        avg_conf = ocr_data.avg_confidence
 
         # Calculate scores
         scores = {}
