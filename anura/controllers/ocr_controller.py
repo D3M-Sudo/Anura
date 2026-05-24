@@ -260,6 +260,8 @@ class OcrController(GObject.GObject):
                         self._window.show_toast(_("Image too large"))
                         return
                     gfile.load_contents_async(None, _on_file_contents_loaded)
+                else:
+                    self._window.welcome_page.hide_spinner()
             except Exception:
                 self._window.welcome_page.hide_spinner()
 

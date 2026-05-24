@@ -38,7 +38,14 @@ class ApplicationContext:
         has_ocr = has_pytesseract and has_tesseract_bin
 
         # 3. Barcode Audit (zxing-cpp)
-        has_barcode = importlib.util.find_spec("zxingcpp") is not None
+        # Perform a trial import to verify that the native library is functional.
+        has_barcode = False
+        if importlib.util.find_spec("zxingcpp"):
+            try:
+                import zxingcpp  # noqa: F401
+                has_barcode = True
+            except (ImportError, RuntimeError, OSError):
+                has_barcode = False
 
         # 4. TTS Audit (gtts + gst)
         has_gtts = importlib.util.find_spec("gtts") is not None

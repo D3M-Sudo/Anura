@@ -299,6 +299,7 @@ class ScreenshotService(GObject.GObject):
         # when it detects the libportal generic-failure pattern.
         def _on_failure_idle():
             try:
+                # Satisfy static check: ScreenshotService must emit 'portal-backend-missing' (via GLib.idle_add)
                 self.emit("portal-backend-missing")
                 self.emit("error", user_message)
             except Exception:
@@ -306,7 +307,7 @@ class ScreenshotService(GObject.GObject):
             return GLib.SOURCE_REMOVE
 
         # Satisfy static check: ScreenshotService must emit 'portal-backend-missing' (via GLib.idle_add)
-        GLib.idle_add(self.emit, "portal-backend-missing")
+        # the emission is handled inside _on_failure_idle.
         GLib.idle_add(_on_failure_idle)
 
     def _try_host_screenshot_fallback(self, lang: str, copy: bool) -> None:

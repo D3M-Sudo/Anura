@@ -59,10 +59,8 @@ class ExtractedPage(Adw.NavigationPage):
         self._share_handler_id = None
         # TTS service reference — initialized post-super() to avoid pre-template access
         self._tts_service = None
-        self._tts_stop_handler_id = None
-        self._tts_paused_handler_id = None
-        self._tts_error_handler_id = None
         self._buffer_handler_id = None
+        self._map_handler_id = None
         self._is_generating_tts = False
 
         super().__init__(**kwargs)
@@ -84,7 +82,7 @@ class ExtractedPage(Adw.NavigationPage):
 
         self._buffer_handler_id = self.buffer.connect("changed", self._on_buffer_changed)
         # GTK4 Layout Fix: Force reflow when widget is mapped to ensure correct Pango layout
-        self.text_view.connect("map", lambda _: self._force_reflow())
+        self._map_handler_id = self.text_view.connect("map", lambda _: self._force_reflow())
 
     def _force_reflow(self) -> None:
         """Force the TextView to recalculate its layout and reflow text.
@@ -188,6 +186,12 @@ class ExtractedPage(Adw.NavigationPage):
             with contextlib.suppress(TypeError, RuntimeError):
                 self.buffer.disconnect(self._buffer_handler_id)
             self._buffer_handler_id = None
+
+        # Disconnect map handler
+        if self._map_handler_id:
+            with contextlib.suppress(TypeError, RuntimeError):
+                self.text_view.disconnect(self._map_handler_id)
+            self._map_handler_id = None
 
         super().do_dispose()
 
