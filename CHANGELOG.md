@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-## [0.1.6] - 2026-06-15 {version-0.1.6-architectural-milestone}
+## [0.1.5] - 2026-06-15 {version-0.1.5-architectural-milestone}
 
 ### Added
 - Implemented **Controller-based Composition Architecture**; dismantled legacy mixins for OCR, TTS, and DnD
