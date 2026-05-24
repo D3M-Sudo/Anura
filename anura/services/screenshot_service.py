@@ -539,7 +539,9 @@ class ScreenshotService(GObject.GObject):
             logger.debug(f"Anura ZXing: Detection failed: {e}")
         return None
 
-    def _try_ocr_extraction(self, img: Image.Image, lang: str, start_time: float) -> tuple[str | None, OcrResult | None]:
+    def _try_ocr_extraction(
+        self, img: Image.Image, lang: str, start_time: float
+    ) -> tuple[str | None, OcrResult | None]:
         """Try to extract text using Tesseract OCR with preprocessing and Magic Transformers."""
         try:
             from pytesseract import Output
@@ -584,16 +586,16 @@ class ScreenshotService(GObject.GObject):
                 processed_text = spatially_reconstructed
 
             # 5. Final cleanup based on user settings
+            from anura.utils.validators import sanitize_text
+
             if mode == "full":
                 cleaned_text = preprocessor.clean_extracted_text(processed_text)
             elif mode == "image-only":
-                cleaned_text = preprocessor._normalize_whitespace(processed_text)
+                cleaned_text = sanitize_text(processed_text)
             else:
                 cleaned_text = processed_text.strip()
 
             # 4. Mandatory security sanitization for OCR output
-            from anura.utils.validators import sanitize_text
-
             cleaned_text = sanitize_text(cleaned_text)
 
             duration = time.time() - start_time

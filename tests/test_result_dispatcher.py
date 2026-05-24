@@ -4,9 +4,9 @@
 # SPDX-License-Identifier: MIT
 
 import pytest
-from unittest.mock import patch
 
 from anura.services.result_dispatcher import ResultDispatcher
+
 
 class TestResultDispatcher:
     @pytest.fixture

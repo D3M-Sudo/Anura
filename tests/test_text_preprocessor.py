@@ -4,15 +4,13 @@
 #
 # SPDX-License-Identifier: MIT
 
-import pytest
-
-# pytest.importorskip("gi")
-
-
 # tests/test_unit_text_preprocessor_enterprise.py
 from PIL import Image
+import pytest
 
 from anura.utils.text_preprocessor import TextPreprocessor
+
+# pytest.importorskip("gi")
 
 
 class TestTextPreprocessorEnterprise:
