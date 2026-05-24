@@ -7,6 +7,7 @@
 import re
 
 from anura.utils.transformers.models import OcrResult, TransformerProtocol
+from anura.utils.validators import URL_RE
 
 # Simplified TLD check for standalone version
 TLDS = {"COM", "ORG", "NET", "EDU", "GOV", "IO", "IT", "DE", "FR", "UK", "APP", "DEV"}
@@ -20,12 +21,7 @@ def _extract_urls(text: str) -> list[str]:
     # Correct commonly unrecognized parts
     text = re.sub(r":\s+\/", ":/", text)
 
-    reg_url = (
-        r"(?:(?:https?|ftp|file):\/\/|www\.)"
-        r"(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#\/%=~_|$?!:,.])*"
-        r"(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[A-Z0-9+&@#\/%=~_|$])"
-    )
-    all_urls = re.findall(reg_url, text, flags=re.IGNORECASE)
+    all_urls = URL_RE.findall(text)
     return [url for url in all_urls if _has_valid_tld(url)]
 
 class UrlTransformer(TransformerProtocol):

@@ -4,14 +4,12 @@
 #
 # MIT License
 
-import re
-
 from anura.utils.transformers.models import OcrResult, TransformerProtocol
+from anura.utils.validators import EMAIL_RE
 
 
 def _extract_emails(text: str) -> list[str]:
-    reg_email = r"[a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]{2,15}"
-    return re.findall(reg_email, text)
+    return EMAIL_RE.findall(text)
 
 class EmailTransformer(TransformerProtocol):
     def score(self, ocr_result: OcrResult) -> float:

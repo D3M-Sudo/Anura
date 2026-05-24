@@ -676,43 +676,13 @@ class AnuraApplication(Adw.Application):
 
     def on_github_star(self, _action: object, _param: object) -> None:
         """Open GitHub repository page in the default browser."""
-        launcher = Gtk.UriLauncher.new("https://github.com/D3M-Sudo/Anura")
-
-        def on_launch_finish(_launcher: object, result: Gio.AsyncResult) -> None:
-            try:
-                launcher.launch_finish(result)
-            except GLib.Error as e:
-                logger.error(f"Anura: Failed to open browser: {e.message}")
-                # Show error dialog to user using Adw.AlertDialog
-                window = self.props.active_window
-                if window:
-                    dialog = Adw.AlertDialog()
-                    dialog.set_heading(_("Failed to Open Browser"))
-                    dialog.set_body(_("No web browser could be launched. Please open the link manually."))
-                    dialog.add_response("ok", _("OK"))
-                    dialog.present(window)
-
-        launcher.launch(self.props.active_window, None, on_launch_finish)
+        from anura.utils.validators import launch_uri
+        launch_uri("https://github.com/D3M-Sudo/Anura", window=self.props.active_window)
 
     def on_report_issue(self, _action: object, _param: object) -> None:
         """Open GitHub issues page in the default browser."""
-        launcher = Gtk.UriLauncher.new("https://github.com/D3M-Sudo/Anura/issues")
-
-        def on_launch_finish(_launcher: object, result: Gio.AsyncResult) -> None:
-            try:
-                launcher.launch_finish(result)
-            except GLib.Error as e:
-                logger.error(f"Anura: Failed to open browser: {e.message}")
-                # Show error dialog to user using Adw.AlertDialog
-                window = self.props.active_window
-                if window:
-                    dialog = Adw.AlertDialog()
-                    dialog.set_heading(_("Failed to Open Browser"))
-                    dialog.set_body(_("No web browser could be launched. Please open the link manually."))
-                    dialog.add_response("ok", _("OK"))
-                    dialog.present(window)
-
-        launcher.launch(self.props.active_window, None, on_launch_finish)
+        from anura.utils.validators import launch_uri
+        launch_uri("https://github.com/D3M-Sudo/Anura/issues", window=self.props.active_window)
 
     def on_shortcuts(self, _action: object, _param: object) -> None:
         window = self.get_active_window()
@@ -797,76 +767,26 @@ class AnuraApplication(Adw.Application):
                 logger.warning("Anura: open-qr-url action triggered with empty URL")
                 return
 
-            # Security: validate URL before launching (defense in depth)
-            from anura.utils import uri_validator
-
-            if not uri_validator(url):
-                logger.warning(f"Anura: Blocked invalid URL from notification: {url}")
-                window = self.get_active_window()
-                if window and hasattr(window, "show_toast"):
-                    window.show_toast(_("Invalid URL blocked for security"))
-                return
-
-            # Launch URL via Gtk.UriLauncher
+            # Launch URL via centralized launch_uri
+            from anura.utils.validators import launch_uri
             window = self.get_active_window()
-            if window and hasattr(window, "_launch_uri"):
-                window._launch_uri(url)
-            else:
-                # Fallback: launch directly if no window available
-                launcher = Gtk.UriLauncher.new(url)
-
-                def on_launch_finish(_launcher: object, result: Gio.AsyncResult) -> None:
-                    try:
-                        launcher.launch_finish(result)
-                    except GLib.Error as e:
-                        logger.error(f"Anura: Failed to open URL from notification: {e.message}")
-
-                launcher.launch(None, None, on_launch_finish)
+            launch_uri(url, window=window)
         except Exception:
             logger.exception("Anura: Unexpected error handling QR notification click")
 
     def on_decoded(self, _sender: object, text: str, copy: bool) -> None:
-        # If a window is present, it handles the 'decoded' signal itself to
-        # provide UI feedback (toasts, page navigation, QR handling).
-        # We only proceed here if there is no active window (CLI/silent mode).
+        """Handle decoded text from backend.
+
+        If a window is present, it handles the 'decoded' signal itself to
+        provide UI feedback (toasts, page navigation, QR handling).
+        We only proceed here if there is no active window (CLI/silent mode).
+        """
         if self.props.active_window:
             logger.debug("Anura: Application-level on_decoded skipped as window is active")
             return
 
-        if not text:
-
-            def _on_empty_notification_idle():
-                self.notification_service.show_notification(
-                    title=_("Anura OCR"),
-                    body=_("No text found. Try to grab another region."),
-                )
-                return GLib.SOURCE_REMOVE
-
-            GLib.idle_add(_on_empty_notification_idle)
-            return
-
-        if copy:
-            clipboard_service_instance = get_clipboard_service()
-            clipboard_service_instance.set(text)
-
-            def _on_copied_notification_idle():
-                self.notification_service.show_notification(
-                    title=_("Anura OCR"),
-                    body=_("Text extracted and copied to clipboard."),
-                )
-                return GLib.SOURCE_REMOVE
-
-            GLib.idle_add(_on_copied_notification_idle)
-        else:
-            # Text extracted but not copied - show notification
-            def _on_success_notification_idle():
-                self.notification_service.show_notification(
-                    title=_("Anura OCR"),
-                    body=_("Text extracted successfully."),
-                )
-                return GLib.SOURCE_REMOVE
-
-            GLib.idle_add(_on_success_notification_idle)
+        from anura.services.result_dispatcher import get_result_dispatcher
+        get_result_dispatcher().dispatch(text, copy)
 
     def on_error(self, _sender: object, message: str) -> None:
         """Handle screenshot service errors, skipping cancellation messages."""

@@ -120,13 +120,15 @@ class ResultDispatcher(GObject.GObject):
 
     def _handle_text_flow(self, text: str, structured: dict, copy_requested: bool) -> None:
         """Handle dispatching for regular text results."""
+        is_window_active = bool(Gtk.Application.get_default().get_active_window())
+
         if settings.get_boolean("autocopy") or copy_requested:
             get_clipboard_service().set(text)
             self.emit("toast-requested", _("Text copied to clipboard"))
-            if not Gtk.Application.get_default().get_active_window():
+            if not is_window_active:
                 self.emit("notification-requested", _("Anura OCR"), _("Text extracted and copied to clipboard."))
         else:
-            if not Gtk.Application.get_default().get_active_window():
+            if not is_window_active:
                 self.emit("notification-requested", _("Anura OCR"), _("Text extracted successfully."))
 
         # Show toasts for other structured data found in text

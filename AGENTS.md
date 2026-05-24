@@ -38,6 +38,7 @@ anura/
 │   │   ├── screenshot_service.py   Screenshot capture via Xdp.Portal
 │   │   ├── host_screenshot_fallback.py X11 fallback using bundled scrot
 │   │   ├── clipboard_service.py    Clipboard read/write (Gdk.Clipboard)
+    │   ├── result_dispatcher.py    Post-OCR coordination (Clipboard, URLs, Notifications)
 │   │   ├── notification_service.py Notifications: XDG Portal → libnotify fallback
 │   │   ├── tts.py                  Text-to-speech via gTTS + GStreamer
 │   │   ├── share_service.py        Social sharing (9 providers)
@@ -50,8 +51,11 @@ anura/
 │   ├── utils/
 │   │   ├── barcode_detector.py    QR/Barcode detection via zxing-cpp
 │   │   ├── image_filters.py       Modular image enhancement filter chain
+    │   ├── transformers/          Semantic text transformers
+    │   │   ├── magic_processor.py Classification & transformation coordinator
+    │   │   └── ...                Specialized transformers (URL, Email, etc.)
 │   │   ├── structural_reconstructor.py Paragraph/Layout spatial analysis
-│   │   ├── validators.py          URI validation & text sanitization
+    │   ├── validators.py          URI validation, security & text sanitization
 │   │   ├── portal_advice.py       Desktop-specific advice for missing portals
 │   │   ├── text_preprocessor.py   Image enhancement & text cleanup factory
 │   │   ├── singleton.py           Thread-safe lazy singleton pattern
@@ -195,6 +199,7 @@ Always use `validators.sanitize_text` to strip Unicode Control/Format characters
 - **Unit Tests** (`tests/test_gi_atomic_task_manager_unit.py`): Headless coverage for core logic.
 - **Security Tests** (`tests/test_security_hardening.py`): Verification of DoS prevention and URI validation.
 - **Integration Tests** (`tests/test_file_dialog_regressions.py`): Verification of GTK/Portal behavior.
+- **Enterprise Suite** (`tests/test_unit_*_enterprise.py`): Advanced exhaustive coverage for all core services and reliability.
 
 ### Running Tests
 

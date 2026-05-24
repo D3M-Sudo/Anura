@@ -47,10 +47,9 @@ class TextPreprocessor:
         self._list_marker_re = re.compile(r"^- +", re.MULTILINE)
 
         # Pre-compiled structured data patterns
-        self._email_re = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b")
-        self._url_re = re.compile(
-            r"https?://(?:[-\w.])+(?:[:\d]+)?(?:/(?:[\w/_.-])*(?:\?(?:[\w&=%.-])*)?(?:#(?:\w*))?)?"
-        )
+        from anura.utils.validators import EMAIL_RE, URL_RE
+        self._email_re = EMAIL_RE
+        self._url_re = URL_RE
 
         self._phone_res = [
             re.compile(r"\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b"),  # US format
