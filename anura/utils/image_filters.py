@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: MIT
 
 from abc import ABC, abstractmethod
+import gc
 import threading
 
 from loguru import logger
@@ -14,15 +15,28 @@ class ImageFilterBase(ABC):
     """Base class for all image processing filters."""
 
     @abstractmethod
-    def apply(self, image: Image.Image) -> Image.Image:
-        """Apply the filter to the image."""
+    def apply(self, image: Image.Image, task_id: str | None = None) -> Image.Image:
+        """Apply the filter to the image.
+
+        Args:
+            image: The image to process.
+            task_id: Optional task ID for cooperative cancellation.
+        """
         pass
+
+    def _check_cancellation(self, task_id: str | None) -> None:
+        """Check if the task has been cancelled and raise an exception if so."""
+        if task_id:
+            from anura.atomic_task_manager import get_atomic_manager
+            if get_atomic_manager().is_cancelled(task_id):
+                raise InterruptedError(f"Task {task_id} was cancelled")
 
 
 class GrayscaleFilter(ImageFilterBase):
     """Converts image to grayscale."""
 
-    def apply(self, image: Image.Image) -> Image.Image:
+    def apply(self, image: Image.Image, task_id: str | None = None) -> Image.Image:
+        self._check_cancellation(task_id)
         if image.mode != "L":
             logger.debug("Filter: Converting to Grayscale")
             return image.convert("L")
@@ -32,7 +46,8 @@ class GrayscaleFilter(ImageFilterBase):
 class RescaleFilter(ImageFilterBase):
     """Rescales image if too small for reliable OCR."""
 
-    def apply(self, image: Image.Image) -> Image.Image:
+    def apply(self, image: Image.Image, task_id: str | None = None) -> Image.Image:
+        self._check_cancellation(task_id)
         width, height = image.size
         if width < 1000 or height < 1000:
             scale_factor = 2
@@ -44,7 +59,8 @@ class RescaleFilter(ImageFilterBase):
 class ContrastEnhancementFilter(ImageFilterBase):
     """Applies combined brightness and contrast enhancement."""
 
-    def apply(self, image: Image.Image) -> Image.Image:
+    def apply(self, image: Image.Image, task_id: str | None = None) -> Image.Image:
+        self._check_cancellation(task_id)
         # Ensure image is grayscale for stats
         if image.mode != "L":
             image = image.convert("L")
@@ -71,6 +87,7 @@ class ContrastEnhancementFilter(ImageFilterBase):
         offset = brightness_factor * mean * (1 - contrast_factor)
 
         lut = [max(0, min(255, int(i * factor + offset))) for i in range(256)]
+        self._check_cancellation(task_id)
         logger.debug(f"Filter: Applying Adaptive Enhancement (b={brightness_factor}, c={contrast_factor})")
         return image.point(lut)
 
@@ -78,7 +95,8 @@ class ContrastEnhancementFilter(ImageFilterBase):
 class NoiseReductionFilter(ImageFilterBase):
     """Applies median filter for noise reduction."""
 
-    def apply(self, image: Image.Image) -> Image.Image:
+    def apply(self, image: Image.Image, task_id: str | None = None) -> Image.Image:
+        self._check_cancellation(task_id)
         logger.debug("Filter: Applying Median Noise Reduction")
         return image.filter(ImageFilter.MedianFilter(size=3))
 
@@ -86,8 +104,9 @@ class NoiseReductionFilter(ImageFilterBase):
 class AdaptiveThresholdFilter(ImageFilterBase):
     """Applies intelligent thresholding based on histogram cutoff."""
 
-    def apply(self, image: Image.Image) -> Image.Image:
+    def apply(self, image: Image.Image, task_id: str | None = None) -> Image.Image:
         try:
+            self._check_cancellation(task_id)
             hist = image.histogram()
             width, height = image.size
             total_pixels = width * height
@@ -115,6 +134,7 @@ class AdaptiveThresholdFilter(ImageFilterBase):
                 threshold_val = low + (high - low) * 0.5
                 lut = [0 if i < threshold_val else 255 for i in range(256)]
 
+            self._check_cancellation(task_id)
             logger.debug("Filter: Applying Thresholding")
             return image.point(lut, "L")
         except Exception as e:
@@ -125,7 +145,8 @@ class AdaptiveThresholdFilter(ImageFilterBase):
 class SharpeningFilter(ImageFilterBase):
     """Applies final sharpening pass."""
 
-    def apply(self, image: Image.Image) -> Image.Image:
+    def apply(self, image: Image.Image, task_id: str | None = None) -> Image.Image:
+        self._check_cancellation(task_id)
         enhancer = ImageEnhance.Sharpness(image)
         logger.debug("Filter: Applying Sharpening")
         return enhancer.enhance(1.5)
@@ -140,10 +161,21 @@ class FilterChain:
     def add_filter(self, img_filter: ImageFilterBase) -> None:
         self._filters.append(img_filter)
 
-    def apply(self, image: Image.Image) -> Image.Image:
+    def apply(self, image: Image.Image, task_id: str | None = None) -> Image.Image:
         result = image
         for img_filter in self._filters:
-            result = img_filter.apply(result)
+            prev_result = result
+            result = img_filter.apply(result, task_id=task_id)
+
+            # Explicitly release the previous image buffer if it's no longer needed
+            # and it's not the same object as the new result.
+            if prev_result is not image and prev_result is not result:
+                prev_result.close()
+                del prev_result
+                # Occasional GC trigger for large buffers
+                if result.size[0] * result.size[1] > 4000000: # > 4MP
+                    gc.collect()
+
         return result
 
 

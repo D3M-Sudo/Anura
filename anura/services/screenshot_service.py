@@ -46,6 +46,94 @@ def _is_flatpak_environment() -> bool:
     return os.path.exists("/.flatpak-info") or "FLATPAK_ID" in os.environ
 
 
+def run_ocr_pipeline(
+    lang: str,
+    file_path: str,
+    preprocessing_mode: str,
+    task_id: str | None = None,
+) -> tuple[bool, str | None, str | None, OcrResult | None]:
+    """
+    Isolated OCR pipeline to bypass Python's GIL.
+    Runs in a separate process via ProcessPoolExecutor.
+    """
+    # Configure Tesseract path in the child process
+    _configure_tesseract_path()
+
+    try:
+        import pytesseract
+        from pytesseract import Output
+        from PIL import Image
+        from anura.utils.text_preprocessor import get_text_preprocessor
+        from anura.utils.structural_reconstructor import get_structural_reconstructor
+        from anura.utils.transformers.magic_processor import get_magic_processor
+        from anura.utils.validators import sanitize_text
+
+        if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
+            return False, "", _("The selected image file is empty."), None
+
+        start_time = time.time()
+
+        with Image.open(file_path) as img:
+            # 1. Barcode Detection
+            from anura.utils.barcode_detector import detect_barcodes
+            results = detect_barcodes(img)
+            if results:
+                raw_extracted = "\n".join([res.text for res in results])
+                extracted = sanitize_text(raw_extracted)
+                logger.info(f"Anura ZXing (Isolated): Code(s) detected in {time.time() - start_time:.3f}s")
+                return True, extracted, None, None
+
+            # 2. Pre-processing
+            if img.mode != "L":
+                img = img.convert("L")
+
+            preprocessor = get_text_preprocessor()
+            enhanced_img = preprocessor.enhance_image(img, task_id=task_id) if preprocessing_mode != "off" else img
+
+            # 3. Tesseract OCR
+            ocr_data = pytesseract.image_to_data(
+                enhanced_img,
+                lang=lang,
+                config=get_tesseract_config(lang),
+                output_type=Output.DICT
+            )
+            ocr_result = OcrResult.from_tesseract_dict(ocr_data)
+
+            # 4. Reconstruction
+            reconstructor = get_structural_reconstructor()
+            spatially_reconstructed, recon_conf = reconstructor.reconstruct(ocr_result, task_id=task_id)
+
+            # 5. Magic Processing
+            magic_processor = get_magic_processor()
+            processed_text, magic_conf = magic_processor.process(ocr_result, task_id=task_id)
+
+            # 6. Selection
+            if spatially_reconstructed.strip() and (
+                (len(spatially_reconstructed) > len(processed_text) * 1.2 and recon_conf >= magic_conf * 0.95)
+                or recon_conf > magic_conf
+            ):
+                processed_text = spatially_reconstructed
+
+            # 7. Final Cleanup
+            if preprocessing_mode == "full":
+                cleaned_text = preprocessor.clean_extracted_text(processed_text)
+            elif preprocessing_mode == "image-only":
+                cleaned_text = sanitize_text(processed_text)
+            else:
+                cleaned_text = processed_text.strip()
+
+            cleaned_text = sanitize_text(cleaned_text)
+
+            logger.info(f"Anura OCR (Isolated): Completed in {time.time() - start_time:.3f}s")
+            return True, cleaned_text, None, ocr_result
+
+    except InterruptedError:
+        return False, None, None, None
+    except Exception as e:
+        logger.exception(f"Anura OCR (Isolated) Error: {e}")
+        return False, "", _("Failed to process image in isolated process."), None
+
+
 def _configure_tesseract_path() -> None:
     """Configure Tesseract command path for Flatpak environment."""
     is_flatpak = _is_flatpak_environment()
@@ -217,6 +305,11 @@ class ScreenshotService(GObject.GObject):
             logger.warning("Anura Screenshot: Portal returned empty URI - treating as cancellation.")
             return None
 
+        # Move URI parsing and file existence check to background thread
+        get_atomic_manager().execute(self._handle_portal_uri_background, (lang, uri, copy), pass_task_id=True)
+
+    def _handle_portal_uri_background(self, lang: str, uri: str, copy: bool, task_id: str | None = None) -> bool:
+        """Background worker to parse Portal URI and trigger OCR."""
         try:
             if uri.startswith("file://") and len(uri) > len("file://"):
                 filename = url2pathname(uri[len("file://") :])
@@ -224,32 +317,30 @@ class ScreenshotService(GObject.GObject):
                 filename = GLib.Uri.unescape_string(uri)
         except (ValueError, GLib.Error) as e:
             logger.error(f"Anura Screenshot: Failed to parse URI '{uri}': {e}")
+            self._emit_decode_error(_("Can't take a screenshot."))
+            return False
 
-            def _on_error_idle():
-                try:
-                    self.emit("error", _("Can't take a screenshot."))
-                except Exception:
-                    logger.exception("Anura: Failed to emit URI parse error")
-                return GLib.SOURCE_REMOVE
+        # Check for cancellation before I/O
+        if task_id and get_atomic_manager().is_cancelled(task_id):
+            return False
 
-            GLib.idle_add(_on_error_idle)
-            return None
-
-        # Validate the extracted filename before processing
+        # Validate the extracted filename before processing (on background thread)
         if not filename or not os.path.exists(filename):
             logger.error(f"Anura Screenshot: Invalid or non-existent file path: {filename}")
+            self._emit_decode_error(_("Can't take a screenshot."))
+            return False
 
-            def _on_error_idle():
-                try:
-                    self.emit("error", _("Can't take a screenshot."))
-                except Exception:
-                    logger.exception("Anura: Failed to emit invalid file path error")
-                return GLib.SOURCE_REMOVE
+        return self.decode_image(lang, filename, copy, remove_source=True, task_id=task_id)
 
-            GLib.idle_add(_on_error_idle)
-            return None
-
-        get_atomic_manager().execute(self.decode_image, (lang, filename, copy, True))
+    def _emit_decode_error(self, message: str) -> None:
+        """Helper to emit error signal on the main thread."""
+        def _on_error_idle():
+            try:
+                self.emit("error", message)
+            except Exception:
+                logger.exception(f"Anura: Failed to emit error: {message}")
+            return GLib.SOURCE_REMOVE
+        GLib.idle_add(_on_error_idle)
 
     # Environment variables surfaced when the portal screenshot fails. These
     # tell us which desktop/session backend should be answering the portal
@@ -392,16 +483,21 @@ class ScreenshotService(GObject.GObject):
             # User pressed Esc / closed the host tool's selection dialog.
             logger.info(f"Anura Screenshot: host tool exited non-zero ({exit_status}); user likely cancelled.")
             # Best-effort cleanup: tool may still have created an empty file.
-            if os.path.exists(output_path):
-                with contextlib.suppress(OSError):
-                    os.unlink(output_path)
+            # Use background cleanup to avoid blocking the main thread.
+            get_atomic_manager().execute(self._cleanup_host_capture_cancel, (output_path,))
             self._emit_portal_failure()
             return
 
         # Use AtomicTaskManager to avoid blocking the main thread during file verification and OCR.
-        get_atomic_manager().execute(self._decode_host_capture, (lang, output_path, copy))
+        get_atomic_manager().execute(self._decode_host_capture, (lang, output_path, copy), pass_task_id=True)
 
-    def _decode_host_capture(self, lang: str, output_path: str, copy: bool) -> bool:
+    def _cleanup_host_capture_cancel(self, output_path: str) -> None:
+        """Background cleanup for cancelled host capture."""
+        if os.path.exists(output_path):
+            with contextlib.suppress(OSError):
+                os.unlink(output_path)
+
+    def _decode_host_capture(self, lang: str, output_path: str, copy: bool, task_id: str | None = None) -> bool:
         """Background worker for host capture: verifies file existence and triggers OCR."""
         # Retry loop for file existence check - handles race condition where
         # the filesystem hasn't flushed the file yet after process exit.
@@ -412,6 +508,9 @@ class ScreenshotService(GObject.GObject):
         retry_delay_ms = 100
 
         for attempt in range(max_retries):
+            if task_id and get_atomic_manager().is_cancelled(task_id):
+                return False
+
             file_exists = os.path.exists(output_path)
             if file_exists:
                 file_size = os.path.getsize(output_path)
@@ -430,13 +529,14 @@ class ScreenshotService(GObject.GObject):
 
         # Same OCR path as a successful portal screenshot.
         # decode_image already handles its own internal idle_add emissions.
-        return self.decode_image(lang, output_path, copy, remove_source=True)
+        return self.decode_image(lang, output_path, copy, remove_source=True, task_id=task_id)
 
     def decode_image_sync(
         self,
         lang: str,
         file: str | Image.Image | object,
         remove_source: bool = False,
+        task_id: str | None = None,
     ) -> tuple[bool, str | None, str | None, OcrResult | None]:
         """
         Synchronously decodes the image to find QR codes or extract text using Tesseract OCR.
@@ -466,7 +566,12 @@ class ScreenshotService(GObject.GObject):
         start_time = time.time()
 
         try:
-            extracted, error_message, ocr_result = self._process_image_decode(file, lang, start_time)
+            extracted, error_message, ocr_result = self._process_image_decode(
+                file, lang, start_time, task_id=task_id
+            )
+        except InterruptedError:
+            logger.debug(f"Anura OCR: Task {task_id} was cancelled during processing.")
+            return False, None, None, None
         except Exception as e:
             extracted, error_message = self._handle_decode_exception(e)
             ocr_result = None
@@ -493,6 +598,7 @@ class ScreenshotService(GObject.GObject):
         file: str | Image.Image | object,
         lang: str,
         start_time: float,
+        task_id: str | None = None,
     ) -> tuple[str | None, str | None, OcrResult | None]:
         """Process image for QR code detection and OCR."""
         extracted = None
@@ -513,10 +619,13 @@ class ScreenshotService(GObject.GObject):
 
             # If no code found, proceed with OCR
             if extracted is None:
+                if task_id and get_atomic_manager().is_cancelled(task_id):
+                    raise InterruptedError(f"Task {task_id} was cancelled before OCR")
+
                 # Optimization: Pre-convert to "L" (grayscale) once for OCR.
                 if img.mode != "L":
                     img = img.convert("L")
-                extracted, ocr_result = self._try_ocr_extraction(img, lang, start_time)
+                extracted, ocr_result = self._try_ocr_extraction(img, lang, start_time, task_id=task_id)
 
         return extracted, error_message, ocr_result
 
@@ -543,7 +652,7 @@ class ScreenshotService(GObject.GObject):
         return None
 
     def _try_ocr_extraction(
-        self, img: Image.Image, lang: str, start_time: float
+        self, img: Image.Image, lang: str, start_time: float, task_id: str | None = None
     ) -> tuple[str | None, OcrResult | None]:
         """Try to extract text using Tesseract OCR with preprocessing and Magic Transformers."""
         try:
@@ -556,7 +665,10 @@ class ScreenshotService(GObject.GObject):
 
             # Apply image enhancement preprocessing
             preprocessor = get_text_preprocessor()
-            enhanced_img = preprocessor.enhance_image(img) if mode != "off" else img
+            enhanced_img = preprocessor.enhance_image(img, task_id=task_id) if mode != "off" else img
+
+            if task_id and get_atomic_manager().is_cancelled(task_id):
+                raise InterruptedError(f"Task {task_id} was cancelled before Tesseract")
 
             # 1. Extract raw data with layout information (image_to_data)
             ocr_data = pytesseract.image_to_data(
@@ -569,13 +681,16 @@ class ScreenshotService(GObject.GObject):
             # 2. Immutable Data Modeling — Parse Tesseract dictionary ONCE
             ocr_result = OcrResult.from_tesseract_dict(ocr_data)
 
+            if task_id and get_atomic_manager().is_cancelled(task_id):
+                raise InterruptedError(f"Task {task_id} was cancelled before Reconstruction")
+
             # 3. Structural reconstruction — preserves paragraph layout from bounding boxes
             reconstructor = get_structural_reconstructor()
-            spatially_reconstructed, recon_conf = reconstructor.reconstruct(ocr_result)
+            spatially_reconstructed, recon_conf = reconstructor.reconstruct(ocr_result, task_id=task_id)
 
             # 4. Magic processor classifies and applies semantic transforms
             magic_processor = get_magic_processor()
-            processed_text, magic_conf = magic_processor.process(ocr_result)
+            processed_text, magic_conf = magic_processor.process(ocr_result, task_id=task_id)
 
             # 4. Confidence-Weighted Selection:
             # We prefer StructuralReconstructor if its output is significant and
@@ -667,6 +782,7 @@ class ScreenshotService(GObject.GObject):
         file: str | Image.Image | object,
         copy: bool = False,
         remove_source: bool = False,
+        task_id: str | None = None,
     ) -> bool:
         """
         Asynchronously decodes the image and emits GObject signals.
@@ -687,7 +803,41 @@ class ScreenshotService(GObject.GObject):
             GLib.idle_add(_on_invalid_lang_error_idle, priority=GLib.PRIORITY_DEFAULT)
             return False
 
-        success, extracted, error_message, ocr_result = self.decode_image_sync(lang, file, remove_source)
+        # If it's a physical file, we can use process isolation to bypass the GIL
+        if isinstance(file, str) and os.path.exists(file):
+            from anura.services.settings import settings
+            mode = settings.get_string("ocr-preprocessing")
+
+            def _on_isolated_complete(result_tuple):
+                success, extracted, error_message, ocr_result = result_tuple
+                if success:
+                    def _on_decoded_idle():
+                        self.emit("decoded", extracted, copy, ocr_result)
+                        return GLib.SOURCE_REMOVE
+                    GLib.idle_add(_on_decoded_idle)
+                elif error_message:
+                    def _on_error_idle():
+                        self.emit("error", error_message)
+                        return GLib.SOURCE_REMOVE
+                    GLib.idle_add(_on_error_idle)
+
+                # Cleanup physical file if requested
+                if remove_source:
+                    get_atomic_manager().execute(self._cleanup_host_capture_cancel, (file,))
+
+            # Use execute_isolated to run in a separate process
+            # Note: execute_isolated handles setting task_id and cancellation check
+            get_atomic_manager().execute_isolated(
+                run_ocr_pipeline,
+                (lang, file, mode),
+                callback=_on_isolated_complete
+            )
+            return True
+
+        # Fallback to sync decoding for non-file resources (BytesIO etc.)
+        success, extracted, error_message, ocr_result = self.decode_image_sync(
+            lang, file, remove_source, task_id=task_id
+        )
 
         if success:
             # Handle silent mode dispatching via ResultDispatcher

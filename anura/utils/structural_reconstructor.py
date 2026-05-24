@@ -22,12 +22,13 @@ class StructuralReconstructor:
         """
         self.proximity_threshold = proximity_threshold
 
-    def reconstruct(self, ocr_result: OcrResult) -> tuple[str, float]:
+    def reconstruct(self, ocr_result: OcrResult, task_id: str | None = None) -> tuple[str, float]:
         """
         Reconstructs text from OcrResult using spatial analysis.
 
         Args:
             ocr_result: Immutable OcrResult containing parsed Tesseract data.
+            task_id: Optional task ID for cooperative cancellation.
 
         Returns:
             tuple: (Reconstructed text string, Average confidence score)
@@ -41,7 +42,12 @@ class StructuralReconstructor:
         current_line = []
         last_line_id = -1
 
-        for word in words:
+        for i, word in enumerate(words):
+            if task_id and i % 50 == 0:
+                from anura.atomic_task_manager import get_atomic_manager
+                if get_atomic_manager().is_cancelled(task_id):
+                    raise InterruptedError(f"Task {task_id} was cancelled")
+
             # Simple grouping by line_num and par_num/block_num
             line_id = (word.block_num, word.par_num, word.line_num)
             if line_id != last_line_id:
@@ -63,6 +69,11 @@ class StructuralReconstructor:
         current_paragraph = [lines[0]]
 
         for i in range(1, len(lines)):
+            if task_id and i % 10 == 0:
+                from anura.atomic_task_manager import get_atomic_manager
+                if get_atomic_manager().is_cancelled(task_id):
+                    raise InterruptedError(f"Task {task_id} was cancelled")
+
             prev_line = lines[i - 1]
             curr_line = lines[i]
 
