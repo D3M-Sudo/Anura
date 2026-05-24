@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: MIT
 
 import pytest
-from anura.utils.validators import uri_validator, is_safe_url_string
+
+from anura.utils.validators import is_safe_url_string, uri_validator
+
 
 class TestSentinelUriSecurity:
     """Security tests for URI validation hardening."""
@@ -38,7 +40,7 @@ class TestSentinelUriSecurity:
         assert uri_validator(url) is True
 
     def test_homograph_attack_rejected_via_ascii_check(self):
-        # Cyrillic 'а' instead of Latin 'a'
-        url = "https://exаmple.com"
+        # Cyrillic 'a' (U+0430) instead of Latin 'a'
+        url = "https://ex\u0430mple.com"
         assert is_safe_url_string(url) is False
         assert uri_validator(url) is False
