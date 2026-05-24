@@ -60,11 +60,12 @@ def run_ocr_pipeline(
     _configure_tesseract_path()
 
     try:
+        from PIL import Image
         import pytesseract
         from pytesseract import Output
-        from PIL import Image
-        from anura.utils.text_preprocessor import get_text_preprocessor
+
         from anura.utils.structural_reconstructor import get_structural_reconstructor
+        from anura.utils.text_preprocessor import get_text_preprocessor
         from anura.utils.transformers.magic_processor import get_magic_processor
         from anura.utils.validators import sanitize_text
 
