@@ -15,6 +15,7 @@ from loguru import logger
 from PIL import Image
 
 from anura.utils.image_filters import get_default_filter_chain
+from anura.utils.singleton import get_instance
 from anura.utils.validators import sanitize_text
 
 
@@ -210,13 +211,10 @@ class TextPreprocessor:
         return structured
 
 
-# Global preprocessor instance
-_text_preprocessor: TextPreprocessor | None = None
-
-
 def get_text_preprocessor() -> TextPreprocessor:
-    """Get singleton text preprocessor instance."""
-    global _text_preprocessor
-    if _text_preprocessor is None:
-        _text_preprocessor = TextPreprocessor()
-    return _text_preprocessor
+    """Get singleton text preprocessor instance.
+
+    Returns:
+        The singleton TextPreprocessor instance.
+    """
+    return get_instance(TextPreprocessor)
