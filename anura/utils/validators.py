@@ -15,7 +15,8 @@ from loguru import logger
 
 from anura.config import MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB
 
-# Pre-compiled regex for control characters (0x00-0x1F) and DEL (0x7F)
+# Pre-compiled regex for C0 control characters (0x00-0x1F) and DEL (0x7F).
+# Note: C1 controls (0x80-0x9F) are handled by is_safe_url_string's isascii() check.
 # Using a regex is ~13x faster than a manual loop for control character detection.
 _CONTROL_CHARS_RE = re.compile(r"[\x00-\x1f\x7f]")
 
@@ -69,20 +70,29 @@ def is_safe_url_string(text: str) -> bool:
     if text is None:
         return False
 
-    # Defense-in-depth: limit URL length BEFORE processing
+    # 1. Defense-in-depth: limit URL length BEFORE processing
     if len(text) > 2048:
         return False
 
-    # Block control characters (0x00-0x1F) and DEL (0x7F) BEFORE strip/sanitize
-    # to catch malicious trailing characters.
+    # 2. Performance & Security: URLs must be ASCII-only to prevent Unicode
+    # homograph attacks and hidden format character injections (Zero-Width Space, etc.).
+    # We check this BEFORE any sanitization/stripping to ensure malicious
+    # input is rejected rather than silently cleaned.
+    if not text.isascii():
+        return False
+
+    # 3. Block C0 control characters (0x00-0x1F) and DEL (0x7F)
+    # BEFORE strip/sanitize to catch malicious trailing/injected characters.
+    # Note: Regex is ~13x faster than a manual loop for this check.
     if _CONTROL_CHARS_RE.search(text):
         return False
 
-    # Clean and normalize text using heuristics
+    # 4. Clean and normalize text using heuristics
+    # sanitize_text also strips Cc/Cf as defense-in-depth, but is_safe_url_string
+    # has already rejected all non-ASCII characters by this point.
     text = sanitize_text(text)
 
-    # Ensure URL is ASCII-only (prevent Unicode homograph attacks).
-    return text.isascii()
+    return True
 
 
 def validate_image_resource(
