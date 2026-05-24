@@ -9,7 +9,6 @@ import pytest
 pytest.importorskip("gi")
 
 
-# tests/test_unit_language_manager_enterprise.py
 import os
 from unittest.mock import MagicMock, patch
 

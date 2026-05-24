@@ -4,7 +4,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-# tests/test_unit_text_preprocessor_enterprise.py
 from PIL import Image
 import pytest
 

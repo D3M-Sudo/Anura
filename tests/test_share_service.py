@@ -9,7 +9,6 @@ import pytest
 pytest.importorskip("gi")
 
 
-# tests/test_unit_share_service_enterprise.py
 from unittest.mock import MagicMock, patch
 
 from anura.services.share_service import ShareService
