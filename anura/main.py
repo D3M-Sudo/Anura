@@ -297,6 +297,7 @@ class AnuraApplication(Adw.Application):
     def _cleanup_notification_service(self) -> None:
         """Clean up notification service."""
         if hasattr(self, "notification_service") and self.notification_service:
+            self.notification_service.cleanup()  # Remove periodic GLib timer
             try:
                 if HAS_LIBNOTIFY:
                     from gi.repository import Notify
@@ -505,7 +506,7 @@ class AnuraApplication(Adw.Application):
                 return False  # Don't repeat
 
             try:
-                success, text, error_message = self._decode_image_synchronously(file_path)
+                success, text, error_message, _ocr_result = self._decode_image_synchronously(file_path)
 
                 if interrupted.is_set():
                     loop.quit()
@@ -536,14 +537,21 @@ class AnuraApplication(Adw.Application):
         sources.append(timeout_source)
 
         # Push context and run loop
+        # Use acquire() to ensure context is not already acquired by another thread
+        if not ctx.acquire():
+            logger.error("Anura: Could not acquire GLib MainContext for silent mode.")
+            return 1
+
         ctx.push()
         try:
             loop.run()
         finally:
             ctx.pop()
-            # Clean up all sources to prevent resource leaks
-            for source in sources:
-                source.destroy()
+            ctx.release()
+
+        # Clean up all sources to prevent resource leaks
+        for source in sources:
+            source.destroy()
 
         # Check final interruption state
         if interrupted.is_set():
@@ -552,10 +560,10 @@ class AnuraApplication(Adw.Application):
 
         return 0
 
-    def _decode_image_synchronously(self, file_path: str) -> tuple[bool, str | None, str | None]:
+    def _decode_image_synchronously(self, file_path: str) -> tuple[bool, str | None, str | None, Any | None]:
         """Decode image synchronously for silent mode."""
         if self.backend is None:
-            return False, None, "Backend not initialized"
+            return False, None, "Backend not initialized", None
         try:
             return self.backend.decode_image_sync(
                 self.settings.get_string("active-language"),
@@ -565,23 +573,23 @@ class AnuraApplication(Adw.Application):
         except FileNotFoundError:
             error_msg = f"File not found: {file_path}"
             logger.error(f"Anura: Silent mode - {error_msg}")
-            return False, None, error_msg
+            return False, None, error_msg, None
         except PermissionError:
             error_msg = f"Permission denied accessing file: {file_path}"
             logger.error(f"Anura: Silent mode - {error_msg}")
-            return False, None, error_msg
+            return False, None, error_msg, None
         except OSError as e:
             error_msg = f"File system error accessing {file_path}: {e}"
             logger.error(f"Anura: Silent mode - {error_msg}")
-            return False, None, error_msg
+            return False, None, error_msg, None
         except ImportError as e:
             error_msg = f"Missing dependency for OCR: {e}"
             logger.error(f"Anura: Silent mode - {error_msg}")
-            return False, None, error_msg
+            return False, None, error_msg, None
         except Exception as e:
             error_msg = f"Unexpected error processing {file_path}: {e}"
             logger.error(f"Anura: Silent mode - {error_msg}")
-            return False, None, error_msg
+            return False, None, error_msg, None
 
     def on_preferences(self, _action: object, _param: object) -> None:
         logger.debug("Anura: Preferences action triggered")

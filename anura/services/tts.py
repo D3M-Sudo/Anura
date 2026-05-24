@@ -310,12 +310,14 @@ class TTSService(GObject.GObject):
         """Plays the generated speech file using GStreamer's playbin."""
         filepath = os.path.abspath(speech_file)
 
-        # If already playing or paused, don't recreate player
+        # If a player already exists (PLAYING or PAUSED), tear it down cleanly
+        # before creating a new one for the new file.
+        # We call _cleanup_gst_resources() directly — NOT stop_speaking() — to
+        # avoid emitting a spurious "stop" signal that would reset UI state while
+        # the new audio is already being set up.
         if self.player:
-            _, state, _ = self.player.get_state(0)
-            if state == Gst.State.PAUSED:
-                self.resume()
-                return
+            with self._cleanup_lock:
+                self._cleanup_gst_resources()
 
         self.player = Gst.ElementFactory.make("playbin3", "player")
         if not self.player:
@@ -332,12 +334,10 @@ class TTSService(GObject.GObject):
 
         self._bus = self.player.get_bus()
 
-        # Thread-safety: schedule bus operations on main thread via idle_add
-        def _on_setup_idle():
-            self._setup_bus_watch()
-            return GLib.SOURCE_REMOVE
-
-        GLib.idle_add(_on_setup_idle)
+        # Setup bus watch synchronously before starting playback to avoid race
+        # conditions on End-of-Stream (EOS) events for short audio clips.
+        # The return value of _setup_bus_watch is ignored in this synchronous path.
+        self._setup_bus_watch()
 
         logger.info("Anura TTSService: Setting GStreamer state to PLAYING")
         self.player.set_state(Gst.State.PLAYING)
