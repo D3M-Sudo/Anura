@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import importlib
 import os
 import shutil
+import threading
 
 from loguru import logger
 
@@ -41,7 +42,13 @@ class ApplicationContext:
 
         # 4. TTS Audit (gtts + gst)
         has_gtts = importlib.util.find_spec("gtts") is not None
-        has_gst = importlib.util.find_spec("gi.repository.Gst") is not None
+        try:
+            import gi
+            gi.require_version("Gst", "1.0")
+            from gi.repository import Gst  # noqa: F401
+            has_gst = True
+        except (ImportError, ValueError):
+            has_gst = False
         has_tts = has_gtts and has_gst
 
         # 5. UI Extras (libnotify)
@@ -65,10 +72,13 @@ class ApplicationContext:
 
 # Global context instance (populated at boot)
 _app_context: ApplicationContext | None = None
+_app_context_lock = threading.Lock()
 
 def get_app_context() -> ApplicationContext:
     """Get the global application context. Performs audit on first call if not initialized."""
     global _app_context
     if _app_context is None:
-        _app_context = ApplicationContext.perform_audit()
+        with _app_context_lock:
+            if _app_context is None:
+                _app_context = ApplicationContext.perform_audit()
     return _app_context

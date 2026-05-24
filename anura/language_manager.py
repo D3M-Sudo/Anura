@@ -12,6 +12,7 @@ import shutil
 import tempfile
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from typing import ClassVar
 
 import gi
@@ -67,6 +68,9 @@ class LanguageManager(GObject.GObject):
         super().__init__()
 
         self.loading_languages: dict[str, DownloadState] = {}
+        self._download_executor = ThreadPoolExecutor(
+            max_workers=1, thread_name_prefix="AnuraDownloadWorker"
+        )
         self._downloaded_codes: list[str] = []
         self._need_update_cache = True
         self._cache_lock = threading.Lock()
@@ -372,14 +376,25 @@ class LanguageManager(GObject.GObject):
 
         # Use a wrapper to ensure download_done knows which code was being downloaded
         # even when download_begin returns None on failure
-        def download_done_wrapper(result_code: str | None) -> None:
-            self.download_done(code, result_code)
+        def download_done_wrapper(future) -> None:
+            try:
+                result_code = future.result()
+            except Exception as e:
+                logger.error(f"Anura: Unexpected error during download of {code}: {e}")
+                result_code = None
 
-        get_atomic_manager().execute(
+            def _on_done_idle():
+                self.download_done(code, result_code)
+                return GLib.SOURCE_REMOVE
+
+            GLib.idle_add(_on_done_idle)
+
+        future = self._download_executor.submit(
             self.download_begin,
-            (code, cancellable),
-            download_done_wrapper,
+            code,
+            cancellable,
         )
+        future.add_done_callback(download_done_wrapper)
 
     def download_begin(self, code: str, cancellable: gi.repository.Gio.Cancellable | None = None) -> str | None:
         """Performs the physical download of the .traineddata file atomically."""
@@ -523,6 +538,10 @@ class LanguageManager(GObject.GObject):
                     return GLib.SOURCE_REMOVE
 
                 GLib.idle_add(_on_failed_idle, requested_code, priority=GLib.PRIORITY_DEFAULT)
+
+    def shutdown(self) -> None:
+        """Shut down the download executor."""
+        self._download_executor.shutdown(wait=False)
 
     def remove_language(self, code: str) -> None:
         """Thread-safe removal of model file from system."""
