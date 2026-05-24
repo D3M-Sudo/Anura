@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: anura\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-21 23:18+0000\n"
+"POT-Creation-Date: 2026-05-24 01:45+0000\n"
 "PO-Revision-Date: 2024-01-22 13:01+0000\n"
 "Last-Translator: rene-coty <irenee.thirion@e.email>\n"
 "Language-Team: French <https://hosted.weblate.org/projects/anura/default/fr/"
@@ -21,694 +21,758 @@ msgstr ""
 "X-Poedit-SearchPath-3: anura\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 
-#: anura/language_manager.py:63 anura/language_manager.py:116
-#: anura/window.py:63
+#: anura/controllers/ocr_controller.py:117
+#, fuzzy
+msgid "Choose an image for extraction"
+msgstr "Ouvrez une image pour en extraire du texte"
+
+#: anura/controllers/ocr_controller.py:120
+msgid "All supported images"
+msgstr ""
+
+#: anura/controllers/ocr_controller.py:141
+msgid "PNG images (*.png)"
+msgstr ""
+
+#: anura/controllers/ocr_controller.py:142
+msgid "JPEG images (*.jpg)"
+msgstr ""
+
+#: anura/controllers/ocr_controller.py:143
+msgid "WebP images (*.webp)"
+msgstr ""
+
+#: anura/controllers/ocr_controller.py:144
+msgid "AVIF images (*.avif)"
+msgstr ""
+
+#: anura/controllers/ocr_controller.py:145
+msgid "TIFF images (*.tif)"
+msgstr ""
+
+#: anura/controllers/ocr_controller.py:146
+msgid "BMP images (*.bmp)"
+msgstr ""
+
+#: anura/controllers/ocr_controller.py:147
+msgid "GIF images (*.gif)"
+msgstr ""
+
+#: anura/controllers/ocr_controller.py:150
+msgid "All files (*)"
+msgstr ""
+
+#: anura/controllers/ocr_controller.py:179
+msgid "Image too large"
+msgstr ""
+
+#: anura/controllers/ocr_controller.py:192
+#: anura/services/screenshot_service.py:464 anura/window.py:182
+msgid "Invalid image file"
+msgstr ""
+
+#: anura/language_manager.py:64 anura/language_manager.py:118
+#: anura/window.py:71
 msgid "English"
 msgstr "Anglais"
 
-#: anura/language_manager.py:90
+#: anura/language_manager.py:91
 msgid "Afrikaans"
 msgstr "Africain"
 
-#: anura/language_manager.py:91
+#: anura/language_manager.py:92
 msgid "Amharic"
 msgstr "Amharique"
 
-#: anura/language_manager.py:92
+#: anura/language_manager.py:93
 msgid "Arabic"
 msgstr "Arabe"
 
-#: anura/language_manager.py:93
+#: anura/language_manager.py:94
 msgid "Assamese"
 msgstr "Assamais"
 
-#: anura/language_manager.py:94
+#: anura/language_manager.py:95
 msgid "Azerbaijani"
 msgstr "Azerbaïdjanais"
 
-#: anura/language_manager.py:95
+#: anura/language_manager.py:96
 #, fuzzy
 msgid "Azerbaijani - Cyrillic"
 msgstr "Azerbaïdjanais - Cyrillique"
 
-#: anura/language_manager.py:96
+#: anura/language_manager.py:97
 msgid "Belarusian"
 msgstr "Biélorusse"
 
-#: anura/language_manager.py:97
+#: anura/language_manager.py:98
 msgid "Bengali"
 msgstr "Bengali"
 
-#: anura/language_manager.py:98
+#: anura/language_manager.py:99
 msgid "Tibetan"
 msgstr "Tibétain"
 
-#: anura/language_manager.py:99
+#: anura/language_manager.py:100
 msgid "Bosnian"
 msgstr "Bosnien"
 
-#: anura/language_manager.py:100
+#: anura/language_manager.py:101
 msgid "Breton"
 msgstr "Breton"
 
-#: anura/language_manager.py:101
+#: anura/language_manager.py:102
 msgid "Bulgarian"
 msgstr "Bulgarien"
 
-#: anura/language_manager.py:102
+#: anura/language_manager.py:103
 msgid "Catalan"
 msgstr ""
 
-#: anura/language_manager.py:103
+#: anura/language_manager.py:104
 msgid "Cebuano"
 msgstr "Cebuano"
 
-#: anura/language_manager.py:104
+#: anura/language_manager.py:105
 msgid "Czech"
 msgstr "Tchèque"
 
-#: anura/language_manager.py:105
+#: anura/language_manager.py:106
 msgid "Chinese - Simplified"
 msgstr "Chinois - Simplifié"
 
-#: anura/language_manager.py:106
+#: anura/language_manager.py:107
 msgid "Chinese - Simplified (vertical)"
 msgstr ""
 
-#: anura/language_manager.py:107
+#: anura/language_manager.py:108
 msgid "Chinese - Traditional"
 msgstr "Chinois - Traditionnel"
 
-#: anura/language_manager.py:108
+#: anura/language_manager.py:109
 msgid "Chinese - Traditional (vertical)"
 msgstr ""
 
-#: anura/language_manager.py:109
+#: anura/language_manager.py:110
 msgid "Cherokee"
 msgstr "Cherokee"
 
-#: anura/language_manager.py:110
+#: anura/language_manager.py:111
 msgid "Corsican"
 msgstr "Corse"
 
-#: anura/language_manager.py:111
+#: anura/language_manager.py:112
 msgid "Welsh"
 msgstr "Gallois"
 
-#: anura/language_manager.py:112
+#: anura/language_manager.py:113
 msgid "Danish"
 msgstr "Danois"
 
-#: anura/language_manager.py:113
+#: anura/language_manager.py:114
 msgid "German"
 msgstr "Allemand"
 
-#: anura/language_manager.py:114
+#: anura/language_manager.py:115
+msgid "German - Fraktur"
+msgstr ""
+
+#. Correct code for Fraktur, available in tessdata_best
+#: anura/language_manager.py:116
 msgid "Dzongkha"
 msgstr "Dzongkha"
 
-#: anura/language_manager.py:115
+#: anura/language_manager.py:117
 msgid "Greek"
 msgstr ""
 
-#: anura/language_manager.py:117
+#: anura/language_manager.py:119
 #, fuzzy
 msgid "English, Middle"
 msgstr "Anglais, Moyen-âge (1100-1500)"
 
-#: anura/language_manager.py:118
+#: anura/language_manager.py:120
 msgid "Esperanto"
 msgstr "Espéranto"
 
 #. NOTE: equ (Math/Equation Detection) intentionally removed — it is a
 #. Tesseract internal utility module, not an OCR language model, and should
 #. not appear as a downloadable language in the UI.
-#: anura/language_manager.py:122
+#: anura/language_manager.py:124
 msgid "Estonian"
 msgstr "Estonien"
 
-#: anura/language_manager.py:123
+#: anura/language_manager.py:125
 msgid "Basque"
 msgstr "Basque"
 
-#: anura/language_manager.py:124
+#: anura/language_manager.py:126
 msgid "Faroese"
 msgstr "Féroïen"
 
-#: anura/language_manager.py:125
+#: anura/language_manager.py:127
 msgid "Persian"
 msgstr "Perse"
 
-#: anura/language_manager.py:126
+#: anura/language_manager.py:128
 msgid "Filipino"
 msgstr ""
 
-#: anura/language_manager.py:127
+#: anura/language_manager.py:129
 msgid "Finnish"
 msgstr "Finnois"
 
-#: anura/language_manager.py:128
+#: anura/language_manager.py:130
 msgid "French"
 msgstr "Français"
 
-#: anura/language_manager.py:132
+#: anura/language_manager.py:131
 #, fuzzy
 msgid "French, Middle"
 msgstr "Français, Moyen-âge (env. 1400-1600)"
 
-#: anura/language_manager.py:133
+#: anura/language_manager.py:132
 msgid "Western Frisian"
 msgstr "Frison occidental"
 
-#: anura/language_manager.py:134
+#: anura/language_manager.py:133
 msgid "Scottish Gaelic"
 msgstr "Gaélique écossais"
 
-#: anura/language_manager.py:135
+#: anura/language_manager.py:134
 msgid "Irish"
 msgstr "Irlandais"
 
-#: anura/language_manager.py:136
+#: anura/language_manager.py:135
 msgid "Galician"
 msgstr "Galicien"
 
-#: anura/language_manager.py:137
+#: anura/language_manager.py:136
 msgid "Greek, Ancient"
 msgstr ""
 
-#: anura/language_manager.py:138
+#: anura/language_manager.py:137
 msgid "Gujarati"
 msgstr "Gujarati"
 
-#: anura/language_manager.py:139
+#: anura/language_manager.py:138
 #, fuzzy
 msgid "Haitian"
 msgstr "Croate"
 
-#: anura/language_manager.py:140
+#: anura/language_manager.py:139
 msgid "Hebrew"
 msgstr "Hébreu"
 
-#: anura/language_manager.py:141
+#: anura/language_manager.py:140
 msgid "Hindi"
 msgstr "Hindi"
 
-#: anura/language_manager.py:142
+#: anura/language_manager.py:141
 msgid "Croatian"
 msgstr "Croate"
 
-#: anura/language_manager.py:143
+#: anura/language_manager.py:142
 msgid "Hungarian"
 msgstr "Hongrois"
 
-#: anura/language_manager.py:144
+#: anura/language_manager.py:143
 msgid "Armenian"
 msgstr "Arménien"
 
-#: anura/language_manager.py:145
+#: anura/language_manager.py:144
 msgid "Inuktitut"
 msgstr "Inuktitut"
 
-#: anura/language_manager.py:146
+#: anura/language_manager.py:145
 msgid "Indonesian"
 msgstr "Indonésien"
 
-#: anura/language_manager.py:147
+#: anura/language_manager.py:146
 msgid "Icelandic"
 msgstr "Islandais"
 
-#: anura/language_manager.py:148
+#: anura/language_manager.py:147
 msgid "Italian"
 msgstr "Italien"
 
-#: anura/language_manager.py:149
+#: anura/language_manager.py:148
 msgid "Italian - Old"
 msgstr "Italien - Ancien"
 
-#: anura/language_manager.py:150
+#: anura/language_manager.py:149
 msgid "Javanese"
 msgstr "Javanais"
 
-#: anura/language_manager.py:151
+#: anura/language_manager.py:150
 msgid "Japanese"
 msgstr "Japonais"
 
-#: anura/language_manager.py:152
+#: anura/language_manager.py:151
 msgid "Japanese (vertical)"
 msgstr "Japonais (vertical)"
 
-#: anura/language_manager.py:153
+#: anura/language_manager.py:152
 msgid "Kannada"
 msgstr "Kannada"
 
-#: anura/language_manager.py:154
+#: anura/language_manager.py:153
 msgid "Georgian"
 msgstr "Géorgien"
 
-#: anura/language_manager.py:155
+#: anura/language_manager.py:154
 msgid "Georgian - Old"
 msgstr "Géorgien - Ancien"
 
-#: anura/language_manager.py:156
+#: anura/language_manager.py:155
 msgid "Kazakh"
 msgstr "Kazakh"
 
-#: anura/language_manager.py:157
+#: anura/language_manager.py:156
 msgid "Central Khmer"
 msgstr "Khmer central"
 
-#: anura/language_manager.py:158
+#: anura/language_manager.py:157
 #, fuzzy
 msgid "Kirghiz"
 msgstr "Kirghiz ; Kyrgyz"
 
-#: anura/language_manager.py:159
+#: anura/language_manager.py:158
 msgid "Kurmanji"
 msgstr ""
 
-#: anura/language_manager.py:160
+#: anura/language_manager.py:159
 msgid "Korean"
 msgstr "Coréen"
 
-#: anura/language_manager.py:161
+#: anura/language_manager.py:160
 msgid "Korean (vertical)"
 msgstr "Coréen (vertical)"
 
-#: anura/language_manager.py:162
+#: anura/language_manager.py:161
 msgid "Lao"
 msgstr "Lao"
 
-#: anura/language_manager.py:163
+#: anura/language_manager.py:162
 msgid "Latin"
 msgstr "Latin"
 
-#: anura/language_manager.py:164
+#: anura/language_manager.py:163
 msgid "Latvian"
 msgstr "Letton"
 
-#: anura/language_manager.py:165
+#: anura/language_manager.py:164
 msgid "Lithuanian"
 msgstr "Lithuanien"
 
-#: anura/language_manager.py:166
+#: anura/language_manager.py:165
 msgid "Luxembourgish"
 msgstr "Luxembourgeois"
 
-#: anura/language_manager.py:167
+#: anura/language_manager.py:166
 msgid "Malayalam"
 msgstr "Malayalam"
 
-#: anura/language_manager.py:168
+#: anura/language_manager.py:167
 msgid "Marathi"
 msgstr "Marathi"
 
-#: anura/language_manager.py:169
+#: anura/language_manager.py:168
 msgid "Macedonian"
 msgstr "Macédonien"
 
-#: anura/language_manager.py:170
+#: anura/language_manager.py:169
 msgid "Maltese"
 msgstr "Maltais"
 
-#: anura/language_manager.py:171
+#: anura/language_manager.py:170
 msgid "Mongolian"
 msgstr "Mongolien"
 
-#: anura/language_manager.py:172
+#: anura/language_manager.py:171
 msgid "Maori"
 msgstr "Maori"
 
-#: anura/language_manager.py:173
+#: anura/language_manager.py:172
 msgid "Malay"
 msgstr "Malais"
 
-#: anura/language_manager.py:174
+#: anura/language_manager.py:173
 msgid "Burmese"
 msgstr "Birman"
 
-#: anura/language_manager.py:175
+#: anura/language_manager.py:174
 msgid "Nepali"
 msgstr "Népalais"
 
-#: anura/language_manager.py:176
+#: anura/language_manager.py:175
 msgid "Dutch"
 msgstr ""
 
-#: anura/language_manager.py:177
+#: anura/language_manager.py:176
 msgid "Norwegian"
 msgstr "Norvégien"
 
-#: anura/language_manager.py:178
+#: anura/language_manager.py:177
 msgid "Occitan"
 msgstr ""
 
-#: anura/language_manager.py:179
+#: anura/language_manager.py:178
 msgid "Oriya"
 msgstr "Oriya"
 
 #. NOTE: osd (Orientation/Script Detection) intentionally removed — it is a
 #. Tesseract internal utility module already excluded from get_downloaded_codes()
 #. via the startswith("osd") filter, but it was still showing in the install list.
-#: anura/language_manager.py:183
+#: anura/language_manager.py:182
 #, fuzzy
 msgid "Panjabi"
 msgstr "Pendjabi"
 
-#: anura/language_manager.py:184
+#: anura/language_manager.py:183
 msgid "Polish"
 msgstr "Polonais"
 
-#: anura/language_manager.py:185
+#: anura/language_manager.py:184
 msgid "Portuguese"
 msgstr "Portugais"
 
-#: anura/language_manager.py:186
+#: anura/language_manager.py:185
 #, fuzzy
 msgid "Pushto"
 msgstr "Pachto"
 
-#: anura/language_manager.py:187
+#: anura/language_manager.py:186
 msgid "Quechua"
 msgstr "Quechua"
 
-#: anura/language_manager.py:188
+#: anura/language_manager.py:187
 #, fuzzy
 msgid "Romanian"
 msgstr "Bosnien"
 
-#: anura/language_manager.py:189
+#: anura/language_manager.py:188
 msgid "Russian"
 msgstr "Russe"
 
-#: anura/language_manager.py:190
+#: anura/language_manager.py:189
 msgid "Sanskrit"
 msgstr "Sanskrit"
 
-#: anura/language_manager.py:191
+#: anura/language_manager.py:190
 msgid "Sinhala"
 msgstr ""
 
-#: anura/language_manager.py:192
+#: anura/language_manager.py:191
 msgid "Slovak"
 msgstr "Slovaque"
 
-#: anura/language_manager.py:193
+#: anura/language_manager.py:192
 msgid "Slovenian"
 msgstr "Slovénien"
 
-#: anura/language_manager.py:194
+#: anura/language_manager.py:193
 msgid "Sindhi"
 msgstr "Sindhi"
 
-#: anura/language_manager.py:195
+#: anura/language_manager.py:194
 #, fuzzy
 msgid "Spanish"
 msgstr "Danois"
 
-#: anura/language_manager.py:196
+#: anura/language_manager.py:195
 #, fuzzy
 msgid "Spanish - Old"
 msgstr "Espagnol ; Castillan - Ancien"
 
-#: anura/language_manager.py:197
+#: anura/language_manager.py:196
 msgid "Albanian"
 msgstr "Albanais"
 
-#: anura/language_manager.py:198
+#: anura/language_manager.py:197
 msgid "Serbian"
 msgstr "Serbe"
 
-#: anura/language_manager.py:199
+#: anura/language_manager.py:198
 msgid "Serbian - Latin"
 msgstr "Serbe - Latin"
 
-#: anura/language_manager.py:200
+#: anura/language_manager.py:199
 msgid "Sundanese"
 msgstr "Soudanais"
 
-#: anura/language_manager.py:201
+#: anura/language_manager.py:200
 msgid "Swahili"
 msgstr "Swahili"
 
-#: anura/language_manager.py:202
+#: anura/language_manager.py:201
 msgid "Swedish"
 msgstr "Suédois"
 
-#: anura/language_manager.py:203
+#: anura/language_manager.py:202
 msgid "Syriac"
 msgstr "Syriaque"
 
-#: anura/language_manager.py:204
+#: anura/language_manager.py:203
 msgid "Tamil"
 msgstr "Tamoul"
 
-#: anura/language_manager.py:205
+#: anura/language_manager.py:204
 msgid "Tatar"
 msgstr "Tatar"
 
-#: anura/language_manager.py:206
+#: anura/language_manager.py:205
 msgid "Telugu"
 msgstr "Télougou"
 
-#: anura/language_manager.py:207
+#: anura/language_manager.py:206
 msgid "Tajik"
 msgstr "Tadjik"
 
-#: anura/language_manager.py:208
+#: anura/language_manager.py:207
 msgid "Thai"
 msgstr "Thaï"
 
-#: anura/language_manager.py:209
+#: anura/language_manager.py:208
 msgid "Tigrinya"
 msgstr "Tigrinya"
 
-#: anura/language_manager.py:210
+#: anura/language_manager.py:209
 msgid "Tonga"
 msgstr "Tongien"
 
-#: anura/language_manager.py:211
+#: anura/language_manager.py:210
 msgid "Turkish"
 msgstr "Turc"
 
-#: anura/language_manager.py:212
+#: anura/language_manager.py:211
 #, fuzzy
 msgid "Uighur"
 msgstr "Ouïghour"
 
-#: anura/language_manager.py:213
+#: anura/language_manager.py:212
 msgid "Ukrainian"
 msgstr "Ukrainien"
 
-#: anura/language_manager.py:214
+#: anura/language_manager.py:213
 msgid "Urdu"
 msgstr "Ourdou"
 
-#: anura/language_manager.py:215
+#: anura/language_manager.py:214
 msgid "Uzbek"
 msgstr "Ouzbek"
 
-#: anura/language_manager.py:216
+#: anura/language_manager.py:215
 #, fuzzy
 msgid "Uzbek - Cyrillic"
 msgstr "Ouzbek - Cyrillique"
 
-#: anura/language_manager.py:217
+#: anura/language_manager.py:216
 msgid "Vietnamese"
 msgstr "Vietnamien"
 
-#: anura/language_manager.py:218
+#: anura/language_manager.py:217
 msgid "Yiddish"
 msgstr "Yiddish"
 
-#: anura/language_manager.py:219
+#: anura/language_manager.py:218
 msgid "Yoruba"
 msgstr "Yoruba"
 
-#: anura/main.py:209
+#: anura/main.py:215
 msgid "Extract directly into the clipboard"
 msgstr "Extraire directement dans le presse-papier"
 
-#: anura/main.py:218
+#: anura/main.py:224
 msgid "Process image file for OCR"
 msgstr ""
 
-#: anura/main.py:227
+#: anura/main.py:233
 msgid "Run OCR without UI (copy result to clipboard)"
 msgstr ""
 
-#: anura/main.py:597
+#: anura/main.py:603
 msgid "Bug fixes and improvements."
 msgstr ""
 
-#: anura/main.py:636
+#: anura/main.py:642
 msgid "Acknowledgements"
 msgstr ""
 
-#: anura/main.py:639
+#: anura/main.py:645
 msgid ""
 "Built with Tesseract OCR, GTK4, Libadwaita, and other open source components."
 msgstr ""
 
-#: anura/main.py:641
+#: anura/main.py:647
 msgid "Changelog"
 msgstr ""
 
-#: anura/main.py:642 data/ui/extracted_page.blp:197
+#: anura/main.py:648 data/ui/extracted_page.blp:206
 msgid "Report an Issue"
 msgstr ""
 
-#: anura/main.py:684 anura/main.py:704
-msgid "Failed to Open Browser"
-msgstr ""
-
-#: anura/main.py:685 anura/main.py:705
-msgid "No web browser could be launched. Please open the link manually."
-msgstr ""
-
-#: anura/main.py:686 anura/main.py:706
-msgid "OK"
-msgstr ""
-
-#: anura/main.py:738 anura/window.py:264
+#: anura/main.py:714 anura/services/result_dispatcher.py:127
+#: anura/window.py:204
 msgid "Text copied to clipboard"
 msgstr "Texte copié vers le presse-papiers"
 
-#: anura/main.py:745
+#: anura/main.py:721
 msgid "No text available to copy"
 msgstr ""
 
-#: anura/main.py:801 anura/window.py:382
-msgid "Invalid URL blocked for security"
+#: anura/main.py:793
+msgid "Cancelled"
 msgstr ""
 
-#: anura/main.py:834 anura/main.py:848 anura/main.py:858 anura/main.py:875
+#: anura/main.py:801 anura/services/result_dispatcher.py:65
+#: anura/services/result_dispatcher.py:129
+#: anura/services/result_dispatcher.py:132
 msgid "Anura OCR"
 msgstr "Anura OCR"
 
-#: anura/main.py:835
+#: anura/services/clipboard_service.py:169
+#: anura/services/clipboard_service.py:185
+#: anura/services/clipboard_service.py:203
+#: anura/services/clipboard_service.py:381
+#: anura/services/clipboard_service.py:411
+#: anura/services/clipboard_service.py:425
+#: anura/services/clipboard_service.py:437
+#: anura/services/clipboard_service.py:445
+#: anura/services/clipboard_service.py:456
+#: anura/services/clipboard_service.py:470
+#: anura/services/clipboard_service.py:482
+msgid "No image in clipboard"
+msgstr "Aucune image dans le presse-papiers"
+
+#: anura/services/clipboard_service.py:560
+#: anura/services/clipboard_service.py:569
+msgid "No text in clipboard"
+msgstr ""
+
+#: anura/services/clipboard_service.py:602
+msgid "Clipboard read operation timed out."
+msgstr ""
+
+#: anura/services/result_dispatcher.py:65
 msgid "No text found. Try to grab another region."
 msgstr "Aucun texte trouvé. Essayez de sélectionner autre chose."
 
-#: anura/main.py:849
+#: anura/services/result_dispatcher.py:95
+msgid "URL opened automatically"
+msgstr ""
+
+#: anura/services/result_dispatcher.py:103
+#: anura/services/result_dispatcher.py:110
+msgid "QR Code URL Detected"
+msgstr ""
+
+#: anura/services/result_dispatcher.py:117
+#, fuzzy
+msgid "URL copied to clipboard"
+msgstr "Texte copié vers le presse-papiers"
+
+#: anura/services/result_dispatcher.py:129
 #, fuzzy
 msgid "Text extracted and copied to clipboard."
 msgstr "Extraire le texte et le copier vers le presse-papiers"
 
-#: anura/main.py:859
+#: anura/services/result_dispatcher.py:132
 msgid "Text extracted successfully."
 msgstr ""
 
-#: anura/main.py:867
-msgid "Cancelled"
-msgstr ""
-
-#: anura/services/clipboard_service.py:170
-#: anura/services/clipboard_service.py:186
-#: anura/services/clipboard_service.py:204
-#: anura/services/clipboard_service.py:382
-#: anura/services/clipboard_service.py:412
-#: anura/services/clipboard_service.py:426
-#: anura/services/clipboard_service.py:438
-#: anura/services/clipboard_service.py:446
-#: anura/services/clipboard_service.py:467
-#: anura/services/clipboard_service.py:481
-#: anura/services/clipboard_service.py:493
-msgid "No image in clipboard"
-msgstr "Aucune image dans le presse-papiers"
-
-#: anura/services/clipboard_service.py:459
-#: anura/services/screenshot_service.py:468 anura/window.py:237
+#: anura/services/result_dispatcher.py:139
 #, python-brace-format
-msgid "Image too large: {size}MB (max {max}MB)"
-msgstr ""
+msgid "{n} email found in text"
+msgid_plural "{n} emails found in text"
+msgstr[0] ""
+msgstr[1] ""
 
-#: anura/services/clipboard_service.py:571
-#: anura/services/clipboard_service.py:580
-msgid "No text in clipboard"
-msgstr ""
+#: anura/services/result_dispatcher.py:146
+#, python-brace-format
+msgid "{n} phone number found in text"
+msgid_plural "{n} phone numbers found in text"
+msgstr[0] ""
+msgstr[1] ""
 
-#: anura/services/clipboard_service.py:613
-msgid "Clipboard read operation timed out."
-msgstr ""
-
-#: anura/services/screenshot_service.py:131
+#: anura/services/screenshot_service.py:138
 msgid "Failed to initiate screenshot capture."
 msgstr ""
 
-#: anura/services/screenshot_service.py:186
+#: anura/services/screenshot_service.py:193
 #, python-brace-format
 msgid "Screenshot failed: {reason}"
 msgstr ""
 
-#: anura/services/screenshot_service.py:202
-#: anura/services/screenshot_service.py:225
-#: anura/services/screenshot_service.py:239
+#: anura/services/screenshot_service.py:209
+#: anura/services/screenshot_service.py:232
+#: anura/services/screenshot_service.py:246
 msgid "Can't take a screenshot."
 msgstr "Impossible de capturer l’écran."
 
-#: anura/services/screenshot_service.py:489
-#: anura/services/screenshot_service.py:670
+#: anura/services/screenshot_service.py:481
+#: anura/services/screenshot_service.py:675
 msgid "Invalid language code specified."
 msgstr ""
 
-#: anura/services/screenshot_service.py:509 anura/window.py:231
+#: anura/services/screenshot_service.py:501
 msgid "The selected image file is empty."
 msgstr ""
 
-#: anura/services/screenshot_service.py:608
+#: anura/services/screenshot_service.py:613
 msgid "Failed to read image file."
 msgstr ""
 
-#: anura/services/screenshot_service.py:611
+#: anura/services/screenshot_service.py:616
 msgid "OCR engine failed to process image."
 msgstr ""
 
-#: anura/services/screenshot_service.py:614
-#: anura/services/screenshot_service.py:620
+#: anura/services/screenshot_service.py:619
+#: anura/services/screenshot_service.py:625
 msgid "Failed to decode data."
 msgstr ""
 
-#: anura/services/screenshot_service.py:650
+#: anura/services/screenshot_service.py:655
 #, fuzzy
 msgid "No text found."
 msgstr "Aucun résultat"
 
-#: anura/services/share_service.py:185
+#: anura/services/share_service.py:186
 msgid "Select Mastodon Instance"
 msgstr ""
 
-#: anura/services/share_service.py:186
+#: anura/services/share_service.py:187
 msgid "Choose your Mastodon instance to share the extracted text:"
 msgstr ""
 
-#: anura/services/share_service.py:192
+#: anura/services/share_service.py:193
 msgid "Cancel"
 msgstr ""
 
-#: anura/services/share_service.py:231
+#: anura/services/share_service.py:232
 msgid "Cannot show dialog without active window"
 msgstr ""
 
-#: anura/services/share_service.py:350
+#: anura/services/share_service.py:351
 msgid "Extracted Text"
 msgstr ""
 
-#: anura/services/tts.py:416
+#: anura/services/tts.py:422
 #, python-brace-format
 msgid "GStreamer playback error: {error}"
 msgstr ""
 
-#: anura/utils/portal_advice.py:85
+#: anura/utils/portal_advice.py:86
 msgid "LXQt"
 msgstr ""
 
-#: anura/utils/portal_advice.py:86
+#: anura/utils/portal_advice.py:87
 msgid ""
 "Screenshot portal is not configured for LXQt. See the README for the LXQt "
 "setup steps."
 msgstr ""
 
-#: anura/utils/portal_advice.py:88
+#: anura/utils/portal_advice.py:89
 msgid ""
 "On LXQt, install xdg-desktop-portal-kde, then create ~/.config/xdg-desktop-"
 "portal/lxqt-portals.conf with [preferred] org.freedesktop.impl.portal."
@@ -716,59 +780,59 @@ msgid ""
 "portal.service)."
 msgstr ""
 
-#: anura/utils/portal_advice.py:99
+#: anura/utils/portal_advice.py:100
 msgid "KDE Plasma"
 msgstr ""
 
-#: anura/utils/portal_advice.py:100
+#: anura/utils/portal_advice.py:101
 msgid ""
 "Screenshot portal unavailable. Install xdg-desktop-portal-kde and re-login."
 msgstr ""
 
-#: anura/utils/portal_advice.py:102
+#: anura/utils/portal_advice.py:103
 msgid ""
 "Screenshot failed. On KDE Plasma, install xdg-desktop-portal-kde (e.g. sudo "
 "apt install xdg-desktop-portal-kde) and log out and back in."
 msgstr ""
 
-#: anura/utils/portal_advice.py:111
+#: anura/utils/portal_advice.py:112
 msgid "your wlroots compositor"
 msgstr ""
 
-#: anura/utils/portal_advice.py:112
+#: anura/utils/portal_advice.py:113
 msgid ""
 "Screenshot portal unavailable. Install xdg-desktop-portal-wlr and re-login."
 msgstr ""
 
-#: anura/utils/portal_advice.py:114
+#: anura/utils/portal_advice.py:115
 msgid ""
 "Screenshot failed. On wlroots-based compositors (Sway, Hyprland, river, "
 "Niri, …), install xdg-desktop-portal-wlr (e.g. sudo apt install xdg-desktop-"
 "portal-wlr) and log out and back in."
 msgstr ""
 
-#: anura/utils/portal_advice.py:125
+#: anura/utils/portal_advice.py:126
 msgid "GNOME"
 msgstr ""
 
-#: anura/utils/portal_advice.py:126
+#: anura/utils/portal_advice.py:127
 msgid ""
 "Screenshot portal unavailable. Install xdg-desktop-portal-gnome and re-login."
 msgstr ""
 
-#: anura/utils/portal_advice.py:128
+#: anura/utils/portal_advice.py:129
 msgid ""
 "Screenshot failed. On GNOME / Ubuntu, install xdg-desktop-portal-gnome (e.g. "
 "sudo apt install xdg-desktop-portal-gnome) and log out and back in."
 msgstr ""
 
-#: anura/utils/portal_advice.py:147
+#: anura/utils/portal_advice.py:148
 msgid ""
 "Screenshot portal unavailable. Install xdg-desktop-portal-gnome (or -kde) "
 "and re-login."
 msgstr ""
 
-#: anura/utils/portal_advice.py:149
+#: anura/utils/portal_advice.py:150
 #, python-brace-format
 msgid ""
 "Screenshot failed. On {desktop}, install xdg-desktop-portal-gnome (or xdg-"
@@ -776,31 +840,39 @@ msgid ""
 "portal-gtk no longer provides the Screenshot interface."
 msgstr ""
 
-#: anura/utils/portal_advice.py:158
+#: anura/utils/portal_advice.py:159
 msgid "your desktop"
 msgstr ""
 
-#: anura/utils/portal_advice.py:159
+#: anura/utils/portal_advice.py:160
 msgid ""
 "Screenshot portal unavailable. Install the xdg-desktop-portal backend "
 "matching your desktop."
 msgstr ""
 
-#: anura/utils/portal_advice.py:161
+#: anura/utils/portal_advice.py:162
 msgid ""
 "Screenshot failed. Your desktop session does not appear to expose a working "
 "screenshot portal. Install the xdg-desktop-portal backend matching your "
 "desktop (e.g. xdg-desktop-portal-gnome, -kde, -wlr) and re-login."
 msgstr ""
 
-#: anura/widgets/extracted_page.py:104
+#: anura/utils/validators.py:215
+msgid "Invalid URL blocked for security"
+msgstr ""
+
+#: anura/utils/validators.py:229
+msgid "Failed to open link"
+msgstr ""
+
+#: anura/widgets/extracted_page.py:124
 #, python-brace-format
 msgid "{n} word"
 msgid_plural "{n} words"
 msgstr[0] ""
 msgstr[1] ""
 
-#: anura/widgets/extracted_page.py:105
+#: anura/widgets/extracted_page.py:125
 #, python-brace-format
 msgid "{n} character"
 msgid_plural "{n} characters"
@@ -809,263 +881,226 @@ msgstr[1] ""
 
 #. Construct the stats label using a single translatable string to ensure
 #. translators can adjust the ordering and separator if necessary.
-#: anura/widgets/extracted_page.py:109
+#: anura/widgets/extracted_page.py:129
 #, python-brace-format
 msgid "{words} | {chars}"
 msgstr ""
 
-#: anura/widgets/extracted_page.py:255
+#: anura/widgets/extracted_page.py:276
 msgid "Text-to-speech is not available for this language"
 msgstr ""
 
-#: anura/widgets/extracted_page.py:310
+#: anura/widgets/extracted_page.py:331
 msgid "Request timed out. Please try again."
 msgstr ""
 
-#: anura/widgets/extracted_page.py:312
+#: anura/widgets/extracted_page.py:333
 msgid "Network error. Please check your internet connection."
 msgstr ""
 
-#: anura/widgets/extracted_page.py:314
+#: anura/widgets/extracted_page.py:335
 msgid "Text-to-speech failed. Please try again."
 msgstr ""
 
-#: anura/widgets/preferences_general_page.py:117
+#: anura/widgets/preferences_general_page.py:118
 #, python-brace-format
 msgid "TTS playback volume level: {percentage:.0f}%"
 msgstr ""
 
 #. Create list: "Auto (follow OCR)" + all supported languages
-#: anura/widgets/preferences_general_page.py:132
+#: anura/widgets/preferences_general_page.py:133
 msgid "Auto (follow OCR language)"
 msgstr ""
 
-#: anura/widgets/preferences_languages_page.py:70
-#: data/ui/preferences_languages.blp:30
+#: anura/widgets/preferences_languages_page.py:71
+#: data/ui/preferences_languages.blp:36
 #, fuzzy
 msgid "OCR models unreachable. Please check your internet connection."
 msgstr ""
 "Emplacement des modèles inaccessible. Vérifiez votre connexion internet."
 
-#: anura/widgets/preferences_languages_page.py:75
+#: anura/widgets/preferences_languages_page.py:76
 msgid "Metered connection detected. Model downloads may incur data costs."
 msgstr ""
 
-#: anura/widgets/share_row.py:27
+#: anura/widgets/share_row.py:28
 #, python-brace-format
 msgid "Share via {name}"
 msgstr ""
 
-#: anura/widgets/shortcuts_overlay.py:59
+#: anura/widgets/shortcuts_overlay.py:62
 msgid "Screenshot & OCR"
 msgstr ""
 
-#: anura/widgets/shortcuts_overlay.py:61
+#: anura/widgets/shortcuts_overlay.py:64
 msgid "Take screenshot"
 msgstr ""
 
-#: anura/widgets/shortcuts_overlay.py:62
+#: anura/widgets/shortcuts_overlay.py:65
 msgid "Take screenshot and copy to clipboard"
 msgstr ""
 
-#: anura/widgets/shortcuts_overlay.py:63
+#: anura/widgets/shortcuts_overlay.py:66
 msgid "Open image file"
 msgstr ""
 
-#: anura/widgets/shortcuts_overlay.py:64
+#: anura/widgets/shortcuts_overlay.py:67
 msgid "Paste image from clipboard"
 msgstr ""
 
-#: anura/widgets/shortcuts_overlay.py:69
+#: anura/widgets/shortcuts_overlay.py:72
 msgid "Text Operations"
 msgstr ""
 
-#: anura/widgets/shortcuts_overlay.py:71
+#: anura/widgets/shortcuts_overlay.py:74
 msgid "Copy text to clipboard"
 msgstr ""
 
-#: anura/widgets/shortcuts_overlay.py:72
+#: anura/widgets/shortcuts_overlay.py:75
 msgid "Listen to text (TTS)"
 msgstr ""
 
-#: anura/widgets/shortcuts_overlay.py:73
+#: anura/widgets/shortcuts_overlay.py:76
 msgid "Stop text-to-speech"
 msgstr ""
 
-#: anura/widgets/shortcuts_overlay.py:78
+#: anura/widgets/shortcuts_overlay.py:81
 msgid "Application"
 msgstr ""
 
-#: anura/widgets/shortcuts_overlay.py:80
+#: anura/widgets/shortcuts_overlay.py:83
 msgid "Open preferences"
 msgstr ""
 
-#: anura/widgets/shortcuts_overlay.py:81 anura/widgets/shortcuts_overlay.py:82
-#: anura/widgets/shortcuts_overlay.py:83
+#: anura/widgets/shortcuts_overlay.py:84 anura/widgets/shortcuts_overlay.py:85
+#: anura/widgets/shortcuts_overlay.py:86
 msgid "Show keyboard shortcuts"
 msgstr ""
 
-#: anura/widgets/shortcuts_overlay.py:84 anura/widgets/shortcuts_overlay.py:85
+#: anura/widgets/shortcuts_overlay.py:87 anura/widgets/shortcuts_overlay.py:88
 msgid "Quit application"
 msgstr ""
 
-#: anura/widgets/shortcuts_overlay.py:90
+#: anura/widgets/shortcuts_overlay.py:93
 msgid "Navigation"
 msgstr ""
 
-#: anura/widgets/shortcuts_overlay.py:92
+#: anura/widgets/shortcuts_overlay.py:95
 msgid "Close dialog/go back"
 msgstr ""
 
-#: anura/widgets/shortcuts_overlay.py:93
+#: anura/widgets/shortcuts_overlay.py:96
 msgid "Navigate between widgets"
 msgstr ""
 
-#: anura/widgets/shortcuts_overlay.py:94
+#: anura/widgets/shortcuts_overlay.py:97
 msgid "Navigate backwards"
 msgstr ""
 
-#: anura/widgets/shortcuts_overlay.py:99
+#: anura/widgets/shortcuts_overlay.py:102
 msgid "Advanced"
 msgstr ""
 
-#: anura/widgets/shortcuts_overlay.py:101
+#: anura/widgets/shortcuts_overlay.py:104
 msgid "Open image file (advanced)"
 msgstr ""
 
-#: anura/widgets/shortcuts_overlay.py:102
+#: anura/widgets/shortcuts_overlay.py:105
 msgid "Show help"
 msgstr ""
 
-#: anura/widgets/shortcuts_overlay.py:103
+#: anura/widgets/shortcuts_overlay.py:106
 msgid "Open application menu"
 msgstr ""
 
-#: anura/widgets/welcome_page.py:99
+#: anura/widgets/welcome_page.py:100
 #, fuzzy
 msgid "Drop image to extract text"
 msgstr "Ouvrez une image pour en extraire du texte"
 
-#: anura/widgets/welcome_page.py:111 anura/widgets/welcome_page.py:267
-#: data/ui/welcome_page.blp:44
+#: anura/widgets/welcome_page.py:112 anura/widgets/welcome_page.py:268
+#: data/ui/welcome_page.blp:50
 msgid "Extract text from anywhere"
 msgstr "Extrayez du texte depuis n’importe où"
 
-#: anura/widgets/welcome_page.py:191
+#: anura/widgets/welcome_page.py:192
 msgid "No file data received from drop"
 msgstr ""
 
-#: anura/widgets/welcome_page.py:204
+#: anura/widgets/welcome_page.py:205
 msgid "No valid file found in drop"
 msgstr ""
 
-#: anura/widgets/welcome_page.py:213
+#: anura/widgets/welcome_page.py:214
 msgid "Only local files can be dropped"
 msgstr ""
 
-#: anura/widgets/welcome_page.py:222
+#: anura/widgets/welcome_page.py:223
 msgid ""
 "File not accessible. Ensure Anura has permission to access this location."
 msgstr ""
 
-#: anura/widgets/welcome_page.py:229
+#: anura/widgets/welcome_page.py:230
 msgid "Only images can be processed that way."
 msgstr ""
 
-#: anura/widgets/welcome_page.py:235
+#: anura/widgets/welcome_page.py:236
 msgid "Failed to process dropped file"
 msgstr ""
 
-#: anura/widgets/welcome_page.py:255
+#: anura/widgets/welcome_page.py:256
 msgid "Processing..."
 msgstr ""
 
-#: anura/widgets/welcome_page.py:259 data/ui/welcome_page.blp:125
+#: anura/widgets/welcome_page.py:260 data/ui/welcome_page.blp:131
 msgid "Drop image file here"
 msgstr ""
 
-#: anura/window.py:138
+#: anura/window.py:126
+msgid "Tesseract OCR not found on system"
+msgstr ""
+
+#: anura/window.py:132
+msgid "TTS dependencies (gTTS/GStreamer) missing"
+msgstr ""
+
+#: anura/window.py:174
 #, fuzzy
 msgid "Failed to capture screenshot"
 msgstr "Prenez une capture"
 
-#: anura/window.py:143
-#, fuzzy
-msgid "Choose an image for extraction"
-msgstr "Ouvrez une image pour en extraire du texte"
-
-#: anura/window.py:152
-msgid "All supported images"
-msgstr ""
-
-#: anura/window.py:170
-msgid "PNG images"
-msgstr ""
-
-#: anura/window.py:174
-msgid "JPEG images"
-msgstr ""
-
-#: anura/window.py:181
-msgid "WebP images"
-msgstr ""
-
-#: anura/window.py:185
-msgid "AVIF images"
-msgstr ""
-
-#: anura/window.py:190
-msgid "TIFF images"
-msgstr ""
-
-#: anura/window.py:195
-msgid "BMP images"
-msgstr ""
-
-#: anura/window.py:200
-msgid "GIF images"
-msgstr ""
-
-#: anura/window.py:207
-msgid "All files (*)"
-msgstr ""
-
-#: anura/window.py:246
+#: anura/window.py:187
 #, python-brace-format
 msgid "Unsupported file format: {path}"
 msgstr ""
 
-#: anura/window.py:252
+#: anura/window.py:193
 #, python-brace-format
 msgid "File not found: {path}"
 msgstr ""
 
-#: anura/window.py:254
+#: anura/window.py:195
 #, python-brace-format
 msgid "Permission denied: {path}"
 msgstr ""
 
-#: anura/window.py:257
+#: anura/window.py:198
 #, python-brace-format
 msgid "Cannot access file: {path}"
 msgstr ""
 
-#: anura/window.py:267
+#: anura/window.py:207
 #, fuzzy
 msgid "No text to copy"
 msgstr "Aucun résultat"
 
-#: anura/window.py:369
+#: anura/window.py:294
 msgid "No text to share."
 msgstr ""
 
-#: anura/window.py:391
-msgid "Failed to open link"
-msgstr ""
-
 #: data/io.github.d3msudo.anura.desktop.in:3
-#: data/io.github.d3msudo.anura.metainfo.xml.in:6 data/ui/welcome_page.blp:16
-#: data/ui/welcome_page.blp:43
+#: data/io.github.d3msudo.anura.metainfo.xml.in:6 data/ui/welcome_page.blp:22
+#: data/ui/welcome_page.blp:49
 #, fuzzy
 msgid "Anura"
 msgstr "Anura"
@@ -1164,294 +1199,293 @@ msgstr ""
 msgid "Extracted text displayed after OCR recognition"
 msgstr ""
 
-#: data/ui/extracted_page.blp:7
+#: data/ui/extracted_page.blp:13
 msgid "Extracted"
 msgstr "Extrait"
 
-#: data/ui/extracted_page.blp:25
+#: data/ui/extracted_page.blp:31
 #, fuzzy
 msgid "Take a Screenshot (Ctrl+G)"
 msgstr "_Prendre une capture d’écran"
 
-#: data/ui/extracted_page.blp:27
+#: data/ui/extracted_page.blp:33
 msgid "Take a screenshot"
 msgstr "Prenez une capture"
 
-#: data/ui/extracted_page.blp:36
+#: data/ui/extracted_page.blp:42
 #, fuzzy
 msgctxt "Extracted screen"
 msgid "Copy Extracted Text to Clipboard (Ctrl+C)"
 msgstr "Extraire directement vers le presse-papiers"
 
-#: data/ui/extracted_page.blp:38
+#: data/ui/extracted_page.blp:44
 msgctxt "Extracted screen"
 msgid "Copy extracted text to clipboard"
 msgstr ""
 
-#: data/ui/extracted_page.blp:51
+#: data/ui/extracted_page.blp:57
 msgctxt "Extracted screen"
 msgid "Listen to Text (Ctrl+L)"
 msgstr ""
 
-#: data/ui/extracted_page.blp:53
+#: data/ui/extracted_page.blp:59
 msgctxt "Extracted screen"
 msgid "Listen to text"
 msgstr ""
 
-#: data/ui/extracted_page.blp:63 data/ui/extracted_page.blp:65
+#: data/ui/extracted_page.blp:69 data/ui/extracted_page.blp:71
 msgctxt "Extracted screen"
 msgid "Cancel listening to text"
 msgstr ""
 
-#: data/ui/extracted_page.blp:86
+#: data/ui/extracted_page.blp:92
 msgctxt "Extracted screen"
 msgid "Pause/Resume listening"
 msgstr ""
 
-#: data/ui/extracted_page.blp:88
+#: data/ui/extracted_page.blp:94
 msgctxt "Extracted screen"
 msgid "Pause or resume listening"
 msgstr ""
 
-#: data/ui/extracted_page.blp:95 data/ui/extracted_page.blp:97
+#: data/ui/extracted_page.blp:101 data/ui/extracted_page.blp:103
 msgctxt "Extracted screen"
 msgid "Stop listening"
 msgstr ""
 
-#: data/ui/extracted_page.blp:108 data/ui/extracted_page.blp:110
+#: data/ui/extracted_page.blp:114 data/ui/extracted_page.blp:116
 msgctxt "Extracted screen"
 msgid "Open menu"
 msgstr ""
 
-#: data/ui/extracted_page.blp:118
+#: data/ui/extracted_page.blp:124
 msgctxt "Extracted screen"
 msgid "Share To"
 msgstr ""
 
-#: data/ui/extracted_page.blp:120
+#: data/ui/extracted_page.blp:126
 msgctxt "Extracted screen"
 msgid "Share text to other applications"
 msgstr ""
 
-#: data/ui/extracted_page.blp:177 data/ui/preferences_dialog.blp:7
-#: data/ui/welcome_page.blp:142
+#: data/ui/extracted_page.blp:186 data/ui/preferences_dialog.blp:13
+#: data/ui/welcome_page.blp:148
 msgid "Preferences"
 msgstr "Préférences"
 
-#: data/ui/extracted_page.blp:185 data/ui/shortcuts_overlay.blp:7
-#: data/ui/shortcuts_overlay.blp:19 data/ui/welcome_page.blp:149
+#: data/ui/extracted_page.blp:194 data/ui/shortcuts_overlay.blp:13
+#: data/ui/shortcuts_overlay.blp:25 data/ui/welcome_page.blp:155
 msgid "Keyboard Shortcuts"
 msgstr "Raccourcis claviers"
 
-#: data/ui/extracted_page.blp:191 data/ui/welcome_page.blp:154
+#: data/ui/extracted_page.blp:200 data/ui/welcome_page.blp:160
 #, fuzzy
 msgid "About Anura"
 msgstr "À propos de anura"
 
-#: data/ui/extracted_page.blp:206
+#: data/ui/extracted_page.blp:215
 msgid "Open image"
 msgstr "Ouvrir une image"
 
-#: data/ui/extracted_page.blp:207
+#: data/ui/extracted_page.blp:216
 msgid "Paste from clipboard"
 msgstr "Coller depuis le presse-papiers"
 
-#: data/ui/language_popover.blp:21 data/ui/preferences_languages.blp:21
+#: data/ui/language_popover.blp:27 data/ui/preferences_languages.blp:27
 #, fuzzy
 msgid "Search Languages"
 msgstr "Rechercher des langues…"
 
-#: data/ui/language_popover.blp:24 data/ui/preferences_languages.blp:25
+#: data/ui/language_popover.blp:30 data/ui/preferences_languages.blp:31
 msgid "Search Languages…"
 msgstr "Rechercher des langues…"
 
-#: data/ui/language_popover.blp:73 data/ui/preferences_languages.blp:109
+#: data/ui/language_popover.blp:79 data/ui/preferences_languages.blp:115
 msgid "No Results Found"
 msgstr "Aucun résultat"
 
-#: data/ui/language_popover.blp:80
+#: data/ui/language_popover.blp:86
 msgid "Add Language"
 msgstr "Ajouter une langue"
 
-#: data/ui/language_row.blp:23
+#: data/ui/language_row.blp:29
 msgctxt "Preferences Language Row"
 msgid "Install language"
 msgstr ""
 
-#: data/ui/language_row.blp:32
+#: data/ui/language_row.blp:38
 msgctxt "Preferences Language Row"
 msgid "Remove language"
 msgstr ""
 
-#: data/ui/preferences_general.blp:7
+#: data/ui/preferences_general.blp:13
 msgid "_General"
 msgstr "_Général"
 
-#: data/ui/preferences_general.blp:12
+#: data/ui/preferences_general.blp:18
 #, fuzzy
 msgid "Text Extraction"
 msgstr "Extraction du texte"
 
-#: data/ui/preferences_general.blp:15
+#: data/ui/preferences_general.blp:21
 #, fuzzy
 msgid "_Secondary Language"
 msgstr "_Seconde langue"
 
-#: data/ui/preferences_general.blp:17
+#: data/ui/preferences_general.blp:23
 msgid "Additional language used in text recognition"
 msgstr "Langue supplémentaire utilisée dans la reconnaissance de texte"
 
-#: data/ui/preferences_general.blp:22
+#: data/ui/preferences_general.blp:28
 msgid "Behavior"
 msgstr "Comportement"
 
-#: data/ui/preferences_general.blp:25
+#: data/ui/preferences_general.blp:31
 #, fuzzy
 msgid "_Copy to Clipboard"
 msgstr "_Copier vers le presse-papiers"
 
-#: data/ui/preferences_general.blp:27
+#: data/ui/preferences_general.blp:33
 #, fuzzy
 msgid "Automatically copy the extracted text after detection"
 msgstr "Copier automatiquement le texte extrait vers le presse-papiers"
 
-#: data/ui/preferences_general.blp:31
+#: data/ui/preferences_general.blp:37
 #, fuzzy
 msgid "_Open QR-code Links"
 msgstr "_Ouvrir les liens des QR codes"
 
-#: data/ui/preferences_general.blp:33
+#: data/ui/preferences_general.blp:39
 msgid ""
 "Open QR code URLs directly in browser. Otherwise, a clickable notification "
 "is shown."
 msgstr ""
 
-#: data/ui/preferences_general.blp:44
+#: data/ui/preferences_general.blp:50
 msgid "Text-to-Speech"
 msgstr ""
 
-#: data/ui/preferences_general.blp:47
+#: data/ui/preferences_general.blp:53
 msgid "Volume"
 msgstr ""
 
-#: data/ui/preferences_general.blp:48
+#: data/ui/preferences_general.blp:54
 msgid "TTS playback volume level (0-100%)"
 msgstr ""
 
-#: data/ui/preferences_general.blp:57
+#: data/ui/preferences_general.blp:63
 msgid "TTS Language"
 msgstr ""
 
-#: data/ui/preferences_general.blp:58
+#: data/ui/preferences_general.blp:64
 msgid "Language for speech synthesis. Uses OCR language if not set."
 msgstr ""
 
-#: data/ui/preferences_languages.blp:8
+#: data/ui/preferences_languages.blp:14
 msgid "_Languages"
 msgstr "_Langues"
 
-#: data/ui/preferences_languages.blp:32
+#: data/ui/preferences_languages.blp:38
 msgid "Retry"
 msgstr "Réessayer"
 
-#: data/ui/preferences_languages.blp:48
+#: data/ui/preferences_languages.blp:54
 #, fuzzy
 msgid "Installed Languages"
 msgstr "Langues installées"
 
-#: data/ui/preferences_languages.blp:57
+#: data/ui/preferences_languages.blp:63
 #, fuzzy
 msgid "Add language"
 msgstr "Ajouter une langue"
 
-#: data/ui/shortcuts_overlay.blp:32
+#: data/ui/shortcuts_overlay.blp:38
 msgid "Search shortcuts..."
 msgstr ""
 
-#: data/ui/shortcuts_overlay.blp:55
+#: data/ui/shortcuts_overlay.blp:61
 #, fuzzy
 msgid "No results found"
 msgstr "Aucun résultat"
 
-#: data/ui/shortcuts_overlay.blp:56
+#: data/ui/shortcuts_overlay.blp:62
 msgid "Try a different search term"
 msgstr ""
 
-#: data/ui/welcome_page.blp:7
+#: data/ui/welcome_page.blp:13
 msgid "Welcome"
 msgstr ""
 
-#: data/ui/welcome_page.blp:21
+#: data/ui/welcome_page.blp:27
 msgid "Language"
 msgstr "Langue"
 
-#: data/ui/welcome_page.blp:22
+#: data/ui/welcome_page.blp:28
 msgid "Select language to extract"
 msgstr "Sélectionnez la langue à extraire"
 
-#: data/ui/welcome_page.blp:35 data/ui/welcome_page.blp:37
+#: data/ui/welcome_page.blp:41 data/ui/welcome_page.blp:43
 msgid "Open menu"
 msgstr "Ouvrir le menu"
 
-#: data/ui/welcome_page.blp:55
+#: data/ui/welcome_page.blp:61
 #, fuzzy
 msgctxt "Welcome screen"
 msgid "Take a Screenshot (Ctrl+G)"
 msgstr "_Prendre une capture d’écran"
 
-#: data/ui/welcome_page.blp:63
+#: data/ui/welcome_page.blp:69
 msgid "_Take a Screenshot"
 msgstr "_Prendre une capture d’écran"
 
-#: data/ui/welcome_page.blp:71
+#: data/ui/welcome_page.blp:77
 #, fuzzy
 msgctxt "Welcome screen"
 msgid "Open Image (Ctrl+O)"
 msgstr "_Ouvrir une image"
 
-#: data/ui/welcome_page.blp:79
+#: data/ui/welcome_page.blp:85
 msgid "_Open Image"
 msgstr "_Ouvrir une image"
 
-#: data/ui/welcome_page.blp:87
+#: data/ui/welcome_page.blp:93
 #, fuzzy
 msgctxt "Welcome screen"
 msgid "Paste Image from Clipboard (Ctrl+V)"
 msgstr "Coller depuis le presse-papiers"
 
-#: data/ui/welcome_page.blp:95
+#: data/ui/welcome_page.blp:101
 #, fuzzy
 msgid "_Paste Image"
 msgstr "Coller une image"
 
-#: data/ui/welcome_page.blp:102
+#: data/ui/welcome_page.blp:108
 msgctxt "Welcome screen"
 msgid "Drop image here"
 msgstr ""
 
-#: data/ui/welcome_page.blp:110
+#: data/ui/welcome_page.blp:116
 #, fuzzy
 msgid "_Drop Image"
 msgstr "_Ouvrir une image"
 
-#: data/ui/welcome_page.blp:161
+#: data/ui/welcome_page.blp:167
 msgid "⭐ Star on GitHub"
 msgstr "⭐ Étoiler sur GitHub"
 
-#: data/ui/window.blp:21
+#: data/ui/window.blp:27
 msgid ""
 "Screenshot portal unavailable. Install xdg-desktop-portal-gtk (or the "
 "backend matching your desktop) and re-login."
 msgstr ""
 
-#: data/ui/window.blp:22
+#: data/ui/window.blp:28
 msgid "Dismiss"
 msgstr ""
 
 #, fuzzy
 #~ msgid "Math / Equation Detection"
 #~ msgstr "Module de détection mathématique / équations"
-
 
 #~ msgid "Open"
 #~ msgstr "Ouvrir"

@@ -19,6 +19,19 @@ from anura.config import MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB
 # Using a regex is ~13x faster than a manual loop for control character detection.
 _CONTROL_CHARS_RE = re.compile(r"[\x00-\x1f\x7f]")
 
+# Centralized patterns for structured data detection (URLs, Emails, etc.)
+# Used across TextPreprocessor, Transformers, and ResultDispatcher.
+EMAIL_PATTERN = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,15}"
+URL_PATTERN = (
+    r"(?:(?:https?|ftp|file):\/\/|www\.)"
+    r"(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#\/%=~_|$?!:,.])*"
+    r"(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[A-Z0-9+&@#\/%=~_|$])"
+)
+
+# Regex objects for performance
+EMAIL_RE = re.compile(EMAIL_PATTERN, re.IGNORECASE)
+URL_RE = re.compile(URL_PATTERN, re.IGNORECASE)
+
 
 def sanitize_text(text: str) -> str:
     """
@@ -180,3 +193,43 @@ def uri_validator(text: str) -> bool:
         return False
     except ValueError:
         return False
+
+
+def launch_uri(url: str, window=None, error_callback=None) -> None:
+    """
+    Centralized URI launching with security validation and UI feedback.
+
+    Args:
+        url: The URI to launch.
+        window: The parent window for the launcher.
+        error_callback: Optional callback for error messages. If not provided,
+                        it attempts to show a toast or alert dialog.
+    """
+    from gettext import gettext as _
+
+    from gi.repository import Gio, GLib, Gtk
+
+    url = url.strip() if url else ""
+    if not uri_validator(url):
+        logger.warning(f"Anura: Blocked invalid URL launch: {url}")
+        msg = _("Invalid URL blocked for security")
+        if error_callback:
+            error_callback(msg)
+        elif window and hasattr(window, "show_toast"):
+            window.show_toast(msg)
+        return
+
+    launcher = Gtk.UriLauncher.new(url)
+
+    def on_launch_finish(_launcher: object, result: Gio.AsyncResult) -> None:
+        try:
+            launcher.launch_finish(result)
+        except GLib.Error as e:
+            logger.error(f"Anura: Failed to launch URI: {e.message}")
+            msg = _("Failed to open link")
+            if error_callback:
+                error_callback(msg)
+            elif window and hasattr(window, "show_toast"):
+                window.show_toast(msg)
+
+    launcher.launch(window, None, on_launch_finish)

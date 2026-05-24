@@ -32,7 +32,7 @@ from anura.services.clipboard_service import get_clipboard_service  # noqa: E402
 from anura.services.screenshot_service import ScreenshotService  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
 from anura.types.context import get_app_context  # noqa: E402
-from anura.utils import uri_validator, validate_image_resource  # noqa: E402
+from anura.utils import validate_image_resource  # noqa: E402
 from anura.utils.signal_manager import SignalManagerMixin  # noqa: E402
 from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
 from anura.widgets.preferences_dialog import PreferencesDialog  # noqa: E402
@@ -200,8 +200,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     def _do_copy_to_clipboard(self) -> None:
         text = self.extracted_page.extracted_text
         if text:
-            clipboard_service_instance = get_clipboard_service()
-            clipboard_service_instance.set(text)
+            get_clipboard_service().set(text)
             self.show_toast(_("Text copied to clipboard"))
             self.extracted_page.show_copy_feedback()
         else:
@@ -302,21 +301,8 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
 
     def _launch_uri(self, url: str) -> None:
         """Open a URI in the default system browser."""
-        url = url.strip() if url else ""
-        if not uri_validator(url):
-            logger.warning(f"Anura: Blocked invalid URL launch: {url}")
-            self.show_toast(_("Invalid URL blocked for security"))
-            return
-        launcher = Gtk.UriLauncher.new(url)
-
-        def on_launch_finish(_launcher: object, result: Gio.AsyncResult) -> None:
-            try:
-                launcher.launch_finish(result)
-            except GLib.Error as e:
-                logger.error(f"Anura: Failed to launch URI: {e.message}")
-                self.show_toast(_("Failed to open link"))
-
-        launcher.launch(self, None, on_launch_finish)
+        from anura.utils.validators import launch_uri
+        launch_uri(url, window=self, error_callback=lambda msg: self.show_toast(msg))
 
     def close_popovers(self) -> None:
         """Close all open popovers."""

@@ -39,6 +39,8 @@ class OcrController(GObject.GObject):
                            lambda _, msg: self._window.show_toast(msg))
         self.connect_tracked(self._dispatcher, "uri-launch-requested",
                            lambda _, uri: self._window._launch_uri(uri))
+        self.connect_tracked(self._dispatcher, "notification-requested",
+                           self._on_notification_requested)
 
         # Backend Responses
         backend = self._window.backend
@@ -49,6 +51,12 @@ class OcrController(GObject.GObject):
         # Banner Interactions
         self.connect_tracked(self._window.portal_banner, "button-clicked",
                            self._on_portal_banner_dismissed)
+
+    def _on_notification_requested(self, _dispatcher, title, body):
+        """Bridge notification requests from dispatcher to system notifications."""
+        app = Gtk.Application.get_default()
+        if app and hasattr(app, "notification_service"):
+            app.notification_service.show_notification(title=title, body=body)
 
     def _on_shot_done(self, _sender, text, copy):
         """Handle successful screenshot capture and OCR processing."""

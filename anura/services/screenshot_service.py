@@ -91,7 +91,6 @@ class ScreenshotService(GObject.GObject):
     def __init__(self) -> None:
         GObject.GObject.__init__(self)
         self._dispatcher = get_result_dispatcher()
-        self._dispatcher.connect("notification-requested", self._on_notification_requested)
 
         self._cancellable_lock = threading.Lock()
         with self._cancellable_lock:
@@ -103,14 +102,6 @@ class ScreenshotService(GObject.GObject):
         # Configure Tesseract path for Flatpak environment
         _configure_tesseract_path()
 
-    def _on_notification_requested(self, _dispatcher, title, body):
-        """Bridge notification requests from dispatcher to main thread."""
-
-        def _emit_error_idle():
-            self.emit("error", body)
-            return GLib.SOURCE_REMOVE
-
-        GLib.idle_add(_emit_error_idle)
 
     def capture(self, lang: str, copy: bool = False) -> None:
         """Requests a screenshot from the system portal."""
@@ -696,14 +687,10 @@ class ScreenshotService(GObject.GObject):
             # We use idle_add to ensure dispatching happens on the main thread
             def _on_decoded_idle(text: str, cp: bool) -> bool:
                 try:
-                    # Emit decoded for UI listeners (like AnuraWindow)
+                    # Emit decoded for UI listeners (like AnuraWindow via OcrController)
                     self.emit("decoded", text, cp)
-                    # If there's no active window, the dispatcher handles notifications/clipboard
-                    app = Gio.Application.get_default()
-                    if app and not app.get_active_window():
-                        self._dispatcher.dispatch(text, cp)
                 except Exception:
-                    logger.exception("Anura: Failed to emit decoded signal or dispatch result")
+                    logger.exception("Anura: Failed to emit decoded signal")
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_decoded_idle, extracted, copy, priority=GLib.PRIORITY_DEFAULT)
