@@ -34,7 +34,6 @@ from anura.config import (  # noqa: E402
     get_tesseract_config,
 )
 from anura.services.host_screenshot_fallback import build_scrot_argv  # noqa: E402
-from anura.services.result_dispatcher import get_result_dispatcher  # noqa: E402
 from anura.types.ocr import OcrResult  # noqa: E402
 from anura.utils import validate_image_resource  # noqa: E402
 from anura.utils.portal_advice import detect_portal_advice  # noqa: E402
@@ -80,7 +79,7 @@ class ScreenshotService(GObject.GObject):
 
     __gsignals__: ClassVar[dict[str, tuple]] = {
         "error": (GObject.SignalFlags.RUN_LAST, None, (str,)),
-        "decoded": (GObject.SignalFlags.RUN_FIRST, None, (str, bool)),
+        "decoded": (GObject.SignalFlags.RUN_FIRST, None, (str, bool, object)),
         # Emitted when the host's xdg-desktop-portal screenshot backend is
         # missing/broken (libportal generic-failure pattern). Consumers
         # typically use this to reveal a persistent install hint banner;
@@ -90,7 +89,6 @@ class ScreenshotService(GObject.GObject):
 
     def __init__(self) -> None:
         GObject.GObject.__init__(self)
-        self._dispatcher = get_result_dispatcher()
 
         self._cancellable_lock = threading.Lock()
         with self._cancellable_lock:
@@ -438,16 +436,17 @@ class ScreenshotService(GObject.GObject):
         lang: str,
         file: str | Image.Image | object,
         remove_source: bool = False,
-    ) -> tuple[bool, str | None, str | None]:
+    ) -> tuple[bool, str | None, str | None, OcrResult | None]:
         """
         Synchronously decodes the image to find QR codes or extract text using Tesseract OCR.
         Supports file paths (str) and binary streams (BytesIO).
 
         Returns:
-            tuple: (success: bool, text: str | None, error_message: str | None)
+            tuple: (success: bool, text: str | None, error_message: str | None, ocr_result: OcrResult | None)
                    - success: True if text was extracted, False otherwise
                    - text: The extracted text or QR code content (None if failed or no text)
                    - error_message: Error description if failed, None otherwise
+                   - ocr_result: The raw OCR result with layout data (None if barcode or failed)
         """
         validation_result = self._validate_decode_inputs(lang)
         if not validation_result[0]:
@@ -466,13 +465,14 @@ class ScreenshotService(GObject.GObject):
         start_time = time.time()
 
         try:
-            extracted, error_message = self._process_image_decode(file, lang, start_time)
+            extracted, error_message, ocr_result = self._process_image_decode(file, lang, start_time)
         except Exception as e:
             extracted, error_message = self._handle_decode_exception(e)
+            ocr_result = None
         finally:
             self._cleanup_temporary_file(file, is_physical_file, remove_source)
 
-        return self._format_decode_result(extracted, error_message)
+        return self._format_decode_result(extracted, error_message, ocr_result)
 
     def _validate_decode_inputs(self, lang: str) -> tuple[bool, str | None, str | None]:
         """Validate language code for OCR processing."""
@@ -490,15 +490,16 @@ class ScreenshotService(GObject.GObject):
         file: str | Image.Image | object,
         lang: str,
         start_time: float,
-    ) -> tuple[str | None, str | None]:
+    ) -> tuple[str | None, str | None, OcrResult | None]:
         """Process image for QR code detection and OCR."""
         extracted = None
         error_message = None
+        ocr_result = None
 
         # Hardening: check for 0-byte physical files before attempting to open
         if isinstance(file, str) and os.path.exists(file) and os.path.getsize(file) == 0:
             logger.error(f"Anura OCR: Attempted to process 0-byte image file: {file}")
-            return None, _("The selected image file is empty.")
+            return None, _("The selected image file is empty."), None
 
         with Image.open(file) as img:
             image_size = img.size
@@ -512,9 +513,9 @@ class ScreenshotService(GObject.GObject):
                 # Optimization: Pre-convert to "L" (grayscale) once for OCR.
                 if img.mode != "L":
                     img = img.convert("L")
-                extracted = self._try_ocr_extraction(img, lang, start_time)
+                extracted, ocr_result = self._try_ocr_extraction(img, lang, start_time)
 
-        return extracted, error_message
+        return extracted, error_message, ocr_result
 
     def _try_barcode_detection(self, img: Image.Image, start_time: float) -> str | None:
         """Try to detect and decode QR codes and Barcodes from image using zxing-cpp."""
@@ -538,7 +539,9 @@ class ScreenshotService(GObject.GObject):
             logger.debug(f"Anura ZXing: Detection failed: {e}")
         return None
 
-    def _try_ocr_extraction(self, img: Image.Image, lang: str, start_time: float) -> str | None:
+    def _try_ocr_extraction(
+        self, img: Image.Image, lang: str, start_time: float
+    ) -> tuple[str | None, OcrResult | None]:
         """Try to extract text using Tesseract OCR with preprocessing and Magic Transformers."""
         try:
             from pytesseract import Output
@@ -583,25 +586,25 @@ class ScreenshotService(GObject.GObject):
                 processed_text = spatially_reconstructed
 
             # 5. Final cleanup based on user settings
+            from anura.utils.validators import sanitize_text
+
             if mode == "full":
                 cleaned_text = preprocessor.clean_extracted_text(processed_text)
             elif mode == "image-only":
-                cleaned_text = preprocessor._normalize_whitespace(processed_text)
+                cleaned_text = sanitize_text(processed_text)
             else:
                 cleaned_text = processed_text.strip()
 
             # 4. Mandatory security sanitization for OCR output
-            from anura.utils.validators import sanitize_text
-
             cleaned_text = sanitize_text(cleaned_text)
 
             duration = time.time() - start_time
             logger.info(f"Anura OCR: Text extraction and Magics completed in {duration:.3f}s")
 
-            return cleaned_text
+            return cleaned_text, ocr_result
         except Exception as e:
             logger.debug(f"Anura OCR: OCR extraction or Magic processing failed: {e}")
-            return None
+            return None, None
 
     def _handle_decode_exception(self, e: Exception) -> tuple[str | None, str | None]:
         """Handle exceptions during image decoding."""
@@ -645,14 +648,15 @@ class ScreenshotService(GObject.GObject):
         self,
         extracted: str | None,
         error_message: str | None,
-    ) -> tuple[bool, str | None, str | None]:
+        ocr_result: OcrResult | None = None,
+    ) -> tuple[bool, str | None, str | None, OcrResult | None]:
         """Format the final decode result."""
         if extracted:
-            return (True, extracted, None)
+            return (True, extracted, None, ocr_result)
         elif error_message:
-            return (False, "", error_message)
+            return (False, "", error_message, None)
         else:
-            return (False, "", _("No text found."))
+            return (False, "", _("No text found."), None)
 
     def decode_image(
         self,
@@ -680,20 +684,20 @@ class ScreenshotService(GObject.GObject):
             GLib.idle_add(_on_invalid_lang_error_idle, priority=GLib.PRIORITY_DEFAULT)
             return False
 
-        success, extracted, error_message = self.decode_image_sync(lang, file, remove_source)
+        success, extracted, error_message, ocr_result = self.decode_image_sync(lang, file, remove_source)
 
         if success:
             # Handle silent mode dispatching via ResultDispatcher
             # We use idle_add to ensure dispatching happens on the main thread
-            def _on_decoded_idle(text: str, cp: bool) -> bool:
+            def _on_decoded_idle(text: str, cp: bool, ocr_res: OcrResult | None) -> bool:
                 try:
                     # Emit decoded for UI listeners (like AnuraWindow via OcrController)
-                    self.emit("decoded", text, cp)
+                    self.emit("decoded", text, cp, ocr_res)
                 except Exception:
                     logger.exception("Anura: Failed to emit decoded signal")
                 return GLib.SOURCE_REMOVE
 
-            GLib.idle_add(_on_decoded_idle, extracted, copy, priority=GLib.PRIORITY_DEFAULT)
+            GLib.idle_add(_on_decoded_idle, extracted, copy, ocr_result, priority=GLib.PRIORITY_DEFAULT)
         else:
 
             def _on_decode_error_idle(msg: str | None) -> bool:

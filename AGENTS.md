@@ -52,8 +52,11 @@ anura/
 │   │   ├── barcode_detector.py    QR/Barcode detection via zxing-cpp
 │   │   ├── image_filters.py       Modular image enhancement filter chain
     │   ├── transformers/          Semantic text transformers
-    │   │   ├── magic_processor.py Classification & transformation coordinator
-    │   │   └── ...                Specialized transformers (URL, Email, etc.)
+    │   │   ├── magic_processor.py Orchestrator: Classification & semantic coordination
+    │   │   ├── base_transformers.py Base implementations (SingleLine, Paragraph, etc.)
+    │   │   ├── email_transformer.py Specialized email extraction & scoring
+    │   │   ├── url_transformer.py   Specialized URL extraction & validation
+    │   │   └── models.py            Dataclasses and Transformer Protocols
 │   │   ├── structural_reconstructor.py Paragraph/Layout spatial analysis
     │   ├── validators.py          URI validation, security & text sanitization
 │   │   ├── portal_advice.py       Desktop-specific advice for missing portals
@@ -188,9 +191,19 @@ get_atomic_manager().execute(
 
 **Rule:** Perform a boot-time system audit (`ApplicationContext`) to detect available binaries and libraries. Bind UI sensitivity to these capability flags to prevent runtime failures.
 
+### Semantic Transformation Pipeline (MagicProcessor)
+
+**Orchestration Pattern:** `MagicProcessor` acts as the central coordinator for semantic text transformation.
+
+1.  **Input:** Receives `OcrResult` (Layout-aware immutable dataclass).
+2.  **Scoring:** Iterates through registered transformers (`UrlTransformer`, `EmailTransformer`, `ParagraphTransformer`, etc.). Each transformer provides a `score()` based on the content's structural and semantic characteristics.
+3.  **Classification:** Selects the transformer with the highest confidence score.
+4.  **Transformation:** Invocates the `.transform()` method of the selected winner to produce specialized, cleaned, or restructured text.
+5.  **Output:** Returns the final transformed text and calculated confidence.
+
 ### Text Sanitization
 
-Always use `validators.sanitize_text` to strip Unicode Control/Format characters and prevent RTL spoofing or terminal injection.
+Always use `validators.sanitize_text` to strip Unicode Control/Format characters and prevent RTL spoofing or terminal injection. `TextPreprocessor` delegates all initial cleaning to this centralized security entry-point.
 
 ## Testing
 

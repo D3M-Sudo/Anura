@@ -9,7 +9,6 @@ import pytest
 pytest.importorskip("gi")
 
 
-# tests/test_unit_validators_enterprise.py
 
 
 from anura.utils.validators import uri_validator

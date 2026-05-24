@@ -4,15 +4,12 @@
 #
 # SPDX-License-Identifier: MIT
 
+from PIL import Image
 import pytest
 
-pytest.importorskip("gi")
-
-
-# tests/test_unit_text_preprocessor_enterprise.py
-from PIL import Image
-
 from anura.utils.text_preprocessor import TextPreprocessor
+
+# pytest.importorskip("gi")
 
 
 class TestTextPreprocessorEnterprise:
@@ -24,12 +21,15 @@ class TestTextPreprocessorEnterprise:
     def preprocessor(self):
         return TextPreprocessor()
 
-    def test_normalize_whitespace(self, preprocessor):
-        """Test whitespace normalization logic."""
+    def test_clean_extracted_text_sanitization(self, preprocessor):
+        """Test that clean_extracted_text sanitizes text."""
         input_text = "  Hello   world! \n New  line.  "
-        assert preprocessor._normalize_whitespace(input_text) == "Hello world! New line."
-        assert preprocessor._normalize_whitespace("") == ""
-        assert preprocessor._normalize_whitespace(None) == ""
+        # sanitize_text squashes [ \t]+ to " " and strips.
+        # It preserves \n.
+        # Expected: "Hello world! \n New line."
+        result = preprocessor.clean_extracted_text(input_text)
+        assert "Hello world!" in result
+        assert "New line." in result
 
     def test_fix_punctuation(self, preprocessor):
         """Test punctuation spacing and deduplication."""

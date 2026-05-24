@@ -774,7 +774,7 @@ class AnuraApplication(Adw.Application):
         except Exception:
             logger.exception("Anura: Unexpected error handling QR notification click")
 
-    def on_decoded(self, _sender: object, text: str, copy: bool) -> None:
+    def on_decoded(self, _sender: object, text: str, copy: bool, ocr_result: object) -> None:
         """Handle decoded text from backend.
 
         If a window is present, it handles the 'decoded' signal itself to
@@ -786,7 +786,28 @@ class AnuraApplication(Adw.Application):
             return
 
         from anura.services.result_dispatcher import get_result_dispatcher
-        get_result_dispatcher().dispatch(text, copy)
+        from anura.types.ocr import OcrResult
+        result = get_result_dispatcher().dispatch(text, ocr_result if isinstance(ocr_result, OcrResult) else None)
+
+        if not result.text:
+            self.notification_service.show_notification(
+                title=_("Anura OCR"),
+                body=_("No text found. Try to grab another region.")
+            )
+            return
+
+        # Handle side effects for CLI/silent mode
+        if self.settings.get_boolean("autocopy") or copy:
+            get_clipboard_service().set(result.text)
+            self.notification_service.show_notification(
+                title=_("Anura OCR"),
+                body=_("Text extracted and copied to clipboard.")
+            )
+        else:
+            self.notification_service.show_notification(
+                title=_("Anura OCR"),
+                body=_("Text extracted successfully.")
+            )
 
     def on_error(self, _sender: object, message: str) -> None:
         """Handle screenshot service errors, skipping cancellation messages."""
