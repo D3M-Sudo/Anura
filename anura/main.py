@@ -213,13 +213,10 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
             if "Screenshot failed" in message.lower() and not getattr(self.backend, "fallback_provider", None):
                 from anura.core.dialogs import DialogManager
 
-                DialogManager.show_fatal_error(
-                    win,
-                    _("Capture Failed"),
-                    _(
-                        "Anura could not capture a screenshot because no suitable portal backend or fallback tool was found."
-                    ),
+                error_body = _(
+                    "Anura could not capture a screenshot because no suitable portal backend or fallback tool was found."
                 )
+                DialogManager.show_fatal_error(win, _("Capture Failed"), error_body)
             else:
                 win.show_toast(message)
         else:
