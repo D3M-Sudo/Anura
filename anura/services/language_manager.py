@@ -454,8 +454,8 @@ class LanguageManager(GObject.GObject):
                                             def _on_progress_idle(c, p):
                                                 try:
                                                     self.emit("downloading", c, p)
-                                                except Exception:
-                                                    logger.exception(f"Anura: Failed to emit 'downloading' for {c}")
+                                                except Exception as e:
+                                                    logger.error(f"Anura: Failed to emit 'downloading' for {c}: {e}")
                                                 return GLib.SOURCE_REMOVE
 
                                             GLib.idle_add(
@@ -470,8 +470,8 @@ class LanguageManager(GObject.GObject):
                                         def _on_progress_idle(c, p):
                                             try:
                                                 self.emit("downloading", c, p)
-                                            except Exception:
-                                                logger.exception(f"Anura: Failed to emit 'downloading' for {c}")
+                                            except Exception as e:
+                                                logger.error(f"Anura: Failed to emit 'downloading' for {c}: {e}")
                                             return GLib.SOURCE_REMOVE
 
                                         GLib.idle_add(_on_progress_idle, code, -1, priority=GLib.PRIORITY_DEFAULT)
