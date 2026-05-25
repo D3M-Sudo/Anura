@@ -56,6 +56,8 @@ def run_ocr_pipeline(
     Isolated OCR pipeline to bypass Python's GIL.
     Runs in a separate process via ProcessPoolExecutor.
     """
+    import tempfile
+
     # Configure Tesseract path in the child process
     _configure_tesseract_path()
 
@@ -74,7 +76,16 @@ def run_ocr_pipeline(
 
         start_time = time.time()
 
-        with Image.open(file_path) as img:
+        # Transactional I/O: Create a temporary directory for all worker artifacts
+        with tempfile.TemporaryDirectory(prefix="anura-worker-") as tmp_dir:
+            # Point Tesseract-related env vars to the transactional directory
+            # This ensures any .tmp or log files created by Tesseract or wrappers
+            # are automatically cleaned up when the context manager exits.
+            os.environ["TMPDIR"] = tmp_dir
+            os.environ["TEMP"] = tmp_dir
+            os.environ["TMP"] = tmp_dir
+
+            with Image.open(file_path) as img:
             # 1. Barcode Detection
             from anura.utils.barcode_detector import detect_barcodes
             results = detect_barcodes(img)

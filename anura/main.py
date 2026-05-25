@@ -195,14 +195,16 @@ from anura.services.notification_service import (
 from anura.services.screenshot_service import ScreenshotService
 from anura.services.settings import settings
 from anura.utils import cleanup_orphaned_resources
+from anura.utils.signal_manager import SignalManagerMixin
 from anura.window import AnuraWindow
 
 
-class AnuraApplication(Adw.Application):
+class AnuraApplication(Adw.Application, SignalManagerMixin):
     __gtype_name__ = "AnuraApplication"
 
     def __init__(self, version: str | None = None) -> None:
         super().__init__(application_id=APP_ID, flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
+        SignalManagerMixin.__init__(self)
         self.backend: ScreenshotService | None = None
         self.version = version
         self.settings = settings
@@ -253,8 +255,8 @@ class AnuraApplication(Adw.Application):
         cleanup_orphaned_resources(active_lang)
 
         self.backend = ScreenshotService()
-        self._backend_decoded_handler_id = self.backend.connect("decoded", self.on_decoded)
-        self._backend_error_handler_id = self.backend.connect("error", self.on_error)
+        self.connect_tracked(self.backend, "decoded", self.on_decoded)
+        self.connect_tracked(self.backend, "error", self.on_error)
 
         # Initialize services on main thread to avoid race conditions
         language_manager_instance = get_language_manager()
@@ -270,17 +272,12 @@ class AnuraApplication(Adw.Application):
 
     def do_shutdown(self, *args: object, **kwargs: object) -> None:
         """Clean up resources on application shutdown."""
-        self._cleanup_backend_signals()
         self._cleanup_notification_service()
         self._cleanup_clipboard_service()
         self._cleanup_tts_service()
-        Adw.Application.do_shutdown(self)
 
-    def _cleanup_backend_signals(self) -> None:
-        """Clean up backend signal handlers and services."""
-        if self.backend is not None:
-            self._disconnect_signal_handler(self._backend_decoded_handler_id)
-            self._disconnect_signal_handler(self._backend_error_handler_id)
+        # Unified teardown of tracked signals and registered controllers (if any)
+        self.teardown_all()
 
         try:
             from anura.language_manager import get_language_manager
@@ -288,11 +285,7 @@ class AnuraApplication(Adw.Application):
         except Exception as e:
             logger.debug(f"Failed to shutdown LanguageManager: {e}")
 
-    def _disconnect_signal_handler(self, handler_id: int | None) -> None:
-        """Safely disconnect a signal handler."""
-        if handler_id is not None and hasattr(self, "backend") and self.backend is not None:
-            with contextlib.suppress(TypeError, RuntimeError, AttributeError):
-                self.backend.disconnect(handler_id)
+        Adw.Application.do_shutdown(self)
 
     def _cleanup_notification_service(self) -> None:
         """Clean up notification service."""

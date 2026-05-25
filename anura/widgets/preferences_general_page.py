@@ -164,5 +164,5 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
 
     def do_destroy(self) -> None:
         """Clean up all tracked signal handlers to prevent memory leaks."""
-        self.disconnect_all_signals()
+        self.teardown_all()
         super().do_destroy()

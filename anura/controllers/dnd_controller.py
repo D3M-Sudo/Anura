@@ -16,6 +16,11 @@ class DndController:
 
     def __init__(self, window):
         self._window = window
+
+        # Register for automatic teardown
+        if hasattr(window, "register_controller"):
+            window.register_controller(self)
+
         logger.debug("DndController: Initialized for AnuraWindow")
 
     def process_dnd_file_sync(self, file_path: str | None) -> None:
@@ -43,6 +48,10 @@ class DndController:
             logger.error(f"DndController: Critical error accessing dropped file: {e}")
             self._window.welcome_page.reset_drop_area_state()
             self._window.show_toast(_("Failed to process the file."))
+
+    def teardown(self) -> None:
+        """Unified teardown called by SignalManagerMixin."""
+        self.cleanup()
 
     def cleanup(self):
         """Explicit cleanup."""

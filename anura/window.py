@@ -241,15 +241,8 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         clipboard_service_instance = get_clipboard_service()
         clipboard_service_instance.cancel_pending_operations()
 
-        # Clean up decoupled controllers
-        if hasattr(self, "ocr_controller"):
-            self.ocr_controller.cleanup()
-        if hasattr(self, "tts_controller"):
-            self.tts_controller.cleanup()
-        if hasattr(self, "dnd_controller"):
-            self.dnd_controller.cleanup()
-
-        self.disconnect_all_signals()
+        # Perform unified teardown of registered controllers and signals
+        self.teardown_all()
 
         super().do_destroy()
 
