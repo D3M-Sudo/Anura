@@ -13,7 +13,7 @@ def boot_audit():
     os.environ.setdefault("NO_AT_BRIDGE", "1")
     os.environ.setdefault("GTK_A11Y", "none")
 
-    from anura.types.context import get_app_context
+    from anura.models.context import get_app_context
 
     get_app_context()
     logger.debug("Boot audit completed.")

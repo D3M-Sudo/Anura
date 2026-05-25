@@ -156,7 +156,7 @@ class OcrController(GObject.GObject):
         all_img_filter = Gtk.FileFilter()
         all_img_filter.set_name(_("All supported images"))
 
-        _ALL_EXTENSIONS = [
+        all_extensions = [
             "png",
             "jpg",
             "jpeg",
@@ -172,7 +172,7 @@ class OcrController(GObject.GObject):
             "gif",
         ]
 
-        for ext in _ALL_EXTENSIONS:
+        for ext in all_extensions:
             all_img_filter.add_pattern(f"*.{ext}")
             all_img_filter.add_pattern(f"*.{ext.upper()}")
 

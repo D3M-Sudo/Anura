@@ -6,8 +6,8 @@
 
 from loguru import logger
 
+from anura.models.ocr import OcrResult as OcrData
 from anura.transformers.models import ITransformer, OcrResult
-from anura.types.ocr import OcrResult as OcrData
 from anura.utils.singleton import get_instance
 
 

@@ -26,11 +26,11 @@ from anura.controllers.dnd_controller import DndController  # noqa: E402
 from anura.controllers.ocr_controller import OcrController  # noqa: E402
 from anura.controllers.tts_controller import TtsController  # noqa: E402
 from anura.core.atomic_task_manager import get_atomic_manager  # noqa: E402
+from anura.models.context import get_app_context  # noqa: E402
 from anura.services.clipboard_service import get_clipboard_service  # noqa: E402
 from anura.services.language_manager import get_language_manager  # noqa: E402
 from anura.services.screenshot_service import ScreenshotService  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
-from anura.types.context import get_app_context  # noqa: E402
 from anura.utils import validate_image_resource  # noqa: E402
 from anura.utils.signal_manager import SignalManagerMixin  # noqa: E402
 from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
@@ -65,7 +65,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
             item = language_manager_instance.get_language_item("eng")
         if item is None:
             # Ultimate fallback - should never happen for built-in languages
-            from anura.types.language_item import LanguageItem
+            from anura.models.language_item import LanguageItem
 
             item = LanguageItem(code="eng", title=_("English"))
         language_manager_instance.active_language = item  # type: ignore[method-assign]

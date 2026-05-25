@@ -63,14 +63,22 @@ class SilentRunner:
                 return False
 
             try:
-                success, text, error_message, _ = self.app._decode_image_synchronously(self.file_path)
+                success, text, error_message, ocr_result = self.app._decode_image_synchronously(self.file_path)
 
                 if self.interrupted.is_set():
                     loop.quit()
                     return False
 
                 if success and text:
-                    get_clipboard_service().set(text)
+                    # Headless/Silent mode: perform direct dispatching
+                    from anura.models.ocr import OcrResult
+                    from anura.services.result_dispatcher import get_result_dispatcher
+
+                    result = get_result_dispatcher().dispatch(
+                        text, ocr_result if isinstance(ocr_result, OcrResult) else None
+                    )
+
+                    get_clipboard_service().set(result.text)
                     logger.info("Anura: OCR completed successfully in silent mode.")
                 else:
                     logger.error(f"Anura: Silent mode failed: {error_message}")

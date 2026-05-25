@@ -4,6 +4,7 @@
 #
 # SPDX-License-Identifier: MIT
 
+import contextlib
 import html
 import os
 import sys
@@ -353,8 +354,8 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
             return
 
         # Headless/Silent mode: perform direct dispatching
+        from anura.models.ocr import OcrResult
         from anura.services.result_dispatcher import get_result_dispatcher
-        from anura.types.ocr import OcrResult
 
         result = get_result_dispatcher().dispatch(text, ocr_result if isinstance(ocr_result, OcrResult) else None)
 
@@ -391,9 +392,6 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         win = self.get_active_window()
         if win:
             win.on_listen_pause()
-
-
-import contextlib
 
 
 def main(version: str) -> int:

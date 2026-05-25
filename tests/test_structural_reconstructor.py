@@ -1,4 +1,4 @@
-from anura.types.ocr import OcrResult, OcrWord
+from anura.models.ocr import OcrResult, OcrWord
 from anura.utils.structural_reconstructor import get_structural_reconstructor
 
 

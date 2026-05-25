@@ -5,7 +5,7 @@
 
 from typing import Any
 
-from anura.types.ocr import OcrResult
+from anura.models.ocr import OcrResult
 from anura.utils.singleton import get_instance
 
 

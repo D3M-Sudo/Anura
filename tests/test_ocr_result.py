@@ -5,7 +5,7 @@
 
 import unittest
 
-from anura.types.ocr import OcrResult
+from anura.models.ocr import OcrResult
 
 
 class TestOcrDataModel(unittest.TestCase):
