@@ -5,20 +5,39 @@
 # SPDX-License-Identifier: MIT
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Protocol, runtime_checkable
+import weakref
 
-import gi
+from loguru import logger
 
-# Set GTK version requirements before imports
-gi.require_version("GObject", "2.0")
+try:
+    import gi
 
-from gi.repository import GObject  # noqa: E402
-from loguru import logger  # noqa: E402
+    # Set GTK version requirements before imports
+    gi.require_version("GObject", "2.0")
+    from gi.repository import GObject
+
+    HAS_GI = True
+except (ImportError, ValueError):
+    HAS_GI = False
+
+    class GObject:
+        class Object:
+            pass
+
+
+@runtime_checkable
+class Teardownable(Protocol):
+    """Protocol for objects that require explicit teardown."""
+
+    def teardown(self) -> None:
+        """Execute cleanup logic."""
+        ...
 
 
 class SignalManagerMixin:
     """
-    Mixin class that provides automatic signal tracking and cleanup.
+    Mixin class that provides automatic signal tracking, controller registry, and cleanup.
 
     Use connect_tracked() instead of direct .connect() to automatically
     store handler IDs. Call disconnect_all_signals() in do_destroy() to
@@ -34,12 +53,30 @@ class SignalManagerMixin:
                 )
 
             def do_destroy(self):
-                self.disconnect_all_signals()
+                self.teardown_all()
                 super().do_destroy()
     """
 
     def __init__(self) -> None:
-        self._signal_connections: dict[Any, list[int]] = {}
+        """Explicitly initialize the mixin state.
+
+        Note: GTK classes using this mixin must call SignalManagerMixin.__init__(self)
+        if they don't want to rely on lazy initialization.
+        """
+        self._ensure_state_initialized()
+
+    def _ensure_state_initialized(self) -> None:
+        """Ensures that the mixin's internal state is initialized."""
+        if not hasattr(self, "_signal_connections"):
+            self._signal_connections: dict[Any, list[int]] = {}
+        if not hasattr(self, "_registered_controllers"):
+            self._registered_controllers: weakref.WeakSet[Teardownable] = weakref.WeakSet()
+
+    def register_controller(self, controller: Teardownable) -> None:
+        """Register a controller for automatic teardown."""
+        self._ensure_state_initialized()
+        self._registered_controllers.add(controller)
+        logger.debug(f"SignalManagerMixin: Registered controller {type(controller).__name__}")
 
     def connect_tracked(
         self,
@@ -58,6 +95,7 @@ class SignalManagerMixin:
         Returns:
             The handler ID that can be used for manual disconnection
         """
+        self._ensure_state_initialized()
         handler_id = emitter.connect(signal_name, callback)
 
         if emitter not in self._signal_connections:
@@ -68,6 +106,27 @@ class SignalManagerMixin:
             f"SignalManagerMixin: Connected {signal_name} on {type(emitter).__name__}, handler_id={handler_id}",
         )
         return handler_id
+
+    def teardown_all(self) -> None:
+        """
+        Perform unified teardown: cleanup controllers and disconnect all signals.
+        """
+        self._ensure_state_initialized()
+        logger.debug("SignalManagerMixin: Starting unified teardown")
+
+        # 1. Teardown registered controllers
+        controllers = list(self._registered_controllers)
+        for controller in controllers:
+            try:
+                if isinstance(controller, Teardownable):
+                    controller.teardown()
+            except Exception as e:
+                logger.warning(f"SignalManagerMixin: Error during controller teardown: {e}")
+
+        self._registered_controllers.clear()
+
+        # 2. Disconnect all tracked signals
+        self.disconnect_all_signals()
 
     def disconnect_all_signals(self) -> None:
         """

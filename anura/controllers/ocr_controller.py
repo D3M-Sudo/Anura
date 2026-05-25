@@ -28,6 +28,10 @@ class OcrController(GObject.GObject):
         self._dispatcher = get_result_dispatcher()
         self._signal_connections = {}
 
+        # Register for automatic teardown
+        if hasattr(window, "register_controller"):
+            window.register_controller(self)
+
         # Connect to window signals and backend
         self._setup_connections()
         logger.debug("OcrController: Initialized and connected to AnuraWindow")
@@ -38,6 +42,10 @@ class OcrController(GObject.GObject):
             self._signal_connections[emitter] = []
         self._signal_connections[emitter].append(handler_id)
         return handler_id
+
+    def teardown(self) -> None:
+        """Unified teardown called by SignalManagerMixin."""
+        self.cleanup()
 
     def _setup_connections(self):
         # Backend Responses

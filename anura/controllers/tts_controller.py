@@ -20,6 +20,10 @@ class TtsController(GObject.GObject):
         self._tts_service = get_tts_service()
         self._signal_connections = {}
 
+        # Register for automatic teardown
+        if hasattr(window, "register_controller"):
+            window.register_controller(self)
+
         self._setup_connections()
         logger.debug("TtsController: Initialized and connected to AnuraWindow")
 
@@ -52,6 +56,10 @@ class TtsController(GObject.GObject):
     def _on_tts_error(self, _service, message):
         self._window.show_toast(message)
         self._window.extracted_page.update_tts_state(playing=False)
+
+    def teardown(self) -> None:
+        """Unified teardown called by SignalManagerMixin."""
+        self.cleanup()
 
     def cleanup(self):
         for emitter, handler_ids in self._signal_connections.items():

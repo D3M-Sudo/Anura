@@ -243,6 +243,7 @@ def test_window_disconnects_portal_banner_signal() -> None:
         "self.portal_banner.disconnect(handler_id)" in text
         or "self.portal_banner.disconnect(self._handler_portal_banner)" in text
         or "self.disconnect_all_signals()" in text
+        or "self.teardown_all()" in text
     ), (
         "AnuraWindow.do_destroy must disconnect signals to prevent memory leaks."
     )
