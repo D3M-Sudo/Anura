@@ -86,58 +86,68 @@ def run_ocr_pipeline(
             os.environ["TMP"] = tmp_dir
 
             with Image.open(file_path) as img:
-            # 1. Barcode Detection
-            from anura.utils.barcode_detector import detect_barcodes
-            results = detect_barcodes(img)
-            if results:
-                raw_extracted = "\n".join([res.text for res in results])
-                extracted = sanitize_text(raw_extracted)
-                logger.info(f"Anura ZXing (Isolated): Code(s) detected in {time.time() - start_time:.3f}s")
-                return True, extracted, None, None
+                # 1. Barcode Detection
+                from anura.utils.barcode_detector import detect_barcodes
 
-            # 2. Pre-processing
-            if img.mode != "L":
-                img = img.convert("L")
+                results = detect_barcodes(img)
+                if results:
+                    raw_extracted = "\n".join([res.text for res in results])
+                    extracted = sanitize_text(raw_extracted)
+                    logger.info(f"Anura ZXing (Isolated): Code(s) detected in {time.time() - start_time:.3f}s")
+                    return True, extracted, None, None
 
-            preprocessor = get_text_preprocessor()
-            enhanced_img = preprocessor.enhance_image(img, task_id=task_id) if preprocessing_mode != "off" else img
+                # 2. Pre-processing
+                if img.mode != "L":
+                    img = img.convert("L")
 
-            # 3. Tesseract OCR
-            ocr_data = pytesseract.image_to_data(
-                enhanced_img,
-                lang=lang,
-                config=get_tesseract_config(lang),
-                output_type=Output.DICT
-            )
-            ocr_result = OcrResult.from_tesseract_dict(ocr_data)
+                preprocessor = get_text_preprocessor()
+                enhanced_img = (
+                    preprocessor.enhance_image(img, task_id=task_id)
+                    if preprocessing_mode != "off"
+                    else img
+                )
 
-            # 4. Reconstruction
-            reconstructor = get_structural_reconstructor()
-            spatially_reconstructed, recon_conf = reconstructor.reconstruct(ocr_result, task_id=task_id)
+                # 3. Tesseract OCR
+                ocr_data = pytesseract.image_to_data(
+                    enhanced_img,
+                    lang=lang,
+                    config=get_tesseract_config(lang),
+                    output_type=Output.DICT,
+                )
+                ocr_result = OcrResult.from_tesseract_dict(ocr_data)
 
-            # 5. Magic Processing
-            magic_processor = get_magic_processor()
-            processed_text, magic_conf = magic_processor.process(ocr_result, task_id=task_id)
+                # 4. Reconstruction
+                reconstructor = get_structural_reconstructor()
+                spatially_reconstructed, recon_conf = reconstructor.reconstruct(
+                    ocr_result, task_id=task_id
+                )
 
-            # 6. Selection
-            if spatially_reconstructed.strip() and (
-                (len(spatially_reconstructed) > len(processed_text) * 1.2 and recon_conf >= magic_conf * 0.95)
-                or recon_conf > magic_conf
-            ):
-                processed_text = spatially_reconstructed
+                # 5. Magic Processing
+                magic_processor = get_magic_processor()
+                processed_text, magic_conf = magic_processor.process(ocr_result, task_id=task_id)
 
-            # 7. Final Cleanup
-            if preprocessing_mode == "full":
-                cleaned_text = preprocessor.clean_extracted_text(processed_text)
-            elif preprocessing_mode == "image-only":
-                cleaned_text = sanitize_text(processed_text)
-            else:
-                cleaned_text = processed_text.strip()
+                # 6. Selection
+                if spatially_reconstructed.strip() and (
+                    (
+                        len(spatially_reconstructed) > len(processed_text) * 1.2
+                        and recon_conf >= magic_conf * 0.95
+                    )
+                    or recon_conf > magic_conf
+                ):
+                    processed_text = spatially_reconstructed
 
-            cleaned_text = sanitize_text(cleaned_text)
+                # 7. Final Cleanup
+                if preprocessing_mode == "full":
+                    cleaned_text = preprocessor.clean_extracted_text(processed_text)
+                elif preprocessing_mode == "image-only":
+                    cleaned_text = sanitize_text(processed_text)
+                else:
+                    cleaned_text = processed_text.strip()
 
-            logger.info(f"Anura OCR (Isolated): Completed in {time.time() - start_time:.3f}s")
-            return True, cleaned_text, None, ocr_result
+                cleaned_text = sanitize_text(cleaned_text)
+
+                logger.info(f"Anura OCR (Isolated): Completed in {time.time() - start_time:.3f}s")
+                return True, cleaned_text, None, ocr_result
 
     except InterruptedError:
         return False, None, None, None

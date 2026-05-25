@@ -1,22 +1,24 @@
 import os
-import time
-import pytest
-from PIL import Image
 from unittest.mock import MagicMock, patch
+
+from PIL import Image
+import pytest
 
 # Mock GI imports if not available for non-GTK tests
 try:
     import gi
+
     gi.require_version("GObject", "2.0")
-    from gi.repository import GLib, GObject
+    from gi.repository import GObject
+
     HAS_GI = True
 except (ImportError, ValueError):
     HAS_GI = False
-    GLib = MagicMock()
     GObject = MagicMock()
 
 from anura.utils.image_filters import RescaleFilter
 from anura.utils.signal_manager import SignalManagerMixin, Teardownable
+
 
 class MockController(Teardownable):
     def __init__(self, window):
@@ -27,13 +29,14 @@ class MockController(Teardownable):
     def teardown(self):
         self.teardown_called = True
 
+
 @pytest.mark.skipif(not os.path.exists("/proc/meminfo"), reason="Requires /proc/meminfo")
 def test_resource_guard_activation():
     """Verify that RescaleFilter blocks on large images when memory is low."""
     filter = RescaleFilter()
 
     # Large image (>20MP)
-    large_img = Image.new("L", (5000, 5000)) # 25MP
+    large_img = Image.new("L", (5000, 5000))  # 25MP
 
     # Mock low memory (100MB available out of 8GB total)
     mock_mem = (100 * 1024 * 1024, 8 * 1024 * 1024 * 1024)
@@ -43,13 +46,14 @@ def test_resource_guard_activation():
         # Should return the same image object (blocked)
         assert result is large_img
 
+
 @pytest.mark.skipif(not os.path.exists("/proc/meminfo"), reason="Requires /proc/meminfo")
 def test_rescale_allowed_on_high_memory():
     """Verify that RescaleFilter proceeds on large images when memory is sufficient."""
     filter = RescaleFilter()
 
     # Large image (>20MP)
-    large_img = Image.new("L", (5000, 5000)) # 25MP
+    large_img = Image.new("L", (5000, 5000))  # 25MP
 
     # Mock high memory (4GB available out of 8GB total)
     mock_mem = (4 * 1024 * 1024 * 1024, 8 * 1024 * 1024 * 1024)
@@ -62,14 +66,16 @@ def test_rescale_allowed_on_high_memory():
         result = filter.apply(large_img)
         assert result is large_img
 
+
 @pytest.mark.gtk
 @pytest.mark.timeout(30)
 def test_lifecycle_teardown_loop():
     """Stress test window lifecycle to verify signal and controller cleanup."""
     pytest.importorskip("gi.repository.Adw")
     from gi.repository import Adw
-    from anura.window import AnuraWindow
+
     from anura.services.screenshot_service import ScreenshotService
+    from anura.window import AnuraWindow
 
     # We need a Gtk Application for the window
     app = Adw.Application(application_id="io.github.d3msudo.anura.stability")
@@ -78,7 +84,7 @@ def test_lifecycle_teardown_loop():
         backend = MagicMock(spec=ScreenshotService)
 
         try:
-            for i in range(50):
+            for _i in range(50):
                 win = AnuraWindow(application=app, backend=backend)
 
                 # Create a mock controller and register it
@@ -100,12 +106,15 @@ def test_lifecycle_teardown_loop():
     app.connect("activate", run_stress_test)
     app.run([])
 
+
 def test_signal_manager_registry_logic():
     """Verify SignalManagerMixin registry and teardown without GTK."""
+
     class MockWindow(SignalManagerMixin):
         def __init__(self):
             # Test lazy initialization
             self.destroyed = False
+
         def destroy(self):
             self.teardown_all()
             self.destroyed = True

@@ -4,22 +4,26 @@
 #
 # SPDX-License-Identifier: MIT
 
-import weakref
 from collections.abc import Callable
 from typing import Any, Protocol, runtime_checkable
+import weakref
+
+from loguru import logger
 
 try:
     import gi
+
     # Set GTK version requirements before imports
     gi.require_version("GObject", "2.0")
     from gi.repository import GObject
+
     HAS_GI = True
 except (ImportError, ValueError):
     HAS_GI = False
-    class GObject:
-        class Object: pass
 
-from loguru import logger  # noqa: E402
+    class GObject:
+        class Object:
+            pass
 
 
 @runtime_checkable

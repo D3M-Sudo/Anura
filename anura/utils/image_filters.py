@@ -5,7 +5,6 @@
 
 from abc import ABC, abstractmethod
 import gc
-import os
 import threading
 
 from loguru import logger
