@@ -34,7 +34,6 @@ class LanguageRow(Gtk.Overlay):
         # Uses a set so completed (auto-removed) source IDs can be pruned.
         self._idle_ids: set[int] = set()
 
-        # Connect language manager signals for download updates
         self._downloading_handler_id = language_manager.connect("downloading", self.update_progress)
         self._downloaded_handler_id = language_manager.connect("downloaded", self.on_downloaded)
 
@@ -70,7 +69,6 @@ class LanguageRow(Gtk.Overlay):
         if not self._item:
             return
 
-        # English is the core language and cannot be removed
         if self._item.code == "eng":
             self.install_btn.set_visible(False)
             self.remove_btn.set_sensitive(False)
@@ -140,7 +138,6 @@ class LanguageRow(Gtk.Overlay):
 
     def do_destroy(self) -> None:
         """Clean up signal handlers and pending idle_add callbacks to prevent memory leaks."""
-        # Remove pending idle_add callbacks
         for idle_id in self._idle_ids:
             with contextlib.suppress(TypeError, RuntimeError):
                 GLib.source_remove(idle_id)

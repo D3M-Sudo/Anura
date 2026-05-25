@@ -64,7 +64,7 @@ def is_safe_url_string(text: str) -> bool:
     Perform fundamental security checks on a URL string.
     Checks for length, control characters, and ASCII-only characters.
     """
-    if text is None:
+    if not isinstance(text, str):
         return False
 
     # 1. Defense-in-depth: limit URL length BEFORE processing (standard limit)

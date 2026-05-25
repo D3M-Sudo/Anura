@@ -23,7 +23,6 @@ class TextPreprocessor:
     """Advanced text preprocessing for OCR accuracy improvement."""
 
     def __init__(self) -> None:
-        # Pre-compiled regex patterns for better performance
         self._punctuation_patterns = [
             (re.compile(r"([.!?])\1+"), r"\1"),  # Multiple punctuation
             (re.compile(r",+"), ","),  # Multiple commas
@@ -31,7 +30,6 @@ class TextPreprocessor:
             (re.compile(r"(?<!\d)([.,;:!?])(?!\d)(\S)"), r"\1 \2"),  # Add space after punctuation if missing (second)
         ]
 
-        # Pre-compiled regexes for punctuation spacing
         self._paren_open_re = re.compile(r"\s*\(\s*")
         self._paren_close_re = re.compile(r"\s*\)\s*")
         self._quote_double_re = re.compile(r'\s*"\s*')
@@ -40,7 +38,6 @@ class TextPreprocessor:
         # Pre-compiled regexes for capitalization
         self._sentence_split_re = re.compile(r"((?<!\d)[.!?]+)\s*")
 
-        # Pre-compiled regexes for artifacts removal
         # Optimization: use [ \t] instead of \s and re.MULTILINE to allow processing the
         # entire text block at once while preserving line structure.
         self._page_num_re = re.compile(r"^[ \t]*\d+[ \t]*\r?\n?", re.MULTILINE)
@@ -48,7 +45,6 @@ class TextPreprocessor:
         self._bullets_re = re.compile(r"^[ \t•·▪▫◦‣]+[ \t]*", re.MULTILINE)
         self._list_marker_re = re.compile(r"^- +", re.MULTILINE)
 
-        # Pre-compiled structured data patterns
         from anura.utils.validators import EMAIL_RE, URL_RE
 
         self._email_re = EMAIL_RE

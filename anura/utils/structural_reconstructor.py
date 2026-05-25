@@ -5,6 +5,7 @@
 
 from typing import Any
 
+from anura.core.atomic_task_manager import get_atomic_manager
 from anura.models.ocr import OcrResult
 from anura.utils.singleton import get_instance
 
@@ -36,20 +37,15 @@ class StructuralReconstructor:
         if not ocr_result.words:
             return "", 0.0
 
-        # Group words into lines
         words = ocr_result.words
         lines = []
         current_line = []
         last_line_id = -1
 
         for i, word in enumerate(words):
-            if task_id and i % 50 == 0:
-                from anura.core.atomic_task_manager import get_atomic_manager
+            if task_id and i % 50 == 0 and get_atomic_manager().is_cancelled(task_id):
+                raise InterruptedError(f"Task {task_id} was cancelled")
 
-                if get_atomic_manager().is_cancelled(task_id):
-                    raise InterruptedError(f"Task {task_id} was cancelled")
-
-            # Simple grouping by line_num and par_num/block_num
             line_id = (word.block_num, word.par_num, word.line_num)
             if line_id != last_line_id:
                 if current_line:
@@ -62,7 +58,6 @@ class StructuralReconstructor:
         if current_line:
             lines.append(self._process_line(current_line))
 
-        # Merge lines into paragraphs based on geometry
         paragraphs = []
         if not lines:
             return ("", 0.0)
@@ -70,11 +65,8 @@ class StructuralReconstructor:
         current_paragraph = [lines[0]]
 
         for i in range(1, len(lines)):
-            if task_id and i % 10 == 0:
-                from anura.core.atomic_task_manager import get_atomic_manager
-
-                if get_atomic_manager().is_cancelled(task_id):
-                    raise InterruptedError(f"Task {task_id} was cancelled")
+            if task_id and i % 10 == 0 and get_atomic_manager().is_cancelled(task_id):
+                raise InterruptedError(f"Task {task_id} was cancelled")
 
             prev_line = lines[i - 1]
             curr_line = lines[i]
@@ -110,7 +102,6 @@ class StructuralReconstructor:
 
     def _should_merge(self, line1: dict, line2: dict) -> bool:
         """Determine if two lines should be merged into a paragraph."""
-        # Vertical distance check
         v_dist = line2["top"] - line1["bottom"]
         avg_height = (line1["height"] + line2["height"]) / 2
 
@@ -118,7 +109,6 @@ class StructuralReconstructor:
         if v_dist > avg_height * self.proximity_threshold:
             return False
 
-        # Horizontal alignment check (start of lines)
         h_diff = abs(line1["left"] - line2["left"])
         return h_diff <= avg_height * 3
 

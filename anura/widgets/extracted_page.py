@@ -136,7 +136,6 @@ class ExtractedPage(Adw.NavigationPage):
         original_icon = self.text_copy_btn.get_icon_name()
         self.text_copy_btn.set_icon_name("emblem-ok-symbolic")
 
-        # Revert icon after 2 seconds
         GLib.timeout_add_seconds(2, self._reset_copy_icon, original_icon)
 
     def _reset_copy_icon(self, icon_name: str) -> bool:

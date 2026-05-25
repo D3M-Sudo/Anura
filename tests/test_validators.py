@@ -122,9 +122,8 @@ class TestUriValidatorEnterprise:
     )
     def test_invalid_types(self, url):
         """Test invalid input types."""
-        # uri_validator expects a string.
-        with pytest.raises(TypeError):
-            uri_validator(url)
+        # uri_validator should return False for non-string types
+        assert uri_validator(url) is False
 
     def test_referential_transparency(self):
         """Test that the function is pure and returns the same result for the same input."""

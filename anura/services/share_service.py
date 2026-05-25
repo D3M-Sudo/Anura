@@ -69,7 +69,6 @@ class ShareService(GObject.GObject):
         if not is_safe_url_string(url):
             return False
 
-        # Strip whitespace first
         url = url.strip() if url else ""
 
         # Allow mailto and web+mastodon schemes after passing fundamental checks
@@ -83,7 +82,6 @@ class ShareService(GObject.GObject):
         """
         Generates a share link and launches the default system handler.
         """
-        # Strip whitespace first, then check for empty
         text = text.strip() if text else ""
         if not text:
             logger.warning("Anura Share: Attempted to share empty text.")

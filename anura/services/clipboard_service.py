@@ -108,7 +108,6 @@ class ClipboardService(GObject.GObject):
                 self._cancellable.cancel()
                 self._cancellable = None
 
-        # Set the text directly
         self.clipboard.set_text(value)
 
         # Set timeout as expected by tests and for robustness

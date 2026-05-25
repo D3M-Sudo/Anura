@@ -32,10 +32,12 @@ from anura.config import (  # noqa: E402
 )
 from anura.core.atomic_task_manager import get_atomic_manager  # noqa: E402
 from anura.models.ocr import OcrResult  # noqa: E402
+from anura.services.settings import settings  # noqa: E402
 from anura.utils import validate_image_resource  # noqa: E402
 from anura.utils.portal_advice import detect_portal_advice  # noqa: E402
 from anura.utils.structural_reconstructor import get_structural_reconstructor  # noqa: E402
 from anura.utils.text_preprocessor import get_text_preprocessor  # noqa: E402
+from anura.utils.validators import sanitize_text  # noqa: E402
 
 
 def _is_flatpak_environment() -> bool:
@@ -67,7 +69,6 @@ def run_ocr_pipeline(
         from anura.transformers.magic_processor import get_magic_processor
         from anura.utils.structural_reconstructor import get_structural_reconstructor
         from anura.utils.text_preprocessor import get_text_preprocessor
-        from anura.utils.validators import sanitize_text
 
         if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
             return False, "", _("The selected image file is empty."), None
@@ -431,7 +432,6 @@ class ScreenshotService(GObject.GObject):
         """Try to detect and decode QR codes and Barcodes from image using zxing-cpp."""
         try:
             from anura.utils.barcode_detector import detect_barcodes
-            from anura.utils.validators import sanitize_text
 
             results = detect_barcodes(img)
             if results:
@@ -451,7 +451,6 @@ class ScreenshotService(GObject.GObject):
         try:
             from pytesseract import Output
 
-            from anura.services.settings import settings
             from anura.transformers.magic_processor import get_magic_processor
 
             mode = settings.get_string("ocr-preprocessing")
@@ -482,8 +481,6 @@ class ScreenshotService(GObject.GObject):
                 or recon_conf > magic_conf
             ):
                 processed_text = spatially_reconstructed
-
-            from anura.utils.validators import sanitize_text
 
             if mode == "full":
                 cleaned_text = preprocessor.clean_extracted_text(processed_text)
@@ -583,8 +580,6 @@ class ScreenshotService(GObject.GObject):
 
         # If it's a physical file, we can use process isolation to bypass the GIL
         if isinstance(file, str) and os.path.exists(file):
-            from anura.services.settings import settings
-
             mode = settings.get_string("ocr-preprocessing")
 
             # Initial status feedback

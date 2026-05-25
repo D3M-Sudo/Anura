@@ -6,6 +6,7 @@
 from gettext import gettext as _
 from gettext import ngettext
 from typing import ClassVar
+import weakref
 
 from gi.repository import Gio, GLib, GObject, Gtk
 from loguru import logger
@@ -13,9 +14,10 @@ from loguru import logger
 from anura.services.result_dispatcher import get_result_dispatcher
 from anura.utils import uri_validator
 from anura.utils.portal_advice import detect_portal_advice
+from anura.utils.signal_manager import SignalManagerMixin
 
 
-class OcrController(GObject.GObject):
+class OcrController(GObject.GObject, SignalManagerMixin):
     """
     Decoupled controller for OCR operations.
     Manages coordination between the Window UI and the ScreenshotService.
@@ -30,11 +32,10 @@ class OcrController(GObject.GObject):
 
     def __init__(self, window):
         GObject.GObject.__init__(self)
-        import weakref
+        SignalManagerMixin.__init__(self)
 
         self._window = weakref.proxy(window)
         self._dispatcher = get_result_dispatcher()
-        self._signal_connections = {}
 
         # Register for automatic teardown
         if hasattr(window, "register_controller"):
@@ -44,26 +45,17 @@ class OcrController(GObject.GObject):
         self._setup_connections()
         logger.debug("OcrController: Initialized and connected to AnuraWindow")
 
-    def connect_tracked(self, emitter, signal_name, callback):
-        handler_id = emitter.connect(signal_name, callback)
-        if emitter not in self._signal_connections:
-            self._signal_connections[emitter] = []
-        self._signal_connections[emitter].append(handler_id)
-        return handler_id
-
     def teardown(self) -> None:
         """Unified teardown called by SignalManagerMixin."""
         self.cleanup()
 
     def _setup_connections(self):
-        # Backend Responses
         backend = self._window.backend
         self.connect_tracked(backend, "decoded", self._on_shot_done)
         self.connect_tracked(backend, "error", self._on_shot_error)
         self.connect_tracked(backend, "status-changed", self._on_status_changed)
         self.connect_tracked(backend, "portal-backend-missing", self._on_portal_backend_missing)
 
-        # Banner Interactions
         self.connect_tracked(self._window.portal_banner, "button-clicked", self._on_portal_banner_dismissed)
 
     def _on_shot_done(self, _sender, text, copy, ocr_result):
@@ -148,8 +140,6 @@ class OcrController(GObject.GObject):
 
     def open_image(self) -> None:
         """Open file dialog to select an image for OCR processing."""
-        from gettext import gettext as _
-
         dialog = Gtk.FileDialog()
         dialog.set_title(_("Choose an image for extraction"))
 
@@ -207,19 +197,16 @@ class OcrController(GObject.GObject):
                 file = dialog.open_finish(result)
                 if file:
                     self._window.process_file(file.get_path())
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Image selection failed or aborted: {e}")
 
         dialog.open(self._window, None, _on_open_image_result)
 
     def cleanup(self):
         """Explicit cleanup to prevent memory leaks."""
-        for emitter, handler_ids in self._signal_connections.items():
-            for handler_id in handler_ids:
-                try:
-                    emitter.disconnect(handler_id)
-                except Exception:
-                    pass
-        self._signal_connections.clear()
+        try:
+            self.disconnect_all_signals()
+        except Exception as e:
+            logger.debug(f"Signal disconnection omitted or failed during cleanup: {e}")
         self._window = None
         logger.debug("OcrController: Cleaned up and disconnected")
