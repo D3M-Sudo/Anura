@@ -3,16 +3,17 @@
 #
 # SPDX-License-Identifier: MIT
 
-import threading
 import time
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
+from PIL import Image
 
 pytest.importorskip("gi")
 
-from anura.atomic_task_manager import get_atomic_manager, AtomicTaskManager
+from anura.atomic_task_manager import AtomicTaskManager
 from anura.utils.image_filters import AdaptiveThresholdFilter
-from PIL import Image
+
 
 def test_new_01_deadlock_prevention():
     """
@@ -29,6 +30,7 @@ def test_new_01_deadlock_prevention():
     assert task_id is not None
     mgr.shutdown()
 
+
 def test_new_02_interrupted_error_propagation_screenshot_service():
     """
     Verify that InterruptedError is correctly re-raised in _try_ocr_extraction.
@@ -40,32 +42,25 @@ def test_new_02_interrupted_error_propagation_screenshot_service():
             # We mock Settings class in anura.services.settings before importing screenshot_service
             with patch("anura.services.settings.Settings"):
                 from anura.services.screenshot_service import ScreenshotService
+
                 service = ScreenshotService.__new__(ScreenshotService)
 
     mock_img = MagicMock(spec=Image.Image)
     mock_img.mode = "L"
 
-    # Force settings mock during method call
-    # We patch everything that could raise an exception before our target line
-    with patch("anura.services.screenshot_service.settings", create=True) as mock_settings, \
-         patch("anura.services.screenshot_service.get_text_preprocessor") as mock_get_pre, \
-         patch("anura.services.screenshot_service.pytesseract", create=True):
-
-        # We also need to mock settings here because screenshot_service.py
-        # might still be trying to access the real one via the proxy.
-        with patch("anura.services.settings.settings", mock_settings):
-            mock_settings.get_string.return_value = "full"
+    # We patch settings in settings.py to avoid the RuntimeError in __getattr__
+    # Using a different approach to bypass the proxy object's __getattr__
+    with patch("anura.services.settings.settings._get_instance") as mock_get_instance:
+        mock_settings = MagicMock()
+        mock_get_instance.return_value = mock_settings
+        mock_settings.get_string.return_value = "full"
+        with patch("anura.services.screenshot_service.get_text_preprocessor") as mock_get_pre:
             mock_pre = MagicMock()
             mock_get_pre.return_value = mock_pre
             mock_pre.enhance_image.side_effect = InterruptedError("Cancelled")
-
-            try:
+            with pytest.raises(InterruptedError):
                 service._try_ocr_extraction(mock_img, "eng", time.time(), task_id="test-task")
-                pytest.fail("Did not raise InterruptedError")
-            except InterruptedError:
-                pass
-            except Exception as e:
-                pytest.fail(f"Raised wrong exception: {e}")
+
 
 def test_new_03_interrupted_error_propagation_filters():
     """
@@ -77,6 +72,7 @@ def test_new_03_interrupted_error_propagation_filters():
     with patch.object(filt, "_check_cancellation", side_effect=InterruptedError("Cancelled")):
         with pytest.raises(InterruptedError):
             filt.apply(mock_img, task_id="test-task")
+
 
 def test_new_06_ipc_outside_lock_logic():
     """
@@ -105,6 +101,7 @@ def test_new_06_ipc_outside_lock_logic():
 
     mgr.shutdown()
 
+
 def test_new_05_silent_reset_on_cancellation():
     """
     Verify that run_ocr_pipeline returns (False, None, None, None) on InterruptedError,
@@ -116,9 +113,8 @@ def test_new_05_silent_reset_on_cancellation():
 
     with patch("anura.utils.barcode_detector.detect_barcodes", side_effect=InterruptedError()):
         # Create a dummy file for the pipeline
-        with patch("os.path.exists", return_value=True), \
-             patch("os.path.getsize", return_value=100), \
-             patch("PIL.Image.open") as mock_open:
-
+        with patch("os.path.exists", return_value=True), patch(
+            "os.path.getsize", return_value=100
+        ), patch("PIL.Image.open"):
             result = run_ocr_pipeline("eng", "dummy.png", "off", task_id="test")
             assert result == (False, None, None, None)
