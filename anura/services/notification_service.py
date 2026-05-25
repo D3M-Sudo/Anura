@@ -277,9 +277,17 @@ class NotificationService:
     def cleanup_notifications(self) -> None:
         """Clean up tracking of active notifications.
 
-        Called periodically (every 60s) as a safety net and by
-        _dismiss_portal_notification after the auto-dismiss timer.
+        Called periodically (every 60s) as a safety net, on app shutdown,
+        and by _dismiss_portal_notification after the auto-dismiss timer.
+        Actively withdraws any still-live portal notifications so they do not
+        persist on the desktop after the application exits.
         """
         if self._active_notifications:
             logger.debug(f"NotificationService: Cleaning up {len(self._active_notifications)} tracked notifications")
+            if self._portal is not None:
+                for notification_id in list(self._active_notifications):
+                    try:
+                        self._portal.remove_notification(notification_id, None, None, None)
+                    except Exception as e:
+                        logger.debug(f"NotificationService: Could not remove notification {notification_id}: {e}")
             self._active_notifications.clear()

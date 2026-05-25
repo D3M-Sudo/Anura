@@ -108,7 +108,12 @@ class ClipboardService(GObject.GObject):
                 self._cancellable.cancel()
                 self._cancellable = None
 
-        self.clipboard.set_text(value)
+        # Gdk.Clipboard.set_text() was removed in GTK4.
+        # The correct GTK4 API is set_content() with a ContentProvider wrapping
+        # a GLib.Variant string, which is supported across all GTK4 backends
+        # (X11, Wayland, Broadway).
+        content = Gdk.ContentProvider.new_for_value(GLib.Variant("s", value))
+        self.clipboard.set_content(content)
 
         # Set timeout as expected by tests and for robustness
         with self._state_lock:
