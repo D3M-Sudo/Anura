@@ -9,7 +9,7 @@ from gettext import gettext as _
 from gi.repository import Adw, Gio, GLib, Gtk
 
 from anura.config import RESOURCE_PREFIX
-from anura.language_manager import language_manager
+from anura.services.language_manager import language_manager
 from anura.services.settings import settings
 from anura.types.language_item import LanguageItem
 from anura.utils.signal_manager import SignalManagerMixin

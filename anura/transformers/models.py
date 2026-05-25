@@ -85,7 +85,17 @@ class OcrResult:
         return "".join(text_parts).strip()
 
 
-class TransformerProtocol(Protocol):
-    def score(self, ocr_result: OcrResult) -> float: ...
+class ITransformer(Protocol):
+    """Protocol for OCR result transformers."""
 
-    def transform(self, ocr_result: OcrResult) -> list[str]: ...
+    def score(self, ocr_result: OcrResult) -> float:
+        """Calculate a score (0.0 to 1.0) indicating how well this transformer fits the result."""
+        ...
+
+    def transform(self, ocr_result: OcrResult) -> list[str]:
+        """Transform the OCR result into a list of strings."""
+        ...
+
+
+# Compatibility alias
+TransformerProtocol = ITransformer

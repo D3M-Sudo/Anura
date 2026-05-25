@@ -13,7 +13,7 @@ import time
 
 from gi.repository import GLib, GObject
 
-from anura.atomic_task_manager import get_atomic_manager
+from anura.core.atomic_task_manager import get_atomic_manager
 from anura.utils.signal_manager import SignalManagerMixin
 from anura.utils.singleton import ThreadSafeSingleton, get_instance
 from anura.utils.validators import uri_validator

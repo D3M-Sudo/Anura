@@ -44,7 +44,7 @@ class StructuralReconstructor:
 
         for i, word in enumerate(words):
             if task_id and i % 50 == 0:
-                from anura.atomic_task_manager import get_atomic_manager
+                from anura.core.atomic_task_manager import get_atomic_manager
 
                 if get_atomic_manager().is_cancelled(task_id):
                     raise InterruptedError(f"Task {task_id} was cancelled")
@@ -71,7 +71,7 @@ class StructuralReconstructor:
 
         for i in range(1, len(lines)):
             if task_id and i % 10 == 0:
-                from anura.atomic_task_manager import get_atomic_manager
+                from anura.core.atomic_task_manager import get_atomic_manager
 
                 if get_atomic_manager().is_cancelled(task_id):
                     raise InterruptedError(f"Task {task_id} was cancelled")

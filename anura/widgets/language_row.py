@@ -9,7 +9,7 @@ import contextlib
 from gi.repository import GLib, GObject, Gtk
 
 from anura.config import RESOURCE_PREFIX
-from anura.language_manager import language_manager
+from anura.services.language_manager import language_manager
 from anura.types.language_item import LanguageItem
 
 

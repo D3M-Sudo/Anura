@@ -13,11 +13,6 @@
         "--socket=wayland",
         "--socket=pulseaudio",
         "--device=dri",
-        "--filesystem=xdg-pictures:ro",
-        "--filesystem=xdg-download:ro",
-        "--filesystem=xdg-desktop:ro",
-        "--filesystem=xdg-documents:ro",
-        "--filesystem=xdg-public-share:ro",
         "--talk-name=org.a11y.Bus",
         "--talk-name=org.freedesktop.portal.Desktop",
         "--env=TESSDATA_PREFIX=/app/share/tessdata"

@@ -22,12 +22,12 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk  # noqa: E402
 from loguru import logger  # noqa: E402
 
-from anura.atomic_task_manager import get_atomic_manager  # noqa: E402
+from anura.core.atomic_task_manager import get_atomic_manager  # noqa: E402
 from anura.config import APP_ID, RESOURCE_PREFIX  # noqa: E402
 from anura.controllers.dnd_controller import DndController  # noqa: E402
 from anura.controllers.ocr_controller import OcrController  # noqa: E402
 from anura.controllers.tts_controller import TtsController  # noqa: E402
-from anura.language_manager import get_language_manager  # noqa: E402
+from anura.services.language_manager import get_language_manager  # noqa: E402
 from anura.services.clipboard_service import get_clipboard_service  # noqa: E402
 from anura.services.screenshot_service import ScreenshotService  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
@@ -181,28 +181,36 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
             self.show_toast(_("Failed to capture screenshot"))
 
     def process_file(self, file_path: str) -> None:
-        """Process an image file directly from CLI."""
-        try:
-            is_valid, _size, error = validate_image_resource(file_path)
-            if not is_valid:
-                logger.error(f"Anura OCR: {error}")
-                self.show_toast(_(error) if error else _("Invalid image file"))
-                return
+        """Process an image file asynchronously."""
+        if not file_path:
+            return
 
-            mimetype, _encoding = guess_type(file_path)
-            if not mimetype or not mimetype.startswith("image"):
-                self.show_toast(_("Unsupported file format: {path}").format(path=file_path))
-                return
+        gfile = Gio.File.new_for_path(file_path)
+        self.welcome_page.show_spinner()
 
-            self.welcome_page.show_spinner()
-            get_atomic_manager().execute(self.backend.decode_image, (self.get_language(), file_path))
-        except FileNotFoundError:
-            self.show_toast(_("File not found: {path}").format(path=file_path))
-        except PermissionError:
-            self.show_toast(_("Permission denied: {path}").format(path=file_path))
-        except OSError as e:
-            logger.error(f"Error accessing file {file_path}: {e}")
-            self.show_toast(_("Cannot access file: {path}").format(path=file_path))
+        def _on_contents_loaded(gfile, result):
+            try:
+                ok, contents, _etag = gfile.load_contents_finish(result)
+                if ok:
+                    is_valid, _size, error = validate_image_resource(contents)
+                    if not is_valid:
+                        self.welcome_page.spinner.set_visible(False)
+                        self.show_toast(_(error) if error else _("Invalid image file"))
+                        return
+
+                    from io import BytesIO
+                    get_atomic_manager().execute(
+                        self.backend.decode_image, (self.get_language(), BytesIO(contents))
+                    )
+                else:
+                    self.welcome_page.hide_spinner()
+                    self.show_toast(_("Failed to load image file"))
+            except Exception as e:
+                logger.error(f"Anura Window: Async load failed: {e}")
+                self.welcome_page.hide_spinner()
+                self.show_toast(_("Error loading file"))
+
+        gfile.load_contents_async(None, _on_contents_loaded)
 
     def _do_copy_to_clipboard(self) -> None:
         text = self.extracted_page.extracted_text

@@ -51,13 +51,13 @@ class TestSecurityAudit:
 
     def test_absolute_path_injection_in_language_manager(self, tmp_path):
         # Test that LanguageManager.remove_language validates input
-        from anura.language_manager import LanguageManager
+        from anura.services.language_manager import LanguageManager
 
         # Mock TESSDATA_DIR to a safe temp path
         tessdata = tmp_path / "tessdata"
         tessdata.mkdir()
 
-        with patch("anura.language_manager.TESSDATA_DIR", str(tessdata)):
+        with patch("anura.services.language_manager.TESSDATA_DIR", str(tessdata)):
             lm = LanguageManager()
 
             # Try to remove a file outside the directory

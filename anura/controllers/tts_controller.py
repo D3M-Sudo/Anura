@@ -16,7 +16,9 @@ class TtsController(GObject.GObject):
 
     def __init__(self, window):
         GObject.GObject.__init__(self)
-        self._window = window
+        import weakref
+
+        self._window = weakref.proxy(window)
         self._tts_service = get_tts_service()
         self._signal_connections = {}
 
@@ -69,5 +71,10 @@ class TtsController(GObject.GObject):
                 except Exception:
                     pass
         self._signal_connections.clear()
-        self._window = None
+        # With weakref.proxy, we don't need to manually nullify self._window
+        # but we do it anyway for safety during explicit cleanup.
+        try:
+            self._window = None
+        except Exception:
+            pass
         logger.debug("TtsController: Cleaned up and disconnected")

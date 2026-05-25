@@ -4,7 +4,7 @@
 #
 # MIT License
 
-from anura.utils.transformers.models import OcrResult, TransformerProtocol
+from anura.transformers.models import OcrResult, TransformerProtocol
 
 
 class SingleLineTransformer(TransformerProtocol):

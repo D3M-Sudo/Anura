@@ -10,7 +10,7 @@ pytest.importorskip("gi")
 
 from unittest.mock import patch
 
-from anura.language_manager import LanguageManager
+from anura.services.language_manager import LanguageManager
 from anura.main import AnuraApplication
 
 
@@ -20,8 +20,8 @@ class TestLanguageManager:
         tessdata = tmp_path / "tessdata"
 
         with (
-            patch("anura.language_manager.TESSDATA_DIR", str(tessdata)),
-            patch("anura.language_manager.TESSDATA_SYSTEM_DIR", str(tmp_path / "system")),
+            patch("anura.services.language_manager.TESSDATA_DIR", str(tessdata)),
+            patch("anura.services.language_manager.TESSDATA_SYSTEM_DIR", str(tmp_path / "system")),
         ):
             lm = LanguageManager()
             lm.init_tessdata()

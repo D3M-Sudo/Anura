@@ -11,7 +11,7 @@ import pytest
 
 pytest.importorskip("gi")
 
-from anura.atomic_task_manager import AtomicTaskManager
+from anura.core.atomic_task_manager import AtomicTaskManager
 from anura.utils.image_filters import AdaptiveThresholdFilter
 
 

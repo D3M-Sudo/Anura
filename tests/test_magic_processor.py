@@ -1,5 +1,5 @@
 from anura.types.ocr import OcrResult
-from anura.utils.transformers.magic_processor import get_magic_processor
+from anura.transformers.magic_processor import get_magic_processor
 
 
 def create_mock_ocr_result(text_list, conf=90.0):

@@ -85,7 +85,7 @@ def test_get_release_notes_wraps_bare_text() -> None:
 
 
 def test_screenshot_service_logs_full_diagnostic_context() -> None:
-    _tree, text = _load_module_source("services/screenshot_service.py")
+    _tree, text = _load_module_source("services/screenshot/portal_provider.py")
     assert "domain={e.domain}" in text and "code={e.code}" in text, (
         "logger.error in take_screenshot_finish must include {e.domain} and "
         "{e.code} so the user/log analysis can identify the failing portal layer.",
@@ -93,7 +93,7 @@ def test_screenshot_service_logs_full_diagnostic_context() -> None:
 
 
 def test_screenshot_service_detects_generic_backend_failure() -> None:
-    _tree, text = _load_module_source("services/screenshot_service.py")
+    _tree, text = _load_module_source("services/screenshot/portal_provider.py")
     assert "Gio.IOErrorEnum.FAILED" in text, (
         "ScreenshotService must explicitly match Gio.IOErrorEnum.FAILED to "
         "detect the libportal generic-failure pattern."
@@ -163,7 +163,7 @@ def test_window_blp_contains_adw_banner() -> None:
 def test_language_manager_remove_language_validates_code() -> None:
     """LanguageManager.remove_language must validate the input code against
     LANG_CODE_PATTERN to prevent path traversal."""
-    tree, _ = _load_module_source("language_manager.py")
+    tree, _ = _load_module_source("services/language_manager.py")
     remove_fn = _find_method(tree, "LanguageManager", "remove_language")
 
     found_validation = False

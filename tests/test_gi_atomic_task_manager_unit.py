@@ -10,7 +10,7 @@ pytest.importorskip("gi")
 import threading
 import uuid
 
-from anura.atomic_task_manager import AtomicTaskManager, AtomicTaskResult, get_atomic_manager
+from anura.core.atomic_task_manager import AtomicTaskManager, AtomicTaskResult, get_atomic_manager
 from anura.utils.singleton import ThreadSafeSingleton
 
 
