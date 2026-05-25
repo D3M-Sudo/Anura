@@ -32,8 +32,8 @@ import pytesseract  # noqa: E402
 from anura.atomic_task_manager import get_atomic_manager  # noqa: E402
 from anura.config import (  # noqa: E402
     LANG_CODE_PATTERN,
-    get_tesseract_config,
 )
+from anura.language_manager import get_tesseract_config  # noqa: E402
 from anura.services.host_screenshot_fallback import build_scrot_argv  # noqa: E402
 from anura.types.ocr import OcrResult  # noqa: E402
 from anura.utils import validate_image_resource  # noqa: E402
@@ -416,19 +416,14 @@ class ScreenshotService(GObject.GObject):
         advice = detect_portal_advice()
         user_message = advice.long_message
 
-        # Static check guard: ScreenshotService must emit 'portal-backend-missing' (via GLib.idle_add)
-        # when it detects the libportal generic-failure pattern.
         def _on_failure_idle():
             try:
-                # Satisfy static check: ScreenshotService must emit 'portal-backend-missing' (via GLib.idle_add)
                 self.emit("portal-backend-missing")
                 self.emit("error", user_message)
             except Exception:
                 logger.exception("Anura: Failed to emit portal failure signals")
             return GLib.SOURCE_REMOVE
 
-        # Satisfy static check: ScreenshotService must emit 'portal-backend-missing' (via GLib.idle_add)
-        # the emission is handled inside _on_failure_idle.
         GLib.idle_add(_on_failure_idle)
 
     def _try_host_screenshot_fallback(self, lang: str, copy: bool) -> None:
