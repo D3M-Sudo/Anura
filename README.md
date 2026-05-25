@@ -48,8 +48,21 @@ It also decodes **QR codes and Barcodes** in a single click using **zxing-cpp**,
 | 🎨 **Native GTK4** | Designed for GNOME, built with Libadwaita and Blueprint |
 | 🚀 **Async D&D** | Smooth, non-blocking asynchronous drag-and-drop |
 | ✨ **Smart OCR Cleanup** | Adaptive image enhancement and structural layout reconstruction |
+🛡️ **Architectural Security** | Transactional worker isolation and OOM prevention guards |
+📜 **Offline Rotary Logs** | Secure, zero-telemetry local logging system |
 | ⌨️ **Keyboard Shortcuts** | Modern shortcut overlay with categorized searchable cheat sheet |
 | 🔗 **Share Anywhere** | Share to Telegram, Reddit, Mastodon, X, Email, Bluesky, Discord, LinkedIn, Threads |
+
+---
+
+## Architecture
+
+As of **v0.1.5**, Anura has migrated to a modular, service-oriented architecture:
+
+- **Core Services (`anura/core/`)**: Decoupled modules for `boot` (hardware/capability audit), `i18n` (localization), `resources` (GResource management), and `dialogs` (UI orchestration).
+- **Controller Pattern**: All business logic is encapsulated in standalone controllers (`OcrController`, `TtsController`, `DndController`), keeping the UI shell clean and maintainable.
+- **Headless Engine**: The CLI/Silent runner is isolated from the main GTK loop to ensure stability in non-interactive environments.
+- **Automated Lifecycle**: Native GObject destruction hooks via `SignalManagerMixin` guarantee leak-free resource management.
 
 ---
 

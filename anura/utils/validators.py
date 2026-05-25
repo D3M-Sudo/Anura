@@ -46,11 +46,7 @@ def sanitize_text(text: str) -> str:
     # 1. Defense-in-depth: Strip non-printable Unicode Control (Cc) and Format (Cf)
     # characters, but preserve legitimate formatting like \n, \r, and \t.
     # This prevents Null byte injection, Bell characters, and RTL override spoofing.
-    text = "".join(
-        ch
-        for ch in text
-        if unicodedata.category(ch) not in ("Cc", "Cf") or ch in "\n\r\t"
-    )
+    text = "".join(ch for ch in text if unicodedata.category(ch) not in ("Cc", "Cf") or ch in "\n\r\t")
 
     # 2. Normalize horizontal whitespace (squash multiple spaces/tabs)
     # Note: \n and \r are preserved by the [ \t]+ pattern.
@@ -61,6 +57,7 @@ def sanitize_text(text: str) -> str:
     text = re.sub(r"(https?|ftp|file):\s+/{2}", r"\1://", text)
 
     return text.strip()
+
 
 def is_safe_url_string(text: str) -> bool:
     """

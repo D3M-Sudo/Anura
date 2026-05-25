@@ -16,16 +16,16 @@ class SingleLineTransformer(TransformerProtocol):
     def transform(self, ocr_result: OcrResult) -> list[str]:
         return [ocr_result.add_linebreaks(line_sep=" ")]
 
+
 class MultiLineTransformer(TransformerProtocol):
     def score(self, ocr_result: OcrResult) -> float:
-        if (ocr_result.num_lines > 1 and
-            ocr_result.num_blocks == 1 and
-            ocr_result.num_pars == 1):
+        if ocr_result.num_lines > 1 and ocr_result.num_blocks == 1 and ocr_result.num_pars == 1:
             return 50.0
         return 0
 
     def transform(self, ocr_result: OcrResult) -> list[str]:
         return [ocr_result.add_linebreaks()]
+
 
 class ParagraphTransformer(TransformerProtocol):
     def score(self, ocr_result: OcrResult) -> float:

@@ -15,6 +15,7 @@ from loguru import logger
 @dataclass(frozen=True, slots=True)
 class ApplicationContext:
     """Immutable representation of application capabilities based on environment audit."""
+
     has_ocr: bool
     has_barcode: bool
     has_tts: bool
@@ -43,6 +44,7 @@ class ApplicationContext:
         if importlib.util.find_spec("zxingcpp"):
             try:
                 import zxingcpp  # noqa: F401
+
                 has_barcode = True
             except (ImportError, RuntimeError, OSError):
                 has_barcode = False
@@ -51,8 +53,10 @@ class ApplicationContext:
         has_gtts = importlib.util.find_spec("gtts") is not None
         try:
             import gi
+
             gi.require_version("Gst", "1.0")
             from gi.repository import Gst  # noqa: F401
+
             has_gst = True
         except (ImportError, ValueError):
             has_gst = False
@@ -70,16 +74,20 @@ class ApplicationContext:
             has_tts=has_tts,
             has_libnotify=has_libnotify,
             has_scrot=has_scrot,
-            is_flatpak=is_flatpak
+            is_flatpak=is_flatpak,
         )
 
-        logger.info(f"Anura Capabilities: OCR={ctx.has_ocr}, Barcode={ctx.has_barcode}, "
-                    f"TTS={ctx.has_tts}, Scrot={ctx.has_scrot}, Flatpak={ctx.is_flatpak}")
+        logger.info(
+            f"Anura Capabilities: OCR={ctx.has_ocr}, Barcode={ctx.has_barcode}, "
+            f"TTS={ctx.has_tts}, Scrot={ctx.has_scrot}, Flatpak={ctx.is_flatpak}"
+        )
         return ctx
+
 
 # Global context instance (populated at boot)
 _app_context: ApplicationContext | None = None
 _app_context_lock = threading.Lock()
+
 
 def get_app_context() -> ApplicationContext:
     """Get the global application context. Performs audit on first call if not initialized."""

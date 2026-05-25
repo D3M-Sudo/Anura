@@ -58,13 +58,16 @@
 
 | Feature | Implementation |
 | ------- | ------------- |
-| **DoS Prevention** | Strict `MAX_IMAGE_SIZE_BYTES` checks in `ScreenshotService` before image loading. |
-| **Text Sanitization** | `validators.sanitize_text` strips Unicode Control (Cc) and Format (Cf) categories. |
-| **URI Validation** | `uri_validator()` blocks homograph attacks and disallowed schemes. |
+| **DoS & OOM Prevention** | Strict `MAX_IMAGE_SIZE_BYTES` checks AND dynamic `Resource Guards` that block high-res processing if free RAM < 15% or available RAM < 500MB. |
+| **Transactional Worker I/O** | All OCR worker artifacts are isolated in a `tempfile.TemporaryDirectory` with environment-level redirection (`TMPDIR`, `TEMP`, `TMP`) to prevent data leakage. |
+| **Text Sanitization** | `validators.sanitize_text` strips Unicode Control (Cc) and Format (Cf) categories to prevent terminal injection and RTL spoofing. |
+| **URI Validation** | `uri_validator()` blocks homograph attacks and disallowed schemes before any browser launch. |
 | **Atomic Task Management** | `AtomicTaskManager` prevents race conditions via single-slot execution and UUID versioning. |
+| **Secure Logging** | Offline rotary logging system with strict rotation and retention policies; strictly zero-telemetry. |
+| **Automated Lifecycle** | Native GObject destruction hooks ensure complete signal disconnection and resource teardown. |
 | **X11 Fallback Security** | Bundled `scrot` fallback used only when Portals fail on X11; Wayland strictly enforces Portal security. |
 | **Atomic tessdata writes** | `tempfile` + `shutil.move` prevents partial file corruption. |
-| **Flatpak sandbox** | Filesystem isolation with `--filesystem=xdg-download`. |
+| **Flatpak sandbox** | Filesystem isolation with restricted XDG directory access. |
 | **Privacy by design** | No telemetry, tracking, or analytics of any kind. |
 
 ---

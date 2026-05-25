@@ -52,11 +52,11 @@ class OcrController(GObject.GObject):
         backend = self._window.backend
         self.connect_tracked(backend, "decoded", self._on_shot_done)
         self.connect_tracked(backend, "error", self._on_shot_error)
+        self.connect_tracked(backend, "status-changed", self._on_status_changed)
         self.connect_tracked(backend, "portal-backend-missing", self._on_portal_backend_missing)
 
         # Banner Interactions
-        self.connect_tracked(self._window.portal_banner, "button-clicked",
-                           self._on_portal_banner_dismissed)
+        self.connect_tracked(self._window.portal_banner, "button-clicked", self._on_portal_banner_dismissed)
 
     def _on_notification_requested(self, _dispatcher, title, body):
         """Bridge notification requests from dispatcher to system notifications."""
@@ -74,9 +74,7 @@ class OcrController(GObject.GObject):
         self._window.welcome_page.reset_drop_area_state()
 
         if not text:
-            self._on_notification_requested(
-                None, _("Anura OCR"), _("No text found. Try to grab another region.")
-            )
+            self._on_notification_requested(None, _("Anura OCR"), _("No text found. Try to grab another region."))
             return
 
         try:
@@ -101,9 +99,9 @@ class OcrController(GObject.GObject):
         if not uri_validator(url):
             # Fallback to text flow if URL is invalid
             from anura.types.ocr import ExtractionResult
+
             fake_result = ExtractionResult(
-                text=url, raw_text=url, urls=(), emails=(), phone_numbers=(),
-                avg_confidence=0.0, is_primary_url=False
+                text=url, raw_text=url, urls=(), emails=(), phone_numbers=(), avg_confidence=0.0, is_primary_url=False
             )
             self._handle_text_flow(fake_result, copy_requested)
             return
@@ -144,14 +142,10 @@ class OcrController(GObject.GObject):
             get_clipboard_service().set(text)
             self._window.show_toast(_("Text copied to clipboard"))
             if not is_window_active:
-                self._on_notification_requested(
-                    None, _("Anura OCR"), _("Text extracted and copied to clipboard.")
-                )
+                self._on_notification_requested(None, _("Anura OCR"), _("Text extracted and copied to clipboard."))
         else:
             if not is_window_active:
-                self._on_notification_requested(
-                    None, _("Anura OCR"), _("Text extracted successfully.")
-                )
+                self._on_notification_requested(None, _("Anura OCR"), _("Text extracted successfully."))
 
         # Show toasts for other structured data found in text
         if result.emails:
@@ -165,6 +159,13 @@ class OcrController(GObject.GObject):
             self._window.show_toast(
                 ngettext("{n} phone number found in text", "{n} phone numbers found in text", count).format(n=count)
             )
+
+    def _on_status_changed(self, _sender, status_msg):
+        """Handle status updates from backend to prevent Zombie UI."""
+        if hasattr(self._window, "show_status"):
+            self._window.show_status(status_msg)
+        elif hasattr(self._window, "welcome_page"):
+            self._window.welcome_page.set_status(status_msg)
 
     def _on_shot_error(self, _sender, message):
         """Handle screenshot capture errors."""
@@ -209,8 +210,19 @@ class OcrController(GObject.GObject):
         all_img_filter.set_name(_("All supported images"))
 
         _ALL_EXTENSIONS = [
-            "png", "jpg", "jpeg", "jpe", "jfif", "webp", "avif", "avifs",
-            "tif", "tiff", "bmp", "dib", "gif",
+            "png",
+            "jpg",
+            "jpeg",
+            "jpe",
+            "jfif",
+            "webp",
+            "avif",
+            "avifs",
+            "tif",
+            "tiff",
+            "bmp",
+            "dib",
+            "gif",
         ]
 
         for ext in _ALL_EXTENSIONS:
@@ -284,9 +296,9 @@ class OcrController(GObject.GObject):
                         return
 
                     from anura.atomic_task_manager import get_atomic_manager
+
                     get_atomic_manager().execute(
-                        self._window.backend.decode_image,
-                        (self._window.get_language(), BytesIO(contents))
+                        self._window.backend.decode_image, (self._window.get_language(), BytesIO(contents))
                     )
             except Exception:
                 self._window.welcome_page.hide_spinner()

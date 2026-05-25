@@ -17,8 +17,10 @@ import zxingcpp
 
 class BarcodeResult(NamedTuple):
     """Result of a barcode/QR code detection."""
+
     text: str
     format: str
+
 
 def detect_barcodes(image: Image.Image) -> list[BarcodeResult]:
     """

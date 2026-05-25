@@ -25,7 +25,14 @@ Anura OCR is a GTK4/Libadwaita desktop application for GNOME that extracts text 
 ```text
 anura/
 ├── anura/                      Python application source
-│   ├── main.py                 AnuraApplication (Adw.Application) + CLI + Capability Audit
+│   ├── main.py                 AnuraApplication (Adw.Application) - Lightweight Orchestrator
+│   ├── core/                   Modular Core Services
+│   │   ├── boot.py             Hardware bootstrap, Capability Audit, Rotary Logging
+│   │   ├── i18n.py             Hybrid C/Python/GLib Localization
+│   │   ├── resources.py        Atomic GResource management
+│   │   ├── action_registry.py  Centralized Action Factory
+│   │   ├── dialogs.py          UI Dialog Orchestration (About, Preferences)
+│   │   └── silent_runner.py    Isolated Headless Engine (CLI/Silent mode)
 │   ├── window.py               AnuraWindow — Core UI shell (Composition-based)
 │   ├── controllers/            Business Logic Controllers
 │   │   ├── ocr_controller.py   OCR coordination and signal handling
@@ -187,9 +194,15 @@ get_atomic_manager().execute(
 
 **Rule:** OCR recognized data should be encapsulated in immutable `frozen` dataclasses (`OcrResult`, `OcrWord`) to ensure data integrity across the transformation pipeline.
 
-### Capability Audit (Feature Toggling)
+### Capability Audit & Logging
 
-**Rule:** Perform a boot-time system audit (`ApplicationContext`) to detect available binaries and libraries. Bind UI sensitivity to these capability flags to prevent runtime failures.
+**Rule:** Perform a boot-time system audit (`ApplicationContext`) via `anura.core.boot.boot_audit()` to detect available binaries and libraries.
+
+**Logging Protocol:**
+1.  **Standard Output**: For terminal visibility during development.
+2.  **Offline Rotary Logs**: Secure local logs in `$XDG_STATE_HOME/anura/logs/`.
+3.  **Constraints**: 5MB max size, 3-file retention, plain text (no compression).
+4.  **Privacy**: Strictly zero-telemetry.
 
 ### Semantic Transformation Pipeline (MagicProcessor)
 

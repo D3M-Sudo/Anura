@@ -12,10 +12,12 @@ from anura.utils.validators import URL_RE
 # Simplified TLD check for standalone version
 TLDS = {"COM", "ORG", "NET", "EDU", "GOV", "IO", "IT", "DE", "FR", "UK", "APP", "DEV"}
 
+
 def _has_valid_tld(url: str) -> bool:
     match = re.search(r"(?:\.)([a-zA-Z]{2,})(?:\/|$)", url, re.IGNORECASE)
     tld = match.group(1) if match else ""
-    return tld.upper() in TLDS or len(tld) >= 2 # Fallback for common TLDs
+    return tld.upper() in TLDS or len(tld) >= 2  # Fallback for common TLDs
+
 
 def _extract_urls(text: str) -> list[str]:
     # Correct commonly unrecognized parts
@@ -23,6 +25,7 @@ def _extract_urls(text: str) -> list[str]:
 
     all_urls = URL_RE.findall(text)
     return [url for url in all_urls if _has_valid_tld(url)]
+
 
 class UrlTransformer(TransformerProtocol):
     def score(self, ocr_result: OcrResult) -> float:

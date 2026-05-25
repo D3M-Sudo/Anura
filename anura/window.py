@@ -241,8 +241,8 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         clipboard_service_instance = get_clipboard_service()
         clipboard_service_instance.cancel_pending_operations()
 
-        # Perform unified teardown of registered controllers and signals
-        self.teardown_all()
+        # Note: self.teardown_all() is now called automatically by SignalManagerMixin
+        # via the 'destroy' signal connection established during __init__.
 
         super().do_destroy()
 
@@ -302,6 +302,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     def _launch_uri(self, url: str) -> None:
         """Open a URI in the default system browser."""
         from anura.utils.validators import launch_uri
+
         launch_uri(url, window=self, error_callback=lambda msg: self.show_toast(msg))
 
     def on_listen(self) -> None:

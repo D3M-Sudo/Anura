@@ -64,6 +64,23 @@ class SignalManagerMixin:
         if they don't want to rely on lazy initialization.
         """
         self._ensure_state_initialized()
+        self._maybe_connect_destroy_signal()
+
+    def _maybe_connect_destroy_signal(self) -> None:
+        """Automatically connect to the 'destroy' signal if available."""
+        if not HAS_GI:
+            return
+
+        from gi.repository import GObject
+
+        if isinstance(self, GObject.Object):
+            try:
+                # Check if the object has a 'destroy' signal (typical for Gtk.Widget)
+                if GObject.signal_lookup("destroy", self.__class__):
+                    self.connect("destroy", lambda _: self.teardown_all())
+                    logger.debug(f"SignalManagerMixin: Auto-connected 'destroy' signal for {type(self).__name__}")
+            except Exception as e:
+                logger.debug(f"SignalManagerMixin: Could not auto-connect 'destroy' for {type(self).__name__}: {e}")
 
     def _ensure_state_initialized(self) -> None:
         """Ensures that the mixin's internal state is initialized."""

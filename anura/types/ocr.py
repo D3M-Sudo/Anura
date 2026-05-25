@@ -10,6 +10,7 @@ from typing import Any
 @dataclass(frozen=True, slots=True)
 class OcrWord:
     """Immutable representation of a single recognized word."""
+
     text: str
     left: int
     top: int
@@ -24,6 +25,7 @@ class OcrWord:
 @dataclass(frozen=True, slots=True)
 class ExtractionResult:
     """Immutable encapsulation of processed extraction results for UI consumption."""
+
     text: str
     raw_text: str
     urls: tuple[str, ...]
@@ -37,6 +39,7 @@ class ExtractionResult:
 @dataclass(frozen=True, slots=True)
 class OcrResult:
     """Immutable encapsulation of recognized text and layout information."""
+
     words: tuple[OcrWord, ...]
     raw_text: str = ""
     avg_confidence: float = 0.0
@@ -79,11 +82,7 @@ class OcrResult:
         avg_conf = total_conf / conf_count if conf_count > 0 else 0.0
         raw_text = " ".join([w.text for w in words])
 
-        return cls(
-            words=tuple(words),
-            raw_text=raw_text,
-            avg_confidence=avg_conf
-        )
+        return cls(words=tuple(words), raw_text=raw_text, avg_confidence=avg_conf)
 
     def filter_by_confidence(self, min_confidence: float) -> list[OcrWord]:
         """Return words with confidence greater than or equal to the threshold."""

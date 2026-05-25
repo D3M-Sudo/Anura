@@ -67,9 +67,7 @@ class LanguageManager(GObject.GObject):
         super().__init__()
 
         self.loading_languages: dict[str, DownloadState] = {}
-        self._download_executor = ThreadPoolExecutor(
-            max_workers=1, thread_name_prefix="AnuraDownloadWorker"
-        )
+        self._download_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="AnuraDownloadWorker")
         self._downloaded_codes: list[str] = []
         self._need_update_cache = True
         self._cache_lock = threading.Lock()

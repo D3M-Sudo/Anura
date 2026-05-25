@@ -62,10 +62,7 @@ class AtomicTaskManager:
             # memory thrashing while still bypassing the GIL.
             # We use 'spawn' to be safe with GTK/GObject.
             ctx = multiprocessing.get_context("spawn")
-            self._process_executor = ProcessPoolExecutor(
-                max_workers=1,
-                mp_context=ctx
-            )
+            self._process_executor = ProcessPoolExecutor(max_workers=1, mp_context=ctx)
             self._process_manager = ctx.Manager()
             self._isolated_cancellation_map = self._process_manager.dict()
             logger.info("AtomicTaskManager: Initialized process executor for OCR isolation")
@@ -82,6 +79,7 @@ class AtomicTaskManager:
         args: tuple = (),
         callback: Callable | None = None,
         errorback: Callable | None = None,
+        status_callback: Callable | None = None,
     ) -> str:
         """
         Executes a command in a separate process, invalidating any previous task.
@@ -119,8 +117,23 @@ class AtomicTaskManager:
             mgr = get_atomic_manager()
             mgr.set_isolated_cancellation_map(shared_map)
 
+            # NEW-03: Implement granular feedback via IPC callback
+            def status_callback(msg: str):
+                GLib.idle_add(self._handle_status_update, new_task_id, msg)
+
             # Call the command with its arguments
-            return command(*args, task_id=new_task_id)
+            return command(*args, task_id=new_task_id, status_callback=status_callback)
+
+        def _handle_status_update(task_id: str, msg: str):
+            with self._state_lock:
+                if task_id != self._current_task_id:
+                    return GLib.SOURCE_REMOVE
+            if status_callback:
+                try:
+                    status_callback(msg)
+                except Exception:
+                    logger.exception("AtomicTaskManager: Unhandled error in status callback")
+            return GLib.SOURCE_REMOVE
 
         def result_wrapper(future):
             # This runs in the ThreadPoolExecutor (main process) to handle the callback

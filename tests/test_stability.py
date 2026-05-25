@@ -30,7 +30,6 @@ class MockController(Teardownable):
         self.teardown_called = True
 
 
-@pytest.mark.skipif(not os.path.exists("/proc/meminfo"), reason="Requires /proc/meminfo")
 def test_resource_guard_activation():
     """Verify that RescaleFilter blocks on large images when memory is low."""
     filter = RescaleFilter()
@@ -38,16 +37,17 @@ def test_resource_guard_activation():
     # Large image (>20MP)
     large_img = Image.new("L", (5000, 5000))  # 25MP
 
-    # Mock low memory (100MB available out of 8GB total)
-    mock_mem = (100 * 1024 * 1024, 8 * 1024 * 1024 * 1024)
+    # Mock low memory
+    mock_mem = MagicMock()
+    mock_mem.available = 100 * 1024 * 1024
+    mock_mem.percent = 95.0 # 5% free
 
-    with patch.object(RescaleFilter, "_get_available_memory", return_value=mock_mem):
+    with patch("psutil.virtual_memory", return_value=mock_mem):
         result = filter.apply(large_img)
         # Should return the same image object (blocked)
         assert result is large_img
 
 
-@pytest.mark.skipif(not os.path.exists("/proc/meminfo"), reason="Requires /proc/meminfo")
 def test_rescale_allowed_on_high_memory():
     """Verify that RescaleFilter proceeds on large images when memory is sufficient."""
     filter = RescaleFilter()
@@ -55,10 +55,12 @@ def test_rescale_allowed_on_high_memory():
     # Large image (>20MP)
     large_img = Image.new("L", (5000, 5000))  # 25MP
 
-    # Mock high memory (4GB available out of 8GB total)
-    mock_mem = (4 * 1024 * 1024 * 1024, 8 * 1024 * 1024 * 1024)
+    # Mock high memory
+    mock_mem = MagicMock()
+    mock_mem.available = 4 * 1024 * 1024 * 1024
+    mock_mem.percent = 50.0 # 50% free
 
-    with patch.object(RescaleFilter, "_get_available_memory", return_value=mock_mem):
+    with patch("psutil.virtual_memory", return_value=mock_mem):
         # We don't want it to actually resize if it doesn't need to (size < 1000 check)
         # but here we just want to see it didn't trigger the Guard.
         # RescaleFilter resizes if width or height < 1000.

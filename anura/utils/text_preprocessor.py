@@ -50,6 +50,7 @@ class TextPreprocessor:
 
         # Pre-compiled structured data patterns
         from anura.utils.validators import EMAIL_RE, URL_RE
+
         self._email_re = EMAIL_RE
         self._url_re = URL_RE
 
