@@ -70,24 +70,29 @@ def is_safe_url_string(text: str) -> bool:
     if text is None:
         return False
 
-    # 1. Defense-in-depth: limit URL length BEFORE processing
-    if len(text) > 2048:
+    # 1. Defense-in-depth: limit URL length BEFORE processing (standard limit)
+    if len(text) > 2000:
         return False
 
-    # 2. Performance & Security: URLs must be ASCII-only to prevent Unicode
+    # 2. Security: Block backslashes to prevent URL spoofing and bypasses.
+    # Browsers often normalize \ to / which can lead to parsing discrepancies.
+    if "\\" in text:
+        return False
+
+    # 3. Performance & Security: URLs must be ASCII-only to prevent Unicode
     # homograph attacks and hidden format character injections (Zero-Width Space, etc.).
     # We check this BEFORE any sanitization/stripping to ensure malicious
     # input is rejected rather than silently cleaned.
     if not text.isascii():
         return False
 
-    # 3. Block C0 control characters (0x00-0x1F) and DEL (0x7F)
+    # 4. Block C0 control characters (0x00-0x1F) and DEL (0x7F)
     # BEFORE strip/sanitize to catch malicious trailing/injected characters.
     # Note: Regex is ~13x faster than a manual loop for this check.
     if _CONTROL_CHARS_RE.search(text):
         return False
 
-    # 4. Clean and normalize text using heuristics
+    # 5. Clean and normalize text using heuristics
     # sanitize_text also strips Cc/Cf as defense-in-depth, but is_safe_url_string
     # has already rejected all non-ASCII characters by this point.
     text = sanitize_text(text)
