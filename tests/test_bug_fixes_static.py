@@ -85,7 +85,7 @@ def test_get_release_notes_wraps_bare_text() -> None:
 
 
 def test_screenshot_service_logs_full_diagnostic_context() -> None:
-    _tree, text = _load_module_source("services/screenshot_service.py")
+    _tree, text = _load_module_source("services/screenshot/portal_provider.py")
     assert "domain={e.domain}" in text and "code={e.code}" in text, (
         "logger.error in take_screenshot_finish must include {e.domain} and "
         "{e.code} so the user/log analysis can identify the failing portal layer.",
@@ -93,7 +93,7 @@ def test_screenshot_service_logs_full_diagnostic_context() -> None:
 
 
 def test_screenshot_service_detects_generic_backend_failure() -> None:
-    _tree, text = _load_module_source("services/screenshot_service.py")
+    _tree, text = _load_module_source("services/screenshot/portal_provider.py")
     assert "Gio.IOErrorEnum.FAILED" in text, (
         "ScreenshotService must explicitly match Gio.IOErrorEnum.FAILED to "
         "detect the libportal generic-failure pattern."
@@ -163,7 +163,7 @@ def test_window_blp_contains_adw_banner() -> None:
 def test_language_manager_remove_language_validates_code() -> None:
     """LanguageManager.remove_language must validate the input code against
     LANG_CODE_PATTERN to prevent path traversal."""
-    tree, _ = _load_module_source("language_manager.py")
+    tree, _ = _load_module_source("services/language_manager.py")
     remove_fn = _find_method(tree, "LanguageManager", "remove_language")
 
     found_validation = False
@@ -244,9 +244,7 @@ def test_window_disconnects_portal_banner_signal() -> None:
         or "self.portal_banner.disconnect(self._handler_portal_banner)" in text
         or "self.disconnect_all_signals()" in text
         or "self.teardown_all()" in text
-    ), (
-        "AnuraWindow.do_destroy must disconnect signals to prevent memory leaks."
-    )
+    ), "AnuraWindow.do_destroy must disconnect signals to prevent memory leaks."
 
 
 def test_window_tracks_portal_banner_handler_id() -> None:
@@ -275,11 +273,7 @@ def test_window_process_file_uses_validate_image_resource() -> None:
 
     found_validation = False
     for node in ast.walk(process_file_fn):
-        if (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and node.func.id == "validate_image_resource"
-        ):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "validate_image_resource":
             found_validation = True
             break
     assert found_validation, (

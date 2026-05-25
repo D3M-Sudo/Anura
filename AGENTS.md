@@ -39,11 +39,14 @@ anura/
 │   │   ├── tts_controller.py   TTS lifecycle and UI state management
 │   │   └── dnd_controller.py   Asynchronous Drag-and-Drop coordination
 │   ├── config.py               Constants APP_ID, tessdata URL, lang_code validation
-│   ├── atomic_task_manager.py  Single-slot thread pool with UUID versioning
-│   ├── language_manager.py     Tessdata model download/management (singleton)
+│   ├── core/
+│   │   ├── atomic_task_manager.py  Single-slot thread pool with UUID versioning
+│   │   ├── boot.py             Hardware bootstrap, Capability Audit
+│   │   ├── logger.py           Rotary Logging logic
 │   ├── services/
-│   │   ├── screenshot_service.py   Screenshot capture via Xdp.Portal
-│   │   ├── host_screenshot_fallback.py X11 fallback using bundled scrot
+│   │   ├── language_manager.py     Tessdata model download/management (singleton)
+│   │   ├── screenshot/             Abstract Factory Screenshot providers
+│   │   ├── screenshot_service.py   Screenshot capture orchestration
 │   │   ├── clipboard_service.py    Clipboard read/write (Gdk.Clipboard)
     │   ├── result_dispatcher.py    Post-OCR coordination (Clipboard, URLs, Notifications)
 │   │   ├── notification_service.py Notifications: XDG Portal → libnotify fallback
@@ -55,15 +58,15 @@ anura/
 │   │   ├── context.py              ApplicationContext capability audit
 │   │   ├── download_state.py       DownloadState enum
 │   │   └── language_item.py        LanguageItem dataclass
+│   ├── transformers/          Semantic text transformers (Chain of Responsibility)
+│   │   ├── magic_processor.py Orchestrator: Classification & semantic coordination
+│   │   ├── base_transformers.py Base implementations (SingleLine, Paragraph, etc.)
+│   │   ├── email_transformer.py Specialized email extraction & scoring
+│   │   ├── url_transformer.py   Specialized URL extraction & validation
+│   │   └── models.py            Dataclasses and ITransformer Protocol
 │   ├── utils/
 │   │   ├── barcode_detector.py    QR/Barcode detection via zxing-cpp
 │   │   ├── image_filters.py       Modular image enhancement filter chain
-    │   ├── transformers/          Semantic text transformers
-    │   │   ├── magic_processor.py Orchestrator: Classification & semantic coordination
-    │   │   ├── base_transformers.py Base implementations (SingleLine, Paragraph, etc.)
-    │   │   ├── email_transformer.py Specialized email extraction & scoring
-    │   │   ├── url_transformer.py   Specialized URL extraction & validation
-    │   │   └── models.py            Dataclasses and Transformer Protocols
 │   │   ├── structural_reconstructor.py Paragraph/Layout spatial analysis
     │   ├── validators.py          URI validation, security & text sanitization
 │   │   ├── portal_advice.py       Desktop-specific advice for missing portals

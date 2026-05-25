@@ -27,7 +27,7 @@ class ImageFilterBase(ABC):
     def _check_cancellation(self, task_id: str | None) -> None:
         """Check if the task has been cancelled and raise an exception if so."""
         if task_id:
-            from anura.atomic_task_manager import get_atomic_manager
+            from anura.core.atomic_task_manager import get_atomic_manager
 
             if get_atomic_manager().is_cancelled(task_id):
                 raise InterruptedError(f"Task {task_id} was cancelled")

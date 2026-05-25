@@ -13,7 +13,7 @@ import time
 
 from gi.repository import GLib, GObject
 
-from anura.atomic_task_manager import get_atomic_manager
+from anura.core.atomic_task_manager import get_atomic_manager
 from anura.utils.signal_manager import SignalManagerMixin
 from anura.utils.singleton import ThreadSafeSingleton, get_instance
 from anura.utils.validators import uri_validator
@@ -25,6 +25,7 @@ class TestAtomicTaskManager:
     def setup_method(self):
         """Reset singleton before each test to ensure isolation."""
         from anura.utils.singleton import ThreadSafeSingleton
+
         ThreadSafeSingleton.reset_for_testing()
 
     @pytest.mark.gtk
@@ -95,7 +96,7 @@ class TestAtomicTaskManager:
 
         manager = get_atomic_manager()
         manager.execute(slow_command, callback=callback)
-        barrier.wait(timeout=2)   # Ensure slow_command is running
+        barrier.wait(timeout=2)  # Ensure slow_command is running
         manager.execute(fast_command, callback=callback)  # Supersedes slow
 
         ctx = GLib.MainContext.default()

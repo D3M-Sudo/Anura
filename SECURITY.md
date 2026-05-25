@@ -49,7 +49,7 @@
 | `anura/utils/validators.py` | URI validation (`uri_validator`) and Text Sanitization (`sanitize_text`) |
 | `anura/atomic_task_manager.py` | Concurrency and task versioning logic |
 | `anura/services/screenshot_service.py` | Image size validation (DoS prevention) and Tesseract hand-off |
-| `anura/language_manager.py` | Tessdata model download and atomic writing |
+| `anura/services/language_manager.py` | Tessdata model download and atomic writing |
 | `anura/services/host_screenshot_fallback.py` | Command building for the bundled `scrot` fallback |
 
 ---

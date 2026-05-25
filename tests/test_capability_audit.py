@@ -10,7 +10,6 @@ from anura.types.context import ApplicationContext
 
 
 class TestCapabilityAudit(unittest.TestCase):
-
     @patch("shutil.which")
     @patch("importlib.util.find_spec")
     @patch("os.path.exists")
@@ -47,6 +46,7 @@ class TestCapabilityAudit(unittest.TestCase):
         self.assertFalse(ctx.has_tts)
         self.assertFalse(ctx.has_scrot)
         self.assertFalse(ctx.is_flatpak)
+
 
 if __name__ == "__main__":
     unittest.main()

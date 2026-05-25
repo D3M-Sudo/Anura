@@ -9,7 +9,8 @@ import os
 import sys
 
 # Bootstrap hardware and logging as early as possible
-from anura.core.boot import boot_audit, setup_logging
+from anura.core.boot import boot_audit
+from anura.core.logger import setup_logging
 
 boot_audit()
 setup_logging()
@@ -43,8 +44,8 @@ if not load_gresource_bundle():
 from anura.core.action_registry import ActionRegistry
 from anura.core.dialogs import DialogManager
 from anura.core.silent_runner import SilentRunner
-from anura.language_manager import get_language_manager
 from anura.services.clipboard_service import get_clipboard_service
+from anura.services.language_manager import get_language_manager
 from anura.services.notification_service import (
     HAS_LIBNOTIFY,
     NotificationService,
@@ -148,7 +149,79 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
             if self.backend is None:
                 self.backend = ScreenshotService()
             win = AnuraWindow(application=self, backend=self.backend)
+            self._setup_window_signals(win)
         win.present()
+
+    def _setup_window_signals(self, win: AnuraWindow) -> None:
+        """Wire up event-driven service integration via OcrController signals."""
+        controller = win.ocr_controller
+        self.connect_tracked(controller, "text-extracted", self._on_text_extracted)
+        self.connect_tracked(controller, "uri-detected", self._on_uri_detected)
+        self.connect_tracked(controller, "error-occurred", self._on_error_occurred)
+
+    def _on_text_extracted(self, _controller, text: str, copy_requested: bool) -> None:
+        is_window_active = bool(self.get_active_window())
+        win = self.get_active_window()
+
+        if self.settings.get_boolean("autocopy") or copy_requested:
+            get_clipboard_service().set(text)
+            if win:
+                win.show_toast(_("Text copied to clipboard"))
+            if not is_window_active:
+                self.notification_service.show_notification(
+                    title=_("Anura OCR"), body=_("Text extracted and copied to clipboard.")
+                )
+        else:
+            if not is_window_active:
+                self.notification_service.show_notification(
+                    title=_("Anura OCR"), body=_("Text extracted successfully.")
+                )
+
+    def _on_uri_detected(self, _controller, url: str, copy_requested: bool) -> None:
+        win = self.get_active_window()
+
+        if self.settings.get_boolean("autolinks"):
+            # Behavior A: Open directly in browser
+            from anura.utils.validators import launch_uri
+
+            launch_uri(url, window=win, error_callback=lambda msg: win.show_toast(msg) if win else None)
+            if win:
+                win.show_toast(_("URL opened automatically"))
+        else:
+            # Behavior B: Send desktop notification with clickable action
+            target = GLib.Variant("s", url)
+            self.notification_service.send_notification_with_action(
+                notification_id="qr-url",
+                title=_("QR Code URL Detected"),
+                body=url,
+                action_id="app.open-qr-url",
+                action_target=target,
+                priority="high",
+            )
+
+        # Handle URL Clipboard (respecting global autocopy or explicit request)
+        if self.settings.get_boolean("autocopy") or copy_requested:
+            get_clipboard_service().set(url)
+            # Only show "copied" toast if we didn't open the browser automatically
+            if win and not self.settings.get_boolean("autolinks"):
+                win.show_toast(_("URL copied to clipboard"))
+
+    def _on_error_occurred(self, _controller, message: str) -> None:
+        win = self.get_active_window()
+        if win:
+            # Check for total capture failure (no primary, no fallback)
+            if "Screenshot failed" in message.lower() and not getattr(self.backend, "fallback_provider", None):
+                from anura.core.dialogs import DialogManager
+
+                error_body = _(
+                    "Anura could not capture a screenshot because no suitable "
+                    "portal backend or fallback tool was found."
+                )
+                DialogManager.show_fatal_error(win, _("Capture Failed"), error_body)
+            else:
+                win.show_toast(message)
+        else:
+            self.notification_service.show_notification(title=_("Anura OCR"), body=message)
 
     def do_command_line(self, command_line: Gio.ApplicationCommandLine) -> int:
         options = command_line.get_options_dict().end().unpack()
@@ -275,8 +348,11 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
 
     def on_decoded(self, _sender, text: str, copy: bool, ocr_result: object) -> None:
         if self.props.active_window:
+            # When UI is present, OcrController handles it via signals
+            # connected in _setup_window_signals
             return
 
+        # Headless/Silent mode: perform direct dispatching
         from anura.services.result_dispatcher import get_result_dispatcher
         from anura.types.ocr import OcrResult
 

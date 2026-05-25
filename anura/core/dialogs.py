@@ -68,3 +68,15 @@ class DialogManager:
 
             dialog = PreferencesDialog()
             dialog.present(parent_window)
+
+    @staticmethod
+    def show_fatal_error(parent_window, title, body):
+        """Show a fatal error message dialog."""
+        dialog = Adw.MessageDialog(
+            parent=parent_window,
+            heading=title,
+            body=body,
+        )
+        dialog.add_response("ok", _("OK"))
+        dialog.set_default_response("ok")
+        dialog.present()

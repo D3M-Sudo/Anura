@@ -19,6 +19,7 @@ def test_structural_reconstructor_basic():
     assert text == "Line1 Line2"
     assert conf == 90.0
 
+
 def test_structural_reconstructor_paragraphs():
     reconstructor = get_structural_reconstructor()
 
@@ -35,6 +36,7 @@ def test_structural_reconstructor_paragraphs():
     # Should be separate paragraphs with \n\n
     assert text == "Para1\n\nPara2"
 
+
 def test_structural_reconstructor_horizontal_separation():
     reconstructor = get_structural_reconstructor()
 
@@ -50,6 +52,7 @@ def test_structural_reconstructor_horizontal_separation():
     text, _conf = reconstructor.reconstruct(ocr_res)
     # Should be separate paragraphs with \n\n
     assert text == "Left\n\nRight"
+
 
 def test_structural_reconstructor_empty():
     reconstructor = get_structural_reconstructor()

@@ -11,23 +11,34 @@ from anura.utils.validators import is_safe_url_string, uri_validator
 class TestSentinelUriSecurity:
     """Security tests for URI validation hardening."""
 
-    @pytest.mark.parametrize("char", [
-        "\x80", "\x81", "\x90", "\x9f",  # C1 Control characters
-        "\x00", "\x1f", "\x7f",          # C0 and DEL
-    ])
+    @pytest.mark.parametrize(
+        "char",
+        [
+            "\x80",
+            "\x81",
+            "\x90",
+            "\x9f",  # C1 Control characters
+            "\x00",
+            "\x1f",
+            "\x7f",  # C0 and DEL
+        ],
+    )
     def test_control_characters_rejected(self, char):
         url = f"https://example.com/{char}"
         assert is_safe_url_string(url) is False
         assert uri_validator(url) is False
 
-    @pytest.mark.parametrize("char", [
-        "\u200b",  # Zero Width Space (Cf)
-        "\u200c",  # Zero Width Non-Joiner (Cf)
-        "\u200d",  # Zero Width Joiner (Cf)
-        "\u200e",  # Left-To-Right Mark (Cf)
-        "\u200f",  # Right-To-Left Mark (Cf)
-        "\u00ad",  # Soft Hyphen (Cf)
-    ])
+    @pytest.mark.parametrize(
+        "char",
+        [
+            "\u200b",  # Zero Width Space (Cf)
+            "\u200c",  # Zero Width Non-Joiner (Cf)
+            "\u200d",  # Zero Width Joiner (Cf)
+            "\u200e",  # Left-To-Right Mark (Cf)
+            "\u200f",  # Right-To-Left Mark (Cf)
+            "\u00ad",  # Soft Hyphen (Cf)
+        ],
+    )
     def test_format_characters_rejected(self, char):
         # Format characters can be used for spoofing or bypassing filters
         url = f"https://example.com/{char}path"

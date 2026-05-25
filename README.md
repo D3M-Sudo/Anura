@@ -57,12 +57,13 @@ It also decodes **QR codes and Barcodes** in a single click using **zxing-cpp**,
 
 ## Architecture
 
-As of **v0.1.5**, Anura has migrated to a modular, service-oriented architecture:
+As of **v0.1.5**, Anura features an **Enterprise Clean Architecture** focused on event-driven decoupling and memory safety:
 
-- **Core Services (`anura/core/`)**: Decoupled modules for `boot` (hardware/capability audit), `i18n` (localization), `resources` (GResource management), and `dialogs` (UI orchestration).
-- **Controller Pattern**: All business logic is encapsulated in standalone controllers (`OcrController`, `TtsController`, `DndController`), keeping the UI shell clean and maintainable.
-- **Headless Engine**: The CLI/Silent runner is isolated from the main GTK loop to ensure stability in non-interactive environments.
-- **Automated Lifecycle**: Native GObject destruction hooks via `SignalManagerMixin` guarantee leak-free resource management.
+- **Core Services (`anura/core/`)**: Pure infrastructure logic. Includes `boot` (capability audit), `logger` (rotary logging), `atomic_task_manager` (isolated worker pool), and `resources`.
+- **Business Services (`anura/services/`)**: High-level I/O and resource management. Includes `language_manager` (Tessdata pooling), `screenshot` (multi-provider capture factory), and `settings`.
+- **Event-Driven Controllers (`anura/controllers/`)**: Logic-only components that emit GLib signals. `OcrController` and `TtsController` are fully decoupled from UI side-effects, which are handled by the main application coordinator.
+- **Semantic Transformers (`anura/transformers/`)**: Implements the **Chain of Responsibility** pattern. The `MagicProcessor` dynamically selects the best `ITransformer` for structured data extraction.
+- **Memory Safety**: Uses `weakref.proxy` for View-Controller relationships and asynchronous native Gio APIs for non-blocking I/O.
 
 ---
 

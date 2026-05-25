@@ -12,7 +12,7 @@ pytest.importorskip("gi")
 import os
 from unittest.mock import MagicMock, patch
 
-from anura.language_manager import LanguageManager
+from anura.services.language_manager import LanguageManager
 from anura.types.download_state import DownloadState
 
 
@@ -25,8 +25,8 @@ class TestLanguageManagerEnterprise:
     def manager(self, tmp_path):
         # Patch TESSDATA_DIR to a temporary directory for each test
         with (
-            patch("anura.language_manager.TESSDATA_DIR", str(tmp_path)),
-            patch("anura.language_manager.TESSDATA_SYSTEM_DIR", str(tmp_path / "system")),
+            patch("anura.services.language_manager.TESSDATA_DIR", str(tmp_path)),
+            patch("anura.services.language_manager.TESSDATA_SYSTEM_DIR", str(tmp_path / "system")),
         ):
             os.makedirs(tmp_path / "system", exist_ok=True)
             yield LanguageManager()
@@ -126,7 +126,7 @@ class TestLanguageManagerEnterprise:
     def test_download_duplicate_prevention(self, manager):
         """Test that multiple downloads for the same code are ignored."""
         manager.loading_languages["eng"] = DownloadState()
-        with patch("anura.atomic_task_manager.get_atomic_manager") as mock_get_manager:
+        with patch("anura.core.atomic_task_manager.get_atomic_manager") as mock_get_manager:
             mock_manager = MagicMock()
             mock_get_manager.return_value = mock_manager
             manager.download("eng")

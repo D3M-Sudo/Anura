@@ -6,7 +6,7 @@
 
 import re
 
-from anura.utils.transformers.models import OcrResult, TransformerProtocol
+from anura.transformers.models import OcrResult, TransformerProtocol
 from anura.utils.validators import URL_RE
 
 # Simplified TLD check for standalone version
