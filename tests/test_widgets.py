@@ -30,7 +30,7 @@ if os.path.exists(resource_path):
 else:
     raise RuntimeError(f"GResource bundle not found at {resource_path}")
 
-from anura.types.language_item import LanguageItem  # noqa: E402
+from anura.models.language_item import LanguageItem  # noqa: E402
 from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
 from anura.widgets.welcome_page import WelcomePage  # noqa: E402
 

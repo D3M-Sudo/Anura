@@ -6,7 +6,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from anura.types.context import ApplicationContext
+from anura.models.context import ApplicationContext
 
 
 class TestCapabilityAudit(unittest.TestCase):

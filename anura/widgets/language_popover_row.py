@@ -7,7 +7,7 @@
 from gi.repository import GObject, Gtk
 
 from anura.config import RESOURCE_PREFIX
-from anura.types.language_item import LanguageItem
+from anura.models.language_item import LanguageItem
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/language_popover_row.ui")

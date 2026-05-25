@@ -31,7 +31,7 @@ from anura.config import (  # noqa: E402
     get_tesseract_config,
 )
 from anura.core.atomic_task_manager import get_atomic_manager  # noqa: E402
-from anura.types.ocr import OcrResult  # noqa: E402
+from anura.models.ocr import OcrResult  # noqa: E402
 from anura.utils import validate_image_resource  # noqa: E402
 from anura.utils.portal_advice import detect_portal_advice  # noqa: E402
 from anura.utils.structural_reconstructor import get_structural_reconstructor  # noqa: E402

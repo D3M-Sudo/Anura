@@ -12,8 +12,8 @@ pytest.importorskip("gi")
 import os
 from unittest.mock import MagicMock, patch
 
+from anura.models.download_state import DownloadState
 from anura.services.language_manager import LanguageManager
-from anura.types.download_state import DownloadState
 
 
 class TestLanguageManagerEnterprise:

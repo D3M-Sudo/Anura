@@ -10,9 +10,9 @@ from gi.repository import Gio, GObject, Gtk
 from loguru import logger
 
 from anura.config import RESOURCE_PREFIX
+from anura.models.language_item import LanguageItem
 from anura.services.language_manager import language_manager
 from anura.services.settings import settings
-from anura.types.language_item import LanguageItem
 from anura.utils.signal_manager import SignalManagerMixin
 from anura.widgets.language_popover_row import LanguagePopoverRow
 

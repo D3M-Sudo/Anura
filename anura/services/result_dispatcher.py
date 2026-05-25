@@ -5,7 +5,7 @@
 
 from loguru import logger
 
-from anura.types.ocr import ExtractionResult, OcrResult
+from anura.models.ocr import ExtractionResult, OcrResult
 from anura.utils.singleton import get_instance
 from anura.utils.text_preprocessor import get_text_preprocessor
 

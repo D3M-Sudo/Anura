@@ -12,8 +12,8 @@ import pytest
 pytest.importorskip("gi")
 
 import anura.config
-from anura.types.download_state import DownloadState
-from anura.types.language_item import LanguageItem
+from anura.models.download_state import DownloadState
+from anura.models.language_item import LanguageItem
 
 
 class TestConfig:

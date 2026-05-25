@@ -27,7 +27,7 @@ if os.path.exists(resource_path):
 class TestWidgets:
     @pytest.mark.gtk
     def test_language_popover_row(self):
-        from anura.types.language_item import LanguageItem
+        from anura.models.language_item import LanguageItem
         from anura.widgets.language_popover_row import LanguagePopoverRow
 
         item = LanguageItem(code="fra", title="French")
