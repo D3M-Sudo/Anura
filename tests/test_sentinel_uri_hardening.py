@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: MIT
 
-import pytest
 from anura.utils.validators import is_safe_url_string, uri_validator
+
 
 def test_backslash_rejection():
     """Verify that backslashes in URLs are rejected for security hardening."""
@@ -14,6 +14,7 @@ def test_backslash_rejection():
 
     # Backslash in path should also be rejected to prevent normalization bypasses
     assert is_safe_url_string("https://google.com/path\\next") is False
+
 
 def test_url_length_limit_hardening():
     """Verify that URL length limit is synchronized to 2000 characters."""
