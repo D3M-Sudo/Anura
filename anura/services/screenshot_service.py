@@ -4,6 +4,7 @@
 #
 # SPDX-License-Identifier: MIT
 
+from collections.abc import Callable
 import contextlib
 from gettext import gettext as _
 import os
@@ -51,6 +52,7 @@ def run_ocr_pipeline(
     file_path: str,
     preprocessing_mode: str,
     task_id: str | None = None,
+    status_callback: Callable | None = None,
 ) -> tuple[bool, str | None, str | None, OcrResult | None]:
     """
     Isolated OCR pipeline to bypass Python's GIL.
@@ -100,14 +102,16 @@ def run_ocr_pipeline(
                 if img.mode != "L":
                     img = img.convert("L")
 
+                logger.debug("Isolated: Enhancing image...")
+                if status_callback:
+                    status_callback(_("Enhancing image..."))
                 preprocessor = get_text_preprocessor()
-                enhanced_img = (
-                    preprocessor.enhance_image(img, task_id=task_id)
-                    if preprocessing_mode != "off"
-                    else img
-                )
+                enhanced_img = preprocessor.enhance_image(img, task_id=task_id) if preprocessing_mode != "off" else img
 
                 # 3. Tesseract OCR
+                logger.debug("Isolated: Running Tesseract OCR...")
+                if status_callback:
+                    status_callback(_("Running Tesseract OCR..."))
                 ocr_data = pytesseract.image_to_data(
                     enhanced_img,
                     lang=lang,
@@ -117,21 +121,22 @@ def run_ocr_pipeline(
                 ocr_result = OcrResult.from_tesseract_dict(ocr_data)
 
                 # 4. Reconstruction
+                logger.debug("Isolated: Reconstructing structure...")
+                if status_callback:
+                    status_callback(_("Reconstructing structure..."))
                 reconstructor = get_structural_reconstructor()
-                spatially_reconstructed, recon_conf = reconstructor.reconstruct(
-                    ocr_result, task_id=task_id
-                )
+                spatially_reconstructed, recon_conf = reconstructor.reconstruct(ocr_result, task_id=task_id)
 
                 # 5. Magic Processing
+                logger.debug("Isolated: Magic processing...")
+                if status_callback:
+                    status_callback(_("Magic processing..."))
                 magic_processor = get_magic_processor()
                 processed_text, magic_conf = magic_processor.process(ocr_result, task_id=task_id)
 
                 # 6. Selection
                 if spatially_reconstructed.strip() and (
-                    (
-                        len(spatially_reconstructed) > len(processed_text) * 1.2
-                        and recon_conf >= magic_conf * 0.95
-                    )
+                    (len(spatially_reconstructed) > len(processed_text) * 1.2 and recon_conf >= magic_conf * 0.95)
                     or recon_conf > magic_conf
                 ):
                     processed_text = spatially_reconstructed
@@ -195,6 +200,8 @@ class ScreenshotService(GObject.GObject):
         # typically use this to reveal a persistent install hint banner;
         # the user-facing toast is still emitted via "error".
         "portal-backend-missing": (GObject.SignalFlags.RUN_FIRST, None, ()),
+        # Emitted during various stages of OCR processing to provide user feedback.
+        "status-changed": (GObject.SignalFlags.RUN_LAST, None, (str,)),
     }
 
     def __init__(self) -> None:
@@ -209,7 +216,6 @@ class ScreenshotService(GObject.GObject):
 
         # Configure Tesseract path for Flatpak environment
         _configure_tesseract_path()
-
 
     def capture(self, lang: str, copy: bool = False) -> None:
         """Requests a screenshot from the system portal."""
@@ -356,12 +362,14 @@ class ScreenshotService(GObject.GObject):
 
     def _emit_decode_error(self, message: str) -> None:
         """Helper to emit error signal on the main thread."""
+
         def _on_error_idle():
             try:
                 self.emit("error", message)
             except Exception:
                 logger.exception(f"Anura: Failed to emit error: {message}")
             return GLib.SOURCE_REMOVE
+
         GLib.idle_add(_on_error_idle)
 
     # Environment variables surfaced when the portal screenshot fails. These
@@ -588,9 +596,7 @@ class ScreenshotService(GObject.GObject):
         start_time = time.time()
 
         try:
-            extracted, error_message, ocr_result = self._process_image_decode(
-                file, lang, start_time, task_id=task_id
-            )
+            extracted, error_message, ocr_result = self._process_image_decode(file, lang, start_time, task_id=task_id)
         except InterruptedError:
             logger.debug(f"Anura OCR: Task {task_id} was cancelled during processing.")
             return False, None, None, None
@@ -602,9 +608,7 @@ class ScreenshotService(GObject.GObject):
 
         return self._format_decode_result(extracted, error_message, ocr_result)
 
-    def _validate_decode_inputs(
-        self, lang: str
-    ) -> tuple[bool, str | None, str | None, OcrResult | None]:
+    def _validate_decode_inputs(self, lang: str) -> tuple[bool, str | None, str | None, OcrResult | None]:
         """Validate language code for OCR processing."""
         if not lang or not re.match(LANG_CODE_PATTERN, lang):
             logger.error(f"Anura: Invalid language code '{lang}' for OCR")
@@ -694,10 +698,7 @@ class ScreenshotService(GObject.GObject):
 
             # 1. Extract raw data with layout information (image_to_data)
             ocr_data = pytesseract.image_to_data(
-                enhanced_img,
-                lang=lang,
-                config=get_tesseract_config(lang),
-                output_type=Output.DICT
+                enhanced_img, lang=lang, config=get_tesseract_config(lang), output_type=Output.DICT
             )
 
             # 2. Immutable Data Modeling — Parse Tesseract dictionary ONCE
@@ -831,19 +832,36 @@ class ScreenshotService(GObject.GObject):
         # If it's a physical file, we can use process isolation to bypass the GIL
         if isinstance(file, str) and os.path.exists(file):
             from anura.services.settings import settings
+
             mode = settings.get_string("ocr-preprocessing")
+
+            # Initial status feedback
+            def _on_status_idle(status_msg):
+                self.emit("status-changed", status_msg)
+                return GLib.SOURCE_REMOVE
+
+            GLib.idle_add(_on_status_idle, _("Extracting text..."))
+
+            # Create a localized status feedback for discrete states
+            def _on_state_update_idle(status_msg):
+                self.emit("status-changed", status_msg)
+                return GLib.SOURCE_REMOVE
 
             def _on_isolated_complete(result_tuple):
                 success, extracted, error_message, ocr_result = result_tuple
                 if success:
+
                     def _on_decoded_idle():
                         self.emit("decoded", extracted, copy, ocr_result)
                         return GLib.SOURCE_REMOVE
+
                     GLib.idle_add(_on_decoded_idle)
                 elif error_message:
+
                     def _on_error_idle():
                         self.emit("error", error_message)
                         return GLib.SOURCE_REMOVE
+
                     GLib.idle_add(_on_error_idle)
                 else:
                     # NEW-05: Handle silent failure or cancellation by resetting UI state
@@ -851,6 +869,7 @@ class ScreenshotService(GObject.GObject):
                     def _on_silent_idle():
                         self.emit("error", "")
                         return GLib.SOURCE_REMOVE
+
                     GLib.idle_add(_on_silent_idle)
 
                 # Cleanup physical file if requested
@@ -864,7 +883,15 @@ class ScreenshotService(GObject.GObject):
                 def _on_error_idle():
                     self.emit("error", _("OCR processing failed. Please try again."))
                     return GLib.SOURCE_REMOVE
+
                 GLib.idle_add(_on_error_idle)
+
+            def _on_isolated_status(status_msg):
+                def _on_status_idle():
+                    self.emit("status-changed", status_msg)
+                    return GLib.SOURCE_REMOVE
+
+                GLib.idle_add(_on_status_idle)
 
             # Use execute_isolated to run in a separate process
             # Note: execute_isolated handles setting task_id and cancellation check
@@ -872,7 +899,8 @@ class ScreenshotService(GObject.GObject):
                 run_ocr_pipeline,
                 (lang, file, mode),
                 callback=_on_isolated_complete,
-                errorback=_on_isolated_error
+                errorback=_on_isolated_error,
+                status_callback=_on_isolated_status,
             )
             return True
 

@@ -82,9 +82,7 @@ def _cleanup_tessdata_pool(active_lang_code: str) -> None:
         return
 
     if not os.access(TESSDATA_POOL_DIR, os.R_OK | os.W_OK):
-        logger.warning(
-            "Anura Cleanup: Cannot read/write tessdata pool directory, skipping cleanup"
-        )
+        logger.warning("Anura Cleanup: Cannot read/write tessdata pool directory, skipping cleanup")
         return
 
     try:

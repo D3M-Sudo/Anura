@@ -267,6 +267,11 @@ class WelcomePage(Adw.NavigationPage):
         self.drop_button.remove_css_class("suggested-action")
         self.welcome.set_description(_("Extract text from anywhere"))
 
+    def set_status(self, status_msg: str) -> None:
+        """Update the status label during processing."""
+        if self.drop_area_label:
+            self.drop_area_label.set_label(status_msg)
+
     def hide_spinner(self) -> None:
         """Stop and hide the spinner."""
         self.spinner.stop()

@@ -28,6 +28,7 @@ class ImageFilterBase(ABC):
         """Check if the task has been cancelled and raise an exception if so."""
         if task_id:
             from anura.atomic_task_manager import get_atomic_manager
+
             if get_atomic_manager().is_cancelled(task_id):
                 raise InterruptedError(f"Task {task_id} was cancelled")
 
@@ -46,43 +47,24 @@ class GrayscaleFilter(ImageFilterBase):
 class RescaleFilter(ImageFilterBase):
     """Rescales image if too small for reliable OCR."""
 
-    def _get_available_memory(self) -> tuple[int, int]:
-        """
-        Get available and total memory in bytes from /proc/meminfo.
-        Returns: (available, total)
-        """
-        mem_total = 0
-        mem_available = 0
-        try:
-            with open("/proc/meminfo") as f:
-                for line in f:
-                    if line.startswith("MemTotal:"):
-                        mem_total = int(line.split()[1]) * 1024
-                    elif line.startswith("MemAvailable:"):
-                        mem_available = int(line.split()[1]) * 1024
-                    if mem_total and mem_available:
-                        break
-        except (OSError, IndexError, ValueError):
-            # Fallback if /proc/meminfo is inaccessible (e.g. non-Linux)
-            # Use safe defaults that won't trigger the guard
-            return (1024 * 1024 * 1024, 2048 * 1024 * 1024)
-
-        return mem_available, mem_total
-
     def apply(self, image: Image.Image, task_id: str | None = None) -> Image.Image:
         self._check_cancellation(task_id)
         width, height = image.size
 
         # Resource Guard: OOM Prevention for images > 20MP
         if width * height > 20_000_000:
-            available, total = self._get_available_memory()
-            mem_percent = (available / total) * 100 if total > 0 else 100
+            import psutil
+
+            mem = psutil.virtual_memory()
+            available = mem.available
+            # Use percent of FREE memory (100 - percent_used)
+            free_percent = 100.0 - mem.percent
 
             # Guard condition: < 15% RAM free OR < 500MB available
-            if mem_percent < 15 or available < 500 * 1024 * 1024:
+            if free_percent < 15 or available < 500 * 1024 * 1024:
                 logger.warning(
                     f"Resource Guard: Blocking RescaleFilter for {width}x{height} image. "
-                    f"Low memory detected: {mem_percent:.1f}% free ({available // 1024 // 1024}MB available)."
+                    f"Low memory detected: {free_percent:.1f}% free ({available // 1024 // 1024}MB available)."
                 )
                 # Return original image to prevent OOM
                 return image
@@ -214,7 +196,7 @@ class FilterChain:
                 prev_result.close()
                 del prev_result
                 # Occasional GC trigger for large buffers
-                if result.size[0] * result.size[1] > 4000000: # > 4MP
+                if result.size[0] * result.size[1] > 4000000:  # > 4MP
                     gc.collect()
 
         return result
@@ -234,10 +216,12 @@ def get_default_filter_chain() -> FilterChain:
     if _default_chain is None:
         with _default_chain_lock:
             if _default_chain is None:
-                _default_chain = FilterChain([
-                    GrayscaleFilter(),
-                    RescaleFilter(),
-                    ContrastEnhancementFilter(),
-                    AdaptiveThresholdFilter(),
-                ])
+                _default_chain = FilterChain(
+                    [
+                        GrayscaleFilter(),
+                        RescaleFilter(),
+                        ContrastEnhancementFilter(),
+                        AdaptiveThresholdFilter(),
+                    ]
+                )
     return _default_chain

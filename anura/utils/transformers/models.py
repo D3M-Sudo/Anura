@@ -17,9 +17,11 @@ class TransformerType(enum.StrEnum):
     MAIL = "MAIL"
     URL = "URL"
 
+
 @dataclass
 class OcrResult:
     """Encapsulate recognized text and layout information from image_to_data."""
+
     words: list[dict]
     text: str = ""
     transformer_scores: dict[TransformerType, float] = field(default_factory=dict)
@@ -82,9 +84,8 @@ class OcrResult:
 
         return "".join(text_parts).strip()
 
-class TransformerProtocol(Protocol):
-    def score(self, ocr_result: OcrResult) -> float:
-        ...
 
-    def transform(self, ocr_result: OcrResult) -> list[str]:
-        ...
+class TransformerProtocol(Protocol):
+    def score(self, ocr_result: OcrResult) -> float: ...
+
+    def transform(self, ocr_result: OcrResult) -> list[str]: ...

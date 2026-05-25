@@ -35,7 +35,7 @@ class ResultDispatcher:
                 emails=(),
                 phone_numbers=(),
                 avg_confidence=0.0,
-                bounding_box=(0, 0, 0, 0)
+                bounding_box=(0, 0, 0, 0),
             )
 
         preprocessor = get_text_preprocessor()
@@ -64,7 +64,7 @@ class ResultDispatcher:
             phone_numbers=phone_numbers,
             avg_confidence=avg_conf,
             bounding_box=bbox,
-            is_primary_url=is_primary_url
+            is_primary_url=is_primary_url,
         )
 
         logger.debug(f"ResultDispatcher: Analyzed text. Primary URL: {is_primary_url}")

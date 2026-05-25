@@ -11,6 +11,7 @@ from anura.utils.validators import EMAIL_RE
 def _extract_emails(text: str) -> list[str]:
     return EMAIL_RE.findall(text)
 
+
 class EmailTransformer(TransformerProtocol):
     def score(self, ocr_result: OcrResult) -> float:
         text = ocr_result.text

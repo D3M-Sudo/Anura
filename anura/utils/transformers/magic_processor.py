@@ -33,13 +33,9 @@ class MagicProcessor:
         # (Transformer refactoring will happen in a future phase)
         words = []
         for w in ocr_data.words:
-            words.append({
-                'text': w.text,
-                'block_num': w.block_num,
-                'par_num': w.par_num,
-                'line_num': w.line_num,
-                'conf': w.conf
-            })
+            words.append(
+                {"text": w.text, "block_num": w.block_num, "par_num": w.par_num, "line_num": w.line_num, "conf": w.conf}
+            )
 
         result = OcrResult(words=words, text=ocr_data.raw_text)
         avg_conf = ocr_data.avg_confidence
@@ -49,6 +45,7 @@ class MagicProcessor:
         for i, (t_type, transformer) in enumerate(self._transformers.items()):
             if task_id and i % 2 == 0:
                 from anura.atomic_task_manager import get_atomic_manager
+
                 if get_atomic_manager().is_cancelled(task_id):
                     raise InterruptedError(f"Task {task_id} was cancelled during Magic score calculation")
             scores[t_type] = transformer.score(result)
@@ -65,6 +62,7 @@ class MagicProcessor:
             final_text = result.add_linebreaks()
 
         return final_text, avg_conf
+
 
 def get_magic_processor() -> MagicProcessor:
     """Get the thread-safe MagicProcessor singleton.

@@ -1,6 +1,6 @@
 [project]
 name = "anura"
-version = "0.1.4.3"
+version = "0.1.5"
 description = "GTK4/Libadwaita desktop app for OCR via Tesseract — fork of Frog OCR"
 requires-python = ">=3.12"
 license = { text = "MIT" }
@@ -8,6 +8,7 @@ dependencies = [
     "gtts>=2.5.4",
     "loguru>=0.7.3",
     "pillow>=12.2.0",
+    "psutil>=7.2.2",
     "pytesseract>=0.3.13",
     "requests>=2.34.2",
     "zxing-cpp>=2.3.0",
