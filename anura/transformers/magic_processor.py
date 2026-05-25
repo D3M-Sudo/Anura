@@ -6,6 +6,7 @@
 
 from loguru import logger
 
+from anura.core.atomic_task_manager import get_atomic_manager
 from anura.models.ocr import OcrResult as OcrData
 from anura.transformers.models import ITransformer, OcrResult
 from anura.utils.singleton import get_instance
@@ -68,11 +69,8 @@ class MagicProcessor:
         best_transformer = None
 
         for i, transformer in enumerate(self._transformers):
-            if task_id and i % 2 == 0:
-                from anura.core.atomic_task_manager import get_atomic_manager
-
-                if get_atomic_manager().is_cancelled(task_id):
-                    raise InterruptedError(f"Task {task_id} was cancelled during Magic score calculation")
+            if task_id and i % 2 == 0 and get_atomic_manager().is_cancelled(task_id):
+                raise InterruptedError(f"Task {task_id} was cancelled during Magic score calculation")
 
             current_score = transformer.score(result)
             if current_score > best_score:

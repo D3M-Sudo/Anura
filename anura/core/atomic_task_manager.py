@@ -97,11 +97,9 @@ class AtomicTaskManager:
             self._cancellable = Gio.Cancellable.new()
             current_cancellable = self._cancellable
 
-            # NEW-01: Use ensure_locked version to avoid deadlock
             self._ensure_process_executor_locked()
             shared_map = self._isolated_cancellation_map
 
-        # NEW-06: Perform IPC operations outside the _state_lock to avoid UI stuttering.
         # We use setdefault for the new task to ensure we don't overwrite a cancellation
         # from a very fast subsequent execute_isolated call.
         if shared_map is not None:
@@ -117,7 +115,6 @@ class AtomicTaskManager:
             mgr = get_atomic_manager()
             mgr.set_isolated_cancellation_map(shared_map)
 
-            # NEW-03: Implement granular feedback via IPC callback
             def status_callback(msg: str):
                 GLib.idle_add(self._handle_status_update, new_task_id, msg)
 

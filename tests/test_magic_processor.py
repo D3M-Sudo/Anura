@@ -1,3 +1,7 @@
+import pytest
+
+pytest.importorskip("gi")
+
 from anura.models.ocr import OcrResult
 from anura.transformers.magic_processor import get_magic_processor
 

@@ -72,7 +72,6 @@ class LanguageManager(GObject.GObject):
         self._need_update_cache = True
         self._cache_lock = threading.Lock()
 
-        # Networking session for downloads
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": USER_AGENT})
         self.session.timeout = REQUEST_TIMEOUT  # Set default timeout here

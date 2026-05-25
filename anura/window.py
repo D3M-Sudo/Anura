@@ -197,8 +197,6 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
                         self.show_toast(_(error) if error else _("Invalid image file"))
                         return
 
-                    from io import BytesIO
-
                     get_atomic_manager().execute(self.backend.decode_image, (self.get_language(), BytesIO(contents)))
                 else:
                     self.welcome_page.hide_spinner()

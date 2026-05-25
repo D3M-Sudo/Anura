@@ -26,10 +26,6 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
     autolinks_switch: Adw.SwitchRow = Gtk.Template.Child()
     volume_row: Adw.SpinRow = Gtk.Template.Child()
     tts_language_combo: Adw.ComboRow = Gtk.Template.Child()
-    # FIX: telemetry_switch removed — it was declared as Template.Child() but the
-    # widget no longer exists in preferences_general.blp (telemetry is fully
-    # disabled in Anura). Keeping a Template.Child() for a non-existent widget
-    # causes a Gtk.BuilderError at runtime.
 
     def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
@@ -42,7 +38,6 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
 
         self._setup_extra_languages()
 
-        # Update combo when languages are installed or removed (tracked for cleanup)
         self.connect_tracked(language_manager, "downloaded", self._on_language_changed)
         self.connect_tracked(language_manager, "removed", self._on_language_changed)
 
@@ -103,7 +98,6 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
 
     def _setup_tts_volume(self) -> None:
         """Setup TTS volume spin row with percentage display (0-100)."""
-        # Load initial value from settings (0.0-1.0) and convert to percentage
         volume_normalized = self.settings.get_double("tts-volume")
         self.volume_row.set_value(volume_normalized * 100)
 

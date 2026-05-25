@@ -39,7 +39,7 @@ from anura.core.resources import load_gresource_bundle
 
 # Load GResource before importing any widgets
 if not load_gresource_bundle():
-    print("CRITICAL: GResource bundle is required to run Anura. The application cannot start.", file=sys.stderr)
+    logger.critical("GResource bundle is required to run Anura. The application cannot start.")
     sys.exit(1)
 
 from anura.core.action_registry import ActionRegistry
@@ -55,6 +55,7 @@ from anura.services.screenshot_service import ScreenshotService
 from anura.services.settings import settings
 from anura.utils import cleanup_orphaned_resources
 from anura.utils.signal_manager import SignalManagerMixin
+from anura.utils.validators import launch_uri
 from anura.window import AnuraWindow
 
 
@@ -133,8 +134,8 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
 
                     if Notify.is_initted():
                         Notify.uninit()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.error(f"Failed to uninitialize Notify service: {e}")
 
         with contextlib.suppress(Exception):
             get_clipboard_service().cancel_pending_operations()
@@ -182,14 +183,10 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         win = self.get_active_window()
 
         if self.settings.get_boolean("autolinks"):
-            # Behavior A: Open directly in browser
-            from anura.utils.validators import launch_uri
-
             launch_uri(url, window=win, error_callback=lambda msg: win.show_toast(msg) if win else None)
             if win:
                 win.show_toast(_("URL opened automatically"))
         else:
-            # Behavior B: Send desktop notification with clickable action
             target = GLib.Variant("s", url)
             self.notification_service.send_notification_with_action(
                 notification_id="qr-url",
@@ -203,7 +200,6 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         # Handle URL Clipboard (respecting global autocopy or explicit request)
         if self.settings.get_boolean("autocopy") or copy_requested:
             get_clipboard_service().set(url)
-            # Only show "copied" toast if we didn't open the browser automatically
             if win and not self.settings.get_boolean("autolinks"):
                 win.show_toast(_("URL copied to clipboard"))
 
@@ -212,8 +208,6 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         if win:
             # Check for total capture failure (no primary, no fallback)
             if "Screenshot failed" in message.lower() and not getattr(self.backend, "fallback_provider", None):
-                from anura.core.dialogs import DialogManager
-
                 error_body = _(
                     "Anura could not capture a screenshot because no suitable "
                     "portal backend or fallback tool was found."
@@ -294,13 +288,9 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         DialogManager.show_about(self.get_active_window(), self.version, self._get_release_notes())
 
     def on_github_star(self, *_) -> None:
-        from anura.utils.validators import launch_uri
-
         launch_uri("https://github.com/D3M-Sudo/Anura", window=self.props.active_window)
 
     def on_report_issue(self, *_) -> None:
-        from anura.utils.validators import launch_uri
-
         launch_uri("https://github.com/D3M-Sudo/Anura/issues", window=self.props.active_window)
 
     def on_shortcuts(self, *_) -> None:
@@ -343,8 +333,6 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
 
     def _on_open_qr_notification(self, _, parameter: GLib.Variant | None) -> None:
         if parameter:
-            from anura.utils.validators import launch_uri
-
             launch_uri(parameter.get_string().strip(), window=self.get_active_window())
 
     def on_decoded(self, _sender, text: str, copy: bool, ocr_result: object) -> None:
