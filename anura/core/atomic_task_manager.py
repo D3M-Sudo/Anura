@@ -22,6 +22,25 @@ from loguru import logger  # noqa: E402
 from anura.utils.singleton import get_instance  # noqa: E402
 
 
+def _isolated_process_worker(command: "Callable", args: tuple, task_id: str, shared_map) -> object:
+    """
+    Top-level picklable entry point for ProcessPoolExecutor.
+
+    Must live at module level: local closures (nested functions that capture
+    the enclosing scope via ``self``) cannot be pickled by the 'spawn'
+    multiprocessing context required for safe GTK/GObject interaction.
+
+    Note: cross-process status callbacks via ``GLib.idle_add`` are not
+    supported here because ``idle_add`` in a child process targets the
+    child's (non-existent) GLib main loop, not the parent's.  Status
+    updates from isolated workers must be delivered through the shared
+    cancellation map or a dedicated IPC channel.
+    """
+    mgr = get_atomic_manager()
+    mgr.set_isolated_cancellation_map(shared_map)
+    return command(*args, task_id=task_id, status_callback=None)
+
+
 class AtomicTaskResult:
     """Wrapper for task results with versioning metadata."""
 
@@ -109,29 +128,6 @@ class AtomicTaskManager:
 
         logger.debug(f"AtomicTaskManager: Enqueuing isolated process task {new_task_id}")
 
-        def process_wrapper():
-            # This runs in the process executor (separate process)
-            # We must set the shared cancellation map in the child process's singleton
-            mgr = get_atomic_manager()
-            mgr.set_isolated_cancellation_map(shared_map)
-
-            def status_callback(msg: str):
-                GLib.idle_add(self._handle_status_update, new_task_id, msg)
-
-            # Call the command with its arguments
-            return command(*args, task_id=new_task_id, status_callback=status_callback)
-
-        def _handle_status_update(task_id: str, msg: str):
-            with self._state_lock:
-                if task_id != self._current_task_id:
-                    return GLib.SOURCE_REMOVE
-            if status_callback:
-                try:
-                    status_callback(msg)
-                except Exception:
-                    logger.exception("AtomicTaskManager: Unhandled error in status callback")
-            return GLib.SOURCE_REMOVE
-
         def result_wrapper(future):
             # This runs in the ThreadPoolExecutor (main process) to handle the callback
             try:
@@ -160,9 +156,11 @@ class AtomicTaskManager:
                         # Given single-slot execution, we can safely clear the ID.
                         self._isolated_cancellation_map.pop(new_task_id, None)
 
-        # Submit to process pool, then attach result handler
+        # Submit to process pool, then attach result handler.
+        # _isolated_process_worker is module-level (not a closure) so it can
+        # be pickled by the 'spawn' multiprocessing context.
         executor = self._get_process_executor()
-        future = executor.submit(process_wrapper)
+        future = executor.submit(_isolated_process_worker, command, args, new_task_id, shared_map)
         future.add_done_callback(result_wrapper)
 
         return new_task_id

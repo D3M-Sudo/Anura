@@ -35,6 +35,10 @@ class OcrController(GObject.GObject, SignalManagerMixin):
         SignalManagerMixin.__init__(self)
 
         self._window = weakref.proxy(window)
+        # weakref.proxy is transparent for Python attribute access, but PyGObject's
+        # C-level type check in dialog.open() rejects proxies.  Keep a plain
+        # weakref.ref for the one call-site that needs the real GObject.
+        self._window_ref = weakref.ref(window)
         self._dispatcher = get_result_dispatcher()
 
         # Register for automatic teardown
@@ -200,7 +204,15 @@ class OcrController(GObject.GObject, SignalManagerMixin):
             except Exception as e:
                 logger.warning(f"Image selection failed or aborted: {e}")
 
-        dialog.open(self._window, None, _on_open_image_result)
+        # Resolve the real GObject: weakref.proxy is opaque to PyGObject's C-level
+        # isinstance check inside Gtk.FileDialog.open(), causing a TypeError.
+        # self._window_ref() returns the live window or None if already destroyed.
+        _win = self._window_ref()
+        if _win is None:
+            logger.warning("OcrController.open_image: window was destroyed, aborting")
+            return
+
+        dialog.open(_win, None, _on_open_image_result)
 
     def cleanup(self):
         """Explicit cleanup to prevent memory leaks."""
