@@ -55,22 +55,26 @@ class AtomicTaskManager:
         self._state_lock = threading.Lock()
         logger.debug("AtomicTaskManager: Initialized with single-worker pool")
 
+    def _ensure_process_executor_locked(self) -> ProcessPoolExecutor:
+        """Initialize process executor if needed. MUST be called with _state_lock held."""
+        if self._process_executor is None:
+            # Use a single worker for process-isolated tasks (OCR) to avoid
+            # memory thrashing while still bypassing the GIL.
+            # We use 'spawn' to be safe with GTK/GObject.
+            ctx = multiprocessing.get_context("spawn")
+            self._process_executor = ProcessPoolExecutor(
+                max_workers=1,
+                mp_context=ctx
+            )
+            self._process_manager = ctx.Manager()
+            self._isolated_cancellation_map = self._process_manager.dict()
+            logger.info("AtomicTaskManager: Initialized process executor for OCR isolation")
+        return self._process_executor
+
     def _get_process_executor(self) -> ProcessPoolExecutor:
         """Lazy initialization of the process executor for OCR isolation."""
         with self._state_lock:
-            if self._process_executor is None:
-                # Use a single worker for process-isolated tasks (OCR) to avoid
-                # memory thrashing while still bypassing the GIL.
-                # We use 'spawn' to be safe with GTK/GObject.
-                ctx = multiprocessing.get_context("spawn")
-                self._process_executor = ProcessPoolExecutor(
-                    max_workers=1,
-                    mp_context=ctx
-                )
-                self._process_manager = ctx.Manager()
-                self._isolated_cancellation_map = self._process_manager.dict()
-                logger.info("AtomicTaskManager: Initialized process executor for OCR isolation")
-            return self._process_executor
+            return self._ensure_process_executor_locked()
 
     def execute_isolated(
         self,
@@ -84,21 +88,28 @@ class AtomicTaskManager:
         Use this for CPU-bound tasks like Tesseract to bypass the GIL.
         """
         new_task_id = str(uuid.uuid4())
+        old_task_id = None
 
         with self._state_lock:
             if self._cancellable:
                 self._cancellable.cancel()
-                if self._isolated_cancellation_map is not None and self._current_task_id:
-                    self._isolated_cancellation_map[self._current_task_id] = True
+                old_task_id = self._current_task_id
 
             self._current_task_id = new_task_id
             self._cancellable = Gio.Cancellable.new()
             current_cancellable = self._cancellable
 
-            # Ensure the new task is marked as NOT cancelled in the shared map
-            self._get_process_executor()
-            self._isolated_cancellation_map[new_task_id] = False
+            # NEW-01: Use ensure_locked version to avoid deadlock
+            self._ensure_process_executor_locked()
             shared_map = self._isolated_cancellation_map
+
+        # NEW-06: Perform IPC operations outside the _state_lock to avoid UI stuttering.
+        # We use setdefault for the new task to ensure we don't overwrite a cancellation
+        # from a very fast subsequent execute_isolated call.
+        if shared_map is not None:
+            shared_map.setdefault(new_task_id, False)
+            if old_task_id:
+                shared_map[old_task_id] = True
 
         logger.debug(f"AtomicTaskManager: Enqueuing isolated process task {new_task_id}")
 

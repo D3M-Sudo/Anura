@@ -137,6 +137,9 @@ class AdaptiveThresholdFilter(ImageFilterBase):
             self._check_cancellation(task_id)
             logger.debug("Filter: Applying Thresholding")
             return image.point(lut, "L")
+        except InterruptedError:
+            logger.debug("Anura Filter: Cancellation intercepted, re-raising InterruptedError")
+            raise
         except Exception as e:
             logger.warning(f"Thresholding filter failed: {e}")
             return image

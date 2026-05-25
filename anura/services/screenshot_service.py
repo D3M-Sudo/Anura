@@ -721,6 +721,9 @@ class ScreenshotService(GObject.GObject):
             logger.info(f"Anura OCR: Text extraction and Magics completed in {duration:.3f}s")
 
             return cleaned_text, ocr_result
+        except InterruptedError:
+            logger.debug("Anura OCR: Cancellation intercepted, re-raising InterruptedError")
+            raise
         except Exception as e:
             logger.debug(f"Anura OCR: OCR extraction or Magic processing failed: {e}")
             return None, None
@@ -821,17 +824,34 @@ class ScreenshotService(GObject.GObject):
                         self.emit("error", error_message)
                         return GLib.SOURCE_REMOVE
                     GLib.idle_add(_on_error_idle)
+                else:
+                    # NEW-05: Handle silent failure or cancellation by resetting UI state
+                    # without showing a toast (empty error string).
+                    def _on_silent_idle():
+                        self.emit("error", "")
+                        return GLib.SOURCE_REMOVE
+                    GLib.idle_add(_on_silent_idle)
 
                 # Cleanup physical file if requested
                 if remove_source:
                     get_atomic_manager().execute(self._cleanup_host_capture_cancel, (file,))
+
+            def _on_isolated_error(error, traceback_str):
+                # NEW-04: Handle process crashes by emitting a localized error signal
+                logger.error(f"Anura OCR (Isolated): Process error: {error}")
+
+                def _on_error_idle():
+                    self.emit("error", _("OCR processing failed. Please try again."))
+                    return GLib.SOURCE_REMOVE
+                GLib.idle_add(_on_error_idle)
 
             # Use execute_isolated to run in a separate process
             # Note: execute_isolated handles setting task_id and cancellation check
             get_atomic_manager().execute_isolated(
                 run_ocr_pipeline,
                 (lang, file, mode),
-                callback=_on_isolated_complete
+                callback=_on_isolated_complete,
+                errorback=_on_isolated_error
             )
             return True
 
