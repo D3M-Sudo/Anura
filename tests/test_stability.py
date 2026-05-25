@@ -39,7 +39,7 @@ def test_resource_guard_activation():
     # Mock low memory
     mock_mem = MagicMock()
     mock_mem.available = 100 * 1024 * 1024
-    mock_mem.percent = 95.0 # 5% free
+    mock_mem.percent = 95.0  # 5% free
 
     with patch("psutil.virtual_memory", return_value=mock_mem):
         result = filter.apply(large_img)
@@ -57,7 +57,7 @@ def test_rescale_allowed_on_high_memory():
     # Mock high memory
     mock_mem = MagicMock()
     mock_mem.available = 4 * 1024 * 1024 * 1024
-    mock_mem.percent = 50.0 # 50% free
+    mock_mem.percent = 50.0  # 50% free
 
     with patch("psutil.virtual_memory", return_value=mock_mem):
         # We don't want it to actually resize if it doesn't need to (size < 1000 check)

@@ -36,14 +36,14 @@ def test_new_02_interrupted_error_propagation_screenshot_service():
     Verify that InterruptedError is correctly re-raised in _try_ocr_extraction.
     We mock the entire module to avoid Xdp dependency.
     """
-    with patch("gi.require_version"):
-        # Mocking the imports that fail
-        with patch("gi.repository.Xdp", create=True):
-            # We mock Settings class in anura.services.settings before importing screenshot_service
-            with patch("anura.services.settings.Settings"):
-                from anura.services.screenshot_service import ScreenshotService
+    with (
+        patch("gi.require_version"),
+        patch("gi.repository.Xdp", create=True),
+        patch("anura.services.settings.Settings"),
+    ):
+        from anura.services.screenshot_service import ScreenshotService
 
-                service = ScreenshotService.__new__(ScreenshotService)
+        service = ScreenshotService.__new__(ScreenshotService)
 
     mock_img = MagicMock(spec=Image.Image)
     mock_img.mode = "L"
@@ -69,9 +69,11 @@ def test_new_03_interrupted_error_propagation_filters():
     filt = AdaptiveThresholdFilter()
     mock_img = MagicMock(spec=Image.Image)
 
-    with patch.object(filt, "_check_cancellation", side_effect=InterruptedError("Cancelled")):
-        with pytest.raises(InterruptedError):
-            filt.apply(mock_img, task_id="test-task")
+    with (
+        patch.object(filt, "_check_cancellation", side_effect=InterruptedError("Cancelled")),
+        pytest.raises(InterruptedError),
+    ):
+        filt.apply(mock_img, task_id="test-task")
 
 
 def test_new_06_ipc_outside_lock_logic():
@@ -107,14 +109,14 @@ def test_new_05_silent_reset_on_cancellation():
     Verify that run_ocr_pipeline returns (False, None, None, None) on InterruptedError,
     which triggers the silent reset in _on_isolated_complete.
     """
-    with patch("gi.require_version"):
-        with patch("gi.repository.Xdp", create=True):
-            from anura.services.screenshot_service import run_ocr_pipeline
+    with patch("gi.require_version"), patch("gi.repository.Xdp", create=True):
+        from anura.services.screenshot_service import run_ocr_pipeline
 
-    with patch("anura.utils.barcode_detector.detect_barcodes", side_effect=InterruptedError()):
-        # Create a dummy file for the pipeline
-        with patch("os.path.exists", return_value=True), patch(
-            "os.path.getsize", return_value=100
-        ), patch("PIL.Image.open"):
-            result = run_ocr_pipeline("eng", "dummy.png", "off", task_id="test")
-            assert result == (False, None, None, None)
+    with (
+        patch("anura.utils.barcode_detector.detect_barcodes", side_effect=InterruptedError()),
+        patch("os.path.exists", return_value=True),
+        patch("os.path.getsize", return_value=100),
+        patch("PIL.Image.open"),
+    ):
+        result = run_ocr_pipeline("eng", "dummy.png", "off", task_id="test")
+        assert result == (False, None, None, None)

@@ -3,11 +3,13 @@
 #
 # SPDX-License-Identifier: MIT
 
-import os
-from typing import Callable
+from collections.abc import Callable
+
 from gi.repository import Gio, GLib, Xdp
 from loguru import logger
+
 from .base import ScreenshotProvider
+
 
 class PortalProvider(ScreenshotProvider):
     """Screenshot provider using XDG Desktop Portal."""
@@ -34,7 +36,7 @@ class PortalProvider(ScreenshotProvider):
             callback(False, None, str(e))
 
     def _on_finish(self, source_object, res, user_data):
-        lang, copy, callback = user_data
+        _lang, _copy, callback = user_data
         try:
             uri = self.portal.take_screenshot_finish(res)
             if uri:

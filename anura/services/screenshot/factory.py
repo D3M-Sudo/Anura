@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: MIT
 
-from .portal_provider import PortalProvider
 from .legacy_provider import LegacyX11Provider
+from .portal_provider import PortalProvider
+
 
 class ScreenshotProviderFactory:
     """Factory for creating the appropriate screenshot provider."""

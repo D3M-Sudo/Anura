@@ -10,8 +10,8 @@ pytest.importorskip("gi")
 
 from unittest.mock import patch
 
-from anura.services.language_manager import LanguageManager
 from anura.main import AnuraApplication
+from anura.services.language_manager import LanguageManager
 
 
 class TestLanguageManager:

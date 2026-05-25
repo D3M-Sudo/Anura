@@ -61,5 +61,6 @@ class TestOcrDataModel(unittest.TestCase):
         self.assertEqual(len(filtered), 1)
         self.assertEqual(filtered[0].text, "Hello")
 
+
 if __name__ == "__main__":
     unittest.main()

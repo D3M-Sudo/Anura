@@ -5,13 +5,12 @@
 
 from gettext import gettext as _
 from gettext import ngettext
+from typing import ClassVar
 
 from gi.repository import Gio, GLib, GObject, Gtk
 from loguru import logger
 
-from anura.services.clipboard_service import get_clipboard_service
 from anura.services.result_dispatcher import get_result_dispatcher
-from anura.services.settings import settings
 from anura.utils import uri_validator
 from anura.utils.portal_advice import detect_portal_advice
 
@@ -23,7 +22,7 @@ class OcrController(GObject.GObject):
     Emits GLib signals for detected text and errors to allow event-driven service integration.
     """
 
-    __gsignals__ = {
+    __gsignals__: ClassVar[dict[str, tuple]] = {
         "text-extracted": (GObject.SignalFlags.RUN_LAST, None, (str, bool)),
         "uri-detected": (GObject.SignalFlags.RUN_LAST, None, (str, bool)),
         "error-occurred": (GObject.SignalFlags.RUN_LAST, None, (str,)),

@@ -244,9 +244,7 @@ def test_window_disconnects_portal_banner_signal() -> None:
         or "self.portal_banner.disconnect(self._handler_portal_banner)" in text
         or "self.disconnect_all_signals()" in text
         or "self.teardown_all()" in text
-    ), (
-        "AnuraWindow.do_destroy must disconnect signals to prevent memory leaks."
-    )
+    ), "AnuraWindow.do_destroy must disconnect signals to prevent memory leaks."
 
 
 def test_window_tracks_portal_banner_handler_id() -> None:
@@ -275,11 +273,7 @@ def test_window_process_file_uses_validate_image_resource() -> None:
 
     found_validation = False
     for node in ast.walk(process_file_fn):
-        if (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and node.func.id == "validate_image_resource"
-        ):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "validate_image_resource":
             found_validation = True
             break
     assert found_validation, (

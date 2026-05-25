@@ -57,7 +57,7 @@ It also decodes **QR codes and Barcodes** in a single click using **zxing-cpp**,
 
 ## Architecture
 
-As of **v0.1.6**, Anura features an **Enterprise Clean Architecture** focused on event-driven decoupling and memory safety:
+As of **v0.1.5**, Anura features an **Enterprise Clean Architecture** focused on event-driven decoupling and memory safety:
 
 - **Core Services (`anura/core/`)**: Pure infrastructure logic. Includes `boot` (capability audit), `logger` (rotary logging), `atomic_task_manager` (isolated worker pool), and `resources`.
 - **Business Services (`anura/services/`)**: High-level I/O and resource management. Includes `language_manager` (Tessdata pooling), `screenshot` (multi-provider capture factory), and `settings`.

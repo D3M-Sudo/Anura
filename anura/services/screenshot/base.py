@@ -4,7 +4,8 @@
 # SPDX-License-Identifier: MIT
 
 from abc import ABC, abstractmethod
-from typing import Callable
+from collections.abc import Callable
+
 
 class ScreenshotProvider(ABC):
     """Abstract base class for screenshot capture providers."""

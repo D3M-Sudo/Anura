@@ -21,8 +21,8 @@ from gi.repository import Adw, GLib, GObject, Gtk  # noqa: E402
 from loguru import logger  # noqa: E402
 import requests  # noqa: E402
 
-from anura.core.atomic_task_manager import get_atomic_manager  # noqa: E402
 from anura.config import RESOURCE_PREFIX  # noqa: E402
+from anura.core.atomic_task_manager import get_atomic_manager  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
 from anura.services.tts import get_tts_service  # noqa: E402

@@ -3,12 +3,15 @@
 #
 # SPDX-License-Identifier: MIT
 
+from collections.abc import Callable
 import os
 import uuid
-from typing import Callable
+
 from gi.repository import Gio, GLib
 from loguru import logger
+
 from .base import ScreenshotProvider
+
 
 class LegacyX11Provider(ScreenshotProvider):
     """Legacy screenshot provider using scrot on X11."""

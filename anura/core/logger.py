@@ -5,8 +5,11 @@
 
 import os
 import sys
+
 from loguru import logger
+
 from anura.config import LOG_LEVEL
+
 
 def setup_logging():
     """Configure logging with professional format and rotary settings."""

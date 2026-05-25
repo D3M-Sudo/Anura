@@ -44,8 +44,8 @@ if not load_gresource_bundle():
 from anura.core.action_registry import ActionRegistry
 from anura.core.dialogs import DialogManager
 from anura.core.silent_runner import SilentRunner
-from anura.services.language_manager import get_language_manager
 from anura.services.clipboard_service import get_clipboard_service
+from anura.services.language_manager import get_language_manager
 from anura.services.notification_service import (
     HAS_LIBNOTIFY,
     NotificationService,
@@ -173,7 +173,9 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
                 )
         else:
             if not is_window_active:
-                self.notification_service.show_notification(title=_("Anura OCR"), body=_("Text extracted successfully."))
+                self.notification_service.show_notification(
+                    title=_("Anura OCR"), body=_("Text extracted successfully.")
+                )
 
     def _on_uri_detected(self, _controller, url: str, copy_requested: bool) -> None:
         win = self.get_active_window()
@@ -210,10 +212,13 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
             # Check for total capture failure (no primary, no fallback)
             if "Screenshot failed" in message.lower() and not getattr(self.backend, "fallback_provider", None):
                 from anura.core.dialogs import DialogManager
+
                 DialogManager.show_fatal_error(
                     win,
                     _("Capture Failed"),
-                    _("Anura could not capture a screenshot because no suitable portal backend or fallback tool was found.")
+                    _(
+                        "Anura could not capture a screenshot because no suitable portal backend or fallback tool was found."
+                    ),
                 )
             else:
                 win.show_toast(message)

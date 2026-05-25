@@ -7,7 +7,6 @@
 import contextlib
 from gettext import gettext as _
 from io import BytesIO
-from mimetypes import guess_type
 
 import gi
 
@@ -22,13 +21,13 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk  # noqa: E402
 from loguru import logger  # noqa: E402
 
-from anura.core.atomic_task_manager import get_atomic_manager  # noqa: E402
 from anura.config import APP_ID, RESOURCE_PREFIX  # noqa: E402
 from anura.controllers.dnd_controller import DndController  # noqa: E402
 from anura.controllers.ocr_controller import OcrController  # noqa: E402
 from anura.controllers.tts_controller import TtsController  # noqa: E402
-from anura.services.language_manager import get_language_manager  # noqa: E402
+from anura.core.atomic_task_manager import get_atomic_manager  # noqa: E402
 from anura.services.clipboard_service import get_clipboard_service  # noqa: E402
+from anura.services.language_manager import get_language_manager  # noqa: E402
 from anura.services.screenshot_service import ScreenshotService  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
 from anura.types.context import get_app_context  # noqa: E402
@@ -199,9 +198,8 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
                         return
 
                     from io import BytesIO
-                    get_atomic_manager().execute(
-                        self.backend.decode_image, (self.get_language(), BytesIO(contents))
-                    )
+
+                    get_atomic_manager().execute(self.backend.decode_image, (self.get_language(), BytesIO(contents)))
                 else:
                     self.welcome_page.hide_spinner()
                     self.show_toast(_("Failed to load image file"))

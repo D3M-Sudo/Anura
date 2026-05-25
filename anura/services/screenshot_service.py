@@ -5,7 +5,6 @@
 # SPDX-License-Identifier: MIT
 
 from collections.abc import Callable
-import contextlib
 from gettext import gettext as _
 import os
 import re
@@ -14,7 +13,6 @@ import threading
 import time
 from typing import ClassVar
 from urllib.request import url2pathname
-import uuid
 
 import gi
 
@@ -28,11 +26,11 @@ from loguru import logger  # noqa: E402
 from PIL import Image  # noqa: E402
 import pytesseract  # noqa: E402
 
-from anura.core.atomic_task_manager import get_atomic_manager  # noqa: E402
 from anura.config import (  # noqa: E402
     LANG_CODE_PATTERN,
     get_tesseract_config,
 )
+from anura.core.atomic_task_manager import get_atomic_manager  # noqa: E402
 from anura.types.ocr import OcrResult  # noqa: E402
 from anura.utils import validate_image_resource  # noqa: E402
 from anura.utils.portal_advice import detect_portal_advice  # noqa: E402
@@ -66,9 +64,9 @@ def run_ocr_pipeline(
         import pytesseract
         from pytesseract import Output
 
+        from anura.transformers.magic_processor import get_magic_processor
         from anura.utils.structural_reconstructor import get_structural_reconstructor
         from anura.utils.text_preprocessor import get_text_preprocessor
-        from anura.transformers.magic_processor import get_magic_processor
         from anura.utils.validators import sanitize_text
 
         if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
@@ -231,9 +229,7 @@ class ScreenshotService(GObject.GObject):
         def _on_capture_result(success, uri, error):
             if success and uri:
                 # Move URI parsing and file existence check to background thread
-                get_atomic_manager().execute(
-                    self._handle_portal_uri_background, (lang, uri, copy), pass_task_id=True
-                )
+                get_atomic_manager().execute(self._handle_portal_uri_background, (lang, uri, copy), pass_task_id=True)
                 self._is_capturing = False
             elif error:
                 # Log full error context
@@ -601,19 +597,25 @@ class ScreenshotService(GObject.GObject):
             def _on_isolated_complete(result_tuple):
                 success, extracted, error_message, ocr_result = result_tuple
                 if success:
+
                     def _on_decoded_idle():
                         self.emit("decoded", extracted, copy, ocr_result)
                         return GLib.SOURCE_REMOVE
+
                     GLib.idle_add(_on_decoded_idle)
                 elif error_message:
+
                     def _on_error_idle():
                         self.emit("error", error_message)
                         return GLib.SOURCE_REMOVE
+
                     GLib.idle_add(_on_error_idle)
                 else:
+
                     def _on_silent_idle():
                         self.emit("error", "")
                         return GLib.SOURCE_REMOVE
+
                     GLib.idle_add(_on_silent_idle)
 
                 if remove_source:
@@ -621,15 +623,18 @@ class ScreenshotService(GObject.GObject):
 
             def _on_isolated_error(error, traceback_str):
                 logger.error(f"Anura OCR (Isolated): Process error: {error}")
+
                 def _on_error_idle():
                     self.emit("error", _("OCR processing failed. Please try again."))
                     return GLib.SOURCE_REMOVE
+
                 GLib.idle_add(_on_error_idle)
 
             def _on_isolated_status(status_msg):
                 def _on_status_idle():
                     self.emit("status-changed", status_msg)
                     return GLib.SOURCE_REMOVE
+
                 GLib.idle_add(_on_status_idle)
 
             get_atomic_manager().execute_isolated(
@@ -646,20 +651,24 @@ class ScreenshotService(GObject.GObject):
         )
 
         if success:
+
             def _on_decoded_idle(text: str, cp: bool, ocr_res: OcrResult | None) -> bool:
                 try:
                     self.emit("decoded", text, cp, ocr_res)
                 except Exception:
                     logger.exception("Anura: Failed to emit decoded signal")
                 return GLib.SOURCE_REMOVE
+
             GLib.idle_add(_on_decoded_idle, extracted, copy, ocr_result, priority=GLib.PRIORITY_DEFAULT)
         else:
+
             def _on_decode_error_idle(msg: str | None) -> bool:
                 try:
                     self.emit("error", msg)
                 except Exception:
                     logger.exception("Anura: Failed to emit decode error")
                 return GLib.SOURCE_REMOVE
+
             GLib.idle_add(_on_decode_error_idle, error_message, priority=GLib.PRIORITY_DEFAULT)
 
         return False
