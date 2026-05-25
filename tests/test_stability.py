@@ -31,7 +31,7 @@ class MockController(Teardownable):
 
 def test_resource_guard_activation():
     """Verify that RescaleFilter blocks on large images when memory is low."""
-    filter = RescaleFilter()
+    rescale_filter = RescaleFilter()
 
     # Large image (>20MP)
     large_img = Image.new("L", (5000, 5000))  # 25MP
@@ -42,14 +42,14 @@ def test_resource_guard_activation():
     mock_mem.percent = 95.0  # 5% free
 
     with patch("psutil.virtual_memory", return_value=mock_mem):
-        result = filter.apply(large_img)
+        result = rescale_filter.apply(large_img)
         # Should return the same image object (blocked)
         assert result is large_img
 
 
 def test_rescale_allowed_on_high_memory():
     """Verify that RescaleFilter proceeds on large images when memory is sufficient."""
-    filter = RescaleFilter()
+    rescale_filter = RescaleFilter()
 
     # Large image (>20MP)
     large_img = Image.new("L", (5000, 5000))  # 25MP
@@ -64,7 +64,7 @@ def test_rescale_allowed_on_high_memory():
         # but here we just want to see it didn't trigger the Guard.
         # RescaleFilter resizes if width or height < 1000.
         # Since 5000 > 1000, it should return the original image if NO guard is triggered.
-        result = filter.apply(large_img)
+        result = rescale_filter.apply(large_img)
         assert result is large_img
 
 

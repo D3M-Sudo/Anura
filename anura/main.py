@@ -4,6 +4,7 @@
 #
 # SPDX-License-Identifier: MIT
 
+import contextlib
 import html
 import os
 import sys
@@ -391,9 +392,6 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         win = self.get_active_window()
         if win:
             win.on_listen_pause()
-
-
-import contextlib
 
 
 def main(version: str) -> int:
