@@ -148,15 +148,15 @@ class ShareService(GObject.GObject):
                 success = self.launcher.launch_finish(result)
                 if not success:
                     # Official scheme failed, show instance selection
-                    logger.info("Anura Share: web+mastodon:// not supported, showing language selection")
+                    logger.info("Anura Share: web+mastodon:// not supported, showing instance selection")
                     self._show_mastodon_instance_dialog(encoded_text)
                 else:
 
                     def _on_share_idle(res):
                         try:
                             self.emit("share", res)
-                        except Exception:
-                            logger.exception("Anura: Failed to emit share status")
+                        except Exception as e:
+                            logger.error(f"Anura: Failed to emit share status: {e}")
                         return GLib.SOURCE_REMOVE
 
                     GLib.idle_add(_on_share_idle, True)
@@ -196,8 +196,8 @@ class ShareService(GObject.GObject):
         def _on_response(dlg, response):
             try:
                 self._on_mastodon_instance_selected(dlg, response, encoded_text)
-            except Exception:
-                logger.exception("Anura: Unexpected error in Mastodon instance selection")
+            except Exception as e:
+                logger.error(f"Anura: Unexpected error in Mastodon instance selection: {e}")
 
         dialog.connect("response", _on_response)
 
