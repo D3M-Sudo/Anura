@@ -1,3 +1,7 @@
+import pytest
+
+pytest.importorskip("gi")
+
 from anura.models.ocr import OcrResult, OcrWord
 from anura.utils.structural_reconstructor import get_structural_reconstructor
 
