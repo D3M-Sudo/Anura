@@ -332,11 +332,14 @@ class TTSService(GObject.GObject):
         self.player.set_property("volume", volume)
         logger.debug(f"Anura TTSService: Set volume to {volume:.2f}")
 
+        # Order of operations is critical:
+        # 1. Get bus
+        # 2. Add signal watch and connect handler
+        # 3. ONLY THEN set state to PLAYING
         self._bus = self.player.get_bus()
 
         # Setup bus watch synchronously before starting playback to avoid race
         # conditions on End-of-Stream (EOS) events for short audio clips.
-        # The return value of _setup_bus_watch is ignored in this synchronous path.
         self._setup_bus_watch()
 
         logger.info("Anura TTSService: Setting GStreamer state to PLAYING")

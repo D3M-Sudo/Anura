@@ -24,7 +24,7 @@ class MagicProcessor:
             TransformerType.URL: UrlTransformer(),
         }
 
-    def process(self, ocr_data: OcrData) -> tuple[str, float]:
+    def process(self, ocr_data: OcrData, task_id: str | None = None) -> tuple[str, float]:
         """
         Process OcrData and return transformed text
         along with the average confidence score.
@@ -46,7 +46,11 @@ class MagicProcessor:
 
         # Calculate scores
         scores = {}
-        for t_type, transformer in self._transformers.items():
+        for i, (t_type, transformer) in enumerate(self._transformers.items()):
+            if task_id and i % 2 == 0:
+                from anura.atomic_task_manager import get_atomic_manager
+                if get_atomic_manager().is_cancelled(task_id):
+                    raise InterruptedError(f"Task {task_id} was cancelled during Magic score calculation")
             scores[t_type] = transformer.score(result)
 
         result.transformer_scores = scores

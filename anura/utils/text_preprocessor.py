@@ -68,17 +68,20 @@ class TextPreprocessor:
             ),  # Month DD, YYYY
         ]
 
-    def enhance_image(self, image: Image.Image) -> Image.Image:
+    def enhance_image(self, image: Image.Image, task_id: str | None = None) -> Image.Image:
         """Apply the preprocessing filter chain to improve OCR accuracy.
 
         Args:
             image: Input PIL Image
+            task_id: Optional task ID for cooperative cancellation.
 
         Returns:
             Enhanced PIL Image, or original if enhancement fails.
         """
         try:
-            return get_default_filter_chain().apply(image)
+            return get_default_filter_chain().apply(image, task_id=task_id)
+        except InterruptedError:
+            raise
         except Exception as e:
             logger.warning(f"Image enhancement failed: {e}")
             return image
