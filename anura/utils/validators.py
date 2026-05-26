@@ -76,7 +76,20 @@ def is_safe_url_string(text: str) -> bool:
     if "\\" in text:
         return False
 
-    # 3. IDN normalization: convert international domain names (IDN) to their
+    # 3. Homograph detection: If the hostname mixes ASCII Latin letters with
+    # non-ASCII characters from scripts commonly used in homograph attacks
+    # (Cyrillic, Greek), reject the URL immediately. Legitimate international
+    # domains (e.g. https://münchen.de, https://例子.测试) use only a single
+    # script (Latin+diacritics or CJK) and will pass safely through to IDN.
+    if not text.isascii() and any(ch.isascii() and ch.isalpha() for ch in text):
+        for ch in text:
+            cp = ord(ch)
+            if cp > 0x7F:
+                # Cyrillic: 0x0400-0x052F, Greek: 0x0370-0x03FF
+                if 0x0400 <= cp <= 0x052F or 0x0370 <= cp <= 0x03FF:
+                    return False
+
+    # 4. IDN normalization: convert international domain names (IDN) to their
     # Punycode ASCII-compatible encoding (ACE) before the ASCII safety check.
     # This allows legitimate URLs like https://münchen.de or https://中文.com
     # while still rejecting homograph attacks — Punycode is always ASCII, so
