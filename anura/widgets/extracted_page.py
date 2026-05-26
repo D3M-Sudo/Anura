@@ -155,12 +155,24 @@ class ExtractedPage(Adw.NavigationPage):
 
     def do_unmap(self) -> None:
         """Handle widget unmapping - stop TTS playback when widget is no longer visible."""
-        # X11 Constraint: Stop TTS immediately when widget is unmapped to prevent zombie audio
+        # X11 Constraint: Stop TTS immediately when widget is unmapped to prevent zombie audio.
+        # BUG-TTS-5 fix: also reset UI controls here so the next visit to the
+        # extracted page does not inherit stale play/pause/spinner state.
         if self._tts_service:
             try:
                 self._tts_service.stop_speaking()
             except Exception as e:
                 logger.warning(f"Failed to stop TTS during unmap: {e}")
+        # Reset generation flag and controls unconditionally — stop_speaking()
+        # may not emit "stop" if the player was already None (e.g. still generating).
+        self._is_generating_tts = False
+        if self.listen_spinner:
+            self.listen_spinner.stop()
+        if self.listen_stack:
+            self.listen_stack.set_visible_child_name("button")
+        self.swap_controls(False)
+        if self.listen_pause_btn:
+            self.listen_pause_btn.set_icon_name("media-playback-pause-symbolic")
         Gtk.Widget.do_unmap(self)
 
     def do_dispose(self) -> None:
@@ -357,19 +369,25 @@ class ExtractedPage(Adw.NavigationPage):
             window.show_toast(message)
 
     def _on_generated(self, filepath: str | None) -> None:
+        """Callback from AtomicTaskManager when TTS generation completes.
+
+        BUG-TTS-1 fix: do NOT call tts_service.play() here.
+        generate() already emits the 'speak' signal via GLib.idle_add, which
+        TtsController._on_tts_speak() handles by calling play().  Calling
+        play() here as well creates a second GStreamer pipeline that plays
+        concurrently with the first — the first lacks a bus watch (overwritten
+        by the second) so it becomes a zombie: it cannot be stopped by pause,
+        stop, or window close.
+        """
         self._is_generating_tts = False
         if not filepath:
             self._set_spinner_active(False)
             self.swap_controls(False)
             return
 
-        # Deactivate spinner immediately when generation is complete
+        # Deactivate spinner — TtsController will call play() via the 'speak'
+        # signal and then update the UI to "playing" via _on_tts_speak().
         self._set_spinner_active(False)
-        # Show pause/stop controls
-        self.swap_controls(True)
-        # Start playback
-        tts_service_instance = get_tts_service()
-        tts_service_instance.play(filepath)
 
     def _on_listen_end(self, service: object, success: bool) -> None:
         """Handle TTS playback completion."""
