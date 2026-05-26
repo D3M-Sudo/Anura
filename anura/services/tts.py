@@ -235,12 +235,8 @@ class TTSService(GObject.GObject):
         self._bus_watch_lock = threading.Lock()
         self._state_lock = threading.Lock()
         self._init_lock = threading.Lock()
-        # BUG-TTS-2 fix: monotonic generation counter.
-        # Incremented every time play() starts a new pipeline.  on_gst_message()
-        # captures the counter at connection time and ignores any EOS/ERROR
-        # message whose generation_id no longer matches — this prevents stale
-        # callbacks from a torn-down pipeline from re-emitting "stop" and
-        # clobbering UI state set by a newer playback session.
+        # Monotonic generation counter: stale bus callbacks from a torn-down
+        # pipeline are ignored when the counter no longer matches.
         self._generation_id: int = 0
         self.player = None
 
@@ -325,8 +321,7 @@ class TTSService(GObject.GObject):
         with self._cleanup_lock:
             if self.player:
                 self._cleanup_gst_resources()
-            # BUG-TTS-2: bump generation counter so any in-flight EOS/ERROR
-            # idle callbacks from the previous pipeline know they are stale.
+            # Bump generation counter to invalidate stale bus callbacks.
             with self._state_lock:
                 self._generation_id += 1
                 current_gen = self._generation_id
@@ -374,7 +369,6 @@ class TTSService(GObject.GObject):
                     # Setup bus watch within the same lock to prevent race conditions
                     self._bus.add_signal_watch()
                     self._bus_watch_active = True
-                    # BUG-TTS-2: bind generation_id so on_gst_message can detect stale callbacks.
                     self._bus_message_handler_id = self._bus.connect(
                         "message",
                         lambda bus, msg, gen=generation_id: self.on_gst_message(bus, msg, gen),
@@ -392,10 +386,8 @@ class TTSService(GObject.GObject):
         the return value is ignored — don't return False/True for "don't
         repeat".
 
-        generation_id is captured at bus-connect time (see _setup_bus_watch).
-        If _generation_id has advanced since then, this callback belongs to a
-        torn-down pipeline and must be ignored to prevent stale "stop" signals
-        from clobbering the UI state of a newer playback session (BUG-TTS-2).
+        Stale callback detection: if _generation_id has advanced since this
+        callback was connected, it belongs to a torn-down pipeline.
         """
         with self._state_lock:
             if generation_id != self._generation_id:
@@ -528,9 +520,6 @@ class TTSService(GObject.GObject):
             return
         logger.info("Anura TTSService: Setting GStreamer state to PAUSED")
         ret = self.player.set_state(Gst.State.PAUSED)
-        # BUG-TTS-3 fix: set_state() is asynchronous for live pipelines.
-        # Wait up to 500 ms for the transition to settle before emitting
-        # the "paused" signal so the UI always reflects the real state.
         if ret == Gst.StateChangeReturn.ASYNC:
             self.player.get_state(500 * Gst.MSECOND)
 
@@ -546,7 +535,6 @@ class TTSService(GObject.GObject):
             return
         logger.info("Anura TTSService: Setting GStreamer state to PLAYING (resume)")
         ret = self.player.set_state(Gst.State.PLAYING)
-        # BUG-TTS-3 fix: same rationale as pause().
         if ret == Gst.StateChangeReturn.ASYNC:
             self.player.get_state(500 * Gst.MSECOND)
 
@@ -568,9 +556,6 @@ class TTSService(GObject.GObject):
         if not self.player:
             return
 
-        # BUG-TTS-4 fix: get_state(0) returns ASYNC when a transition is in
-        # flight — the state value is unreliable.  Use a short timeout so we
-        # always read the settled state before deciding which way to toggle.
         _, state, _ = self.player.get_state(100 * Gst.MSECOND)
         if state == Gst.State.PLAYING:
             self.pause()
