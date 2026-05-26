@@ -32,7 +32,7 @@ def load_gresource_bundle() -> bool:
                 Gio.resources_register(resource)
                 logger.debug(f"GResource bundle loaded from: {path}")
                 return True
-            except Exception as e:
+            except (GLib.Error, RuntimeError) as e:
                 logger.error(f"Failed to load GResource from {path}: {e}")
                 continue
 

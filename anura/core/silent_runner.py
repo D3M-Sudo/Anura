@@ -82,8 +82,8 @@ class SilentRunner:
                     logger.info("Anura: OCR completed successfully in silent mode.")
                 else:
                     logger.error(f"Anura: Silent mode failed: {error_message}")
-            except Exception as e:
-                logger.exception(f"Anura: Silent mode unexpected error: {e}")
+            except (RuntimeError, OSError) as e:
+                logger.error(f"Anura: Silent mode unexpected error: {e}")
 
             loop.quit()
             return False

@@ -104,14 +104,15 @@ class AtomicTaskManager:
     def _teardown_process_executor_locked(self) -> None:
         """Shut down and discard the broken process executor. MUST be called with _state_lock held."""
         try:
-            self._process_executor.shutdown(wait=False, cancel_futures=True)
-        except Exception:
-            pass
+            if self._process_executor:
+                self._process_executor.shutdown(wait=False, cancel_futures=True)
+        except (RuntimeError, OSError) as e:
+            logger.debug(f"AtomicTaskManager: Executor shutdown omitted or failed: {e}")
         try:
             if self._process_manager is not None:
                 self._process_manager.shutdown()
-        except Exception:
-            pass
+        except (RuntimeError, OSError) as e:
+            logger.debug(f"AtomicTaskManager: Process manager shutdown omitted or failed: {e}")
         self._process_executor = None
         self._process_manager = None
         self._isolated_cancellation_map = None
@@ -184,7 +185,7 @@ class AtomicTaskManager:
                 result = AtomicTaskResult(task_id=new_task_id, error=e, traceback_str=tb_str)
                 GLib.idle_add(self._handle_error, result, errorback)
 
-            except Exception as e:
+            except (AttributeError, TypeError, RuntimeError, OSError) as e:
                 tb_str = traceback.format_exc()
                 result = AtomicTaskResult(task_id=new_task_id, error=e, traceback_str=tb_str)
                 GLib.idle_add(self._handle_error, result, errorback)
@@ -258,7 +259,7 @@ class AtomicTaskManager:
                 result = AtomicTaskResult(task_id=new_task_id, data=result_data)
                 GLib.idle_add(self._handle_success, result, callback)
 
-            except Exception as e:
+            except (AttributeError, TypeError, RuntimeError, OSError) as e:
                 tb_str = traceback.format_exc()
                 result = AtomicTaskResult(task_id=new_task_id, error=e, traceback_str=tb_str)
                 GLib.idle_add(self._handle_error, result, errorback)
@@ -300,8 +301,8 @@ class AtomicTaskManager:
 
         try:
             callback(result.data)
-        except Exception:
-            logger.exception("AtomicTaskManager: Unhandled error in success callback")
+        except (AttributeError, TypeError, RuntimeError) as e:
+            logger.error(f"AtomicTaskManager: Unhandled error in success callback: {e}")
 
         return GLib.SOURCE_REMOVE
 
@@ -316,8 +317,8 @@ class AtomicTaskManager:
         eb = errorback or self._default_errorback
         try:
             eb(result.error, result.traceback_str)
-        except Exception:
-            logger.exception("AtomicTaskManager: Unhandled error in error callback")
+        except (AttributeError, TypeError, RuntimeError) as e:
+            logger.error(f"AtomicTaskManager: Unhandled error in error callback: {e}")
 
         return GLib.SOURCE_REMOVE
 

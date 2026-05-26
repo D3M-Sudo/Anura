@@ -7,6 +7,7 @@
 import contextlib
 from gettext import gettext as _
 from io import BytesIO
+from typing import TYPE_CHECKING, Any
 
 import gi
 
@@ -37,6 +38,9 @@ from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
 from anura.widgets.preferences_dialog import PreferencesDialog  # noqa: E402
 from anura.widgets.welcome_page import WelcomePage  # noqa: E402
 
+if TYPE_CHECKING:
+    from anura.services.language_manager import LanguageManager
+
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/window.ui")
 class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
@@ -48,6 +52,15 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     extracted_page: ExtractedPage = Gtk.Template.Child()
     portal_banner: Adw.Banner = Gtk.Template.Child()
 
+    settings: Gio.Settings
+    share_service: Any
+    backend: ScreenshotService
+    ocr_controller: OcrController
+    tts_controller: TtsController
+    dnd_controller: DndController
+    _clipboard_service: Any | None
+    _screenshot_timeout_id: int | None
+
     def __init__(self, backend: ScreenshotService, **kwargs: object) -> None:
         super().__init__(**kwargs)
         SignalManagerMixin.__init__(self)
@@ -58,7 +71,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         self.settings = app.settings
 
         # Defensive: validate language from settings, fallback to English if corrupted
-        lang_code = self.settings.get_string("active-language")
+        lang_code: str = self.settings.get_string("active-language")
         language_manager_instance = get_language_manager()
         item = language_manager_instance.get_language_item(lang_code)
         if item is None:
@@ -75,7 +88,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         self.set_icon_name(APP_ID)
 
         # Safety timeout for portal screenshot (prevents hidden window on D-Bus hang)
-        self._screenshot_timeout_id: int | None = None
+        self._screenshot_timeout_id = None
 
         # Use shared singleton instance
         self.share_service = get_share_service()
@@ -106,8 +119,8 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
             logger.warning(f"Clipboard service unavailable: {e}")
 
     def _setup_geometry(self) -> None:
-        width = max(400, self.settings.get_int("window-width"))  # Min 400px
-        height = max(300, self.settings.get_int("window-height"))  # Min 300px
+        width: int = max(400, self.settings.get_int("window-width"))  # Min 400px
+        height: int = max(300, self.settings.get_int("window-height"))  # Min 300px
         self.set_default_size(width, height)
 
         # Connect to surface scale changes to handle multi-monitor DPI scaling
@@ -130,7 +143,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
             self.extracted_page.listen_btn.set_tooltip_text(_("TTS dependencies (gTTS/GStreamer) missing"))
 
     def _on_scale_factor_changed(self, _window: Gtk.Window, _pspec: GObject.ParamSpec) -> None:
-        scale = self.get_scale_factor()
+        scale: int = self.get_scale_factor()
         logger.debug(f"Anura: Window scale factor changed to {scale}")
         # Ensure the window is properly resized/redrawn if needed
         self.queue_resize()
@@ -138,7 +151,8 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     def get_language(self) -> str:
         """Get current language code from settings or language manager."""
         language_manager_instance = get_language_manager()
-        return self.settings.get_string("active-language") or language_manager_instance.active_language.code
+        lang_setting: str = self.settings.get_string("active-language")
+        return lang_setting or language_manager_instance.active_language.code
 
     def _on_screenshot_timeout(self) -> bool:
         """Restore window if portal screenshot doesn't respond within 30s."""
@@ -150,7 +164,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
 
     def get_screenshot(self, copy: bool = False) -> None:
         """Capture screenshot and process it for OCR."""
-        lang = self.get_language()
+        lang: str = self.get_language()
         self.hide()
 
         # Safety timeout: if portal doesn't respond within 30s, restore window
@@ -185,10 +199,10 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         if not file_path:
             return
 
-        gfile = Gio.File.new_for_path(file_path)
+        gfile: Gio.File = Gio.File.new_for_path(file_path)
         self.welcome_page.show_spinner()
 
-        def _on_contents_loaded(gfile, result):
+        def _on_contents_loaded(gfile: Gio.File, result: Gio.AsyncResult) -> None:
             try:
                 ok, contents, _etag = gfile.load_contents_finish(result)
                 if ok:
@@ -202,7 +216,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
                 else:
                     self.welcome_page.hide_spinner()
                     self.show_toast(_("Failed to load image file"))
-            except Exception as e:
+            except (GLib.Error, RuntimeError) as e:
                 logger.error(f"Anura Window: Async load failed: {e}")
                 self.welcome_page.hide_spinner()
                 self.show_toast(_("Error loading file"))
@@ -210,7 +224,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         gfile.load_contents_async(None, _on_contents_loaded)
 
     def _do_copy_to_clipboard(self) -> None:
-        text = self.extracted_page.extracted_text
+        text: str = self.extracted_page.extracted_text
         if text:
             get_clipboard_service().set(text)
             self.show_toast(_("Text copied to clipboard"))
@@ -220,7 +234,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
 
     def _on_paste_from_clipboard_texture(self, _service: GObject.GObject, texture: Gdk.Texture) -> None:
         self.welcome_page.show_spinner()
-        png_bytes = BytesIO(texture.save_to_png_bytes().get_data())
+        png_bytes: BytesIO = BytesIO(texture.save_to_png_bytes().get_data())
         get_atomic_manager().execute(self.backend.decode_image, (self.get_language(), png_bytes))
 
     def _on_clipboard_error(self, _service: GObject.GObject, message: str) -> None:
@@ -231,8 +245,8 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
 
     def do_close_request(self) -> bool:
         """Handle window close request and save window state."""
-        width = self.get_width()
-        height = self.get_height()
+        width: int = self.get_width()
+        height: int = self.get_height()
         self.settings.set_int("window-width", width)
         self.settings.set_int("window-height", height)
         return False
@@ -254,7 +268,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     def show_preferences(self) -> None:
         """Show the preferences dialog for application settings."""
         self.set_focus(None)
-        dialog = PreferencesDialog()
+        dialog: PreferencesDialog = PreferencesDialog()
         language_manager_instance = get_language_manager()
         signal_handlers: list[int] = []
 
@@ -265,10 +279,10 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
                 except (TypeError, RuntimeError):
                     pass
 
-        def _on_downloaded_idle(_mgr, code):
+        def _on_downloaded_idle(_mgr: "LanguageManager", code: str) -> None:
             GLib.idle_add(dialog.on_language_downloaded, code)
 
-        def _on_failed_idle(_mgr, code):
+        def _on_failed_idle(_mgr: "LanguageManager", code: str) -> None:
             GLib.idle_add(dialog.on_language_download_failed, code)
 
         signal_handlers.append(language_manager_instance.connect("downloaded", _on_downloaded_idle))
@@ -293,8 +307,8 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
 
     def _on_share(self, _action: Gio.SimpleAction, variant: GLib.Variant) -> None:
         """Dispatch share action to the correct provider."""
-        provider = variant.get_string()
-        text = self.extracted_page.extracted_text
+        provider: str = variant.get_string()
+        text: str = self.extracted_page.extracted_text
         if not text:
             self.show_toast(_("No text to share."))
             return
@@ -325,7 +339,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     def close_popovers(self) -> None:
         """Close all open popovers."""
         try:
-            share_popover = self.extracted_page.share_button.get_popover()
+            share_popover: Gtk.Popover = self.extracted_page.share_button.get_popover()
             if share_popover and share_popover.get_visible():
                 share_popover.popdown()
         except (AttributeError, RuntimeError, TypeError):
@@ -336,7 +350,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
                 self._close_page_menu_popovers(page)
 
     def _close_page_menu_popovers(self, page: Adw.NavigationPage) -> None:
-        child = page.get_first_child()
+        child: Gtk.Widget | None = page.get_first_child()
         while child is not None:
             if isinstance(child, Adw.ToolbarView):
                 self._close_toolbar_view_popovers(child)
@@ -344,7 +358,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
             child = child.get_next_sibling()
 
     def _close_toolbar_view_popovers(self, toolbar_view: Adw.ToolbarView) -> None:
-        child = toolbar_view.get_first_child()
+        child: Gtk.Widget | None = toolbar_view.get_first_child()
         while child is not None:
             if isinstance(child, Adw.HeaderBar):
                 self._close_header_bar_popovers(child)
@@ -352,11 +366,11 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
             child = child.get_next_sibling()
 
     def _close_header_bar_popovers(self, headerbar: Adw.HeaderBar) -> None:
-        child = headerbar.get_first_child()
+        child: Gtk.Widget | None = headerbar.get_first_child()
         while child is not None:
             if isinstance(child, Gtk.MenuButton):
                 with contextlib.suppress(AttributeError, RuntimeError, TypeError):
-                    popover = child.get_popover()
+                    popover: Gtk.Popover = child.get_popover()
                     if popover and popover.get_visible():
                         popover.popdown()
             child = child.get_next_sibling()
