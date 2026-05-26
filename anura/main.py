@@ -5,9 +5,13 @@
 # SPDX-License-Identifier: MIT
 
 import contextlib
+from gettext import gettext as _
 import html
 import os
 import sys
+
+import gi
+from loguru import logger
 
 # Bootstrap hardware and logging as early as possible
 from anura.core.boot import boot_audit
@@ -20,10 +24,6 @@ from anura.core.i18n import setup_i18n
 
 setup_i18n()
 
-from gettext import gettext as _
-
-import gi
-
 # Set GTK version requirements before imports
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
@@ -32,7 +32,6 @@ gi.require_version("Xdp", "1.0")
 gi.require_version("Gst", "1.0")
 
 from gi.repository import Adw, Gio, GLib
-from loguru import logger
 
 from anura.config import APP_ID
 from anura.core.resources import load_gresource_bundle
@@ -43,6 +42,7 @@ if not load_gresource_bundle():
     sys.exit(1)
 
 from anura.core.action_registry import ActionRegistry
+from anura.core.atomic_task_manager import get_atomic_manager
 from anura.core.dialogs import DialogManager
 from anura.core.silent_runner import SilentRunner
 from anura.services.clipboard_service import get_clipboard_service
@@ -123,6 +123,12 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
             get_language_manager().shutdown()
         except Exception as e:
             logger.debug(f"Failed to shutdown LanguageManager: {e}")
+
+        try:
+            get_atomic_manager().shutdown()
+        except Exception as e:
+            logger.debug(f"Failed to shutdown AtomicTaskManager: {e}")
+
         Adw.Application.do_shutdown(self)
 
     def _cleanup_services(self) -> None:
@@ -162,8 +168,8 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         self.connect_tracked(controller, "error-occurred", self._on_error_occurred)
 
     def _on_text_extracted(self, _controller, text: str, copy_requested: bool) -> None:
-        is_window_active = bool(self.get_active_window())
         win = self.get_active_window()
+        is_window_active = bool(win)
 
         if self.settings.get_boolean("autocopy") or copy_requested:
             get_clipboard_service().set(text)
@@ -205,6 +211,7 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
 
     def _on_error_occurred(self, _controller, message: str) -> None:
         win = self.get_active_window()
+
         if win:
             # Check for total capture failure (no primary, no fallback)
             if "Screenshot failed" in message.lower() and not getattr(self.backend, "fallback_provider", None):
