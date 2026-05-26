@@ -3,19 +3,27 @@
 #
 # SPDX-License-Identifier: MIT
 
+from typing import TYPE_CHECKING
+import weakref
+
 from loguru import logger
 
 from anura.core.atomic_task_manager import get_atomic_manager
 from anura.utils import validate_image_resource
+from anura.utils.signal_manager import SignalManagerMixin
+
+if TYPE_CHECKING:
+    from anura.window import AnuraWindow
 
 
-class DndController:
+class DndController(SignalManagerMixin):
     """
     Decoupled controller for Drag-and-Drop operations.
     """
 
-    def __init__(self, window):
-        self._window = window
+    def __init__(self, window: "AnuraWindow") -> None:
+        SignalManagerMixin.__init__(self)
+        self._window = weakref.proxy(window)
 
         # Register for automatic teardown
         if hasattr(window, "register_controller"):

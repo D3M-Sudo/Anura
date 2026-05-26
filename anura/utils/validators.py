@@ -76,46 +76,50 @@ def is_safe_url_string(text: str) -> bool:
     if "\\" in text:
         return False
 
-    # 3. Homograph detection: If the hostname mixes ASCII Latin letters with
-    # non-ASCII characters from scripts commonly used in homograph attacks
-    # (Cyrillic, Greek), reject the URL immediately. Legitimate international
-    # domains (e.g. https://münchen.de, https://例子.测试) use only a single
-    # script (Latin+diacritics or CJK) and will pass safely through to IDN.
-    if not text.isascii() and any(ch.isascii() and ch.isalpha() for ch in text):
-        for ch in text:
-            cp = ord(ch)
-            if cp > 0x7F and (0x0400 <= cp <= 0x052F or 0x0370 <= cp <= 0x03FF):
-                # Cyrillic: 0x0400-0x052F, Greek: 0x0370-0x03FF
-                return False
-
-    # 4. IDN normalization: convert international domain names (IDN) to their
-    # Punycode ASCII-compatible encoding (ACE) before the ASCII safety check.
-    # This allows legitimate URLs like https://münchen.de or https://中文.com
-    # while still rejecting homograph attacks — Punycode is always ASCII, so
-    # the isascii() check below still catches unencoded non-ASCII that isn't
-    # a valid hostname label (e.g. invisible Unicode in the path/query).
+    # 3. IDN normalization and Homograph detection: convert international
+    # domain names (IDN) to their Punycode ASCII-compatible encoding (ACE).
+    #
+    # We must parse the URL to extract the hostname, as mixed-script detection
+    # (e.g. ASCII 'https' + Cyrillic domain) must be scoped to individual DNS
+    # labels to avoid blocking legitimate international URLs.
     if not text.isascii():
         try:
             from urllib.parse import urlparse, urlunparse
             parsed = urlparse(text)
-            if parsed.hostname and not parsed.hostname.isascii():
+            hostname = parsed.hostname or ""
+
+            # 3a. Homograph detection: If a single DNS label mixes ASCII Latin
+            # letters with non-ASCII characters from scripts commonly used in
+            # homograph attacks (Cyrillic, Greek), reject the URL.
+            # Legitimate IDNs (e.g. https://münchen.de) use only a single script
+            # per label and will pass safely.
+            for label in hostname.split("."):
+                if not label.isascii() and any(ch.isascii() and ch.isalpha() for ch in label):
+                    for ch in label:
+                        cp = ord(ch)
+                        if cp > 0x7F and (0x0400 <= cp <= 0x052F or 0x0370 <= cp <= 0x03FF):
+                            # Cyrillic: 0x0400-0x052F, Greek: 0x0370-0x03FF
+                            return False
+
+            # 3b. IDN normalization: convert to Punycode
+            if hostname and not hostname.isascii():
                 # Encode each DNS label separately; skip empty labels (leading dots etc.)
                 punycode_labels = []
-                for label in parsed.hostname.split("."):
+                for label in hostname.split("."):
                     if not label or label.isascii():
                         punycode_labels.append(label)
                     else:
                         punycode_labels.append(label.encode("idna").decode("ascii"))
                 punycode_host = ".".join(punycode_labels)
                 # Rebuild the netloc, preserving port and userinfo if present
-                netloc = parsed.netloc.replace(parsed.hostname, punycode_host, 1)
+                netloc = parsed.netloc.replace(hostname, punycode_host, 1)
                 text = urlunparse(parsed._replace(netloc=netloc))
         except (UnicodeError, ValueError, UnicodeDecodeError):
             # IDNA encoding failed (e.g. label too long, invalid character set):
             # fall through to the isascii() guard which will reject the URL.
             pass
 
-    # ASCII safety check: after IDN normalization, any remaining non-ASCII
+    # 4. ASCII safety check: after IDN normalization, any remaining non-ASCII
     # characters indicate invalid or potentially malicious input.
     if not text.isascii():
         return False
