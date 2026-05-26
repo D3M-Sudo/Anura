@@ -11,9 +11,9 @@ from gi.repository import Adw, Gio, Gtk
 from loguru import logger
 
 from anura.config import RESOURCE_PREFIX
-from anura.services.language_manager import language_manager
+from anura.services.language_manager import get_language_manager
 from anura.services.settings import settings
-from anura.services.tts import ttsservice
+from anura.services.tts import get_tts_service
 from anura.utils.signal_manager import SignalManagerMixin
 
 
@@ -38,14 +38,14 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
 
         self._setup_extra_languages()
 
-        self.connect_tracked(language_manager, "downloaded", self._on_language_changed)
-        self.connect_tracked(language_manager, "removed", self._on_language_changed)
+        self.connect_tracked(get_language_manager(), "downloaded", self._on_language_changed)
+        self.connect_tracked(get_language_manager(), "removed", self._on_language_changed)
 
         self._setup_tts_volume()
         self._setup_tts_language()
 
     def _setup_extra_languages(self) -> None:
-        downloaded_langs = language_manager.get_downloaded_languages()
+        downloaded_langs = get_language_manager().get_downloaded_languages()
         self.extra_language_combo.set_model(Gtk.StringList.new(downloaded_langs))
 
         if not downloaded_langs:
@@ -61,7 +61,7 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
             # No extra language configured - leave combo at default (index 0)
             return
 
-        current_name = language_manager.get_language(current_extra)
+        current_name = get_language_manager().get_language(current_extra)
 
         try:
             index = downloaded_langs.index(current_name)
@@ -74,7 +74,7 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
         if not selected_item:
             return
         lang_name = selected_item.get_string()
-        lang_code = language_manager.get_language_code(lang_name)
+        lang_code = get_language_manager().get_language_code(lang_name)
         logger.debug(f"Anura: Extra language set to {lang_name} ({lang_code})")
         self.settings.set_string("extra-language", lang_code)
 
@@ -121,7 +121,7 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
 
     def _setup_tts_language(self) -> None:
         """Populate TTS language combo with gTTS supported languages."""
-        supported = ttsservice.get_supported_gtts_languages()
+        supported = get_tts_service().get_supported_gtts_languages()
 
         # Create list: "Auto (follow OCR)" + all supported languages
         lang_names = [_("Auto (follow OCR language)"), *list(supported.values())]
@@ -145,7 +145,7 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
         if idx == 0:
             self.settings.set_string("tts-language", "")  # Auto
         else:
-            supported = ttsservice.get_supported_gtts_languages()
+            supported = get_tts_service().get_supported_gtts_languages()
             supported_keys = list(supported.keys())
             # Bounds check to prevent IndexError
             if idx - 1 < len(supported_keys):

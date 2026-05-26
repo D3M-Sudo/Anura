@@ -156,6 +156,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         # Safety timeout: if portal doesn't respond within 30s, restore window
         if self._screenshot_timeout_id is not None:
             GLib.source_remove(self._screenshot_timeout_id)
+            self._screenshot_timeout_id = None  # prevent double source_remove on early return path
 
         self._screenshot_timeout_id = GLib.timeout_add_seconds(30, self._on_screenshot_timeout)
 
