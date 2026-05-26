@@ -68,13 +68,13 @@ class TtsController(GObject.GObject):
             for handler_id in handler_ids:
                 try:
                     emitter.disconnect(handler_id)
-                except Exception as e:
+                except (TypeError, RuntimeError) as e:
                     logger.debug(f"TtsController: Signal disconnection failed: {e}")
         self._signal_connections.clear()
         # With weakref.proxy, we don't need to manually nullify self._window
         # but we do it anyway for safety during explicit cleanup.
         try:
             self._window = None
-        except Exception as e:
+        except (AttributeError, TypeError, RuntimeError) as e:
             logger.debug(f"TtsController: Error nullifying window reference: {e}")
         logger.debug("TtsController: Cleaned up and disconnected")

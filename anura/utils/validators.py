@@ -84,10 +84,9 @@ def is_safe_url_string(text: str) -> bool:
     if not text.isascii() and any(ch.isascii() and ch.isalpha() for ch in text):
         for ch in text:
             cp = ord(ch)
-            if cp > 0x7F:
+            if cp > 0x7F and (0x0400 <= cp <= 0x052F or 0x0370 <= cp <= 0x03FF):
                 # Cyrillic: 0x0400-0x052F, Greek: 0x0370-0x03FF
-                if 0x0400 <= cp <= 0x052F or 0x0370 <= cp <= 0x03FF:
-                    return False
+                return False
 
     # 4. IDN normalization: convert international domain names (IDN) to their
     # Punycode ASCII-compatible encoding (ACE) before the ASCII safety check.
@@ -103,9 +102,7 @@ def is_safe_url_string(text: str) -> bool:
                 # Encode each DNS label separately; skip empty labels (leading dots etc.)
                 punycode_labels = []
                 for label in parsed.hostname.split("."):
-                    if not label:
-                        punycode_labels.append(label)
-                    elif label.isascii():
+                    if not label or label.isascii():
                         punycode_labels.append(label)
                     else:
                         punycode_labels.append(label.encode("idna").decode("ascii"))

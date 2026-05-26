@@ -5,16 +5,20 @@
 
 from gettext import gettext as _
 from gettext import ngettext
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 import weakref
 
-from gi.repository import Gio, GLib, GObject, Gtk
+from gi.repository import Adw, Gio, GLib, GObject, Gtk
 from loguru import logger
 
 from anura.services.result_dispatcher import get_result_dispatcher
 from anura.utils import uri_validator
 from anura.utils.portal_advice import detect_portal_advice
 from anura.utils.signal_manager import SignalManagerMixin
+
+if TYPE_CHECKING:
+    from anura.models.ocr import ExtractionResult, OcrResult
+    from anura.window import AnuraWindow
 
 
 class OcrController(GObject.GObject, SignalManagerMixin):
@@ -30,7 +34,7 @@ class OcrController(GObject.GObject, SignalManagerMixin):
         "error-occurred": (GObject.SignalFlags.RUN_LAST, None, (str,)),
     }
 
-    def __init__(self, window):
+    def __init__(self, window: "AnuraWindow") -> None:
         GObject.GObject.__init__(self)
         SignalManagerMixin.__init__(self)
 
@@ -53,7 +57,7 @@ class OcrController(GObject.GObject, SignalManagerMixin):
         """Unified teardown called by SignalManagerMixin."""
         self.cleanup()
 
-    def _setup_connections(self):
+    def _setup_connections(self) -> None:
         backend = self._window.backend
         self.connect_tracked(backend, "decoded", self._on_shot_done)
         self.connect_tracked(backend, "error", self._on_shot_error)
@@ -62,7 +66,7 @@ class OcrController(GObject.GObject, SignalManagerMixin):
 
         self.connect_tracked(self._window.portal_banner, "button-clicked", self._on_portal_banner_dismissed)
 
-    def _on_shot_done(self, _sender, text, copy, ocr_result):
+    def _on_shot_done(self, _sender: GObject.GObject, text: str, copy: bool, ocr_result: "OcrResult") -> None:
         """Handle successful screenshot capture and OCR processing."""
         if hasattr(self._window, "_screenshot_timeout_id") and self._window._screenshot_timeout_id is not None:
             GLib.source_remove(self._window._screenshot_timeout_id)
@@ -80,10 +84,10 @@ class OcrController(GObject.GObject, SignalManagerMixin):
             extraction_result = self._dispatcher.dispatch(text, ocr_result)
             self._handle_extraction_result(extraction_result, copy)
             GLib.idle_add(self._navigate_to_extracted_page)
-        except Exception as e:
+        except (AttributeError, TypeError, RuntimeError) as e:
             logger.error(f"OcrController: UI Error in _on_shot_done: {e}")
 
-    def _handle_extraction_result(self, result, copy_requested: bool):
+    def _handle_extraction_result(self, result: "ExtractionResult", copy_requested: bool) -> None:
         """Handle the extraction result, emitting signals for side effects."""
         if result.is_primary_url:
             url = result.urls[0].strip().strip("\n\r\t\v\f")
@@ -107,14 +111,14 @@ class OcrController(GObject.GObject, SignalManagerMixin):
                     ngettext("{n} phone number found in text", "{n} phone numbers found in text", count).format(n=count)
                 )
 
-    def _on_status_changed(self, _sender, status_msg):
+    def _on_status_changed(self, _sender: GObject.GObject, status_msg: str) -> None:
         """Handle status updates from backend to prevent Zombie UI."""
         if hasattr(self._window, "show_status"):
             self._window.show_status(status_msg)
         elif hasattr(self._window, "welcome_page"):
             self._window.welcome_page.set_status(status_msg)
 
-    def _on_shot_error(self, _sender, message):
+    def _on_shot_error(self, _sender: GObject.GObject, message: str) -> None:
         """Handle screenshot capture errors."""
         if hasattr(self._window, "_screenshot_timeout_id") and self._window._screenshot_timeout_id is not None:
             GLib.source_remove(self._window._screenshot_timeout_id)
@@ -125,19 +129,19 @@ class OcrController(GObject.GObject, SignalManagerMixin):
         if message:
             self.emit("error-occurred", message)
 
-    def _on_portal_backend_missing(self, _sender):
+    def _on_portal_backend_missing(self, _sender: GObject.GObject) -> None:
         """Reveal the persistent install hint banner."""
         try:
             advice = detect_portal_advice()
             self._window.portal_banner.set_title(advice.short_message)
             self._window.portal_banner.set_revealed(True)
-        except Exception:
-            logger.exception("OcrController: Unexpected error handling portal backend missing")
+        except (AttributeError, RuntimeError) as e:
+            logger.error(f"OcrController: Error handling portal backend missing: {e}")
 
-    def _on_portal_banner_dismissed(self, _banner):
+    def _on_portal_banner_dismissed(self, _banner: Adw.Banner) -> None:
         self._window.portal_banner.set_revealed(False)
 
-    def _navigate_to_extracted_page(self):
+    def _navigate_to_extracted_page(self) -> int:
         self._window.split_view.set_show_content(True)
         self._window.extracted_page.text_view.grab_focus()
         return GLib.SOURCE_REMOVE
@@ -196,12 +200,12 @@ class OcrController(GObject.GObject, SignalManagerMixin):
         dialog.set_filters(filters)
         dialog.set_default_filter(all_img_filter)
 
-        def _on_open_image_result(dialog, result):
+        def _on_open_image_result(dialog: Gtk.FileDialog, result: Gio.AsyncResult) -> None:
             try:
                 file = dialog.open_finish(result)
                 if file:
                     self._window.process_file(file.get_path())
-            except Exception as e:
+            except (GLib.Error, RuntimeError) as e:
                 logger.warning(f"Image selection failed or aborted: {e}")
 
         # Resolve the real GObject: weakref.proxy is opaque to PyGObject's C-level
@@ -214,11 +218,11 @@ class OcrController(GObject.GObject, SignalManagerMixin):
 
         dialog.open(_win, None, _on_open_image_result)
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """Explicit cleanup to prevent memory leaks."""
         try:
             self.disconnect_all_signals()
-        except Exception as e:
+        except (TypeError, RuntimeError) as e:
             logger.debug(f"Signal disconnection omitted or failed during cleanup: {e}")
         self._window = None
         logger.debug("OcrController: Cleaned up and disconnected")

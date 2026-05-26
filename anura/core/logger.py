@@ -54,7 +54,7 @@ def setup_logging():
             encoding="utf-8",
         )
         logger.debug(f"Rotary logging initialized at: {log_file}")
-    except Exception as e:
+    except (OSError, RuntimeError) as e:
         # Fallback if filesystem is read-only or inaccessible
         logger.warning(f"Failed to initialize rotary file logging: {e}")
 

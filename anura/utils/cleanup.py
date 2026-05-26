@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: MIT
 
 import os
+from pathlib import Path
 import time
 
 from loguru import logger
@@ -40,29 +41,31 @@ def cleanup_orphaned_resources(active_lang_code: str = "eng") -> None:
 def _cleanup_tts_cache(cutoff_time: float) -> None:
     """Clean up old TTS MP3 files from cache directory."""
     try:
-        cache_dir = os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
-        tts_cache_dir = os.path.join(cache_dir, "anura")
+        cache_dir_str = os.environ.get("XDG_CACHE_HOME")
+        if cache_dir_str:
+            cache_dir = Path(cache_dir_str)
+        else:
+            cache_dir = Path.home() / ".cache"
 
-        if not os.path.exists(tts_cache_dir):
+        tts_cache_dir = cache_dir / "anura"
+
+        if not tts_cache_dir.exists():
             return
 
-        if not os.access(tts_cache_dir, os.R_OK | os.W_OK):
-            logger.warning(f"Anura Cleanup: Cannot access TTS cache directory: {tts_cache_dir}")
-            return
+        # Check access - pathlib doesn't have a direct equivalent to os.access for specific modes easily
+        # but we can try-except the operations.
 
         cleaned_count = 0
-        for filename in os.listdir(tts_cache_dir):
-            if filename.endswith(".mp3"):
-                file_path = os.path.join(tts_cache_dir, filename)
-                try:
-                    # Check file age to avoid deleting recent files
-                    file_mtime = os.path.getmtime(file_path)
-                    if file_mtime < cutoff_time:
-                        os.remove(file_path)
-                        cleaned_count += 1
-                        logger.debug(f"Anura Cleanup: Removed old TTS file: {filename}")
-                except OSError as e:
-                    logger.warning(f"Anura Cleanup: Failed to remove TTS file {filename}: {e}")
+        for file_path in tts_cache_dir.glob("*.mp3"):
+            try:
+                # Check file age to avoid deleting recent files
+                file_mtime = file_path.stat().st_mtime
+                if file_mtime < cutoff_time:
+                    file_path.unlink()
+                    cleaned_count += 1
+                    logger.debug(f"Anura Cleanup: Removed old TTS file: {file_path.name}")
+            except OSError as e:
+                logger.warning(f"Anura Cleanup: Failed to remove TTS file {file_path.name}: {e}")
 
         if cleaned_count > 0:
             logger.info(f"Anura Cleanup: Removed {cleaned_count} old TTS cache files")
@@ -78,28 +81,23 @@ def _cleanup_tessdata_pool(active_lang_code: str) -> None:
     Args:
         active_lang_code: The currently active language code (e.g. 'eng' or 'eng+ita')
     """
-    if not os.path.exists(TESSDATA_POOL_DIR):
-        return
-
-    if not os.access(TESSDATA_POOL_DIR, os.R_OK | os.W_OK):
-        logger.warning("Anura Cleanup: Cannot read/write tessdata pool directory, skipping cleanup")
+    pool_dir = Path(TESSDATA_POOL_DIR)
+    if not pool_dir.exists():
         return
 
     try:
         needed_codes = set(active_lang_code.split("+"))
         removed_count = 0
 
-        for filename in os.listdir(TESSDATA_POOL_DIR):
-            if filename.endswith(".traineddata"):
-                stem = filename[:-12]  # Remove .traineddata
-                if stem not in needed_codes:
-                    file_path = os.path.join(TESSDATA_POOL_DIR, filename)
-                    try:
-                        os.unlink(file_path)
-                        removed_count += 1
-                        logger.debug(f"Anura Cleanup: Removed stale pool model: {filename}")
-                    except OSError as e:
-                        logger.warning(f"Anura Cleanup: Failed to remove stale model {filename}: {e}")
+        for file_path in pool_dir.glob("*.traineddata"):
+            stem = file_path.name[:-12]  # Remove .traineddata
+            if stem not in needed_codes:
+                try:
+                    file_path.unlink()
+                    removed_count += 1
+                    logger.debug(f"Anura Cleanup: Removed stale pool model: {file_path.name}")
+                except OSError as e:
+                    logger.warning(f"Anura Cleanup: Failed to remove stale model {file_path.name}: {e}")
 
         if removed_count > 0:
             logger.info(f"Anura Cleanup: Removed {removed_count} stale pool models")
@@ -111,26 +109,21 @@ def _cleanup_tessdata_pool(active_lang_code: str) -> None:
 def _cleanup_tessdata_temp_files(cutoff_time: float) -> None:
     """Clean up orphaned temporary files from tessdata directory."""
     try:
-        if not os.path.exists(TESSDATA_DIR):
-            return
-
-        if not os.access(TESSDATA_DIR, os.R_OK | os.W_OK):
-            logger.warning("Anura Cleanup: Cannot access tessdata directory for cleanup")
+        tessdata_dir = Path(TESSDATA_DIR)
+        if not tessdata_dir.exists():
             return
 
         cleaned_count = 0
-        for filename in os.listdir(TESSDATA_DIR):
-            if filename.endswith(".tmp"):
-                file_path = os.path.join(TESSDATA_DIR, filename)
-                try:
-                    # Check file age to avoid deleting active downloads
-                    file_mtime = os.path.getmtime(file_path)
-                    if file_mtime < cutoff_time:
-                        os.remove(file_path)
-                        cleaned_count += 1
-                        logger.debug(f"Anura Cleanup: Removed orphaned temp file: {filename}")
-                except OSError as e:
-                    logger.warning(f"Anura Cleanup: Failed to remove temp file {filename}: {e}")
+        for file_path in tessdata_dir.glob("*.tmp"):
+            try:
+                # Check file age to avoid deleting active downloads
+                file_mtime = file_path.stat().st_mtime
+                if file_mtime < cutoff_time:
+                    file_path.unlink()
+                    cleaned_count += 1
+                    logger.debug(f"Anura Cleanup: Removed orphaned temp file: {file_path.name}")
+            except OSError as e:
+                logger.warning(f"Anura Cleanup: Failed to remove temp file {file_path.name}: {e}")
         if cleaned_count > 0:
             logger.info(f"Anura Cleanup: Removed {cleaned_count} orphaned temporary files")
 
@@ -149,27 +142,30 @@ def get_cache_info() -> dict[str, int]:
 
     try:
         # TTS cache info
-        cache_dir = os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
-        tts_cache_dir = os.path.join(cache_dir, "anura")
+        cache_dir_str = os.environ.get("XDG_CACHE_HOME")
+        if cache_dir_str:
+            cache_dir = Path(cache_dir_str)
+        else:
+            cache_dir = Path.home() / ".cache"
 
-        if os.path.exists(tts_cache_dir):
-            for filename in os.listdir(tts_cache_dir):
-                if filename.endswith(".mp3"):
-                    file_path = os.path.join(tts_cache_dir, filename)
-                    cache_info["tts_files"] += 1
-                    try:
-                        cache_info["tts_size_bytes"] += os.path.getsize(file_path)
-                    except (OSError, FileNotFoundError):
-                        # File might have been deleted between listdir and getsize
-                        pass
+        tts_cache_dir = cache_dir / "anura"
+
+        if tts_cache_dir.exists():
+            for file_path in tts_cache_dir.glob("*.mp3"):
+                cache_info["tts_files"] += 1
+                try:
+                    cache_info["tts_size_bytes"] += file_path.stat().st_size
+                except (OSError, FileNotFoundError):
+                    # File might have been deleted between listdir and getsize
+                    pass
 
         # Temp files info
-        if os.path.exists(TESSDATA_DIR):
-            for filename in os.listdir(TESSDATA_DIR):
-                if filename.endswith(".tmp"):
-                    cache_info["temp_files"] += 1
+        tessdata_dir = Path(TESSDATA_DIR)
+        if tessdata_dir.exists():
+            for _ in tessdata_dir.glob("*.tmp"):
+                cache_info["temp_files"] += 1
 
     except OSError as e:
-        logger.debug("Anura Cleanup: Error getting cache info: %s", e)
+        logger.debug(f"Anura Cleanup: Error getting cache info: {e}")
 
     return cache_info
