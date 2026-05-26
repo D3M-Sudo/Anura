@@ -20,8 +20,9 @@ jobs:
 
       - name: Install flatpak-external-data-checker
         run: |
-          sudo apt-get update
-          sudo apt-get install -y flatpak-external-data-checker
+          curl -LO https://github.com/flathub/flatpak-external-data-checker/releases/latest/download/flatpak-external-data-checker
+          chmod +x flatpak-external-data-checker
+          sudo mv flatpak-external-data-checker /usr/local/bin/
 
       - name: Check for available updates
         id: check
