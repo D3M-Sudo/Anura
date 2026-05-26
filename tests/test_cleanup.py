@@ -91,7 +91,7 @@ class TestCleanupEnterprise:
         old_time = time.time() - 7200
         os.utime(old_mp3, (old_time, old_time))
 
-        with patch("os.remove", side_effect=PermissionError("Denied")), patch("loguru.logger.warning") as mock_log:
+        with patch("pathlib.Path.unlink", side_effect=PermissionError("Denied")), patch("loguru.logger.warning") as mock_log:
             cleanup_orphaned_resources()
             mock_log.assert_called()
             assert old_mp3.exists()

@@ -437,8 +437,8 @@ class TTSService(GObject.GObject):
                 try:
                     self.emit("error", msg)
                     self.emit("stop", False)
-                except Exception:
-                    logger.exception("Anura TTS: Failed to emit playback error")
+                except Exception as e:
+                    logger.exception(f"Anura TTS: Failed to emit playback error: {e}")
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_error_idle, _("GStreamer playback error: {error}").format(error=error_msg))

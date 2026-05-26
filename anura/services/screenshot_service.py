@@ -312,8 +312,8 @@ class ScreenshotService(GObject.GObject):
         def _on_error_idle():
             try:
                 self.emit("error", message)
-            except Exception:
-                logger.exception(f"Anura: Failed to emit error: {message}")
+            except Exception as e:
+                logger.exception(f"Anura: Failed to emit error: {message} ({e})")
             return GLib.SOURCE_REMOVE
 
         GLib.idle_add(_on_error_idle)
@@ -364,8 +364,8 @@ class ScreenshotService(GObject.GObject):
             try:
                 self.emit("portal-backend-missing")
                 self.emit("error", user_message)
-            except Exception:
-                logger.exception("Anura: Failed to emit portal failure signals")
+            except Exception as e:
+                logger.exception(f"Anura: Failed to emit portal failure signals: {e}")
             return GLib.SOURCE_REMOVE
 
         GLib.idle_add(_on_failure_idle)
@@ -594,8 +594,8 @@ class ScreenshotService(GObject.GObject):
             def _on_invalid_lang_error_idle() -> bool:
                 try:
                     self.emit("error", _("Invalid language code specified."))
-                except Exception:
-                    logger.exception("Anura: Failed to emit invalid language code error")
+                except Exception as e:
+                    logger.exception(f"Anura: Failed to emit invalid language code error: {e}")
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_invalid_lang_error_idle, priority=GLib.PRIORITY_DEFAULT)
@@ -617,21 +617,30 @@ class ScreenshotService(GObject.GObject):
                 if success:
 
                     def _on_decoded_idle():
-                        self.emit("decoded", extracted, copy, ocr_result)
+                        try:
+                            self.emit("decoded", extracted, copy, ocr_result)
+                        except Exception as e:
+                            logger.exception(f"Anura: Failed to emit decoded signal (isolated): {e}")
                         return GLib.SOURCE_REMOVE
 
                     GLib.idle_add(_on_decoded_idle)
                 elif error_message:
 
                     def _on_error_idle():
-                        self.emit("error", error_message)
+                        try:
+                            self.emit("error", error_message)
+                        except Exception as e:
+                            logger.exception(f"Anura: Failed to emit error signal (isolated): {e}")
                         return GLib.SOURCE_REMOVE
 
                     GLib.idle_add(_on_error_idle)
                 else:
 
                     def _on_silent_idle():
-                        self.emit("error", "")
+                        try:
+                            self.emit("error", "")
+                        except Exception as e:
+                            logger.exception(f"Anura: Failed to emit silent error signal (isolated): {e}")
                         return GLib.SOURCE_REMOVE
 
                     GLib.idle_add(_on_silent_idle)
@@ -643,14 +652,20 @@ class ScreenshotService(GObject.GObject):
                 logger.error(f"Anura OCR (Isolated): Process error: {error}")
 
                 def _on_error_idle():
-                    self.emit("error", _("OCR processing failed. Please try again."))
+                    try:
+                        self.emit("error", _("OCR processing failed. Please try again."))
+                    except Exception as e:
+                        logger.exception(f"Anura: Failed to emit isolated process error signal: {e}")
                     return GLib.SOURCE_REMOVE
 
                 GLib.idle_add(_on_error_idle)
 
             def _on_isolated_status(status_msg):
                 def _on_status_idle():
-                    self.emit("status-changed", status_msg)
+                    try:
+                        self.emit("status-changed", status_msg)
+                    except Exception as e:
+                        logger.debug(f"Failed to emit status-changed: {e}")
                     return GLib.SOURCE_REMOVE
 
                 GLib.idle_add(_on_status_idle)
@@ -673,8 +688,8 @@ class ScreenshotService(GObject.GObject):
             def _on_decoded_idle(text: str, cp: bool, ocr_res: OcrResult | None) -> bool:
                 try:
                     self.emit("decoded", text, cp, ocr_res)
-                except Exception:
-                    logger.exception("Anura: Failed to emit decoded signal")
+                except Exception as e:
+                    logger.exception(f"Anura: Failed to emit decoded signal: {e}")
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_decoded_idle, extracted, copy, ocr_result, priority=GLib.PRIORITY_DEFAULT)
@@ -683,8 +698,8 @@ class ScreenshotService(GObject.GObject):
             def _on_decode_error_idle(msg: str | None) -> bool:
                 try:
                     self.emit("error", msg)
-                except Exception:
-                    logger.exception("Anura: Failed to emit decode error")
+                except Exception as e:
+                    logger.exception(f"Anura: Failed to emit decode error: {e}")
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_decode_error_idle, error_message, priority=GLib.PRIORITY_DEFAULT)
