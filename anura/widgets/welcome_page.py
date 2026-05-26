@@ -89,8 +89,8 @@ class WelcomePage(Adw.NavigationPage):
                 self.drop_button.add_css_class("suggested-action")
             else:
                 self.drop_button.remove_css_class("suggested-action")
-        except Exception:
-            logger.exception("Anura: Failed to handle drop button click")
+        except Exception as e:
+            logger.exception(f"Anura: Failed to handle drop button click: {e}")
 
     def _on_dnd_enter(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float) -> Gdk.DragAction:
         """Visual feedback when drag enters the drop area."""
@@ -98,8 +98,8 @@ class WelcomePage(Adw.NavigationPage):
             self.drop_area.set_visible(True)
             self.drop_area.add_css_class("drag-hover")
             self.welcome.set_description(_("Drop image to extract text"))
-        except Exception:
-            logger.exception("Anura: Failed to handle DnD enter")
+        except Exception as e:
+            logger.exception(f"Anura: Failed to handle DnD enter: {e}")
         return Gdk.DragAction.COPY
 
     def _on_dnd_leave(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop) -> None:
@@ -110,8 +110,8 @@ class WelcomePage(Adw.NavigationPage):
             if not self.drop_button.has_css_class("suggested-action"):
                 self.drop_area.set_visible(False)
             self.welcome.set_description(_("Extract text from anywhere"))
-        except Exception:
-            logger.exception("Anura: Failed to handle DnD leave")
+        except Exception as e:
+            logger.exception(f"Anura: Failed to handle DnD leave: {e}")
 
     def _on_dnd_drop(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float) -> bool:
         """Handle drop signal. Initiates a fully async stream read of text/uri-list.

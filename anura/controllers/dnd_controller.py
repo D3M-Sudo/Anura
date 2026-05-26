@@ -3,19 +3,25 @@
 #
 # SPDX-License-Identifier: MIT
 
+from gi.repository import GObject
 from loguru import logger
 
 from anura.core.atomic_task_manager import get_atomic_manager
 from anura.utils import validate_image_resource
+from anura.utils.signal_manager import SignalManagerMixin
 
 
-class DndController:
+class DndController(GObject.GObject, SignalManagerMixin):
     """
     Decoupled controller for Drag-and-Drop operations.
     """
 
     def __init__(self, window):
-        self._window = window
+        GObject.GObject.__init__(self)
+        SignalManagerMixin.__init__(self)
+        import weakref
+
+        self._window = weakref.proxy(window)
 
         # Register for automatic teardown
         if hasattr(window, "register_controller"):
@@ -54,6 +60,10 @@ class DndController:
         self.cleanup()
 
     def cleanup(self):
-        """Explicit cleanup."""
+        """Explicit cleanup to prevent memory leaks."""
+        try:
+            self.disconnect_all_signals()
+        except (TypeError, RuntimeError) as e:
+            logger.debug(f"Signal disconnection omitted or failed during cleanup: {e}")
         self._window = None
         logger.debug("DndController: Cleaned up")

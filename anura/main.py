@@ -105,6 +105,8 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         cleanup_orphaned_resources(active_lang)
 
         self.backend = ScreenshotService()
+        # Signals are now coordinated via OcrController in AnuraWindow for GUI mode.
+        # on_decoded and on_error are maintained for Headless/Silent mode entry points.
         self.connect_tracked(self.backend, "decoded", self.on_decoded)
         self.connect_tracked(self.backend, "error", self.on_error)
 
@@ -123,6 +125,11 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
             get_language_manager().shutdown()
         except Exception as e:
             logger.debug(f"Failed to shutdown LanguageManager: {e}")
+
+        from anura.core.atomic_task_manager import get_atomic_manager
+
+        get_atomic_manager().shutdown()
+
         Adw.Application.do_shutdown(self)
 
     def _cleanup_services(self) -> None:
@@ -336,9 +343,10 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
             launch_uri(parameter.get_string().strip(), window=self.get_active_window())
 
     def on_decoded(self, _sender, text: str, copy: bool, ocr_result: object) -> None:
-        if self.props.active_window:
+        win = self.get_active_window()
+        if win:
             # When UI is present, OcrController handles it via signals
-            # connected in _setup_window_signals
+            # connected in _setup_window_signals.
             return
 
         # Headless/Silent mode: perform direct dispatching

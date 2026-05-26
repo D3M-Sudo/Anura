@@ -7,20 +7,21 @@ from gi.repository import GObject
 from loguru import logger
 
 from anura.services.tts import get_tts_service
+from anura.utils.signal_manager import SignalManagerMixin
 
 
-class TtsController(GObject.GObject):
+class TtsController(GObject.GObject, SignalManagerMixin):
     """
     Decoupled controller for Text-to-Speech operations.
     """
 
     def __init__(self, window):
         GObject.GObject.__init__(self)
+        SignalManagerMixin.__init__(self)
         import weakref
 
         self._window = weakref.proxy(window)
         self._tts_service = get_tts_service()
-        self._signal_connections = {}
 
         # Register for automatic teardown
         if hasattr(window, "register_controller"):
@@ -28,13 +29,6 @@ class TtsController(GObject.GObject):
 
         self._setup_connections()
         logger.debug("TtsController: Initialized and connected to AnuraWindow")
-
-    def connect_tracked(self, emitter, signal_name, callback):
-        handler_id = emitter.connect(signal_name, callback)
-        if emitter not in self._signal_connections:
-            self._signal_connections[emitter] = []
-        self._signal_connections[emitter].append(handler_id)
-        return handler_id
 
     def _setup_connections(self):
         self.connect_tracked(self._tts_service, "speak", self._on_tts_speak)
@@ -64,17 +58,10 @@ class TtsController(GObject.GObject):
         self.cleanup()
 
     def cleanup(self):
-        for emitter, handler_ids in self._signal_connections.items():
-            for handler_id in handler_ids:
-                try:
-                    emitter.disconnect(handler_id)
-                except (TypeError, RuntimeError) as e:
-                    logger.debug(f"TtsController: Signal disconnection failed: {e}")
-        self._signal_connections.clear()
-        # With weakref.proxy, we don't need to manually nullify self._window
-        # but we do it anyway for safety during explicit cleanup.
+        """Explicit cleanup to prevent memory leaks."""
         try:
-            self._window = None
-        except (AttributeError, TypeError, RuntimeError) as e:
-            logger.debug(f"TtsController: Error nullifying window reference: {e}")
+            self.disconnect_all_signals()
+        except (TypeError, RuntimeError) as e:
+            logger.debug(f"Signal disconnection omitted or failed during cleanup: {e}")
+        self._window = None
         logger.debug("TtsController: Cleaned up and disconnected")

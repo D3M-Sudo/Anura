@@ -186,20 +186,40 @@ class FilterChain:
 
     def apply(self, image: Image.Image, task_id: str | None = None) -> Image.Image:
         result = image
-        for img_filter in self._filters:
-            prev_result = result
-            result = img_filter.apply(result, task_id=task_id)
+        # Keep track of intermediate images to ensure they are closed correctly
+        intermediates = []
+        try:
+            for img_filter in self._filters:
+                prev_result = result
+                result = img_filter.apply(result, task_id=task_id)
 
-            # Explicitly release the previous image buffer if it's no longer needed
-            # and it's not the same object as the new result.
-            if prev_result is not image and prev_result is not result:
-                prev_result.close()
-                del prev_result
+                # If a new image was created, track it for cleanup.
+                if result is not prev_result and result is not image:
+                    intermediates.append(result)
+
                 # Occasional GC trigger for large buffers
                 if result.size[0] * result.size[1] > 4000000:  # > 4MP
                     gc.collect()
 
-        return result
+            # Final result is returned; all other intermediates created
+            # during the chain MUST be closed to prevent memory leaks.
+            for img in intermediates:
+                if img is not result:
+                    try:
+                        img.close()
+                    except Exception as e:
+                        logger.debug(f"Failed to close intermediate image: {e}")
+
+            return result
+        except Exception as e:
+            # If the pipeline fails, ensure all successfully created intermediates are closed
+            logger.error(f"Filter chain failed: {e}")
+            for img in intermediates:
+                try:
+                    img.close()
+                except Exception as e_close:
+                    logger.debug(f"Failed to close intermediate image: {e_close}")
+            raise
 
 
 _default_chain: FilterChain | None = None
