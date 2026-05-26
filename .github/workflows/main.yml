@@ -67,10 +67,26 @@ jobs:
 
       - name: Run GTK tests (Wayland headless)
         run: |
+          # 1. Setup XDG_RUNTIME_DIR for Weston and Wayland
+          export XDG_RUNTIME_DIR=/tmp/anura-runtime
+          mkdir -p $XDG_RUNTIME_DIR
+          chmod 700 $XDG_RUNTIME_DIR
+
+          # 2. Expose system site-packages to uv via PYTHONPATH
+          # This allows the 'uv run' environment to see 'gi' and other system libs.
+          # We prioritize system dist-packages where GI is usually installed.
+          export PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH"
+
+          # 3. Start Weston headless
           weston --backend=headless-backend.so --socket=wayland-test &
-          sleep 1
+          sleep 2 # Give it a bit more time to settle
+
+          # 4. Run tests through the helper script which handles GI_TYPELIB_PATH and PYTHONPATH robustly.
+          # Note: The script already uses xvfb-run, but it should work fine under Weston as well,
+          # or we could bypass xvfb-run if we trust Weston is sufficient.
+          # We pass --timeout=30 to the script.
           WAYLAND_DISPLAY=wayland-test \
-            uv run pytest tests/ -m gtk -v --timeout=30
+            ./bin/run_gtk_tests.sh --timeout=30
         env:
           DISPLAY: ""
 

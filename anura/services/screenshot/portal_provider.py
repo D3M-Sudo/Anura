@@ -77,6 +77,6 @@ class PortalProvider(ScreenshotProvider):
                     )
 
                 callback(False, None, e.message)
-        except (GLib.Error, RuntimeError) as e:
+        except RuntimeError as e:
             logger.error(f"PortalProvider: Unexpected error: {e}")
             callback(False, None, str(e))
