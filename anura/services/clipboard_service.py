@@ -340,11 +340,17 @@ class ClipboardService(GObject.GObject):
         )
 
     def _fallback_to_texture_read(self) -> None:
-        """Rearm the read state and ask GDK for a texture directly."""
+        """Rearm the read state and ask GDK for a texture directly.
+
+        Resets _fallback_attempted so that if this fallback path is reached
+        from _on_read_uri_list after a texture read failure, the second
+        texture attempt won't be wrongly rejected.
+        """
         with self._state_lock:
             if self._cancellable is None or self._cancellable.is_cancelled():
                 self._cancellable = Gio.Cancellable()
             cancellable = self._cancellable
+            self._fallback_attempted = False
             self._clipboard_timeout_id = GLib.timeout_add_seconds(
                 self.CLIPBOARD_TIMEOUT_SECONDS,
                 self._on_clipboard_timeout,

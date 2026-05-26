@@ -62,7 +62,19 @@ class PortalProvider(ScreenshotProvider):
 
                 # Satisfy static audit: guide user to xdg-desktop-portal backend
                 if is_generic:
-                    logger.debug("PortalProvider: missing xdg-desktop-portal backend detected")
+                    logger.warning(
+                        "PortalProvider: xdg-desktop-portal screenshot backend failed (code=0). "
+                        "This is often caused by missing portal backends or an unavailable "
+                        "session bus.  Try installing one of: "
+                        "xdg-desktop-portal-gnome, xdg-desktop-portal-gtk, "
+                        "xdg-desktop-portal-kde.",
+                    )
+                else:
+                    logger.warning(
+                        "PortalProvider: unexpected portal error "
+                        f"(domain={e.domain}, code={e.code}): {e.message} — "
+                        "screenshot will use fallback if available.",
+                    )
 
                 callback(False, None, e.message)
         except Exception as e:
