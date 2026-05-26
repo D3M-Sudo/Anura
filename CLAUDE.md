@@ -1,10 +1,10 @@
 # CLAUDE.md — Anura OCR Project Guide
 
-> Regole per l'agente AI. Letto automaticamente all'inizio di ogni sessione.
+> Rules for the AI agent. Automatically read at the start of each session.
 
 ## Tech Stack
 
-- **Linguaggio**: Python 3.12+
+- **Language**: Python 3.12+
 - **Build**: Meson ≥ 1.5.0
 - **Distribuzione**: Flatpak (`io.github.d3msudo.anura`)
 - **UI**: GTK4 + Libadwaita + Blueprint Compiler 0.16.0
@@ -15,16 +15,16 @@
 - **Settings**: GSettings singleton → `anura/services/settings.py`
 - **Linter**: **ruff** solo — mai flake8, pylint o black
 
-## Architettura
+## Architecture
 
-### Filosofia
-- SOLID, KISS, DRY. Mixin per classi "God" (es. `AnuraWindow`).
-- `AtomicTaskManager` per esecuzione asincrona a singolo slot con versioning UUID.
-- Type hints obbligatori su funzioni pubbliche.
-- `validators.sanitize_text` per pulizia output OCR (Unicode control chars).
-- `uri_validator()` per validazione URI centralizzata.
+### Philosophy
+- SOLID, KISS, DRY. Mixins for "God" classes (e.g., `AnuraWindow`).
+- `AtomicTaskManager` for single-slot asynchronous execution with UUID versioning.
+- Mandatory type hints on public functions.
+- `validators.sanitize_text` for OCR output cleaning (Unicode control chars).
+- `uri_validator()` for centralized URI validation.
 
-### Struttura progetto
+### Project Structure
 ```
 anura/
 ├── main.py              ← AnuraApplication (Adw.Application)
@@ -36,33 +36,33 @@ anura/
 └── widgets/             ← extracted_page, welcome_page, preferences, shortcuts_overlay
 ```
 
-## Regole di Codice — ASSOLUTE
+## Code Rules — ABSOLUTE
 
 ### Thread Safety & Atomic Execution
-- **MAI** emettere GObject signal o modificare UI da thread secondari.
-- **SEMPRE** usare `AtomicTaskManager.execute()`.
-- Discard automatico dei risultati obsoleti tramite ID task.
-- `SignalManagerMixin` + `connect_tracked()` per cleanup automatico segnali.
+- **NEVER** emit GObject signals or modify UI from secondary threads.
+- **ALWAYS** use `AtomicTaskManager.execute()`.
+- Automatic discard of obsolete results via task ID.
+- `SignalManagerMixin` + `connect_tracked()` for automatic signal cleanup.
 
-### File protetti — MAI MODIFICARE
+### Protected Files — NEVER MODIFY
 - `po/*.po`
 - `anura/_release_notes.py`
 - `data/ui/*.ui`
 - `CHANGELOG.md` (manutenzione via Keep a Changelog)
 
-### Internazionalizzazione (i18n)
-- `_("text {var}").format(var=value)` — MAI `_(f"...")`.
-- `ngettext()` per plurali.
-- Dopo nuove stringhe UI → `cd po && ./update_potfiles.sh`.
+### Internationalization (i18n)
+- `_("text {var}").format(var=value)` — NEVER `_(f"...")`.
+- `ngettext()` for plurals.
+- After new UI strings → `cd po && ./update_potfiles.sh`.
 
-### Gestione errori — Early Return Pattern
-- Guardie e validazioni all'inizio. Happy path alla fine.
-- Nessun `except Exception` generico che silenzia bug.
+### Error Handling — Early Return Pattern
+- Guards and validations at the beginning. Happy path at the end.
+- No generic `except Exception` that silences bugs.
 
-### Dipendenze
-- **`uv` esclusivo**: `uv add`, `uv sync`. Mai `pip` o `poetry`.
+### Dependencies
+- **`uv` exclusive**: `uv add`, `uv sync`. Never `pip` or `poetry`.
 
-## Comandi di Sviluppo
+## Development Commands
 
 ### Setup & Build
 ```bash
@@ -76,14 +76,14 @@ GSETTINGS_SCHEMA_DIR=builddir/data python3 -m anura.main
 ```bash
 # Headless
 uv run pytest tests/ -v -m "not gtk"
-# Full (richiede display)
+# Full (requires display)
 ./setup-gschema.sh && ./tests/setup_resources.sh
 export GSETTINGS_SCHEMA_DIR="builddir"
 uv run pytest tests/ -v
 ```
 
-## Sicurezza & Privacy
-- **DoS**: Validazione `MAX_IMAGE_SIZE_BYTES` prima del caricamento.
-- **Sanificazione**: Rimozione caratteri di controllo Unicode dall'OCR.
-- **Validazione**: Controllo URI rigoroso prima di `UriLauncher`.
-- **Zero Telemetria**: Nessun tracciamento o analytics.
+## Security & Privacy
+- **DoS**: `MAX_IMAGE_SIZE_BYTES` validation before loading.
+- **Sanitization**: Removal of Unicode control characters from OCR.
+- **Validation**: Strict URI check before `UriLauncher`.
+- **Zero Telemetry**: No tracking or analytics.

@@ -9,10 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.1.5] - 2026-05-25 {version-0.1.5-architectural-milestone}
 
 ### Added
-- Implementata la "Modular Core Architecture" con destrutturazione di AnuraApplication in servizi isolati (boot, i18n, resources, dialogs).
-- Implementato un "SilentRunner" per isolare il motore headless/CLI dal main loop GTK.
-- Sistema "Offline Rotary Logging" zero-telemetry in $XDG_STATE_HOME/anura/logs/.
-- "Progressive Loading" asincrono per prevenire l'effetto Zombie UI durante il Magic Processing.
+- Implemented "Modular Core Architecture" by decomposing AnuraApplication into isolated services (boot, i18n, resources, dialogs).
+- Implemented "SilentRunner" to isolate the headless/CLI engine from the GTK main loop.
+- Zero-telemetry "Offline Rotary Logging" system in $XDG_STATE_HOME/anura/logs/.
+- Asynchronous "Progressive Loading" to prevent the Zombie UI effect during Magic Processing.
 - Implemented **Controller-based Composition Architecture**; dismantled legacy mixins for OCR, TTS, and DnD
 - Introduced immutable **OcrResult** and **OcrWord** dataclasses with `slots=True` for optimized memory and performance
 - Added boot-time **Capability Audit** (`ApplicationContext`) to detect system dependencies (Tesseract, ZXing, GStreamer)
@@ -45,14 +45,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Resolved navigation focus race conditions and spinner animation states
 
 ### Security
-- Implementate "Resource Guards" (prevenzione OOM) per bloccare l'elaborazione di immagini >20MP con RAM libera inferiore al 15% o 500MB.
-- Isolamento I/O transazionale per il worker OCR tramite tempfile.TemporaryDirectory interna al processo isolato.
+- Implemented "Resource Guards" (OOM prevention) to block processing of images >20MP with less than 15% free RAM or 500MB.
+- Transactional I/O isolation for the OCR worker via tempfile.TemporaryDirectory within the isolated process.
 - Implemented **Resource-based DoS Protection** by validating image file sizes (`MAX_IMAGE_SIZE_BYTES`) before processing
 - Hardened text extraction with `validators.sanitize_text`, stripping Unicode Control (Cc) and Format (Cf) characters
 - Hardened URL validation and encoding in `ShareService` against injection and RTL spoofing attacks
 
 ### Changed
-- Refactoring di SignalManagerMixin per l'aggancio nativo e il teardown automatico dei controller all'evento destroy.
+- Refactored SignalManagerMixin for native binding and automatic teardown of controllers on the destroy event.
 - Optimized OCR pipeline by unifying Tesseract parsing into a single $O(N)$ pass
 - Standardized file headers across the entire repository for project-wide consistency
 - Updated Tesseract language identifier for German Fraktur to the correct `deu_latf` code
