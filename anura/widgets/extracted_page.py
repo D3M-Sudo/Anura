@@ -155,12 +155,21 @@ class ExtractedPage(Adw.NavigationPage):
 
     def do_unmap(self) -> None:
         """Handle widget unmapping - stop TTS playback when widget is no longer visible."""
-        # X11 Constraint: Stop TTS immediately when widget is unmapped to prevent zombie audio
+        # X11 Constraint: stop TTS and reset UI controls to prevent stale state
+        # on the next visit.
         if self._tts_service:
             try:
                 self._tts_service.stop_speaking()
             except Exception as e:
                 logger.warning(f"Failed to stop TTS during unmap: {e}")
+        self._is_generating_tts = False
+        if self.listen_spinner:
+            self.listen_spinner.stop()
+        if self.listen_stack:
+            self.listen_stack.set_visible_child_name("button")
+        self.swap_controls(False)
+        if self.listen_pause_btn:
+            self.listen_pause_btn.set_icon_name("media-playback-pause-symbolic")
         Gtk.Widget.do_unmap(self)
 
     def do_dispose(self) -> None:
@@ -357,19 +366,18 @@ class ExtractedPage(Adw.NavigationPage):
             window.show_toast(message)
 
     def _on_generated(self, filepath: str | None) -> None:
+        """Callback when TTS generation completes.
+
+        The 'speak' signal triggers TtsController to call play(), so
+        calling it here would create a duplicate GStreamer pipeline.
+        """
         self._is_generating_tts = False
         if not filepath:
             self._set_spinner_active(False)
             self.swap_controls(False)
             return
 
-        # Deactivate spinner immediately when generation is complete
         self._set_spinner_active(False)
-        # Show pause/stop controls
-        self.swap_controls(True)
-        # Start playback
-        tts_service_instance = get_tts_service()
-        tts_service_instance.play(filepath)
 
     def _on_listen_end(self, service: object, success: bool) -> None:
         """Handle TTS playback completion."""

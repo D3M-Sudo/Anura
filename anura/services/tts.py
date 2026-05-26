@@ -235,6 +235,9 @@ class TTSService(GObject.GObject):
         self._bus_watch_lock = threading.Lock()
         self._state_lock = threading.Lock()
         self._init_lock = threading.Lock()
+        # Monotonic generation counter: stale bus callbacks from a torn-down
+        # pipeline are ignored when the counter no longer matches.
+        self._generation_id: int = 0
         self.player = None
 
         # Initialize GStreamer only once to prevent crashes on multiple instantiations
@@ -315,9 +318,13 @@ class TTSService(GObject.GObject):
         # We call _cleanup_gst_resources() directly — NOT stop_speaking() — to
         # avoid emitting a spurious "stop" signal that would reset UI state while
         # the new audio is already being set up.
-        if self.player:
-            with self._cleanup_lock:
+        with self._cleanup_lock:
+            if self.player:
                 self._cleanup_gst_resources()
+            # Bump generation counter to invalidate stale bus callbacks.
+            with self._state_lock:
+                self._generation_id += 1
+                current_gen = self._generation_id
 
         self.player = Gst.ElementFactory.make("playbin3", "player")
         if not self.player:
@@ -340,12 +347,12 @@ class TTSService(GObject.GObject):
 
         # Setup bus watch synchronously before starting playback to avoid race
         # conditions on End-of-Stream (EOS) events for short audio clips.
-        self._setup_bus_watch()
+        self._setup_bus_watch(current_gen)
 
         logger.info("Anura TTSService: Setting GStreamer state to PLAYING")
         self.player.set_state(Gst.State.PLAYING)
 
-    def _setup_bus_watch(self) -> bool:
+    def _setup_bus_watch(self, generation_id: int) -> bool:
         """Thread-safe GStreamer bus signal watch setup on main thread."""
         # Thread-safe guard against concurrent setup calls
         with self._bus_watch_lock:
@@ -362,20 +369,32 @@ class TTSService(GObject.GObject):
                     # Setup bus watch within the same lock to prevent race conditions
                     self._bus.add_signal_watch()
                     self._bus_watch_active = True
-                    self._bus_message_handler_id = self._bus.connect("message", self.on_gst_message)
+                    self._bus_message_handler_id = self._bus.connect(
+                        "message",
+                        lambda bus, msg, gen=generation_id: self.on_gst_message(bus, msg, gen),
+                    )
                     logger.debug("Anura TTS: Bus watch setup completed")
             finally:
                 self._bus_watch_setup_in_progress = False
 
         return False  # Don't repeat
 
-    def on_gst_message(self, _bus: Gst.Bus, message: Gst.Message) -> None:
+    def on_gst_message(self, _bus: Gst.Bus, message: Gst.Message, generation_id: int) -> None:
         """Thread-safe GStreamer bus message handling.
 
         This is a Gst.Bus "message" signal callback, not a GLib timeout, so
         the return value is ignored — don't return False/True for "don't
         repeat".
+
+        Stale callback detection: if _generation_id has advanced since this
+        callback was connected, it belongs to a torn-down pipeline.
         """
+        with self._state_lock:
+            if generation_id != self._generation_id:
+                logger.debug(
+                    f"Anura TTS: Ignoring stale bus message (gen {generation_id} != current {self._generation_id})"
+                )
+                return
         if message.type == Gst.MessageType.EOS:
             logger.info("Anura TTSService: GStreamer state changed to EOS (End of Stream)")
             with self._cleanup_lock:
@@ -497,27 +516,33 @@ class TTSService(GObject.GObject):
 
     def pause(self) -> None:
         """Pauses the GStreamer player."""
-        if self.player:
-            logger.info("Anura TTSService: Setting GStreamer state to PAUSED")
-            self.player.set_state(Gst.State.PAUSED)
+        if not self.player:
+            return
+        logger.info("Anura TTSService: Setting GStreamer state to PAUSED")
+        ret = self.player.set_state(Gst.State.PAUSED)
+        if ret == Gst.StateChangeReturn.ASYNC:
+            self.player.get_state(500 * Gst.MSECOND)
 
-            def _on_paused_idle():
-                self.emit("paused", True)
-                return GLib.SOURCE_REMOVE
+        def _on_paused_idle():
+            self.emit("paused", True)
+            return GLib.SOURCE_REMOVE
 
-            GLib.idle_add(_on_paused_idle)
+        GLib.idle_add(_on_paused_idle)
 
     def resume(self) -> None:
         """Resumes the GStreamer player."""
-        if self.player:
-            logger.info("Anura TTSService: Setting GStreamer state to PLAYING (resume)")
-            self.player.set_state(Gst.State.PLAYING)
+        if not self.player:
+            return
+        logger.info("Anura TTSService: Setting GStreamer state to PLAYING (resume)")
+        ret = self.player.set_state(Gst.State.PLAYING)
+        if ret == Gst.StateChangeReturn.ASYNC:
+            self.player.get_state(500 * Gst.MSECOND)
 
-            def _on_resumed_idle():
-                self.emit("paused", False)
-                return GLib.SOURCE_REMOVE
+        def _on_resumed_idle():
+            self.emit("paused", False)
+            return GLib.SOURCE_REMOVE
 
-            GLib.idle_add(_on_resumed_idle)
+        GLib.idle_add(_on_resumed_idle)
 
     def is_playing(self) -> bool:
         """Returns True if the GStreamer player is in the PLAYING state."""
@@ -531,11 +556,13 @@ class TTSService(GObject.GObject):
         if not self.player:
             return
 
-        _, state, _ = self.player.get_state(0)
+        _, state, _ = self.player.get_state(100 * Gst.MSECOND)
         if state == Gst.State.PLAYING:
             self.pause()
         elif state == Gst.State.PAUSED:
             self.resume()
+        else:
+            logger.debug(f"Anura TTS: toggle_pause called in unexpected state {state.value_nick}, ignoring")
 
     def cleanup(self) -> None:
         """Complete cleanup for application shutdown - prevents broken pipe errors."""
