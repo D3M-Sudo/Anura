@@ -5,6 +5,7 @@
 
 from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from concurrent.futures.process import BrokenProcessPool
 import multiprocessing
 import threading
 import traceback
@@ -75,7 +76,20 @@ class AtomicTaskManager:
         logger.debug("AtomicTaskManager: Initialized with single-worker pool")
 
     def _ensure_process_executor_locked(self) -> ProcessPoolExecutor:
-        """Initialize process executor if needed. MUST be called with _state_lock held."""
+        """Initialize or recover the process executor. MUST be called with _state_lock held."""
+        if self._process_executor is not None:
+            # Detect a broken pool (e.g. Tesseract segfault killed the worker).
+            # A broken executor raises BrokenProcessPool on every subsequent submit();
+            # we must tear it down and recreate it before the next task.
+            try:
+                if self._process_executor._broken:  # type: ignore[attr-defined]
+                    logger.warning("AtomicTaskManager: Detected broken process pool — recovering")
+                    self._teardown_process_executor_locked()
+            except AttributeError:
+                # _broken is a CPython implementation detail; if it's missing,
+                # we'll catch BrokenProcessPool at submit() time in result_wrapper.
+                pass
+
         if self._process_executor is None:
             # Use a single worker for process-isolated tasks (OCR) to avoid
             # memory thrashing while still bypassing the GIL.
@@ -86,6 +100,21 @@ class AtomicTaskManager:
             self._isolated_cancellation_map = self._process_manager.dict()
             logger.info("AtomicTaskManager: Initialized process executor for OCR isolation")
         return self._process_executor
+
+    def _teardown_process_executor_locked(self) -> None:
+        """Shut down and discard the broken process executor. MUST be called with _state_lock held."""
+        try:
+            self._process_executor.shutdown(wait=False, cancel_futures=True)
+        except Exception:
+            pass
+        try:
+            if self._process_manager is not None:
+                self._process_manager.shutdown()
+        except Exception:
+            pass
+        self._process_executor = None
+        self._process_manager = None
+        self._isolated_cancellation_map = None
 
     def _get_process_executor(self) -> ProcessPoolExecutor:
         """Lazy initialization of the process executor for OCR isolation."""
@@ -142,6 +171,19 @@ class AtomicTaskManager:
                 result = AtomicTaskResult(task_id=new_task_id, data=result_data)
                 GLib.idle_add(self._handle_success, result, callback)
 
+            except BrokenProcessPool as e:
+                # The worker process was killed (e.g. Tesseract segfault).
+                # Reset the executor so the next call gets a fresh pool.
+                logger.error(
+                    "AtomicTaskManager: Process pool broken (worker crashed) — "
+                    "resetting executor for next task"
+                )
+                with self._state_lock:
+                    self._teardown_process_executor_locked()
+                tb_str = traceback.format_exc()
+                result = AtomicTaskResult(task_id=new_task_id, error=e, traceback_str=tb_str)
+                GLib.idle_add(self._handle_error, result, errorback)
+
             except Exception as e:
                 tb_str = traceback.format_exc()
                 result = AtomicTaskResult(task_id=new_task_id, error=e, traceback_str=tb_str)
@@ -150,10 +192,6 @@ class AtomicTaskManager:
                 # Cleanup the shared map to prevent memory leaks
                 with self._state_lock:
                     if self._isolated_cancellation_map is not None:
-                        # We only remove it if it's not the CURRENT task,
-                        # but since we're in the result_wrapper, the task is done.
-                        # However, we might want to keep some history or just clear it.
-                        # Given single-slot execution, we can safely clear the ID.
                         self._isolated_cancellation_map.pop(new_task_id, None)
 
         # Submit to process pool, then attach result handler.
@@ -294,10 +332,8 @@ class AtomicTaskManager:
     def shutdown(self) -> None:
         """Shut down the executors."""
         self._executor.shutdown(wait=False)
-        if self._process_executor:
-            self._process_executor.shutdown(wait=False)
-        if hasattr(self, "_process_manager") and self._process_manager:
-            self._process_manager.shutdown()
+        with self._state_lock:
+            self._teardown_process_executor_locked()
 
 
 def get_atomic_manager() -> AtomicTaskManager:
