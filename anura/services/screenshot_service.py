@@ -113,7 +113,11 @@ def run_ocr_pipeline(
                     if status_callback:
                         status_callback(_("Enhancing image..."))
                     preprocessor = get_text_preprocessor()
-                    enhanced_img = preprocessor.enhance_image(img, task_id=task_id) if preprocessing_mode != "off" else img
+                    enhanced_img = (
+                        preprocessor.enhance_image(img, task_id=task_id)
+                        if preprocessing_mode != "off"
+                        else img
+                    )
 
                     # 3. Tesseract OCR
                     logger.debug("Isolated: Running Tesseract OCR...")
