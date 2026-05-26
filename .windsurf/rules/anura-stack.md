@@ -1,6 +1,6 @@
 # Anura Tech Stack
 
-- **Linguaggio**: Python 3.12+
+- **Language**: Python 3.12+
 - **Build System**: Meson ≥ 1.5.0
 - **UI Framework**: GTK4 + Libadwaita
 - **Declarative UI**: Blueprint Compiler ≥ 0.16.0
