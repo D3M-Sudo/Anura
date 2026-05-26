@@ -114,7 +114,9 @@ def validate_image_resource(
 
     try:
         if isinstance(resource, str):
-            if not os.path.exists(resource):
+            # Security: Use isfile() instead of exists() to ensure we're not
+            # attempting to process directories, FIFOs, or device files as images.
+            if not os.path.isfile(resource):
                 return False, 0, "File not found"
             if not os.access(resource, os.R_OK):
                 return False, 0, "Permission denied"
