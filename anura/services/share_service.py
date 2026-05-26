@@ -133,7 +133,7 @@ class ShareService(GObject.GObject):
             def _on_share_idle(res):
                 try:
                     self.emit("share", res)
-                except Exception as e:
+                except (RuntimeError, TypeError) as e:
                     logger.exception(f"Anura: Failed to emit share status: {e}")
                 return GLib.SOURCE_REMOVE
 
@@ -155,7 +155,7 @@ class ShareService(GObject.GObject):
                     def _on_share_idle(res):
                         try:
                             self.emit("share", res)
-                        except Exception as e:
+                        except (RuntimeError, TypeError) as e:
                             logger.error(f"Anura: Failed to emit share status: {e}")
                         return GLib.SOURCE_REMOVE
 
@@ -196,7 +196,7 @@ class ShareService(GObject.GObject):
         def _on_response(dlg, response):
             try:
                 self._on_mastodon_instance_selected(dlg, response, encoded_text)
-            except Exception as e:
+            except (ValueError, TypeError, RuntimeError) as e:
                 logger.error(f"Anura: Unexpected error in Mastodon instance selection: {e}")
 
         dialog.connect("response", _on_response)
@@ -223,7 +223,7 @@ class ShareService(GObject.GObject):
                         def _on_toast_idle(msg):
                             try:
                                 main_window.show_toast(msg)
-                            except Exception as e:
+                            except (AttributeError, RuntimeError) as e:
                                 logger.exception(f"Anura: Failed to show toast: {e}")
                             return GLib.SOURCE_REMOVE
 
@@ -232,7 +232,7 @@ class ShareService(GObject.GObject):
                 def _on_share_idle(res):
                     try:
                         self.emit("share", res)
-                    except Exception as e:
+                    except (RuntimeError, TypeError) as e:
                         logger.exception(f"Anura: Failed to emit share status: {e}")
                     return GLib.SOURCE_REMOVE
 
@@ -244,7 +244,7 @@ class ShareService(GObject.GObject):
             def _on_share_idle(res):
                 try:
                     self.emit("share", res)
-                except Exception as e:
+                except (RuntimeError, TypeError) as e:
                     logger.exception(f"Anura: Failed to emit share status: {e}")
                 return GLib.SOURCE_REMOVE
 
@@ -284,7 +284,7 @@ class ShareService(GObject.GObject):
             def _on_share_idle(res):
                 try:
                     self.emit("share", res)
-                except Exception as e:
+                except (RuntimeError, TypeError) as e:
                     logger.exception(f"Anura: Failed to emit share status: {e}")
                 return GLib.SOURCE_REMOVE
 
@@ -295,7 +295,7 @@ class ShareService(GObject.GObject):
             def _on_share_idle(res):
                 try:
                     self.emit("share", res)
-                except Exception as e:
+                except (RuntimeError, TypeError) as e:
                     logger.exception(f"Anura: Failed to emit share status: {e}")
                 return GLib.SOURCE_REMOVE
 

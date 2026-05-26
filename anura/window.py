@@ -273,6 +273,8 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         signal_handlers: list[int] = []
 
         def on_dialog_close(*args: object) -> None:
+            # Manually disconnect signals on dialog closure to prevent leaks
+            # on the LanguageManager singleton.
             for handler_id in signal_handlers:
                 try:
                     language_manager_instance.disconnect(handler_id)
