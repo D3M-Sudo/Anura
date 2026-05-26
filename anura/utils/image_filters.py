@@ -186,23 +186,29 @@ class FilterChain:
 
     def apply(self, image: Image.Image, task_id: str | None = None) -> Image.Image:
         result = image
-        # Keep track of intermediate images to ensure they are closed even on failure
+        # Keep track of intermediate images to ensure they are closed correctly
         intermediates = []
         try:
             for img_filter in self._filters:
                 prev_result = result
                 result = img_filter.apply(result, task_id=task_id)
 
-                # Explicitly release the previous image buffer if it's no longer needed
-                # and it's not the same object as the new result.
-                if prev_result is not image and prev_result is not result:
-                    if prev_result not in intermediates:
-                        intermediates.append(prev_result)
+                # If a new image was created, track it for cleanup.
+                if result is not prev_result and result is not image:
+                    intermediates.append(result)
 
-                    prev_result.close()
-                    # Occasional GC trigger for large buffers
-                    if result.size[0] * result.size[1] > 4000000:  # > 4MP
-                        gc.collect()
+                # Occasional GC trigger for large buffers
+                if result.size[0] * result.size[1] > 4000000:  # > 4MP
+                    gc.collect()
+
+            # Final result is returned; all other intermediates created
+            # during the chain MUST be closed to prevent memory leaks.
+            for img in intermediates:
+                if img is not result:
+                    try:
+                        img.close()
+                    except Exception as e:
+                        logger.debug(f"Failed to close intermediate image: {e}")
 
             return result
         except Exception as e:
@@ -213,11 +219,6 @@ class FilterChain:
                     img.close()
                 except Exception as e_close:
                     logger.debug(f"Failed to close intermediate image: {e_close}")
-            if result is not image:
-                try:
-                    result.close()
-                except Exception as e_close:
-                    logger.debug(f"Failed to close result image: {e_close}")
             raise
 
 
