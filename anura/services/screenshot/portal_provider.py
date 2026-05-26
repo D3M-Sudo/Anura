@@ -31,7 +31,7 @@ class PortalProvider(ScreenshotProvider):
                 self._on_finish,
                 (lang, copy, callback),
             )
-        except Exception as e:
+        except (GLib.Error, RuntimeError) as e:
             logger.error(f"PortalProvider: Call failed: {e}")
             callback(False, None, str(e))
 
@@ -77,6 +77,6 @@ class PortalProvider(ScreenshotProvider):
                     )
 
                 callback(False, None, e.message)
-        except Exception as e:
+        except (GLib.Error, RuntimeError) as e:
             logger.error(f"PortalProvider: Unexpected error: {e}")
             callback(False, None, str(e))

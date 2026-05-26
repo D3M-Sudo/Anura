@@ -151,6 +151,50 @@
       "chain_of_thought": "is_safe_url_string accepted mixed-script URLs that could be used for homograph attacks. Hardened to reject non-ASCII mixed with ASCII letters.",
       "status": "FIXED",
       "pattern_matched": "Security bypass"
+    },
+    {
+      "id": "BUG-008",
+      "severity": "HIGH",
+      "confidence_score": 1.0,
+      "personality_detecting": "Systems Architect",
+      "personality_agreement": ["Security Paranoid"],
+      "location": {"file": "flatpak/io.github.d3msudo.anura.json", "line": 137, "function": "MANIFEST"},
+      "chain_of_thought": "Flatpak manifest was out of sync with uv.lock, including older versions and dead dependencies (six, dateutil). Hardened by synchronizing and purging.",
+      "status": "FIXED",
+      "pattern_matched": "Environment drift"
+    },
+    {
+      "id": "BUG-009",
+      "severity": "MEDIUM",
+      "confidence_score": 1.0,
+      "personality_detecting": "Code Path Detective",
+      "personality_agreement": ["Logic Validator"],
+      "location": {"file": "anura/services/share_service.py", "line": 133, "function": "_on_share_idle"},
+      "chain_of_thought": "Widespread use of blind exceptions (BLE001) hides operational failures. Remediated 28 critical sites in core services.",
+      "status": "FIXED",
+      "pattern_matched": "Silent exception"
+    },
+    {
+      "id": "BUG-010",
+      "severity": "MEDIUM",
+      "confidence_score": 1.0,
+      "personality_detecting": "Systems Architect",
+      "personality_agreement": ["Memory Surgeon"],
+      "location": {"file": "anura/window.py", "line": 270, "function": "show_preferences"},
+      "chain_of_thought": "Manual signal management for PreferencesDialog bypasses the standardized SignalManagerMixin, risking leaks on abnormal closure.",
+      "status": "FIXED",
+      "pattern_matched": "Inconsistent implementation"
+    },
+    {
+      "id": "BUG-011",
+      "severity": "MEDIUM",
+      "confidence_score": 1.0,
+      "personality_detecting": "Performance Optimizer",
+      "personality_agreement": ["Systems Architect"],
+      "location": {"file": "anura/core/logger.py", "line": 41, "function": "setup_logging"},
+      "chain_of_thought": "Log rotation too shallow (3 files) and lacks compression, risking loss of Tesseract diagnostic data. Hardened to 5 files + gzip.",
+      "status": "FIXED",
+      "pattern_matched": "Inadequate diagnostic buffer"
     }
   ],
   "learned_patterns": {

@@ -437,7 +437,7 @@ class TTSService(GObject.GObject):
                 try:
                     self.emit("error", msg)
                     self.emit("stop", False)
-                except Exception as e:
+                except (RuntimeError, TypeError) as e:
                     logger.exception(f"Anura TTS: Failed to emit playback error: {e}")
                 return GLib.SOURCE_REMOVE
 
@@ -475,7 +475,7 @@ class TTSService(GObject.GObject):
                 # before returning, preventing race conditions with rapid restarts.
                 self.player.set_state(Gst.State.NULL)
                 self.player.get_state(Gst.CLOCK_TIME_NONE)
-            except Exception as e:
+            except (GLib.Error, RuntimeError) as e:
                 logger.debug(f"Anura TTSService: Suppressed GStreamer NULL state error: {e}")
             self.player = None
             logger.debug("Anura TTSService: GStreamer resource cleanup complete")
@@ -593,7 +593,7 @@ class TTSService(GObject.GObject):
                         if time.time() - os.path.getmtime(file_path) > 3600:
                             with contextlib.suppress(OSError):
                                 os.unlink(file_path)
-        except Exception as e:
+        except (OSError, RuntimeError) as e:
             logger.debug(f"Anura TTS: Error during directory cleanup: {e}")
 
 

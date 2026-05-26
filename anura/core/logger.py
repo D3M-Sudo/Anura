@@ -41,14 +41,14 @@ def setup_logging():
 
         log_file = os.path.join(log_dir, "anura.log")
 
-        # Add rotary handler: Max 5MB, 3 rotations, plain text
+        # Add rotary handler: Max 5MB, 5 rotations, compressed plain text
         logger.add(
             log_file,
             rotation="5 MB",
-            retention=3,
+            retention=5,
             format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
             level=LOG_LEVEL,
-            compression=None,  # No compression as requested
+            compression="gz",  # Enable compression for better retention
             catch=True,
             mode="a",
             encoding="utf-8",
