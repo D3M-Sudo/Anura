@@ -464,7 +464,8 @@ class TTSService(GObject.GObject):
     def stop_speaking(self) -> None:
         """Thread-safe interruption of playback and cleanup."""
         with self._cleanup_lock:
-            if self.player:
+            had_player = self.player is not None
+            if had_player:
                 logger.info("Anura TTS: Stopping playback.")
                 self._cleanup_gst_resources()
 
@@ -483,12 +484,16 @@ class TTSService(GObject.GObject):
             elif filepath:
                 logger.debug("Anura TTS: Cleanup skipped on stop, file already removed")
 
-            # Fix Bug 3: Emit stop signal to ensure proper UI cleanup
-            def _on_stop_idle():
-                self.emit("stop", False)
-                return GLib.SOURCE_REMOVE
+            # Only emit 'stop' when there was an active player to stop.
+            # Emitting unconditionally caused spurious UI state resets
+            # (e.g. flickering of TTS controls) when stop_speaking() was
+            # called with no playback in progress.
+            if had_player:
+                def _on_stop_idle():
+                    self.emit("stop", False)
+                    return GLib.SOURCE_REMOVE
 
-            GLib.idle_add(_on_stop_idle)
+                GLib.idle_add(_on_stop_idle)
 
     def pause(self) -> None:
         """Pauses the GStreamer player."""
@@ -569,7 +574,3 @@ class TTSService(GObject.GObject):
 def get_tts_service() -> TTSService:
     """Get thread-safe TTS service singleton."""
     return get_instance(TTSService)
-
-
-# Global singleton instance for direct import
-ttsservice = get_tts_service()

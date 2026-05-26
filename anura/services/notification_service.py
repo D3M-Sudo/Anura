@@ -89,7 +89,7 @@ class NotificationService:
 
     def cleanup(self) -> None:
         """Clean up the periodic timer to prevent resource leaks."""
-        if hasattr(self, "_cleanup_timeout_id") and self._cleanup_timeout_id:
+        if hasattr(self, "_cleanup_timeout_id") and self._cleanup_timeout_id is not None:
             with contextlib.suppress(GLib.Error):
                 GLib.source_remove(self._cleanup_timeout_id)
             self._cleanup_timeout_id = None

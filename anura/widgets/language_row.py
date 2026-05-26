@@ -10,7 +10,7 @@ from gi.repository import GLib, GObject, Gtk
 
 from anura.config import RESOURCE_PREFIX
 from anura.models.language_item import LanguageItem
-from anura.services.language_manager import language_manager
+from anura.services.language_manager import get_language_manager
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/language_row.ui")
@@ -34,8 +34,8 @@ class LanguageRow(Gtk.Overlay):
         # Uses a set so completed (auto-removed) source IDs can be pruned.
         self._idle_ids: set[int] = set()
 
-        self._downloading_handler_id = language_manager.connect("downloading", self.update_progress)
-        self._downloaded_handler_id = language_manager.connect("downloaded", self.on_downloaded)
+        self._downloading_handler_id = get_language_manager().connect("downloading", self.update_progress)
+        self._downloaded_handler_id = get_language_manager().connect("downloaded", self.on_downloaded)
 
         # Deferred UI update to ensure item is set
         idle_id = GLib.idle_add(self._idle_update_ui)
@@ -75,8 +75,8 @@ class LanguageRow(Gtk.Overlay):
             return
 
         # Handle button states based on installation/download status
-        is_installed = self._item.code in language_manager.get_downloaded_codes()
-        is_loading = self._item.code in language_manager.loading_languages
+        is_installed = self._item.code in get_language_manager().get_downloaded_codes()
+        is_loading = self._item.code in get_language_manager().loading_languages
 
         self.remove_btn.set_visible(is_installed)
         self.install_btn.set_visible(not is_installed)
@@ -110,10 +110,10 @@ class LanguageRow(Gtk.Overlay):
         """
         Triggered when the install button is clicked.
         """
-        if not self._item or self._item.code in language_manager.loading_languages:
+        if not self._item or self._item.code in get_language_manager().loading_languages:
             return
 
-        language_manager.download(self._item.code)
+        get_language_manager().download(self._item.code)
         self.update_ui()
 
     @Gtk.Template.Callback()
@@ -121,11 +121,11 @@ class LanguageRow(Gtk.Overlay):
         """
         Triggered when the remove button is clicked.
         """
-        if not self._item or self._item.code in language_manager.loading_languages:
+        if not self._item or self._item.code in get_language_manager().loading_languages:
             return
 
-        if self._item.code in language_manager.get_downloaded_codes():
-            language_manager.remove_language(self._item.code)
+        if self._item.code in get_language_manager().get_downloaded_codes():
+            get_language_manager().remove_language(self._item.code)
             self.update_ui()
 
     def on_downloaded(self, sender: GObject.GObject, code: str) -> None:
@@ -146,12 +146,12 @@ class LanguageRow(Gtk.Overlay):
         # Disconnect signal handlers
         if self._downloading_handler_id is not None:
             with contextlib.suppress(TypeError, RuntimeError):
-                language_manager.disconnect(self._downloading_handler_id)
+                get_language_manager().disconnect(self._downloading_handler_id)
             self._downloading_handler_id = None
 
         if self._downloaded_handler_id is not None:
             with contextlib.suppress(TypeError, RuntimeError):
-                language_manager.disconnect(self._downloaded_handler_id)
+                get_language_manager().disconnect(self._downloaded_handler_id)
             self._downloaded_handler_id = None
 
         super().do_destroy()

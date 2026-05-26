@@ -14,7 +14,7 @@ from loguru import logger
 
 from anura.config import RESOURCE_PREFIX
 from anura.models.language_item import LanguageItem
-from anura.services.language_manager import language_manager
+from anura.services.language_manager import get_language_manager
 from anura.services.settings import settings
 from anura.widgets.language_popover import LanguagePopover
 
@@ -43,7 +43,7 @@ class WelcomePage(Adw.NavigationPage):
 
         current_lang_code = self.settings.get_string("active-language")
         self.lang_combo.set_label(
-            language_manager.get_language(current_lang_code),
+            get_language_manager().get_language(current_lang_code),
         )
 
         self._drop_button_handler_id = self.drop_button.connect("clicked", self._on_drop_button_clicked)

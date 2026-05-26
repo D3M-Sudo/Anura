@@ -11,7 +11,7 @@ from loguru import logger
 
 from anura.config import RESOURCE_PREFIX
 from anura.models.language_item import LanguageItem
-from anura.services.language_manager import language_manager
+from anura.services.language_manager import get_language_manager
 from anura.services.settings import settings
 from anura.utils.signal_manager import SignalManagerMixin
 from anura.widgets.language_popover_row import LanguagePopoverRow
@@ -40,8 +40,8 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
 
         self.settings = settings
 
-        self.connect_tracked(language_manager, "downloaded", self._on_language_downloaded)
-        self.connect_tracked(language_manager, "removed", self._on_language_removed)
+        self.connect_tracked(get_language_manager(), "downloaded", self._on_language_downloaded)
+        self.connect_tracked(get_language_manager(), "removed", self._on_language_removed)
 
         self._active_language = self.settings.get_string("active-language")
 
@@ -86,7 +86,7 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
         item: LanguageItem = row.lang
         self.emit("language-changed", item)
         self.active_language = item.code  # type: ignore[method-assign]
-        language_manager.active_language = item  # type: ignore[method-assign]
+        get_language_manager().active_language = item  # type: ignore[method-assign]
 
         self.settings.set_string("active-language", item.code)
         logger.debug(f"Anura: OCR language changed to '{item.code}'")
@@ -121,9 +121,9 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
         try:
             self.lang_list.remove_all()
 
-            downloaded_codes = language_manager.get_downloaded_codes(force=force)
+            downloaded_codes = get_language_manager().get_downloaded_codes(force=force)
             for code in downloaded_codes:
-                title = language_manager.get_language(code)
+                title = get_language_manager().get_language(code)
 
                 selected = self.active_language == code
                 self.lang_list.append(LanguageItem(code=code, title=title, selected=selected))
@@ -131,7 +131,7 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
             # Fallback to English if current language was removed, emitting only on actual change
             current_code = self.active_language
             if current_code not in downloaded_codes:
-                new_item = language_manager.get_language_item("eng")
+                new_item = get_language_manager().get_language_item("eng")
                 if new_item and self.active_language != "eng":  # emit only if language actually changed
                     self.active_language = "eng"  # type: ignore[method-assign]
                     self.settings.set_string("active-language", "eng")

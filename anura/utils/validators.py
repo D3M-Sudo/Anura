@@ -76,10 +76,37 @@ def is_safe_url_string(text: str) -> bool:
     if "\\" in text:
         return False
 
-    # 3. Performance & Security: URLs must be ASCII-only to prevent Unicode
-    # homograph attacks and hidden format character injections (Zero-Width Space, etc.).
-    # We check this BEFORE any sanitization/stripping to ensure malicious
-    # input is rejected rather than silently cleaned.
+    # 3. IDN normalization: convert international domain names (IDN) to their
+    # Punycode ASCII-compatible encoding (ACE) before the ASCII safety check.
+    # This allows legitimate URLs like https://münchen.de or https://中文.com
+    # while still rejecting homograph attacks — Punycode is always ASCII, so
+    # the isascii() check below still catches unencoded non-ASCII that isn't
+    # a valid hostname label (e.g. invisible Unicode in the path/query).
+    if not text.isascii():
+        try:
+            from urllib.parse import urlparse, urlunparse
+            parsed = urlparse(text)
+            if parsed.hostname and not parsed.hostname.isascii():
+                # Encode each DNS label separately; skip empty labels (leading dots etc.)
+                punycode_labels = []
+                for label in parsed.hostname.split("."):
+                    if not label:
+                        punycode_labels.append(label)
+                    elif label.isascii():
+                        punycode_labels.append(label)
+                    else:
+                        punycode_labels.append(label.encode("idna").decode("ascii"))
+                punycode_host = ".".join(punycode_labels)
+                # Rebuild the netloc, preserving port and userinfo if present
+                netloc = parsed.netloc.replace(parsed.hostname, punycode_host, 1)
+                text = urlunparse(parsed._replace(netloc=netloc))
+        except (UnicodeError, ValueError, UnicodeDecodeError):
+            # IDNA encoding failed (e.g. label too long, invalid character set):
+            # fall through to the isascii() guard which will reject the URL.
+            pass
+
+    # ASCII safety check: after IDN normalization, any remaining non-ASCII
+    # characters indicate invalid or potentially malicious input.
     if not text.isascii():
         return False
 

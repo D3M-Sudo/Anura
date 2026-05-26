@@ -574,7 +574,3 @@ class LanguageManager(GObject.GObject):
 def get_language_manager() -> LanguageManager:
     """Get thread-safe language manager singleton."""
     return get_instance(LanguageManager)
-
-
-# Global singleton instance for direct import
-language_manager = get_language_manager()
