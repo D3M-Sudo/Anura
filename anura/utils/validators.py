@@ -7,6 +7,7 @@
 import contextlib
 import ipaddress
 import os
+from pathlib import Path
 import re
 import unicodedata
 from urllib.parse import urlparse
@@ -177,13 +178,14 @@ def validate_image_resource(
 
     try:
         if isinstance(resource, str):
-            # Security: Use isfile() instead of exists() to ensure we're not
+            # Security: Use is_file() instead of exists() to ensure we're not
             # attempting to process directories, FIFOs, or device files as images.
-            if not os.path.isfile(resource):
+            path = Path(resource)
+            if not path.is_file():
                 return False, 0, "File not found"
             if not os.access(resource, os.R_OK):
                 return False, 0, "Permission denied"
-            size = os.path.getsize(resource)
+            size = path.stat().st_size
         elif isinstance(resource, bytes):
             size = len(resource)
         elif hasattr(resource, "getbuffer"):
@@ -211,7 +213,7 @@ def validate_image_resource(
 
         return True, size, None
 
-    except Exception as e:
+    except (AttributeError, RuntimeError, TypeError, ValueError, OSError) as e:
         logger.error(f"Validation: Unexpected error: {e}")
         return False, 0, f"Validation error: {e}"
 

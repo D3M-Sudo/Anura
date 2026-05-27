@@ -12,7 +12,7 @@ from anura.models.context import ApplicationContext
 class TestCapabilityAudit(unittest.TestCase):
     @patch("shutil.which")
     @patch("importlib.util.find_spec")
-    @patch("os.path.exists")
+    @patch("anura.models.context.Path.exists")
     def test_perform_audit_full_capabilities(self, mock_exists, mock_find_spec, mock_which):
         # Setup mocks for full capabilities
         mock_exists.return_value = True
@@ -32,7 +32,7 @@ class TestCapabilityAudit(unittest.TestCase):
 
     @patch("shutil.which")
     @patch("importlib.util.find_spec")
-    @patch("os.path.exists")
+    @patch("anura.models.context.Path.exists")
     def test_perform_audit_missing_dependencies(self, mock_exists, mock_find_spec, mock_which):
         # Setup mocks for missing dependencies
         mock_exists.return_value = False

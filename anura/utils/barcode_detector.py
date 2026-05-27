@@ -52,6 +52,6 @@ def detect_barcodes(image: Image.Image) -> list[BarcodeResult]:
             logger.info(f"Anura ZXing: Detected {len(barcode_results)} codes")
 
         return barcode_results
-    except Exception as e:
+    except (ImportError, RuntimeError, AttributeError, TypeError) as e:
         logger.debug(f"Anura ZXing: Detection failed or zxing-cpp not available: {e}")
         return []

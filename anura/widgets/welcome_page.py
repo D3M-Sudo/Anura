@@ -7,7 +7,7 @@
 import contextlib
 from gettext import gettext as _
 from mimetypes import guess_type
-import os
+from pathlib import Path
 
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk
 from loguru import logger
@@ -89,7 +89,7 @@ class WelcomePage(Adw.NavigationPage):
                 self.drop_button.add_css_class("suggested-action")
             else:
                 self.drop_button.remove_css_class("suggested-action")
-        except Exception as e:
+        except (AttributeError, RuntimeError) as e:
             logger.exception(f"Anura: Failed to handle drop button click: {e}")
 
     def _on_dnd_enter(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float) -> Gdk.DragAction:
@@ -98,7 +98,7 @@ class WelcomePage(Adw.NavigationPage):
             self.drop_area.set_visible(True)
             self.drop_area.add_css_class("drag-hover")
             self.welcome.set_description(_("Drop image to extract text"))
-        except Exception as e:
+        except (AttributeError, RuntimeError) as e:
             logger.exception(f"Anura: Failed to handle DnD enter: {e}")
         return Gdk.DragAction.COPY
 
@@ -110,7 +110,7 @@ class WelcomePage(Adw.NavigationPage):
             if not self.drop_button.has_css_class("suggested-action"):
                 self.drop_area.set_visible(False)
             self.welcome.set_description(_("Extract text from anywhere"))
-        except Exception as e:
+        except (AttributeError, RuntimeError) as e:
             logger.exception(f"Anura: Failed to handle DnD leave: {e}")
 
     def _on_dnd_drop(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float) -> bool:
@@ -218,7 +218,7 @@ class WelcomePage(Adw.NavigationPage):
 
     def _process_dropped_path(self, local_path: str) -> None:
         """Common logic for processing a verified local path from any DnD format."""
-        if not os.path.exists(local_path):
+        if not Path(local_path).exists():
             logger.error(f"DnD: File not accessible: {local_path}")
             self._show_error_toast(_("File not accessible. Ensure Anura has permission to access this location."))
             return

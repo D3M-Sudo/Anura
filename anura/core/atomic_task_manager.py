@@ -105,7 +105,9 @@ class AtomicTaskManager:
         """Shut down and discard the broken process executor. MUST be called with _state_lock held."""
         try:
             if self._process_executor:
-                self._process_executor.shutdown(wait=False, cancel_futures=True)
+                # Use wait=True during teardown to ensure worker processes are reaped
+                # and don't become orphans.
+                self._process_executor.shutdown(wait=True, cancel_futures=True)
         except (RuntimeError, OSError) as e:
             logger.debug(f"AtomicTaskManager: Executor shutdown omitted or failed: {e}")
         try:
@@ -247,10 +249,7 @@ class AtomicTaskManager:
                     return
 
                 # Execute the actual work
-                if pass_task_id:
-                    result_data = command(*args, task_id=new_task_id)
-                else:
-                    result_data = command(*args)
+                result_data = command(*args, task_id=new_task_id) if pass_task_id else command(*args)
 
                 # Post-execution check for cancellation
                 if current_cancellable.is_cancelled():
@@ -332,7 +331,8 @@ class AtomicTaskManager:
 
     def shutdown(self) -> None:
         """Shut down the executors."""
-        self._executor.shutdown(wait=False)
+        # Use wait=True for clean cleanup during application shutdown
+        self._executor.shutdown(wait=True)
         with self._state_lock:
             self._teardown_process_executor_locked()
 

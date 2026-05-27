@@ -229,7 +229,7 @@ def show_shortcuts_overlay(parent_window: Gtk.Window) -> None:
     try:
         overlay = ShortcutsOverlay(transient_for=parent_window)
         overlay.present()
-    except Exception as e:
+    except (AttributeError, RuntimeError, TypeError, GLib.Error) as e:
         from loguru import logger
 
         logger.error(f"Failed to show shortcuts overlay: {e}")

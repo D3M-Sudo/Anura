@@ -5,6 +5,7 @@
 
 from collections.abc import Callable
 import os
+from pathlib import Path
 import shutil
 import threading
 import time
@@ -34,7 +35,8 @@ def _resolve_scrot_binary() -> str | None:
        because it is the version pinned in the manifest and guaranteed to be there.
     2. System PATH — for host/development installs where scrot is installed globally.
     """
-    if os.path.isfile(_FLATPAK_SCROT_BIN) and os.access(_FLATPAK_SCROT_BIN, os.X_OK):
+    path = Path(_FLATPAK_SCROT_BIN)
+    if path.is_file() and os.access(path, os.X_OK):
         return _FLATPAK_SCROT_BIN
     return shutil.which("scrot")
 
@@ -98,7 +100,7 @@ class LegacyX11Provider(ScreenshotProvider):
                 self._cancellable = None
             callback(False, None, e.message)
             return
-        except Exception as e:
+        except (AttributeError, RuntimeError, TypeError) as e:
             logger.error(f"LegacyX11Provider: Failed to spawn scrot: {e}")
             with self._lock:
                 self._cancellable = None
@@ -132,7 +134,7 @@ class LegacyX11Provider(ScreenshotProvider):
             self._cleanup_file(output_path)
             callback(False, None, e.message)
             return
-        except Exception as e:
+        except (AttributeError, RuntimeError, TypeError) as e:
             logger.error(f"LegacyX11Provider: Error waiting for scrot process: {e}")
             self._cleanup_file(output_path)
             callback(False, None, str(e))
@@ -153,8 +155,9 @@ class LegacyX11Provider(ScreenshotProvider):
         # --- 3. Retry loop: wait for filesystem to flush the PNG ---
         # scrot may exit before the OS has written all bytes to disk.
         file_ready = False
+        path = Path(output_path)
         for attempt in range(_FILE_READY_RETRIES):
-            if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
+            if path.exists() and path.stat().st_size > 0:
                 file_ready = True
                 break
             if attempt < _FILE_READY_RETRIES - 1:
@@ -184,9 +187,11 @@ class LegacyX11Provider(ScreenshotProvider):
     @staticmethod
     def _cleanup_file(path: str) -> None:
         """Best-effort removal of a temporary screenshot file."""
-        if path and os.path.exists(path):
-            try:
-                os.unlink(path)
-                logger.debug(f"LegacyX11Provider: Cleaned up temp file: {path}")
-            except OSError as e:
-                logger.debug(f"LegacyX11Provider: Cleanup failed for '{path}': {e}")
+        if path:
+            p = Path(path)
+            if p.exists():
+                try:
+                    p.unlink()
+                    logger.debug(f"LegacyX11Provider: Cleaned up temp file: {path}")
+                except OSError as e:
+                    logger.debug(f"LegacyX11Provider: Cleanup failed for '{path}': {e}")

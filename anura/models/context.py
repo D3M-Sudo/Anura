@@ -6,6 +6,7 @@
 from dataclasses import dataclass
 import importlib
 import os
+from pathlib import Path
 import shutil
 import threading
 
@@ -29,7 +30,7 @@ class ApplicationContext:
         logger.info("Anura: Performing boot-time capability audit...")
 
         # 1. Environment Check
-        is_flatpak = os.path.exists("/.flatpak-info") or "FLATPAK_ID" in os.environ
+        is_flatpak = Path("/.flatpak-info").exists() or "FLATPAK_ID" in os.environ
 
         # 2. OCR Audit (Tesseract binary + wrapper)
         has_pytesseract = importlib.util.find_spec("pytesseract") is not None

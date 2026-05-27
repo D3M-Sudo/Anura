@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: MIT
 
 import os
+from pathlib import Path
 import re
 
 from loguru import logger
@@ -24,14 +25,14 @@ RESOURCE_PREFIX = "/io/github/d3msudo/anura"
 LANG_CODE_PATTERN = r"^[a-zA-Z0-9+_]{2,18}$"
 
 # XDG Base Directory specification compliance
-XDG_DATA_HOME = os.getenv("XDG_DATA_HOME", os.path.expanduser("~/.local/share"))
-XDG_CACHE_HOME = os.getenv("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
+XDG_DATA_HOME = os.getenv("XDG_DATA_HOME", str(Path.home() / ".local/share"))
+XDG_CACHE_HOME = os.getenv("XDG_CACHE_HOME", str(Path.home() / ".cache"))
 
 # Anura specific data directory for OCR models (user-downloaded)
-TESSDATA_DIR = os.path.join(XDG_DATA_HOME, "anura", "tessdata")
+TESSDATA_DIR = str(Path(XDG_DATA_HOME) / "anura" / "tessdata")
 
 # Cache directory for multi-language model pooling (Flatpak optimization)
-TESSDATA_POOL_DIR = os.path.join(XDG_CACHE_HOME, "anura", "tessdata_pool")
+TESSDATA_POOL_DIR = str(Path(XDG_CACHE_HOME) / "anura" / "tessdata_pool")
 
 # Maximum image file size (50MB) to prevent memory exhaustion (DoS)
 # Used for input validation across services and UI.
@@ -53,7 +54,7 @@ def _get_tessdata_system_dir() -> str:
     """
     # Priority 1: Environment variable override
     env_path = os.getenv("TESSDATA_PREFIX_SYSTEM")
-    if env_path and os.path.isdir(env_path):
+    if env_path and Path(env_path).is_dir():
         return env_path
 
     # Priority 2: Dynamic scan of candidate directories
@@ -66,7 +67,7 @@ def _get_tessdata_system_dir() -> str:
     ]
 
     for path in candidate_dirs:
-        if os.path.isdir(path):
+        if Path(path).is_dir():
             return path
 
     # Fallback to Flatpak default even if not present (for Flatpak builds)
@@ -120,37 +121,37 @@ def get_tesseract_config(lang_code: str) -> str:
 
     # If it's a single language, use standard priority logic without pooling
     if "+" not in lang_code:
-        user_model = os.path.join(TESSDATA_DIR, f"{lang_code}.traineddata")
-        if os.path.exists(user_model):
+        user_model = Path(TESSDATA_DIR) / f"{lang_code}.traineddata"
+        if user_model.exists():
             return f'--tessdata-dir "{TESSDATA_DIR}" --psm 3 --oem 1'
 
-        system_model = os.path.join(TESSDATA_SYSTEM_DIR, f"{lang_code}.traineddata")
-        if os.path.exists(system_model):
+        system_model = Path(TESSDATA_SYSTEM_DIR) / f"{lang_code}.traineddata"
+        if system_model.exists():
             return f'--tessdata-dir "{TESSDATA_SYSTEM_DIR}" --psm 3 --oem 1'
 
         return f'--tessdata-dir "{TESSDATA_DIR}" --psm 3 --oem 1'
 
     # Multi-language: Dynamic Pooling Approach
     codes = lang_code.split("+")
-    os.makedirs(TESSDATA_POOL_DIR, exist_ok=True)
+    Path(TESSDATA_POOL_DIR).mkdir(parents=True, exist_ok=True)
 
     for code in codes:
         # Resolve source
         source_path = None
-        user_path = os.path.join(TESSDATA_DIR, f"{code}.traineddata")
-        system_path = os.path.join(TESSDATA_SYSTEM_DIR, f"{code}.traineddata")
+        user_path = Path(TESSDATA_DIR) / f"{code}.traineddata"
+        system_path = Path(TESSDATA_SYSTEM_DIR) / f"{code}.traineddata"
 
-        if os.path.exists(user_path):
+        if user_path.exists():
             source_path = user_path
-        elif os.path.exists(system_path):
+        elif system_path.exists():
             source_path = system_path
 
         if source_path:
-            dest_path = os.path.join(TESSDATA_POOL_DIR, f"{code}.traineddata")
+            dest_path = Path(TESSDATA_POOL_DIR) / f"{code}.traineddata"
             # Create hard link with fallback to copy (for cross-filesystem)
             try:
-                if os.path.exists(dest_path):
-                    os.unlink(dest_path)
+                if dest_path.exists():
+                    dest_path.unlink()
                 os.link(source_path, dest_path)
             except (OSError, AttributeError):
                 try:

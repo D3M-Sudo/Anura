@@ -79,7 +79,7 @@ class TextPreprocessor:
             return get_default_filter_chain().apply(image, task_id=task_id)
         except InterruptedError:
             raise
-        except Exception as e:
+        except (AttributeError, RuntimeError, TypeError, ValueError, OSError) as e:
             logger.warning(f"Image enhancement failed: {e}")
             return image
 

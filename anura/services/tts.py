@@ -7,6 +7,7 @@
 import contextlib
 from gettext import gettext as _
 import os
+from pathlib import Path
 import threading
 import time
 from typing import ClassVar
@@ -212,8 +213,8 @@ class TTSService(GObject.GObject):
     # Use XDG_CACHE_HOME for temporary files (not XDG_DATA_HOME).
     # Cache dir is the correct location for ephemeral data; data dir is for
     # persistent user data like tessdata models.
-    _cache_home = os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
-    _speech_dir: str = os.path.join(_cache_home, "anura")
+    _cache_home = os.environ.get("XDG_CACHE_HOME", str(Path.home() / ".cache"))
+    _speech_dir: Path = Path(_cache_home) / "anura"
 
     def __init__(self) -> None:
         super().__init__()
@@ -221,7 +222,7 @@ class TTSService(GObject.GObject):
 
         # Pre-cache supported languages in background to avoid UI hang during first use
         threading.Thread(target=self.get_supported_gtts_languages, daemon=True).start()
-        os.makedirs(self._speech_dir, exist_ok=True)
+        self._speech_dir.mkdir(parents=True, exist_ok=True)
 
         # Initialize all instance attributes (fixes class-level state
         # leaking between instances)
@@ -258,11 +259,11 @@ class TTSService(GObject.GObject):
         """Thread-safe MP3 generation with proper state management."""
         # Clean up any previously orphaned file from this instance before starting new generation
         with self._state_lock:
-            if self._current_speech_file and os.path.exists(self._current_speech_file):
-                try:
-                    os.unlink(self._current_speech_file)
-                except OSError:
-                    pass
+            if self._current_speech_file:
+                path = Path(self._current_speech_file)
+                if path.exists():
+                    with contextlib.suppress(OSError):
+                        path.unlink()
             self._current_speech_file = None
 
         # Input validation: avoid unnecessary gTTS calls for empty/whitespace text
@@ -271,7 +272,7 @@ class TTSService(GObject.GObject):
             return ""
 
         timestamp = int(time.monotonic() * 1000)
-        filepath = os.path.join(self._speech_dir, f"speech_{timestamp}.mp3")
+        filepath = str(self._speech_dir / f"speech_{timestamp}.mp3")
 
         tts = gtts.gTTS(text, lang=lang, tld=self._tld)
         logger.info(f"Anura TTS: Generating speech for language: {lang}")
@@ -283,11 +284,10 @@ class TTSService(GObject.GObject):
             raise
         except (requests.RequestException, OSError) as e:
             logger.error(f"Anura TTS: Failed to save speech file: {e}")
-            if os.path.exists(filepath):
-                try:
-                    os.remove(filepath)
-                except OSError:
-                    logger.debug("Anura TTS: Failed to remove temporary speech file during cleanup")
+            path = Path(filepath)
+            if path.exists():
+                with contextlib.suppress(OSError):
+                    path.unlink()
             # Don't re-raise: AtomicTaskManager errorback handles exceptions from
             # the worker thread.  Let it catch the return value "" instead.
             return ""
@@ -311,7 +311,7 @@ class TTSService(GObject.GObject):
 
     def play(self, speech_file: str) -> None:
         """Plays the generated speech file using GStreamer's playbin."""
-        filepath = os.path.abspath(speech_file)
+        filepath = str(Path(speech_file).resolve())
 
         # If a player already exists (PLAYING or PAUSED), tear it down cleanly
         # before creating a new one for the new file.
@@ -405,12 +405,14 @@ class TTSService(GObject.GObject):
                     self._current_speech_file = None
 
                 # Atomic file cleanup: check existence and remove inside lock
-                if filepath and os.path.exists(filepath):
-                    try:
-                        os.unlink(filepath)
-                        logger.debug("Anura TTS: Cleaned up temporary speech file")
-                    except (OSError, GLib.Error):
-                        logger.warning("Anura TTS: Failed to cleanup temporary speech file")
+                if filepath:
+                    path = Path(filepath)
+                    if path.exists():
+                        try:
+                            path.unlink()
+                            logger.debug("Anura TTS: Cleaned up temporary speech file")
+                        except (OSError, GLib.Error):
+                            logger.warning("Anura TTS: Failed to cleanup temporary speech file")
                 elif filepath:
                     logger.debug("Anura TTS: Cleanup skipped, file already removed")
 
@@ -494,12 +496,14 @@ class TTSService(GObject.GObject):
                 self._current_speech_file = None
 
             # Atomic file cleanup: check existence and remove inside lock
-            if filepath and os.path.exists(filepath):
-                try:
-                    os.unlink(filepath)
-                    logger.debug("Anura TTS: Cleaned up temporary speech file on stop")
-                except OSError:
-                    logger.warning("Anura TTS: Failed to cleanup temporary speech file on stop")
+            if filepath:
+                path = Path(filepath)
+                if path.exists():
+                    try:
+                        path.unlink()
+                        logger.debug("Anura TTS: Cleaned up temporary speech file on stop")
+                    except OSError:
+                        logger.warning("Anura TTS: Failed to cleanup temporary speech file on stop")
             elif filepath:
                 logger.debug("Anura TTS: Cleanup skipped on stop, file already removed")
 
@@ -576,23 +580,27 @@ class TTSService(GObject.GObject):
                 filepath = self._current_speech_file
                 self._current_speech_file = None
 
-            if filepath and os.path.exists(filepath):
-                try:
-                    os.unlink(filepath)
-                    logger.debug("Anura TTS: Cleaned up temporary speech file on shutdown")
-                except OSError:
-                    logger.debug("Anura TTS: Failed to cleanup temporary speech file on shutdown")
+            if filepath:
+                path = Path(filepath)
+                if path.exists():
+                    try:
+                        path.unlink()
+                        logger.debug("Anura TTS: Cleaned up temporary speech file on shutdown")
+                    except OSError:
+                        logger.debug("Anura TTS: Failed to cleanup temporary speech file on shutdown")
 
         # Also cleanup the speech directory from old files (best effort)
         try:
-            if os.path.exists(self._speech_dir):
-                for f in os.listdir(self._speech_dir):
-                    if f.startswith("speech_") and f.endswith(".mp3"):
-                        file_path = os.path.join(self._speech_dir, f)
+            if self._speech_dir.exists():
+                for file_path in self._speech_dir.iterdir():
+                    if (
+                        file_path.name.startswith("speech_")
+                        and file_path.name.endswith(".mp3")
+                        and time.time() - file_path.stat().st_mtime > 3600
+                    ):
                         # Only delete files older than 1 hour to avoid deleting active files from other instances
-                        if time.time() - os.path.getmtime(file_path) > 3600:
-                            with contextlib.suppress(OSError):
-                                os.unlink(file_path)
+                        with contextlib.suppress(OSError):
+                            file_path.unlink()
         except (OSError, RuntimeError) as e:
             logger.debug(f"Anura TTS: Error during directory cleanup: {e}")
 

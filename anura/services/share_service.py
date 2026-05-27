@@ -266,7 +266,7 @@ class ShareService(GObject.GObject):
                 def _on_share_idle(res):
                     try:
                         self.emit("share", res)
-                    except Exception as e:
+                    except (AttributeError, RuntimeError, TypeError) as e:
                         logger.exception(f"Anura: Failed to emit share status: {e}")
                     return GLib.SOURCE_REMOVE
 

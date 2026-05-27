@@ -7,6 +7,7 @@
 import contextlib
 import html
 import os
+from pathlib import Path
 import sys
 
 # Bootstrap hardware and logging as early as possible
@@ -123,7 +124,7 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         self.teardown_all()
         try:
             get_language_manager().shutdown()
-        except Exception as e:
+        except (AttributeError, RuntimeError) as e:
             logger.debug(f"Failed to shutdown LanguageManager: {e}")
 
         from anura.core.atomic_task_manager import get_atomic_manager
@@ -141,7 +142,7 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
 
                     if Notify.is_initted():
                         Notify.uninit()
-            except Exception as e:
+            except (AttributeError, RuntimeError) as e:
                 logger.error(f"Failed to uninitialize Notify service: {e}")
 
         with contextlib.suppress(Exception):
@@ -243,7 +244,7 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         return 1
 
     def _handle_file_option(self, file_path: str, is_silent: bool) -> int:
-        if os.path.exists(file_path) and os.access(file_path, os.R_OK):
+        if Path(file_path).exists() and os.access(file_path, os.R_OK):
             if is_silent:
                 return SilentRunner(self, file_path).run()
             self.activate()
@@ -276,7 +277,7 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
             from anura._release_notes import get_release_notes
 
             notes = get_release_notes()
-        except Exception as e:
+        except (ImportError, AttributeError, RuntimeError) as e:
             logger.debug(f"Could not load release notes: {e}")
 
         if not notes or not notes.strip():

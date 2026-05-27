@@ -7,6 +7,7 @@
 from collections.abc import Callable
 from gettext import gettext as _
 import os
+from pathlib import Path
 import re
 import shutil
 import threading
@@ -42,7 +43,7 @@ from anura.utils.validators import sanitize_text  # noqa: E402
 
 def _is_flatpak_environment() -> bool:
     """Detect if running in Flatpak sandbox."""
-    return os.path.exists("/.flatpak-info") or "FLATPAK_ID" in os.environ
+    return Path("/.flatpak-info") or "FLATPAK_ID" in os.environ
 
 
 def run_ocr_pipeline(
@@ -70,7 +71,7 @@ def run_ocr_pipeline(
         from anura.utils.structural_reconstructor import get_structural_reconstructor
         from anura.utils.text_preprocessor import get_text_preprocessor
 
-        if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
+        if not Path(file_path) or Path(file_path).stat().st_size == 0:
             return False, "", _("The selected image file is empty."), None
 
         start_time = time.time()
@@ -186,7 +187,7 @@ def _configure_tesseract_path() -> None:
     is_flatpak = _is_flatpak_environment()
     flatpak_tess_bin = "/app/bin/tesseract"
 
-    if is_flatpak and os.path.exists(flatpak_tess_bin):
+    if is_flatpak and Path(flatpak_tess_bin):
         # Force Tesseract to use Flatpak path
         os.environ["TESSERACT_CMD"] = flatpak_tess_bin
         pytesseract.pytesseract.tesseract_cmd = flatpak_tess_bin
@@ -299,7 +300,7 @@ class ScreenshotService(GObject.GObject):
             return False
 
         # Validate the extracted filename before processing (on background thread)
-        if not filename or not os.path.exists(filename):
+        if not filename or not Path(filename).exists():
             logger.error(f"Anura Screenshot: Invalid or non-existent file path: {filename}")
             self._emit_decode_error(_("Can't take a screenshot."))
             return False
@@ -417,7 +418,7 @@ class ScreenshotService(GObject.GObject):
 
     def _determine_file_type(self, file: str | Image.Image | object, _remove_source: bool) -> bool:
         """Determine if file is a physical file."""
-        return isinstance(file, str) and os.path.exists(file)
+        return isinstance(file, str) and Path(file)
 
     def _process_image_decode(
         self,
@@ -431,7 +432,7 @@ class ScreenshotService(GObject.GObject):
         error_message = None
         ocr_result = None
 
-        if isinstance(file, str) and os.path.exists(file) and os.path.getsize(file) == 0:
+        if isinstance(file, str) and Path(file) and Path(file).stat().st_size == 0:
             logger.error(f"Anura OCR: Attempted to process 0-byte image file: {file}")
             return None, _("The selected image file is empty."), None
 
@@ -556,7 +557,7 @@ class ScreenshotService(GObject.GObject):
         """Clean up temporary files if requested."""
         if remove_source and is_physical_file:
             try:
-                os.unlink(file)  # type: ignore[arg-type]
+                Path(file).unlink()  # type: ignore[arg-type]
                 logger.debug(f"Anura OCR: Cleaned up temporary file: {file}")
             except (OSError, PermissionError) as e:
                 logger.warning(f"Anura OCR: Could not delete {file}: {e}")
@@ -602,7 +603,7 @@ class ScreenshotService(GObject.GObject):
             return False
 
         # If it's a physical file, we can use process isolation to bypass the GIL
-        if isinstance(file, str) and os.path.exists(file):
+        if isinstance(file, str) and Path(file):
             mode = settings.get_string("ocr-preprocessing")
 
             # Initial status feedback
@@ -646,7 +647,7 @@ class ScreenshotService(GObject.GObject):
                     GLib.idle_add(_on_silent_idle)
 
                 if remove_source:
-                    get_atomic_manager().execute(os.unlink, (file,))
+                    get_atomic_manager().execute(Path(file).unlink, ())
 
             def _on_isolated_error(error, traceback_str):
                 logger.error(f"Anura OCR (Isolated): Process error: {error}")

@@ -7,7 +7,7 @@
 from collections.abc import Callable
 from gettext import gettext as _
 from io import BytesIO
-import os
+from pathlib import Path
 import threading
 from typing import ClassVar
 
@@ -198,7 +198,7 @@ class ClipboardService(GObject.GObject):
 
             GLib.idle_add(process_result)
 
-        except Exception as e:
+        except (AttributeError, RuntimeError, TypeError) as e:
             # Handle unexpected errors in the callback setup itself
             logger.error(f"Anura Clipboard: Unexpected error in callback setup: {e}")
 
@@ -273,14 +273,14 @@ class ClipboardService(GObject.GObject):
         """Return MIME types currently advertised by the clipboard (best effort)."""
         try:
             formats = self.clipboard.get_formats()
-        except Exception as e:
+        except (AttributeError, RuntimeError, TypeError, GLib.Error) as e:
             logger.debug(f"Anura Clipboard: get_formats() failed: {e}")
             return []
         if formats is None:
             return []
         try:
             return list(formats.get_mime_types() or [])
-        except Exception as e:
+        except (AttributeError, RuntimeError, TypeError, GLib.Error) as e:
             logger.debug(f"Anura Clipboard: get_mime_types() failed: {e}")
             return []
 
@@ -457,7 +457,7 @@ class ClipboardService(GObject.GObject):
             GLib.idle_add(_on_error_idle)
             return
 
-        if not path or not os.path.exists(path):
+        if not path or not Path(path).exists():
             logger.warning(f"Anura Clipboard: file does not exist or inaccessible: {path!r}")
             self._emit_clipboard_error(_("No image in clipboard"))
             return
