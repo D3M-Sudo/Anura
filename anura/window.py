@@ -269,27 +269,6 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         """Show the preferences dialog for application settings."""
         self.set_focus(None)
         dialog: PreferencesDialog = PreferencesDialog()
-        language_manager_instance = get_language_manager()
-        signal_handlers: list[int] = []
-
-        def on_dialog_close(*args: object) -> None:
-            # Manually disconnect signals on dialog closure to prevent leaks
-            # on the LanguageManager singleton.
-            for handler_id in signal_handlers:
-                try:
-                    language_manager_instance.disconnect(handler_id)
-                except (TypeError, RuntimeError):
-                    pass
-
-        def _on_downloaded_idle(_mgr: "LanguageManager", code: str) -> None:
-            GLib.idle_add(dialog.on_language_downloaded, code)
-
-        def _on_failed_idle(_mgr: "LanguageManager", code: str) -> None:
-            GLib.idle_add(dialog.on_language_download_failed, code)
-
-        signal_handlers.append(language_manager_instance.connect("downloaded", _on_downloaded_idle))
-        signal_handlers.append(language_manager_instance.connect("download-failed", _on_failed_idle))
-        dialog.connect("closed", on_dialog_close)
         dialog.present(self)
 
     def show_shortcuts(self) -> None:

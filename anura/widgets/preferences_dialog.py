@@ -4,15 +4,17 @@
 #
 # SPDX-License-Identifier: MIT
 
-from gi.repository import Adw, Gtk
+from gi.repository import Adw, GLib, Gtk
 
 from anura.config import RESOURCE_PREFIX
+from anura.services.language_manager import get_language_manager
+from anura.utils.signal_manager import SignalManagerMixin
 from anura.widgets.preferences_general_page import PreferencesGeneralPage
 from anura.widgets.preferences_languages_page import PreferencesLanguagesPage
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/preferences_dialog.ui")
-class PreferencesDialog(Adw.PreferencesDialog):
+class PreferencesDialog(Adw.PreferencesDialog, SignalManagerMixin):
     __gtype_name__ = "PreferencesDialog"
 
     general_page: PreferencesGeneralPage = Gtk.Template.Child()
@@ -20,6 +22,11 @@ class PreferencesDialog(Adw.PreferencesDialog):
 
     def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
+        SignalManagerMixin.__init__(self)
+
+        mgr = get_language_manager()
+        self.connect_tracked(mgr, "downloaded", lambda _, code: GLib.idle_add(self.on_language_downloaded, code))
+        self.connect_tracked(mgr, "download-failed", lambda _, code: GLib.idle_add(self.on_language_download_failed, code))
 
     def on_language_downloaded(self, code: str) -> None:
         """Handle language download completion - refresh UI state."""
@@ -43,4 +50,5 @@ class PreferencesDialog(Adw.PreferencesDialog):
         if hasattr(self.languages_page, "disconnect_all_signals"):
             self.languages_page.disconnect_all_signals()
 
+        self.teardown_all()
         super().do_destroy()

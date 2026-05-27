@@ -1,13 +1,18 @@
 {
   "session_metadata": {
     "repository_path": ".",
-    "languages_detected": ["Python", "Blueprint", "C", "Meson", "Shell"],
-    "total_files": 306,
-    "total_lines": 14523,
+    "languages_detected": [
+      "JSON",
+      "Shell",
+      "Python",
+      "Blueprint"
+    ],
+    "total_files": 166,
+    "total_lines": 58217,
     "analyzed_files": 15,
-    "analyzed_lines": 3000,
+    "analyzed_lines": 5000,
     "start_timestamp": "2025-05-22T12:00:00Z",
-    "last_checkpoint": "2025-05-22T15:00:00Z",
+    "last_checkpoint": "2026-05-27T03:14:19.850925",
     "personalities_activated": [
       "Senior Mathematician",
       "Security Paranoid",
@@ -42,7 +47,12 @@
       "Logic Validator": 1.4,
       "Parameter Inspector": 1.2
     },
-    "phase_gates_completed": ["gate_0_setup", "gate_1_initial_scan", "gate_2_deep_dive", "gate_3_completion"]
+    "phase_gates_completed": [
+      "gate_0_setup",
+      "gate_1_initial_scan",
+      "gate_2_deep_dive",
+      "gate_3_completion"
+    ]
   },
   "progress_tracking": {
     "current_file": "COMPLETED",
@@ -59,20 +69,177 @@
       "anura/services/tts.py",
       "anura/widgets/welcome_page.py",
       "anura/widgets/extracted_page.py",
-      "anura/config.py"
+      "anura/config.py",
+      "anura/core/boot.py",
+      "anura/core/atomic_task_manager.py",
+      "anura/controllers/ocr_controller.py",
+      "anura/widgets/preferences_dialog.py",
+      "anura/window.py"
     ],
-    "pending_files": [],
+    "pending_files": [
+      "release.sh",
+      "CHANGELOG.md",
+      "CONTRIBUTING.md",
+      "CLAUDE.md",
+      "AGENTS.md",
+      "SECURITY.md",
+      "README.md",
+      "setup-gschema.sh",
+      "build-aux/generate_release_notes.py",
+      "build-aux/meson/postinstall.py",
+      "flatpak/io.github.d3msudo.anura.local.json",
+      "flatpak/io.github.d3msudo.anura.json",
+      "po/be_Latn.po",
+      "po/es.po",
+      "po/cs.po",
+      "po/ja.po",
+      "po/oc.po",
+      "po/sv.po",
+      "po/zh_Hans.po",
+      "po/ko_KR.po",
+      "po/it.po",
+      "po/uk.po",
+      "po/de.po",
+      "po/io.github.d3msudo.anura.pot",
+      "po/nb_NO.po",
+      "po/ar.po",
+      "po/ca.po",
+      "po/bn.po",
+      "po/ie.po",
+      "po/tr.po",
+      "po/ta.po",
+      "po/fr.po",
+      "po/pt.po",
+      "po/nl.po",
+      "po/pt_BR.po",
+      "po/update_potfiles.sh",
+      "po/eu.po",
+      "po/fi.po",
+      "po/hi.po",
+      "po/ru.po",
+      "docs/audit/bugs-observed.json",
+      "docs/audit/bugs-summary.md",
+      "data/io.github.d3msudo.anura.metainfo.xml.in",
+      "data/io.github.d3msudo.anura.gschema.xml",
+      "data/io.github.d3msudo.anura.gresource.xml",
+      "data/style.css",
+      "data/io.github.d3msudo.anura.desktop.in",
+      "data/ui/preferences_languages.blp",
+      "data/ui/language_row.blp",
+      "data/ui/preferences_general.blp",
+      "data/ui/language_popover.blp",
+      "data/ui/share_row.blp",
+      "data/ui/preferences_dialog.blp",
+      "data/ui/language_popover_row.blp",
+      "data/ui/shortcuts_overlay.blp",
+      "data/ui/extracted_page.blp",
+      "data/ui/window.blp",
+      "data/ui/welcome_page.blp",
+      "anura/__init__.py",
+      "anura/services/clipboard_service.py",
+      "anura/services/__init__.py",
+      "anura/services/settings.py",
+      "anura/services/result_dispatcher.py",
+      "anura/services/language_manager.py",
+      "anura/services/notification_service.py",
+      "anura/services/screenshot/portal_provider.py",
+      "anura/services/screenshot/factory.py",
+      "anura/services/screenshot/legacy_provider.py",
+      "anura/services/screenshot/base.py",
+      "anura/utils/structural_reconstructor.py",
+      "anura/utils/text_preprocessor.py",
+      "anura/utils/__init__.py",
+      "anura/utils/portal_advice.py",
+      "anura/utils/barcode_detector.py",
+      "anura/utils/singleton.py",
+      "anura/utils/signal_manager.py",
+      "anura/utils/cleanup.py",
+      "anura/core/logger.py",
+      "anura/core/action_registry.py",
+      "anura/core/dialogs.py",
+      "anura/core/resources.py",
+      "anura/core/i18n.py",
+      "anura/core/silent_runner.py",
+      "anura/widgets/preferences_general_page.py",
+      "anura/widgets/language_row.py",
+      "anura/widgets/preferences_languages_page.py",
+      "anura/widgets/__init__.py",
+      "anura/widgets/language_popover_row.py",
+      "anura/widgets/language_popover.py",
+      "anura/widgets/share_row.py",
+      "anura/widgets/shortcuts_overlay.py",
+      "anura/models/language_item.py",
+      "anura/models/__init__.py",
+      "anura/models/download_state.py",
+      "anura/models/ocr.py",
+      "anura/models/context.py",
+      "anura/transformers/email_transformer.py",
+      "anura/transformers/url_transformer.py",
+      "anura/transformers/base_transformers.py",
+      "anura/transformers/models.py",
+      "anura/transformers/magic_processor.py",
+      "tests/test_performance_enterprise.py",
+      "tests/test_share_service.py",
+      "tests/test_audit_performance_benchmarks.py",
+      "tests/test_host_screenshot_fallback.py",
+      "tests/test_stability.py",
+      "tests/test_capability_audit.py",
+      "tests/setup_resources.sh",
+      "tests/test_portal_advice.py",
+      "tests/test_audit_ui_widgets.py",
+      "tests/test_audit_ocr_preprocessing.py",
+      "tests/test_text_preprocessor.py",
+      "tests/test_gi_bugs_audit_v2.py",
+      "tests/test_sentinel_uri_security.py",
+      "tests/test_result_dispatcher.py",
+      "tests/conftest.py",
+      "tests/test_tts_initialization.py",
+      "tests/test_gi_atomic_task_manager_unit.py",
+      "tests/test_widgets.py",
+      "tests/test_tts_service.py",
+      "tests/test_audit_security_injection.py",
+      "tests/test_audit_config_types.py",
+      "tests/test_ocr_result.py",
+      "tests/test_audit_core_services.py",
+      "tests/test_integration_cli_enterprise.py",
+      "tests/test_reliability_enterprise.py",
+      "tests/test_extracted_page_reflow.py",
+      "tests/test_security_hardening.py",
+      "tests/test_audit_foundational_utils.py",
+      "tests/test_magic_processor.py",
+      "tests/test_audit_app_logic.py",
+      "tests/test_cleanup.py",
+      "tests/test_audit_reliability_chaos.py",
+      "tests/test_security_validators_sentinel.py",
+      "tests/test_validators.py",
+      "tests/test_screenshot_service.py",
+      "tests/test_language_manager.py",
+      "tests/test_audit_integration_flows.py",
+      "tests/test_sentinel_uri_hardening.py",
+      "tests/test_file_dialog_regressions.py",
+      "tests/test_structural_reconstructor.py",
+      "tests/test_release_notes_generation.py",
+      "tests/test_clipboard_service.py",
+      "tests/test_notification_service.py",
+      "tests/test_config.py",
+      "tests/test_keyboard_shortcuts.py",
+      "tests/test_bug_fixes_static.py",
+      "tests/test_app_lifecycle.py",
+      "bin/run_gtk_tests.sh",
+      "bin/anura.in"
+    ],
     "untested_paths": [],
-    "coverage_percentage": 100,
+    "coverage_percentage": 9,
     "micro_checkpoints": [],
     "progress_visual": {
       "ascii_bar": "[####################] 306/306 files",
-      "current_focus": "Total Victory",
+      "current_focus": "Systematic Investigation",
       "bugs_last_hour": 0,
       "estimated_completion": "0 minutes",
       "velocity_trend": "->",
       "lines_per_minute": 0
-    }
+    },
+    "current_focus": "anura/main.py"
   },
   "bugs_database": [
     {
@@ -80,8 +247,14 @@
       "severity": "MEDIUM",
       "confidence_score": 1.0,
       "personality_detecting": "Systems Architect",
-      "personality_agreement": ["Memory Surgeon"],
-      "location": {"file": "anura/main.py", "line": 105, "function": "do_shutdown"},
+      "personality_agreement": [
+        "Memory Surgeon"
+      ],
+      "location": {
+        "file": "anura/main.py",
+        "line": 105,
+        "function": "do_shutdown"
+      },
       "chain_of_thought": "AtomicTaskManager is not shut down in do_shutdown, potentially leaking processes and resources.",
       "status": "FIXED",
       "pattern_matched": "Missing teardown"
@@ -91,8 +264,14 @@
       "severity": "MEDIUM",
       "confidence_score": 1.0,
       "personality_detecting": "Systems Architect",
-      "personality_agreement": ["Naming Police"],
-      "location": {"file": "anura/controllers/tts_controller.py", "line": 10, "function": "TtsController"},
+      "personality_agreement": [
+        "Naming Police"
+      ],
+      "location": {
+        "file": "anura/controllers/tts_controller.py",
+        "line": 10,
+        "function": "TtsController"
+      },
       "chain_of_thought": "TtsController does not inherit from SignalManagerMixin, leading to architectural inconsistency and manual signal management.",
       "status": "FIXED",
       "pattern_matched": "Inconsistent implementation"
@@ -102,8 +281,14 @@
       "severity": "MEDIUM",
       "confidence_score": 1.0,
       "personality_detecting": "Systems Architect",
-      "personality_agreement": ["Naming Police"],
-      "location": {"file": "anura/controllers/dnd_controller.py", "line": 10, "function": "DndController"},
+      "personality_agreement": [
+        "Naming Police"
+      ],
+      "location": {
+        "file": "anura/controllers/dnd_controller.py",
+        "line": 10,
+        "function": "DndController"
+      },
       "chain_of_thought": "DndController is a plain Python class lacking GObject inheritance and SignalManagerMixin, making lifecycle management fragile.",
       "status": "FIXED",
       "pattern_matched": "Inconsistent implementation"
@@ -113,8 +298,14 @@
       "severity": "HIGH",
       "confidence_score": 1.0,
       "personality_detecting": "Security Paranoid",
-      "personality_agreement": ["Logic Validator"],
-      "location": {"file": "anura/config.py", "line": 84, "function": "GLOBAL"},
+      "personality_agreement": [
+        "Logic Validator"
+      ],
+      "location": {
+        "file": "anura/config.py",
+        "line": 84,
+        "function": "GLOBAL"
+      },
       "chain_of_thought": "Tesseract models were downloaded via 'main' branch URLs, allowing for unexpected changes. Pinned to immutable commit hashes.",
       "status": "FIXED",
       "pattern_matched": "Insecure download"
@@ -124,8 +315,14 @@
       "severity": "MEDIUM",
       "confidence_score": 1.0,
       "personality_detecting": "Memory Surgeon",
-      "personality_agreement": ["Logic Validator"],
-      "location": {"file": "anura/utils/image_filters.py", "line": 170, "function": "FilterChain.apply"},
+      "personality_agreement": [
+        "Logic Validator"
+      ],
+      "location": {
+        "file": "anura/utils/image_filters.py",
+        "line": 170,
+        "function": "FilterChain.apply"
+      },
       "chain_of_thought": "Missing try...finally guards for closing intermediate PIL image buffers during pipeline failures.",
       "status": "FIXED",
       "pattern_matched": "Resource leak risk"
@@ -135,8 +332,14 @@
       "severity": "LOW",
       "confidence_score": 1.0,
       "personality_detecting": "Systems Architect",
-      "personality_agreement": ["Performance Optimizer"],
-      "location": {"file": "anura/main.py", "line": 90, "function": "do_startup"},
+      "personality_agreement": [
+        "Performance Optimizer"
+      ],
+      "location": {
+        "file": "anura/main.py",
+        "line": 90,
+        "function": "do_startup"
+      },
       "chain_of_thought": "Redundant signal listening on ScreenshotService 'decoded' signal between AnuraApplication and OcrController. Optimized by separating Headless vs GUI paths.",
       "status": "FIXED",
       "pattern_matched": "Redundancy"
@@ -146,8 +349,14 @@
       "severity": "HIGH",
       "confidence_score": 1.0,
       "personality_detecting": "Security Paranoid",
-      "personality_agreement": ["Logic Validator"],
-      "location": {"file": "anura/utils/validators.py", "line": 77, "function": "is_safe_url_string"},
+      "personality_agreement": [
+        "Logic Validator"
+      ],
+      "location": {
+        "file": "anura/utils/validators.py",
+        "line": 77,
+        "function": "is_safe_url_string"
+      },
       "chain_of_thought": "is_safe_url_string accepted mixed-script URLs that could be used for homograph attacks. Hardened to reject non-ASCII mixed with ASCII letters.",
       "status": "FIXED",
       "pattern_matched": "Security bypass"
@@ -157,8 +366,14 @@
       "severity": "HIGH",
       "confidence_score": 1.0,
       "personality_detecting": "Systems Architect",
-      "personality_agreement": ["Security Paranoid"],
-      "location": {"file": "flatpak/io.github.d3msudo.anura.json", "line": 137, "function": "MANIFEST"},
+      "personality_agreement": [
+        "Security Paranoid"
+      ],
+      "location": {
+        "file": "flatpak/io.github.d3msudo.anura.json",
+        "line": 137,
+        "function": "MANIFEST"
+      },
       "chain_of_thought": "Flatpak manifest was out of sync with uv.lock, including older versions and dead dependencies (six, dateutil). Hardened by synchronizing and purging.",
       "status": "FIXED",
       "pattern_matched": "Environment drift"
@@ -168,8 +383,14 @@
       "severity": "MEDIUM",
       "confidence_score": 1.0,
       "personality_detecting": "Code Path Detective",
-      "personality_agreement": ["Logic Validator"],
-      "location": {"file": "anura/services/share_service.py", "line": 133, "function": "_on_share_idle"},
+      "personality_agreement": [
+        "Logic Validator"
+      ],
+      "location": {
+        "file": "anura/services/share_service.py",
+        "line": 133,
+        "function": "_on_share_idle"
+      },
       "chain_of_thought": "Widespread use of blind exceptions (BLE001) hides operational failures. Remediated 28 critical sites in core services.",
       "status": "FIXED",
       "pattern_matched": "Silent exception"
@@ -179,8 +400,14 @@
       "severity": "MEDIUM",
       "confidence_score": 1.0,
       "personality_detecting": "Systems Architect",
-      "personality_agreement": ["Memory Surgeon"],
-      "location": {"file": "anura/window.py", "line": 270, "function": "show_preferences"},
+      "personality_agreement": [
+        "Memory Surgeon"
+      ],
+      "location": {
+        "file": "anura/window.py",
+        "line": 270,
+        "function": "show_preferences"
+      },
       "chain_of_thought": "Manual signal management for PreferencesDialog bypasses the standardized SignalManagerMixin, risking leaks on abnormal closure.",
       "status": "FIXED",
       "pattern_matched": "Inconsistent implementation"
@@ -190,18 +417,59 @@
       "severity": "MEDIUM",
       "confidence_score": 1.0,
       "personality_detecting": "Performance Optimizer",
-      "personality_agreement": ["Systems Architect"],
-      "location": {"file": "anura/core/logger.py", "line": 41, "function": "setup_logging"},
+      "personality_agreement": [
+        "Systems Architect"
+      ],
+      "location": {
+        "file": "anura/core/logger.py",
+        "line": 41,
+        "function": "setup_logging"
+      },
       "chain_of_thought": "Log rotation too shallow (3 files) and lacks compression, risking loss of Tesseract diagnostic data. Hardened to 5 files + gzip.",
       "status": "FIXED",
       "pattern_matched": "Inadequate diagnostic buffer"
+    },
+    {
+      "id": "BUG-012",
+      "severity": "MEDIUM",
+      "confidence_score": 1.0,
+      "personality_detecting": "Security Paranoid",
+      "personality_agreement": [
+        "Logic Validator"
+      ],
+      "location": {
+        "file": "anura/utils/validators.py",
+        "line": 84,
+        "function": "is_safe_url_string"
+      },
+      "chain_of_thought": "Mixed-script homograph check incorrectly includes the URL scheme, causing any non-ASCII URL (IDN) to be rejected as a potential attack, making the Punycode normalization unreachable.",
+      "status": "OPEN",
+      "pattern_matched": "Logic flaw"
+    },
+    {
+      "id": "BUG-013",
+      "severity": "MEDIUM",
+      "confidence_score": 1.0,
+      "personality_detecting": "Systems Architect",
+      "personality_agreement": [
+        "Memory Surgeon"
+      ],
+      "location": {
+        "file": "anura/window.py",
+        "line": 265,
+        "function": "show_preferences"
+      },
+      "chain_of_thought": "show_preferences uses manual signal tracking for LanguageManager signals instead of registering PreferencesDialog as a controller or using connect_tracked on the dialog itself. While it attempts manual disconnection on close, it's inconsistent with the rest of the architecture.",
+      "status": "OPEN",
+      "pattern_matched": "Inconsistent implementation"
     }
   ],
   "learned_patterns": {
     "patterns": {
       "missing_teardown": "Component initialization lacks corresponding explicit shutdown/cleanup call in application lifecycle.",
       "inconsistent_mixin": "Controller-like components fail to utilize standardized SignalManagerMixin for GObject signal tracking.",
-      "silent_exception": "except Exception blocks without logging hide system failures and hinder observability."
+      "silent_exception": "except Exception blocks without logging hide system failures and hinder observability.",
+      "hostname_prefix_leak": "Security checks on URLs that operate on the full string instead of isolating the hostname, leading to false positives or bypasses."
     }
   },
   "checkpoint_history": [],
@@ -214,7 +482,9 @@
   "execution_metrics": {
     "stuck_detection_counter": {},
     "skip_list": [],
-    "todo_items": [],
+    "todo_items": [
+      "Analyze priority files: anura/main.py, anura/utils/validators.py, anura/core/boot.py, anura/window.py, anura/core/atomic_task_manager.py, anura/controllers/ocr_controller.py, anura/services/screenshot_service.py, anura/transformers/magic_processor.py"
+    ],
     "complexity_issues": []
   }
 }
