@@ -5,7 +5,7 @@ permissions:
 
 on:
   push:
-    branches: [ "main", "development", "testing", "flathub-testing" ]
+    branches: [ "main", "development", "testing" ]
     tags: [ "v*" ]
   pull_request:
     branches: [ "main", "development", "testing" ]
