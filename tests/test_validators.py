@@ -74,6 +74,23 @@ class TestUriValidatorEnterprise:
         assert uri_validator(url) is False
 
     @pytest.mark.parametrize(
+        "text,expected",
+        [
+            ("Normal text", "Normal text"),
+            ("Text with \n newline", "Text with \n newline"),
+            ("Text with \uE000 private use", "Text with private use"),
+            ("Text with \uD800 surrogate", "Text with surrogate"),
+            ("Text with \u202E RLO", "Text with RLO"),
+            ("Mixed \uE000 and \n inside", "Mixed and \n inside"),
+        ],
+    )
+    def test_sanitize_text_hardening(self, text, expected):
+        """Test that sanitize_text strips dangerous Unicode categories."""
+        from anura.utils.validators import sanitize_text
+
+        assert sanitize_text(text) == expected
+
+    @pytest.mark.parametrize(
         "url",
         [
             "ftp://example.com",
