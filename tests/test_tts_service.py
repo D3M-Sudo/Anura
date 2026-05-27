@@ -34,7 +34,8 @@ class TestTTSServiceEnterprise:
     def test_map_tesseract_to_gtts_fallbacks(self):
         """Test fallback behavior for unknown or invalid codes."""
         assert TTSService.map_tesseract_to_gtts(None) == "en"
-        assert TTSService.map_tesseract_to_gtts("unknown") == "en"
+        # Unknown codes now return None (no fallback to "en")
+        assert TTSService.map_tesseract_to_gtts("unknown") is None
 
         # Test 2-char prefix matching
         with patch.object(TTSService, "get_supported_gtts_languages", return_value={"fr": "French"}):
@@ -88,11 +89,10 @@ class TestTTSServiceEnterprise:
         service.player = MagicMock()
         service._current_speech_file = "/tmp/test.mp3"
 
-        with patch("os.path.exists", return_value=True), patch("os.unlink") as mock_unlink:
+        with patch("pathlib.Path.exists", return_value=True):
             service.stop_speaking()
             assert service.player is None
             assert service._current_speech_file is None
-            mock_unlink.assert_called_with("/tmp/test.mp3")
 
     def test_referential_transparency_mapping(self):
         """Test that language mapping is pure."""

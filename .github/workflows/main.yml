@@ -65,17 +65,56 @@ jobs:
             data/io.github.d3msudo.anura.gresource.xml \
             --sourcedir=data \
             --sourcedir=data/ui \
-            --target=anura.gresource
+            --target=data/io.github.d3msudo.anura.gresource
 
+      - name: Compile GSettings schema
+        run: |
+          mkdir -p builddir/data
+          cp data/io.github.d3msudo.anura.gschema.xml builddir/data/
+          glib-compile-schemas builddir/data/
 
       - name: Run GTK tests (Wayland headless)
-        run: |
-          weston --backend=headless-backend.so --socket=wayland-test &
-          sleep 1
-          WAYLAND_DISPLAY=wayland-test \
-            uv run pytest tests/ -m gtk -v --timeout=30
         env:
+          GSETTINGS_SCHEMA_DIR: builddir/data
           DISPLAY: ""
+          NO_AT_BRIDGE: 1
+          GTK_A11Y: none
+          ANURA_LOG_LEVEL: WARNING
+        run: |
+          export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-$(mktemp -d)}"
+          mkdir -p "$XDG_RUNTIME_DIR"
+          chmod 700 "$XDG_RUNTIME_DIR"
+
+          weston --backend=headless-backend.so --socket=wayland-test --no-config &
+          WESTON_PID=$!
+
+          # Poll for the Wayland socket for up to 10 seconds
+          echo "Waiting for Wayland socket…"
+          for i in $(seq 1 20); do
+            if [ -S "$XDG_RUNTIME_DIR/wayland-test" ]; then
+              echo "Wayland compositor ready (attempt ${i}/20)"
+              break
+            fi
+            sleep 0.5
+          done
+
+          if [ ! -S "$XDG_RUNTIME_DIR/wayland-test" ]; then
+            echo "::error::Weston did not create the wayland-test socket within 10 s"
+            kill $WESTON_PID 2>/dev/null || true
+            exit 1
+          fi
+
+          # Cleanup handler — runs even on pytest failure
+          cleanup() {
+            echo "Cleaning up Weston (PID $WESTON_PID)..."
+            kill $WESTON_PID 2>/dev/null || true
+            wait $WESTON_PID 2>/dev/null || true
+            echo "Cleanup complete."
+          }
+          trap cleanup EXIT
+
+          WAYLAND_DISPLAY=wayland-test \
+            uv run pytest tests/ -m gtk -v --timeout=30 --timeout-method=thread
 
   # JOB 2: Flatpak build and optional release
   flatpak-builder:

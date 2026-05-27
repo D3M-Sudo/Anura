@@ -118,7 +118,9 @@ class TestWelcomePageEnterprise:
 
     @pytest.fixture
     def widget(self):
-        with patch("anura.widgets.welcome_page.language_manager") as mock_manager:
+        with patch("anura.services.language_manager.get_language_manager") as mock_get_manager:
+            mock_manager = MagicMock()
+            mock_get_manager.return_value = mock_manager
             mock_manager.get_language.return_value = "English"
             return WelcomePage()
 
@@ -187,8 +189,8 @@ class TestLanguagePopoverEnterprise:
             code=x, title="English" if x == "eng" else "Italian"
         )
 
-        # Monkeypatch the singleton in the widget module directly on the module object
-        monkeypatch.setattr(lp_mod, "language_manager", mock_manager)
+        # Monkeypatch the get_language_manager() function call inside the module
+        monkeypatch.setattr(lp_mod, "get_language_manager", lambda: mock_manager)
 
         popover = lp_mod.LanguagePopover()
         return popover
