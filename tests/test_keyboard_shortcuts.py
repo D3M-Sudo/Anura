@@ -46,17 +46,15 @@ class TestKeyboardShortcuts:
 
     @pytest.mark.gtk
     def test_shortcuts_action_setup_method_exists(self, setup_gtk_environment):
-        """Test that _setup_actions method contains expected shortcuts."""
+        """Test that _setup_options method exists for keyboard shortcuts."""
         pytest.importorskip("anura.main")
         try:
             # Import without executing GTK-dependent code
             from anura.main import AnuraApplication
 
-            _ = AnuraApplication._setup_actions.__doc__
-
-            # Check method exists
-            assert hasattr(AnuraApplication, "_setup_actions")
-            assert callable(AnuraApplication._setup_actions)
+            # Check method exists (was renamed from _setup_actions)
+            assert hasattr(AnuraApplication, "_setup_options")
+            assert callable(AnuraApplication._setup_options)
 
         except ImportError as e:
             pytest.skip(f"Cannot import main module: {e}")
@@ -68,12 +66,9 @@ class TestKeyboardShortcuts:
         try:
             from anura.main import AnuraApplication
 
-            # Get the source code of _setup_actions
-            _ = AnuraApplication._setup_actions.__code__.co_code
-
             # This is a basic check - in real scenarios we'd read the file
             # For now, we check the method exists and has proper signature
-            assert hasattr(AnuraApplication, "_setup_actions")
+            assert hasattr(AnuraApplication, "_setup_options")
 
         except ImportError as e:
             pytest.skip(f"Cannot import main module: {e}")
@@ -94,11 +89,10 @@ class TestKeyboardShortcuts:
             sig = inspect.signature(method)
             params = list(sig.parameters.keys())
 
-            # Should take 'self', '_action', and '_param' (3 params total)
-            assert len(params) == 3, f"Expected 3 parameters, got {len(params)}: {params}"
+            # Current signature is (self, _variant) — GActions pass a single
+            # GLib.Variant parameter (or None) to the handler.
+            assert len(params) == 2, f"Expected 2 parameters, got {len(params)}: {params}"
             assert "self" in params, "Missing 'self' parameter"
-            assert "_action" in params, "Missing '_action' parameter"
-            assert "_param" in params, "Missing '_param' parameter"
 
         except ImportError as e:
             pytest.skip(f"Cannot import main module: {e}")

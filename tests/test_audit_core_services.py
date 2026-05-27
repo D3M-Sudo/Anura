@@ -51,7 +51,9 @@ class TestTTSService:
         assert TTSService.map_tesseract_to_gtts("eng") == "en"
         assert TTSService.map_tesseract_to_gtts("ita") == "it"
         assert TTSService.map_tesseract_to_gtts("jpn_vert") == "ja"
-        assert TTSService.map_tesseract_to_gtts("unknown") == "en"
+        # Unknown codes now return None (no fallback to "en")
+        # UI layer handles the None case explicitly
+        assert TTSService.map_tesseract_to_gtts("unknown") is None
 
     @pytest.mark.gtk
     def test_get_effective_language(self):
@@ -84,24 +86,24 @@ class TestScreenshotService:
     @pytest.mark.gtk
     def test_validate_decode_inputs(self):
         service = ScreenshotService()
-        valid, _, _ = service._validate_decode_inputs("eng")
+        valid, _, _, _ = service._validate_decode_inputs("eng")
         assert valid is True
 
-        invalid, _, _ = service._validate_decode_inputs("invalid!")
+        invalid, _, _, _ = service._validate_decode_inputs("invalid!")
         assert invalid is False
 
     @pytest.mark.gtk
     def test_format_decode_result(self):
         service = ScreenshotService()
-        success, text, err = service._format_decode_result("Extracted", None)
+        success, text, err, _ocr = service._format_decode_result("Extracted", None)
         assert success is True
         assert text == "Extracted"
 
-        success, text, err = service._format_decode_result(None, "Error")
+        success, text, err, _ocr = service._format_decode_result(None, "Error")
         assert success is False
         assert err == "Error"
 
-        success, text, err = service._format_decode_result(None, None)
+        success, text, err, _ocr = service._format_decode_result(None, None)
         assert success is False
         assert "No text found" in err
 
