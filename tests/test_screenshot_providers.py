@@ -3,39 +3,42 @@
 #
 # SPDX-License-Identifier: MIT
 
-import pytest
-from unittest.mock import patch, MagicMock
 import os
 import sys
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("gi")
 
 # Mock only what is missing
 import gi
+
 try:
-    from gi.repository import Gio
+    from gi.repository import Gio  # noqa: F401
 except ImportError:
     mock_gio = MagicMock()
     sys.modules["gi.repository.Gio"] = mock_gio
     gi.repository.Gio = mock_gio
 
 try:
-    from gi.repository import GLib
+    from gi.repository import GLib  # noqa: F401
 except ImportError:
     mock_glib = MagicMock()
     sys.modules["gi.repository.GLib"] = mock_glib
     gi.repository.GLib = mock_glib
 
 try:
-    from gi.repository import Xdp
+    from gi.repository import Xdp  # noqa: F401
 except ImportError:
     mock_xdp = MagicMock()
     sys.modules["gi.repository.Xdp"] = mock_xdp
     gi.repository.Xdp = mock_xdp
 
+from anura.services.screenshot.factory import ScreenshotProviderFactory
 from anura.services.screenshot.legacy_provider import LegacyX11Provider
 from anura.services.screenshot.portal_provider import PortalProvider
-from anura.services.screenshot.factory import ScreenshotProviderFactory
+
 
 class TestLegacyX11Provider:
     @pytest.fixture
@@ -76,6 +79,7 @@ class TestLegacyX11Provider:
         args = mock_gio.Subprocess.new.call_args[0][0]
         assert args[0] == "/usr/bin/scrot"
         assert "-s" in args
+
 
 class TestScreenshotProviderFactory:
     def test_get_provider_returns_portal(self):

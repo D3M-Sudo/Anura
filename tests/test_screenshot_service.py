@@ -4,49 +4,57 @@
 #
 # SPDX-License-Identifier: MIT
 
-import pytest
 import sys
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("gi")
 
 # Mock missing components
 import gi
+
 try:
-    from gi.repository import Gio
+    from gi.repository import Gio  # noqa: F401
 except ImportError:
     mock_gio = MagicMock()
     sys.modules["gi.repository.Gio"] = mock_gio
     gi.repository.Gio = mock_gio
 
 try:
-    from gi.repository import GLib
+    from gi.repository import GLib  # noqa: F401
 except ImportError:
     mock_glib = MagicMock()
     sys.modules["gi.repository.GLib"] = mock_glib
     gi.repository.GLib = mock_glib
 
 try:
-    from gi.repository import Xdp
+    from gi.repository import Xdp  # noqa: F401
 except ImportError:
     mock_xdp = MagicMock()
     sys.modules["gi.repository.Xdp"] = mock_xdp
     gi.repository.Xdp = mock_xdp
 
 try:
-    from gi.repository import GObject
+    from gi.repository import GObject  # noqa: F401
 except ImportError:
     mock_gobject = MagicMock()
+
     class MockGObject:
-        def __init__(self, *args, **kwargs): pass
+        def __init__(self, *args, **kwargs):
+            pass
+
         @staticmethod
-        def emit(*args, **kwargs): pass
+        def emit(*args, **kwargs):
+            pass
+
     mock_gobject.GObject = MockGObject
     sys.modules["gi.repository.GObject"] = mock_gobject
     gi.repository.GObject = mock_gobject
 
 # Now import the service
 from anura.services.screenshot_service import ScreenshotService
+
 
 class TestScreenshotServiceEnterprise:
     """
@@ -59,7 +67,9 @@ class TestScreenshotServiceEnterprise:
         with patch("anura.services.screenshot_service._configure_tesseract_path"):
             # Minimal init to satisfy the tests
             # We want to use the real class logic but avoid GObject issues
-            class PseudoService: pass
+            class PseudoService:
+                pass
+
             s = PseudoService()
             s.provider = MagicMock()
             s.fallback_provider = MagicMock()
