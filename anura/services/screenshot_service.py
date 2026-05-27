@@ -26,12 +26,10 @@ from loguru import logger  # noqa: E402
 from PIL import Image  # noqa: E402
 import pytesseract  # noqa: E402
 
-from anura.config import (  # noqa: E402
-    LANG_CODE_PATTERN,
-    get_tesseract_config,
-)
+from anura.config import LANG_CODE_PATTERN  # noqa: E402
 from anura.core.atomic_task_manager import get_atomic_manager  # noqa: E402
 from anura.models.ocr import OcrResult  # noqa: E402
+from anura.services.language_manager import get_tesseract_config  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
 from anura.utils import validate_image_resource  # noqa: E402
 from anura.utils.portal_advice import detect_portal_advice  # noqa: E402
