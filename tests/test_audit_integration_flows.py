@@ -10,8 +10,6 @@ pytest.importorskip("gi")
 
 from unittest.mock import MagicMock, patch
 
-from gi.repository import GLib
-
 from anura.services.screenshot_service import ScreenshotService
 from anura.services.share_service import ShareService
 from anura.services.tts import TTSService
@@ -70,8 +68,6 @@ class TestIntegrationFlows:
 
         with patch.object(service, "fallback_provider") as mock_fallback_provider:
             # Create a mock error that looks like portal backend missing
-            from gi.repository import Gio
-
 
             # Mock the provider's capture method to simulate failure
             mock_provider = MagicMock()
