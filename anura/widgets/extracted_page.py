@@ -60,6 +60,7 @@ class ExtractedPage(Adw.NavigationPage):
         # TTS service reference — initialized post-super() to avoid pre-template access
         self._tts_service = None
         self._buffer_handler_id = None
+        self._mark_set_handler_id = None
         self._map_handler_id = None
         self._is_generating_tts = False
 
@@ -81,6 +82,13 @@ class ExtractedPage(Adw.NavigationPage):
             logger.warning(f"Failed to initialize TTS service: {e}")
 
         self._buffer_handler_id = self.buffer.connect("changed", self._on_buffer_changed)
+        self._mark_set_handler_id = self.buffer.connect("mark-set", self._on_mark_set)
+
+        # Accessibility: set tooltip for the stats label
+        self.stats_label.set_tooltip_text(
+            _("Shows character and word count. If text is selected, shows selection stats.")
+        )
+
         # GTK4 Layout Fix: Force reflow when widget is mapped to ensure correct Pango layout
         self._map_handler_id = self.text_view.connect("map", lambda _: self._force_reflow())
 
@@ -101,7 +109,7 @@ class ExtractedPage(Adw.NavigationPage):
         self.text_view.queue_resize()
 
     def _on_buffer_changed(self, buffer: Gtk.TextBuffer) -> None:
-        """Update character and word count in the status bar label."""
+        """Update action sensitivities when buffer changes."""
         text = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), False)
         has_text = bool(text.strip()) if text else False
 
@@ -113,15 +121,34 @@ class ExtractedPage(Adw.NavigationPage):
         if self.listen_btn:
             self.listen_btn.set_sensitive(has_text)
 
+        self._update_stats_label()
+
+    def _on_mark_set(self, _buffer: Gtk.TextBuffer, _location: Gtk.TextIter, mark: Gtk.TextMark) -> None:
+        """Update stats label when selection changes."""
+        # We only care about the selection bound or the insert mark which define the selection
+        if mark.get_name() in ["selection_bound", "insert"]:
+            self._update_stats_label()
+
+    def _update_stats_label(self) -> None:
+        """Update character and word count in the status bar label, considering selection."""
+        has_selection, start, end = self.buffer.get_selection_bounds()
+        if has_selection:
+            text = self.buffer.get_text(start, end, False)
+            # Use a prefix to indicate these are selection stats
+            prefix = _("Selection: ")
+        else:
+            text = self.extracted_text
+            prefix = ""
+
         char_count = len(text) if text else 0
         word_count = len(text.split()) if text else 0
 
         words_text = ngettext("{n} word", "{n} words", word_count).format(n=word_count)
         chars_text = ngettext("{n} character", "{n} characters", char_count).format(n=char_count)
 
-        # Construct the stats label using a single translatable string to ensure
-        # translators can adjust the ordering and separator if necessary.
-        self.stats_label.set_text(_("{words} | {chars}").format(words=words_text, chars=chars_text))
+        # Construct the stats label using a single translatable string
+        stats = _("{words} | {chars}").format(words=words_text, chars=chars_text)
+        self.stats_label.set_text(f"{prefix}{stats}")
 
     def show_copy_feedback(self) -> None:
         """Temporarily change the copy button icon to a checkmark for UX feedback."""
@@ -189,11 +216,16 @@ class ExtractedPage(Adw.NavigationPage):
             except (TypeError, RuntimeError) as e:
                 logger.warning(f"Failed to cleanup share service during dispose: {e}")
 
-        # Disconnect internal buffer handler
+        # Disconnect internal buffer handlers
         if self._buffer_handler_id:
             with contextlib.suppress(TypeError, RuntimeError):
                 self.buffer.disconnect(self._buffer_handler_id)
             self._buffer_handler_id = None
+
+        if self._mark_set_handler_id:
+            with contextlib.suppress(TypeError, RuntimeError):
+                self.buffer.disconnect(self._mark_set_handler_id)
+            self._mark_set_handler_id = None
 
         # Disconnect map handler
         if self._map_handler_id:
@@ -219,6 +251,13 @@ class ExtractedPage(Adw.NavigationPage):
             self._force_reflow()
         except (GLib.Error, ValueError) as e:
             logger.error(f"Error setting extracted text: {e}")
+
+    def get_active_text(self) -> str:
+        """Get selected text if available, otherwise the full text."""
+        has_selection, start, end = self.buffer.get_selection_bounds()
+        if has_selection:
+            return self.buffer.get_text(start, end, False)
+        return self.extracted_text
 
     def listen(self) -> None:
         """Start TTS playback for the extracted text."""
@@ -271,7 +310,7 @@ class ExtractedPage(Adw.NavigationPage):
         try:
             get_atomic_manager().execute(
                 tts_service_instance.generate,
-                (self.extracted_text, tts_lang),
+                (self.get_active_text(), tts_lang),
                 callback=self._on_generated,
                 errorback=self._on_generate_error,
             )
