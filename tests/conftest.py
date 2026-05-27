@@ -6,6 +6,7 @@
 
 import os
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -14,9 +15,56 @@ import pytest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-def pytest_collection_modifyitems(items):
+def _module_needs_gi(fspath: object) -> bool:
+    """Return True if the test module at *fspath* depends on gi.repository.
+
+    Scans the file content directly rather than relying on the filename or the
+    test function name.  The previous heuristic (``"gi" in str(item.fspath)``)
+    never matched any test file because no file path contains the literal
+    two-character substring "gi" in isolation — it only appeared inside longer
+    words like "github" in the runner's workspace path.
+
+    This function is intentionally kept simple and side-effect-free: it reads
+    the source file once per file (the call-site caches per fspath) and checks
+    for the presence of common gi-dependency patterns.
+    """
+    try:
+        src = Path(str(fspath)).read_text(encoding="utf-8", errors="replace")
+        return (
+            "import gi" in src
+            or "from gi" in src
+            or 'importorskip("gi")' in src
+            or "importorskip('gi')" in src
+        )
+    except OSError:
+        return False
+
+
+def pytest_collection_modifyitems(items: list) -> None:
+    """Add the ``gtk`` marker to every test that depends on gi.repository.
+
+    Bug fixed: the previous implementation used two unreliable heuristics:
+    - ``"gi" in str(item.fspath)``  → never matched (path contains "github",
+      "gi" only as a substring of longer words, never standalone).
+    - ``"gtk" in item.name.lower()`` → only caught tests explicitly named
+      *test_gtk_**, missing the vast majority of gi-dependent tests.
+
+    Result: only 7 out of ~80 gi-dependent tests were tagged, causing the
+    gtk-tests CI job to run almost nothing.
+
+    Fix: scan each file's source once (cached per fspath) for the four
+    patterns that indicate a gi dependency.  A per-call dict is used as the
+    cache so the hook remains stateless across test runs.
+    """
+    _gi_file_cache: dict[str, bool] = {}
+
     for item in items:
-        if "gi" in str(item.fspath) or "gtk" in item.name.lower():
+        fspath_str = str(item.fspath)
+
+        if fspath_str not in _gi_file_cache:
+            _gi_file_cache[fspath_str] = _module_needs_gi(item.fspath)
+
+        if _gi_file_cache[fspath_str] or "gtk" in item.name.lower():
             item.add_marker(pytest.mark.gtk)
 
 

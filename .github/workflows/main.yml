@@ -28,7 +28,19 @@ jobs:
         run: |
           pip install uv
           uv sync --dev
+          # The --ignore flags below mirror the addopts list in pyproject.toml.
+          # They are kept explicit here so the gtk-tests job can override
+          # addopts independently and collect those files without them.
           uv run pytest tests/ -m "not gtk" \
+            --ignore=tests/test_clipboard_service.py \
+            --ignore=tests/test_screenshot_service.py \
+            --ignore=tests/test_share_service.py \
+            --ignore=tests/test_tts_service.py \
+            --ignore=tests/test_notification_service.py \
+            --ignore=tests/test_services.py \
+            --ignore=tests/test_language_manager.py \
+            --ignore=tests/test_tts.py \
+            --ignore=tests/test_tts_initialization.py \
             --cov=anura --cov-report=xml --cov-report=term-missing
 
       - name: Upload coverage report
@@ -41,6 +53,12 @@ jobs:
     name: GTK Integration Tests
     runs-on: ubuntu-latest
     needs: python-quality
+    # XDG_RUNTIME_DIR is required by weston to create its Wayland socket.
+    # Setting it at the job level makes it available to every step, including
+    # the weston start step and the pytest run step.
+    env:
+      XDG_RUNTIME_DIR: /tmp/xdg-runtime-ci
+
     steps:
       - uses: actions/checkout@v6
 
@@ -56,26 +74,83 @@ jobs:
             tesseract-ocr tesseract-ocr-eng \
             weston xwayland
 
-      - name: Install Python dependencies
-        run: pip install uv && uv sync --dev
+      - name: Install Python dependencies (with system site-packages)
+        # Bug fixed: plain `uv sync --dev` creates an isolated venv that
+        # cannot see python3-gi / libadwaita installed by apt above.
+        # `uv venv --system-site-packages` creates a venv that inherits the
+        # system's site-packages first, then `uv sync --dev` layers the dev
+        # dependencies (pytest, pytest-cov, …) on top.
+        run: |
+          pip install uv
+          uv venv --system-site-packages .venv
+          uv sync --dev
 
       - name: Compile GResources
+        # Bug fixed: previously compiled to `anura.gresource` in the repo
+        # root, but _load_gresource_bundle() (main.py) resolves the relative
+        # fallback path as `data/io.github.d3msudo.anura.gresource`.
+        # The target must match that relative path so the bundle is found when
+        # tests initialise the application.
         run: |
           glib-compile-resources \
             data/io.github.d3msudo.anura.gresource.xml \
             --sourcedir=data \
             --sourcedir=data/ui \
-            --target=anura.gresource
+            --target=data/io.github.d3msudo.anura.gresource
 
+      - name: Start Wayland compositor (headless)
+        # Bug fixed (1): `--backend=headless-backend.so` is the pre-weston-12
+        # syntax.  Ubuntu 24.04 ships weston 13.x which requires the bare
+        # name `--backend=headless` (no .so suffix, no full path).
+        #
+        # Bug fixed (2): weston requires XDG_RUNTIME_DIR to exist and be
+        # chmod 700 before it will create the Wayland socket.  Without this
+        # weston exits silently with "failed to create dir" and the socket
+        # never appears, causing the test run to see WAYLAND_DISPLAY set but
+        # pointing at a non-existent socket.
+        #
+        # --no-config: prevents weston from reading ~/.config/weston.ini,
+        # which does not exist on the runner and causes harmless but noisy
+        # "failed to load config" warnings.
+        run: |
+          mkdir -p "$XDG_RUNTIME_DIR"
+          chmod 700 "$XDG_RUNTIME_DIR"
+
+          weston --backend=headless --socket=wayland-test --no-config &
+
+          # Poll for the socket for up to 10 s (20 × 500 ms).
+          # `sleep 1` (old approach) is unreliable on loaded runners.
+          echo "Waiting for Wayland socket…"
+          for i in $(seq 1 20); do
+            if [ -S "$XDG_RUNTIME_DIR/wayland-test" ]; then
+              echo "Wayland compositor ready (attempt ${i}/20)"
+              break
+            fi
+            sleep 0.5
+          done
+
+          if [ ! -S "$XDG_RUNTIME_DIR/wayland-test" ]; then
+            echo "::error::Weston did not create the wayland-test socket within 10 s"
+            exit 1
+          fi
 
       - name: Run GTK tests (Wayland headless)
+        # --override-ini replaces the global addopts from pyproject.toml.
+        # Without this override the --ignore list baked into addopts would
+        # suppress collection of the files that hold most gtk-marked tests
+        # (test_clipboard_service.py, test_tts_service.py, etc.), leaving only
+        # ~7 tests selected instead of the full gtk suite.
         run: |
-          weston --backend=headless-backend.so --socket=wayland-test &
-          sleep 1
-          WAYLAND_DISPLAY=wayland-test \
-            uv run pytest tests/ -m gtk -v --timeout=30
+          uv run pytest tests/ -m gtk -v --timeout=30 \
+            --override-ini "addopts=-v --tb=short"
         env:
+          WAYLAND_DISPLAY: wayland-test
           DISPLAY: ""
+          # Suppress a11y bus warnings that flood CI logs in headless mode
+          NO_AT_BRIDGE: "1"
+          GTK_A11Y: none
+          # Reduce log noise from loguru in test output
+          ANURA_LOG_LEVEL: WARNING
 
   # JOB 2: Flatpak build and optional release
   flatpak-builder:
