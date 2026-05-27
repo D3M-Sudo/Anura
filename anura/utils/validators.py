@@ -43,10 +43,14 @@ def sanitize_text(text: str) -> str:
     if not text:
         return ""
 
-    # 1. Defense-in-depth: Strip non-printable Unicode Control (Cc) and Format (Cf)
-    # characters, but preserve legitimate formatting like \n, \r, and \t.
-    # This prevents Null byte injection, Bell characters, and RTL override spoofing.
-    text = "".join(ch for ch in text if unicodedata.category(ch) not in ("Cc", "Cf") or ch in "\n\r\t")
+    # 1. Defense-in-depth: Strip non-printable Unicode Control (Cc), Format (Cf),
+    # Private Use (Co), and Surrogate (Cs) characters, but preserve legitimate
+    # formatting like \n, \r, and \t.
+    # This prevents Null byte injection, Bell characters, RTL override spoofing,
+    # and obfuscation using private-use or surrogate characters.
+    text = "".join(
+        ch for ch in text if unicodedata.category(ch) not in ("Cc", "Cf", "Co", "Cs") or ch in "\n\r\t"
+    )
 
     # 2. Normalize horizontal whitespace (squash multiple spaces/tabs)
     # Note: \n and \r are preserved by the [ \t]+ pattern.
