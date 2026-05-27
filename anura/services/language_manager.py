@@ -30,6 +30,7 @@ from anura.config import (  # noqa: E402
     REQUEST_TIMEOUT,
     TESSDATA_BEST_URL,
     TESSDATA_DIR,
+    TESSDATA_POOL_DIR,
     TESSDATA_SYSTEM_DIR,
     TESSDATA_URL,
     USER_AGENT,
@@ -568,6 +569,69 @@ class LanguageManager(GObject.GObject):
             logger.error(f"Anura: Permission denied removing language '{code}': {e}")
         except OSError as e:
             logger.error(f"Anura: OS error removing language '{code}': {e}")
+
+
+def get_tesseract_config(lang_code: str) -> str:
+    """
+    Returns Tesseract config string with correct --tessdata-dir.
+
+    Tesseract only supports a single --tessdata-dir path. For multi-language
+    configurations (e.g. 'eng+ita') where models may be split between system
+    (/app/share/tessdata) and user (~/.local/share/anura/tessdata) directories,
+    this function creates a dynamic pool in the sandbox cache.
+
+    Args:
+        lang_code: The ISO 639-2 language code (e.g., 'eng', 'eng+ita')
+
+    Returns:
+        Config string with --tessdata-dir pointing to the correct directory.
+    """
+    # Security: Validate lang_code
+    if not lang_code or not re.match(LANG_CODE_PATTERN, lang_code):
+        logger.error(f"Anura: Invalid language code '{lang_code}' - using 'eng'")
+        lang_code = "eng"
+
+    # If it's a single language, use standard priority logic without pooling
+    if "+" not in lang_code:
+        user_model = os.path.join(TESSDATA_DIR, f"{lang_code}.traineddata")
+        if os.path.exists(user_model):
+            return f'--tessdata-dir "{TESSDATA_DIR}" --psm 3 --oem 1'
+
+        system_model = os.path.join(TESSDATA_SYSTEM_DIR, f"{lang_code}.traineddata")
+        if os.path.exists(system_model):
+            return f'--tessdata-dir "{TESSDATA_SYSTEM_DIR}" --psm 3 --oem 1'
+
+        return f'--tessdata-dir "{TESSDATA_DIR}" --psm 3 --oem 1'
+
+    # Multi-language: Dynamic Pooling Approach
+    codes = lang_code.split("+")
+    os.makedirs(TESSDATA_POOL_DIR, exist_ok=True)
+
+    for code in codes:
+        # Resolve source
+        source_path = None
+        user_path = os.path.join(TESSDATA_DIR, f"{code}.traineddata")
+        system_path = os.path.join(TESSDATA_SYSTEM_DIR, f"{code}.traineddata")
+
+        if os.path.exists(user_path):
+            source_path = user_path
+        elif os.path.exists(system_path):
+            source_path = system_path
+
+        if source_path:
+            dest_path = os.path.join(TESSDATA_POOL_DIR, f"{code}.traineddata")
+            # Create hard link with fallback to copy (for cross-filesystem)
+            try:
+                if os.path.exists(dest_path):
+                    os.unlink(dest_path)
+                os.link(source_path, dest_path)
+            except (OSError, AttributeError):
+                try:
+                    shutil.copy2(source_path, dest_path)
+                except OSError as e:
+                    logger.error(f"Anura Pooling: Failed to copy {code}: {e}")
+
+    return f'--tessdata-dir "{TESSDATA_POOL_DIR}" --psm 3 --oem 1'
 
 
 # Thread-safe singleton instance for global app access
