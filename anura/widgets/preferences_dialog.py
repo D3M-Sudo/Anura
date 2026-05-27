@@ -25,8 +25,12 @@ class PreferencesDialog(Adw.PreferencesDialog, SignalManagerMixin):
         SignalManagerMixin.__init__(self)
 
         mgr = get_language_manager()
-        self.connect_tracked(mgr, "downloaded", lambda _, code: GLib.idle_add(self.on_language_downloaded, code))
-        self.connect_tracked(mgr, "download-failed", lambda _, code: GLib.idle_add(self.on_language_download_failed, code))
+        self.connect_tracked(
+            mgr, "downloaded", lambda _, code: GLib.idle_add(self.on_language_downloaded, code)
+        )
+        self.connect_tracked(
+            mgr, "download-failed", lambda _, code: GLib.idle_add(self.on_language_download_failed, code)
+        )
 
     def on_language_downloaded(self, code: str) -> None:
         """Handle language download completion - refresh UI state."""

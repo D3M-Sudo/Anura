@@ -39,7 +39,7 @@ from anura.widgets.preferences_dialog import PreferencesDialog  # noqa: E402
 from anura.widgets.welcome_page import WelcomePage  # noqa: E402
 
 if TYPE_CHECKING:
-    from anura.services.language_manager import LanguageManager
+    pass
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/window.ui")
