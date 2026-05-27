@@ -224,10 +224,14 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         gfile.load_contents_async(None, _on_contents_loaded)
 
     def _do_copy_to_clipboard(self) -> None:
-        text: str = self.extracted_page.extracted_text
+        text: str = self.extracted_page.get_active_text()
         if text:
+            has_selection, _start, _end = self.extracted_page.buffer.get_selection_bounds()
             get_clipboard_service().set(text)
-            self.show_toast(_("Text copied to clipboard"))
+            if has_selection:
+                self.show_toast(_("Selection copied to clipboard"))
+            else:
+                self.show_toast(_("Text copied to clipboard"))
             self.extracted_page.show_copy_feedback()
         else:
             self.show_toast(_("No text to copy"))
@@ -289,7 +293,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     def _on_share(self, _action: Gio.SimpleAction, variant: GLib.Variant) -> None:
         """Dispatch share action to the correct provider."""
         provider: str = variant.get_string()
-        text: str = self.extracted_page.extracted_text
+        text: str = self.extracted_page.get_active_text()
         if not text:
             self.show_toast(_("No text to share."))
             return

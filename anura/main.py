@@ -120,6 +120,10 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         GLib.set_prgname(APP_ID)
 
     def do_shutdown(self, *args: object, **kwargs: object) -> None:
+        if self.backend:
+            with contextlib.suppress(Exception):
+                self.backend.do_destroy()
+
         self._cleanup_services()
         self.teardown_all()
         try:
@@ -333,7 +337,15 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         if win and hasattr(win, "ocr_controller"):
             win.ocr_controller.open_image()
 
+    _last_paste_time: float = 0
+
     def on_paste_from_clipboard(self, *_) -> None:
+        now = GLib.get_monotonic_time() / 1_000_000
+        if now - self._last_paste_time < 0.5:
+            logger.debug("Anura: Debouncing clipboard paste")
+            return
+        self._last_paste_time = now
+
         win = self.props.active_window
         if win and hasattr(win, "welcome_page"):
             win.welcome_page.show_spinner()
