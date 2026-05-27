@@ -118,8 +118,10 @@ class TestWelcomePageEnterprise:
 
     @pytest.fixture
     def widget(self):
-        with patch("anura.widgets.welcome_page.language_manager") as mock_manager:
+        with patch("anura.widgets.welcome_page.get_language_manager") as mock_getter:
+            mock_manager = MagicMock()
             mock_manager.get_language.return_value = "English"
+            mock_getter.return_value = mock_manager
             return WelcomePage()
 
     @pytest.mark.gtk
@@ -152,7 +154,8 @@ class TestWelcomePageEnterprise:
         lang_item = LanguageItem(code="fra", title="French")
 
         # Emit signal from the internal popover
-        widget.language_popover.emit("language-changed", lang_item)
+        # Signal signature: (LanguagePopover, LanguageItem)
+        widget.language_popover.emit("language-changed", widget.language_popover, lang_item)
 
         assert widget.lang_combo.get_label() == "French"
         widget.settings.set_string.assert_called_with("active-language", "fra")
@@ -176,7 +179,7 @@ class TestLanguagePopoverEnterprise:
     """
 
     @pytest.fixture
-    def widget(self, monkeypatch):
+    def widget(self):
         # Import inside to avoid module-level issues during discovery if any
         import anura.widgets.language_popover as lp_mod
 
@@ -187,11 +190,9 @@ class TestLanguagePopoverEnterprise:
             code=x, title="English" if x == "eng" else "Italian"
         )
 
-        # Monkeypatch the singleton in the widget module directly on the module object
-        monkeypatch.setattr(lp_mod, "language_manager", mock_manager)
-
-        popover = lp_mod.LanguagePopover()
-        return popover
+        with patch("anura.widgets.language_popover.get_language_manager", return_value=mock_manager):
+            popover = lp_mod.LanguagePopover()
+            return popover
 
     @pytest.mark.gtk
     def test_search_filtering(self, widget):

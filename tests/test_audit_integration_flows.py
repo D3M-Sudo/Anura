@@ -8,9 +8,7 @@ import pytest
 
 pytest.importorskip("gi")
 
-from unittest.mock import MagicMock, patch
-
-from gi.repository import GLib
+from unittest.mock import patch
 
 from anura.services.screenshot_service import ScreenshotService
 from anura.services.share_service import ShareService
@@ -67,17 +65,23 @@ class TestIntegrationFlows:
         service = ScreenshotService()
 
         with patch.object(service, "_try_host_screenshot_fallback") as mock_fallback:
-            # Create a mock error that looks like portal backend missing
-            from gi.repository import Gio
+            # The flow is now ScreenshotService.capture -> PortalProvider.capture -> PortalProvider._on_finish
+            # which calls the callback with error -> ScreenshotService._on_capture_result
+            # -> _try_host_screenshot_fallback (if generic failure)
 
-            error = GLib.Error.new_literal(Gio.io_error_quark(), "Screenshot failed", Gio.IOErrorEnum.FAILED)
+            # Manually trigger the callback logic in ScreenshotService
+            # This is cleaner than mocking the whole Gio.AsyncResult chain
+            service._is_capturing = True
+            # In current implementation, _on_capture_result is a closure in capture()
+            # but we can test the fallback logic by simulating the generic error.
 
-            # We need to mock the portal object itself
-            mock_portal = MagicMock()
-            mock_portal.take_screenshot_finish.side_effect = error
-            service.portal = mock_portal
+            # Get the actual capture method and mock its internal callback
+            with patch("anura.services.screenshot.portal_provider.PortalProvider.capture") as mock_portal_cap:
+                def side_effect(lang, copy, callback):
+                    callback(False, None, "Screenshot failed")
 
-            # Call finish callback (simulating portal response)
-            service.take_screenshot_finish(None, MagicMock(), ("eng", False))
+                mock_portal_cap.side_effect = side_effect
+
+                service.capture("eng", False)
 
             mock_fallback.assert_called_once_with("eng", False)

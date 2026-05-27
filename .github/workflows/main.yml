@@ -58,21 +58,23 @@ jobs:
       - name: Install Python dependencies
         run: pip install uv && uv sync --dev
 
-      - name: Compile GResources
+      - name: Compile GResources and Schemas
         run: |
           glib-compile-resources \
             data/io.github.d3msudo.anura.gresource.xml \
             --sourcedir=data \
             --sourcedir=data/ui \
             --target=data/io.github.d3msudo.anura.gresource
+          glib-compile-schemas data/
 
 
       - name: Run GTK tests (Wayland headless)
         run: |
-          # 1. Setup XDG_RUNTIME_DIR for Weston and Wayland
+          # 1. Setup XDG_RUNTIME_DIR and GSettings
           export XDG_RUNTIME_DIR=/tmp/anura-runtime
           mkdir -p $XDG_RUNTIME_DIR
           chmod 700 $XDG_RUNTIME_DIR
+          export GSETTINGS_SCHEMA_DIR=$GITHUB_WORKSPACE/data
 
           # 2. Expose system site-packages to uv via PYTHONPATH
           # This allows the 'uv run' environment to see 'gi' and other system libs.

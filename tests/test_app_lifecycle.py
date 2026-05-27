@@ -24,7 +24,7 @@ class TestAppLifecycleEnterprise:
     @pytest.fixture
     def app(self):
         with (
-            patch("anura.main._load_gresource_bundle", return_value=True),
+            patch("anura.main.load_gresource_bundle", return_value=True),
             patch("anura.main.ScreenshotService"),
             patch("anura.main.NotificationService"),
             patch("anura.main.get_clipboard_service"),

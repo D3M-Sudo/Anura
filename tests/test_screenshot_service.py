@@ -74,19 +74,19 @@ class TestScreenshotServiceEnterprise:
     def test_format_decode_result(self, service):
         """Test result formatting for various OCR outcomes."""
         # Success
-        s, t, e, r = service._format_decode_result("Extracted Text", None)
+        s, t, e, _r = service._format_decode_result("Extracted Text", None)
         assert s is True
         assert t == "Extracted Text"
         assert e is None
 
         # Explicit Error
-        s, t, e, r = service._format_decode_result(None, "Fatal Error")
+        s, t, e, _r = service._format_decode_result(None, "Fatal Error")
         assert s is False
         assert t == ""
         assert e == "Fatal Error"
 
         # No Text Found
-        s, t, e, r = service._format_decode_result(None, None)
+        s, t, e, _r = service._format_decode_result(None, None)
         assert s is False
         assert "No text found" in e
 

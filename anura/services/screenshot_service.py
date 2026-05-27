@@ -312,16 +312,32 @@ class ScreenshotService(GObject.GObject):
             self._emit_portal_failure()
             return
 
-        # Running on X11 - attempt bundled scrot fallback
+        # Running on X11 - attempt host tool fallback
         output_path = f"/tmp/anura-shot-{uuid.uuid4().hex}.png"
 
-        from anura.services.host_screenshot_fallback import build_scrot_argv
+        from anura.services.host_screenshot_fallback import (
+            build_fallback_argv,
+            detect_host_tools,
+        )
 
-        # Rigorous coordinate calculation for fallback:
-        # In multi-monitor setups, we ensure any hypothetical offset is sanitized.
-        argv = build_scrot_argv(output_path, offset_x=0, offset_y=0)
+        tools = detect_host_tools()
+        if not tools:
+            self._is_capturing = False
+            logger.warning("Anura Screenshot: portal failed on X11 and no fallback tools found.")
+            self._emit_portal_failure()
+            return
 
-        logger.info("Anura Screenshot: portal failed on X11, falling back to bundled 'scrot'.")
+        # Try the first available tool (usually gnome-screenshot or scrot)
+        tool = tools[0]
+        try:
+            argv = build_fallback_argv(tool, output_path)
+        except ValueError as e:
+            self._is_capturing = False
+            logger.error(f"Anura Screenshot: fallback config error: {e}")
+            self._emit_portal_failure()
+            return
+
+        logger.info(f"Anura Screenshot: portal failed on X11, falling back to '{tool}'.")
         try:
             capture_proc = Gio.Subprocess.new(
                 argv,
