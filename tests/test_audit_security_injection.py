@@ -57,7 +57,9 @@ class TestSecurityAudit:
         tessdata = tmp_path / "tessdata"
         tessdata.mkdir()
 
-        with patch("anura.services.language_manager.TESSDATA_DIR", str(tessdata)):
+        with patch("anura.services.language_manager.TESSDATA_DIR", str(tessdata)), \
+             patch("gi.repository.GLib.idle_add"), \
+             patch("gi.repository.GObject.GObject.__init__"):
             lm = LanguageManager()
 
             # Try to remove a file outside the directory

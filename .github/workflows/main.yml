@@ -51,7 +51,9 @@ jobs:
             python3-gi python3-gi-cairo gir1.2-gtk-4.0 \
             gir1.2-adw-1 libadwaita-1-dev \
             tesseract-ocr tesseract-ocr-eng \
-            weston xwayland
+            weston xwayland \
+            gir1.2-gstreamer-1.0 gstreamer1.0-plugins-base \
+            gir1.2-notify-0.7 libnotify-dev
 
       - name: Install Python dependencies
         run: pip install uv && uv sync --dev
@@ -62,7 +64,7 @@ jobs:
             data/io.github.d3msudo.anura.gresource.xml \
             --sourcedir=data \
             --sourcedir=data/ui \
-            --target=anura.gresource
+            --target=data/io.github.d3msudo.anura.gresource
 
 
       - name: Run GTK tests (Wayland headless)

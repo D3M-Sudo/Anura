@@ -13,6 +13,7 @@ import threading
 import time
 from typing import ClassVar
 from urllib.request import url2pathname
+import uuid
 
 import gi
 
@@ -281,6 +282,84 @@ class ScreenshotService(GObject.GObject):
             self._is_capturing = False
             logger.error(f"Anura Screenshot: Provider capture call failed: {e}")
             self._emit_decode_error(_("Failed to initiate screenshot capture."))
+
+    def _try_host_screenshot_fallback(self, lang: str, copy: bool) -> None:
+        """
+        Attempts to use host-side screenshot tools via flatpak-spawn.
+        This is a legacy fallback for environments where xdg-desktop-portal
+        is not functional.
+        """
+        if not _is_flatpak_environment():
+            self._is_capturing = False
+            self._emit_portal_failure()
+            return
+
+        from anura.services.host_screenshot_fallback import (
+            build_detection_argv,
+            build_screenshot_argv,
+            find_tool_by_name,
+            parse_detection_output,
+        )
+
+        def _on_detection_finished(proc, res):
+            try:
+                _, stdout_buf, _ = proc.communicate_utf8_finish(res)
+                tool_name = parse_detection_output(stdout_buf)
+                tool = find_tool_by_name(tool_name) if tool_name else None
+
+                if not tool:
+                    logger.warning("Anura Screenshot: No host screenshot tools detected.")
+                    self._is_capturing = False
+                    self._emit_portal_failure()
+                    return
+
+                output_path = f"/tmp/.anura-shot-{uuid.uuid4().hex}.png"
+                argv = build_screenshot_argv(tool, output_path)
+
+                logger.info(f"Anura Screenshot: Using host fallback tool: {tool.name}")
+                proc_shot = Gio.Subprocess.new(
+                    argv,
+                    Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE,
+                )
+                proc_shot.wait_async(None, _on_screenshot_finished, (output_path,))
+
+            except GLib.Error as e:
+                logger.error(f"Anura Screenshot: Host tool detection failed: {e}")
+                self._is_capturing = False
+                self._emit_portal_failure()
+
+        def _on_screenshot_finished(proc, res, user_data):
+            output_path = user_data[0]
+            try:
+                proc.wait_finish(res)
+                if proc.get_exit_status() == 0:
+                    uri = GLib.filename_to_uri(output_path, None)
+                    # Use the standard background handler for the resulting URI
+                    get_atomic_manager().execute(
+                        self._handle_portal_uri_background, (lang, uri, copy), pass_task_id=True
+                    )
+                    self._is_capturing = False
+                else:
+                    logger.warning(f"Anura Screenshot: Host tool {proc.get_identifier()} failed.")
+                    self._is_capturing = False
+                    self._emit_portal_failure()
+            except GLib.Error as e:
+                logger.error(f"Anura Screenshot: Host screenshot process error: {e}")
+                self._is_capturing = False
+                self._emit_portal_failure()
+
+        # Step 1: Detect available tools on the host
+        try:
+            detection_argv = build_detection_argv()
+            proc = Gio.Subprocess.new(
+                detection_argv,
+                Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE,
+            )
+            proc.communicate_utf8_async(None, None, _on_detection_finished)
+        except GLib.Error as e:
+            logger.error(f"Anura Screenshot: Failed to start host tool detection: {e}")
+            self._is_capturing = False
+            self._emit_portal_failure()
 
     def _handle_portal_uri_background(self, lang: str, uri: str, copy: bool, task_id: str | None = None) -> bool:
         """Background worker to parse Portal URI and trigger OCR."""
