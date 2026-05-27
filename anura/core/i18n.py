@@ -5,7 +5,7 @@
 
 import gettext
 import locale
-import os
+from pathlib import Path
 
 from loguru import logger
 
@@ -37,17 +37,17 @@ def setup_i18n():
     """Initialize localization."""
     project_name = APP_ID
     possible_localedirs = [
-        "/app/share/locale",
-        os.path.join(os.path.dirname(__file__), "..", "..", "builddir", "po"),
-        os.path.join(os.path.dirname(__file__), "..", "..", "po"),
-        "/usr/local/share/locale",
-        "/usr/share/locale",
+        Path("/app/share/locale"),
+        Path(__file__).parent.parent.parent / "builddir" / "po",
+        Path(__file__).parent.parent.parent / "po",
+        Path("/usr/local/share/locale"),
+        Path("/usr/share/locale"),
     ]
 
     localedir = None
     for path in possible_localedirs:
-        if os.path.exists(path):
-            localedir = path
+        if path.exists():
+            localedir = str(path)
             break
 
     try:

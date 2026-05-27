@@ -4,6 +4,7 @@
 #
 # SPDX-License-Identifier: MIT
 
+import contextlib
 import os
 from pathlib import Path
 import time
@@ -42,10 +43,7 @@ def _cleanup_tts_cache(cutoff_time: float) -> None:
     """Clean up old TTS MP3 files from cache directory."""
     try:
         cache_dir_str = os.environ.get("XDG_CACHE_HOME")
-        if cache_dir_str:
-            cache_dir = Path(cache_dir_str)
-        else:
-            cache_dir = Path.home() / ".cache"
+        cache_dir = Path(cache_dir_str) if cache_dir_str else Path.home() / ".cache"
 
         tts_cache_dir = cache_dir / "anura"
 
@@ -143,21 +141,15 @@ def get_cache_info() -> dict[str, int]:
     try:
         # TTS cache info
         cache_dir_str = os.environ.get("XDG_CACHE_HOME")
-        if cache_dir_str:
-            cache_dir = Path(cache_dir_str)
-        else:
-            cache_dir = Path.home() / ".cache"
+        cache_dir = Path(cache_dir_str) if cache_dir_str else Path.home() / ".cache"
 
         tts_cache_dir = cache_dir / "anura"
 
         if tts_cache_dir.exists():
             for file_path in tts_cache_dir.glob("*.mp3"):
                 cache_info["tts_files"] += 1
-                try:
+                with contextlib.suppress(OSError, FileNotFoundError):
                     cache_info["tts_size_bytes"] += file_path.stat().st_size
-                except (OSError, FileNotFoundError):
-                    # File might have been deleted between listdir and getsize
-                    pass
 
         # Temp files info
         tessdata_dir = Path(TESSDATA_DIR)

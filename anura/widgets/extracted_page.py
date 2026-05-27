@@ -171,7 +171,7 @@ class ExtractedPage(Adw.NavigationPage):
             if self.text_copy_btn and self.text_copy_btn.get_icon_name() == "emblem-ok-symbolic":
                 # Only reset if it's still showing the checkmark (don't overwrite newer state)
                 self.text_copy_btn.set_icon_name(icon_name)
-        except Exception as e:
+        except (AttributeError, RuntimeError, TypeError) as e:
             logger.exception(f"Anura: Failed to reset copy icon: {e}")
         return GLib.SOURCE_REMOVE
 
@@ -187,7 +187,7 @@ class ExtractedPage(Adw.NavigationPage):
         if self._tts_service:
             try:
                 self._tts_service.stop_speaking()
-            except Exception as e:
+            except (AttributeError, RuntimeError) as e:
                 logger.warning(f"Failed to stop TTS during unmap: {e}")
         self._is_generating_tts = False
         if self.listen_spinner:
@@ -205,7 +205,7 @@ class ExtractedPage(Adw.NavigationPage):
         if self._tts_service:
             try:
                 self._tts_service.stop_speaking()
-            except Exception as e:
+            except (AttributeError, RuntimeError) as e:
                 logger.warning(f"Failed to cleanup TTS during dispose: {e}")
 
         # Disconnect share service signal handler
@@ -314,7 +314,7 @@ class ExtractedPage(Adw.NavigationPage):
                 callback=self._on_generated,
                 errorback=self._on_generate_error,
             )
-        except Exception as e:
+        except (AttributeError, RuntimeError, TypeError) as e:
             self._is_generating_tts = False
             self._set_spinner_active(False)
             self.swap_controls(False)

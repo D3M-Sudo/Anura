@@ -79,7 +79,7 @@ class SignalManagerMixin:
                 if GObject.signal_lookup("destroy", self.__class__):
                     self.connect("destroy", lambda _: self.teardown_all())
                     logger.debug(f"SignalManagerMixin: Auto-connected 'destroy' signal for {type(self).__name__}")
-            except Exception as e:
+            except (AttributeError, RuntimeError, TypeError) as e:
                 logger.debug(f"SignalManagerMixin: Could not auto-connect 'destroy' for {type(self).__name__}: {e}")
 
     def _ensure_state_initialized(self) -> None:
@@ -137,7 +137,7 @@ class SignalManagerMixin:
             try:
                 if isinstance(controller, Teardownable):
                     controller.teardown()
-            except Exception as e:
+            except (AttributeError, RuntimeError, TypeError) as e:
                 logger.warning(f"SignalManagerMixin: Error during controller teardown: {e}")
 
         self._registered_controllers.clear()

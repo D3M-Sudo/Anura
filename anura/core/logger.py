@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: MIT
 
 import os
+from pathlib import Path
 import sys
 
 from loguru import logger
@@ -33,13 +34,12 @@ def setup_logging():
     try:
         # Resolve log directory: XDG_STATE_HOME -> ~/.local/state/anura/logs
         state_home = os.environ.get("XDG_STATE_HOME")
-        if not state_home:
-            state_home = os.path.expanduser("~/.local/state")
+        state_home_path = Path(state_home) if state_home else Path.home() / ".local" / "state"
 
-        log_dir = os.path.join(state_home, "anura", "logs")
-        os.makedirs(log_dir, exist_ok=True)
+        log_dir = state_home_path / "anura" / "logs"
+        log_dir.mkdir(parents=True, exist_ok=True)
 
-        log_file = os.path.join(log_dir, "anura.log")
+        log_file = log_dir / "anura.log"
 
         # Add rotary handler: Max 5MB, 5 rotations, compressed plain text
         logger.add(

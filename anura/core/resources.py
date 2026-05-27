@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: MIT
 
 import contextlib
-import os
+from pathlib import Path
 
 from gi.repository import Gio, GLib
 from loguru import logger
@@ -18,17 +18,17 @@ def load_gresource_bundle() -> bool:
         return True
 
     possible_paths = [
-        "/app/share/anura/io.github.d3msudo.anura.gresource",
-        "/usr/share/anura/io.github.d3msudo.anura.gresource",
-        "/usr/local/share/anura/io.github.d3msudo.anura.gresource",
-        os.path.expanduser("~/.local/share/anura/io.github.d3msudo.anura.gresource"),
-        os.path.join(os.path.dirname(__file__), "..", "..", "data", "io.github.d3msudo.anura.gresource"),
+        Path("/app/share/anura/io.github.d3msudo.anura.gresource"),
+        Path("/usr/share/anura/io.github.d3msudo.anura.gresource"),
+        Path("/usr/local/share/anura/io.github.d3msudo.anura.gresource"),
+        Path.home() / ".local" / "share" / "anura" / "io.github.d3msudo.anura.gresource",
+        Path(__file__).parent.parent.parent / "data" / "io.github.d3msudo.anura.gresource",
     ]
 
     for path in possible_paths:
-        if os.path.exists(path):
+        if path.exists():
             try:
-                resource = Gio.Resource.load(path)
+                resource = Gio.Resource.load(str(path))
                 Gio.resources_register(resource)
                 logger.debug(f"GResource bundle loaded from: {path}")
                 return True

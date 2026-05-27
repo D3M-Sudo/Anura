@@ -5,6 +5,10 @@
 # SPDX-License-Identifier: MIT
 
 import os
+from pathlib import Path
+import re
+
+from loguru import logger
 
 # Core Application Identity
 APP_ID = "io.github.d3msudo.anura"
@@ -21,14 +25,14 @@ RESOURCE_PREFIX = "/io/github/d3msudo/anura"
 LANG_CODE_PATTERN = r"^[a-zA-Z0-9+_]{2,18}$"
 
 # XDG Base Directory specification compliance
-XDG_DATA_HOME = os.getenv("XDG_DATA_HOME", os.path.expanduser("~/.local/share"))
-XDG_CACHE_HOME = os.getenv("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
+XDG_DATA_HOME = os.getenv("XDG_DATA_HOME", str(Path.home() / ".local/share"))
+XDG_CACHE_HOME = os.getenv("XDG_CACHE_HOME", str(Path.home() / ".cache"))
 
 # Anura specific data directory for OCR models (user-downloaded)
-TESSDATA_DIR = os.path.join(XDG_DATA_HOME, "anura", "tessdata")
+TESSDATA_DIR = str(Path(XDG_DATA_HOME) / "anura" / "tessdata")
 
 # Cache directory for multi-language model pooling (Flatpak optimization)
-TESSDATA_POOL_DIR = os.path.join(XDG_CACHE_HOME, "anura", "tessdata_pool")
+TESSDATA_POOL_DIR = str(Path(XDG_CACHE_HOME) / "anura" / "tessdata_pool")
 
 # Maximum image file size (50MB) to prevent memory exhaustion (DoS)
 # Used for input validation across services and UI.
@@ -50,7 +54,7 @@ def _get_tessdata_system_dir() -> str:
     """
     # Priority 1: Environment variable override
     env_path = os.getenv("TESSDATA_PREFIX_SYSTEM")
-    if env_path and os.path.isdir(env_path):
+    if env_path and Path(env_path).is_dir():
         return env_path
 
     # Priority 2: Dynamic scan of candidate directories
@@ -63,7 +67,7 @@ def _get_tessdata_system_dir() -> str:
     ]
 
     for path in candidate_dirs:
-        if os.path.isdir(path):
+        if Path(path).is_dir():
             return path
 
     # Fallback to Flatpak default even if not present (for Flatpak builds)
@@ -88,3 +92,71 @@ TESSDATA_BEST_URL = "https://github.com/tesseract-ocr/tessdata_best/raw/923915d4
 USER_AGENT = "Anura-OCR-Client/1.0 (Linux; Flatpak)"
 REQUEST_TIMEOUT = 30  # seconds
 
+# Tesseract OCR parameters
+# --psm 3: Fully automatic page segmentation
+# --oem 1: Neural nets LSTM engine only
+
+
+def get_tesseract_config(lang_code: str) -> str:
+    """
+    Returns Tesseract config string with correct --tessdata-dir.
+
+    Tesseract only supports a single --tessdata-dir path. For multi-language
+    configurations (e.g. 'eng+ita') where models may be split between system
+    (/app/share/tessdata) and user (~/.local/share/anura/tessdata) directories,
+    this function creates a dynamic pool in the sandbox cache.
+
+    Args:
+        lang_code: The ISO 639-2 language code (e.g., 'eng', 'eng+ita')
+
+    Returns:
+        Config string with --tessdata-dir pointing to the correct directory.
+    """
+    import shutil
+
+    # Security: Validate lang_code
+    if not lang_code or not re.match(LANG_CODE_PATTERN, lang_code):
+        logger.error(f"Anura: Invalid language code '{lang_code}' - using 'eng'")
+        lang_code = "eng"
+
+    # If it's a single language, use standard priority logic without pooling
+    if "+" not in lang_code:
+        user_model = Path(TESSDATA_DIR) / f"{lang_code}.traineddata"
+        if user_model.exists():
+            return f'--tessdata-dir "{TESSDATA_DIR}" --psm 3 --oem 1'
+
+        system_model = Path(TESSDATA_SYSTEM_DIR) / f"{lang_code}.traineddata"
+        if system_model.exists():
+            return f'--tessdata-dir "{TESSDATA_SYSTEM_DIR}" --psm 3 --oem 1'
+
+        return f'--tessdata-dir "{TESSDATA_DIR}" --psm 3 --oem 1'
+
+    # Multi-language: Dynamic Pooling Approach
+    codes = lang_code.split("+")
+    Path(TESSDATA_POOL_DIR).mkdir(parents=True, exist_ok=True)
+
+    for code in codes:
+        # Resolve source
+        source_path = None
+        user_path = Path(TESSDATA_DIR) / f"{code}.traineddata"
+        system_path = Path(TESSDATA_SYSTEM_DIR) / f"{code}.traineddata"
+
+        if user_path.exists():
+            source_path = user_path
+        elif system_path.exists():
+            source_path = system_path
+
+        if source_path:
+            dest_path = Path(TESSDATA_POOL_DIR) / f"{code}.traineddata"
+            # Create hard link with fallback to copy (for cross-filesystem)
+            try:
+                if dest_path.exists():
+                    dest_path.unlink()
+                os.link(source_path, dest_path)
+            except (OSError, AttributeError):
+                try:
+                    shutil.copy2(source_path, dest_path)
+                except OSError as e:
+                    logger.error(f"Anura Pooling: Failed to copy {code}: {e}")
+
+    return f'--tessdata-dir "{TESSDATA_POOL_DIR}" --psm 3 --oem 1'

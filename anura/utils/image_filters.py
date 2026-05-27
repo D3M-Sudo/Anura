@@ -160,7 +160,7 @@ class AdaptiveThresholdFilter(ImageFilterBase):
         except InterruptedError:
             logger.debug("Anura Filter: Cancellation intercepted, re-raising InterruptedError")
             raise
-        except Exception as e:
+        except (AttributeError, RuntimeError, TypeError, ValueError) as e:
             logger.warning(f"Thresholding filter failed: {e}")
             return image
 
@@ -207,17 +207,17 @@ class FilterChain:
                 if img is not result:
                     try:
                         img.close()
-                    except Exception as e:
+                    except (AttributeError, RuntimeError) as e:
                         logger.debug(f"Failed to close intermediate image: {e}")
 
             return result
-        except Exception as e:
+        except (AttributeError, RuntimeError, TypeError, ValueError, OSError) as e:
             # If the pipeline fails, ensure all successfully created intermediates are closed
             logger.error(f"Filter chain failed: {e}")
             for img in intermediates:
                 try:
                     img.close()
-                except Exception as e_close:
+                except (AttributeError, RuntimeError) as e_close:
                     logger.debug(f"Failed to close intermediate image: {e_close}")
             raise
 

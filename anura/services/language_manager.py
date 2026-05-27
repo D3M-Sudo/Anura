@@ -8,6 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 import contextlib
 from gettext import gettext as _
 import os
+from pathlib import Path
 import re
 import shutil
 import tempfile
@@ -243,30 +244,31 @@ class LanguageManager(GObject.GObject):
 
         # Use lock to prevent race condition when multiple threads try to create directory
         with self._cache_lock:
-            if not os.path.exists(TESSDATA_DIR):
+            tess_path = Path(TESSDATA_DIR)
+            if not tess_path.exists():
                 logger.warning(
                     "Anura: tessdata directory not found. It will be created on first language download.",
                 )
                 with contextlib.suppress(FileExistsError):
                     # Another thread created it between check and makedirs
-                    os.makedirs(TESSDATA_DIR, exist_ok=True)
+                    tess_path.mkdir(parents=True, exist_ok=True)
 
         # Clean up orphaned temp files from crashed/interrupted downloads
         try:
+            tess_path = Path(TESSDATA_DIR)
             # Check directory readability first
-            if not os.access(TESSDATA_DIR, os.R_OK | os.X_OK):
+            if not os.access(tess_path, os.R_OK | os.X_OK):
                 logger.warning("Anura: Cannot read tessdata directory for cleanup")
             else:
-                temp_files = [f for f in os.listdir(TESSDATA_DIR) if f.endswith(".tmp")]
-                for temp_file in temp_files:
-                    temp_path = os.path.join(TESSDATA_DIR, temp_file)
-                    try:
-                        os.remove(temp_path)
-                        logger.warning("Anura: Cleaned up orphaned temporary language file")
-                    except PermissionError:
-                        logger.error("Anura: Permission denied removing orphaned temporary language file")
-                    except OSError:
-                        logger.error("Anura: Failed to remove orphaned temporary language file")
+                for file_path in tess_path.iterdir():
+                    if file_path.suffix == ".tmp":
+                        try:
+                            file_path.unlink()
+                            logger.warning("Anura: Cleaned up orphaned temporary language file")
+                        except PermissionError:
+                            logger.error("Anura: Permission denied removing orphaned temporary language file")
+                        except OSError:
+                            logger.error("Anura: Failed to remove orphaned temporary language file")
         except OSError:
             logger.error("Anura: Error scanning for orphaned temporary language files")
 
@@ -296,36 +298,38 @@ class LanguageManager(GObject.GObject):
                 logger.debug(f"Anura LanguageManager: Scanning system tessdata directory: {TESSDATA_SYSTEM_DIR}")
 
                 # User-downloaded models (~/.var/app/.../data/anura/tessdata/)
-                if os.path.exists(TESSDATA_DIR):
+                tess_path = Path(TESSDATA_DIR)
+                if tess_path.exists():
                     try:
                         user_files = [
-                            f
-                            for f in os.listdir(TESSDATA_DIR)
-                            if f.endswith(".traineddata") and not f.startswith("osd")
+                            f.name
+                            for f in tess_path.iterdir()
+                            if f.name.endswith(".traineddata") and not f.name.startswith("osd")
                         ]
                         logger.debug(
                             f"Anura LanguageManager: User directory scanned, "
                             f"{len(user_files)} models found: {user_files}",
                         )
-                        codes.update(os.path.splitext(f)[0] for f in user_files)
+                        codes.update(Path(f).stem for f in user_files)
                     except OSError as e:
                         logger.exception(f"Anura LanguageManager: Error reading user tessdata directory: {e}")
                 else:
                     logger.debug(f"Anura LanguageManager: User tessdata directory does not exist: {TESSDATA_DIR}")
 
                 # Bundled system models (/app/share/tessdata/ — eng, ita pre-installed)
-                if os.path.exists(TESSDATA_SYSTEM_DIR):
+                system_path = Path(TESSDATA_SYSTEM_DIR)
+                if system_path.exists():
                     try:
                         system_files = [
-                            f
-                            for f in os.listdir(TESSDATA_SYSTEM_DIR)
-                            if f.endswith(".traineddata") and not f.startswith("osd")
+                            f.name
+                            for f in system_path.iterdir()
+                            if f.name.endswith(".traineddata") and not f.name.startswith("osd")
                         ]
                         logger.debug(
                             f"Anura LanguageManager: System directory scanned, "
                             f"{len(system_files)} models found: {system_files}",
                         )
-                        codes.update(os.path.splitext(f)[0] for f in system_files)
+                        codes.update(Path(f).stem for f in system_files)
                     except OSError as e:
                         logger.exception(f"Anura LanguageManager: Error reading system tessdata directory: {e}")
                 else:
@@ -365,8 +369,8 @@ class LanguageManager(GObject.GObject):
         def _on_added_idle(c):
             try:
                 self.emit("added", c)
-            except Exception:
-                logger.exception(f"Anura: Failed to emit 'added' signal for {c}")
+            except (AttributeError, RuntimeError, TypeError) as e:
+                logger.exception(f"Anura: Failed to emit 'added' signal for {c}: {e}")
             return GLib.SOURCE_REMOVE
 
         GLib.idle_add(_on_added_idle, code, priority=GLib.PRIORITY_DEFAULT)
@@ -376,7 +380,7 @@ class LanguageManager(GObject.GObject):
         def download_done_wrapper(future) -> None:
             try:
                 result_code = future.result()
-            except Exception as e:
+            except (AttributeError, RuntimeError, TypeError, ValueError, OSError) as e:
                 logger.error(f"Anura: Unexpected error during download of {code}: {e}")
                 result_code = None
 
@@ -410,7 +414,7 @@ class LanguageManager(GObject.GObject):
             return None
 
         tessfile = f"{filename_code}.traineddata"
-        final_path = os.path.join(TESSDATA_DIR, f"{code}.traineddata")  # Always save with original code
+        final_path = Path(TESSDATA_DIR) / f"{code}.traineddata"  # Always save with original code
         tmp_path = None
         for url_base in (TESSDATA_BEST_URL, TESSDATA_URL):
             try:
@@ -420,7 +424,7 @@ class LanguageManager(GObject.GObject):
                     suffix=".tmp",
                     delete=False,
                 ) as tmp:
-                    tmp_path = tmp.name
+                    tmp_path = Path(tmp.name)
 
                 try:
                     # Use central session with consistent headers and timeout
@@ -435,7 +439,7 @@ class LanguageManager(GObject.GObject):
                     last_progress_time = time.monotonic()
                     last_progress_value = 0
 
-                    with open(tmp_path, "wb") as f:
+                    with tmp_path.open("wb") as f:
                         for chunk in response.iter_content(chunk_size=8192):
                             if cancellable and cancellable.is_cancelled():
                                 logger.debug(f"Anura: Download of {code} cancelled")
@@ -455,7 +459,7 @@ class LanguageManager(GObject.GObject):
                                             def _on_progress_idle(c, p):
                                                 try:
                                                     self.emit("downloading", c, p)
-                                                except Exception as e:
+                                                except (AttributeError, RuntimeError, TypeError) as e:
                                                     logger.error(f"Anura: Failed to emit 'downloading' for {c}: {e}")
                                                 return GLib.SOURCE_REMOVE
 
@@ -468,10 +472,10 @@ class LanguageManager(GObject.GObject):
                                             last_progress_value = progress
                                     else:
                                         # No content-length header, emit indeterminate progress
-                                        def _on_progress_idle(c, p):
+                                        def _on_progress_idle(c, _):
                                             try:
-                                                self.emit("downloading", c, p)
-                                            except Exception as e:
+                                                self.emit("downloading", c, -1)
+                                            except (AttributeError, RuntimeError, TypeError) as e:
                                                 logger.error(f"Anura: Failed to emit 'downloading' for {c}: {e}")
                                             return GLib.SOURCE_REMOVE
 
@@ -488,9 +492,9 @@ class LanguageManager(GObject.GObject):
 
                 finally:
                     # Ensure temporary file is always cleaned up
-                    if tmp_path and os.path.exists(tmp_path):
+                    if tmp_path and tmp_path.exists():
                         try:
-                            os.unlink(tmp_path)
+                            tmp_path.unlink()
                             tmp_path = None
                         except OSError:
                             logger.warning(f"Anura: Failed to clean up temporary file: {tmp_path}")
@@ -520,8 +524,8 @@ class LanguageManager(GObject.GObject):
                 def _on_downloaded_idle(c):
                     try:
                         self.emit("downloaded", c)
-                    except Exception:
-                        logger.exception(f"Anura: Failed to emit 'downloaded' for {c}")
+                    except (AttributeError, RuntimeError, TypeError) as e:
+                        logger.exception(f"Anura: Failed to emit 'downloaded' for {c}: {e}")
                     return GLib.SOURCE_REMOVE
 
                 GLib.idle_add(_on_downloaded_idle, result_code, priority=GLib.PRIORITY_DEFAULT)
@@ -530,8 +534,8 @@ class LanguageManager(GObject.GObject):
                 def _on_failed_idle(c):
                     try:
                         self.emit("download-failed", c)
-                    except Exception:
-                        logger.exception(f"Anura: Failed to emit 'download-failed' for {c}")
+                    except (AttributeError, RuntimeError, TypeError) as e:
+                        logger.exception(f"Anura: Failed to emit 'download-failed' for {c}: {e}")
                     return GLib.SOURCE_REMOVE
 
                 GLib.idle_add(_on_failed_idle, requested_code, priority=GLib.PRIORITY_DEFAULT)
@@ -547,12 +551,12 @@ class LanguageManager(GObject.GObject):
             logger.error(f"Anura: Blocked invalid language code removal attempt: '{code}'")
             return
 
-        path = os.path.join(TESSDATA_DIR, f"{code}.traineddata")
-        if not os.path.exists(path):
+        path = Path(TESSDATA_DIR) / f"{code}.traineddata"
+        if not path.exists():
             return
 
         try:
-            os.remove(path)
+            path.unlink()
             with self._cache_lock:
                 self._need_update_cache = True
             logger.info(f"Anura: Model '{code}' removed successfully.")
@@ -560,8 +564,8 @@ class LanguageManager(GObject.GObject):
             def _on_removed_idle(c):
                 try:
                     self.emit("removed", c)
-                except Exception:
-                    logger.exception(f"Anura: Failed to emit 'removed' for {c}")
+                except (AttributeError, RuntimeError, TypeError) as e:
+                    logger.exception(f"Anura: Failed to emit 'removed' for {c}: {e}")
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_removed_idle, code, priority=GLib.PRIORITY_DEFAULT)
