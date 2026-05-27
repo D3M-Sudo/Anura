@@ -12,7 +12,6 @@ import pytest
 pytest.importorskip("gi")
 
 from anura.config import LANG_CODE_PATTERN
-from anura.services.host_screenshot_fallback import _validate_tool_name
 from anura.utils.validators import uri_validator
 
 
@@ -41,13 +40,6 @@ class TestSecurityAudit:
         assert uri_validator("https://google.com\r\n/evil") is False
         assert uri_validator("https://google.com\0/evil") is False
 
-    def test_host_tool_name_validation(self):
-        # Ensure tool names in fallback are strictly validated
-        malicious_tools = ["gnome-screenshot; rm -rf /", "scrot && touch /tmp/pwned", "$(whoami)", "import\n", " tool"]
-
-        for tool in malicious_tools:
-            with pytest.raises(ValueError, match="unsafe tool name"):
-                _validate_tool_name(tool)
 
     def test_absolute_path_injection_in_language_manager(self, tmp_path):
         # Test that LanguageManager.remove_language validates input

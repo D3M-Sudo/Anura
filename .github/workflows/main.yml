@@ -53,7 +53,7 @@ jobs:
             tesseract-ocr tesseract-ocr-eng \
             weston xwayland \
             gir1.2-gstreamer-1.0 gstreamer1.0-plugins-base \
-            gir1.2-notify-0.7 libnotify-dev
+            gir1.2-notify-0.7 libnotify-dev gir1.2-xdp-1.0
 
       - name: Install Python dependencies
         run: pip install uv && uv sync --dev

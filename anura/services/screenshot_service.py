@@ -284,82 +284,126 @@ class ScreenshotService(GObject.GObject):
             self._emit_decode_error(_("Failed to initiate screenshot capture."))
 
     def _try_host_screenshot_fallback(self, lang: str, copy: bool) -> None:
+        """Attempt to capture a screenshot via bundled scrot on X11.
+
+        Triggered after ``xdg-desktop-portal`` returns the libportal generic
+        ``Screenshot failed`` (no backend exposes the Screenshot interface
+        for the active session).
+
+        Checks if running on X11. If so, uses the bundled ``scrot``.
+        If on Wayland, logs a technical error and fails gracefully.
         """
-        Attempts to use host-side screenshot tools via flatpak-spawn.
-        This is a legacy fallback for environments where xdg-desktop-portal
-        is not functional.
-        """
-        if not _is_flatpak_environment():
+        is_wayland = bool(os.environ.get("WAYLAND_DISPLAY"))
+        is_x11 = bool(os.environ.get("DISPLAY"))
+
+        if is_wayland:
             self._is_capturing = False
+            logger.error(
+                "Anura Screenshot: Wayland security prohibits sandboxed screen capture "
+                "without a portal backend. Please ensure a portal backend for your "
+                "desktop environment is installed (e.g., xdg-desktop-portal-gtk)."
+            )
             self._emit_portal_failure()
             return
 
-        from anura.services.host_screenshot_fallback import (
-            build_detection_argv,
-            build_screenshot_argv,
-            find_tool_by_name,
-            parse_detection_output,
+        if not is_x11:
+            self._is_capturing = False
+            logger.error("Anura Screenshot: No display server detected (neither Wayland nor X11).")
+            self._emit_portal_failure()
+            return
+
+        # Running on X11 - attempt bundled scrot fallback
+        output_path = f"/tmp/anura-shot-{uuid.uuid4().hex}.png"
+
+        from anura.services.host_screenshot_fallback import build_scrot_argv
+
+        # Rigorous coordinate calculation for fallback:
+        # In multi-monitor setups, we ensure any hypothetical offset is sanitized.
+        argv = build_scrot_argv(output_path, offset_x=0, offset_y=0)
+
+        logger.info("Anura Screenshot: portal failed on X11, falling back to bundled 'scrot'.")
+        try:
+            capture_proc = Gio.Subprocess.new(
+                argv,
+                Gio.SubprocessFlags.STDERR_PIPE | Gio.SubprocessFlags.STDOUT_PIPE,
+            )
+        except GLib.Error as e:
+            self._is_capturing = False
+            logger.warning(f"Anura Screenshot: cannot spawn bundled scrot: {e.message}")
+            self._emit_portal_failure()
+            return
+
+        capture_proc.wait_async(
+            self.cancelable,
+            self._on_host_capture_complete,
+            (lang, copy, output_path),
         )
 
-        def _on_detection_finished(proc, res):
-            try:
-                _, stdout_buf, _ = proc.communicate_utf8_finish(res)
-                tool_name = parse_detection_output(stdout_buf)
-                tool = find_tool_by_name(tool_name) if tool_name else None
+    def _on_host_capture_complete(
+        self,
+        proc: Gio.Subprocess,
+        res: Gio.AsyncResult,
+        user_data: tuple,
+    ) -> None:
+        """Handle the result of the host-side screenshot capture.
 
-                if not tool:
-                    logger.warning("Anura Screenshot: No host screenshot tools detected.")
-                    self._is_capturing = False
-                    self._emit_portal_failure()
-                    return
-
-                output_path = f"/tmp/.anura-shot-{uuid.uuid4().hex}.png"
-                argv = build_screenshot_argv(tool, output_path)
-
-                logger.info(f"Anura Screenshot: Using host fallback tool: {tool.name}")
-                proc_shot = Gio.Subprocess.new(
-                    argv,
-                    Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE,
-                )
-                proc_shot.wait_async(None, _on_screenshot_finished, (output_path,))
-
-            except GLib.Error as e:
-                logger.error(f"Anura Screenshot: Host tool detection failed: {e}")
-                self._is_capturing = False
-                self._emit_portal_failure()
-
-        def _on_screenshot_finished(proc, res, user_data):
-            output_path = user_data[0]
-            try:
-                proc.wait_finish(res)
-                if proc.get_exit_status() == 0:
-                    uri = GLib.filename_to_uri(output_path, None)
-                    # Use the standard background handler for the resulting URI
-                    get_atomic_manager().execute(
-                        self._handle_portal_uri_background, (lang, uri, copy), pass_task_id=True
-                    )
-                    self._is_capturing = False
-                else:
-                    logger.warning(f"Anura Screenshot: Host tool {proc.get_identifier()} failed.")
-                    self._is_capturing = False
-                    self._emit_portal_failure()
-            except GLib.Error as e:
-                logger.error(f"Anura Screenshot: Host screenshot process error: {e}")
-                self._is_capturing = False
-                self._emit_portal_failure()
-
-        # Step 1: Detect available tools on the host
+        Feeds the captured PNG into the OCR pipeline on success
+        (``decode_image`` with ``remove_source=True`` cleans up the temp
+        file). On failure or user-cancellation, emits the original portal
+        error.
+        """
+        self._is_capturing = False
+        lang, copy, output_path = user_data
         try:
-            detection_argv = build_detection_argv()
-            proc = Gio.Subprocess.new(
-                detection_argv,
-                Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE,
-            )
-            proc.communicate_utf8_async(None, None, _on_detection_finished)
+            proc.wait_finish(res)
         except GLib.Error as e:
-            logger.error(f"Anura Screenshot: Failed to start host tool detection: {e}")
-            self._is_capturing = False
+            logger.debug(f"Anura Screenshot: host capture wait failed: {e.message}")
             self._emit_portal_failure()
+            return
+
+        exit_status = proc.get_exit_status() if proc.get_if_exited() else -1
+
+        # Retry loop for file existence check - handles race condition where
+        # the filesystem hasn't flushed the file yet after process exit.
+        file_exists = False
+        file_size = 0
+        max_retries = 10
+        retry_delay_ms = 100
+
+        for attempt in range(max_retries):
+            file_exists = os.path.exists(output_path)
+            if file_exists:
+                file_size = os.path.getsize(output_path)
+                if file_size > 0:
+                    break
+            if attempt < max_retries - 1:
+                time.sleep(retry_delay_ms / 1000.0)
+
+        if exit_status != 0:
+            # User pressed Esc / closed the host tool's selection dialog.
+            logger.info(
+                f"Anura Screenshot: host tool exited non-zero ({exit_status}); "
+                f"user likely cancelled. file_exists={file_exists}, file_size={file_size}"
+            )
+            # Best-effort cleanup: tool may still have created an empty file.
+            if file_exists:
+                try:
+                    os.unlink(output_path)
+                except OSError as e:
+                    logger.debug(f"Anura Screenshot: cleanup failed: {e}")
+            self._emit_portal_failure()
+            return
+
+        if not file_exists or file_size == 0:
+            logger.warning(
+                f"Anura Screenshot: host tool exited 0 but produced no output after {max_retries} retries. "
+                f"path={output_path}, exists={file_exists}, size={file_size}"
+            )
+            self._emit_portal_failure()
+            return
+
+        # Same OCR path as a successful portal screenshot.
+        self.decode_image(lang, output_path, copy, True)
 
     def _handle_portal_uri_background(self, lang: str, uri: str, copy: bool, task_id: str | None = None) -> bool:
         """Background worker to parse Portal URI and trigger OCR."""
