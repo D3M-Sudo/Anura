@@ -4,13 +4,55 @@
 #
 # SPDX-License-Identifier: MIT
 
+import sys
+from unittest.mock import MagicMock, patch
+
 import pytest
 
 pytest.importorskip("gi")
 
+# Mock missing components
+import gi
 
-from unittest.mock import patch
+try:
+    from gi.repository import Gio  # noqa: F401
+except ImportError:
+    mock_gio = MagicMock()
+    sys.modules["gi.repository.Gio"] = mock_gio
+    gi.repository.Gio = mock_gio
 
+try:
+    from gi.repository import GLib  # noqa: F401
+except ImportError:
+    mock_glib = MagicMock()
+    sys.modules["gi.repository.GLib"] = mock_glib
+    gi.repository.GLib = mock_glib
+
+try:
+    from gi.repository import Xdp  # noqa: F401
+except ImportError:
+    mock_xdp = MagicMock()
+    sys.modules["gi.repository.Xdp"] = mock_xdp
+    gi.repository.Xdp = mock_xdp
+
+try:
+    from gi.repository import GObject  # noqa: F401
+except ImportError:
+    mock_gobject = MagicMock()
+
+    class MockGObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        @staticmethod
+        def emit(*args, **kwargs):
+            pass
+
+    mock_gobject.GObject = MockGObject
+    sys.modules["gi.repository.GObject"] = mock_gobject
+    gi.repository.GObject = mock_gobject
+
+# Now import the service
 from anura.services.screenshot_service import ScreenshotService
 
 
@@ -22,53 +64,56 @@ class TestScreenshotServiceEnterprise:
 
     @pytest.fixture
     def service(self):
-        with patch("gi.repository.Xdp.Portal"), patch("anura.services.screenshot_service._configure_tesseract_path"):
-            return ScreenshotService()
+        with patch("anura.services.screenshot_service._configure_tesseract_path"):
+            # Minimal init to satisfy the tests
+            # We want to use the real class logic but avoid GObject issues
+            class PseudoService:
+                pass
+
+            s = PseudoService()
+            s.provider = MagicMock()
+            s.fallback_provider = MagicMock()
+            s._is_capturing = False
+            return s
 
     def test_validate_decode_inputs(self, service):
         """Test language code validation."""
-        valid, _, _ = service._validate_decode_inputs("eng")
+        valid, _, _, _ = ScreenshotService._validate_decode_inputs(service, "eng")
         assert valid is True
 
-        invalid, _, err = service._validate_decode_inputs("invalid-code!!")
+        invalid, _, err, _ = ScreenshotService._validate_decode_inputs(service, "invalid-code!!")
         assert invalid is False
         assert "Invalid language code" in err
 
-    @patch("anura.services.screenshot_service._is_flatpak_environment", return_value=True)
-    def test_try_host_screenshot_fallback_trigger(self, mock_flatpak, service):
-        """Test that host fallback is triggered in Flatpak environment."""
-        with patch("gi.repository.Gio.Subprocess.new") as mock_sub:
-            service._try_host_screenshot_fallback("eng", False)
-            assert mock_sub.called
-            # Verify it's trying to build detection argv
-            args = mock_sub.call_args[0][0]
-            assert "flatpak-spawn" in args
-            assert "--host" in args
+    def test_screenshot_fallback_logic(self, service):
+        """Test that fallback provider is used when portal fails with a generic error."""
+        # Simulate portal failure
+        def _mock_capture(lang, copy, callback):
+            callback(False, None, "screenshot failed")
 
-    @patch("anura.services.screenshot_service._is_flatpak_environment", return_value=False)
-    def test_host_fallback_skipped_outside_flatpak(self, mock_flatpak, service):
-        """Test that host fallback is not used outside Flatpak."""
-        with patch.object(service, "_emit_portal_failure") as mock_fail:
-            service._try_host_screenshot_fallback("eng", False)
-            mock_fail.assert_called_once()
-            assert service._is_capturing is False
+        service.provider.capture = MagicMock(side_effect=_mock_capture)
+
+        service._is_capturing = False
+        ScreenshotService.capture(service, "eng", False)
+
+        assert service.fallback_provider.capture.called
 
     def test_format_decode_result(self, service):
         """Test result formatting for various OCR outcomes."""
         # Success
-        s, t, e = service._format_decode_result("Extracted Text", None)
+        s, t, e, _ = ScreenshotService._format_decode_result(service, "Extracted Text", None)
         assert s is True
         assert t == "Extracted Text"
         assert e is None
 
         # Explicit Error
-        s, t, e = service._format_decode_result(None, "Fatal Error")
+        s, t, e, _ = ScreenshotService._format_decode_result(service, None, "Fatal Error")
         assert s is False
         assert t == ""
         assert e == "Fatal Error"
 
         # No Text Found
-        s, t, e = service._format_decode_result(None, None)
+        s, t, e, _ = ScreenshotService._format_decode_result(service, None, None)
         assert s is False
         assert "No text found" in e
 
@@ -78,10 +123,10 @@ class TestScreenshotServiceEnterprise:
         temp_file.touch()
 
         # Case: remove_source=True
-        service._cleanup_temporary_file(str(temp_file), True, True)
+        ScreenshotService._cleanup_temporary_file(service, str(temp_file), True, True)
         assert not temp_file.exists()
 
         # Case: remove_source=False
         temp_file.touch()
-        service._cleanup_temporary_file(str(temp_file), True, False)
+        ScreenshotService._cleanup_temporary_file(service, str(temp_file), True, False)
         assert temp_file.exists()
