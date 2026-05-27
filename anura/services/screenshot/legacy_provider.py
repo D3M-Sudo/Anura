@@ -31,7 +31,7 @@ class LegacyX11Provider(ScreenshotProvider):
                 Gio.SubprocessFlags.STDERR_PIPE | Gio.SubprocessFlags.STDOUT_PIPE,
             )
             proc.wait_async(None, self._on_finish, (callback, output_path))
-        except Exception as e:
+        except (AttributeError, RuntimeError, OSError) as e:
             logger.error(f"LegacyX11Provider: Failed to spawn scrot: {e}")
             callback(False, None, str(e))
 
@@ -44,6 +44,6 @@ class LegacyX11Provider(ScreenshotProvider):
                 callback(True, uri, None)
             else:
                 callback(False, None, "Screenshot tool exited with error or was cancelled.")
-        except Exception as e:
+        except (AttributeError, RuntimeError, OSError) as e:
             logger.error(f"LegacyX11Provider: Error waiting for process: {e}")
             callback(False, None, str(e))

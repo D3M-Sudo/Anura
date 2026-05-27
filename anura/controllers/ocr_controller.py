@@ -135,7 +135,7 @@ class OcrController(GObject.GObject, SignalManagerMixin):
             advice = detect_portal_advice()
             self._window.portal_banner.set_title(advice.short_message)
             self._window.portal_banner.set_revealed(True)
-        except (AttributeError, RuntimeError) as e:
+        except (AttributeError, RuntimeError, TypeError) as e:
             logger.error(f"OcrController: Error handling portal backend missing: {e}")
 
     def _on_portal_banner_dismissed(self, _banner: Adw.Banner) -> None:

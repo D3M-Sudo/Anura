@@ -364,8 +364,8 @@ class LanguageManager(GObject.GObject):
         def _on_added_idle(c):
             try:
                 self.emit("added", c)
-            except Exception:
-                logger.exception(f"Anura: Failed to emit 'added' signal for {c}")
+            except (RuntimeError, TypeError) as e:
+                logger.error(f"Anura: Failed to emit 'added' signal for {c}: {e}")
             return GLib.SOURCE_REMOVE
 
         GLib.idle_add(_on_added_idle, code, priority=GLib.PRIORITY_DEFAULT)
@@ -375,7 +375,7 @@ class LanguageManager(GObject.GObject):
         def download_done_wrapper(future) -> None:
             try:
                 result_code = future.result()
-            except Exception as e:
+            except (AttributeError, RuntimeError, requests.RequestException) as e:
                 logger.error(f"Anura: Unexpected error during download of {code}: {e}")
                 result_code = None
 
@@ -454,7 +454,7 @@ class LanguageManager(GObject.GObject):
                                             def _on_progress_idle(c, p):
                                                 try:
                                                     self.emit("downloading", c, p)
-                                                except Exception as e:
+                                                except (RuntimeError, TypeError) as e:
                                                     logger.error(f"Anura: Failed to emit 'downloading' for {c}: {e}")
                                                 return GLib.SOURCE_REMOVE
 
@@ -470,7 +470,7 @@ class LanguageManager(GObject.GObject):
                                         def _on_progress_idle(c, p):
                                             try:
                                                 self.emit("downloading", c, p)
-                                            except Exception as e:
+                                            except (RuntimeError, TypeError) as e:
                                                 logger.error(f"Anura: Failed to emit 'downloading' for {c}: {e}")
                                             return GLib.SOURCE_REMOVE
 
@@ -519,8 +519,8 @@ class LanguageManager(GObject.GObject):
                 def _on_downloaded_idle(c):
                     try:
                         self.emit("downloaded", c)
-                    except Exception:
-                        logger.exception(f"Anura: Failed to emit 'downloaded' for {c}")
+                    except (RuntimeError, TypeError) as e:
+                        logger.error(f"Anura: Failed to emit 'downloaded' for {c}: {e}")
                     return GLib.SOURCE_REMOVE
 
                 GLib.idle_add(_on_downloaded_idle, result_code, priority=GLib.PRIORITY_DEFAULT)
@@ -529,8 +529,8 @@ class LanguageManager(GObject.GObject):
                 def _on_failed_idle(c):
                     try:
                         self.emit("download-failed", c)
-                    except Exception:
-                        logger.exception(f"Anura: Failed to emit 'download-failed' for {c}")
+                    except (RuntimeError, TypeError) as e:
+                        logger.error(f"Anura: Failed to emit 'download-failed' for {c}: {e}")
                     return GLib.SOURCE_REMOVE
 
                 GLib.idle_add(_on_failed_idle, requested_code, priority=GLib.PRIORITY_DEFAULT)
@@ -559,8 +559,8 @@ class LanguageManager(GObject.GObject):
             def _on_removed_idle(c):
                 try:
                     self.emit("removed", c)
-                except Exception:
-                    logger.exception(f"Anura: Failed to emit 'removed' for {c}")
+                except (RuntimeError, TypeError) as e:
+                    logger.error(f"Anura: Failed to emit 'removed' for {c}: {e}")
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_removed_idle, code, priority=GLib.PRIORITY_DEFAULT)

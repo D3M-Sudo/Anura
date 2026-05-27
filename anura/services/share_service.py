@@ -223,8 +223,8 @@ class ShareService(GObject.GObject):
                         def _on_toast_idle(msg):
                             try:
                                 main_window.show_toast(msg)
-                            except (AttributeError, RuntimeError) as e:
-                                logger.exception(f"Anura: Failed to show toast: {e}")
+                            except (AttributeError, RuntimeError, TypeError) as e:
+                                logger.error(f"Anura: Failed to show toast: {e}")
                             return GLib.SOURCE_REMOVE
 
                         GLib.idle_add(_on_toast_idle, _("Cannot show dialog without active window"))
@@ -266,8 +266,8 @@ class ShareService(GObject.GObject):
                 def _on_share_idle(res):
                     try:
                         self.emit("share", res)
-                    except Exception as e:
-                        logger.exception(f"Anura: Failed to emit share status: {e}")
+                    except (RuntimeError, TypeError) as e:
+                        logger.error(f"Anura: Failed to emit share status: {e}")
                     return GLib.SOURCE_REMOVE
 
                 GLib.idle_add(_on_share_idle, False)

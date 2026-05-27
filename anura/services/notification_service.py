@@ -242,7 +242,7 @@ class NotificationService:
             logger.debug(f"NotificationService: Portal notification sent: {title}, dismiss in {self._DISMISS_SECONDS}s")
             return True
 
-        except Exception as e:
+        except (AttributeError, RuntimeError, TypeError) as e:
             logger.warning(f"NotificationService: Portal notification failed: {e}")
             return False
 
@@ -252,7 +252,7 @@ class NotificationService:
             if self._portal is not None:
                 self._portal.remove_notification(notification_id, None, None, None)
                 logger.debug(f"NotificationService: Dismissed portal notification: {notification_id}")
-        except Exception as e:
+        except (AttributeError, RuntimeError) as e:
             logger.debug(f"NotificationService: Failed to dismiss portal notification: {e}")
         # Remove from tracking set regardless
         self._active_notifications.discard(notification_id)
@@ -266,7 +266,7 @@ class NotificationService:
             notification.show()
             logger.debug(f"NotificationService: libnotify notification sent: {title}")
             return True
-        except Exception as e:
+        except (AttributeError, RuntimeError, TypeError) as e:
             logger.warning(f"NotificationService: libnotify notification failed: {e}")
             return False
 
@@ -288,6 +288,6 @@ class NotificationService:
                 for notification_id in list(self._active_notifications):
                     try:
                         self._portal.remove_notification(notification_id, None, None, None)
-                    except Exception as e:
+                    except (AttributeError, RuntimeError, TypeError) as e:
                         logger.debug(f"NotificationService: Could not remove notification {notification_id}: {e}")
             self._active_notifications.clear()

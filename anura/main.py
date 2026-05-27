@@ -123,7 +123,7 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         self.teardown_all()
         try:
             get_language_manager().shutdown()
-        except Exception as e:
+        except (AttributeError, RuntimeError, TypeError) as e:
             logger.debug(f"Failed to shutdown LanguageManager: {e}")
 
         from anura.core.atomic_task_manager import get_atomic_manager
@@ -141,13 +141,13 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
 
                     if Notify.is_initted():
                         Notify.uninit()
-            except Exception as e:
+            except (AttributeError, RuntimeError, TypeError) as e:
                 logger.error(f"Failed to uninitialize Notify service: {e}")
 
-        with contextlib.suppress(Exception):
+        with contextlib.suppress(AttributeError, RuntimeError):
             get_clipboard_service().cancel_pending_operations()
 
-        with contextlib.suppress(Exception):
+        with contextlib.suppress(AttributeError, RuntimeError):
             from anura.services.tts import get_tts_service
 
             get_tts_service().cleanup()
@@ -276,7 +276,7 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
             from anura._release_notes import get_release_notes
 
             notes = get_release_notes()
-        except Exception as e:
+        except (ImportError, AttributeError, RuntimeError) as e:
             logger.debug(f"Could not load release notes: {e}")
 
         if not notes or not notes.strip():

@@ -198,7 +198,7 @@ class ClipboardService(GObject.GObject):
 
             GLib.idle_add(process_result)
 
-        except Exception as e:
+        except (AttributeError, TypeError, ValueError, RuntimeError) as e:
             # Handle unexpected errors in the callback setup itself
             logger.error(f"Anura Clipboard: Unexpected error in callback setup: {e}")
 
@@ -273,14 +273,14 @@ class ClipboardService(GObject.GObject):
         """Return MIME types currently advertised by the clipboard (best effort)."""
         try:
             formats = self.clipboard.get_formats()
-        except Exception as e:
+        except (AttributeError, RuntimeError, TypeError) as e:
             logger.debug(f"Anura Clipboard: get_formats() failed: {e}")
             return []
         if formats is None:
             return []
         try:
             return list(formats.get_mime_types() or [])
-        except Exception as e:
+        except (AttributeError, RuntimeError, TypeError) as e:
             logger.debug(f"Anura Clipboard: get_mime_types() failed: {e}")
             return []
 
@@ -480,7 +480,7 @@ class ClipboardService(GObject.GObject):
                 buf = BytesIO()
                 out.save(buf, format="PNG")
                 png_bytes = buf.getvalue()
-        except (OSError, ValueError, Image.UnidentifiedImageError) as e:
+        except (OSError, ValueError, Image.UnidentifiedImageError, AttributeError) as e:
             logger.warning(f"Anura Clipboard: PIL failed to decode {path!r}: {e}")
 
             def _on_error_idle():

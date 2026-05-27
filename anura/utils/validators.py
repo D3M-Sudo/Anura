@@ -9,7 +9,7 @@ import ipaddress
 import os
 import re
 import unicodedata
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 
 from loguru import logger
 
@@ -76,38 +76,25 @@ def is_safe_url_string(text: str) -> bool:
     if "\\" in text:
         return False
 
-    # 3. Homograph detection: If the hostname mixes ASCII Latin letters with
-    # non-ASCII characters, reject the URL unless it's entirely non-ASCII or
-    # uses a safe script. To prevent homograph attacks (e.g. mixing 'a' and 'cyrillic-a'),
-    # we reject any URL that contains both ASCII letters and non-ASCII characters,
-    # unless the non-ASCII part is specifically whitelisted or properly handled
-    # by IDNA.
-    if not text.isascii() and any(ch.isascii() and ch.isalpha() for ch in text):
-        # If it's not pure ASCII but contains ASCII letters, it's a mixed-script
-        # string which is a high risk for homograph attacks.
-        # We allow it ONLY if the non-ASCII characters are NOT in Cyrillic/Greek blocks.
-        for ch in text:
-            cp = ord(ch)
-            if cp > 0x7F:
-                # Block Cyrillic (0x0400-0x052F) and Greek (0x0370-0x03FF)
-                # when mixed with ASCII letters.
-                if 0x0400 <= cp <= 0x052F or 0x0370 <= cp <= 0x03FF:
-                    return False
-
-                # Also block generic non-ASCII if mixed with ASCII,
-                # unless it's a known safe character like accented Latin.
-                # 'é' (0xe9) is Latin-1 Supplement.
-                # For now, let's be strict: if it's mixed-script, we reject
-                # if it's not clearly a safe accented Latin character.
-                if not (0x00A0 <= cp <= 0x00FF): # Latin-1 Supplement (includes é, ü, etc.)
-                     return False
-
-        # Additional check: even with Latin-1, we should be careful.
-        # But the existing test expects googlé.com to be rejected.
-        # Wait, the test says:
-        # "https://googlé.com",  # Non-ASCII -> expect False
-        # So it should be rejected.
-        return False
+    # 3. Homograph detection: Prevent mixing ASCII Latin with confusing non-ASCII
+    # scripts (Cyrillic/Greek) in the same hostname label.
+    if not text.isascii():
+        try:
+            parsed = urlparse(text)
+            hostname = parsed.hostname
+            if hostname:
+                # Check each label in the hostname independently
+                for label in hostname.split("."):
+                    if not label.isascii() and any(ch.isascii() and ch.isalpha() for ch in label):
+                        # Mixed-script label: high risk for homograph attacks.
+                        for ch in label:
+                            cp = ord(ch)
+                            if cp > 0x7f and (0x0400 <= cp <= 0x052F or 0x0370 <= cp <= 0x03FF):
+                                # Block Cyrillic and Greek when mixed with ASCII letters
+                                return False
+        except (ValueError, AttributeError):
+            # If parsing fails, the IDN logic below will likely catch it
+            pass
 
     # 4. IDN normalization: convert international domain names (IDN) to their
     # Punycode ASCII-compatible encoding (ACE) before the ASCII safety check.
@@ -117,7 +104,6 @@ def is_safe_url_string(text: str) -> bool:
     # a valid hostname label (e.g. invisible Unicode in the path/query).
     if not text.isascii():
         try:
-            from urllib.parse import urlparse, urlunparse
             parsed = urlparse(text)
             if parsed.hostname and not parsed.hostname.isascii():
                 # Encode each DNS label separately; skip empty labels (leading dots etc.)
@@ -206,7 +192,7 @@ def validate_image_resource(
 
         return True, size, None
 
-    except Exception as e:
+    except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as e:
         logger.error(f"Validation: Unexpected error: {e}")
         return False, 0, f"Validation error: {e}"
 

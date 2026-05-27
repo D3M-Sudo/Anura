@@ -137,7 +137,7 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
                     self.settings.set_string("active-language", "eng")
                     self.emit("language-changed", new_item)
 
-        except Exception as e:
+        except (AttributeError, RuntimeError, TypeError) as e:
             logger.error(f"Failed to populate language model: {e}")
             # Ensure UI doesn't remain empty
             self.toggle_empty_state(True)

@@ -89,8 +89,8 @@ class WelcomePage(Adw.NavigationPage):
                 self.drop_button.add_css_class("suggested-action")
             else:
                 self.drop_button.remove_css_class("suggested-action")
-        except Exception as e:
-            logger.exception(f"Anura: Failed to handle drop button click: {e}")
+        except (AttributeError, RuntimeError) as e:
+            logger.error(f"Anura: Failed to handle drop button click: {e}")
 
     def _on_dnd_enter(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float) -> Gdk.DragAction:
         """Visual feedback when drag enters the drop area."""
@@ -98,8 +98,8 @@ class WelcomePage(Adw.NavigationPage):
             self.drop_area.set_visible(True)
             self.drop_area.add_css_class("drag-hover")
             self.welcome.set_description(_("Drop image to extract text"))
-        except Exception as e:
-            logger.exception(f"Anura: Failed to handle DnD enter: {e}")
+        except (AttributeError, RuntimeError) as e:
+            logger.error(f"Anura: Failed to handle DnD enter: {e}")
         return Gdk.DragAction.COPY
 
     def _on_dnd_leave(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop) -> None:
@@ -110,8 +110,8 @@ class WelcomePage(Adw.NavigationPage):
             if not self.drop_button.has_css_class("suggested-action"):
                 self.drop_area.set_visible(False)
             self.welcome.set_description(_("Extract text from anywhere"))
-        except Exception as e:
-            logger.exception(f"Anura: Failed to handle DnD leave: {e}")
+        except (AttributeError, RuntimeError) as e:
+            logger.error(f"Anura: Failed to handle DnD leave: {e}")
 
     def _on_dnd_drop(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float) -> bool:
         """Handle drop signal. Initiates a fully async stream read of text/uri-list.
@@ -289,12 +289,12 @@ class WelcomePage(Adw.NavigationPage):
     def do_destroy(self) -> None:
         """Clean up signal handlers to prevent memory leaks."""
         if self._language_changed_handler_id is not None:
-            with contextlib.suppress(Exception):
+            with contextlib.suppress(AttributeError, RuntimeError, TypeError):
                 self.language_popover.disconnect(self._language_changed_handler_id)
             self._language_changed_handler_id = None
 
         if self._drop_button_handler_id is not None:
-            with contextlib.suppress(Exception):
+            with contextlib.suppress(AttributeError, RuntimeError, TypeError):
                 self.drop_button.disconnect(self._drop_button_handler_id)
             self._drop_button_handler_id = None
 
@@ -308,7 +308,7 @@ class WelcomePage(Adw.NavigationPage):
 
         # Remove drop target controller and disconnect its internal handlers
         if hasattr(self, "_drop_target") and self._drop_target:
-            with contextlib.suppress(Exception):
+            with contextlib.suppress(AttributeError, RuntimeError, TypeError):
                 if hasattr(self, "_dnd_drop_handler_id") and self._dnd_drop_handler_id:
                     self._drop_target.disconnect(self._dnd_drop_handler_id)
                 if hasattr(self, "_dnd_enter_handler_id") and self._dnd_enter_handler_id:
