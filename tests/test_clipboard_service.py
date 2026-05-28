@@ -38,17 +38,30 @@ class TestClipboardServiceEnterprise:
         assert service._cancellable is None
 
     def test_copy_text_trigger(self, service):
-        """Test that copy_text triggers clipboard operations."""
+        """Test that copy_text triggers clipboard set_content (GTK4 API).
+
+        GTK4 removed Gdk.Clipboard.set_text().  The production code wraps the
+        string in a GLib.Variant("s", ...) and passes it to
+        Gdk.ContentProvider.new_for_value(), then calls clipboard.set_content().
+        We mock both the ContentProvider factory and the clipboard property so
+        the test remains headless-safe and asserts the correct GTK4 call path.
+        """
         from unittest.mock import PropertyMock
 
-        # Mock the lazy clipboard property return value
         mock_clipboard = MagicMock()
-        with patch.object(ClipboardService, "clipboard", new_callable=PropertyMock) as mock_cb_prop:
+        mock_content_provider = MagicMock()
+
+        with (
+            patch.object(ClipboardService, "clipboard", new_callable=PropertyMock) as mock_cb_prop,
+            patch("gi.repository.Gdk.ContentProvider.new_for_value", return_value=mock_content_provider),
+            patch("gi.repository.GLib.Variant"),
+            patch("gi.repository.GLib.timeout_add_seconds") as mock_timeout,
+        ):
             mock_cb_prop.return_value = mock_clipboard
-            with patch("gi.repository.GLib.timeout_add_seconds") as mock_timeout:
-                service.copy_text("Enterprise Audit")
-                mock_clipboard.set_text.assert_called_with("Enterprise Audit")
-                assert mock_timeout.called
+            service.copy_text("Enterprise Audit")
+            # GTK4: set_content() replaces the removed set_text()
+            mock_clipboard.set_content.assert_called_once_with(mock_content_provider)
+            assert mock_timeout.called
 
     def test_cancel_pending_operations(self, service):
         """Test atomic cancellation logic."""
