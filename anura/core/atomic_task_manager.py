@@ -68,12 +68,26 @@ class AtomicTaskManager:
     def __init__(self) -> None:
         self._current_task_id: str | None = None
         self._cancellable: Gio.Cancellable | None = None
-        self._executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="AnuraAtomicWorker")
+        self._executor: ThreadPoolExecutor | None = None
         self._process_executor = None
         self._process_manager = None
         self._isolated_cancellation_map = None
         self._state_lock = threading.Lock()
-        logger.debug("AtomicTaskManager: Initialized with single-worker pool")
+        logger.debug("AtomicTaskManager: Initialized (lazy executors)")
+
+    def _get_executor(self) -> ThreadPoolExecutor:
+        """Lazy initialization of the thread executor."""
+        with self._state_lock:
+            if self._executor is None:
+                # ThreadPoolExecutor doesn't support setting daemon=True directly.
+                # Since we use lazy initialization, child processes spawned with 'spawn'
+                # will not have these threads running unless they explicitly call
+                # execute() or execute_isolated().
+                self._executor = ThreadPoolExecutor(
+                    max_workers=1,
+                    thread_name_prefix="AnuraAtomicWorker",
+                )
+            return self._executor
 
     def _ensure_process_executor_locked(self) -> ProcessPoolExecutor:
         """Initialize or recover the process executor. MUST be called with _state_lock held."""
@@ -263,7 +277,7 @@ class AtomicTaskManager:
                 result = AtomicTaskResult(task_id=new_task_id, error=e, traceback_str=tb_str)
                 GLib.idle_add(self._handle_error, result, errorback)
 
-        self._executor.submit(wrapper)
+        self._get_executor().submit(wrapper)
         return new_task_id
 
     def set_isolated_cancellation_map(self, cancellation_map) -> None:
@@ -343,29 +357,48 @@ class AtomicTaskManager:
 
         Fix: capture the executor references under the lock, clear them so
         no new work can be submitted, then release the lock *before* calling
-        .shutdown(wait=True).  The actual wait happens outside the lock so
+        .shutdown(). The actual wait happens outside the lock so
         future callbacks can acquire it freely.
         """
-        # Shut down the thread executor first (no _state_lock needed).
-        self._executor.shutdown(wait=True)
-
         # Capture + clear under lock so no new submissions can race.
         with self._state_lock:
+            thread_executor = self._executor
             process_executor = self._process_executor
-            process_manager  = self._process_manager
-            self._process_executor          = None
-            self._process_manager           = None
+            process_manager = self._process_manager
+
+            self._executor = None
+            self._process_executor = None
+            self._process_manager = None
             self._isolated_cancellation_map = None
 
         # Shut down OUTSIDE the lock — prevents the deadlock described above.
+
+        # 1. Thread executor (main process tasks)
+        if thread_executor is not None:
+            # wait=True is safe here as thread tasks are usually non-blocking
+            # and don't involve child processes or shared managers.
+            thread_executor.shutdown(wait=True)
+
+        # 2. Process executor
+        # We use wait=False here because ProcessPoolExecutor.shutdown(wait=True)
+        # can deadlock in Python 3.12 when used with a multiprocessing.Manager
+        # and 'spawn' context, especially if a task is still active.
         if process_executor is not None:
             try:
-                process_executor.shutdown(wait=True, cancel_futures=True)
+                logger.debug("AtomicTaskManager: Shutting down process executor...")
+                process_executor.shutdown(wait=False, cancel_futures=True)
+                logger.debug("AtomicTaskManager: Process executor shutdown initiated.")
             except (RuntimeError, OSError) as e:
                 logger.debug(f"AtomicTaskManager: process executor shutdown failed: {e}")
+
+        # 3. Process manager
+        # Shutting down the manager will forcefully terminate the manager process
+        # and should help clean up any remaining resources/workers.
         if process_manager is not None:
             try:
+                logger.debug("AtomicTaskManager: Shutting down process manager...")
                 process_manager.shutdown()
+                logger.debug("AtomicTaskManager: Process manager shut down.")
             except (RuntimeError, OSError) as e:
                 logger.debug(f"AtomicTaskManager: process manager shutdown failed: {e}")
 
