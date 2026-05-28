@@ -7,6 +7,7 @@
 from gettext import gettext as _
 
 from gi.repository import Adw, Gio, GLib, Gtk
+from loguru import logger
 
 from anura.config import RESOURCE_PREFIX
 from anura.models.language_item import LanguageItem

@@ -38,9 +38,9 @@ from anura.config import (  # noqa: E402
     TESSDATA_URL,
     USER_AGENT,
 )
-from anura.services.settings import settings  # noqa: E402
 from anura.models.download_state import DownloadState  # noqa: E402
 from anura.models.language_item import LanguageItem  # noqa: E402
+from anura.services.settings import settings  # noqa: E402
 from anura.utils.singleton import get_instance  # noqa: E402
 
 

@@ -9,6 +9,7 @@ import re
 from anura.transformers.models import OcrResult, TransformerProtocol
 from anura.utils.validators import URL_RE
 
+
 def _has_valid_tld(url: str) -> bool:
     """Verify the URL has a valid-looking TLD (at least 2 characters)."""
     match = re.search(r"(?:\.)([a-zA-Z]{2,})(?:\/|$)", url, re.IGNORECASE)
