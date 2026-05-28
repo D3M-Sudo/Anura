@@ -53,8 +53,6 @@ jobs:
     name: GTK Integration Tests
     runs-on: ubuntu-latest
     needs: python-quality
-    # Robustness: prevent job from hanging indefinitely
-    timeout-minutes: 15
     # XDG_RUNTIME_DIR is required by weston to create its Wayland socket.
     # Setting it at the job level makes it available to every step.
     env:
@@ -156,29 +154,11 @@ jobs:
           ANURA_LOG_LEVEL: WARNING
         run: |
           cleanup() {
-            echo "::group::Cleanup remaining processes"
-            echo "Stopping Weston and orphaned workers..."
-            # 1. Kill Weston by PID file
-            if [ -f /tmp/weston.pid ]; then
-              W_PID=$(cat /tmp/weston.pid)
-              kill "$W_PID" 2>/dev/null || true
-            fi
-
-            # 2. Kill any remaining processes by name
-            pkill -x weston 2>/dev/null || true
-            pkill -f "pytest" 2>/dev/null || true
-            pkill -f "uv run" 2>/dev/null || true
-
-            # 3. Brief grace period then force kill
-            sleep 1
-            pkill -9 -x weston 2>/dev/null || true
-            pkill -9 -f "pytest" 2>/dev/null || true
-
-            # 4. Remove socket
-            rm -f "$XDG_RUNTIME_DIR/wayland-test"
-
-            echo "Cleanup complete."
-            echo "::endgroup::"
+            echo "Stopping Weston…"
+            kill "$(cat /tmp/weston.pid 2>/dev/null)" 2>/dev/null \
+              || pkill -x weston 2>/dev/null \
+              || true
+            echo "Weston stopped."
           }
           trap cleanup EXIT
 
