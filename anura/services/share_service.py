@@ -204,8 +204,6 @@ class ShareService(GObject.GObject):
         # Show dialog (we need a parent window)
         try:
             # Try to get the active window from the application
-            from gi.repository import Gio
-
             app = Gio.Application.get_default()
             parent_window = app.get_active_window() if app else None
             if parent_window:

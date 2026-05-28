@@ -72,7 +72,7 @@ class TestIntegrationFlows:
             # Create a mock error that looks like portal backend missing
             from gi.repository import Gio
 
-            error = GLib.Error.new_literal(Gio.io_error_quark(), "Screenshot failed", Gio.IOErrorEnum.FAILED)
+            GLib.Error.new_literal(Gio.io_error_quark(), "Screenshot failed", Gio.IOErrorEnum.FAILED)
 
             # Mock the provider's capture method to simulate failure
             mock_provider = MagicMock()

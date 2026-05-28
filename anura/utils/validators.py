@@ -90,7 +90,6 @@ def is_safe_url_string(text: str) -> bool:
     # Logic note: We must isolate the hostname for this check to avoid flagging
     # the 'https://' prefix as the ASCII component of a mixed-script string.
     try:
-        from urllib.parse import urlparse
         parsed_for_homograph = urlparse(text)
         hostname = parsed_for_homograph.hostname or ""
         if hostname and not hostname.isascii() and any(ch.isascii() and ch.isalpha() for ch in hostname):

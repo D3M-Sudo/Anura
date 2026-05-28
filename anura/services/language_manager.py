@@ -597,37 +597,37 @@ def get_tesseract_config(lang_code: str) -> str:
 
     # If it's a single language, use standard priority logic without pooling
     if "+" not in lang_code:
-        user_model = os.path.join(TESSDATA_DIR, f"{lang_code}.traineddata")
-        if os.path.exists(user_model):
+        user_model = Path(TESSDATA_DIR) / f"{lang_code}.traineddata"
+        if user_model.exists():
             return f'--tessdata-dir "{TESSDATA_DIR}" --psm 3 --oem 1'
 
-        system_model = os.path.join(TESSDATA_SYSTEM_DIR, f"{lang_code}.traineddata")
-        if os.path.exists(system_model):
+        system_model = Path(TESSDATA_SYSTEM_DIR) / f"{lang_code}.traineddata"
+        if system_model.exists():
             return f'--tessdata-dir "{TESSDATA_SYSTEM_DIR}" --psm 3 --oem 1'
 
         return f'--tessdata-dir "{TESSDATA_DIR}" --psm 3 --oem 1'
 
     # Multi-language: Dynamic Pooling Approach
     codes = lang_code.split("+")
-    os.makedirs(TESSDATA_POOL_DIR, exist_ok=True)
+    Path(TESSDATA_POOL_DIR).mkdir(parents=True, exist_ok=True)
 
     for code in codes:
         # Resolve source
         source_path = None
-        user_path = os.path.join(TESSDATA_DIR, f"{code}.traineddata")
-        system_path = os.path.join(TESSDATA_SYSTEM_DIR, f"{code}.traineddata")
+        user_path = Path(TESSDATA_DIR) / f"{code}.traineddata"
+        system_path = Path(TESSDATA_SYSTEM_DIR) / f"{code}.traineddata"
 
-        if os.path.exists(user_path):
+        if user_path.exists():
             source_path = user_path
-        elif os.path.exists(system_path):
+        elif system_path.exists():
             source_path = system_path
 
         if source_path:
-            dest_path = os.path.join(TESSDATA_POOL_DIR, f"{code}.traineddata")
+            dest_path = Path(TESSDATA_POOL_DIR) / f"{code}.traineddata"
             # Create hard link with fallback to copy (for cross-filesystem)
             try:
-                if os.path.exists(dest_path):
-                    os.unlink(dest_path)
+                if dest_path.exists():
+                    dest_path.unlink()
                 os.link(source_path, dest_path)
             except (OSError, AttributeError):
                 try:
