@@ -24,16 +24,33 @@ if os.path.exists(resource_path):
     res._register()
 
 # Initialize GTK / libadwaita once per process so @Gtk.Template widgets can
-# be instantiated safely.  Without a live display connection, super().__init__()
-# inside any @Gtk.Template subclass segfaults when GTK tries to inflate the
-# template (template children end up as NULL C pointers, and the first
-# attribute access triggers the SIGSEGV).
-# NOTE: Adw.Application() must be created *before* any widget is instantiated,
-# so this cannot be deferred to a pytest fixture or to test_simple_widgets_init.
+# be instantiated safely.
+#
+# Root cause of the SIGSEGV:
+#   @Gtk.Template widgets call gtk_widget_init() → gtk_init_check() inside
+#   super().__init__().  That function opens the Wayland/X11 display and wires
+#   template XML to the GType.  Without an open display, every
+#   Gtk.Template.Child() slot stays as a NULL C pointer; the first Python
+#   attribute access on that NULL pointer triggers SIGSEGV (exit code 139).
+#
+# Why Adw.Application() alone was not enough (previous attempt):
+#   GApplication.__init__() only allocates the GObject struct.  The display
+#   connection is established by g_application_register(), which fires the
+#   GtkApplication::startup signal → gtk_init_check() → gdk_display_open().
+#   Without register(), GTK is still uninitialised at widget-instantiation time.
+#
+# Fix: call register() immediately after construction.  The NON_UNIQUE flag
+# prevents "another instance is already running" errors when multiple pytest
+# worker processes share the same session bus.
 _adw_app = Adw.Application(
     application_id="io.github.d3msudo.anura.test",
     flags=Gio.ApplicationFlags.NON_UNIQUE,
 )
+try:
+    _adw_app.register()
+except Exception as _e:  # pragma: no cover
+    import warnings
+    warnings.warn(f"Adw.Application.register() failed: {_e}. GTK widgets may segfault.")
 
 
 class TestWidgets:
