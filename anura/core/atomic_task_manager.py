@@ -330,11 +330,44 @@ class AtomicTaskManager:
             logger.error(f"AtomicTaskManager Error: {error}")
 
     def shutdown(self) -> None:
-        """Shut down the executors."""
-        # Use wait=True for clean cleanup during application shutdown
+        """Shut down the executors cleanly without deadlocking.
+
+        Deadlock scenario that this method must avoid:
+          1. shutdown() acquires _state_lock.
+          2. ProcessPoolExecutor.shutdown(wait=True) blocks waiting for
+             _executor_manager_thread to join.
+          3. _executor_manager_thread tries to deliver a future result by
+             calling result_wrapper, which does `with self._state_lock`.
+          4. _state_lock is already held by step 1 → both threads wait
+             forever (pytest-timeout fires after 30 s as Timeout).
+
+        Fix: capture the executor references under the lock, clear them so
+        no new work can be submitted, then release the lock *before* calling
+        .shutdown(wait=True).  The actual wait happens outside the lock so
+        future callbacks can acquire it freely.
+        """
+        # Shut down the thread executor first (no _state_lock needed).
         self._executor.shutdown(wait=True)
+
+        # Capture + clear under lock so no new submissions can race.
         with self._state_lock:
-            self._teardown_process_executor_locked()
+            process_executor = self._process_executor
+            process_manager  = self._process_manager
+            self._process_executor          = None
+            self._process_manager           = None
+            self._isolated_cancellation_map = None
+
+        # Shut down OUTSIDE the lock — prevents the deadlock described above.
+        if process_executor is not None:
+            try:
+                process_executor.shutdown(wait=True, cancel_futures=True)
+            except (RuntimeError, OSError) as e:
+                logger.debug(f"AtomicTaskManager: process executor shutdown failed: {e}")
+        if process_manager is not None:
+            try:
+                process_manager.shutdown()
+            except (RuntimeError, OSError) as e:
+                logger.debug(f"AtomicTaskManager: process manager shutdown failed: {e}")
 
 
 def get_atomic_manager() -> AtomicTaskManager:
