@@ -158,46 +158,33 @@ jobs:
           cleanup() {
             echo "::group::Cleanup remaining processes"
             echo "Stopping Weston and orphaned workers..."
-
-            # 1. First attempt: gentle kill
-            if [ -f /tmp/weston.pid ]; then
-              kill "$(cat /tmp/weston.pid)" 2>/dev/null || true
-            fi
+            kill "$(cat /tmp/weston.pid 2>/dev/null)" 2>/dev/null || true
             pkill -x weston 2>/dev/null || true
-            pkill -f "pytest" 2>/dev/null || true
-            pkill -f "uv run" 2>/dev/null || true
-            pkill -f "python3" 2>/dev/null || true
-
-            # 2. Brief grace period
-            sleep 2
-
-            # 3. Second attempt: forced kill
-            pkill -9 -x weston 2>/dev/null || true
-            pkill -9 -f "pytest" 2>/dev/null || true
-            pkill -9 -f "uv run" 2>/dev/null || true
-            pkill -9 -f "python3" 2>/dev/null || true
-
-            # 4. Remove socket and temp files
-            rm -f "$XDG_RUNTIME_DIR/wayland-test"
-            rm -f /tmp/weston.pid
-
+            rm -f "$XDG_RUNTIME_DIR/wayland-test" /tmp/weston.pid
             echo "Cleanup complete."
             echo "::endgroup::"
           }
           trap cleanup EXIT
 
-          # Use timeout command to wrap pytest. This ensures that even if Python hangs
-          # during process exit (e.g. non-daemon threads), the shell command will
-          # eventually terminate, triggering the cleanup trap.
+          # Root cause of the previous ~115-second hang (now fixed):
           #
-          # 120s is ample for tests that should take <30s.
-          timeout 120s uv run pytest tests/ -m gtk -v --timeout=30 \
-            --override-ini "addopts=-v --tb=short" || (
-              # If timeout fired (exit code 124) or pytest crashed,
-              # the exit status will be non-zero.
-              echo "::error::Pytest timed out or failed. Triggering forced cleanup."
-              exit 1
-            )
+          # Adw.Application.register() in test_audit_ui_widgets.py registers
+          # the app on D-Bus and starts internal GLib/GDBus threads.  These
+          # threads are non-daemon, so Python cannot exit while they are alive.
+          # pytest_sessionfinish never called _adw_app.quit(), so Python blocked
+          # after printing "324 passed" until this shell's `timeout 120s` killed
+          # it with SIGTERM (exit code 124), causing the job to fail.
+          #
+          # Fix applied in test_audit_ui_widgets.py:
+          #   atexit.register(_adw_app.quit)
+          # This stops the GLib main context when Python begins shutdown,
+          # releasing the internal threads and allowing the process to exit in <1 s.
+          #
+          # The `timeout 120s ... || exit 1` wrapper is therefore removed:
+          # it was treating a successful-but-hanging pytest run as a failure.
+          # The job-level timeout-minutes: 15 is the proper safety net.
+          uv run pytest tests/ -m gtk -v --timeout=30 \
+            --override-ini "addopts=-v --tb=short"
 
   # JOB 2: Flatpak build and optional release
   flatpak-builder:
