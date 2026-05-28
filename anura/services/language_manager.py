@@ -21,8 +21,9 @@ import gi
 # Set GTK version requirements before imports
 gi.require_version("GLib", "2.0")
 gi.require_version("GObject", "2.0")
+gi.require_version("Gio", "2.0")
 
-from gi.repository import GLib, GObject  # noqa: E402
+from gi.repository import Gio, GLib, GObject  # noqa: E402
 from loguru import logger  # noqa: E402
 import requests  # noqa: E402
 
@@ -359,7 +360,7 @@ class LanguageManager(GObject.GObject):
                 return code
         return "eng"
 
-    def download(self, code: str, cancellable: gi.repository.Gio.Cancellable | None = None) -> None:
+    def download(self, code: str, cancellable: Gio.Cancellable | None = None) -> None:
         """Thread-safe asynchronous download process."""
         with self._cache_lock:
             if code in self.loading_languages:
@@ -397,7 +398,7 @@ class LanguageManager(GObject.GObject):
         )
         future.add_done_callback(download_done_wrapper)
 
-    def download_begin(self, code: str, cancellable: gi.repository.Gio.Cancellable | None = None) -> str | None:
+    def download_begin(self, code: str, cancellable: Gio.Cancellable | None = None) -> str | None:
         """Performs the physical download of the .traineddata file atomically."""
         # Hardening: verify Tesseract binary availability before downloading models
         tess_bin = os.environ.get("TESSERACT_CMD", "tesseract")

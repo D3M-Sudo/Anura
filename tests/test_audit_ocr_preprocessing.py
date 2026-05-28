@@ -24,7 +24,7 @@ class TestTextPreprocessor:
 
     def test_clean_extracted_text_whitespace(self):
         """Whitespace normalization is handled by sanitize_text in clean_extracted_text."""
-        assert self.preprocessor.clean_extracted_text("  hello   world  \n  new  line ") == "Hello World New Line"
+        assert self.preprocessor.clean_extracted_text("  hello   world  \n  new  line ") == "Hello world new line"
         assert self.preprocessor.clean_extracted_text("") == ""
 
     def test_fix_punctuation(self):

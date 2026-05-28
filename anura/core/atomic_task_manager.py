@@ -187,7 +187,7 @@ class AtomicTaskManager:
                 result = AtomicTaskResult(task_id=new_task_id, error=e, traceback_str=tb_str)
                 GLib.idle_add(self._handle_error, result, errorback)
 
-            except (AttributeError, TypeError, RuntimeError, OSError) as e:
+            except Exception as e:
                 tb_str = traceback.format_exc()
                 result = AtomicTaskResult(task_id=new_task_id, error=e, traceback_str=tb_str)
                 GLib.idle_add(self._handle_error, result, errorback)
@@ -258,7 +258,7 @@ class AtomicTaskManager:
                 result = AtomicTaskResult(task_id=new_task_id, data=result_data)
                 GLib.idle_add(self._handle_success, result, callback)
 
-            except (AttributeError, TypeError, RuntimeError, OSError) as e:
+            except Exception as e:
                 tb_str = traceback.format_exc()
                 result = AtomicTaskResult(task_id=new_task_id, error=e, traceback_str=tb_str)
                 GLib.idle_add(self._handle_error, result, errorback)
