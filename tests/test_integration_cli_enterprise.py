@@ -75,9 +75,18 @@ class TestCLIIntegrationEnterprise:
             mock_window.process_file.assert_called_once_with(file_path)
 
     def test_handle_inaccessible_file_silent(self, app):
-        """Test handling of inaccessible files in silent mode."""
+        """Test handling of inaccessible files in silent mode.
+
+        Note: production code uses pathlib.Path.exists(), not os.path.exists().
+        Patching os.path.exists has no effect — we must patch pathlib.Path.exists
+        directly.  os.access is still patched via its module path because the
+        production import is `import os` (not `from os import access`).
+        """
         file_path = "/root/secret.png"
-        with patch("os.path.exists", return_value=True), patch("os.access", return_value=False):
+        with (
+            patch("pathlib.Path.exists", return_value=True),
+            patch("os.access", return_value=False),
+        ):
             exit_code = app._handle_file_option(file_path, is_silent=True)
             assert exit_code == 1
 
