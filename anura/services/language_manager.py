@@ -70,7 +70,7 @@ class LanguageManager(GObject.GObject):
         super().__init__()
 
         self.loading_languages: dict[str, DownloadState] = {}
-        self._download_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="AnuraDownloadWorker")
+        self._download_executor: ThreadPoolExecutor | None = None
         self._downloaded_codes: list[str] = []
         self._need_update_cache = True
         self._cache_lock = threading.Lock()
@@ -360,6 +360,23 @@ class LanguageManager(GObject.GObject):
                 return code
         return "eng"
 
+    def _get_download_executor(self) -> ThreadPoolExecutor:
+        """Lazy initialization of the download executor."""
+        with self._cache_lock:
+            if self._download_executor is None:
+                # Use daemon threads to prevent hangs in child processes or during shutdown
+                self._download_executor = ThreadPoolExecutor(
+                    max_workers=1,
+                    thread_name_prefix="AnuraDownloadWorker",
+                    initializer=self._set_thread_daemon,
+                )
+            return self._download_executor
+
+    @staticmethod
+    def _set_thread_daemon() -> None:
+        """Sets the current thread to be a daemon thread."""
+        threading.current_thread().daemon = True
+
     def download(self, code: str, cancellable: Gio.Cancellable | None = None) -> None:
         """Thread-safe asynchronous download process."""
         with self._cache_lock:
@@ -391,7 +408,7 @@ class LanguageManager(GObject.GObject):
 
             GLib.idle_add(_on_done_idle)
 
-        future = self._download_executor.submit(
+        future = self._get_download_executor().submit(
             self.download_begin,
             code,
             cancellable,
@@ -543,7 +560,12 @@ class LanguageManager(GObject.GObject):
 
     def shutdown(self) -> None:
         """Shut down the download executor."""
-        self._download_executor.shutdown(wait=False)
+        with self._cache_lock:
+            executor = self._download_executor
+            self._download_executor = None
+
+        if executor is not None:
+            executor.shutdown(wait=False)
 
     def remove_language(self, code: str) -> None:
         """Thread-safe removal of model file from system."""
