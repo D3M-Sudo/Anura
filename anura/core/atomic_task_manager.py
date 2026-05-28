@@ -86,8 +86,14 @@ class AtomicTaskManager:
                 self._executor = ThreadPoolExecutor(
                     max_workers=1,
                     thread_name_prefix="AnuraAtomicWorker",
+                    initializer=self._set_thread_daemon,
                 )
             return self._executor
+
+    @staticmethod
+    def _set_thread_daemon() -> None:
+        """Sets the current thread to be a daemon thread."""
+        threading.current_thread().daemon = True
 
     def _ensure_process_executor_locked(self) -> ProcessPoolExecutor:
         """Initialize or recover the process executor. MUST be called with _state_lock held."""
@@ -375,9 +381,10 @@ class AtomicTaskManager:
 
         # 1. Thread executor (main process tasks)
         if thread_executor is not None:
-            # wait=True is safe here as thread tasks are usually non-blocking
-            # and don't involve child processes or shared managers.
-            thread_executor.shutdown(wait=True)
+            # Use wait=False for maximum safety in CI/restricted environments.
+            # Worker threads are daemonized (initializer=_set_thread_daemon),
+            # so they won't prevent the process from exiting if they hang.
+            thread_executor.shutdown(wait=False, cancel_futures=True)
 
         # 2. Process executor
         # We use wait=False here because ProcessPoolExecutor.shutdown(wait=True)
