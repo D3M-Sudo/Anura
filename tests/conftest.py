@@ -92,21 +92,22 @@ def isolate_env(monkeypatch, tmp_path):
     monkeypatch.setenv("TESSDATA_PREFIX_SYSTEM", str(tmp_path / "system-tessdata"))
 
 
-# Module-level variable to carry exitstatus from pytest_sessionfinish
-# to pytest_unconfigure (the two hooks run in different call frames).
-_pytest_exitstatus: int = 0
-
-
 def pytest_sessionfinish(session, exitstatus):
     """
-    Called after whole test run finished, RIGHT BEFORE pytest prints the
-    summary line ("N passed, M skipped…").  We do all service cleanup here
-    and store the exit status, but do NOT call os._exit() yet — that would
-    kill the process before the summary is printed.
-    """
-    global _pytest_exitstatus
-    _pytest_exitstatus = int(exitstatus)
+    Called after the last test, before pytest prints the summary line.
 
+    We run all service cleanup here, then force-print the summary ourselves
+    via TerminalReporter, and finally call os._exit() to bypass Python's
+    slow non-daemon-thread shutdown (which blocked for 74 s in CI).
+
+    WHY the explicit terminalreporter.summary_stats() call:
+      Empirically (pytest 9.0.3), both pytest_sessionfinish AND
+      pytest_unconfigure fire BEFORE the "N passed, M skipped" line is
+      written to stdout.  Calling os._exit() in either hook therefore
+      suppresses the summary entirely.  The fix is to invoke the
+      TerminalReporter's summary_stats() method directly — the same call
+      pytest would make internally — so the line appears before we exit.
+    """
     print("\nEnsuring clean session teardown...")
 
     # 1. Shutdown AtomicTaskManager (best-effort; os._exit cleans up the rest)
@@ -139,31 +140,20 @@ def pytest_sessionfinish(session, exitstatus):
 
     print("Teardown complete.")
 
+    # Force-print the summary line that pytest would normally emit after this
+    # hook returns.  We need it now because os._exit() below will prevent
+    # pytest from reaching its own summary-printing code.
+    try:
+        import sys
+        tr = session.config.pluginmanager.get_plugin("terminalreporter")
+        if tr is not None:
+            tr.summary_stats()
+        sys.stdout.flush()
+        sys.stderr.flush()
+    except Exception:
+        pass
 
-def pytest_unconfigure(config):
-    """
-    Called AFTER pytest has printed the final summary line and written all
-    reports — the last hook before pytest returns control to the caller.
-
-    This is the correct place for os._exit(): the summary is already on
-    screen, all report files are flushed, and we can terminate immediately
-    without going through Python's slow non-daemon-thread shutdown.
-
-    WHY os._exit() AND NOT sys.exit():
-      After the summary, Python would enter its shutdown sequence:
-        1. atexit callbacks
-        2. GC / object finalizers
-        3. join() of every non-daemon thread  ← caused 74-second hang
-
-      Non-daemon thread sources in this test suite:
-        a) Adw.Application.register() → GLib/GDBus internal threads
-        b) AtomicTaskManager → ProcessPoolExecutor + SyncManager (spawn)
-
-      os._exit(n) calls the kernel _exit(2) syscall directly, bypassing all
-      of the above.  The kernel sends SIGHUP to surviving child processes
-      (the two spawn workers visible as "Terminate orphan process" in the
-      GitHub Actions post-job cleanup — this is expected and harmless).
-
-      Same pattern used by pytest-xdist, pytest-cov, and Coverage.py.
-    """
-    os._exit(_pytest_exitstatus)
+    # Force-exit: skips Python's non-daemon-thread join (the 74-second hang).
+    # exitstatus is a pytest.ExitCode enum; int() gives the numeric code
+    # (0 = all passed, 1 = some failed, 2 = interrupted, etc.).
+    os._exit(int(exitstatus))
