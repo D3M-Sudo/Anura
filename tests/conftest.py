@@ -98,6 +98,7 @@ def pytest_sessionfinish(session, exitstatus):
     Ensures that all background executors and singleton services are explicitly shut down
     to prevent orphan processes or threads from hanging CI.
     """
+    print("\nEnsuring clean session teardown...")
     # 1. Shutdown AtomicTaskManager
     try:
         from anura.core.atomic_task_manager import get_atomic_manager
@@ -129,3 +130,4 @@ def pytest_sessionfinish(session, exitstatus):
         ThreadSafeSingleton.reset_for_testing()
     except (ImportError, AttributeError):
         pass
+    print("Teardown complete.")

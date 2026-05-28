@@ -364,18 +364,11 @@ class LanguageManager(GObject.GObject):
         """Lazy initialization of the download executor."""
         with self._cache_lock:
             if self._download_executor is None:
-                # Use daemon threads to prevent hangs in child processes or during shutdown
                 self._download_executor = ThreadPoolExecutor(
                     max_workers=1,
                     thread_name_prefix="AnuraDownloadWorker",
-                    initializer=self._set_thread_daemon,
                 )
             return self._download_executor
-
-    @staticmethod
-    def _set_thread_daemon() -> None:
-        """Sets the current thread to be a daemon thread."""
-        threading.current_thread().daemon = True
 
     def download(self, code: str, cancellable: Gio.Cancellable | None = None) -> None:
         """Thread-safe asynchronous download process."""
@@ -565,7 +558,7 @@ class LanguageManager(GObject.GObject):
             self._download_executor = None
 
         if executor is not None:
-            executor.shutdown(wait=False)
+            executor.shutdown(wait=False, cancel_futures=True)
 
     def remove_language(self, code: str) -> None:
         """Thread-safe removal of model file from system."""

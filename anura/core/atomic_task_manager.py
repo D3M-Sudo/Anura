@@ -79,21 +79,13 @@ class AtomicTaskManager:
         """Lazy initialization of the thread executor."""
         with self._state_lock:
             if self._executor is None:
-                # ThreadPoolExecutor doesn't support setting daemon=True directly.
-                # Since we use lazy initialization, child processes spawned with 'spawn'
-                # will not have these threads running unless they explicitly call
-                # execute() or execute_isolated().
+                # Note: ThreadPoolExecutor doesn't support setting daemon=True directly.
+                # Lazy initialization ensures these threads only exist when needed.
                 self._executor = ThreadPoolExecutor(
                     max_workers=1,
                     thread_name_prefix="AnuraAtomicWorker",
-                    initializer=self._set_thread_daemon,
                 )
             return self._executor
-
-    @staticmethod
-    def _set_thread_daemon() -> None:
-        """Sets the current thread to be a daemon thread."""
-        threading.current_thread().daemon = True
 
     def _ensure_process_executor_locked(self) -> ProcessPoolExecutor:
         """Initialize or recover the process executor. MUST be called with _state_lock held."""
@@ -382,8 +374,7 @@ class AtomicTaskManager:
         # 1. Thread executor (main process tasks)
         if thread_executor is not None:
             # Use wait=False for maximum safety in CI/restricted environments.
-            # Worker threads are daemonized (initializer=_set_thread_daemon),
-            # so they won't prevent the process from exiting if they hang.
+            # Lazy initialization ensures these threads only exist when needed.
             thread_executor.shutdown(wait=False, cancel_futures=True)
 
         # 2. Process executor
