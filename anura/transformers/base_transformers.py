@@ -10,7 +10,7 @@ from anura.transformers.models import OcrResult, TransformerProtocol
 class SingleLineTransformer(TransformerProtocol):
     def score(self, ocr_result: OcrResult) -> float:
         if not ocr_result.words:
-            return 1
+            return 0
         return 50 if ocr_result.num_lines == 1 else 0
 
     def transform(self, ocr_result: OcrResult) -> list[str]:
