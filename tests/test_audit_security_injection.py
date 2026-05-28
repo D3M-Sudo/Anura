@@ -1,9 +1,4 @@
-# This file is part of Anura.
-# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
-# Copyright (C) 2026 D3M-Sudo (Anura)
-#
-# SPDX-License-Identifier: MIT
-
+# tests/test_security_audit.py
 import re
 from unittest.mock import patch
 
@@ -12,6 +7,7 @@ import pytest
 pytest.importorskip("gi")
 
 from anura.config import LANG_CODE_PATTERN
+from anura.services.host_screenshot_fallback import _validate_tool_name
 from anura.utils.validators import uri_validator
 
 
@@ -40,15 +36,23 @@ class TestSecurityAudit:
         assert uri_validator("https://google.com\r\n/evil") is False
         assert uri_validator("https://google.com\0/evil") is False
 
+    def test_host_tool_name_validation(self):
+        # Ensure tool names in fallback are strictly validated
+        malicious_tools = ["gnome-screenshot; rm -rf /", "scrot && touch /tmp/pwned", "$(whoami)", "import\n", " tool"]
+
+        for tool in malicious_tools:
+            with pytest.raises(ValueError, match="unsafe tool name"):
+                _validate_tool_name(tool)
+
     def test_absolute_path_injection_in_language_manager(self, tmp_path):
         # Test that LanguageManager.remove_language validates input
-        from anura.services.language_manager import LanguageManager
+        from anura.language_manager import LanguageManager
 
         # Mock TESSDATA_DIR to a safe temp path
         tessdata = tmp_path / "tessdata"
         tessdata.mkdir()
 
-        with patch("anura.services.language_manager.TESSDATA_DIR", str(tessdata)):
+        with patch("anura.language_manager.TESSDATA_DIR", str(tessdata)):
             lm = LanguageManager()
 
             # Try to remove a file outside the directory

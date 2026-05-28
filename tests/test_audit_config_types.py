@@ -1,9 +1,4 @@
-# This file is part of Anura.
-# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
-# Copyright (C) 2026 D3M-Sudo (Anura)
-#
-# SPDX-License-Identifier: MIT
-
+# tests/test_phase2_a.py
 import re
 from unittest.mock import patch
 
@@ -12,8 +7,8 @@ import pytest
 pytest.importorskip("gi")
 
 import anura.config
-from anura.models.download_state import DownloadState
-from anura.models.language_item import LanguageItem
+from anura.types.download_state import DownloadState
+from anura.types.language_item import LanguageItem
 
 
 class TestConfig:

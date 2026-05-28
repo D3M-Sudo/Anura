@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Intuitive text extraction for the Linux desktop.</strong><br>
-  OCR · QR/Barcode Decoding · Privacy-first · Native GTK4
+  OCR · QR Decoding · Privacy-first · Native GTK4
 </p>
 
 <p align="center">
@@ -32,7 +32,7 @@
 
 Anura lets you capture any region of your screen and instantly extract the text inside — from videos, screencasts, PDFs, webpages, or photos. The result lands straight in your clipboard, ready to paste.
 
-It also decodes **QR codes and Barcodes** in a single click using **zxing-cpp**, with full system integration on modern GTK-based Linux desktops.
+It also decodes **QR codes** in a single click, with full system integration on modern GTK-based Linux desktops.
 
 ---
 
@@ -41,29 +41,15 @@ It also decodes **QR codes and Barcodes** in a single click using **zxing-cpp**,
 | | |
 | --- | --- |
 | 📷 **Instant OCR** | Select a screen region — text is copied automatically |
-| 🔲 **QR & Barcode Decoding** | Robust recognition via `zxing-cpp` (QR, DataMatrix, UPC, etc.) |
-| 🌍 **Multi-language** | Supports 100+ Tesseract models with pooling for simultaneous multi-lang OCR |
-| 🔊 **Text-to-Speech** | Read extracted text aloud via gTTS + GStreamer `playbin3` |
-| 🔒 **Privacy-first** | All processing happens locally — no telemetry or tracking |
-| 🎨 **Native GTK4** | Designed for GNOME, built with Libadwaita and Blueprint |
-| 🚀 **Async D&D** | Smooth, non-blocking asynchronous drag-and-drop |
-| ✨ **Smart OCR Cleanup** | Adaptive image enhancement and structural layout reconstruction |
-🛡️ **Architectural Security** | Transactional worker isolation and OOM prevention guards |
-📜 **Offline Rotary Logs** | Secure, zero-telemetry local logging system |
-| ⌨️ **Keyboard Shortcuts** | Modern shortcut overlay with categorized searchable cheat sheet |
-| 🔗 **Share Anywhere** | Share to Telegram, Reddit, Mastodon, X, Email, Bluesky, Discord, LinkedIn, Threads |
-
----
-
-## Architecture
-
-As of **v0.1.5**, Anura features an **Enterprise Clean Architecture** focused on event-driven decoupling and memory safety:
-
-- **Core Services (`anura/core/`)**: Pure infrastructure logic. Includes `boot` (capability audit), `logger` (rotary logging), `atomic_task_manager` (isolated worker pool), and `resources`.
-- **Business Services (`anura/services/`)**: High-level I/O and resource management. Includes `language_manager` (Tessdata pooling), `screenshot` (multi-provider capture factory), and `settings`.
-- **Event-Driven Controllers (`anura/controllers/`)**: Logic-only components that emit GLib signals. `OcrController` and `TtsController` are fully decoupled from UI side-effects, which are handled by the main application coordinator.
-- **Semantic Transformers (`anura/transformers/`)**: Implements the **Chain of Responsibility** pattern. The `MagicProcessor` dynamically selects the best `ITransformer` for structured data extraction.
-- **Memory Safety**: Uses `weakref.proxy` for View-Controller relationships and asynchronous native Gio APIs for non-blocking I/O.
+| 🔲 **QR Code Decoding** | Recognizes links and data from QR codes |
+| 🌍 **Multi-language** | Supports 100+ Tesseract language models |
+| 🔊 **Text-to-Speech** | Read extracted text aloud via gTTS |
+| 🔒 **Privacy-first** | All processing happens locally — no data leaves your machine |
+| 🎨 **Native GTK4** | Designed for GNOME, built with Libadwaita |
+| 🚀 **Async D&D** | Smooth, non-blocking drag-and-drop experience |
+| ✨ **Smart OCR Cleanup** | Automatic image enhancement and text normalisation for better accuracy |
+| ⌨️ **Keyboard Shortcuts** | Full shortcut overlay with searchable cheat sheet |
+| 🔗 **Share Anywhere** | Share extracted text to 9 platforms: Telegram, Reddit, Mastodon, X, Email, Bluesky, Discord, LinkedIn, Threads |
 
 ---
 
@@ -79,19 +65,38 @@ flatpak install --user ~/Downloads/io.github.d3msudo.anura.flatpak
 
 ### Runtime requirements
 
-Anura captures screenshots through the **XDG Desktop Portal**. The portal frontend is shipped with `xdg-desktop-portal`, but it needs a *backend* matching your desktop session.
+Anura captures screenshots through the **XDG Desktop Portal**. The portal frontend is shipped with `xdg-desktop-portal` (typically already installed), but it needs a *backend* matching your desktop session. **GNOME and KDE ship one by default**, but other desktops (notably **LXQt**) do not — Anura cannot bundle a portal backend inside the Flatpak because it must run on the host with access to the compositor.
 
 | Desktop session | Install command (Ubuntu 24.04+) | Notes |
 | --- | --- | --- |
-| GNOME / Ubuntu Desktop | already installed | Uses `xdg-desktop-portal-gnome` |
+| GNOME / Ubuntu Desktop | already installed | Uses `xdg-desktop-portal-gnome` or `-gtk` |
 | KDE Plasma / Kubuntu | already installed | Uses `xdg-desktop-portal-kde` |
-| **LXQt / Lubuntu** | `sudo apt install xdg-desktop-portal-gtk` | Uses `xdg-desktop-portal-gtk` (legacy) or `xdg-desktop-portal-kde` |
-| Xfce / MATE | `sudo apt install xdg-desktop-portal-gnome` | Backend needed for Screenshot interface |
-| wlroots (Sway, Hyprland) | `sudo apt install xdg-desktop-portal-wlr` | Requires screencast support |
+| **LXQt / Lubuntu** | `sudo apt install xdg-desktop-portal-kde` | Also create `~/.config/xdg-desktop-portal/lxqt-portals.conf` |
+| Xfce | `sudo apt install xdg-desktop-portal-gnome` | Or `-kde`; `-gtk` no longer provides Screenshot |
+| MATE | `sudo apt install xdg-desktop-portal-gnome` | Or `-kde` |
+| Cinnamon | `sudo apt install xdg-desktop-portal-gnome` | Or `-kde` |
+| Budgie | `sudo apt install xdg-desktop-portal-gnome` | Or `-kde` |
+| wlroots (Sway, Hyprland, river, Niri) | `sudo apt install xdg-desktop-portal-wlr` | May need `xdg-desktop-portal` ≥ 1.15 |
+
+After installing, **log out and back in** so the portal D-Bus service reloads. If the screenshot still fails, capture an `anura_debug.log` and the `domain=…, code=…` line will narrow down the cause.
 
 #### Host screenshot fallback (Flatpak + X11 only)
 
-On **X11 sessions**, if the portal fails, Anura automatically falls back to a **bundled `scrot`** inside the sandbox. This is self-contained and requires no host tools.
+Some desktop sessions ship a portal frontend but no backend that exposes the
+`Screenshot` interface — most notably **LXQt / Xfce / Openbox on Ubuntu 24.04+**,
+where `xdg-desktop-portal-gtk` 1.15.x removed Screenshot upstream and
+`xdg-desktop-portal-kde` 5.27.x only registers it when KWin is the window manager.
+
+On **X11 sessions**, when the portal returns a `Screenshot failed` error, Anura
+automatically falls back to a **bundled `scrot`** that runs directly inside the
+Flatpak sandbox (via the `--socket=x11` permission). No additional tools need to
+be installed on the host — the fallback is self-contained.
+
+> **Wayland sessions**: the X11 fallback is not available. Install the appropriate
+> portal backend for your compositor (see table above).
+
+Outside the Flatpak (e.g. when running from source), the fallback is not used;
+the portal is the only path.
 
 ---
 
@@ -102,10 +107,34 @@ On **X11 sessions**, if the portal fails, Anura automatically falls back to a **
 Anura supports configurable logging levels via the `ANURA_LOG_LEVEL` environment variable:
 
 ```bash
+# Default level (INFO)
+ANURA_LOG_LEVEL=INFO flatpak run io.github.d3msudo.anura
+
+# Verbose debugging
 ANURA_LOG_LEVEL=DEBUG flatpak run io.github.d3msudo.anura
+
+# Trace level (most detailed)
+ANURA_LOG_LEVEL=TRACE flatpak run io.github.d3msudo.anura
 ```
 
 Valid levels: `TRACE`, `DEBUG`, `INFO` (default), `WARNING`, `ERROR`, `CRITICAL`
+
+### Common Issues
+
+**Screenshot fails with "No portal backend found"**
+- Install the appropriate portal backend for your desktop (see table above)
+- Log out and back in to reload portal services
+- On X11 sessions inside the Flatpak, Anura falls back to the bundled `scrot` automatically
+
+**Language models not downloading**
+- Check network connection
+- Verify `~/.var/app/io.github.d3msudo.anura/data/anura/tessdata/` exists
+- Set `ANURA_LOG_LEVEL=DEBUG` for detailed download logs
+
+**Text extraction shows no results**
+- Ensure the image contains readable text
+- Try different language settings
+- Check if the image resolution is too low
 
 ---
 
@@ -119,16 +148,31 @@ Valid levels: `TRACE`, `DEBUG`, `INFO` (default), `WARNING`, `ERROR`, `CRITICAL`
 | Python | ≥ 3.12 |
 | GTK4 + Libadwaita | latest |
 | Tesseract OCR | ≥ 5.0 |
-| zxing-cpp | ≥ 2.3.0 |
+| ZBar | any |
 | Blueprint Compiler | ≥ 0.16.0 |
 | uv | latest |
+
+**Fedora:**
+
+```bash
+sudo dnf install meson python3-gobject gtk4-devel libadwaita-devel \
+    tesseract zbar-devel blueprint-compiler
+```
 
 **Ubuntu / Linux Mint / Debian:**
 
 ```bash
-sudo apt install meson python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 \
-    tesseract-ocr blueprint-compiler libxml2-utils
+sudo apt install meson python3-gi python3-gi-cairo gir1.2-gtk-4.0 \
+    gir1.2-adw-1 tesseract-ocr libzbar0 blueprint-compiler
 ```
+
+---
+
+### GNOME Builder *(recommended)*
+
+1. Install [GNOME Builder](https://wiki.gnome.org/Apps/Builder) from Flathub
+2. Open the project folder in Builder
+3. Press **Run (F5)** — Builder handles runtimes and compilation automatically
 
 ---
 
@@ -138,57 +182,96 @@ sudo apt install meson python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 \
 git clone https://github.com/D3M-Sudo/Anura.git
 cd Anura
 
-# Setup and build using uv
-uv sync --dev
-uv run meson setup builddir
-uv run meson compile -C builddir
+meson setup builddir --prefix=/usr/local
+ninja -C builddir
 
 # Run without installing
-GSETTINGS_SCHEMA_DIR=builddir/data python3 -m anura.main
+./builddir/bin/anura
+
+# Or install system-wide
+sudo ninja -C builddir install
+```
+
+---
+
+### Flatpak *(distributable bundle)*
+
+```bash
+flatpak-builder --force-clean build-flatpak \
+    flatpak/io.github.d3msudo.anura.json
 ```
 
 ---
 
 ## Code Quality
 
-Anura uses **Ruff** for linting and **pytest** for testing, managed via **uv**.
+Anura uses [Ruff](https://docs.astral.sh/ruff/) for linting and formatting, and [pytest](https://pytest.org) for testing. The project uses **uv** for dependency management.
 
 ```bash
-# Run headless unit/security tests
+# Install dependencies
+uv sync --dev
+
+# Lint
+uv run ruff check anura/ build-aux/
+
+# Format
+uv run ruff format anura/
+
+# Auto-fix
+uv run ruff check --fix anura/
+
+# Run unit tests (no GTK required)
 uv run pytest tests/ -m "not gtk" -v
 
-# Run full suite (requires GTK environment)
-./setup-gschema.sh
-./tests/setup_resources.sh
+# Run GTK-dependent tests (requires GSettings schema)
+mkdir -p builddir
+cp data/io.github.d3msudo.anura.gschema.xml builddir/
+glib-compile-schemas builddir/
 export GSETTINGS_SCHEMA_DIR="builddir"
+export PYTHONPATH="/usr/lib/python3/dist-packages:."
 uv run pytest tests/ -v
 ```
+
+> **Note:** Tests marked `@pytest.mark.gtk` require system GTK libraries and a compiled GSettings schema.
+> See `CONTRIBUTING.md` for the complete testing setup and workflow.
 
 ---
 
 ## Localization
 
-Anura is translated via [Weblate](https://hosted.weblate.org/engage/anura/).
-
-Contributions in any language are welcome.
-
+Anura is translated via [Weblate](https://hosted.weblate.org/engage/anura/). Contributions in any language are welcome.
 
 <p align="center">
- <a href="https://hosted.weblate.org/engage/anura/">
-  <img src="https://hosted.weblate.org/widgets/anura/-/horizontal-auto.svg" alt="Translation status" />
- </a>
+  <a href="https://hosted.weblate.org/engage/anura/">
+    <img src="https://hosted.weblate.org/widgets/anura/-/horizontal-auto.svg" alt="Translation status" />
+  </a>
 </p>
 
-**For maintainers** — update translatable strings:
+**For maintainers** — after changing translatable strings, from the `po/` directory:
 
 ```bash
-cd po
+# Update the POT file and POTFILES
 ./update_potfiles.sh
+
+# Sync all locale files before committing
 for f in *.po; do msgmerge -U "$f" io.github.d3msudo.anura.pot --backup=none; done
 ```
+
+Then push `io.github.d3msudo.anura.pot`, `POTFILES`, and the updated `.po` files to keep Weblate in sync.
+
+---
+
+## Contributing
+
+Any help is appreciated — bug reports, translations, code, or design feedback.
+
+Anura follows the GNOME project [Code of Conduct](https://gitlab.gnome.org/World/amberol/-/blob/main/code-of-conduct.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines and workflow details.
 
 ---
 
 ## License
 
 Released under the **MIT** license. See [`LICENSE`](LICENSE) for details.
+
+---

@@ -1,9 +1,4 @@
-# This file is part of Anura.
-# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
-# Copyright (C) 2026 D3M-Sudo (Anura)
-#
-# SPDX-License-Identifier: MIT
-
+# tests/test_text_preprocessor.py
 import pytest
 
 pytest.importorskip("gi")
@@ -22,10 +17,10 @@ class TestTextPreprocessor:
         tp2 = get_text_preprocessor()
         assert tp1 is tp2
 
-    def test_clean_extracted_text_whitespace(self):
-        """Whitespace normalization is handled by sanitize_text in clean_extracted_text."""
-        assert self.preprocessor.clean_extracted_text("  hello   world  \n  new  line ") == "Hello World New Line"
-        assert self.preprocessor.clean_extracted_text("") == ""
+    def test_normalize_whitespace(self):
+        assert self.preprocessor._normalize_whitespace("  hello   world  \n  new  line ") == "hello world new line"
+        assert self.preprocessor._normalize_whitespace("") == ""
+        assert self.preprocessor._normalize_whitespace(None) == ""
 
     def test_fix_punctuation(self):
         assert self.preprocessor._fix_punctuation("Hello... world!!!") == "Hello. world!"
@@ -52,9 +47,7 @@ class TestTextPreprocessor:
         text = "Contact me at test@example.com or visit https://anura.app. Call 555-555-0199 on 05/20/2026."
         data = self.preprocessor.extract_structured_data(text)
         assert "test@example.com" in data["emails"]
-        # The URL regex captures 'https://anura.app' without the trailing period
-        # since '.' is a sentence boundary, not part of the URL
-        assert any("anura.app" in url for url in data["urls"])
+        assert "https://anura.app." in data["urls"]
         assert "555-555-0199" in data["phone_numbers"]
         assert "05/20/2026" in data["dates"]
 
@@ -63,6 +56,16 @@ class TestTextPreprocessor:
         enhanced = self.preprocessor.enhance_image(img)
         assert enhanced.mode == "L"
         assert enhanced.size == (200, 200)
+
+    def test_apply_adaptive_enhancements_dark(self):
+        img = Image.new("L", (100, 100), color=30)
+        enhanced = self.preprocessor._apply_adaptive_enhancements(img)
+        assert enhanced.getpixel((50, 50)) > 30
+
+    def test_apply_adaptive_enhancements_light(self):
+        img = Image.new("L", (100, 100), color=220)
+        enhanced = self.preprocessor._apply_adaptive_enhancements(img)
+        assert enhanced.mode == "L"
 
     def test_clean_extracted_text(self):
         # WORLD (5) -> World

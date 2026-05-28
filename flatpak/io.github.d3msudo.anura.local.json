@@ -17,6 +17,7 @@
         "--filesystem=xdg-download:ro",
         "--filesystem=xdg-desktop:ro",
         "--filesystem=xdg-documents:ro",
+        "--filesystem=xdg-public-share:ro",
         "--talk-name=org.a11y.Bus",
         "--talk-name=org.freedesktop.portal.Desktop",
         "--env=TESSDATA_PREFIX=/app/share/tessdata"
@@ -70,25 +71,6 @@
             ]
         },
         {
-            "name": "python3-psutil",
-            "buildsystem": "simple",
-            "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app .",
-                "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/psutil-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/psutil/LICENSE \\; -quit || true'"
-            ],
-            "sources": [
-                {
-                    "type": "archive",
-                    "url": "https://files.pythonhosted.org/packages/aa/c6/d1ddf4abb55e93cebc4f2ed8b5d6dbad109ecb8d63748dd2b20ab5e57ebe/psutil-7.2.2.tar.gz",
-                    "sha256": "0746f5f8d406af344fd547f1c8daa5f5c33dbc293bb8d6a16d80b4bb88f59372",
-                    "x-checker-data": {
-                        "type": "pypi",
-                        "name": "psutil"
-                    }
-                }
-            ]
-        },
-        {
             "name": "python3-pybind11",
             "buildsystem": "simple",
             "build-commands": [
@@ -122,8 +104,8 @@
             "sources": [
                 {
                     "type": "archive",
-                    "url": "https://files.pythonhosted.org/packages/f1/c6/ac2a12cdc2b1c296804fc6a65bf112b607825ca7f47742a5aca541134711/zxing_cpp-3.0.0.tar.gz",
-                    "sha256": "703353304de24d947bd68044fac4e062953a7b64029de6941ba8ffeb4476b60d",
+                    "url": "https://files.pythonhosted.org/packages/d9/f2/b781bf6119abe665069777e3c0f154752cf924fe8a55fca027243abbc555/zxing_cpp-2.3.0.tar.gz",
+                    "sha256": "3babedb67a4c15c9de2c2b4c42d70af83a6c85780c1b2d9803ac64c6ae69f14e",
                     "x-checker-data": {
                         "type": "pypi",
                         "name": "zxing-cpp"
@@ -190,8 +172,8 @@
             "sources": [
                 {
                     "type": "archive",
-                    "url": "https://files.pythonhosted.org/packages/8c/21/c2bcdd5906101a30244eaffc1b6e6ce71a31bd0742a01eb89e660ebfac2d/pillow-12.2.0.tar.gz",
-                    "sha256": "a830b1a40919539d07806aa58e1b114df53ddd43213d9c8b75847eee6c0182b5",
+                    "url": "https://files.pythonhosted.org/packages/af/cb/bb5c01fcd2a69335b86c22142b2bccfc3464087efb7fd382eee5ffc7fdf7/pillow-11.2.1.tar.gz",
+                    "sha256": "a64dd61998416367b7ef979b73d3a85853ba9bec4c2925f74e588879a58716b6",
                     "x-checker-data": {
                         "type": "pypi",
                         "name": "Pillow"
@@ -218,14 +200,14 @@
             "name": "python3-click",
             "buildsystem": "simple",
             "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed click-8.1.8-py3-none-any.whl",
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed click-8.1.7-py3-none-any.whl",
                 "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/click-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/click/LICENSE \\; -quit || true'"
             ],
             "sources": [
                 {
                     "type": "file",
-                    "url": "https://files.pythonhosted.org/packages/7e/d4/7ebdbd03970677812aac39c869717059dbb71a4cfc033ca6e5221787892c/click-8.1.8-py3-none-any.whl",
-                    "sha256": "63c132bbbed01578a06712a2d1f497bb62d9c1c0d329b7903a866228027263b2"
+                    "url": "https://files.pythonhosted.org/packages/00/2e/d53fa4befbf2cfa713304affc7ca780ce4fc1fd8710527771b58311a3229/click-8.1.7-py3-none-any.whl",
+                    "sha256": "ae74fb96c20a0277a1d615f1e4d73c8414f5a98db8b799a7931d1582f3390c28"
                 }
             ]
         },
@@ -233,14 +215,44 @@
             "name": "python3-gTTS",
             "buildsystem": "simple",
             "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed gTTS-2.5.4-py3-none-any.whl",
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed gTTS-2.5.1-py3-none-any.whl",
                 "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/gtts-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/gTTS/LICENSE \\; -quit || true'"
             ],
             "sources": [
                 {
                     "type": "file",
-                    "url": "https://files.pythonhosted.org/packages/e3/6c/8b8b1fdcaee7e268536f1bb00183a5894627726b54a9ddc6fc9909888447/gTTS-2.5.4-py3-none-any.whl",
-                    "sha256": "5dd579377f9f5546893bc26315ab1f846933dc27a054764b168f141065ca8436"
+                    "url": "https://files.pythonhosted.org/packages/59/a8/e3434904445eacf03b857ac001755d8ffac49b4f3339d63592b4eda009dc/gTTS-2.5.1-py3-none-any.whl",
+                    "sha256": "273ec8a5077b25e60ca5a266ed254b54d1f14032b0af3ba00092d14966148664"
+                }
+            ]
+        },
+        {
+            "name": "python3-six",
+            "buildsystem": "simple",
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed six-1.16.0-py2.py3-none-any.whl",
+                "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/six-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/six/LICENSE \\; -quit || true'"
+            ],
+            "sources": [
+                {
+                    "type": "file",
+                    "url": "https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl",
+                    "sha256": "8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"
+                }
+            ]
+        },
+        {
+            "name": "python3-dateutil",
+            "buildsystem": "simple",
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed python_dateutil-2.9.0.post0-py2.py3-none-any.whl",
+                "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/python_dateutil-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/dateutil/LICENSE \\; -quit || true'"
+            ],
+            "sources": [
+                {
+                    "type": "file",
+                    "url": "https://files.pythonhosted.org/packages/ec/57/56b9bcc3c9c6a792fcbaf139543cee77261f3651ca9da0c93f5c1221264b/python_dateutil-2.9.0.post0-py2.py3-none-any.whl",
+                    "sha256": "a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427"
                 }
             ]
         },
@@ -248,14 +260,14 @@
             "name": "python3-loguru",
             "buildsystem": "simple",
             "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed loguru-0.7.3-py3-none-any.whl",
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed loguru-0.7.2-py3-none-any.whl",
                 "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/loguru-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/loguru/LICENSE \\; -quit || true'"
             ],
             "sources": [
                 {
                     "type": "file",
-                    "url": "https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl",
-                    "sha256": "31a33c10c8e1e10422bfd431aeb5d351c7cf7fa671e3c4df004162264b28220c"
+                    "url": "https://files.pythonhosted.org/packages/03/0a/4f6fed21aa246c6b49b561ca55facacc2a44b87d65b8b92362a8e99ba202/loguru-0.7.2-py3-none-any.whl",
+                    "sha256": "003d71e3d3ed35f0f8984898359d65b79e5b21943f78af86aa5491210429b8eb"
                 }
             ]
         },
@@ -263,14 +275,14 @@
             "name": "python3-urllib3",
             "buildsystem": "simple",
             "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed urllib3-2.7.0-py3-none-any.whl",
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed urllib3-2.2.3-py3-none-any.whl",
                 "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/urllib3-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/urllib3/LICENSE \\; -quit || true'"
             ],
             "sources": [
                 {
                     "type": "file",
-                    "url": "https://files.pythonhosted.org/packages/7f/3e/5db95bcf282c52709639744ca2a8b149baccf648e39c8cc87553df9eae0c/urllib3-2.7.0-py3-none-any.whl",
-                    "sha256": "9fb4c81ebbb1ce9531cce37674bbc6f1360472bc18ca9a553ede278ef7276897"
+                    "url": "https://files.pythonhosted.org/packages/ce/d9/5f4c13cecde62396b0d3fe530a50ccea91e7dfc1ccf0e09c228841bb5ba8/urllib3-2.2.3-py3-none-any.whl",
+                    "sha256": "ca899ca043dcb1bafa3e262d73aa25c465bfb49e0bd9dd5d59f1d0acba2f8fac"
                 }
             ]
         },
@@ -278,14 +290,14 @@
             "name": "python3-certifi",
             "buildsystem": "simple",
             "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed certifi-2026.4.22-py3-none-any.whl",
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed certifi-2025.1.31-py3-none-any.whl",
                 "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/certifi-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/certifi/LICENSE \\; -quit || true'"
             ],
             "sources": [
                 {
                     "type": "file",
-                    "url": "https://files.pythonhosted.org/packages/22/30/7cd8fdcdfbc5b869528b079bfb76dcdf6056b1a2097a662e5e8c04f42965/certifi-2026.4.22-py3-none-any.whl",
-                    "sha256": "3cb2210c8f88ba2318d29b0388d1023c8492ff72ecdde4ebdaddbb13a31b1c4a"
+                    "url": "https://files.pythonhosted.org/packages/38/fc/bce832fd4fd99766c04d1ee0eead6b0ec6486fb100ae5e74c1d91292b982/certifi-2025.1.31-py3-none-any.whl",
+                    "sha256": "ca78db4565a652026a4db2bcdf68f2fb589ea80d0be70e03929ed730746b84fe"
                 }
             ]
         },
@@ -293,18 +305,14 @@
             "name": "python3-charset-normalizer",
             "buildsystem": "simple",
             "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app .",
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed charset_normalizer-3.4.0-py3-none-any.whl",
                 "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/charset_normalizer-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/charset-normalizer/LICENSE \\; -quit || true'"
             ],
             "sources": [
                 {
-                    "type": "archive",
-                    "url": "https://files.pythonhosted.org/packages/e7/a1/67fe25fac3c7642725500a3f6cfe5821ad557c3abb11c9d20d12c7008d3e/charset_normalizer-3.4.7.tar.gz",
-                    "sha256": "ae89db9e5f98a11a4bf50407d4363e7b09b31e55bc117b4f7d80aab97ba009e5",
-                    "x-checker-data": {
-                        "type": "pypi",
-                        "name": "charset-normalizer"
-                    }
+                    "type": "file",
+                    "url": "https://files.pythonhosted.org/packages/bf/9b/08c0432272d77b04803958a4598a51e2a4b51c06640af8b8f0f908c18bf2/charset_normalizer-3.4.0-py3-none-any.whl",
+                    "sha256": "fe9f97feb71aa9896b81973a7bbada8c49501dc73e58a10fcef6663af95e5079"
                 }
             ]
         },
@@ -312,14 +320,14 @@
             "name": "python3-idna",
             "buildsystem": "simple",
             "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed idna-3.15-py3-none-any.whl",
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed idna-3.10-py3-none-any.whl",
                 "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/idna-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/idna/LICENSE \\; -quit || true'"
             ],
             "sources": [
                 {
                     "type": "file",
-                    "url": "https://files.pythonhosted.org/packages/d2/23/408243171aa9aaba178d3e2559159c24c1171a641aa83b67bdd3394ead8e/idna-3.15-py3-none-any.whl",
-                    "sha256": "048adeaf8c2d788c40fee287673ccaa74c24ffd8dcf09ffa555a2fbb59f10ac8"
+                    "url": "https://files.pythonhosted.org/packages/76/c6/c88e154df9c4e1a2a66ccf0005a88dfb2650c1dffb6f5ce603dfbd452ce3/idna-3.10-py3-none-any.whl",
+                    "sha256": "946d195a0d259cbba61165e88e65941f16e9b36ea6ddb97f00452bae8b1287d3"
                 }
             ]
         },
@@ -327,14 +335,14 @@
             "name": "python3-requests",
             "buildsystem": "simple",
             "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed requests-2.34.2-py3-none-any.whl",
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed requests-2.32.3-py3-none-any.whl",
                 "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/requests-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/requests/LICENSE \\; -quit || true'"
             ],
             "sources": [
                 {
                     "type": "file",
-                    "url": "https://files.pythonhosted.org/packages/a0/f4/c67b0b3f1b9245e8d266f0f112c500d50e5b4e83cb6f3b71b6528104182a/requests-2.34.2-py3-none-any.whl",
-                    "sha256": "2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0"
+                    "url": "https://files.pythonhosted.org/packages/f9/9b/335f9764261e915ed497fcdeb11df5dfd6f7bf257d4a6a2a686d80da4d54/requests-2.32.3-py3-none-any.whl",
+                    "sha256": "70761cfe03c773ceb22aa2f671b4757976145175cdfca038c02654d061d6dcc6"
                 }
             ]
         },

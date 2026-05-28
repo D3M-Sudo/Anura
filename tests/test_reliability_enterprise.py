@@ -1,9 +1,3 @@
-# This file is part of Anura.
-# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
-# Copyright (C) 2026 D3M-Sudo (Anura)
-#
-# SPDX-License-Identifier: MIT
-
 import pytest
 
 pytest.importorskip("gi")
@@ -15,7 +9,7 @@ from unittest.mock import MagicMock, patch
 
 import requests
 
-from anura.services.language_manager import LanguageManager
+from anura.language_manager import LanguageManager
 from anura.services.tts import TTSService
 
 
@@ -31,7 +25,7 @@ class TestReliabilityEnterprise:
 
     @pytest.fixture
     def lang_manager(self, tmp_path):
-        with patch("anura.services.language_manager.TESSDATA_DIR", str(tmp_path)):
+        with patch("anura.language_manager.TESSDATA_DIR", str(tmp_path)):
             return LanguageManager()
 
     def test_tts_network_outage(self, tts_service):
@@ -61,7 +55,7 @@ class TestReliabilityEnterprise:
         """Test recovery when a download is interrupted/corrupted."""
         # The LanguageManager init_tessdata uses TESSDATA_DIR constant.
         # We need to ensure the test's lang_manager uses the tmp_path.
-        import anura.services.language_manager as lm_mod
+        import anura.language_manager as lm_mod
 
         with patch.object(lm_mod, "TESSDATA_DIR", str(tmp_path)):
             # Create a partial/corrupted file

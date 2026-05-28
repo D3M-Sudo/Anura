@@ -1,8 +1,6 @@
-# This file is part of Anura.
-# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
-# Copyright (C) 2026 D3M-Sudo (Anura)
+# test_extracted_page_reflow.py
 #
-# SPDX-License-Identifier: MIT
+# Static verification of the dynamic reflow bug fix in extracted_page.ui.
 
 from pathlib import Path
 import xml.etree.ElementTree as ET

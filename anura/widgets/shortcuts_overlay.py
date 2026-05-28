@@ -1,9 +1,6 @@
-# This file is part of Anura.
-# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
-# Copyright (C) 2026 D3M-Sudo (Anura)
+# shortcuts_overlay.py
 #
-# SPDX-License-Identifier: MIT
-
+# Copyright 2026 D3M-Sudo (Anura fork and modifications)
 """
 Keyboard shortcuts overlay widget for Anura OCR.
 Provides an elegant cheat sheet with all available keyboard shortcuts.
@@ -229,7 +226,7 @@ def show_shortcuts_overlay(parent_window: Gtk.Window) -> None:
     try:
         overlay = ShortcutsOverlay(transient_for=parent_window)
         overlay.present()
-    except (AttributeError, RuntimeError, TypeError, GLib.Error) as e:
+    except Exception as e:
         from loguru import logger
 
         logger.error(f"Failed to show shortcuts overlay: {e}")

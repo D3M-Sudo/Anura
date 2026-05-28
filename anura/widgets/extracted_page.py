@@ -1,8 +1,7 @@
-# This file is part of Anura.
-# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
-# Copyright (C) 2026 D3M-Sudo (Anura)
+# extracted_page.py
 #
-# SPDX-License-Identifier: MIT
+# Copyright 2021-2025 Andrey Maksimov
+# Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
 import contextlib
 from gettext import gettext as _
@@ -22,7 +21,7 @@ from loguru import logger  # noqa: E402
 import requests  # noqa: E402
 
 from anura.config import RESOURCE_PREFIX  # noqa: E402
-from anura.core.atomic_task_manager import get_atomic_manager  # noqa: E402
+from anura.gobject_worker import GObjectWorker  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
 from anura.services.tts import get_tts_service  # noqa: E402
@@ -59,9 +58,10 @@ class ExtractedPage(Adw.NavigationPage):
         self._share_handler_id = None
         # TTS service reference — initialized post-super() to avoid pre-template access
         self._tts_service = None
+        self._tts_stop_handler_id = None
+        self._tts_paused_handler_id = None
+        self._tts_error_handler_id = None
         self._buffer_handler_id = None
-        self._mark_set_handler_id = None
-        self._map_handler_id = None
         self._is_generating_tts = False
 
         super().__init__(**kwargs)
@@ -78,19 +78,15 @@ class ExtractedPage(Adw.NavigationPage):
 
         try:
             self._tts_service = get_tts_service()
+            self._tts_stop_handler_id = self._tts_service.connect("stop", self._on_listen_end)
+            self._tts_paused_handler_id = self._tts_service.connect("paused", self._on_paused)
+            self._tts_error_handler_id = self._tts_service.connect("error", self._on_tts_error)
         except (TypeError, RuntimeError, AttributeError) as e:
-            logger.warning(f"Failed to initialize TTS service: {e}")
+            logger.warning(f"Failed to connect TTS services: {e}")
 
         self._buffer_handler_id = self.buffer.connect("changed", self._on_buffer_changed)
-        self._mark_set_handler_id = self.buffer.connect("mark-set", self._on_mark_set)
-
-        # Accessibility: set tooltip for the stats label
-        self.stats_label.set_tooltip_text(
-            _("Shows character and word count. If text is selected, shows selection stats.")
-        )
-
         # GTK4 Layout Fix: Force reflow when widget is mapped to ensure correct Pango layout
-        self._map_handler_id = self.text_view.connect("map", lambda _: self._force_reflow())
+        self.text_view.connect("map", lambda _: self._force_reflow())
 
     def _force_reflow(self) -> None:
         """Force the TextView to recalculate its layout and reflow text.
@@ -109,7 +105,7 @@ class ExtractedPage(Adw.NavigationPage):
         self.text_view.queue_resize()
 
     def _on_buffer_changed(self, buffer: Gtk.TextBuffer) -> None:
-        """Update action sensitivities when buffer changes."""
+        """Update character and word count in the status bar label."""
         text = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), False)
         has_text = bool(text.strip()) if text else False
 
@@ -121,34 +117,15 @@ class ExtractedPage(Adw.NavigationPage):
         if self.listen_btn:
             self.listen_btn.set_sensitive(has_text)
 
-        self._update_stats_label()
-
-    def _on_mark_set(self, _buffer: Gtk.TextBuffer, _location: Gtk.TextIter, mark: Gtk.TextMark) -> None:
-        """Update stats label when selection changes."""
-        # We only care about the selection bound or the insert mark which define the selection
-        if mark.get_name() in ["selection_bound", "insert"]:
-            self._update_stats_label()
-
-    def _update_stats_label(self) -> None:
-        """Update character and word count in the status bar label, considering selection."""
-        has_selection, start, end = self.buffer.get_selection_bounds()
-        if has_selection:
-            text = self.buffer.get_text(start, end, False)
-            # Use a prefix to indicate these are selection stats
-            prefix = _("Selection: ")
-        else:
-            text = self.extracted_text
-            prefix = ""
-
         char_count = len(text) if text else 0
         word_count = len(text.split()) if text else 0
 
         words_text = ngettext("{n} word", "{n} words", word_count).format(n=word_count)
         chars_text = ngettext("{n} character", "{n} characters", char_count).format(n=char_count)
 
-        # Construct the stats label using a single translatable string
-        stats = _("{words} | {chars}").format(words=words_text, chars=chars_text)
-        self.stats_label.set_text(f"{prefix}{stats}")
+        # Construct the stats label using a single translatable string to ensure
+        # translators can adjust the ordering and separator if necessary.
+        self.stats_label.set_text(_("{words} | {chars}").format(words=words_text, chars=chars_text))
 
     def show_copy_feedback(self) -> None:
         """Temporarily change the copy button icon to a checkmark for UX feedback."""
@@ -163,6 +140,7 @@ class ExtractedPage(Adw.NavigationPage):
         original_icon = self.text_copy_btn.get_icon_name()
         self.text_copy_btn.set_icon_name("emblem-ok-symbolic")
 
+        # Revert icon after 2 seconds
         GLib.timeout_add_seconds(2, self._reset_copy_icon, original_icon)
 
     def _reset_copy_icon(self, icon_name: str) -> bool:
@@ -171,8 +149,8 @@ class ExtractedPage(Adw.NavigationPage):
             if self.text_copy_btn and self.text_copy_btn.get_icon_name() == "emblem-ok-symbolic":
                 # Only reset if it's still showing the checkmark (don't overwrite newer state)
                 self.text_copy_btn.set_icon_name(icon_name)
-        except (AttributeError, RuntimeError, TypeError) as e:
-            logger.exception(f"Anura: Failed to reset copy icon: {e}")
+        except Exception:
+            logger.exception("Anura: Failed to reset copy icon")
         return GLib.SOURCE_REMOVE
 
     def do_hiding(self) -> None:
@@ -182,21 +160,12 @@ class ExtractedPage(Adw.NavigationPage):
 
     def do_unmap(self) -> None:
         """Handle widget unmapping - stop TTS playback when widget is no longer visible."""
-        # X11 Constraint: stop TTS and reset UI controls to prevent stale state
-        # on the next visit.
+        # X11 Constraint: Stop TTS immediately when widget is unmapped to prevent zombie audio
         if self._tts_service:
             try:
                 self._tts_service.stop_speaking()
-            except (AttributeError, RuntimeError) as e:
+            except Exception as e:
                 logger.warning(f"Failed to stop TTS during unmap: {e}")
-        self._is_generating_tts = False
-        if self.listen_spinner:
-            self.listen_spinner.stop()
-        if self.listen_stack:
-            self.listen_stack.set_visible_child_name("button")
-        self.swap_controls(False)
-        if self.listen_pause_btn:
-            self.listen_pause_btn.set_icon_name("media-playback-pause-symbolic")
         Gtk.Widget.do_unmap(self)
 
     def do_dispose(self) -> None:
@@ -205,7 +174,17 @@ class ExtractedPage(Adw.NavigationPage):
         if self._tts_service:
             try:
                 self._tts_service.stop_speaking()
-            except (AttributeError, RuntimeError) as e:
+                # Disconnect signal handlers
+                if self._tts_stop_handler_id:
+                    self._tts_service.disconnect(self._tts_stop_handler_id)
+                    self._tts_stop_handler_id = None
+                if self._tts_paused_handler_id:
+                    self._tts_service.disconnect(self._tts_paused_handler_id)
+                    self._tts_paused_handler_id = None
+                if self._tts_error_handler_id:
+                    self._tts_service.disconnect(self._tts_error_handler_id)
+                    self._tts_error_handler_id = None
+            except Exception as e:
                 logger.warning(f"Failed to cleanup TTS during dispose: {e}")
 
         # Disconnect share service signal handler
@@ -216,22 +195,11 @@ class ExtractedPage(Adw.NavigationPage):
             except (TypeError, RuntimeError) as e:
                 logger.warning(f"Failed to cleanup share service during dispose: {e}")
 
-        # Disconnect internal buffer handlers
+        # Disconnect internal buffer handler
         if self._buffer_handler_id:
             with contextlib.suppress(TypeError, RuntimeError):
                 self.buffer.disconnect(self._buffer_handler_id)
             self._buffer_handler_id = None
-
-        if self._mark_set_handler_id:
-            with contextlib.suppress(TypeError, RuntimeError):
-                self.buffer.disconnect(self._mark_set_handler_id)
-            self._mark_set_handler_id = None
-
-        # Disconnect map handler
-        if self._map_handler_id:
-            with contextlib.suppress(TypeError, RuntimeError):
-                self.text_view.disconnect(self._map_handler_id)
-            self._map_handler_id = None
 
         super().do_dispose()
 
@@ -251,13 +219,6 @@ class ExtractedPage(Adw.NavigationPage):
             self._force_reflow()
         except (GLib.Error, ValueError) as e:
             logger.error(f"Error setting extracted text: {e}")
-
-    def get_active_text(self) -> str:
-        """Get selected text if available, otherwise the full text."""
-        has_selection, start, end = self.buffer.get_selection_bounds()
-        if has_selection:
-            return self.buffer.get_text(start, end, False)
-        return self.extracted_text
 
     def listen(self) -> None:
         """Start TTS playback for the extracted text."""
@@ -288,6 +249,16 @@ class ExtractedPage(Adw.NavigationPage):
         # Store reference for cleanup if not already stored
         if self._tts_service is None:
             self._tts_service = tts_service_instance
+            # Only connect handlers if they are not already connected from __init__
+            try:
+                if self._tts_stop_handler_id is None:
+                    self._tts_stop_handler_id = self._tts_service.connect("stop", self._on_listen_end)
+                if self._tts_paused_handler_id is None:
+                    self._tts_paused_handler_id = self._tts_service.connect("paused", self._on_paused)
+                if self._tts_error_handler_id is None:
+                    self._tts_error_handler_id = self._tts_service.connect("error", self._on_tts_error)
+            except (TypeError, RuntimeError, AttributeError) as e:
+                logger.warning(f"Failed to connect TTS signals during listen: {e}")
 
         # Resolve TTS language: explicit user preference (tts-language) wins,
         # otherwise map the OCR language (Tesseract 3-letter, e.g. "ita") to
@@ -308,17 +279,17 @@ class ExtractedPage(Adw.NavigationPage):
             return
 
         try:
-            get_atomic_manager().execute(
+            GObjectWorker.call(
                 tts_service_instance.generate,
-                (self.get_active_text(), tts_lang),
+                (self.extracted_text, tts_lang),
                 callback=self._on_generated,
                 errorback=self._on_generate_error,
             )
-        except (AttributeError, RuntimeError, TypeError) as e:
+        except Exception:
             self._is_generating_tts = False
             self._set_spinner_active(False)
             self.swap_controls(False)
-            logger.exception(f"Anura TTS: Failed to initiate speech generation: {e}")
+            logger.exception("Anura TTS: Failed to initiate speech generation")
 
     def _set_spinner_active(self, active: bool) -> None:
         """X11 Constraint: Switch Stack between button and spinner."""
@@ -342,7 +313,7 @@ class ExtractedPage(Adw.NavigationPage):
             popover.popdown()
 
     def _on_generate_error(self, error: Exception, traceback_str: str | None = None) -> None:
-        """Handle generation errors (called on main thread by AtomicTaskManager)."""
+        """Handle generation errors (called on main thread by GObjectWorker)."""
         self._is_generating_tts = False
         # Force stack back to button state on error — the spinner must not persist.
         # We bypass _set_spinner_active + swap_controls here because swap_controls
@@ -388,15 +359,6 @@ class ExtractedPage(Adw.NavigationPage):
             icon = "media-playback-start-symbolic" if is_paused else "media-playback-pause-symbolic"
             self.listen_pause_btn.set_icon_name(icon)
 
-    def update_tts_state(self, playing: bool = False, paused: bool = False) -> None:
-        """Update the TTS UI state (called from TtsController)."""
-        if playing:
-            self.swap_controls("playing")
-        elif paused:
-            self._on_paused(None, True)
-        else:
-            self.swap_controls("stopped")
-
     def _on_tts_error(self, _service: object, message: str) -> None:
         """Handle TTS error signal."""
         self._on_listen_end(_service, False)
@@ -405,18 +367,19 @@ class ExtractedPage(Adw.NavigationPage):
             window.show_toast(message)
 
     def _on_generated(self, filepath: str | None) -> None:
-        """Callback when TTS generation completes.
-
-        The 'speak' signal triggers TtsController to call play(), so
-        calling it here would create a duplicate GStreamer pipeline.
-        """
         self._is_generating_tts = False
         if not filepath:
             self._set_spinner_active(False)
             self.swap_controls(False)
             return
 
+        # Deactivate spinner immediately when generation is complete
         self._set_spinner_active(False)
+        # Show pause/stop controls
+        self.swap_controls(True)
+        # Start playback
+        tts_service_instance = get_tts_service()
+        tts_service_instance.play(filepath)
 
     def _on_listen_end(self, service: object, success: bool) -> None:
         """Handle TTS playback completion."""
@@ -429,18 +392,15 @@ class ExtractedPage(Adw.NavigationPage):
         if self.listen_pause_btn:
             self.listen_pause_btn.set_icon_name("media-playback-pause-symbolic")
 
-    def swap_controls(self, state: bool | str = False) -> None:
+    def swap_controls(self, state: bool = False) -> None:
         """Enable or disable interactive controls during TTS playback."""
-        # Handle both legacy boolean state and new descriptive string states
-        is_playing = state is True or state == "playing"
-
         if self.grab_btn:
-            self.grab_btn.set_sensitive(not is_playing)
+            self.grab_btn.set_sensitive(not state)
         if self.text_copy_btn:
-            self.text_copy_btn.set_sensitive(not is_playing)
+            self.text_copy_btn.set_sensitive(not state)
         if self.listen_stack:
             # Unified stack management: handle both pause/play and spinner states
-            if is_playing:
+            if state:
                 self.listen_stack.set_visible_child_name("pause")
             else:
                 # Check if spinner is active before switching to button

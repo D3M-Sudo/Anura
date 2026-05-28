@@ -73,6 +73,3 @@ cline/
 *.bak
 *.tmp
 *.temp
-
-# Test audit files
-audit-report.md

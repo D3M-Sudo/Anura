@@ -1,8 +1,10 @@
-# This file is part of Anura.
-# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
-# Copyright (C) 2026 D3M-Sudo (Anura)
+# test_release_notes_generation.py
 #
-# SPDX-License-Identifier: MIT
+# Tests for build-aux/generate_release_notes.py
+# Specifically guards against the libxml parse error in the Adw.AboutDialog
+# "Novità" window when the regex fails to match CHANGELOG sections that contain
+# "### Subsection" headers (the original `[^#]*?` content pattern stopped at
+# the first `#`, leaving RELEASE_NOTES empty and CURRENT_NOTES = bare text).
 
 from pathlib import Path
 import sys

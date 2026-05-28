@@ -1,21 +1,20 @@
-# This file is part of Anura.
-# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
-# Copyright (C) 2026 D3M-Sudo (Anura)
+# welcome_page.py
 #
-# SPDX-License-Identifier: MIT
+# Copyright 2021-2025 Andrey Maksimov
+# Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
 import contextlib
 from gettext import gettext as _
 from mimetypes import guess_type
-from pathlib import Path
+import os
 
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk
 from loguru import logger
 
 from anura.config import RESOURCE_PREFIX
-from anura.models.language_item import LanguageItem
-from anura.services.language_manager import get_language_manager
+from anura.language_manager import language_manager
 from anura.services.settings import settings
+from anura.types.language_item import LanguageItem
 from anura.widgets.language_popover import LanguagePopover
 
 
@@ -43,7 +42,7 @@ class WelcomePage(Adw.NavigationPage):
 
         current_lang_code = self.settings.get_string("active-language")
         self.lang_combo.set_label(
-            get_language_manager().get_language(current_lang_code),
+            language_manager.get_language(current_lang_code),
         )
 
         self._drop_button_handler_id = self.drop_button.connect("clicked", self._on_drop_button_clicked)
@@ -89,8 +88,8 @@ class WelcomePage(Adw.NavigationPage):
                 self.drop_button.add_css_class("suggested-action")
             else:
                 self.drop_button.remove_css_class("suggested-action")
-        except (AttributeError, RuntimeError) as e:
-            logger.exception(f"Anura: Failed to handle drop button click: {e}")
+        except Exception:
+            logger.exception("Anura: Failed to handle drop button click")
 
     def _on_dnd_enter(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float) -> Gdk.DragAction:
         """Visual feedback when drag enters the drop area."""
@@ -98,8 +97,8 @@ class WelcomePage(Adw.NavigationPage):
             self.drop_area.set_visible(True)
             self.drop_area.add_css_class("drag-hover")
             self.welcome.set_description(_("Drop image to extract text"))
-        except (AttributeError, RuntimeError) as e:
-            logger.exception(f"Anura: Failed to handle DnD enter: {e}")
+        except Exception:
+            logger.exception("Anura: Failed to handle DnD enter")
         return Gdk.DragAction.COPY
 
     def _on_dnd_leave(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop) -> None:
@@ -110,8 +109,8 @@ class WelcomePage(Adw.NavigationPage):
             if not self.drop_button.has_css_class("suggested-action"):
                 self.drop_area.set_visible(False)
             self.welcome.set_description(_("Extract text from anywhere"))
-        except (AttributeError, RuntimeError) as e:
-            logger.exception(f"Anura: Failed to handle DnD leave: {e}")
+        except Exception:
+            logger.exception("Anura: Failed to handle DnD leave")
 
     def _on_dnd_drop(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float) -> bool:
         """Handle drop signal. Initiates a fully async stream read of text/uri-list.
@@ -218,7 +217,7 @@ class WelcomePage(Adw.NavigationPage):
 
     def _process_dropped_path(self, local_path: str) -> None:
         """Common logic for processing a verified local path from any DnD format."""
-        if not Path(local_path).exists():
+        if not os.path.exists(local_path):
             logger.error(f"DnD: File not accessible: {local_path}")
             self._show_error_toast(_("File not accessible. Ensure Anura has permission to access this location."))
             return
@@ -231,14 +230,14 @@ class WelcomePage(Adw.NavigationPage):
             return
 
         window = self.get_root()
-        if not window or not hasattr(window, "dnd_controller"):
+        if not window or not hasattr(window, "process_dnd_file_sync"):
             logger.error("DnD: Root window missing process_dnd_file_sync")
             self._show_error_toast(_("Failed to process dropped file"))
             return
 
         self._set_drop_area_processing_state(True)
         self.show_spinner()
-        window.dnd_controller.process_dnd_file_sync(local_path)
+        window.process_dnd_file_sync(local_path)
 
     def _show_error_toast(self, message: str) -> None:
         """Show error toast to user."""
@@ -266,11 +265,6 @@ class WelcomePage(Adw.NavigationPage):
         self.drop_area.set_visible(False)
         self.drop_button.remove_css_class("suggested-action")
         self.welcome.set_description(_("Extract text from anywhere"))
-
-    def set_status(self, status_msg: str) -> None:
-        """Update the status label during processing."""
-        if self.drop_area_label:
-            self.drop_area_label.set_label(status_msg)
 
     def hide_spinner(self) -> None:
         """Stop and hide the spinner."""

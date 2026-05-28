@@ -1,8 +1,10 @@
-# This file is part of Anura.
-# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
-# Copyright (C) 2026 D3M-Sudo (Anura)
+# settings.py
 #
-# SPDX-License-Identifier: MIT
+# Copyright 2021-2025 Andrey Maksimov
+# Copyright 2026 D3M-Sudo (Anura fork and modifications)
+#
+# Settings module - moved from anura/settings.py to anura/services/settings.py
+# to avoid ModuleNotFoundError in Flatpak sandbox.
 
 import threading
 from typing import Any

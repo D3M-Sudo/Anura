@@ -1,9 +1,6 @@
-# This file is part of Anura.
-# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
-# Copyright (C) 2026 D3M-Sudo (Anura)
+# text_preprocessor.py
 #
-# SPDX-License-Identifier: MIT
-
+# Copyright 2026 D3M-Sudo (Anura fork and modifications)
 """
 Smart text preprocessing utilities for better OCR results.
 Includes image enhancement, text cleanup, and intelligent formatting.
@@ -12,17 +9,14 @@ Includes image enhancement, text cleanup, and intelligent formatting.
 import re
 
 from loguru import logger
-from PIL import Image
-
-from anura.utils.image_filters import get_default_filter_chain
-from anura.utils.singleton import get_instance
-from anura.utils.validators import sanitize_text
+from PIL import Image, ImageEnhance, ImageFilter, ImageStat
 
 
 class TextPreprocessor:
     """Advanced text preprocessing for OCR accuracy improvement."""
 
     def __init__(self) -> None:
+        # Pre-compiled regex patterns for better performance
         self._punctuation_patterns = [
             (re.compile(r"([.!?])\1+"), r"\1"),  # Multiple punctuation
             (re.compile(r",+"), ","),  # Multiple commas
@@ -30,6 +24,7 @@ class TextPreprocessor:
             (re.compile(r"(?<!\d)([.,;:!?])(?!\d)(\S)"), r"\1 \2"),  # Add space after punctuation if missing (second)
         ]
 
+        # Pre-compiled regexes for punctuation spacing
         self._paren_open_re = re.compile(r"\s*\(\s*")
         self._paren_close_re = re.compile(r"\s*\)\s*")
         self._quote_double_re = re.compile(r'\s*"\s*')
@@ -38,6 +33,7 @@ class TextPreprocessor:
         # Pre-compiled regexes for capitalization
         self._sentence_split_re = re.compile(r"((?<!\d)[.!?]+)\s*")
 
+        # Pre-compiled regexes for artifacts removal
         # Optimization: use [ \t] instead of \s and re.MULTILINE to allow processing the
         # entire text block at once while preserving line structure.
         self._page_num_re = re.compile(r"^[ \t]*\d+[ \t]*\r?\n?", re.MULTILINE)
@@ -45,10 +41,11 @@ class TextPreprocessor:
         self._bullets_re = re.compile(r"^[ \t•·▪▫◦‣]+[ \t]*", re.MULTILINE)
         self._list_marker_re = re.compile(r"^- +", re.MULTILINE)
 
-        from anura.utils.validators import EMAIL_RE, URL_RE
-
-        self._email_re = EMAIL_RE
-        self._url_re = URL_RE
+        # Pre-compiled structured data patterns
+        self._email_re = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b")
+        self._url_re = re.compile(
+            r"https?://(?:[-\w.])+(?:[:\d]+)?(?:/(?:[\w/_.-])*(?:\?(?:[\w&=%.-])*)?(?:#(?:\w*))?)?"
+        )
 
         self._phone_res = [
             re.compile(r"\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b"),  # US format
@@ -65,23 +62,137 @@ class TextPreprocessor:
             ),  # Month DD, YYYY
         ]
 
-    def enhance_image(self, image: Image.Image, task_id: str | None = None) -> Image.Image:
-        """Apply the preprocessing filter chain to improve OCR accuracy.
+    def enhance_image(self, image: Image.Image) -> Image.Image:
+        """
+        Apply intelligent image enhancement for better OCR accuracy.
+        Includes grayscale conversion, adaptive thresholding, and noise reduction.
 
         Args:
             image: Input PIL Image
-            task_id: Optional task ID for cooperative cancellation.
 
         Returns:
-            Enhanced PIL Image, or original if enhancement fails.
+            Enhanced PIL Image
         """
         try:
-            return get_default_filter_chain().apply(image, task_id=task_id)
-        except InterruptedError:
-            raise
-        except (AttributeError, RuntimeError, TypeError, ValueError, OSError) as e:
-            logger.warning(f"Image enhancement failed: {e}")
+            # 1. Grayscale conversion
+            if image.mode != "L":
+                image = image.convert("L")
+
+            # 2. Rescale for better OCR if image is too small
+            image = self._rescale_if_needed(image)
+
+            # 3. Adaptive enhancements (Brightness/Contrast)
+            enhanced = self._apply_adaptive_enhancements(image)
+
+            # 4. Noise reduction (Median Filter)
+            enhanced = enhanced.filter(ImageFilter.MedianFilter(size=3))
+
+            # 5. Adaptive Thresholding (Otsu-like via numpy if available, or basic auto-contrast)
+            enhanced = self._apply_thresholding(enhanced)
+
+            # 6. Final Sharpening
+            enhancer = ImageEnhance.Sharpness(enhanced)
+            enhanced = enhancer.enhance(1.5)
+
+            logger.debug("Applied advanced image enhancement preprocessing")
+            return enhanced
+
+        except Exception as e:
+            logger.warning(f"Advanced image enhancement failed: {e}")
             return image
+
+    def _rescale_if_needed(self, image: Image.Image) -> Image.Image:
+        """Rescale image if it's too small for reliable OCR."""
+        width, height = image.size
+        # OCR works best with text height around 30-40 pixels
+        if width < 1000 or height < 1000:
+            scale_factor = 2
+            logger.debug(f"Rescaling image by {scale_factor}x for better OCR")
+            return image.resize((width * scale_factor, height * scale_factor), Image.Resampling.LANCZOS)
+        return image
+
+    def _apply_thresholding(self, image: Image.Image) -> Image.Image:
+        """
+        Apply thresholding for better text/background separation.
+        Optimized to combine autocontrast-like logic and thresholding into a single pass.
+        """
+        try:
+            # Optimization: Calculate threshold based on 2% histogram cutoff to simulate
+            # autocontrast without a separate pixel traversal pass.
+            hist = image.histogram()
+            width, height = image.size
+            total_pixels = width * height
+            cutoff = int(total_pixels * 0.02)
+
+            # Find low/high bounds similar to ImageOps.autocontrast
+            low = 0
+            temp_sum = 0
+            for i in range(256):
+                temp_sum += hist[i]
+                if temp_sum > cutoff:
+                    low = i
+                    break
+
+            high = 255
+            temp_sum = 0
+            for i in range(255, -1, -1):
+                temp_sum += hist[i]
+                if temp_sum > cutoff:
+                    high = i
+                    break
+
+            # If image is completely uniform, fallback to simple threshold
+            if high <= low:
+                lut = [0 if i < 128 else 255 for i in range(256)]
+                return image.point(lut, "L")
+
+            # Calculate mid-point threshold between detected bounds
+            threshold_val = low + (high - low) * 0.5
+            lut = [0 if i < threshold_val else 255 for i in range(256)]
+            return image.point(lut, "L")
+
+        except Exception as e:
+            logger.warning(f"Thresholding failed: {e}")
+            return image
+
+    def _apply_adaptive_enhancements(self, image: Image.Image) -> Image.Image:
+        """
+        Apply adaptive enhancements based on image analysis.
+        Optimized to use a single LUT pass for combined brightness and contrast.
+        """
+        # Calculate image statistics from histogram
+        histogram = image.histogram()
+        width, height = image.size
+        total_pixels = width * height
+
+        dark_pixels = sum(histogram[:128]) / total_pixels
+        light_pixels = 1.0 - dark_pixels
+
+        brightness_factor = 1.0
+        contrast_factor = 1.2
+
+        if dark_pixels > 0.7:  # Image is too dark
+            logger.debug("Applying brightness enhancement for dark image")
+            brightness_factor = 1.3
+
+        elif light_pixels > 0.8:  # Image is too light
+            logger.debug("Applying combined contrast enhancement for light image")
+            # Optimization: Combined 1.4x (light) and 1.2x (mandatory) contrast pass
+            contrast_factor = 1.68
+
+        # Optimization: Combined single-pass LUT for Brightness and Contrast.
+        # Uses ImageStat.Stat(image).mean for efficient contrast pivot calculation.
+        # Formula: new_pixel = brightness_factor * ((pixel - mean) * contrast_factor + mean)
+        # Simplified: new_pixel = pixel * (b * c) + (b * mean * (1 - c))
+        stat = ImageStat.Stat(image)
+        mean = stat.mean[0]
+
+        factor = brightness_factor * contrast_factor
+        offset = brightness_factor * mean * (1 - contrast_factor)
+
+        # Pre-calculate 256-value LUT to avoid redundant math per pixel
+        lut = [max(0, min(255, int(i * factor + offset))) for i in range(256)]
+        return image.point(lut)
 
     def clean_extracted_text(self, text: str) -> str:
         """
@@ -96,8 +207,10 @@ class TextPreprocessor:
         if not text:
             return ""
 
-        # Use security-focused sanitization as the first step (handles Unicode & whitespace)
-        cleaned = sanitize_text(text)
+        cleaned = text
+
+        # Normalize whitespace
+        cleaned = self._normalize_whitespace(cleaned)
 
         # Fix punctuation
         cleaned = self._fix_punctuation(cleaned)
@@ -109,6 +222,14 @@ class TextPreprocessor:
         cleaned = self._remove_artifacts(cleaned)
 
         return cleaned.strip()
+
+    def _normalize_whitespace(self, text: str) -> str:
+        """Normalize whitespace in text while preserving line breaks."""
+        if not text:
+            return ""
+
+        # Use regex to squash horizontal whitespace while preserving vertical structure
+        return re.sub(r"[ \t]+", " ", text).strip()
 
     def _fix_punctuation(self, text: str) -> str:
         """Fix punctuation spacing and duplication."""
@@ -211,10 +332,13 @@ class TextPreprocessor:
         return structured
 
 
-def get_text_preprocessor() -> TextPreprocessor:
-    """Get singleton text preprocessor instance.
+# Global preprocessor instance
+_text_preprocessor: TextPreprocessor | None = None
 
-    Returns:
-        The singleton TextPreprocessor instance.
-    """
-    return get_instance(TextPreprocessor)
+
+def get_text_preprocessor() -> TextPreprocessor:
+    """Get singleton text preprocessor instance."""
+    global _text_preprocessor
+    if _text_preprocessor is None:
+        _text_preprocessor = TextPreprocessor()
+    return _text_preprocessor

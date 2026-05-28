@@ -11,47 +11,47 @@ description: Automated commit message generation following Conventional Commits
 
 When this command is triggered, follow this exact protocol:
 
-### 1. Inspection
-- Run `git status` to identify modified and untracked files
-- List all files that need to be committed
+### 1. Ispezione
+- Esegui `git status` per identificare file modificati e non tracciati
+- Elenca tutti i file che necessitano di commit
 
-### 2. Analysis
-- Run `git diff` for modified files
-- Analyze the content of new files
-- Understand the logic and purpose of the changes
+### 2. Analisi
+- Esegui `git diff` per i file modificati
+- Analizza il contenuto dei nuovi file
+- Comprendi la logica e lo scopo delle modifiche
 
-### 3. Commit Message Generation
-Follow the Conventional Commits format:
-- `feat:` for new features
-- `fix:` for bug fixes
-- `refactor:` for refactoring
-- `docs:` for documentation
-- `style:` for style changes
-- `test:` for tests
-- `chore:` for maintenance
+### 3. Generazione Messaggio di Commit
+Segui il formato Conventional Commits:
+- `feat:` per nuove funzionalità
+- `fix:` per bug fix
+- `refactor:` per refactoring
+- `docs:` per documentazione
+- `style:` per modifiche di stile
+- `test:` per test
+- `chore:` per manutenzione
 
-### 4. Message Structure
+### 4. Struttura del Messaggio
 
 ```
-<type>(<scope>): <clear and concise title>
+<type>(<scope>): <titolo chiaro e conciso>
 
-- Logical change 1: brief description
-- Logical change 2: brief description
-- Logical change 3: brief description
+- Modifica logica 1: descrizione breve
+- Modifica logica 2: descrizione breve
+- Modifica logica 3: descrizione breve
 
 Files changed:
-- path/to/file1: change description
-- path/to/file2: change description
-- path/to/file3: change description
+- path/to/file1: descrizione modifica
+- path/to/file2: descrizione modifica
+- path/to/file3: descrizione modifica
 ```
 
-## Automatic Execution
+## Esecuzione Automatica
 
-This protocol must be executed autonomously when the `prompt commit` command is detected, without requiring further instructions from the user.
+Questo protocollo deve essere eseguito autonomamente quando viene rilevato il comando `prompt commit`, senza richiedere ulteriori istruzioni all'utente.
 
-## Important Notes
+## Note Importanti
 
-- Always analyze the context of the changes before generating the message
-- Be specific but concise in descriptions
-- Always follow the Conventional Commits format
-- Always include the "Files changed" section for traceability
+- Analizzare sempre il contesto delle modifiche prima di generare il messaggio
+- Essere specifici ma concisi nelle descrizioni
+- Seguire sempre il formato Conventional Commits
+- Includere sempre la sezione "Files changed" per tracciabilità

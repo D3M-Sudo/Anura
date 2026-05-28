@@ -1,17 +1,16 @@
-# This file is part of Anura.
-# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
-# Copyright (C) 2026 D3M-Sudo (Anura)
+# preferences_languages_page.py
 #
-# SPDX-License-Identifier: MIT
+# Copyright 2021-2025 Andrey Maksimov
+# Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
 from gettext import gettext as _
 
 from gi.repository import Adw, Gio, GLib, Gtk
 
 from anura.config import RESOURCE_PREFIX
-from anura.models.language_item import LanguageItem
-from anura.services.language_manager import get_language_manager
+from anura.language_manager import language_manager
 from anura.services.settings import settings
+from anura.types.language_item import LanguageItem
 from anura.utils.signal_manager import SignalManagerMixin
 from anura.widgets.language_row import LanguageRow
 
@@ -36,15 +35,15 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
         self.settings = settings
 
         # Dynamic language store initialization - use centralized get_language_item pattern
-        for lang_code in get_language_manager().get_available_codes():
-            item = get_language_manager().get_language_item(lang_code)
+        for lang_code in language_manager.get_available_codes():
+            item = language_manager.get_language_item(lang_code)
             if item is not None:
                 self.list_store.append(item)
 
         # Signals for dynamic model updates (tracked for automatic cleanup)
-        self.connect_tracked(get_language_manager(), "added", self.on_language_added)
-        self.connect_tracked(get_language_manager(), "downloaded", self.on_language_added)
-        self.connect_tracked(get_language_manager(), "removed", self.on_language_removed)
+        self.connect_tracked(language_manager, "added", self.on_language_added)
+        self.connect_tracked(language_manager, "downloaded", self.on_language_added)
+        self.connect_tracked(language_manager, "removed", self.on_language_removed)
 
         # UI signal connections (tracked for automatic cleanup)
         self.connect_tracked(self.language_search_entry, "search-changed", self.on_language_search)
@@ -107,8 +106,8 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
         """Load all available languages into the list store."""
         self.list_store.remove_all()
         existing_codes = set()
-        for lang_code in get_language_manager().get_available_codes():
-            item = get_language_manager().get_language_item(lang_code)
+        for lang_code in language_manager.get_available_codes():
+            item = language_manager.get_language_item(lang_code)
             if item is not None and item.code not in existing_codes:
                 self.list_store.append(item)
                 existing_codes.add(item.code)
@@ -149,7 +148,7 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
         """Filter function for language search."""
         if user_data:
             return user_data.lower() in item.title.lower()
-        return item.code in get_language_manager().get_downloaded_codes()
+        return item.code in language_manager.get_downloaded_codes()
 
     def on_language_added(self, _sender: object, code: str | None = None) -> None:
         """Handle language added event."""
@@ -157,7 +156,7 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
         if code is not None:
             existing_codes = {item.code for item in self.list_store}
             if code not in existing_codes:
-                item = get_language_manager().get_language_item(code)
+                item = language_manager.get_language_item(code)
                 if item is not None:
                     self.list_store.append(item)
         if not self.search_bar.get_search_mode():
@@ -175,5 +174,5 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
 
     def do_destroy(self) -> None:
         """Clean up all tracked signal handlers to prevent memory leaks."""
-        self.teardown_all()
+        self.disconnect_all_signals()
         super().do_destroy()

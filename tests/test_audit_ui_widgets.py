@@ -1,9 +1,4 @@
-# This file is part of Anura.
-# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
-# Copyright (C) 2026 D3M-Sudo (Anura)
-#
-# SPDX-License-Identifier: MIT
-
+# tests/test_phase2_f.py
 import pytest
 
 pytest.importorskip("gi")
@@ -27,7 +22,7 @@ if os.path.exists(resource_path):
 class TestWidgets:
     @pytest.mark.gtk
     def test_language_popover_row(self):
-        from anura.models.language_item import LanguageItem
+        from anura.types.language_item import LanguageItem
         from anura.widgets.language_popover_row import LanguagePopoverRow
 
         item = LanguageItem(code="fra", title="French")

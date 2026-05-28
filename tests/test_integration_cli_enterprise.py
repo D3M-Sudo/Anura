@@ -1,9 +1,3 @@
-# This file is part of Anura.
-# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
-# Copyright (C) 2026 D3M-Sudo (Anura)
-#
-# SPDX-License-Identifier: MIT
-
 import pytest
 
 pytest.importorskip("gi")
@@ -24,7 +18,7 @@ class TestCLIIntegrationEnterprise:
     @pytest.fixture
     def app(self):
         with (
-            patch("anura.core.resources.load_gresource_bundle", return_value=True),
+            patch("anura.main._load_gresource_bundle", return_value=True),
             patch("anura.main.ScreenshotService"),
             patch("anura.main.NotificationService"),
             patch("anura.main.get_clipboard_service"),

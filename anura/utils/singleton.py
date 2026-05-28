@@ -1,8 +1,9 @@
-# This file is part of Anura.
-# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
-# Copyright (C) 2026 D3M-Sudo (Anura)
+# singleton.py
 #
-# SPDX-License-Identifier: MIT
+# Copyright 2026 D3MS-Sudo (Anura thread safety improvements)
+#
+# Thread-safe lazy singleton pattern for Anura services
+# Provides double-checked locking for safe initialization
 
 import threading
 from typing import Any, ClassVar, TypeVar

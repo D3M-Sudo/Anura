@@ -1,6 +1,6 @@
 [project]
 name = "anura"
-version = "0.1.5"
+version = "0.1.4.3"
 description = "GTK4/Libadwaita desktop app for OCR via Tesseract — fork of Frog OCR"
 requires-python = ">=3.12"
 license = { text = "MIT" }
@@ -8,10 +8,9 @@ dependencies = [
     "gtts>=2.5.4",
     "loguru>=0.7.3",
     "pillow>=12.2.0",
-    "psutil>=7.2.2",
     "pytesseract>=0.3.13",
+    "pyzbar>=0.1.9",
     "requests>=2.34.2",
-    "zxing-cpp>=2.3.0",
 ]
 
 # ─── Ruff ─────────────────────────────────────────────────────────────────────
@@ -44,12 +43,14 @@ ignore = [
 [tool.ruff.lint.isort]
 known-first-party = ["anura"]
 # gi.repository is a special namespace — treat as third-party
-known-third-party = ["gi", "loguru", "pytesseract", "gtts", "PIL", "requests"]
+known-third-party = ["gi", "loguru", "pytesseract", "gtts", "pyzbar", "PIL", "requests"]
 force-sort-within-sections = true
 
 [tool.ruff.lint.per-file-ignores]
 # Allow unused imports in __init__.py (re-exports)
 "anura/**/__init__.py" = ["F401"]
+# Allow broad exceptions in worker error handlers
+"anura/gobject_worker.py" = ["B"]
 # Allow module level imports not at top of file (intentional for logging setup)
 "anura/main.py" = ["E402"]
 

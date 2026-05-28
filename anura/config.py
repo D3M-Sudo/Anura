@@ -1,11 +1,9 @@
-# This file is part of Anura.
-# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
-# Copyright (C) 2026 D3M-Sudo (Anura)
+# config.py
 #
-# SPDX-License-Identifier: MIT
+# Copyright 2021-2025 Andrey Maksimov
+# Copyright 2026 D3M-Sudo (Anura fork and modifications)
 
 import os
-from pathlib import Path
 import re
 
 from loguru import logger
@@ -25,14 +23,14 @@ RESOURCE_PREFIX = "/io/github/d3msudo/anura"
 LANG_CODE_PATTERN = r"^[a-zA-Z0-9+_]{2,18}$"
 
 # XDG Base Directory specification compliance
-XDG_DATA_HOME = os.getenv("XDG_DATA_HOME", str(Path.home() / ".local/share"))
-XDG_CACHE_HOME = os.getenv("XDG_CACHE_HOME", str(Path.home() / ".cache"))
+XDG_DATA_HOME = os.getenv("XDG_DATA_HOME", os.path.expanduser("~/.local/share"))
+XDG_CACHE_HOME = os.getenv("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
 
 # Anura specific data directory for OCR models (user-downloaded)
-TESSDATA_DIR = str(Path(XDG_DATA_HOME) / "anura" / "tessdata")
+TESSDATA_DIR = os.path.join(XDG_DATA_HOME, "anura", "tessdata")
 
 # Cache directory for multi-language model pooling (Flatpak optimization)
-TESSDATA_POOL_DIR = str(Path(XDG_CACHE_HOME) / "anura" / "tessdata_pool")
+TESSDATA_POOL_DIR = os.path.join(XDG_CACHE_HOME, "anura", "tessdata_pool")
 
 # Maximum image file size (50MB) to prevent memory exhaustion (DoS)
 # Used for input validation across services and UI.
@@ -54,7 +52,7 @@ def _get_tessdata_system_dir() -> str:
     """
     # Priority 1: Environment variable override
     env_path = os.getenv("TESSDATA_PREFIX_SYSTEM")
-    if env_path and Path(env_path).is_dir():
+    if env_path and os.path.isdir(env_path):
         return env_path
 
     # Priority 2: Dynamic scan of candidate directories
@@ -67,7 +65,7 @@ def _get_tessdata_system_dir() -> str:
     ]
 
     for path in candidate_dirs:
-        if Path(path).is_dir():
+        if os.path.isdir(path):
             return path
 
     # Fallback to Flatpak default even if not present (for Flatpak builds)
@@ -82,11 +80,8 @@ TESSDATA_SYSTEM_DIR = _get_tessdata_system_dir()
 # to avoid side effects at import time.
 
 # Tesseract OCR Repository URLs
-# Pinned to specific commit hashes for security and immutability.
-# tessdata (standard models) - Pinned to main as of 2024-05-18
-TESSDATA_URL = "https://github.com/tesseract-ocr/tessdata/raw/4767ea922bcc460e70b87b1d303ebdfed0e3060b/"
-# tessdata_best (high-quality models) - Pinned to main as of 2024-05-18
-TESSDATA_BEST_URL = "https://github.com/tesseract-ocr/tessdata_best/raw/923915d4ced2a7235221788285785a29c4a42d4a/"
+TESSDATA_URL = "https://github.com/tesseract-ocr/tessdata/raw/main/"
+TESSDATA_BEST_URL = "https://github.com/tesseract-ocr/tessdata_best/raw/main/"
 
 # Network configuration for LanguageManager
 USER_AGENT = "Anura-OCR-Client/1.0 (Linux; Flatpak)"
@@ -121,37 +116,37 @@ def get_tesseract_config(lang_code: str) -> str:
 
     # If it's a single language, use standard priority logic without pooling
     if "+" not in lang_code:
-        user_model = Path(TESSDATA_DIR) / f"{lang_code}.traineddata"
-        if user_model.exists():
+        user_model = os.path.join(TESSDATA_DIR, f"{lang_code}.traineddata")
+        if os.path.exists(user_model):
             return f'--tessdata-dir "{TESSDATA_DIR}" --psm 3 --oem 1'
 
-        system_model = Path(TESSDATA_SYSTEM_DIR) / f"{lang_code}.traineddata"
-        if system_model.exists():
+        system_model = os.path.join(TESSDATA_SYSTEM_DIR, f"{lang_code}.traineddata")
+        if os.path.exists(system_model):
             return f'--tessdata-dir "{TESSDATA_SYSTEM_DIR}" --psm 3 --oem 1'
 
         return f'--tessdata-dir "{TESSDATA_DIR}" --psm 3 --oem 1'
 
     # Multi-language: Dynamic Pooling Approach
     codes = lang_code.split("+")
-    Path(TESSDATA_POOL_DIR).mkdir(parents=True, exist_ok=True)
+    os.makedirs(TESSDATA_POOL_DIR, exist_ok=True)
 
     for code in codes:
         # Resolve source
         source_path = None
-        user_path = Path(TESSDATA_DIR) / f"{code}.traineddata"
-        system_path = Path(TESSDATA_SYSTEM_DIR) / f"{code}.traineddata"
+        user_path = os.path.join(TESSDATA_DIR, f"{code}.traineddata")
+        system_path = os.path.join(TESSDATA_SYSTEM_DIR, f"{code}.traineddata")
 
-        if user_path.exists():
+        if os.path.exists(user_path):
             source_path = user_path
-        elif system_path.exists():
+        elif os.path.exists(system_path):
             source_path = system_path
 
         if source_path:
-            dest_path = Path(TESSDATA_POOL_DIR) / f"{code}.traineddata"
+            dest_path = os.path.join(TESSDATA_POOL_DIR, f"{code}.traineddata")
             # Create hard link with fallback to copy (for cross-filesystem)
             try:
-                if dest_path.exists():
-                    dest_path.unlink()
+                if os.path.exists(dest_path):
+                    os.unlink(dest_path)
                 os.link(source_path, dest_path)
             except (OSError, AttributeError):
                 try:

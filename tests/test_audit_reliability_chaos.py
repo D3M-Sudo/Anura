@@ -1,9 +1,4 @@
-# This file is part of Anura.
-# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
-# Copyright (C) 2026 D3M-Sudo (Anura)
-#
-# SPDX-License-Identifier: MIT
-
+# tests/test_reliability_chaos.py
 from unittest.mock import patch
 
 import pytest

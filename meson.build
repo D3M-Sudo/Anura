@@ -1,5 +1,5 @@
 project('anura',
-          version: '0.1.5',
+          version: '0.1.4.3',
     meson_version: '>= 1.5.0',
   default_options: [ 
     'warning_level=2',
