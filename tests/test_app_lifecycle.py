@@ -48,30 +48,30 @@ class TestAppLifecycleEnterprise:
                 assert mock_idle.called
                 # Execute the callback passed to idle_add
                 callback = mock_idle.call_args[0][0]
-                callback(mock_idle.call_args[0][1])
+                callback()
                 mock_notif.assert_called_with(title="Anura OCR", body="Fatal Crash")
 
     def test_decode_image_synchronously_success(self, app):
         """Test synchronous decoding used in silent mode."""
-        app.backend.decode_image_sync.return_value = (True, "Extracted Text", None)
+        app.backend.decode_image_sync.return_value = (True, "Extracted Text", None, None)
         app.settings.get_string.return_value = "eng"
 
-        success, text, _ = app._decode_image_synchronously("/tmp/test.png")
+        success, text, _, _ = app._decode_image_synchronously("/tmp/test.png")
         assert success is True
         assert text == "Extracted Text"
-        app.backend.decode_image_sync.assert_called_with("eng", "/tmp/test.png", remove_source=False)
+        app.backend.decode_image_sync.assert_called_with("eng", "/tmp/test.png")
 
     def test_decode_image_synchronously_failures(self, app):
         """Test synchronous decoding error paths."""
         # File not found
-        app.backend.decode_image_sync.side_effect = FileNotFoundError()
-        s, _, e = app._decode_image_synchronously("missing.png")
+        app.backend.decode_image_sync.return_value = (False, None, "File not found", None)
+        s, _, e, _ = app._decode_image_synchronously("missing.png")
         assert s is False
         assert "not found" in e
 
         # Permission denied
-        app.backend.decode_image_sync.side_effect = PermissionError()
-        s, _, e = app._decode_image_synchronously("secret.png")
+        app.backend.decode_image_sync.return_value = (False, None, "Permission denied", None)
+        s, _, e, _ = app._decode_image_synchronously("secret.png")
         assert s is False
         assert "Permission denied" in e
 
@@ -79,18 +79,19 @@ class TestAppLifecycleEnterprise:
         """Test validation of URLs from QR notifications."""
         # Case: Invalid URL
         param = GLib.Variant("s", "javascript:alert(1)")
-        with patch("loguru.logger.warning") as mock_log:
+        with patch("anura.utils.validators.logger.warning") as mock_log:
             app._on_open_qr_notification(None, param)
-            mock_log.assert_any_call("Anura: Blocked invalid URL from notification: javascript:alert(1)")
+            mock_log.assert_any_call("Anura: Blocked invalid URL launch: javascript:alert(1)")
 
         # Case: Valid URL (calls launch)
         param = GLib.Variant("s", "https://google.com")
         with (
             patch.object(app, "get_active_window", return_value=None),
-            patch("gi.repository.Gtk.UriLauncher.launch") as mock_launch,
+            patch("anura.utils.validators.uri_validator", return_value=True),
+            patch("gi.repository.Gtk.UriLauncher.new") as mock_launcher_new,
         ):
             app._on_open_qr_notification(None, param)
-            assert mock_launch.called
+            assert mock_launcher_new.called
 
     def test_app_cleanup_handlers(self, app):
         """Test that shutdown cleans up various services."""

@@ -53,10 +53,10 @@ class TestExtractedPageEnterprise:
         """Test that typing in the text buffer updates word/char counts."""
         widget.buffer.set_text("Hello world")
         # _on_buffer_changed is connected to "changed" signal
-        assert "Words: 2 | Characters: 11" in widget.stats_label.get_text()
+        assert "2 words | 11 characters" in widget.stats_label.get_text()
 
         widget.buffer.set_text("")
-        assert "Words: 0 | Characters: 0" in widget.stats_label.get_text()
+        assert "0 words | 0 characters" in widget.stats_label.get_text()
 
     @pytest.mark.gtk
     def test_button_sensitivity(self, widget):
@@ -90,7 +90,11 @@ class TestExtractedPageEnterprise:
             assert widget.grab_btn.get_sensitive() is True
 
             # Simulate generation success
+            # The 'speak' signal from TTSService would normally trigger this via TtsController
+            # In this test, we simulate what the controller does
             widget._on_generated("/tmp/speech.mp3")
+            widget.update_tts_state(playing=True)
+
             # Should be in playing state (pause button)
             assert widget.listen_stack.get_visible_child_name() == "pause"
 

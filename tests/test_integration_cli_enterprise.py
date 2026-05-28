@@ -48,25 +48,31 @@ class TestCLIIntegrationEnterprise:
         """Test the -f --silent CLI flow."""
         file_path = "/tmp/test.png"
         with (
-            patch("os.path.exists", return_value=True),
+            patch("anura.main.Path.exists", return_value=True),
             patch("os.access", return_value=True),
-            patch.object(app, "_run_silent_mode", return_value=0) as mock_silent,
+            patch("anura.main.SilentRunner") as mock_runner_cls,
         ):
+            mock_runner = mock_runner_cls.return_value
+            mock_runner.run.return_value = 0
             exit_code = app._handle_file_option(file_path, is_silent=True)
             assert exit_code == 0
-            mock_silent.assert_called_once_with(file_path)
+            mock_runner_cls.assert_called_once_with(app, file_path)
 
     def test_handle_file_option_gui(self, app):
         """Test the -f (without --silent) CLI flow."""
         file_path = "/tmp/test.png"
         with (
-            patch("os.path.exists", return_value=True),
+            patch("anura.main.Path.exists", return_value=True),
             patch("os.access", return_value=True),
-            patch.object(app, "_activate_window_and_process_file") as mock_gui,
+            patch.object(app, "activate") as mock_activate,
+            patch.object(app, "props") as mock_props,
         ):
+            mock_window = MagicMock()
+            mock_props.active_window = mock_window
             exit_code = app._handle_file_option(file_path, is_silent=False)
             assert exit_code == 0
-            mock_gui.assert_called_once_with(file_path)
+            mock_activate.assert_called_once()
+            mock_window.process_file.assert_called_once_with(file_path)
 
     def test_handle_inaccessible_file_silent(self, app):
         """Test handling of inaccessible files in silent mode."""
@@ -101,20 +107,20 @@ class TestCLIIntegrationEnterprise:
             mock_props.active_window = None
 
         # Case: No text found
-        app.on_decoded(None, "", copy=False)
+        app.on_decoded(None, "", copy=False, ocr_result=None)
 
         # Process the main loop to execute idle_add callbacks
         while GLib.MainContext.default().iteration(False):
             pass
 
         app.notification_service.show_notification.assert_called_with(
-            title="Anura OCR", body="No text found. Try to grab another region."
+            title="Anura OCR", body="No text found."
         )
 
         # Case: Success with copy
         with patch("anura.main.get_clipboard_service") as mock_get_cb:
             mock_cb = mock_get_cb.return_value
-            app.on_decoded(None, "found text", copy=True)
+            app.on_decoded(None, "found text", copy=True, ocr_result=None)
 
             # Process the main loop to execute idle_add callbacks
             while GLib.MainContext.default().iteration(False):
@@ -122,5 +128,5 @@ class TestCLIIntegrationEnterprise:
 
             mock_cb.set.assert_called_with("found text")
             app.notification_service.show_notification.assert_any_call(
-                title="Anura OCR", body="Text extracted and copied to clipboard."
+                title="Anura OCR", body="Text copied to clipboard."
             )
