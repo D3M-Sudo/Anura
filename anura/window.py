@@ -226,9 +226,9 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     def _do_copy_to_clipboard(self) -> None:
         text: str = self.extracted_page.get_active_text()
         if text:
-            has_selection, _start, _end = self.extracted_page.buffer.get_selection_bounds()
+            selection = self.extracted_page.buffer.get_selection_bounds()
             get_clipboard_service().set(text)
-            if has_selection:
+            if selection:
                 self.show_toast(_("Selection copied to clipboard"))
             else:
                 self.show_toast(_("Text copied to clipboard"))

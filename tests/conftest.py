@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: MIT
 
 import os
+from pathlib import Path
 import sys
 
 import pytest
@@ -14,9 +15,56 @@ import pytest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-def pytest_collection_modifyitems(items):
+def _module_needs_gi(fspath: object) -> bool:
+    """Return True if the test module at *fspath* depends on gi.repository.
+
+    Scans the file content directly rather than relying on the filename or the
+    test function name.  The previous heuristic (``"gi" in str(item.fspath)``)
+    never matched any test file because no file path contains the literal
+    two-character substring "gi" in isolation — it only appeared inside longer
+    words like "github" in the runner's workspace path.
+
+    This function is intentionally kept simple and side-effect-free: it reads
+    the source file once per file (the call-site caches per fspath) and checks
+    for the presence of common gi-dependency patterns.
+    """
+    try:
+        src = Path(str(fspath)).read_text(encoding="utf-8", errors="replace")
+        return (
+            "import gi" in src
+            or "from gi" in src
+            or 'importorskip("gi")' in src
+            or "importorskip('gi')" in src
+        )
+    except OSError:
+        return False
+
+
+def pytest_collection_modifyitems(items: list) -> None:
+    """Add the ``gtk`` marker to every test that depends on gi.repository.
+
+    Bug fixed: the previous implementation used two unreliable heuristics:
+    - ``"gi" in str(item.fspath)``  → never matched (path contains "github",
+      "gi" only as a substring of longer words, never standalone).
+    - ``"gtk" in item.name.lower()`` → only caught tests explicitly named
+      *test_gtk_**, missing the vast majority of gi-dependent tests.
+
+    Result: only 7 out of ~80 gi-dependent tests were tagged, causing the
+    gtk-tests CI job to run almost nothing.
+
+    Fix: scan each file's source once (cached per fspath) for the four
+    patterns that indicate a gi dependency.  A per-call dict is used as the
+    cache so the hook remains stateless across test runs.
+    """
+    _gi_file_cache: dict[str, bool] = {}
+
     for item in items:
-        if "gi" in str(item.fspath) or "gtk" in item.name.lower():
+        fspath_str = str(item.fspath)
+
+        if fspath_str not in _gi_file_cache:
+            _gi_file_cache[fspath_str] = _module_needs_gi(item.fspath)
+
+        if _gi_file_cache[fspath_str] or "gtk" in item.name.lower():
             item.add_marker(pytest.mark.gtk)
 
 
@@ -42,3 +90,70 @@ def isolate_env(monkeypatch, tmp_path):
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
     monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "cache"))
     monkeypatch.setenv("TESSDATA_PREFIX_SYSTEM", str(tmp_path / "system-tessdata"))
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """
+    Called after the last test, before pytest prints the summary line.
+
+    We run all service cleanup here, then force-print the summary ourselves
+    via TerminalReporter, and finally call os._exit() to bypass Python's
+    slow non-daemon-thread shutdown (which blocked for 74 s in CI).
+
+    WHY the explicit terminalreporter.summary_stats() call:
+      Empirically (pytest 9.0.3), both pytest_sessionfinish AND
+      pytest_unconfigure fire BEFORE the "N passed, M skipped" line is
+      written to stdout.  Calling os._exit() in either hook therefore
+      suppresses the summary entirely.  The fix is to invoke the
+      TerminalReporter's summary_stats() method directly — the same call
+      pytest would make internally — so the line appears before we exit.
+    """
+    print("\nEnsuring clean session teardown...")
+
+    # 1. Shutdown AtomicTaskManager (best-effort; os._exit cleans up the rest)
+    try:
+        from anura.core.atomic_task_manager import get_atomic_manager
+        get_atomic_manager().shutdown()
+    except (ImportError, AttributeError, RuntimeError):
+        pass
+
+    # 2. Shutdown LanguageManager
+    try:
+        from anura.services.language_manager import get_language_manager
+        get_language_manager().shutdown()
+    except (ImportError, AttributeError, RuntimeError):
+        pass
+
+    # 3. Cleanup TTSService
+    try:
+        from anura.services.tts import get_tts_service
+        get_tts_service().cleanup()
+    except (ImportError, AttributeError, RuntimeError):
+        pass
+
+    # 4. Reset singletons
+    try:
+        from anura.utils.singleton import ThreadSafeSingleton
+        ThreadSafeSingleton.reset_for_testing()
+    except (ImportError, AttributeError):
+        pass
+
+    print("Teardown complete.")
+
+    # Force-print the summary line that pytest would normally emit after this
+    # hook returns.  We need it now because os._exit() below will prevent
+    # pytest from reaching its own summary-printing code.
+    try:
+        import sys
+        tr = session.config.pluginmanager.get_plugin("terminalreporter")
+        if tr is not None:
+            tr.summary_stats()
+        sys.stdout.flush()
+        sys.stderr.flush()
+    except Exception:
+        pass
+
+    # Force-exit: skips Python's non-daemon-thread join (the 74-second hang).
+    # exitstatus is a pytest.ExitCode enum; int() gives the numeric code
+    # (0 = all passed, 1 = some failed, 2 = interrupted, etc.).
+    os._exit(int(exitstatus))

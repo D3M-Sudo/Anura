@@ -8,20 +8,70 @@ import pytest
 
 pytest.importorskip("gi")
 
+import atexit
 import os
+import warnings
 
 import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 
-from gi.repository import Gio  # noqa: E402
+from gi.repository import Adw, Gio, Gtk  # noqa: E402
 
 # Load resources before importing widgets
 resource_path = os.path.join(os.path.dirname(__file__), "..", "data", "io.github.d3msudo.anura.gresource")
 if os.path.exists(resource_path):
     res = Gio.Resource.load(resource_path)
     res._register()
+
+# ---------------------------------------------------------------------------
+# GTK / display initialization
+# ---------------------------------------------------------------------------
+# @Gtk.Template widgets call gtk_widget_init_template() inside __init__().
+# That function requires GTK to be fully initialized (gtk_initialized == TRUE
+# and an open GdkDisplay).  Without initialization, template children stay as
+# NULL C pointers and the first Python attribute access on them triggers SIGSEGV.
+#
+# Primary approach: Adw.Application.register()
+#   register() → g_application_register() → GtkApplication::startup
+#   → gtk_init_check() → gdk_display_open(WAYLAND_DISPLAY)
+#   This requires a running compositor (weston) AND a D-Bus session bus.
+#   register() returns False without raising an exception when it fails.
+#
+# Fallback: Gtk.init()
+#   Calls gtk_init() directly — opens the display and sets gtk_initialized.
+#   Works without D-Bus but still requires a running Wayland/X11 compositor.
+#
+# The CI workflow ensures weston is alive for the full duration of the test
+# run (trap cleanup EXIT moved to the test step, not the setup step).
+# ---------------------------------------------------------------------------
+_adw_app = Adw.Application(
+    application_id="io.github.d3msudo.anura.test",
+    flags=Gio.ApplicationFlags.NON_UNIQUE,
+)
+try:
+    _registered = _adw_app.register()
+    if not _registered:
+        raise RuntimeError("register() returned False (D-Bus unavailable?)")
+    # CRITICAL: register() starts internal GLib/GDBus threads that are
+    # non-daemon.  Python cannot exit while they are alive, causing a ~120s
+    # hang after pytest finishes (until the workflow `timeout 120s` kills it).
+    # Fix: call quit() via atexit so the GLib main context is stopped and
+    # those threads are released before Python begins its shutdown sequence.
+    atexit.register(_adw_app.quit)
+except Exception as _register_exc:
+    warnings.warn(
+        f"Adw.Application.register() failed: {_register_exc}. "
+        "Falling back to Gtk.init()."
+    )
+    try:
+        Gtk.init()
+    except Exception as _init_exc:
+        warnings.warn(
+            f"Gtk.init() also failed: {_init_exc}. "
+            "@Gtk.Template widgets will likely segfault."
+        )
 
 
 class TestWidgets:
@@ -50,9 +100,6 @@ class TestWidgets:
         from anura.widgets.preferences_dialog import PreferencesDialog
 
         try:
-            from gi.repository import Adw
-
-            _ = Adw.Application()
             dialog = PreferencesDialog(transient_for=None)
             assert dialog is not None
         except Exception as e:

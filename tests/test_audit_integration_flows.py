@@ -67,6 +67,8 @@ class TestIntegrationFlows:
         service = ScreenshotService()
 
         with patch.object(service, "fallback_provider") as mock_fallback_provider:
+            # Create a mock error that looks like portal backend missing
+
             # Mock the provider's capture method to simulate failure
             mock_provider = MagicMock()
 

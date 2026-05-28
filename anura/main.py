@@ -248,7 +248,15 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         return 1
 
     def _handle_file_option(self, file_path: str, is_silent: bool) -> int:
-        if Path(file_path).exists() and os.access(file_path, os.R_OK):
+        try:
+            _exists = Path(file_path).exists()
+        except PermissionError:
+            # Path.exists() raises PermissionError when the *parent directory*
+            # is not readable (e.g. /root/ on a non-root CI runner).
+            # Treat this as inaccessible rather than letting the exception
+            # propagate to the caller.
+            _exists = False
+        if _exists and os.access(file_path, os.R_OK):
             if is_silent:
                 return SilentRunner(self, file_path).run()
             self.activate()

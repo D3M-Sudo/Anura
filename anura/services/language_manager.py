@@ -21,8 +21,9 @@ import gi
 # Set GTK version requirements before imports
 gi.require_version("GLib", "2.0")
 gi.require_version("GObject", "2.0")
+gi.require_version("Gio", "2.0")
 
-from gi.repository import GLib, GObject  # noqa: E402
+from gi.repository import Gio, GLib, GObject  # noqa: E402
 from loguru import logger  # noqa: E402
 import requests  # noqa: E402
 
@@ -69,7 +70,7 @@ class LanguageManager(GObject.GObject):
         super().__init__()
 
         self.loading_languages: dict[str, DownloadState] = {}
-        self._download_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="AnuraDownloadWorker")
+        self._download_executor: ThreadPoolExecutor | None = None
         self._downloaded_codes: list[str] = []
         self._need_update_cache = True
         self._cache_lock = threading.Lock()
@@ -359,7 +360,17 @@ class LanguageManager(GObject.GObject):
                 return code
         return "eng"
 
-    def download(self, code: str, cancellable: gi.repository.Gio.Cancellable | None = None) -> None:
+    def _get_download_executor(self) -> ThreadPoolExecutor:
+        """Lazy initialization of the download executor."""
+        with self._cache_lock:
+            if self._download_executor is None:
+                self._download_executor = ThreadPoolExecutor(
+                    max_workers=1,
+                    thread_name_prefix="AnuraDownloadWorker",
+                )
+            return self._download_executor
+
+    def download(self, code: str, cancellable: Gio.Cancellable | None = None) -> None:
         """Thread-safe asynchronous download process."""
         with self._cache_lock:
             if code in self.loading_languages:
@@ -390,14 +401,14 @@ class LanguageManager(GObject.GObject):
 
             GLib.idle_add(_on_done_idle)
 
-        future = self._download_executor.submit(
+        future = self._get_download_executor().submit(
             self.download_begin,
             code,
             cancellable,
         )
         future.add_done_callback(download_done_wrapper)
 
-    def download_begin(self, code: str, cancellable: gi.repository.Gio.Cancellable | None = None) -> str | None:
+    def download_begin(self, code: str, cancellable: Gio.Cancellable | None = None) -> str | None:
         """Performs the physical download of the .traineddata file atomically."""
         # Hardening: verify Tesseract binary availability before downloading models
         tess_bin = os.environ.get("TESSERACT_CMD", "tesseract")
@@ -542,7 +553,12 @@ class LanguageManager(GObject.GObject):
 
     def shutdown(self) -> None:
         """Shut down the download executor."""
-        self._download_executor.shutdown(wait=False)
+        with self._cache_lock:
+            executor = self._download_executor
+            self._download_executor = None
+
+        if executor is not None:
+            executor.shutdown(wait=False, cancel_futures=True)
 
     def remove_language(self, code: str) -> None:
         """Thread-safe removal of model file from system."""

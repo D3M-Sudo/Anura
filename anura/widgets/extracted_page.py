@@ -131,8 +131,9 @@ class ExtractedPage(Adw.NavigationPage):
 
     def _update_stats_label(self) -> None:
         """Update character and word count in the status bar label, considering selection."""
-        has_selection, start, end = self.buffer.get_selection_bounds()
-        if has_selection:
+        selection = self.buffer.get_selection_bounds()
+        if selection:
+            start, end = selection
             text = self.buffer.get_text(start, end, False)
             # Use a prefix to indicate these are selection stats
             prefix = _("Selection: ")
@@ -254,8 +255,9 @@ class ExtractedPage(Adw.NavigationPage):
 
     def get_active_text(self) -> str:
         """Get selected text if available, otherwise the full text."""
-        has_selection, start, end = self.buffer.get_selection_bounds()
-        if has_selection:
+        selection = self.buffer.get_selection_bounds()
+        if selection:
+            start, end = selection
             return self.buffer.get_text(start, end, False)
         return self.extracted_text
 

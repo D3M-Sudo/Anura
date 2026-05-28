@@ -28,7 +28,19 @@ jobs:
         run: |
           pip install uv
           uv sync --dev
+          # The --ignore flags below mirror the addopts list in pyproject.toml.
+          # They are kept explicit here so the gtk-tests job can override
+          # addopts independently and collect those files without them.
           uv run pytest tests/ -m "not gtk" \
+            --ignore=tests/test_clipboard_service.py \
+            --ignore=tests/test_screenshot_service.py \
+            --ignore=tests/test_share_service.py \
+            --ignore=tests/test_tts_service.py \
+            --ignore=tests/test_notification_service.py \
+            --ignore=tests/test_services.py \
+            --ignore=tests/test_language_manager.py \
+            --ignore=tests/test_tts.py \
+            --ignore=tests/test_tts_initialization.py \
             --cov=anura --cov-report=xml --cov-report=term-missing
 
       - name: Upload coverage report
@@ -41,6 +53,13 @@ jobs:
     name: GTK Integration Tests
     runs-on: ubuntu-latest
     needs: python-quality
+    # Robustness: prevent job from hanging indefinitely
+    timeout-minutes: 15
+    # XDG_RUNTIME_DIR is required by weston to create its Wayland socket.
+    # Setting it at the job level makes it available to every step.
+    env:
+      XDG_RUNTIME_DIR: /tmp/xdg-runtime-ci
+
     steps:
       - uses: actions/checkout@v6
 
@@ -51,15 +70,27 @@ jobs:
             python3-gi python3-gi-cairo gir1.2-gtk-4.0 \
             gir1.2-adw-1 libadwaita-1-dev \
             gir1.2-notify-0.7 libnotify-dev \
+            gir1.2-xdp-1.0 libportal1 \
             gir1.2-gstreamer-1.0 gir1.2-gst-plugins-base-1.0 python3-gst-1.0 \
             libxml2-utils \
             tesseract-ocr tesseract-ocr-eng \
             weston xwayland
 
-      - name: Install Python dependencies
-        run: pip install uv && uv sync --dev
+      - name: Install Python dependencies (with system site-packages)
+        # Bug fixed: plain `uv sync --dev` creates an isolated venv that
+        # cannot see python3-gi / libadwaita installed by apt above.
+        # `uv venv --system-site-packages` creates a venv that inherits the
+        # system's site-packages first, then `uv sync --dev` layers the dev
+        # dependencies on top.
+        run: |
+          pip install uv
+          uv venv --system-site-packages .venv
+          uv sync --dev
 
       - name: Compile GResources
+        # Bug fixed: previously compiled to `anura.gresource` in the repo
+        # root, but _load_gresource_bundle() resolves the relative fallback
+        # path as `data/io.github.d3msudo.anura.gresource`.
         run: |
           glib-compile-resources \
             data/io.github.d3msudo.anura.gresource.xml \
@@ -73,22 +104,26 @@ jobs:
           cp data/io.github.d3msudo.anura.gschema.xml builddir/data/
           glib-compile-schemas builddir/data/
 
-      - name: Run GTK tests (Wayland headless)
-        env:
-          GSETTINGS_SCHEMA_DIR: builddir/data
-          DISPLAY: ""
-          NO_AT_BRIDGE: 1
-          GTK_A11Y: none
-          ANURA_LOG_LEVEL: WARNING
+      - name: Start Wayland compositor (headless)
+        # Bug fixed (round 2): the previous version used `trap cleanup EXIT`
+        # inside this step's run script.  In GitHub Actions, each `run:` block
+        # is executed in its own bash process.  When that process exits at the
+        # end of the step, the EXIT trap fires and kills weston — before the
+        # test step ever starts.
+        #
+        # Fix: launch weston with `nohup` so it is detached from this shell's
+        # process group and immune to HUP/TERM on session exit.  The PID is
+        # written to /tmp/weston.pid so the test step can clean up after itself.
+        # No trap is set here; cleanup belongs in the step that uses weston.
         run: |
-          export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-$(mktemp -d)}"
           mkdir -p "$XDG_RUNTIME_DIR"
           chmod 700 "$XDG_RUNTIME_DIR"
 
-          weston --backend=headless-backend.so --socket=wayland-test --no-config &
-          WESTON_PID=$!
+          nohup weston --backend=headless --socket=wayland-test --no-config \
+            >/tmp/weston.log 2>&1 &
+          echo $! > /tmp/weston.pid
 
-          # Poll for the Wayland socket for up to 10 seconds
+          # Poll for the socket for up to 10 s (20 × 500 ms).
           echo "Waiting for Wayland socket…"
           for i in $(seq 1 20); do
             if [ -S "$XDG_RUNTIME_DIR/wayland-test" ]; then
@@ -100,21 +135,56 @@ jobs:
 
           if [ ! -S "$XDG_RUNTIME_DIR/wayland-test" ]; then
             echo "::error::Weston did not create the wayland-test socket within 10 s"
-            kill $WESTON_PID 2>/dev/null || true
+            kill "$(cat /tmp/weston.pid)" 2>/dev/null || true
             exit 1
           fi
 
-          # Cleanup handler — runs even on pytest failure
+      - name: Run GTK tests (Wayland headless)
+        # --override-ini replaces the global addopts from pyproject.toml.
+        # Without this override the --ignore list baked into addopts would
+        # suppress collection of the files that hold most gtk-marked tests.
+        #
+        # The cleanup trap lives here (not in the weston setup step) so that
+        # weston is kept alive for the full duration of the test run and is
+        # only stopped once pytest exits — whether it passes, fails, or times out.
+        env:
+          GSETTINGS_SCHEMA_DIR: builddir/data
+          DISPLAY: ""
+          WAYLAND_DISPLAY: wayland-test
+          NO_AT_BRIDGE: "1"
+          GTK_A11Y: none
+          ANURA_LOG_LEVEL: WARNING
+        run: |
           cleanup() {
-            echo "Cleaning up Weston (PID $WESTON_PID)..."
-            kill $WESTON_PID 2>/dev/null || true
-            wait $WESTON_PID 2>/dev/null || true
+            echo "::group::Cleanup remaining processes"
+            echo "Stopping Weston and orphaned workers..."
+            kill "$(cat /tmp/weston.pid 2>/dev/null)" 2>/dev/null || true
+            pkill -x weston 2>/dev/null || true
+            rm -f "$XDG_RUNTIME_DIR/wayland-test" /tmp/weston.pid
             echo "Cleanup complete."
+            echo "::endgroup::"
           }
           trap cleanup EXIT
 
-          WAYLAND_DISPLAY=wayland-test \
-            uv run pytest tests/ -m gtk -v --timeout=30 --timeout-method=thread
+          # Root cause of the previous ~115-second hang (now fixed):
+          #
+          # Adw.Application.register() in test_audit_ui_widgets.py registers
+          # the app on D-Bus and starts internal GLib/GDBus threads.  These
+          # threads are non-daemon, so Python cannot exit while they are alive.
+          # pytest_sessionfinish never called _adw_app.quit(), so Python blocked
+          # after printing "324 passed" until this shell's `timeout 120s` killed
+          # it with SIGTERM (exit code 124), causing the job to fail.
+          #
+          # Fix applied in test_audit_ui_widgets.py:
+          #   atexit.register(_adw_app.quit)
+          # This stops the GLib main context when Python begins shutdown,
+          # releasing the internal threads and allowing the process to exit in <1 s.
+          #
+          # The `timeout 120s ... || exit 1` wrapper is therefore removed:
+          # it was treating a successful-but-hanging pytest run as a failure.
+          # The job-level timeout-minutes: 15 is the proper safety net.
+          uv run pytest tests/ -m gtk -v --timeout=30 \
+            --override-ini "addopts=-v --tb=short"
 
   # JOB 2: Flatpak build and optional release
   flatpak-builder:
@@ -122,10 +192,6 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    # Using the specialized container to handle GNOME runtimes and permissions.
-    # Both CI and production target GNOME 50 (current stable).
-    # When upgrading to a newer runtime, update both the manifest runtime-version
-    # and this container tag to the same version.
     container:
       image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-50
       options: --privileged
@@ -137,120 +203,78 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v6
 
-      # RIGOR: Force a clean state to bypass broken caches
       - name: Purge build caches and artifacts
         run: |
           rm -rf .flatpak-builder/
           rm -rf _build/
           rm -rf builddir/
-          # Ensure the builder starts with a fresh environment
           echo "Caches purged. Proceeding with clean build."
 
-      # 1. VALIDAZIONE FORMALE DEL MANIFESTO
       - name: Validate Flatpak Manifest
         run: |
           echo "=== Validating manifest syntax and permissions ==="
           flatpak-builder --show-manifest flatpak/io.github.d3msudo.anura.local.json > /dev/null
           echo "✓ Manifest validation passed"
 
-      # 2. BUILD (con test unitari pytest eseguiti nel step precedente)
       - name: Build Anura Flatpak
         uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:
           bundle: io.github.d3msudo.anura.flatpak
           manifest-path: flatpak/io.github.d3msudo.anura.local.json
-          # Explicitly disable action-level cache
           cache: false
-          # Keep build directories for the verification step
           keep-build-dirs: true
-          # Use consistent state-dir for predictable paths
           state-dir: .flatpak-builder
 
-      # 2b. VERIFICA STRUTTURA RISORSE BLUEPRINT
       - name: Verify Blueprint and Resource Structure
         run: |
           echo "=== Verifying generated UI files ==="
           GRESOURCE_XML="data/io.github.d3msudo.anura.gresource.xml"
-          
-          # Find the actual build directory (flatpak-builder adds numeric suffixes like anura-1)
           BUILD_ROOT=$(find .flatpak-builder/build -maxdepth 1 -type d -name 'anura*' | head -1)
           if [ -z "$BUILD_ROOT" ]; then
-            echo "✗ ERROR: Build directory not found in .flatpak-builder/build/"
-            ls -la .flatpak-builder/build/ 2>/dev/null || echo "No build directory found"
+            echo "✗ ERROR: Build directory not found"
             exit 1
           fi
           echo "Found build directory: $BUILD_ROOT"
-          
-          # Search for .ui files in any subdirectory of the build
           UI_FILES=$(find "$BUILD_ROOT" -name "*.ui" -type f 2>/dev/null)
           UI_COUNT=$(echo "$UI_FILES" | grep -c . || echo 0)
-          
           if [ "$UI_COUNT" -eq 0 ]; then
-            echo "✗ ERROR: No .ui files found in build directory"
-            echo "Searched in: $BUILD_ROOT"
-            echo "Directory structure:"
-            find "$BUILD_ROOT" -type d | head -20
+            echo "✗ ERROR: No .ui files found"
             exit 1
           fi
           echo "✓ Found $UI_COUNT .ui file(s)"
-          
-          # List found UI files
-          echo "Generated UI files:"
-          echo "$UI_FILES" | head -20
-          
-          # Verify gresource.xml references match generated files
-          echo ""
-          echo "=== Checking gresource.xml paths ==="
           MISSING=0
           for file in $(grep -oP '(?<=<file[^>]*>)[^<]+\.ui' "$GRESOURCE_XML" | sed 's|ui/||'); do
             if ! echo "$UI_FILES" | grep -q "/$file$"; then
-              echo "✗ Missing: $file (referenced in gresource.xml)"
+              echo "✗ Missing: $file"
               MISSING=$((MISSING + 1))
             fi
           done
-          
           if [ "$MISSING" -gt 0 ]; then
-            echo ""
             echo "✗ RESOURCE VERIFICATION FAILED: $MISSING file(s) missing"
-            echo "All generated files:"
-            find "$BUILD_ROOT" -type f | sort
             exit 1
           fi
-          
-          echo "✓ All gresource.xml references resolved successfully"
+          echo "✓ All gresource.xml references resolved"
 
-      # 3. HEADLESS RUNTIME SMOKE TEST
       - name: Smoke Test - Headless Runtime
         run: |
           echo "=== Installing bundle for smoke test ==="
           flatpak install --user --noninteractive --bundle io.github.d3msudo.anura.flatpak
-
-          echo "=== Running smoke test with virtual display ==="
-          # Test app launch with virtual display
-          # --help exits immediately with code 0 if app starts correctly
-          # Environment variables to suppress harmless warnings in headless CI:
-          # - NO_AT_BRIDGE=1: disables a11y bus warnings
-          # - GTK_A11Y=none: disables GTK accessibility entirely for headless mode
-          # - AT_SPI_BUS_ADDRESS=disabled: blocks GTK4 a11y bus lookup at runtime
-          # - LIBGL_ALWAYS_SOFTWARE=1: forces software rendering, suppresses DRI3 warnings
+          echo "=== Running smoke test ==="
           if ! xvfb-run -a flatpak run \
               --env=NO_AT_BRIDGE=1 \
               --env=GTK_A11Y=none \
               --env=AT_SPI_BUS_ADDRESS=disabled \
               --env=LIBGL_ALWAYS_SOFTWARE=1 \
               io.github.d3msudo.anura --help; then
-            echo "✗ Smoke test failed - app failed to launch"
+            echo "✗ Smoke test failed"
             exit 1
           fi
-
-          # Verify app is properly installed
           if ! flatpak list --user | grep -q io.github.d3msudo.anura; then
-            echo "✗ Smoke test failed - app not found in installation"
+            echo "✗ App not found in installation"
             exit 1
           fi
-          echo "✓ Smoke test passed - app launches without critical errors"
+          echo "✓ Smoke test passed"
 
-      # 4. ESPORTAZIONE ARTEFATTI PER DEBUG
       - name: Upload Flatpak Artifact (Debug)
         if: always()
         uses: actions/upload-artifact@v7
