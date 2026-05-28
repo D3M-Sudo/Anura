@@ -85,9 +85,11 @@ class ClipboardService(GObject.GObject):
         with self._state_lock:
             if self._clipboard is None:
                 display = Gdk.Display.get_default()
-                if display is not None:
-                    self._clipboard = display.get_clipboard()
-                    logger.debug("Anura Clipboard: Initialized on main thread.")
+                if display is None:
+                    logger.warning("Anura Clipboard: No GDK display available during init.")
+                    return
+                self._clipboard = display.get_clipboard()
+                logger.debug("Anura Clipboard: Initialized on main thread.")
 
     def set(self, value: str) -> None:
         """

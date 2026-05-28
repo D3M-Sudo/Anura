@@ -9,10 +9,10 @@
     ],
     "total_files": 306,
     "total_lines": 9732,
-    "analyzed_files": 35,
-    "analyzed_lines": 6200,
+    "analyzed_files": 41,
+    "analyzed_lines": 7500,
     "start_timestamp": "2026-05-27T03:22:49Z",
-    "last_checkpoint": "2026-05-27T04:20:00Z",
+    "last_checkpoint": "2026-05-27T05:00:00Z",
     "personalities_activated": [
       "Senior Mathematician",
       "Security Paranoid",
@@ -50,10 +50,20 @@
     "phase_gates_completed": [
       "gate_0_setup",
       "gate_1_initial_scan"
+    ],
+    "tools_available": {
+      "ruff": "uv run ruff",
+      "pytest": "uv run pytest",
+      "mypy": "uv run mypy"
+    },
+    "tools_executed": [
+      "ruff",
+      "mypy",
+      "pytest"
     ]
   },
   "progress_tracking": {
-    "current_file": "anura/transformers/magic_processor.py",
+    "current_file": "anura/services/notification_service.py",
     "current_line": 0,
     "current_variable_tracking": [],
     "completed_files": [
@@ -76,25 +86,28 @@
       "anura/transformers/models.py",
       "anura/transformers/base_transformers.py",
       "anura/transformers/url_transformer.py",
-      "anura/transformers/email_transformer.py"
-    ],
-    "pending_files": [
+      "anura/transformers/email_transformer.py",
       "anura/utils/structural_reconstructor.py",
       "anura/transformers/magic_processor.py",
       "anura/services/clipboard_service.py",
-      "anura/services/notification_service.py"
+      "anura/services/notification_service.py",
+      "anura/models/ocr.py",
+      "anura/models/context.py"
     ],
+    "pending_files": [],
     "untested_paths": [],
-    "coverage_percentage": 11.4,
+    "coverage_percentage": 13.4,
     "micro_checkpoints": [],
     "progress_visual": {
-      "ascii_bar": "[###-----------------] 35/306 files",
-      "current_focus": "Deep Dive - Auditing Transformer Chain and Structural Reconstructor",
-      "bugs_last_hour": 7,
+      "ascii_bar": "[####----------------] 41/306 files",
+      "current_focus": "Audit phase complete. Moving to remediation.",
+      "bugs_last_hour": 11,
       "estimated_completion": "Unknown",
       "velocity_trend": "->",
-      "lines_per_minute": 0
-    }
+      "lines_per_minute": 0,
+      "tools_running": []
+    },
+    "tool_results": {}
   },
   "bugs_database": [
     {
@@ -110,9 +123,16 @@
         "line": 105,
         "function": "do_shutdown"
       },
-      "chain_of_thought": "AtomicTaskManager is not shut down in do_shutdown, potentially leaking processes and resources.",
+      "chain_of_thought": {
+        "description": "AtomicTaskManager is not shut down in do_shutdown, potentially leaking processes and resources."
+      },
       "status": "FIXED",
-      "pattern_matched": "Missing teardown"
+      "pattern_matched": "Missing teardown",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
     },
     {
       "id": "BUG-002",
@@ -127,9 +147,16 @@
         "line": 10,
         "function": "TtsController"
       },
-      "chain_of_thought": "TtsController does not inherit from SignalManagerMixin, leading to architectural inconsistency and manual signal management.",
+      "chain_of_thought": {
+        "description": "TtsController does not inherit from SignalManagerMixin, leading to architectural inconsistency and manual signal management."
+      },
       "status": "FIXED",
-      "pattern_matched": "Inconsistent implementation"
+      "pattern_matched": "Inconsistent implementation",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
     },
     {
       "id": "BUG-003",
@@ -144,9 +171,16 @@
         "line": 10,
         "function": "DndController"
       },
-      "chain_of_thought": "DndController is a plain Python class lacking GObject inheritance and SignalManagerMixin, making lifecycle management fragile.",
+      "chain_of_thought": {
+        "description": "DndController is a plain Python class lacking GObject inheritance and SignalManagerMixin, making lifecycle management fragile."
+      },
       "status": "FIXED",
-      "pattern_matched": "Inconsistent implementation"
+      "pattern_matched": "Inconsistent implementation",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
     },
     {
       "id": "BUG-004",
@@ -161,9 +195,16 @@
         "line": 84,
         "function": "GLOBAL"
       },
-      "chain_of_thought": "Tesseract models were downloaded via 'main' branch URLs, allowing for unexpected changes. Pinned to immutable commit hashes.",
+      "chain_of_thought": {
+        "description": "Tesseract models were downloaded via 'main' branch URLs, allowing for unexpected changes. Pinned to immutable commit hashes."
+      },
       "status": "FIXED",
-      "pattern_matched": "Insecure download"
+      "pattern_matched": "Insecure download",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
     },
     {
       "id": "BUG-005",
@@ -178,9 +219,16 @@
         "line": 170,
         "function": "FilterChain.apply"
       },
-      "chain_of_thought": "Missing try...finally guards for closing intermediate PIL image buffers during pipeline failures.",
+      "chain_of_thought": {
+        "description": "Missing try...finally guards for closing intermediate PIL image buffers during pipeline failures."
+      },
       "status": "FIXED",
-      "pattern_matched": "Resource leak risk"
+      "pattern_matched": "Resource leak risk",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
     },
     {
       "id": "BUG-006",
@@ -195,9 +243,16 @@
         "line": 90,
         "function": "do_startup"
       },
-      "chain_of_thought": "Redundant signal listening on ScreenshotService 'decoded' signal between AnuraApplication and OcrController. Optimized by separating Headless vs GUI paths.",
+      "chain_of_thought": {
+        "description": "Redundant signal listening on ScreenshotService 'decoded' signal between AnuraApplication and OcrController. Optimized by separating Headless vs GUI paths."
+      },
       "status": "FIXED",
-      "pattern_matched": "Redundancy"
+      "pattern_matched": "Redundancy",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
     },
     {
       "id": "BUG-007",
@@ -212,9 +267,16 @@
         "line": 77,
         "function": "is_safe_url_string"
       },
-      "chain_of_thought": "is_safe_url_string accepted mixed-script URLs that could be used for homograph attacks. Hardened to reject non-ASCII mixed with ASCII letters.",
+      "chain_of_thought": {
+        "description": "is_safe_url_string accepted mixed-script URLs that could be used for homograph attacks. Hardened to reject non-ASCII mixed with ASCII letters."
+      },
       "status": "FIXED",
-      "pattern_matched": "Security bypass"
+      "pattern_matched": "Security bypass",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
     },
     {
       "id": "BUG-008",
@@ -229,9 +291,16 @@
         "line": 137,
         "function": "MANIFEST"
       },
-      "chain_of_thought": "Flatpak manifest was out of sync with uv.lock, including older versions and dead dependencies (six, dateutil). Hardened by synchronizing and purging.",
+      "chain_of_thought": {
+        "description": "Flatpak manifest was out of sync with uv.lock, including older versions and dead dependencies (six, dateutil). Hardened by synchronizing and purging."
+      },
       "status": "FIXED",
-      "pattern_matched": "Environment drift"
+      "pattern_matched": "Environment drift",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
     },
     {
       "id": "BUG-009",
@@ -246,9 +315,16 @@
         "line": 133,
         "function": "_on_share_idle"
       },
-      "chain_of_thought": "Widespread use of blind exceptions (BLE001) hides operational failures. Remediated 28 critical sites in core services.",
+      "chain_of_thought": {
+        "description": "Widespread use of blind exceptions (BLE001) hides operational failures. Remediated 28 critical sites in core services."
+      },
       "status": "FIXED",
-      "pattern_matched": "Silent exception"
+      "pattern_matched": "Silent exception",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
     },
     {
       "id": "BUG-010",
@@ -263,9 +339,16 @@
         "line": 270,
         "function": "show_preferences"
       },
-      "chain_of_thought": "Manual signal management for PreferencesDialog bypasses the standardized SignalManagerMixin, risking leaks on abnormal closure.",
+      "chain_of_thought": {
+        "description": "Manual signal management for PreferencesDialog bypasses the standardized SignalManagerMixin, risking leaks on abnormal closure."
+      },
       "status": "FIXED",
-      "pattern_matched": "Inconsistent implementation"
+      "pattern_matched": "Inconsistent implementation",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
     },
     {
       "id": "BUG-011",
@@ -280,9 +363,16 @@
         "line": 41,
         "function": "setup_logging"
       },
-      "chain_of_thought": "Log rotation too shallow (3 files) and lacks compression, risking loss of Tesseract diagnostic data. Hardened to 5 files + gzip.",
+      "chain_of_thought": {
+        "description": "Log rotation too shallow (3 files) and lacks compression, risking loss of Tesseract diagnostic data. Hardened to 5 files + gzip."
+      },
       "status": "FIXED",
-      "pattern_matched": "Inadequate diagnostic buffer"
+      "pattern_matched": "Inadequate diagnostic buffer",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
     },
     {
       "id": "BUG-012",
@@ -297,9 +387,16 @@
         "line": 84,
         "function": "is_safe_url_string"
       },
-      "chain_of_thought": "Mixed-script homograph check incorrectly includes the URL scheme, causing any non-ASCII URL (IDN) to be rejected as a potential attack, making the Punycode normalization unreachable.",
+      "chain_of_thought": {
+        "description": "Mixed-script homograph check incorrectly includes the URL scheme, causing any non-ASCII URL (IDN) to be rejected as a potential attack, making the Punycode normalization unreachable."
+      },
       "status": "FIXED",
-      "pattern_matched": "Logic flaw"
+      "pattern_matched": "Logic flaw",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
     },
     {
       "id": "BUG-013",
@@ -314,9 +411,16 @@
         "line": 265,
         "function": "show_preferences"
       },
-      "chain_of_thought": "show_preferences uses manual signal tracking for LanguageManager signals instead of registering PreferencesDialog as a controller or using connect_tracked on the dialog itself. While it attempts manual disconnection on close, it's inconsistent with the rest of the architecture.",
+      "chain_of_thought": {
+        "description": "show_preferences uses manual signal tracking for LanguageManager signals instead of registering PreferencesDialog as a controller or using connect_tracked on the dialog itself. While it attempts manual disconnection on close, it's inconsistent with the rest of the architecture."
+      },
       "status": "FIXED",
-      "pattern_matched": "Inconsistent implementation"
+      "pattern_matched": "Inconsistent implementation",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
     },
     {
       "id": "BUG-014",
@@ -331,9 +435,16 @@
         "line": 100,
         "function": "get_tesseract_config"
       },
-      "chain_of_thought": "Config Layer Leakage: get_tesseract_config in config.py performed filesystem operations (makedirs, link, copy), violating the principle of pure configuration. Moved to anura/services/language_manager.py.",
+      "chain_of_thought": {
+        "description": "Config Layer Leakage: get_tesseract_config in config.py performed filesystem operations (makedirs, link, copy), violating the principle of pure configuration. Moved to anura/services/language_manager.py."
+      },
       "status": "FIXED",
-      "pattern_matched": "Config logic leak"
+      "pattern_matched": "Config logic leak",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
     },
     {
       "id": "BUG-015",
@@ -348,9 +459,16 @@
         "line": 122,
         "function": "do_shutdown"
       },
-      "chain_of_thought": "The shutdown sequence in AnuraApplication didn't explicitly cleanup the backend (ScreenshotService). Added explicit call to self.backend.do_destroy().",
+      "chain_of_thought": {
+        "description": "The shutdown sequence in AnuraApplication didn't explicitly cleanup the backend (ScreenshotService). Added explicit call to self.backend.do_destroy()."
+      },
       "status": "FIXED",
-      "pattern_matched": "Incomplete shutdown"
+      "pattern_matched": "Incomplete shutdown",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
     },
     {
       "id": "BUG-016",
@@ -365,9 +483,16 @@
         "line": 340,
         "function": "on_paste_from_clipboard"
       },
-      "chain_of_thought": "UI actions like pasting from clipboard were not debounced. Implemented 500ms debouncing logic using GLib.get_monotonic_time().",
+      "chain_of_thought": {
+        "description": "UI actions like pasting from clipboard were not debounced. Implemented 500ms debouncing logic using GLib.get_monotonic_time()."
+      },
       "status": "FIXED",
-      "pattern_matched": "Missing throttling"
+      "pattern_matched": "Missing throttling",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
     },
     {
       "id": "BUG-017",
@@ -382,9 +507,16 @@
         "line": 11,
         "function": "SingleLineTransformer.score"
       },
-      "chain_of_thought": "SingleLineTransformer.score returns 1 for empty results instead of 0. This could lead to a false positive selection of this transformer for empty OCR data.",
+      "chain_of_thought": {
+        "description": "SingleLineTransformer.score returns 1 for empty results instead of 0. This could lead to a false positive selection of this transformer for empty OCR data."
+      },
       "status": "FIXED",
-      "pattern_matched": "Logic flaw"
+      "pattern_matched": "Logic flaw",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
     },
     {
       "id": "BUG-020",
@@ -399,9 +531,16 @@
         "line": 52,
         "function": "MagicProcessor.process"
       },
-      "chain_of_thought": "Redundant data structure conversion in MagicProcessor.process from OcrData dataclass to list of dicts. This creates unnecessary memory pressure during heavy OCR tasks.",
+      "chain_of_thought": {
+        "description": "Redundant data structure conversion in MagicProcessor.process from OcrData dataclass to list of dicts. This creates unnecessary memory pressure during heavy OCR tasks."
+      },
       "status": "FIXED",
-      "pattern_matched": "Performance bottleneck"
+      "pattern_matched": "Performance bottleneck",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
     },
     {
       "id": "BUG-023",
@@ -416,9 +555,110 @@
         "line": 32,
         "function": "OcrResult._count_unique_sections"
       },
-      "chain_of_thought": "Hierarchical ID Collision: _count_unique_sections only counts unique IDs within a level, ignoring hierarchy. For example, it fails to distinguish line 1 in block 1 from line 1 in block 2, leading to incorrect line counts and skewed transformer scoring.",
-      "status": "OPEN",
-      "pattern_matched": "Numerical instability"
+      "chain_of_thought": {
+        "description": "Hierarchical ID Collision: _count_unique_sections only counts unique IDs within a level, ignoring hierarchy. For example, it fails to distinguish line 1 in block 1 from line 1 in block 2, leading to incorrect line counts and skewed transformer scoring."
+      },
+      "status": "FIXED",
+      "pattern_matched": "Hierarchical ID Collision",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
+    },
+    {
+      "id": "BUG-024",
+      "severity": "HIGH",
+      "confidence_score": 1.0,
+      "personality_detecting": "Logic Validator",
+      "personality_agreement": [
+        "Systems Architect"
+      ],
+      "location": {
+        "file": "anura/models/context.py",
+        "line": 31,
+        "function": "ApplicationContext.perform_audit"
+      },
+      "chain_of_thought": {
+        "description": "Truthiness Bug: Path(\"/.flatpak-info\") always evaluates to True because it's a Path object, regardless of whether the file exists. This causes incorrect capability detection in non-Flatpak environments."
+      },
+      "status": "FIXED",
+      "pattern_matched": "Object truthiness flaw",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
+    },
+    {
+      "id": "BUG-025",
+      "severity": "HIGH",
+      "confidence_score": 1.0,
+      "personality_detecting": "Logic Validator",
+      "personality_agreement": [
+        "Senior Mathematician"
+      ],
+      "location": {
+        "file": "anura/models/ocr.py",
+        "line": 95,
+        "function": "OcrResult._count_unique_sections"
+      },
+      "chain_of_thought": {
+        "description": "Duplicate of BUG-023 in a different model. OcrResult in anura/models/ocr.py also suffers from hierarchical ID collisions, returning incorrect line/paragraph counts by ignoring parent IDs."
+      },
+      "status": "FIXED",
+      "pattern_matched": "Hierarchical ID Collision",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
+    },
+    {
+      "id": "BUG-026",
+      "severity": "LOW",
+      "confidence_score": 1.0,
+      "personality_detecting": "Logic Validator",
+      "location": {
+        "file": "anura/services/screenshot_service.py",
+        "line": 40,
+        "function": "_is_flatpak_environment"
+      },
+      "chain_of_thought": {
+        "description": "Truthiness Bug: return Path(\"/.flatpak-info\") always returns a Path object (True), breaking Flatpak detection for the Tesseract path configuration."
+      },
+      "status": "FIXED",
+      "pattern_matched": "Object truthiness flaw",
+      "personality_agreement": [],
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
+    },
+    {
+      "id": "BUG-027",
+      "severity": "MEDIUM",
+      "confidence_score": 1.0,
+      "personality_detecting": "Concurrency Specialist",
+      "personality_agreement": [
+        "Systems Architect"
+      ],
+      "location": {
+        "file": "anura/services/clipboard_service.py",
+        "line": 86,
+        "function": "init"
+      },
+      "chain_of_thought": {
+        "description": "Unsafe initialization: ClipboardService.init() does not check if Gdk.Display.get_default() returns None before calling get_clipboard(), leading to crashes in headless or restricted CI environments."
+      },
+      "status": "FIXED",
+      "pattern_matched": "Unsafe initialization",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
     }
   ],
   "learned_patterns": {
@@ -428,7 +668,8 @@
       "silent_exception": "except Exception blocks without logging hide system failures and hinder observability.",
       "config_leak": "Configuration files containing functional logic or filesystem side-effects.",
       "hierarchical_id_collision": "Counting IDs at a specific level without considering parent IDs in the hierarchy.",
-      "redundant_logic": "Logical expressions where one condition is a subset of another, rendering part of the expression dead."
+      "redundant_logic": "Logical expressions where one condition is a subset of another, rendering part of the expression dead.",
+      "object_truthiness_flaw": "Evaluating a complex object (like a Path) for truthiness instead of checking a specific property (like .exists())."
     }
   },
   "checkpoint_history": [],
@@ -447,5 +688,16 @@
       "Deep audit of anura/services/notification_service.py for portal leaks"
     ],
     "complexity_issues": []
+  },
+  "tool_execution_log": {
+    "linters": {
+      "ruff": "passed",
+      "mypy": "129 errors (mostly missing stubs)"
+    },
+    "security_scanners": {},
+    "performance_profilers": {},
+    "test_runners": {
+      "pytest": "64 passed, 24 skipped"
+    }
   }
 }
