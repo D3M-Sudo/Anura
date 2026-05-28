@@ -41,7 +41,7 @@ from anura.utils.validators import sanitize_text  # noqa: E402
 
 def _is_flatpak_environment() -> bool:
     """Detect if running in Flatpak sandbox."""
-    return Path("/.flatpak-info") or "FLATPAK_ID" in os.environ
+    return Path("/.flatpak-info").exists() or "FLATPAK_ID" in os.environ
 
 
 def run_ocr_pipeline(

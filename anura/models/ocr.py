@@ -100,8 +100,21 @@ class OcrResult:
 
         return left, top, right - left, bottom - top
 
-    def _count_unique_sections(self, attr: str) -> int:
-        return len({getattr(w, attr) for w in self.words})
+    def _count_unique_sections(self, level: str) -> int:
+        """
+        Count unique layout sections at a given level (block, paragraph, line).
+        Uses composite keys to prevent hierarchical ID collisions.
+        """
+        if level == "block_num":
+            keys = {(w.block_num,) for w in self.words}
+        elif level == "par_num":
+            keys = {(w.block_num, w.par_num) for w in self.words}
+        elif level == "line_num":
+            keys = {(w.block_num, w.par_num, w.line_num) for w in self.words}
+        else:
+            keys = {(getattr(w, level),) for w in self.words}
+
+        return len(keys)
 
     @property
     def num_lines(self) -> int:
