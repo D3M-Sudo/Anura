@@ -92,42 +92,24 @@ def isolate_env(monkeypatch, tmp_path):
     monkeypatch.setenv("TESSDATA_PREFIX_SYSTEM", str(tmp_path / "system-tessdata"))
 
 
+# Module-level variable to carry exitstatus from pytest_sessionfinish
+# to pytest_unconfigure (the two hooks run in different call frames).
+_pytest_exitstatus: int = 0
+
+
 def pytest_sessionfinish(session, exitstatus):
     """
-    Called after whole test run finished, right before returning the exit status.
-
-    Performs explicit cleanup then calls os._exit() to terminate immediately.
-
-    WHY os._exit() IS REQUIRED HERE:
-      After pytest prints its summary, Python enters its shutdown sequence:
-        1. atexit callbacks
-        2. GC / object finalizers
-        3. join() of every non-daemon thread   ← this is where we blocked for 74 s
-
-      The blocking threads come from two sources:
-        a) Adw.Application.register() (test_audit_ui_widgets.py) starts internal
-           GLib/GDBus threads.  Even with atexit.register(_adw_app.quit), the
-           GLib main context shutdown is asynchronous and takes many seconds.
-        b) AtomicTaskManager uses multiprocessing.get_context("spawn") for both
-           ProcessPoolExecutor and Manager (SyncManager).  Spawn-context processes
-           keep the parent alive until SIGCHLD is delivered, regardless of whether
-           .shutdown(wait=True) has been called.
-
-      sys.exit() goes through the same shutdown path and has the same hang.
-      os._exit(n) calls the kernel's _exit(2) syscall directly:
-        - skips atexit, GC, and thread joins
-        - the kernel delivers SIGHUP to any remaining child processes
-        - stdout/stderr are already flushed by pytest before this hook runs,
-          so no output is lost
-        - the exit code passed to os._exit() is the pytest exit status, so
-          CI correctly distinguishes passing (0) from failing (1+) runs
-
-      This is the same pattern used by pytest-xdist, pytest-cov, and
-      Coverage.py to avoid an identical hang with multiprocessing workers.
+    Called after whole test run finished, RIGHT BEFORE pytest prints the
+    summary line ("N passed, M skipped…").  We do all service cleanup here
+    and store the exit status, but do NOT call os._exit() yet — that would
+    kill the process before the summary is printed.
     """
+    global _pytest_exitstatus
+    _pytest_exitstatus = int(exitstatus)
+
     print("\nEnsuring clean session teardown...")
 
-    # 1. Shutdown AtomicTaskManager (best-effort; os._exit cleans up anyway)
+    # 1. Shutdown AtomicTaskManager (best-effort; os._exit cleans up the rest)
     try:
         from anura.core.atomic_task_manager import get_atomic_manager
         get_atomic_manager().shutdown()
@@ -157,7 +139,31 @@ def pytest_sessionfinish(session, exitstatus):
 
     print("Teardown complete.")
 
-    # Force-exit: bypasses Python's slow non-daemon-thread join.
-    # exitstatus is a pytest.ExitCode enum; int() converts it to the
-    # numeric exit code (0 = all passed, 1 = some failed, etc.).
-    os._exit(int(exitstatus))
+
+def pytest_unconfigure(config):
+    """
+    Called AFTER pytest has printed the final summary line and written all
+    reports — the last hook before pytest returns control to the caller.
+
+    This is the correct place for os._exit(): the summary is already on
+    screen, all report files are flushed, and we can terminate immediately
+    without going through Python's slow non-daemon-thread shutdown.
+
+    WHY os._exit() AND NOT sys.exit():
+      After the summary, Python would enter its shutdown sequence:
+        1. atexit callbacks
+        2. GC / object finalizers
+        3. join() of every non-daemon thread  ← caused 74-second hang
+
+      Non-daemon thread sources in this test suite:
+        a) Adw.Application.register() → GLib/GDBus internal threads
+        b) AtomicTaskManager → ProcessPoolExecutor + SyncManager (spawn)
+
+      os._exit(n) calls the kernel _exit(2) syscall directly, bypassing all
+      of the above.  The kernel sends SIGHUP to surviving child processes
+      (the two spawn workers visible as "Terminate orphan process" in the
+      GitHub Actions post-job cleanup — this is expected and harmless).
+
+      Same pattern used by pytest-xdist, pytest-cov, and Coverage.py.
+    """
+    os._exit(_pytest_exitstatus)
