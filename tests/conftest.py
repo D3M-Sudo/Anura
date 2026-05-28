@@ -90,3 +90,42 @@ def isolate_env(monkeypatch, tmp_path):
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
     monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "cache"))
     monkeypatch.setenv("TESSDATA_PREFIX_SYSTEM", str(tmp_path / "system-tessdata"))
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """
+    Called after whole test run finished, right before returning the exit status to the system.
+    Ensures that all background executors and singleton services are explicitly shut down
+    to prevent orphan processes or threads from hanging CI.
+    """
+    # 1. Shutdown AtomicTaskManager
+    try:
+        from anura.core.atomic_task_manager import get_atomic_manager
+
+        get_atomic_manager().shutdown()
+    except (ImportError, AttributeError, RuntimeError):
+        pass
+
+    # 2. Shutdown LanguageManager
+    try:
+        from anura.services.language_manager import get_language_manager
+
+        get_language_manager().shutdown()
+    except (ImportError, AttributeError, RuntimeError):
+        pass
+
+    # 3. Cleanup TTSService
+    try:
+        from anura.services.tts import get_tts_service
+
+        get_tts_service().cleanup()
+    except (ImportError, AttributeError, RuntimeError):
+        pass
+
+    # 4. Reset singletons to clear references
+    try:
+        from anura.utils.singleton import ThreadSafeSingleton
+
+        ThreadSafeSingleton.reset_for_testing()
+    except (ImportError, AttributeError):
+        pass
