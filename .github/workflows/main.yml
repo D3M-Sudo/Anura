@@ -103,15 +103,23 @@ jobs:
           glib-compile-schemas builddir/data/
 
       - name: Start Wayland compositor (headless)
-        # Bug fixed: `--backend=headless-backend.so` is the pre-weston-12
-        # syntax. Ubuntu 24.04 ships weston 13.x which requires the bare
-        # name `--backend=headless` (no .so suffix).
+        # Bug fixed (round 2): the previous version used `trap cleanup EXIT`
+        # inside this step's run script.  In GitHub Actions, each `run:` block
+        # is executed in its own bash process.  When that process exits at the
+        # end of the step, the EXIT trap fires and kills weston — before the
+        # test step ever starts.
+        #
+        # Fix: launch weston with `nohup` so it is detached from this shell's
+        # process group and immune to HUP/TERM on session exit.  The PID is
+        # written to /tmp/weston.pid so the test step can clean up after itself.
+        # No trap is set here; cleanup belongs in the step that uses weston.
         run: |
           mkdir -p "$XDG_RUNTIME_DIR"
           chmod 700 "$XDG_RUNTIME_DIR"
 
-          weston --backend=headless --socket=wayland-test --no-config &
-          WESTON_PID=$!
+          nohup weston --backend=headless --socket=wayland-test --no-config \
+            >/tmp/weston.log 2>&1 &
+          echo $! > /tmp/weston.pid
 
           # Poll for the socket for up to 10 s (20 × 500 ms).
           echo "Waiting for Wayland socket…"
@@ -125,23 +133,18 @@ jobs:
 
           if [ ! -S "$XDG_RUNTIME_DIR/wayland-test" ]; then
             echo "::error::Weston did not create the wayland-test socket within 10 s"
-            kill $WESTON_PID 2>/dev/null || true
+            kill "$(cat /tmp/weston.pid)" 2>/dev/null || true
             exit 1
           fi
-
-          # Cleanup handler — runs even on pytest failure
-          cleanup() {
-            echo "Cleaning up Weston (PID $WESTON_PID)..."
-            kill $WESTON_PID 2>/dev/null || true
-            wait $WESTON_PID 2>/dev/null || true
-            echo "Cleanup complete."
-          }
-          trap cleanup EXIT
 
       - name: Run GTK tests (Wayland headless)
         # --override-ini replaces the global addopts from pyproject.toml.
         # Without this override the --ignore list baked into addopts would
         # suppress collection of the files that hold most gtk-marked tests.
+        #
+        # The cleanup trap lives here (not in the weston setup step) so that
+        # weston is kept alive for the full duration of the test run and is
+        # only stopped once pytest exits — whether it passes, fails, or times out.
         env:
           GSETTINGS_SCHEMA_DIR: builddir/data
           DISPLAY: ""
@@ -150,6 +153,15 @@ jobs:
           GTK_A11Y: none
           ANURA_LOG_LEVEL: WARNING
         run: |
+          cleanup() {
+            echo "Stopping Weston…"
+            kill "$(cat /tmp/weston.pid 2>/dev/null)" 2>/dev/null \
+              || pkill -x weston 2>/dev/null \
+              || true
+            echo "Weston stopped."
+          }
+          trap cleanup EXIT
+
           uv run pytest tests/ -m gtk -v --timeout=30 \
             --override-ini "addopts=-v --tb=short"
 
