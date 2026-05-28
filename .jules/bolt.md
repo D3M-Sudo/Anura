@@ -35,3 +35,7 @@
 ## 2026-05-20 - Combined Image Enhancement LUT Optimization
 **Learning:** Consolidating multiple sequential image processing steps (Brightness, Contrast, Autocontrast, Thresholding) into single-pass Look-Up Tables (LUTs) significantly reduces total pixel traversals. Combining Brightness and Contrast into one linear formula and simulating Autocontrast via histogram bounds for Thresholding yields a measurable speedup (~28% on 4K-like images).
 **Action:** When performing sequential linear or threshold-based image transformations, derive a single mathematical mapping and apply it via `image.point(lut)` to minimize processing overhead.
+
+## 2026-05-28 - Histogram-based Statistics Optimization
+**Learning:** Calculating image statistics (like the mean) directly from a pre-computed histogram is significantly faster (~2x on 4K images) than using `ImageStat.Stat(image)`. `ImageStat.Stat` often triggers its own full-image traversal if the internal cache is cold or invalidated, whereas a histogram summation is O(bins) rather than O(pixels).
+**Action:** If a histogram is already available or required for other logic (like thresholding or adaptive enhancements), derive dependent statistics (mean, median, dark/light pixel ratios) directly from the histogram to avoid redundant pixel passes.
