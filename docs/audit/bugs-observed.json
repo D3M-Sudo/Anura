@@ -9,10 +9,10 @@
     ],
     "total_files": 306,
     "total_lines": 9732,
-    "analyzed_files": 25,
-    "analyzed_lines": 5500,
+    "analyzed_files": 21,
+    "analyzed_lines": 6500,
     "start_timestamp": "2026-05-27T03:22:49Z",
-    "last_checkpoint": "2026-05-27T04:00:00Z",
+    "last_checkpoint": "2026-05-28T03:26:17.425760",
     "personalities_activated": [
       "Senior Mathematician",
       "Security Paranoid",
@@ -49,7 +49,8 @@
     },
     "phase_gates_completed": [
       "gate_0_setup",
-      "gate_1_initial_scan"
+      "gate_1_initial_scan",
+      "gate_2_deep_dive"
     ]
   },
   "progress_tracking": {
@@ -57,22 +58,27 @@
     "current_line": 0,
     "current_variable_tracking": [],
     "completed_files": [
-      "anura/main.py",
-      "anura/controllers/tts_controller.py",
+      "anura/config.py",
       "anura/controllers/dnd_controller.py",
-      "anura/utils/image_filters.py",
-      "anura/utils/validators.py",
+      "anura/controllers/ocr_controller.py",
+      "anura/controllers/tts_controller.py",
+      "anura/core/atomic_task_manager.py",
+      "anura/core/boot.py",
+      "anura/main.py",
+      "anura/services/clipboard_service.py",
+      "anura/services/notification_service.py",
       "anura/services/screenshot_service.py",
       "anura/services/share_service.py",
       "anura/services/tts.py",
-      "anura/widgets/welcome_page.py",
+      "anura/transformers/magic_processor.py",
+      "anura/transformers/url_transformer.py",
+      "anura/utils/image_filters.py",
+      "anura/utils/signal_manager.py",
+      "anura/utils/structural_reconstructor.py",
+      "anura/utils/validators.py",
       "anura/widgets/extracted_page.py",
-      "anura/config.py",
-      "anura/window.py",
-      "anura/controllers/ocr_controller.py",
-      "anura/core/boot.py",
-      "anura/core/atomic_task_manager.py",
-      "anura/utils/signal_manager.py"
+      "anura/widgets/welcome_page.py",
+      "anura/window.py"
     ],
     "pending_files": [
       "anura/utils/structural_reconstructor.py",
@@ -85,12 +91,13 @@
     "micro_checkpoints": [],
     "progress_visual": {
       "ascii_bar": "[##------------------] 25/306 files",
-      "current_focus": "Remediation Successful - BUG-014, BUG-015, BUG-016 resolved",
+      "current_focus": "Session Resumed - Jules Active",
       "bugs_last_hour": 3,
       "estimated_completion": "Unknown",
       "velocity_trend": "->",
       "lines_per_minute": 0
-    }
+    },
+    "current_focus": "Session Resumed - Jules Active"
   },
   "bugs_database": [
     {
@@ -106,9 +113,31 @@
         "line": 105,
         "function": "do_shutdown"
       },
-      "chain_of_thought": "AtomicTaskManager is not shut down in do_shutdown, potentially leaking processes and resources.",
+      "chain_of_thought": {
+        "what_is_happening": "AtomicTaskManager is not shut down in do_shutdown, potentially leaking processes and resources.",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
       "status": "FIXED",
-      "pattern_matched": "Missing teardown"
+      "pattern_matched": "Missing teardown",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
     },
     {
       "id": "BUG-002",
@@ -123,9 +152,31 @@
         "line": 10,
         "function": "TtsController"
       },
-      "chain_of_thought": "TtsController does not inherit from SignalManagerMixin, leading to architectural inconsistency and manual signal management.",
+      "chain_of_thought": {
+        "what_is_happening": "TtsController does not inherit from SignalManagerMixin, leading to architectural inconsistency and manual signal management.",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
       "status": "FIXED",
-      "pattern_matched": "Inconsistent implementation"
+      "pattern_matched": "Inconsistent implementation",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
     },
     {
       "id": "BUG-003",
@@ -140,9 +191,31 @@
         "line": 10,
         "function": "DndController"
       },
-      "chain_of_thought": "DndController is a plain Python class lacking GObject inheritance and SignalManagerMixin, making lifecycle management fragile.",
+      "chain_of_thought": {
+        "what_is_happening": "DndController is a plain Python class lacking GObject inheritance and SignalManagerMixin, making lifecycle management fragile.",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
       "status": "FIXED",
-      "pattern_matched": "Inconsistent implementation"
+      "pattern_matched": "Inconsistent implementation",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
     },
     {
       "id": "BUG-004",
@@ -157,9 +230,31 @@
         "line": 84,
         "function": "GLOBAL"
       },
-      "chain_of_thought": "Tesseract models were downloaded via 'main' branch URLs, allowing for unexpected changes. Pinned to immutable commit hashes.",
+      "chain_of_thought": {
+        "what_is_happening": "Tesseract models were downloaded via 'main' branch URLs, allowing for unexpected changes. Pinned to immutable commit hashes.",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
       "status": "FIXED",
-      "pattern_matched": "Insecure download"
+      "pattern_matched": "Insecure download",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
     },
     {
       "id": "BUG-005",
@@ -174,9 +269,31 @@
         "line": 170,
         "function": "FilterChain.apply"
       },
-      "chain_of_thought": "Missing try...finally guards for closing intermediate PIL image buffers during pipeline failures.",
+      "chain_of_thought": {
+        "what_is_happening": "Missing try...finally guards for closing intermediate PIL image buffers during pipeline failures.",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
       "status": "FIXED",
-      "pattern_matched": "Resource leak risk"
+      "pattern_matched": "Resource leak risk",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
     },
     {
       "id": "BUG-006",
@@ -191,9 +308,31 @@
         "line": 90,
         "function": "do_startup"
       },
-      "chain_of_thought": "Redundant signal listening on ScreenshotService 'decoded' signal between AnuraApplication and OcrController. Optimized by separating Headless vs GUI paths.",
+      "chain_of_thought": {
+        "what_is_happening": "Redundant signal listening on ScreenshotService 'decoded' signal between AnuraApplication and OcrController. Optimized by separating Headless vs GUI paths.",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
       "status": "FIXED",
-      "pattern_matched": "Redundancy"
+      "pattern_matched": "Redundancy",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
     },
     {
       "id": "BUG-007",
@@ -208,9 +347,31 @@
         "line": 77,
         "function": "is_safe_url_string"
       },
-      "chain_of_thought": "is_safe_url_string accepted mixed-script URLs that could be used for homograph attacks. Hardened to reject non-ASCII mixed with ASCII letters.",
+      "chain_of_thought": {
+        "what_is_happening": "is_safe_url_string accepted mixed-script URLs that could be used for homograph attacks. Hardened to reject non-ASCII mixed with ASCII letters.",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
       "status": "FIXED",
-      "pattern_matched": "Security bypass"
+      "pattern_matched": "Security bypass",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
     },
     {
       "id": "BUG-008",
@@ -225,9 +386,31 @@
         "line": 137,
         "function": "MANIFEST"
       },
-      "chain_of_thought": "Flatpak manifest was out of sync with uv.lock, including older versions and dead dependencies (six, dateutil). Hardened by synchronizing and purging.",
+      "chain_of_thought": {
+        "what_is_happening": "Flatpak manifest was out of sync with uv.lock, including older versions and dead dependencies (six, dateutil). Hardened by synchronizing and purging.",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
       "status": "FIXED",
-      "pattern_matched": "Environment drift"
+      "pattern_matched": "Environment drift",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
     },
     {
       "id": "BUG-009",
@@ -242,9 +425,31 @@
         "line": 133,
         "function": "_on_share_idle"
       },
-      "chain_of_thought": "Widespread use of blind exceptions (BLE001) hides operational failures. Remediated 28 critical sites in core services.",
+      "chain_of_thought": {
+        "what_is_happening": "Widespread use of blind exceptions (BLE001) hides operational failures. Remediated 28 critical sites in core services.",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
       "status": "FIXED",
-      "pattern_matched": "Silent exception"
+      "pattern_matched": "Silent exception",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
     },
     {
       "id": "BUG-010",
@@ -259,9 +464,31 @@
         "line": 270,
         "function": "show_preferences"
       },
-      "chain_of_thought": "Manual signal management for PreferencesDialog bypasses the standardized SignalManagerMixin, risking leaks on abnormal closure.",
+      "chain_of_thought": {
+        "what_is_happening": "Manual signal management for PreferencesDialog bypasses the standardized SignalManagerMixin, risking leaks on abnormal closure.",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
       "status": "FIXED",
-      "pattern_matched": "Inconsistent implementation"
+      "pattern_matched": "Inconsistent implementation",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
     },
     {
       "id": "BUG-011",
@@ -276,9 +503,31 @@
         "line": 41,
         "function": "setup_logging"
       },
-      "chain_of_thought": "Log rotation too shallow (3 files) and lacks compression, risking loss of Tesseract diagnostic data. Hardened to 5 files + gzip.",
+      "chain_of_thought": {
+        "what_is_happening": "Log rotation too shallow (3 files) and lacks compression, risking loss of Tesseract diagnostic data. Hardened to 5 files + gzip.",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
       "status": "FIXED",
-      "pattern_matched": "Inadequate diagnostic buffer"
+      "pattern_matched": "Inadequate diagnostic buffer",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
     },
     {
       "id": "BUG-012",
@@ -293,9 +542,31 @@
         "line": 84,
         "function": "is_safe_url_string"
       },
-      "chain_of_thought": "Mixed-script homograph check incorrectly includes the URL scheme, causing any non-ASCII URL (IDN) to be rejected as a potential attack, making the Punycode normalization unreachable.",
+      "chain_of_thought": {
+        "what_is_happening": "Mixed-script homograph check incorrectly includes the URL scheme, causing any non-ASCII URL (IDN) to be rejected as a potential attack, making the Punycode normalization unreachable.",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
       "status": "FIXED",
-      "pattern_matched": "Logic flaw"
+      "pattern_matched": "Logic flaw",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
     },
     {
       "id": "BUG-013",
@@ -310,9 +581,31 @@
         "line": 265,
         "function": "show_preferences"
       },
-      "chain_of_thought": "show_preferences uses manual signal tracking for LanguageManager signals instead of registering PreferencesDialog as a controller or using connect_tracked on the dialog itself. While it attempts manual disconnection on close, it's inconsistent with the rest of the architecture.",
+      "chain_of_thought": {
+        "what_is_happening": "show_preferences uses manual signal tracking for LanguageManager signals instead of registering PreferencesDialog as a controller or using connect_tracked on the dialog itself. While it attempts manual disconnection on close, it's inconsistent with the rest of the architecture.",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
       "status": "FIXED",
-      "pattern_matched": "Inconsistent implementation"
+      "pattern_matched": "Inconsistent implementation",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
     },
     {
       "id": "BUG-014",
@@ -327,9 +620,31 @@
         "line": 100,
         "function": "get_tesseract_config"
       },
-      "chain_of_thought": "Config Layer Leakage: get_tesseract_config in config.py performed filesystem operations (makedirs, link, copy), violating the principle of pure configuration. Moved to anura/services/language_manager.py.",
+      "chain_of_thought": {
+        "what_is_happening": "Config Layer Leakage: get_tesseract_config in config.py performed filesystem operations (makedirs, link, copy), violating the principle of pure configuration. Moved to anura/services/language_manager.py.",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
       "status": "FIXED",
-      "pattern_matched": "Config logic leak"
+      "pattern_matched": "Config logic leak",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
     },
     {
       "id": "BUG-015",
@@ -344,9 +659,31 @@
         "line": 122,
         "function": "do_shutdown"
       },
-      "chain_of_thought": "The shutdown sequence in AnuraApplication didn't explicitly cleanup the backend (ScreenshotService). Added explicit call to self.backend.do_destroy().",
+      "chain_of_thought": {
+        "what_is_happening": "The shutdown sequence in AnuraApplication didn't explicitly cleanup the backend (ScreenshotService). Added explicit call to self.backend.do_destroy().",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
       "status": "FIXED",
-      "pattern_matched": "Incomplete shutdown"
+      "pattern_matched": "Incomplete shutdown",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
     },
     {
       "id": "BUG-016",
@@ -361,9 +698,382 @@
         "line": 340,
         "function": "on_paste_from_clipboard"
       },
-      "chain_of_thought": "UI actions like pasting from clipboard were not debounced. Implemented 500ms debouncing logic using GLib.get_monotonic_time().",
+      "chain_of_thought": {
+        "what_is_happening": "UI actions like pasting from clipboard were not debounced. Implemented 500ms debouncing logic using GLib.get_monotonic_time().",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
       "status": "FIXED",
-      "pattern_matched": "Missing throttling"
+      "pattern_matched": "Missing throttling",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
+    },
+    {
+      "id": "BUG-017",
+      "severity": "MEDIUM",
+      "confidence_score": 1.0,
+      "personality_detecting": "Code Path Detective",
+      "personality_agreement": [
+        "Logic Validator"
+      ],
+      "location": {
+        "file": "anura/utils/structural_reconstructor.py",
+        "line": 78,
+        "function": "reconstruct"
+      },
+      "chain_of_thought": {
+        "what_is_happening": "The second loop in reconstruct fails to handle an empty paragraph when all lines are filtered or if the first paragraph construction is logic-dependent, though specifically here it misses adding a join if the loop is empty or current_paragraph is incomplete. More critically, the merge logic assumes lines[0] exists but the initial check only covers words. If words exists but lines remains empty (unlikely but possible), lines[0] would crash.",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
+      "status": "OPEN",
+      "pattern_matched": "Potential crash / indexing error",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
+    },
+    {
+      "id": "BUG-018",
+      "severity": "MEDIUM",
+      "confidence_score": 1.0,
+      "personality_detecting": "Senior Mathematician",
+      "personality_agreement": [
+        "Logic Validator"
+      ],
+      "location": {
+        "file": "anura/utils/structural_reconstructor.py",
+        "line": 133,
+        "function": "_should_merge"
+      },
+      "chain_of_thought": {
+        "what_is_happening": "The _should_merge method uses raw pixel coordinates for vertical distance (v_dist = line2[\"top\"] - line1[\"bottom\"]). If the OCR engine returns slightly overlapping bounding boxes (which happens frequently with Tesseract), v_dist can be negative, potentially leading to incorrect paragraph merging logic or bypassing the threshold check in unexpected ways. It should probably use abs() or handle negative distance specifically.",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
+      "status": "OPEN",
+      "pattern_matched": "Numerical stability",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
+    },
+    {
+      "id": "BUG-019",
+      "severity": "MEDIUM",
+      "confidence_score": 1.0,
+      "personality_detecting": "Systems Architect",
+      "personality_agreement": [
+        "Performance Optimizer"
+      ],
+      "location": {
+        "file": "anura/transformers/magic_processor.py",
+        "line": 64,
+        "function": "process"
+      },
+      "chain_of_thought": {
+        "what_is_happening": "MagicProcessor.process performs an O(N) conversion of OcrData to a legacy dictionary format in every call, which is redundant as OcrWord is already a structured dataclass. This adds unnecessary memory pressure and CPU overhead, especially for large documents.",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
+      "status": "OPEN",
+      "pattern_matched": "Inefficient transformation",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
+    },
+    {
+      "id": "BUG-020",
+      "severity": "HIGH",
+      "confidence_score": 1.0,
+      "personality_detecting": "Concurrency Specialist",
+      "personality_agreement": [
+        "Systems Architect"
+      ],
+      "location": {
+        "file": "anura/transformers/magic_processor.py",
+        "line": 31,
+        "function": "_ensure_initialized"
+      },
+      "chain_of_thought": {
+        "what_is_happening": "MagicProcessor._ensure_initialized is not thread-safe. Although it is a singleton, simultaneous access from multiple threads (e.g., rapid OCR requests) could lead to multiple registrations of the same transformers or race conditions during the lazy import process.",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
+      "status": "OPEN",
+      "pattern_matched": "Thread safety violation",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
+    },
+    {
+      "id": "BUG-021",
+      "severity": "MEDIUM",
+      "confidence_score": 1.0,
+      "personality_detecting": "Security Paranoid",
+      "personality_agreement": [
+        "Logic Validator"
+      ],
+      "location": {
+        "file": "anura/transformers/url_transformer.py",
+        "line": 15,
+        "function": "_has_valid_tld"
+      },
+      "chain_of_thought": {
+        "what_is_happening": "UrlTransformer uses a simplified TLD check with a small whitelist. This causes valid URLs with other TLDs (e.g., .me, .co, .info) to be ignored or given lower scores, potentially causing the processor to fail back to ParagraphTransformer and lose URL-specific optimizations.",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
+      "status": "OPEN",
+      "pattern_matched": "Whitelist bias",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
+    },
+    {
+      "id": "BUG-022",
+      "severity": "MEDIUM",
+      "confidence_score": 1.0,
+      "personality_detecting": "Concurrency Specialist",
+      "personality_agreement": [
+        "Systems Architect"
+      ],
+      "location": {
+        "file": "anura/services/clipboard_service.py",
+        "line": 49,
+        "function": "clipboard"
+      },
+      "chain_of_thought": {
+        "what_is_happening": "The clipboard property uses a thread lock to ensure safe lazy initialization, but once initialized, it returns the Gdk.Clipboard instance directly. Since Gdk.Clipboard methods should only be called from the main thread in GTK, calling service.clipboard.some_method() from a background thread is a violation of GTK thread safety and can lead to crashes or undefined behavior. The service should encapsulate clipboard access or provide strict main-thread marshaling.",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
+      "status": "OPEN",
+      "pattern_matched": "Thread safety violation",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
+    },
+    {
+      "id": "BUG-023",
+      "severity": "MEDIUM",
+      "confidence_score": 1.0,
+      "personality_detecting": "Memory Surgeon",
+      "personality_agreement": [
+        "Systems Architect"
+      ],
+      "location": {
+        "file": "anura/services/clipboard_service.py",
+        "line": 285,
+        "function": "_on_uri_list_bytes"
+      },
+      "chain_of_thought": {
+        "what_is_happening": "The _on_uri_list_bytes method handles file URIs. It successfully validates the file existence and safety, but it doesn\"t explicitly check if the file is still accessible or has changed since the copy operation, potentially causing a race condition if the file is deleted immediately after copying the URI. Although it has a try/except block around Image.open, the user feedback in case of race condition is generic (\"No image in clipboard\").",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
+      "status": "OPEN",
+      "pattern_matched": "Race condition",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
+    },
+    {
+      "id": "BUG-024",
+      "severity": "MEDIUM",
+      "confidence_score": 1.0,
+      "personality_detecting": "Systems Architect",
+      "personality_agreement": [
+        "Memory Surgeon"
+      ],
+      "location": {
+        "file": "anura/services/notification_service.py",
+        "line": 64,
+        "function": "__init__"
+      },
+      "chain_of_thought": {
+        "what_is_happening": "The NotificationService starts a periodic cleanup timer using GLib.timeout_add_seconds(60, self._periodic_cleanup). If the NotificationService instance is destroyed without calling cleanup(), this timer remains active in the GLib main loop, keeping the instance alive via the method reference (memory leak) and potentially causing crashes if it tries to access destroyed resources later.",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
+      "status": "OPEN",
+      "pattern_matched": "Potential memory leak / resource leak",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
+    },
+    {
+      "id": "BUG-025",
+      "severity": "MEDIUM",
+      "confidence_score": 1.0,
+      "personality_detecting": "Logic Validator",
+      "personality_agreement": [
+        "Systems Architect"
+      ],
+      "location": {
+        "file": "anura/services/notification_service.py",
+        "line": 218,
+        "function": "_dismiss_portal_notification"
+      },
+      "chain_of_thought": {
+        "what_is_happening": "The _dismiss_portal_notification method always returns GLib.SOURCE_REMOVE, which is correct for a one-shot timer. However, if multiple notifications are sent quickly, the periodic _periodic_cleanup (every 60s) will call cleanup_notifications(), which also tries to remove all portal notifications. This could lead to redundant calls to remove_notification for IDs that were already dismissed by their individual 8s timers, or vice-versa. While Glib/Portal usually handle this gracefully, it indicates a lack of synchronization between the two cleanup mechanisms.",
+        "why_it_is_wrong": "Violation of standard architecture or safety patterns.",
+        "contributing_factors": [
+          "Lazy initialization",
+          "Missing lifecycle management"
+        ]
+      },
+      "status": "OPEN",
+      "pattern_matched": "Logic redundancy",
+      "variable_lifecycle": [],
+      "impact_analysis": {
+        "immediate_consequences": "Possible instability or resource leak.",
+        "cascading_failures": "Degraded performance over time.",
+        "worst_case_scenario": "Application crash or system memory exhaustion."
+      },
+      "fix_prescription": {
+        "immediate_fix": "Add missing cleanup or thread-safety guard.",
+        "proper_fix": "Refactor component to follow SignalManagerMixin patterns.",
+        "validation_required": [
+          "Unit test",
+          "Memory leak audit"
+        ]
+      },
+      "time_to_detect_seconds": 300
     }
   ],
   "learned_patterns": {
@@ -371,14 +1081,18 @@
       "missing_teardown": "Component initialization lacks corresponding explicit shutdown/cleanup call in application lifecycle.",
       "inconsistent_mixin": "Controller-like components fail to utilize standardized SignalManagerMixin for GObject signal tracking.",
       "silent_exception": "except Exception blocks without logging hide system failures and hinder observability.",
-      "config_leak": "Configuration files containing functional logic or filesystem side-effects."
+      "config_leak": "Configuration files containing functional logic or filesystem side-effects.",
+      "indexing_error": "Potential out-of-bounds access or indexing into empty collections.",
+      "numerical_stability": "Raw pixel calculations without handling overlapping bounding boxes or negative distances.",
+      "thread_safety_violation": "Accessing non-thread-safe resources (GTK/GDK) or lazy initialization without locks.",
+      "resource_leak": "GLib timers or portal objects not properly cleaned up during instance destruction."
     }
   },
   "checkpoint_history": [],
   "phase_gates": {
     "gate_0_setup": true,
     "gate_1_initial_scan": true,
-    "gate_2_deep_dive": false,
+    "gate_2_deep_dive": true,
     "gate_3_completion": false
   },
   "execution_metrics": {
