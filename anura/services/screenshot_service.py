@@ -142,7 +142,7 @@ def run_ocr_pipeline(
                     if status_callback:
                         status_callback(_("Magic processing..."))
                     magic_processor = get_magic_processor()
-                    processed_text, magic_conf = magic_processor.process(ocr_result, task_id=task_id)
+                    processed_text, magic_conf, _applied_name = magic_processor.process(ocr_result, task_id=task_id)
 
                     # 6. Selection
                     if spatially_reconstructed.strip() and (
@@ -496,7 +496,7 @@ class ScreenshotService(GObject.GObject):
             spatially_reconstructed, recon_conf = reconstructor.reconstruct(ocr_result, task_id=task_id)
 
             magic_processor = get_magic_processor()
-            processed_text, magic_conf = magic_processor.process(ocr_result, task_id=task_id)
+            processed_text, magic_conf, _applied_name = magic_processor.process(ocr_result, task_id=task_id)
 
             if spatially_reconstructed.strip() and (
                 (len(spatially_reconstructed) > len(processed_text) * 1.2 and recon_conf >= magic_conf * 0.95)

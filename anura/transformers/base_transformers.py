@@ -20,7 +20,7 @@ class SingleLineTransformer(TransformerProtocol):
 class MultiLineTransformer(TransformerProtocol):
     def score(self, ocr_result: OcrResult) -> float:
         if ocr_result.num_lines > 1 and ocr_result.num_blocks == 1 and ocr_result.num_pars == 1:
-            return 50.0
+            return 60.0
         return 0
 
     def transform(self, ocr_result: OcrResult) -> list[str]:
@@ -30,7 +30,8 @@ class MultiLineTransformer(TransformerProtocol):
 class ParagraphTransformer(TransformerProtocol):
     def score(self, ocr_result: OcrResult) -> float:
         breaks = max(1, ocr_result.num_blocks + ocr_result.num_pars - 1)
-        return 100 - (100 / breaks)
+        # Offset to ensure multi-block text wins over SingleLine/MultiLine in ambiguous cases
+        return 100 - (100 / (breaks + 0.05))
 
     def transform(self, ocr_result: OcrResult) -> list[str]:
         return [ocr_result.add_linebreaks(block_sep="\n", line_sep=" ")]

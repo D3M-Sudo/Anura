@@ -9,15 +9,10 @@ import re
 from anura.transformers.models import OcrResult, TransformerProtocol
 from anura.utils.validators import URL_RE
 
-# Simplified TLD check for standalone version
-TLDS = {"COM", "ORG", "NET", "EDU", "GOV", "IO", "IT", "DE", "FR", "UK", "APP", "DEV"}
-
-
 def _has_valid_tld(url: str) -> bool:
+    """Verify the URL has a valid-looking TLD (at least 2 characters)."""
     match = re.search(r"(?:\.)([a-zA-Z]{2,})(?:\/|$)", url, re.IGNORECASE)
     tld = match.group(1) if match else ""
-    # Hardened TLD check: length check is a heuristic fallback for the whitelist.
-    # Logic simplified to clarify the fallback behavior.
     return len(tld) >= 2
 
 

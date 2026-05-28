@@ -56,5 +56,22 @@
       <summary>OCR Preprocessing Mode</summary>
       <description>Level of image and text preprocessing before and after OCR.</description>
     </key>
+
+    <key name="magic-processor-enabled" type="b">
+      <default>true</default>
+      <summary>Enable Smart Text Parsing</summary>
+      <description>When enabled, extracted text is automatically reformatted using heuristic rules (URL, email, paragraph detection).</description>
+    </key>
+
+    <key name="tessdata-model" type="s">
+      <choices>
+        <choice value="fast"/>
+        <choice value="standard"/>
+        <choice value="best"/>
+      </choices>
+      <default>"fast"</default>
+      <summary>Tesseract Model Quality</summary>
+      <description>Choose between speed-optimized (fast), balanced (standard), or accuracy-optimized (best) Tesseract language models.</description>
+    </key>
   </schema>
 </schemalist>

@@ -16,6 +16,16 @@ template $PreferencesLanguagesPage : Adw.PreferencesPage {
   icon-name: "preferences-desktop-locale-symbolic";
 
   Adw.PreferencesGroup {
+    Adw.ComboRow model_quality_combo {
+      title: _("Model Quality");
+      subtitle: _("Higher quality is slower but more accurate");
+      model: StringList {
+        strings: [_("Fast"), _("Standard"), _("Best")]
+      };
+    }
+  }
+
+  Adw.PreferencesGroup {
     Box {
       orientation: vertical;
 

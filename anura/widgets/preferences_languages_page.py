@@ -28,6 +28,7 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
     model: Gtk.FilterListModel = Gtk.Template.Child()
     list_store: Gio.ListStore = Gtk.Template.Child()
     revealer: Gtk.Revealer = Gtk.Template.Child()
+    model_quality_combo: Adw.ComboRow = Gtk.Template.Child()
 
     def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
@@ -50,6 +51,9 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
         self.connect_tracked(self.language_search_entry, "search-changed", self.on_language_search)
         self.connect_tracked(self.language_search_entry, "stop-search", self.on_language_search_stop)
         self.connect_tracked(self.search_bar, "notify::search-mode-enabled", self.on_search_mode_enabled)
+
+        # Bind model quality setting
+        self._setup_model_quality()
 
         self.load_languages()
         self.activate_filter()
@@ -172,6 +176,22 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
         """Toggle between empty and languages state views."""
         state = "empty_state" if is_empty else "languages_state"
         self.views.set_visible_child_name(state)
+
+    def _setup_model_quality(self) -> None:
+        """Setup model quality combo box."""
+        current = self.settings.get_string("tessdata-model")
+        mapping = {"fast": 0, "standard": 1, "best": 2}
+        self.model_quality_combo.set_selected(mapping.get(current, 0))
+
+        self.connect_tracked(self.model_quality_combo, "notify::selected", self._on_model_quality_changed)
+
+    def _on_model_quality_changed(self, combo: Adw.ComboRow, _param: object) -> None:
+        idx = combo.get_selected()
+        mapping = {0: "fast", 1: "standard", 2: "best"}
+        model = mapping.get(idx, "fast")
+        self.settings.set_string("tessdata-model", model)
+        logger.debug(f"Anura: Tesseract model quality set to {model}")
+        self.load_languages()
 
     def do_destroy(self) -> None:
         """Clean up all tracked signal handlers to prevent memory leaks."""

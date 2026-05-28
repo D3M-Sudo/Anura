@@ -26,23 +26,26 @@ def create_mock_ocr_result(text_list, conf=90.0):
 def test_magic_processor_single_line():
     processor = get_magic_processor()
     ocr_res = create_mock_ocr_result(["Hello", "World"])
-    text, conf = processor.process(ocr_res)
+    text, conf, name = processor.process(ocr_res)
     assert "Hello World" in text
     assert conf == 90.0
+    assert name == "SingleLine"
 
 
 def test_magic_processor_url():
     processor = get_magic_processor()
     ocr_res = create_mock_ocr_result(["https://github.com/d3msudo/anura"])
-    text, _conf = processor.process(ocr_res)
+    text, _conf, name = processor.process(ocr_res)
     assert "https://github.com/d3msudo/anura" in text
+    assert name == "Url"
 
 
 def test_magic_processor_email():
     processor = get_magic_processor()
     ocr_res = create_mock_ocr_result(["test@example.com"])
-    text, _conf = processor.process(ocr_res)
+    text, _conf, name = processor.process(ocr_res)
     assert "test@example.com" in text
+    assert name == "Email"
 
 
 def test_magic_processor_multi_line():
@@ -61,15 +64,17 @@ def test_magic_processor_multi_line():
             "block_num": [1, 1, 1, 1],
         }
     )
-    text, _conf = processor.process(ocr_res)
+    text, _conf, name = processor.process(ocr_res)
     assert "Line One" in text
     assert "Line Two" in text
     assert "\n" in text
+    assert name == "MultiLine"
 
 
 def test_magic_processor_empty():
     processor = get_magic_processor()
     ocr_res = OcrResult(words=(), raw_text="", avg_confidence=0.0)
-    text, conf = processor.process(ocr_res)
+    text, conf, name = processor.process(ocr_res)
     assert text == ""
     assert conf == 0.0
+    assert name == ""

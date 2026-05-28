@@ -11,7 +11,10 @@ import weakref
 from gi.repository import Adw, Gio, GLib, GObject, Gtk
 from loguru import logger
 
+from anura.services.notification_service import get_notification_service
 from anura.services.result_dispatcher import get_result_dispatcher
+from anura.services.settings import settings
+from anura.transformers.magic_processor import get_magic_processor
 from anura.utils import uri_validator
 from anura.utils.portal_advice import detect_portal_advice
 from anura.utils.signal_manager import SignalManagerMixin
@@ -44,6 +47,7 @@ class OcrController(GObject.GObject, SignalManagerMixin):
         # weakref.ref for the one call-site that needs the real GObject.
         self._window_ref = weakref.ref(window)
         self._dispatcher = get_result_dispatcher()
+        self._notification_service = get_notification_service()
 
         # Register for automatic teardown
         if hasattr(window, "register_controller"):
@@ -80,9 +84,21 @@ class OcrController(GObject.GObject, SignalManagerMixin):
             return
 
         try:
-            self._window.extracted_page.extracted_text = text
+            applied_name = ""
+            if settings.get_boolean("magic-processor-enabled") and ocr_result:
+                try:
+                    text, _conf, applied_name = get_magic_processor().process(ocr_result)
+                except Exception as e:
+                    logger.error(f"OcrController: MagicProcessor failed: {e}")
+
+            self._window.extracted_page.set_extracted_text(text, applied_name)
             extraction_result = self._dispatcher.dispatch(text, ocr_result)
             self._handle_extraction_result(extraction_result, copy)
+
+            if self._notification_service.is_available():
+                body = text[:80] + "…" if len(text) > 80 else text
+                self._notification_service.show(title=_("Text extracted"), body=body, priority="normal")
+
             GLib.idle_add(self._navigate_to_extracted_page)
         except (AttributeError, TypeError, RuntimeError) as e:
             logger.error(f"OcrController: UI Error in _on_shot_done: {e}")

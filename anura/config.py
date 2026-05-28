@@ -87,6 +87,8 @@ TESSDATA_SYSTEM_DIR = _get_tessdata_system_dir()
 TESSDATA_URL = "https://github.com/tesseract-ocr/tessdata/raw/4767ea922bcc460e70b87b1d303ebdfed0e3060b/"
 # tessdata_best (high-quality models) - Pinned to main as of 2024-05-18
 TESSDATA_BEST_URL = "https://github.com/tesseract-ocr/tessdata_best/raw/923915d4ced2a7235221788285785a29c4a42d4a/"
+# TESSDATA_STANDARD_URL (balanced models) - Pinned to main as of 2024-05-18
+TESSDATA_STANDARD_URL = "https://github.com/tesseract-ocr/tessdata/raw/4767ea922bcc460e70b87b1d303ebdfed0e3060b/"
 
 # Network configuration for LanguageManager
 USER_AGENT = "Anura-OCR-Client/1.0 (Linux; Flatpak)"
