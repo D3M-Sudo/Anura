@@ -84,6 +84,17 @@ class StructuralReconstructor:
 
     def _process_line(self, words: list[Any]) -> dict:
         """Calculate line geometry from its words."""
+        if not words:
+            return {
+                "text": "",
+                "left": 0,
+                "top": 0,
+                "right": 0,
+                "bottom": 0,
+                "height": 0,
+                "width": 0,
+            }
+
         text = " ".join([w.text for w in words])
         left = min([w.left for w in words])
         top = min([w.top for w in words])
@@ -96,8 +107,8 @@ class StructuralReconstructor:
             "top": top,
             "right": right,
             "bottom": bottom,
-            "height": bottom - top,
-            "width": right - left,
+            "height": max(0, bottom - top),
+            "width": max(0, right - left),
         }
 
     def _should_merge(self, line1: dict, line2: dict) -> bool:
@@ -105,9 +116,17 @@ class StructuralReconstructor:
         v_dist = line2["top"] - line1["bottom"]
         avg_height = (line1["height"] + line2["height"]) / 2
 
+        # Numerical stability: avoid division by zero or merging based on empty lines
+        if avg_height <= 0:
+            return False
+
         # If vertical distance is within threshold of line height
         if v_dist > avg_height * self.proximity_threshold:
             return False
+
+        # Heuristic: also prevent merging if lines are physically too far apart vertically (overlap or huge gap)
+        # but the proximity_threshold check above already handles the gap.
+        # If v_dist is negative, it means lines overlap. We usually merge overlapping lines in OCR.
 
         h_diff = abs(line1["left"] - line2["left"])
         return h_diff <= avg_height * 3

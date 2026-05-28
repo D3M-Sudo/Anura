@@ -7,7 +7,7 @@
 
 from dataclasses import dataclass, field
 import enum
-from typing import Protocol
+from typing import Any, Protocol
 
 
 class TransformerType(enum.StrEnum):
@@ -22,14 +22,30 @@ class TransformerType(enum.StrEnum):
 class OcrResult:
     """Encapsulate recognized text and layout information from image_to_data."""
 
-    words: list[dict]
+    words: list[Any]
     text: str = ""
     transformer_scores: dict[TransformerType, float] = field(default_factory=dict)
     parsed: list[str] = field(default_factory=list)
 
+    def _get_val(self, obj: Any, attr: str) -> Any:
+        if isinstance(obj, dict):
+            return obj.get(attr)
+        return getattr(obj, attr, None)
+
     def _count_unique_sections(self, level: str) -> int:
-        unique_sections = {w[level] for w in self.words if level in w}
-        return len(unique_sections)
+        if level == "block_num":
+            keys = {(self._get_val(w, "block_num"),) for w in self.words}
+        elif level == "par_num":
+            keys = {(self._get_val(w, "block_num"), self._get_val(w, "par_num")) for w in self.words}
+        elif level == "line_num":
+            keys = {
+                (self._get_val(w, "block_num"), self._get_val(w, "par_num"), self._get_val(w, "line_num"))
+                for w in self.words
+            }
+        else:
+            keys = {(self._get_val(w, level),) for w in self.words}
+
+        return len(keys)
 
     @property
     def num_lines(self) -> int:
@@ -60,12 +76,13 @@ class OcrResult:
 
         for word in self.words:
             # Skip empty entries often returned by Tesseract for layout markers
-            if not word.get("text", "").strip():
+            text = self._get_val(word, "text")
+            if not text or not text.strip():
                 continue
 
-            block_num = word.get("block_num")
-            par_num = word.get("par_num")
-            line_num = word.get("line_num")
+            block_num = self._get_val(word, "block_num")
+            par_num = self._get_val(word, "par_num")
+            line_num = self._get_val(word, "line_num")
 
             if last_block_num is not None and block_num != last_block_num:
                 text_parts.append(block_sep)
@@ -76,7 +93,7 @@ class OcrResult:
             elif last_line_num is not None:
                 text_parts.append(word_sep)
 
-            text_parts.append(word["text"])
+            text_parts.append(text)
 
             last_block_num = block_num
             last_par_num = par_num

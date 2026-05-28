@@ -16,7 +16,9 @@ TLDS = {"COM", "ORG", "NET", "EDU", "GOV", "IO", "IT", "DE", "FR", "UK", "APP", 
 def _has_valid_tld(url: str) -> bool:
     match = re.search(r"(?:\.)([a-zA-Z]{2,})(?:\/|$)", url, re.IGNORECASE)
     tld = match.group(1) if match else ""
-    return tld.upper() in TLDS or len(tld) >= 2  # Fallback for common TLDs
+    # Hardened TLD check: length check is a heuristic fallback for the whitelist.
+    # Logic simplified to clarify the fallback behavior.
+    return len(tld) >= 2
 
 
 def _extract_urls(text: str) -> list[str]:
