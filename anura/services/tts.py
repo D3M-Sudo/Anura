@@ -413,7 +413,7 @@ class TTSService(GObject.GObject):
                             logger.debug("Anura TTS: Cleaned up temporary speech file")
                         except (OSError, GLib.Error):
                             logger.warning("Anura TTS: Failed to cleanup temporary speech file")
-                elif filepath:
+                else:
                     logger.debug("Anura TTS: Cleanup skipped, file already removed")
 
             def _on_stop_idle():
@@ -504,7 +504,7 @@ class TTSService(GObject.GObject):
                         logger.debug("Anura TTS: Cleaned up temporary speech file on stop")
                     except OSError:
                         logger.warning("Anura TTS: Failed to cleanup temporary speech file on stop")
-            elif filepath:
+            else:
                 logger.debug("Anura TTS: Cleanup skipped on stop, file already removed")
 
             # Only emit 'stop' when there was an active player to stop.

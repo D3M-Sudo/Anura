@@ -72,11 +72,14 @@ class OcrController(GObject.GObject, SignalManagerMixin):
 
     def _on_shot_done(self, _sender: GObject.GObject, text: str, copy: bool, ocr_result: "OcrResult") -> None:
         """Handle successful screenshot capture and OCR processing."""
+        was_screenshot = False
         if hasattr(self._window, "_screenshot_timeout_id") and self._window._screenshot_timeout_id is not None:
             GLib.source_remove(self._window._screenshot_timeout_id)
             self._window._screenshot_timeout_id = None
+            was_screenshot = True
 
-        self._window.present()
+        if was_screenshot:
+            self._window.present()
         self._window.welcome_page.reset_drop_area_state()
 
         if not text:
@@ -106,7 +109,7 @@ class OcrController(GObject.GObject, SignalManagerMixin):
     def _handle_extraction_result(self, result: "ExtractionResult", copy_requested: bool) -> None:
         """Handle the extraction result, emitting signals for side effects."""
         if result.is_primary_url:
-            url = result.urls[0].strip().strip("\n\r\t\v\f")
+            url = result.urls[0].strip()
             if uri_validator(url):
                 self.emit("uri-detected", url, copy_requested)
             else:
@@ -136,11 +139,14 @@ class OcrController(GObject.GObject, SignalManagerMixin):
 
     def _on_shot_error(self, _sender: GObject.GObject, message: str) -> None:
         """Handle screenshot capture errors."""
+        was_screenshot = False
         if hasattr(self._window, "_screenshot_timeout_id") and self._window._screenshot_timeout_id is not None:
             GLib.source_remove(self._window._screenshot_timeout_id)
             self._window._screenshot_timeout_id = None
+            was_screenshot = True
 
-        self._window.present()
+        if was_screenshot:
+            self._window.present()
         self._window.welcome_page.reset_drop_area_state()
         if message:
             self.emit("error-occurred", message)

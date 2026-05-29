@@ -79,7 +79,9 @@ class LanguageManager(GObject.GObject):
 
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": USER_AGENT})
-        self.session.timeout = REQUEST_TIMEOUT  # Set default timeout here
+        # Note: requests.Session does not have a built-in .timeout attribute.
+        # The actual timeout is passed explicitly in session.get(timeout=REQUEST_TIMEOUT).
+        # Removed the no-op self.session.timeout assignment.
         # Set retry logic
         adapter = requests.adapters.HTTPAdapter(
             max_retries=requests.adapters.Retry(
@@ -230,7 +232,7 @@ class LanguageManager(GObject.GObject):
     @active_language.setter  # type: ignore[no-redef]
     def active_language(self, language: LanguageItem) -> None:
         self._active_language = language
-        self.notify("active_language")
+        self.notify("active-language")
 
     def _get_model_quality_dir(self, quality: str | None = None) -> Path:
         """Get the directory for the specified model quality."""

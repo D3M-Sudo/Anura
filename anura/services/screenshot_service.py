@@ -69,7 +69,7 @@ def run_ocr_pipeline(
         from anura.utils.structural_reconstructor import get_structural_reconstructor
         from anura.utils.text_preprocessor import get_text_preprocessor
 
-        if not Path(file_path) or Path(file_path).stat().st_size == 0:
+        if not Path(file_path).exists() or Path(file_path).stat().st_size == 0:
             return False, "", _("The selected image file is empty."), None
 
         start_time = time.time()
@@ -185,7 +185,7 @@ def _configure_tesseract_path() -> None:
     is_flatpak = _is_flatpak_environment()
     flatpak_tess_bin = "/app/bin/tesseract"
 
-    if is_flatpak and Path(flatpak_tess_bin):
+    if is_flatpak and Path(flatpak_tess_bin).exists():
         # Force Tesseract to use Flatpak path
         os.environ["TESSERACT_CMD"] = flatpak_tess_bin
         pytesseract.pytesseract.tesseract_cmd = flatpak_tess_bin
@@ -390,7 +390,7 @@ class ScreenshotService(GObject.GObject):
             is_valid, _size, error = validate_image_resource(file)
             if not is_valid:
                 logger.error(f"Anura OCR: {error}")
-                return False, "", _(error) if error else _("Invalid image file")
+                return False, "", _(error) if error else _("Invalid image file"), None
 
         start_time = time.time()
 
@@ -416,7 +416,7 @@ class ScreenshotService(GObject.GObject):
 
     def _determine_file_type(self, file: str | Image.Image | object, _remove_source: bool) -> bool:
         """Determine if file is a physical file."""
-        return isinstance(file, str) and Path(file)
+        return isinstance(file, str) and Path(file).exists()
 
     def _process_image_decode(
         self,
@@ -430,7 +430,7 @@ class ScreenshotService(GObject.GObject):
         error_message = None
         ocr_result = None
 
-        if isinstance(file, str) and Path(file) and Path(file).stat().st_size == 0:
+        if isinstance(file, str) and Path(file).exists() and Path(file).stat().st_size == 0:
             logger.error(f"Anura OCR: Attempted to process 0-byte image file: {file}")
             return None, _("The selected image file is empty."), None
 
@@ -601,7 +601,7 @@ class ScreenshotService(GObject.GObject):
             return False
 
         # If it's a physical file, we can use process isolation to bypass the GIL
-        if isinstance(file, str) and Path(file):
+        if isinstance(file, str) and Path(file).exists():
             mode = settings.get_string("ocr-preprocessing")
 
             # Initial status feedback

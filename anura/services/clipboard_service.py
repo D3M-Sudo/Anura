@@ -512,81 +512,11 @@ class ClipboardService(GObject.GObject):
 
         GLib.idle_add(_on_success_idle, texture)
 
-    def read_text(self) -> None:
-        """
-        Thread-safe asynchronous text reading with 10-second timeout.
-        """
-        with self._state_lock:
-            old_timeout_id = self._clipboard_timeout_id
-            self._clipboard_timeout_id = None
-            if self._cancellable is not None:
-                self._cancellable.cancel()
-                self._cancellable = None
-            self._cancellable = Gio.Cancellable()
-            cancellable = self._cancellable
-            self._clipboard_timeout_id = GLib.timeout_add_seconds(
-                self.CLIPBOARD_TIMEOUT_SECONDS,
-                self._on_clipboard_timeout,
-                cancellable,
-            )
-        # Remove old source outside the lock (deadlock prevention).
-        if old_timeout_id and old_timeout_id > 0:
-            GLib.source_remove(old_timeout_id)
-
-        self.clipboard.read_text_async(cancellable=cancellable, callback=self._on_text_read)
-
-    def _on_text_read(self, _sender: GObject.GObject, result: Gio.AsyncResult) -> None:
-        """
-        Thread-safe callback for text reading from clipboard.
-        """
-        # Capture timeout ID under lock, remove the source outside the lock.
-        with self._state_lock:
-            timeout_id = self._clipboard_timeout_id
-            self._clipboard_timeout_id = None
-        if timeout_id and timeout_id > 0:
-            GLib.source_remove(timeout_id)
-
-        try:
-            text = self.clipboard.read_text_finish(result)
-            if not text:
-                raise ValueError("No valid text found in result.")
-
-            logger.info("Anura Clipboard: Text retrieved from clipboard.")
-
-            # For text reading, we might emit a different signal or handle differently
-            # For now, just log the success
-            def _on_success_idle(t):
-                logger.debug(f"Clipboard text read: {t[:50]}...")
-                return GLib.SOURCE_REMOVE
-
-            GLib.idle_add(_on_success_idle, text)
-
-        except GLib.Error as e:
-            # Check if operation was cancelled
-            if e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED):
-                logger.debug("Anura Clipboard: Text read operation cancelled.")
-                return
-            # Other errors - log and emit error signal
-            logger.error(f"Anura Clipboard Error: {e}")
-
-            def _on_error_idle():
-                self.emit("error", _("No text in clipboard"))
-                return GLib.SOURCE_REMOVE
-
-            GLib.idle_add(_on_error_idle)
-        except (ValueError, RuntimeError) as e:
-            # Technical rigor: log error for X11/Wayland clipboard synchronization issues
-            logger.error(f"Anura Clipboard Error: {e}")
-
-            def _on_error_idle():
-                self.emit("error", _("No text in clipboard"))
-                return GLib.SOURCE_REMOVE
-
-            GLib.idle_add(_on_error_idle)
-        finally:
-            # Clean up cancellable regardless of outcome
-            with self._state_lock:
-                self._cancellable = None
+    # Note: read_text() and _on_text_read() have been removed as they were dead code.
+    # The method read clipboard text but never emitted a signal or called a callback,
+    # making it a no-op for consumers. If text reading from clipboard is needed in
+    # the future, implement it following the pattern used by paste_from_clipboard()
+    # which correctly emits the "paste_from_clipboard" signal.
 
     def _on_clipboard_timeout(self, cancellable: Gio.Cancellable) -> bool:
         """Thread-safe timeout handler with atomic state management."""
