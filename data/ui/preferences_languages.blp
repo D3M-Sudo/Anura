@@ -19,9 +19,6 @@ template $PreferencesLanguagesPage : Adw.PreferencesPage {
     Adw.ComboRow model_quality_combo {
       title: _("Model Quality");
       subtitle: _("Higher quality is slower but more accurate");
-      model: StringList {
-        strings: [_("Fast"), _("Standard"), _("Best")]
-      };
     }
   }
 
@@ -30,9 +27,9 @@ template $PreferencesLanguagesPage : Adw.PreferencesPage {
       orientation: vertical;
 
       SearchBar search_bar {
-      show-close-button: true;
+        show-close-button: true;
 
-      SearchEntry language_search_entry {
+        SearchEntry language_search_entry {
         accessibility {
           label: _("Search Languages");
         }
