@@ -38,6 +38,9 @@ def setup_logging():
 
         log_dir = state_home_path / "anura" / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
+        # Security: Ensure log directory has restrictive permissions (0700)
+        # to protect potentially sensitive OCR data from other users.
+        log_dir.chmod(0o700)
 
         log_file = log_dir / "anura.log"
 

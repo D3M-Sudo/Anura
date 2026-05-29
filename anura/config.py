@@ -133,7 +133,11 @@ def get_tesseract_config(lang_code: str) -> str:
 
     # Multi-language: Dynamic Pooling Approach
     codes = lang_code.split("+")
-    Path(TESSDATA_POOL_DIR).mkdir(parents=True, exist_ok=True)
+    pool_path = Path(TESSDATA_POOL_DIR)
+    pool_path.mkdir(parents=True, exist_ok=True)
+    # Security: Ensure pool directory has restrictive permissions (0700)
+    # to protect temporary language models from other users.
+    pool_path.chmod(0o700)
 
     for code in codes:
         # Resolve source
