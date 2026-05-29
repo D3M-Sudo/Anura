@@ -21,7 +21,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Ruff Linter
-        uses: chartboost/ruff-action@99052d92170366eb6899e1966a014902888c3e80 # v1.1.0
+        uses: astral-sh/ruff-action@a7b1296fb5bd3ebb270731d1782bf05a97806e29 # v3.2.0
         with:
           # Strict linting with enforcement - no automatic fixes in CI
           args: check --select E,F,W,I --target-version py312
@@ -46,7 +46,7 @@ jobs:
             --cov=anura --cov-report=xml --cov-report=term-missing
 
       - name: Upload coverage report
-        uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # v5.4.0
+        uses: codecov/codecov-action@e96185f4044c2f0cedf0f022454acf9811cf8057 # v5.4.0
         with:
           files: coverage.xml
           fail_ci_if_error: false
@@ -223,7 +223,7 @@ jobs:
           echo "✓ Manifest validation passed"
 
       - name: Build Anura Flatpak
-        uses: flatpak/flatpak-github-actions/flatpak-builder@40049f75ec50e6bc216d7a4b0811e57a80b15c9d # v6.0.0
+        uses: flatpak/flatpak-github-actions/flatpak-builder@401fe28a8384095fc1531b9d320b292f0ee45adb # v6.7.0
         with:
           bundle: io.github.d3msudo.anura.flatpak
           manifest-path: flatpak/io.github.d3msudo.anura.local.json
@@ -283,7 +283,7 @@ jobs:
 
       - name: Upload Flatpak Artifact (Debug)
         if: always()
-        uses: actions/upload-artifact@4cec3d8aa04e39d1a6839979c1cb005d897dea04 # v4.6.1
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a6839979c1cb005d897de04 # v4.6.1
         with:
           name: io.github.d3msudo.anura-flatpak-${{ github.run_id }}
           path: io.github.d3msudo.anura.flatpak
