@@ -68,6 +68,37 @@ def pytest_collection_modifyitems(items: list) -> None:
             item.add_marker(pytest.mark.gtk)
 
 
+@pytest.fixture(scope="session")
+def headless_gi_mocks():
+    """Inject MagicMock stubs for gi when the real binding is unavailable.
+
+    Session-scoped so mocks are inserted exactly once and the module cache
+    stays stable for the lifetime of the test run.  Tests that mock gi
+    internals (e.g. test_config.py, test_audit_config_types.py) declare
+    this fixture as a dependency; it is intentionally NOT autouse so that
+    test files which use the real gi are not affected.
+
+    The keys are added only if absent, so running in an environment where gi
+    IS installed (GTK integration tests) is transparent.
+    """
+    _GI_KEYS = [
+        "gi",
+        "gi.repository",
+        "gi.repository.Gio",
+        "gi.repository.GLib",
+        "gi.repository.GObject",
+    ]
+    inserted: list[str] = []
+    for key in _GI_KEYS:
+        if key not in sys.modules:
+            from unittest.mock import MagicMock
+            sys.modules[key] = MagicMock()
+            inserted.append(key)
+    yield
+    for key in inserted:
+        sys.modules.pop(key, None)
+
+
 @pytest.fixture
 def tmp_tessdata(tmp_path):
     """

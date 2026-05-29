@@ -4,30 +4,29 @@
 #
 # SPDX-License-Identifier: MIT
 
-from pathlib import Path
+# NOTE: gi mocking is handled by the session-scoped `headless_gi_mocks`
+# fixture defined in conftest.py.  Do NOT add module-level sys.modules
+# assignments here — they execute at collection time and poison gi for every
+# other test in the session.
+#
+# LanguageItem and other GObject subclasses are NOT imported at module level
+# because language_item.py imports gi.repository at import time, which would
+# fail during collection in headless environments before any fixture runs.
+# Tests that need LanguageItem import it lazily inside the test body.
+
 import re
-import sys
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 
-# Mock gi for headless environments
-mock_gi = MagicMock()
-sys.modules["gi"] = mock_gi
-sys.modules["gi.repository"] = MagicMock()
-sys.modules["gi.repository.Gio"] = MagicMock()
-sys.modules["gi.repository.GLib"] = MagicMock()
-sys.modules["gi.repository.GObject"] = MagicMock()
-
-import anura.config  # noqa: E402
-from anura.models.download_state import DownloadState  # noqa: E402
-from anura.models.language_item import LanguageItem  # noqa: E402
-import anura.services.language_manager  # noqa: E402
+import anura.config
+from anura.models.download_state import DownloadState
 
 
 class TestConfig:
     @pytest.fixture(autouse=True)
-    def mock_lm_dependencies(self, monkeypatch):
+    def mock_lm_dependencies(self, monkeypatch, headless_gi_mocks):  # noqa: ARG002
         import anura.services.language_manager as lm
 
         mock_settings = MagicMock()
@@ -36,6 +35,9 @@ class TestConfig:
 
         self.mock_mgr = MagicMock()
         monkeypatch.setattr(lm, "get_language_manager", lambda: self.mock_mgr)
+
+        # Patch the name as it appears in language_manager's own namespace.
+        monkeypatch.setattr(lm, "TESSDATA_SYSTEM_DIR", str(Path("/tmp/anura-system-tessdata")))
 
         return lm
 
@@ -86,6 +88,8 @@ class TestDownloadState:
 class TestLanguageItem:
     @pytest.mark.skip(reason="Needs real GObject")
     def test_language_item_init(self):
+        from anura.models.language_item import LanguageItem
+
         li = LanguageItem(code="fra", title="French", selected=True)
         assert li.code == "fra"
         assert li.title == "French"
@@ -93,6 +97,8 @@ class TestLanguageItem:
 
     @pytest.mark.skip(reason="Needs real GObject")
     def test_language_item_repr(self):
+        from anura.models.language_item import LanguageItem
+
         li = LanguageItem(code="fra", title="French", selected=False)
         assert "French" in repr(li)
         assert "fra" in repr(li)
