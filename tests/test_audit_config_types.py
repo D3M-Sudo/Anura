@@ -4,10 +4,10 @@
 #
 # SPDX-License-Identifier: MIT
 
+from pathlib import Path
 import re
 import sys
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -19,10 +19,10 @@ sys.modules["gi.repository.Gio"] = MagicMock()
 sys.modules["gi.repository.GLib"] = MagicMock()
 sys.modules["gi.repository.GObject"] = MagicMock()
 
-import anura.config
-import anura.services.language_manager
-from anura.models.download_state import DownloadState
-from anura.models.language_item import LanguageItem
+import anura.config  # noqa: E402
+from anura.models.download_state import DownloadState  # noqa: E402
+from anura.models.language_item import LanguageItem  # noqa: E402
+import anura.services.language_manager  # noqa: E402
 
 
 class TestConfig:

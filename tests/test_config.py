@@ -15,11 +15,11 @@ sys.modules["gi.repository.Gio"] = MagicMock()
 sys.modules["gi.repository.GLib"] = MagicMock()
 sys.modules["gi.repository.GObject"] = MagicMock()
 
-import re
-from pathlib import Path
-from unittest.mock import patch
+from pathlib import Path  # noqa: E402
+import re  # noqa: E402
+from unittest.mock import patch  # noqa: E402
 
-import pytest
+import pytest  # noqa: E402
 
 
 class TestLangCodePattern:

@@ -6,6 +6,9 @@
 
 import os
 from pathlib import Path
+import re
+
+from loguru import logger
 
 # Core Application Identity
 APP_ID = "io.github.d3msudo.anura"
