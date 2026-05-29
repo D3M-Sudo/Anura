@@ -102,6 +102,9 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         Adw.init()
         Adw.Application.do_startup(self)
 
+        self._apply_color_scheme()
+        self.settings.connect("changed::color-scheme", self._on_color_scheme_changed)
+
         active_lang = self.settings.get_string("active-language")
         cleanup_orphaned_resources(active_lang)
 
@@ -165,6 +168,23 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
             win = AnuraWindow(application=self, backend=self.backend)
             self._setup_window_signals(win)
         win.present()
+
+    def _apply_color_scheme(self) -> None:
+        """Apply color scheme preference using Adw.StyleManager."""
+        scheme = self.settings.get_string("color-scheme")
+        style_manager = Adw.StyleManager.get_default()
+
+        if scheme == "force-light":
+            style_manager.set_color_scheme(Adw.ColorScheme.FORCE_LIGHT)
+        elif scheme == "force-dark":
+            style_manager.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
+        else:
+            style_manager.set_color_scheme(Adw.ColorScheme.DEFAULT)
+
+        logger.debug(f"Anura: Applied color scheme '{scheme}'")
+
+    def _on_color_scheme_changed(self, _settings: Gio.Settings, _key: str) -> None:
+        self._apply_color_scheme()
 
     def _setup_window_signals(self, win: AnuraWindow) -> None:
         """Wire up event-driven service integration via OcrController signals."""

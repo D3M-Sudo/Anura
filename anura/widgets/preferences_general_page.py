@@ -21,6 +21,7 @@ from anura.utils.signal_manager import SignalManagerMixin
 class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
     __gtype_name__ = "PreferencesGeneralPage"
 
+    color_scheme_combo: Adw.ComboRow = Gtk.Template.Child()
     extra_language_combo: Adw.ComboRow = Gtk.Template.Child()
     magic_processor_switch: Adw.SwitchRow = Gtk.Template.Child()
     autocopy_switch: Adw.SwitchRow = Gtk.Template.Child()
@@ -40,6 +41,7 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
             "magic-processor-enabled", self.magic_processor_switch, "active", Gio.SettingsBindFlags.DEFAULT
         )
 
+        self._setup_color_scheme()
         self._setup_extra_languages()
 
         self.connect_tracked(get_language_manager(), "downloaded", self._on_language_changed)
@@ -47,6 +49,22 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
 
         self._setup_tts_volume()
         self._setup_tts_language()
+
+    def _setup_color_scheme(self) -> None:
+        """Initialize color scheme selector from settings."""
+        scheme = self.settings.get_string("color-scheme")
+        mapping = {"default": 0, "force-light": 1, "force-dark": 2}
+        idx = mapping.get(scheme, 0)
+        self.color_scheme_combo.set_selected(idx)
+
+        self.connect_tracked(self.color_scheme_combo, "notify::selected", self._on_color_scheme_changed)
+
+    def _on_color_scheme_changed(self, combo: Adw.ComboRow, _param: object) -> None:
+        idx = combo.get_selected()
+        mapping = {0: "default", 1: "force-light", 2: "force-dark"}
+        scheme = mapping.get(idx, "default")
+        logger.debug(f"Anura: Color scheme preference changed to {scheme}")
+        self.settings.set_string("color-scheme", scheme)
 
     def _setup_extra_languages(self) -> None:
         downloaded_langs = get_language_manager().get_downloaded_languages()

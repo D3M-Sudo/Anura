@@ -1,0 +1,21 @@
+
+msgid "Appearance"
+msgstr ""
+
+msgid "Color Scheme"
+msgstr ""
+
+msgid "The preferred color scheme for the application."
+msgstr ""
+
+msgctxt "color-scheme"
+msgid "System"
+msgstr ""
+
+msgctxt "color-scheme"
+msgid "Light"
+msgstr ""
+
+msgctxt "color-scheme"
+msgid "Dark"
+msgstr ""

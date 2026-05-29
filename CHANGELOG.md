@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- Implemented a UI theme selector with three explicit states (System, Light, Dark) using `Adw.StyleManager`.
+- Added `color-scheme` GSettings key for persistent theme preference.
+
 ## [0.1.5] - 2026-05-25 {version-0.1.5-architectural-milestone}
 
 ### Added
