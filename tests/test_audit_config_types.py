@@ -14,8 +14,8 @@
 # fail during collection in headless environments before any fixture runs.
 # Tests that need LanguageItem import it lazily inside the test body.
 
-import re
 from pathlib import Path
+import re
 from unittest.mock import MagicMock
 
 import pytest
