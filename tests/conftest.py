@@ -114,21 +114,22 @@ def pytest_sessionfinish(session, exitstatus):
     try:
         from anura.core.atomic_task_manager import get_atomic_manager
         get_atomic_manager().shutdown()
-    except (ImportError, AttributeError, RuntimeError):
+    except (ImportError, AttributeError, RuntimeError, ValueError):
         pass
 
     # 2. Shutdown LanguageManager
     try:
         from anura.services.language_manager import get_language_manager
         get_language_manager().shutdown()
-    except (ImportError, AttributeError, RuntimeError):
+    except (ImportError, AttributeError, RuntimeError, ValueError):
         pass
 
     # 3. Cleanup TTSService
     try:
         from anura.services.tts import get_tts_service
         get_tts_service().cleanup()
-    except (ImportError, AttributeError, RuntimeError):
+    except (ImportError, AttributeError, RuntimeError, ValueError):
+        # ValueError: Namespace Gst not available
         pass
 
     # 4. Reset singletons

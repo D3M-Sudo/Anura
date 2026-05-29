@@ -4,11 +4,19 @@
 #
 # SPDX-License-Identifier: MIT
 
-import pytest
+import sys
+from unittest.mock import MagicMock
 
-pytest.importorskip("gi")
+# Mock gi for headless environments
+mock_gi = MagicMock()
+sys.modules["gi"] = mock_gi
+sys.modules["gi.repository"] = MagicMock()
+sys.modules["gi.repository.Gio"] = MagicMock()
+sys.modules["gi.repository.GLib"] = MagicMock()
+sys.modules["gi.repository.GObject"] = MagicMock()
 
 import re
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -89,8 +97,24 @@ class TestLangCodePattern:
 class TestGetTesseractConfig:
     """Tests for get_tesseract_config() path resolution logic."""
 
-    def test_user_model_takes_priority(self, tmp_path, monkeypatch):
+    @pytest.fixture(autouse=True)
+    def mock_lm_dependencies(self, monkeypatch):
+        import anura.services.language_manager as lm
+
+        mock_settings = MagicMock()
+        mock_settings.get_string.return_value = "standard"
+        monkeypatch.setattr(lm, "settings", mock_settings)
+
+        self.mock_mgr = MagicMock()
+        # Default quality dir to something safe
+        self.mock_mgr._get_model_quality_dir.return_value = Path("/tmp/anura-user-tessdata")
+        monkeypatch.setattr(lm, "get_language_manager", lambda: self.mock_mgr)
+
+        return lm
+
+    def test_user_model_takes_priority(self, tmp_path, monkeypatch, mock_lm_dependencies):
         """User tessdata directory has priority over system directory."""
+        lm = mock_lm_dependencies
         user_dir = tmp_path / "user-tessdata"
         system_dir = tmp_path / "system-tessdata"
         user_dir.mkdir()
@@ -98,52 +122,44 @@ class TestGetTesseractConfig:
         (user_dir / "ita.traineddata").write_bytes(b"fake")
         (system_dir / "ita.traineddata").write_bytes(b"fake")
 
-        monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
-        import anura.config as cfg
+        self.mock_mgr._get_model_quality_dir.return_value = user_dir
+        monkeypatch.setattr(lm, "TESSDATA_SYSTEM_DIR", str(system_dir))
 
-        monkeypatch.setattr(cfg, "TESSDATA_DIR", str(user_dir))
-        monkeypatch.setattr(cfg, "TESSDATA_SYSTEM_DIR", str(system_dir))
-
-        result = cfg.get_tesseract_config("ita")
+        result = lm.get_tesseract_config("ita")
         assert str(user_dir) in result
 
-    def test_fallback_to_system_dir(self, tmp_path, monkeypatch):
+    def test_fallback_to_system_dir(self, tmp_path, monkeypatch, mock_lm_dependencies):
         """Falls back to system tessdata when user model is missing."""
+        lm = mock_lm_dependencies
         user_dir = tmp_path / "user-tessdata"
         system_dir = tmp_path / "system-tessdata"
         user_dir.mkdir()
         system_dir.mkdir()
         (system_dir / "eng.traineddata").write_bytes(b"fake")
 
-        import anura.config as cfg
+        self.mock_mgr._get_model_quality_dir.return_value = user_dir
+        monkeypatch.setattr(lm, "TESSDATA_SYSTEM_DIR", str(system_dir))
 
-        monkeypatch.setattr(cfg, "TESSDATA_DIR", str(user_dir))
-        monkeypatch.setattr(cfg, "TESSDATA_SYSTEM_DIR", str(system_dir))
-
-        result = cfg.get_tesseract_config("eng")
+        result = lm.get_tesseract_config("eng")
         assert str(system_dir) in result
 
-    def test_invalid_lang_code_defaults_to_eng(self, tmp_path, monkeypatch):
+    def test_invalid_lang_code_defaults_to_eng(self, tmp_path, monkeypatch, mock_lm_dependencies):
         """Invalid lang_code is rejected and falls back to 'eng'."""
-        import anura.config as cfg
-
-        monkeypatch.setattr(cfg, "TESSDATA_DIR", str(tmp_path))
-        monkeypatch.setattr(cfg, "TESSDATA_SYSTEM_DIR", str(tmp_path))
+        lm = mock_lm_dependencies
+        monkeypatch.setattr(lm, "TESSDATA_SYSTEM_DIR", str(tmp_path))
 
         # Should not raise, should log error and use 'eng'
-        result = cfg.get_tesseract_config("../../etc/passwd")
+        result = lm.get_tesseract_config("../../etc/passwd")
         assert result is not None
         assert "--psm 3" in result
         assert "--oem 1" in result
 
-    def test_config_contains_psm_and_oem(self, tmp_path, monkeypatch):
+    def test_config_contains_psm_and_oem(self, tmp_path, monkeypatch, mock_lm_dependencies):
         """Config string always contains Tesseract mode flags."""
-        import anura.config as cfg
+        lm = mock_lm_dependencies
+        monkeypatch.setattr(lm, "TESSDATA_SYSTEM_DIR", str(tmp_path))
 
-        monkeypatch.setattr(cfg, "TESSDATA_DIR", str(tmp_path))
-        monkeypatch.setattr(cfg, "TESSDATA_SYSTEM_DIR", str(tmp_path))
-
-        result = cfg.get_tesseract_config("eng")
+        result = lm.get_tesseract_config("eng")
         assert "--psm 3" in result
         assert "--oem 1" in result
 
@@ -164,22 +180,20 @@ class TestGetTesseractConfig:
 
         assert config == '--tessdata-dir "/path with spaces/tessdata" --psm 3 --oem 1'
 
-    def test_config_valid_english(self):
+    def test_config_valid_english(self, mock_lm_dependencies):
         """Test Tesseract config generation for valid English."""
-        from anura.config import get_tesseract_config
-
+        lm = mock_lm_dependencies
         with patch("os.path.exists", return_value=True):
-            config = get_tesseract_config("eng")
+            config = lm.get_tesseract_config("eng")
             assert "--tessdata-dir" in config
             assert "--psm 3" in config
             assert "--oem 1" in config
 
-    def test_config_invalid_language(self):
+    def test_config_invalid_language(self, mock_lm_dependencies):
         """Test Tesseract config generation for invalid language."""
-        from anura.config import get_tesseract_config
-
+        lm = mock_lm_dependencies
         with patch("os.path.exists", return_value=False):
-            config = get_tesseract_config("invalid")
+            config = lm.get_tesseract_config("invalid")
             # Should default to 'eng' and return valid config
             assert "--tessdata-dir" in config
             assert "--psm 3" in config

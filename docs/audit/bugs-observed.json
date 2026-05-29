@@ -659,30 +659,6 @@
       "impact_analysis": {},
       "fix_prescription": {},
       "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-028",
-      "severity": "MEDIUM",
-      "confidence_score": 1.0,
-      "personality_detecting": "Code Path Detective",
-      "personality_agreement": [
-        "Logic Validator"
-      ],
-      "location": {
-        "file": "anura/core/silent_runner.py",
-        "line": 116,
-        "function": "_execute_silent_ocr"
-      },
-      "chain_of_thought": {
-        "description": "SilentRunner returned exit code 0 regardless of OCR outcome or timeout, masking failures in headless/automated environments."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Incorrect exit code",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "fix_prescription": {},
-      "time_to_detect_seconds": 0
     }
   ],
   "learned_patterns": {

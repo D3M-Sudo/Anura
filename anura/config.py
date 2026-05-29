@@ -7,6 +7,7 @@
 import os
 from pathlib import Path
 
+
 # Core Application Identity
 APP_ID = "io.github.d3msudo.anura"
 
