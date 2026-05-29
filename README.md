@@ -164,6 +164,8 @@ export GSETTINGS_SCHEMA_DIR="builddir"
 uv run pytest tests/ -v
 ```
 
+The test suite covers unit tests (headless logic), integration tests (GTK/GLib environment), security/hardening tests (DoS prevention, URI validation, sanitization), and reliability/enterprise tests (performance benchmarks, concurrency, lifecycle).
+
 ---
 
 ## Localization

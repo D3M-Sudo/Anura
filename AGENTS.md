@@ -1,6 +1,6 @@
 # AGENTS.md — Anura OCR AI Assistant Guide
 
-> Canonical AI-assistant guide for this repository. Also read by Claude Code, Cursor, Aider, Continue, and Zed via the AGENTS.md convention.
+> Canonical AI-assistant guide for this repository. Also read by Claude Code, Cline, Cursor, Aider, Continue, and Zed via the AGENTS.md convention.
 
 ## Project Overview
 
@@ -26,65 +26,64 @@ Anura OCR is a GTK4/Libadwaita desktop application for GNOME that extracts text 
 anura/
 ├── anura/                      Python application source
 │   ├── main.py                 AnuraApplication (Adw.Application) - Lightweight Orchestrator
+│   ├── window.py               AnuraWindow — Core UI shell (Composition-based)
+│   ├── config.py               Constants APP_ID, tessdata URL, lang_code validation
+│   ├── atomic_task_manager.py  Single-slot thread pool with UUID versioning (legacy — use core/)
 │   ├── core/                   Modular Core Services
-│   │   ├── boot.py             Hardware bootstrap, Capability Audit, Rotary Logging
+│   │   ├── atomic_task_manager.py  Single-slot thread pool with UUID versioning
+│   │   ├── boot.py             Hardware bootstrap, Capability Audit
+│   │   ├── logger.py           Rotary Logging logic
 │   │   ├── i18n.py             Hybrid C/Python/GLib Localization
 │   │   ├── resources.py        Atomic GResource management
 │   │   ├── action_registry.py  Centralized Action Factory
 │   │   ├── dialogs.py          UI Dialog Orchestration (About, Preferences)
 │   │   └── silent_runner.py    Isolated Headless Engine (CLI/Silent mode)
-│   ├── window.py               AnuraWindow — Core UI shell (Composition-based)
 │   ├── controllers/            Business Logic Controllers
 │   │   ├── ocr_controller.py   OCR coordination and signal handling
 │   │   ├── tts_controller.py   TTS lifecycle and UI state management
 │   │   └── dnd_controller.py   Asynchronous Drag-and-Drop coordination
-│   ├── config.py               Constants APP_ID, tessdata URL, lang_code validation
-│   ├── core/
-│   │   ├── atomic_task_manager.py  Single-slot thread pool with UUID versioning
-│   │   ├── boot.py             Hardware bootstrap, Capability Audit
-│   │   ├── logger.py           Rotary Logging logic
 │   ├── services/
+│   │   ├── clipboard_service.py    Clipboard read/write (Gdk.Clipboard)
 │   │   ├── language_manager.py     Tessdata model download/management (singleton)
+│   │   ├── notification_service.py Notifications: XDG Portal → libnotify fallback
+│   │   ├── result_dispatcher.py    Post-OCR coordination (Clipboard, URLs, Notifications)
 │   │   ├── screenshot/             Abstract Factory Screenshot providers
 │   │   ├── screenshot_service.py   Screenshot capture orchestration
-│   │   ├── clipboard_service.py    Clipboard read/write (Gdk.Clipboard)
-    │   ├── result_dispatcher.py    Post-OCR coordination (Clipboard, URLs, Notifications)
-│   │   ├── notification_service.py Notifications: XDG Portal → libnotify fallback
-│   │   ├── tts.py                  Text-to-speech via gTTS + GStreamer
+│   │   ├── settings.py             GSettings singleton wrapper
 │   │   ├── share_service.py        Social sharing (9 providers)
-│   │   └── settings.py             GSettings singleton wrapper
+│   │   └── tts.py                  Text-to-speech via gTTS + GStreamer
 │   ├── types/
-│   │   ├── ocr.py                  Immutable OcrResult and OcrWord dataclasses
 │   │   ├── context.py              ApplicationContext capability audit
 │   │   ├── download_state.py       DownloadState enum
-│   │   └── language_item.py        LanguageItem dataclass
+│   │   ├── language_item.py        LanguageItem dataclass
+│   │   └── ocr.py                  Immutable OcrResult and OcrWord dataclasses
 │   ├── transformers/          Semantic text transformers (Chain of Responsibility)
-│   │   ├── magic_processor.py Orchestrator: Classification & semantic coordination
 │   │   ├── base_transformers.py Base implementations (SingleLine, Paragraph, etc.)
 │   │   ├── email_transformer.py Specialized email extraction & scoring
-│   │   ├── url_transformer.py   Specialized URL extraction & validation
-│   │   └── models.py            Dataclasses and ITransformer Protocol
+│   │   ├── magic_processor.py Orchestrator: Classification & semantic coordination
+│   │   ├── models.py            Dataclasses and ITransformer Protocol
+│   │   └── url_transformer.py   Specialized URL extraction & validation
 │   ├── utils/
 │   │   ├── barcode_detector.py    QR/Barcode detection via zxing-cpp
-│   │   ├── image_filters.py       Modular image enhancement filter chain
-│   │   ├── structural_reconstructor.py Paragraph/Layout spatial analysis
-    │   ├── validators.py          URI validation, security & text sanitization
-│   │   ├── portal_advice.py       Desktop-specific advice for missing portals
-│   │   ├── text_preprocessor.py   Image enhancement & text cleanup factory
-│   │   ├── singleton.py           Thread-safe lazy singleton pattern
 │   │   ├── cleanup.py             Resource cleanup utilities
-│   │   └── signal_manager.py      GLib signal management mixin
-│   ├── widgets/
-│   │   ├── extracted_page.py       OCR result page with share/TTS actions
-│   │   ├── language_popover.py     Language selector with search
-│   │   ├── language_popover_row.py Language row in popover
-│   │   ├── language_row.py         Language row in preferences page
-│   │   ├── preferences_dialog.py   Preferences dialog (Adw.PreferencesDialog)
-│   │   ├── preferences_general_page.py   General preferences page
-│   │   ├── preferences_languages_page.py Language management/download page
-│   │   ├── share_row.py            Share provider row
-│   │   ├── shortcuts_overlay.py    Keyboard shortcuts cheat sheet widget
-│   │   └── welcome_page.py         Welcome page
+│   │   ├── image_filters.py       Modular image enhancement filter chain
+│   │   ├── portal_advice.py       Desktop-specific advice for missing portals
+│   │   ├── signal_manager.py      GLib signal management mixin
+│   │   ├── singleton.py           Thread-safe lazy singleton pattern
+│   │   ├── structural_reconstructor.py Paragraph/Layout spatial analysis
+│   │   ├── text_preprocessor.py   Image enhancement & text cleanup factory
+│   │   └── validators.py          URI validation, security & text sanitization
+│   └── widgets/
+│       ├── extracted_page.py       OCR result page with share/TTS actions
+│       ├── language_popover.py     Language selector with search
+│       ├── language_popover_row.py Language row in popover
+│       ├── language_row.py         Language row in preferences page
+│       ├── preferences_dialog.py   Preferences dialog (Adw.PreferencesDialog)
+│       ├── preferences_general_page.py   General preferences page
+│       ├── preferences_languages_page.py Language management/download page
+│       ├── share_row.py            Share provider row
+│       ├── shortcuts_overlay.py    Keyboard shortcuts cheat sheet widget
+│       └── welcome_page.py         Welcome page
 ├── data/
 │   ├── ui/                     Blueprint files (.blp) → compiled to .ui
 │   ├── icons/                  Scalable SVG icons + symbolic variants

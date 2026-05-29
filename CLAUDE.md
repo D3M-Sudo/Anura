@@ -18,20 +18,24 @@
 ## Architecture
 
 ### Philosophy
-- SOLID, KISS, DRY. Mixins for "God" classes (e.g., `AnuraWindow`).
+- SOLID, KISS, DRY. Controller-based Composition over mixins for "God" classes (e.g., `AnuraWindow`).
 - `AtomicTaskManager` for single-slot asynchronous execution with UUID versioning.
 - Mandatory type hints on public functions.
-- `validators.sanitize_text` for OCR output cleaning (Unicode control chars).
-- `uri_validator()` for centralized URI validation.
+- `validators.sanitize_text` for OCR output cleaning (Unicode control chars, Private Use/Surrogate categories).
+- `uri_validator()` for centralized URI validation with homograph attack prevention.
 
 ### Project Structure
 ```
 anura/
 ├── main.py              ← AnuraApplication (Adw.Application)
-├── window.py            ← AnuraWindow (Mixin-based)
-├── window_mixins/       ← ocr_mixin, tts_mixin, dnd_mixin
-├── atomic_task_manager.py ← Task threading & versioning
-├── services/            ← clipboard, screenshot, notification, tts, share, settings
+├── window.py            ← AnuraWindow (Controller Composition)
+├── config.py            ← Constants, tessdata URL, lang_code validation
+├── atomic_task_manager.py ← Threading (legacy — use core/atomic_task_manager.py)
+├── core/                ← atomic_task_manager, boot, logger, i18n, resources, dialogs, silent_runner
+├── controllers/         ← ocr_controller, tts_controller, dnd_controller
+├── services/            ← clipboard, screenshot, notification, tts, share, settings, language_manager
+├── types/               ← context, download_state, language_item, ocr (immutable dataclasses)
+├── transformers/        ← magic_processor, base_transformers, email_transformer, url_transformer
 ├── utils/               ← barcode_detector, image_filters, structural_reconstructor, validators
 └── widgets/             ← extracted_page, welcome_page, preferences, shortcuts_overlay
 ```
