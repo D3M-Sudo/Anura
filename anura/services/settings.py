@@ -15,6 +15,8 @@ gi.require_version("Gio", "2.0")
 from gi.repository import Gio  # noqa: E402
 from loguru import logger  # noqa: E402
 
+from anura.utils.singleton import get_instance  # noqa: E402
+
 # Inline APP_ID to avoid circular import with config.py
 # This ensures settings can be imported independently
 APP_ID = "io.github.d3msudo.anura"
@@ -39,28 +41,16 @@ class Settings(Gio.Settings):
             raise RuntimeError(f"GSettings schema '{APP_ID}' not found.")
 
 
-class _LazySettings:
+class _SettingsProxy:
     """
-    Lazy initializer for Settings singleton.
+    Proxy for the Settings singleton that handles lazy initialization.
     Allows CLI-only operation without GSettings being available at import time.
-    Settings are only initialized when first accessed.
     """
-
-    _instance: Settings | None = None
-    _lock = threading.Lock()
-
-    def _get_instance(self) -> Settings:
-        if self._instance is None:
-            with self._lock:
-                # Double-checked locking pattern
-                if self._instance is None:
-                    self._instance = Settings()
-        return self._instance
 
     def __getattr__(self, name: str) -> Any:
-        """Delegate all attribute access to the actual Settings instance."""
-        return getattr(self._get_instance(), name)
+        """Delegate all attribute access to the thread-safe Settings singleton."""
+        return getattr(get_instance(Settings), name)
 
 
-# Lazy singleton - Settings only initialized on first access
-settings = _LazySettings()
+# Lazy singleton proxy - Settings only initialized on first access
+settings = _SettingsProxy()

@@ -4,6 +4,8 @@
 #
 # SPDX-License-Identifier: MIT
 
+from gettext import gettext as _
+
 from gi.repository import Adw, GLib, Gtk
 
 from anura.config import RESOURCE_PREFIX
@@ -42,9 +44,16 @@ class PreferencesDialog(Adw.PreferencesDialog, SignalManagerMixin):
 
     def on_language_download_failed(self, code: str) -> None:
         """Handle language download failure - show user feedback."""
-        # Could show error notification or update UI state
-        # For now, just ensure UI remains responsive
-        pass
+        mgr = get_language_manager()
+        lang_name = mgr.get_language(code)
+        msg = _("Failed to download {language} model. Please check your internet connection.").format(
+            language=lang_name
+        )
+
+        # Try to show toast on the parent window
+        parent = self.get_transient_for()
+        if parent and hasattr(parent, "show_toast"):
+            parent.show_toast(msg)
 
     def do_destroy(self) -> None:
         """Clean up child pages when dialog is destroyed."""

@@ -659,6 +659,306 @@
       "impact_analysis": {},
       "fix_prescription": {},
       "time_to_detect_seconds": 0
+    },
+    {
+      "id": "BUG-028",
+      "severity": "MEDIUM",
+      "confidence_score": 1.0,
+      "personality_detecting": "Memory Surgeon",
+      "personality_agreement": [
+        "Systems Architect"
+      ],
+      "location": {
+        "file": "anura/services/language_manager.py",
+        "line": 82,
+        "function": "__init__"
+      },
+      "chain_of_thought": {
+        "description": "Leaked Requests Session: LanguageManager initializes a requests.Session but fails to close it in shutdown(), leading to leaked sockets and connection pools."
+      },
+      "status": "FIXED",
+      "pattern_matched": "Resource leak",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
+    },
+    {
+      "id": "BUG-029",
+      "severity": "MEDIUM",
+      "confidence_score": 1.0,
+      "personality_detecting": "Performance Optimizer",
+      "personality_agreement": [
+        "Systems Architect"
+      ],
+      "location": {
+        "file": "anura/services/language_manager.py",
+        "line": 640,
+        "function": "get_tesseract_config"
+      },
+      "chain_of_thought": {
+        "description": "Tesseract Pool Directory Accumulation: Multi-language pooling creates hard links/copies in TESSDATA_POOL_DIR that are never cleared, leading to orphaned files and potential disk space consumption."
+      },
+      "status": "FIXED",
+      "pattern_matched": "Resource leak",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
+    },
+    {
+      "id": "BUG-030",
+      "severity": "LOW",
+      "confidence_score": 1.0,
+      "personality_detecting": "Concurrency Specialist",
+      "personality_agreement": [
+        "Logic Validator"
+      ],
+      "location": {
+        "file": "anura/services/language_manager.py",
+        "line": 257,
+        "function": "init_tessdata"
+      },
+      "chain_of_thought": {
+        "description": "Race Condition in tessdata cleanup: init_tessdata performed file scanning and unlinking without holding _cache_lock, potentially conflicting with concurrent downloads."
+      },
+      "status": "FIXED",
+      "pattern_matched": "Race condition",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
+    },
+    {
+      "id": "BUG-031",
+      "severity": "HIGH",
+      "confidence_score": 1.0,
+      "personality_detecting": "Performance Optimizer",
+      "personality_agreement": [
+        "Systems Architect"
+      ],
+      "location": {
+        "file": "anura/services/screenshot/legacy_provider.py",
+        "line": 158,
+        "function": "_on_finish"
+      },
+      "chain_of_thought": {
+        "description": "Blocking UI thread: LegacyX11Provider._on_finish contained a blocking sleep/retry loop for file readiness, causing the GTK main loop to freeze during X11 captures."
+      },
+      "status": "FIXED",
+      "pattern_matched": "UI Thread Block",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
+    },
+    {
+      "id": "BUG-032",
+      "severity": "MEDIUM",
+      "confidence_score": 1.0,
+      "personality_detecting": "Memory Surgeon",
+      "personality_agreement": [
+        "Systems Architect"
+      ],
+      "location": {
+        "file": "anura/services/screenshot/legacy_provider.py",
+        "line": 64,
+        "function": "cancel"
+      },
+      "chain_of_thought": {
+        "description": "Subprocess Leak: LegacyX11Provider.cancel() cancelled the async cancellable but failed to force-terminate the scrot subprocess, potentially leaving orphaned processes."
+      },
+      "status": "FIXED",
+      "pattern_matched": "Resource leak",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
+    },
+    {
+      "id": "BUG-033",
+      "severity": "MEDIUM",
+      "confidence_score": 1.0,
+      "personality_detecting": "Systems Architect",
+      "personality_agreement": [
+        "Memory Surgeon"
+      ],
+      "location": {
+        "file": "anura/services/screenshot/factory.py",
+        "line": 10,
+        "function": "ScreenshotProviderFactory"
+      },
+      "chain_of_thought": {
+        "description": "Lack of Singleton Persistence: ScreenshotProviderFactory instantiated new providers on every call instead of maintaining singletons, complicating lifecycle management and resource cleanup."
+      },
+      "status": "FIXED",
+      "pattern_matched": "Architectural Debt",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
+    },
+    {
+      "id": "BUG-034",
+      "severity": "MEDIUM",
+      "confidence_score": 1.0,
+      "personality_detecting": "Systems Architect",
+      "location": {
+        "file": "anura/services/screenshot/base.py",
+        "line": 9,
+        "function": "ScreenshotProvider"
+      },
+      "chain_of_thought": {
+        "description": "Incomplete Interface: ScreenshotProvider ABC was missing cancel() and destroy() abstract methods, preventing consistent polymorphic lifecycle management across providers."
+      },
+      "status": "FIXED",
+      "pattern_matched": "Incomplete interface",
+      "personality_agreement": [],
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
+    },
+    {
+      "id": "BUG-035",
+      "severity": "LOW",
+      "confidence_score": 1.0,
+      "personality_detecting": "Systems Architect",
+      "location": {
+        "file": "anura/services/settings.py",
+        "line": 42,
+        "function": "_LazySettings"
+      },
+      "chain_of_thought": {
+        "description": "Architectural Inconsistency: Settings service used a custom lazy proxy instead of the standardized ThreadSafeSingleton, increasing technical debt."
+      },
+      "status": "FIXED",
+      "pattern_matched": "Inconsistent implementation",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
+    },
+    {
+      "id": "BUG-036",
+      "severity": "LOW",
+      "confidence_score": 1.0,
+      "personality_detecting": "Data Scientist",
+      "location": {
+        "file": "anura/services/result_dispatcher.py",
+        "line": 56,
+        "function": "dispatch"
+      },
+      "chain_of_thought": {
+        "description": "Incorrect Confidence Representation: ResultDispatcher set average confidence to 0.0 for barcode results (which don't have OCR confidence), misrepresenting a 100% successful decode."
+      },
+      "status": "FIXED",
+      "pattern_matched": "Logic flaw",
+      "personality_agreement": [],
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
+    },
+    {
+      "id": "BUG-037",
+      "severity": "LOW",
+      "confidence_score": 1.0,
+      "personality_detecting": "Code Path Detective",
+      "location": {
+        "file": "anura/core/dialogs.py",
+        "line": 15,
+        "function": "show_about"
+      },
+      "chain_of_thought": {
+        "description": "Unused Parameter: show_about accepted a release_notes parameter that was never utilized in the Adw.AboutDialog construction."
+      },
+      "status": "FIXED",
+      "pattern_matched": "Dead code",
+      "personality_agreement": [],
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
+    },
+    {
+      "id": "BUG-038",
+      "severity": "MEDIUM",
+      "confidence_score": 1.0,
+      "personality_detecting": "Code Path Detective",
+      "personality_agreement": [
+        "Systems Architect"
+      ],
+      "location": {
+        "file": "anura/core/silent_runner.py",
+        "line": 86,
+        "function": "_execute_silent_ocr"
+      },
+      "chain_of_thought": {
+        "description": "Silent Mode Clipboard Crash: SilentRunner attempted to access the clipboard service in headless mode without display availability guards, causing crashes in CI or display-less environments."
+      },
+      "status": "FIXED",
+      "pattern_matched": "Unsafe initialization",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
+    },
+    {
+      "id": "BUG-039",
+      "severity": "LOW",
+      "confidence_score": 1.0,
+      "personality_detecting": "Naming Police",
+      "location": {
+        "file": "anura/widgets/preferences_dialog.py",
+        "line": 42,
+        "function": "on_language_download_failed"
+      },
+      "chain_of_thought": {
+        "description": "Silent Download Failure: PreferencesDialog.on_language_download_failed was empty, failing to provide user feedback when an OCR model download failed."
+      },
+      "status": "FIXED",
+      "pattern_matched": "Inadequate user feedback",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
+    },
+    {
+      "id": "BUG-041",
+      "severity": "LOW",
+      "confidence_score": 1.0,
+      "personality_detecting": "Memory Surgeon",
+      "personality_agreement": [
+        "Systems Architect"
+      ],
+      "location": {
+        "file": "anura/widgets/language_row.py",
+        "line": 15,
+        "function": "LanguageRow"
+      },
+      "chain_of_thought": {
+        "description": "Architectural Inconsistency: LanguageRow and WelcomePage managed GObject signals manually instead of using SignalManagerMixin, increasing the risk of memory leaks and stale handler IDs."
+      },
+      "status": "FIXED",
+      "pattern_matched": "Inconsistent implementation",
+      "tool_confirmations": [],
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
     }
   ],
   "learned_patterns": {
@@ -669,7 +969,10 @@
       "config_leak": "Configuration files containing functional logic or filesystem side-effects.",
       "hierarchical_id_collision": "Counting IDs at a specific level without considering parent IDs in the hierarchy.",
       "redundant_logic": "Logical expressions where one condition is a subset of another, rendering part of the expression dead.",
-      "object_truthiness_flaw": "Evaluating a complex object (like a Path) for truthiness instead of checking a specific property (like .exists())."
+      "object_truthiness_flaw": "Evaluating a complex object (like a Path) for truthiness instead of checking a specific property (like .exists()).",
+      "main_thread_block": "Performing blocking I/O or sleep operations on the GTK main thread, leading to UI freezes.",
+      "singleton_drift": "Inconsistent manual singleton implementations instead of utilizing the standardized ThreadSafeSingleton helper.",
+      "missing_interface_methods": "Concrete implementations of an abstract class define methods that are logically part of the interface but missing from the ABC definition."
     }
   },
   "checkpoint_history": [],

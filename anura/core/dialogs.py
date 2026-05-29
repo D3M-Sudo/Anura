@@ -15,7 +15,7 @@ class DialogManager:
     """Manager for application-level dialogs (About, Preferences)."""
 
     @staticmethod
-    def show_about(parent_window, version, release_notes=None):
+    def show_about(parent_window, version, _release_notes=None):
         """Show the About dialog."""
         # Adw.AboutDialog internally uses a GtkLabel with markup enabled
         _copyright = html.escape("© 2025-2026 D3M-Sudo & Anura Contributors\n© 2022-2025 Frog OCR Contributors")

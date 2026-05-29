@@ -78,8 +78,12 @@ class SilentRunner:
                         text, ocr_result if isinstance(ocr_result, OcrResult) else None
                     )
 
-                    get_clipboard_service().set(result.text)
-                    logger.info("Anura: OCR completed successfully in silent mode.")
+                    try:
+                        get_clipboard_service().set(result.text)
+                        logger.info("Anura: OCR completed successfully in silent mode (copied to clipboard).")
+                    except RuntimeError as e:
+                        logger.warning(f"Anura Silent Mode: Could not copy to clipboard: {e}")
+                        logger.info(f"Anura OCR Result:\n{result.text}")
                 else:
                     logger.error(f"Anura: Silent mode failed: {error_message}")
             except (RuntimeError, OSError) as e:

@@ -99,12 +99,12 @@ class TestGetTesseractConfig:
         (system_dir / "ita.traineddata").write_bytes(b"fake")
 
         monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
-        import anura.config as cfg
+        from anura.services import language_manager as lm
 
-        monkeypatch.setattr(cfg, "TESSDATA_DIR", str(user_dir))
-        monkeypatch.setattr(cfg, "TESSDATA_SYSTEM_DIR", str(system_dir))
+        monkeypatch.setattr(lm, "TESSDATA_DIR", str(user_dir))
+        monkeypatch.setattr(lm, "TESSDATA_SYSTEM_DIR", str(system_dir))
 
-        result = cfg.get_tesseract_config("ita")
+        result = lm.get_tesseract_config("ita")
         assert str(user_dir) in result
 
     def test_fallback_to_system_dir(self, tmp_path, monkeypatch):
@@ -115,35 +115,35 @@ class TestGetTesseractConfig:
         system_dir.mkdir()
         (system_dir / "eng.traineddata").write_bytes(b"fake")
 
-        import anura.config as cfg
+        from anura.services import language_manager as lm
 
-        monkeypatch.setattr(cfg, "TESSDATA_DIR", str(user_dir))
-        monkeypatch.setattr(cfg, "TESSDATA_SYSTEM_DIR", str(system_dir))
+        monkeypatch.setattr(lm, "TESSDATA_DIR", str(user_dir))
+        monkeypatch.setattr(lm, "TESSDATA_SYSTEM_DIR", str(system_dir))
 
-        result = cfg.get_tesseract_config("eng")
+        result = lm.get_tesseract_config("eng")
         assert str(system_dir) in result
 
     def test_invalid_lang_code_defaults_to_eng(self, tmp_path, monkeypatch):
         """Invalid lang_code is rejected and falls back to 'eng'."""
-        import anura.config as cfg
+        from anura.services import language_manager as lm
 
-        monkeypatch.setattr(cfg, "TESSDATA_DIR", str(tmp_path))
-        monkeypatch.setattr(cfg, "TESSDATA_SYSTEM_DIR", str(tmp_path))
+        monkeypatch.setattr(lm, "TESSDATA_DIR", str(tmp_path))
+        monkeypatch.setattr(lm, "TESSDATA_SYSTEM_DIR", str(tmp_path))
 
         # Should not raise, should log error and use 'eng'
-        result = cfg.get_tesseract_config("../../etc/passwd")
+        result = lm.get_tesseract_config("../../etc/passwd")
         assert result is not None
         assert "--psm 3" in result
         assert "--oem 1" in result
 
     def test_config_contains_psm_and_oem(self, tmp_path, monkeypatch):
         """Config string always contains Tesseract mode flags."""
-        import anura.config as cfg
+        from anura.services import language_manager as lm
 
-        monkeypatch.setattr(cfg, "TESSDATA_DIR", str(tmp_path))
-        monkeypatch.setattr(cfg, "TESSDATA_SYSTEM_DIR", str(tmp_path))
+        monkeypatch.setattr(lm, "TESSDATA_DIR", str(tmp_path))
+        monkeypatch.setattr(lm, "TESSDATA_SYSTEM_DIR", str(tmp_path))
 
-        result = cfg.get_tesseract_config("eng")
+        result = lm.get_tesseract_config("eng")
         assert "--psm 3" in result
         assert "--oem 1" in result
 
@@ -166,7 +166,7 @@ class TestGetTesseractConfig:
 
     def test_config_valid_english(self):
         """Test Tesseract config generation for valid English."""
-        from anura.config import get_tesseract_config
+        from anura.services.language_manager import get_tesseract_config
 
         with patch("os.path.exists", return_value=True):
             config = get_tesseract_config("eng")
@@ -176,7 +176,7 @@ class TestGetTesseractConfig:
 
     def test_config_invalid_language(self):
         """Test Tesseract config generation for invalid language."""
-        from anura.config import get_tesseract_config
+        from anura.services.language_manager import get_tesseract_config
 
         with patch("os.path.exists", return_value=False):
             config = get_tesseract_config("invalid")

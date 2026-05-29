@@ -26,3 +26,13 @@ class ScreenshotProvider(ABC):
     def is_available(self) -> bool:
         """Check if this provider is available in the current environment."""
         pass
+
+    @abstractmethod
+    def cancel(self) -> None:
+        """Cancel any in-flight capture request."""
+        pass
+
+    @abstractmethod
+    def destroy(self) -> None:
+        """Clean up resources on provider destruction."""
+        pass

@@ -32,6 +32,10 @@ class PortalProvider(ScreenshotProvider):
                 logger.debug("PortalProvider: Cancelled in-flight portal request.")
             self._cancellable = None
 
+    def destroy(self) -> None:
+        """Clean up resources on provider destruction."""
+        self.cancel()
+
     def capture(self, lang: str, copy: bool, callback: Callable) -> None:
         # Cancel any previous in-flight request before starting a new one
         self.cancel()

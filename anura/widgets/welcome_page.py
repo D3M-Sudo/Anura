@@ -4,7 +4,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-import contextlib
 from gettext import gettext as _
 from mimetypes import guess_type
 from pathlib import Path
@@ -16,11 +15,12 @@ from anura.config import RESOURCE_PREFIX
 from anura.models.language_item import LanguageItem
 from anura.services.language_manager import get_language_manager
 from anura.services.settings import settings
+from anura.utils.signal_manager import SignalManagerMixin
 from anura.widgets.language_popover import LanguagePopover
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/welcome_page.ui")
-class WelcomePage(Adw.NavigationPage):
+class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
     __gtype_name__ = "WelcomePage"
 
     spinner: Gtk.Spinner = Gtk.Template.Child()
@@ -36,17 +36,18 @@ class WelcomePage(Adw.NavigationPage):
 
     def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
+        SignalManagerMixin.__init__(self)
 
         self.settings = settings
 
-        self._language_changed_handler_id = self.language_popover.connect("language-changed", self._on_language_changed)
+        self.connect_tracked(self.language_popover, "language-changed", self._on_language_changed)
 
         current_lang_code = self.settings.get_string("active-language")
         self.lang_combo.set_label(
             get_language_manager().get_language(current_lang_code),
         )
 
-        self._drop_button_handler_id = self.drop_button.connect("clicked", self._on_drop_button_clicked)
+        self.connect_tracked(self.drop_button, "clicked", self._on_drop_button_clicked)
         self._setup_drop_target()
 
     def _setup_drop_target(self) -> None:
@@ -74,9 +75,9 @@ class WelcomePage(Adw.NavigationPage):
         )
         self._drop_cancellable: Gio.Cancellable | None = None
 
-        self._dnd_drop_handler_id = self._drop_target.connect("drop", self._on_dnd_drop)
-        self._dnd_enter_handler_id = self._drop_target.connect("drag-enter", self._on_dnd_enter)
-        self._dnd_leave_handler_id = self._drop_target.connect("drag-leave", self._on_dnd_leave)
+        self.connect_tracked(self._drop_target, "drop", self._on_dnd_drop)
+        self.connect_tracked(self._drop_target, "drag-enter", self._on_dnd_enter)
+        self.connect_tracked(self._drop_target, "drag-leave", self._on_dnd_leave)
 
         self.add_controller(self._drop_target)
 
@@ -288,35 +289,16 @@ class WelcomePage(Adw.NavigationPage):
 
     def do_destroy(self) -> None:
         """Clean up signal handlers to prevent memory leaks."""
-        if self._language_changed_handler_id is not None:
-            with contextlib.suppress(Exception):
-                self.language_popover.disconnect(self._language_changed_handler_id)
-            self._language_changed_handler_id = None
-
-        if self._drop_button_handler_id is not None:
-            with contextlib.suppress(Exception):
-                self.drop_button.disconnect(self._drop_button_handler_id)
-            self._drop_button_handler_id = None
-
-        # Disconnect any other signals that might have been connected manually
-
         # Cancel any in-flight drop operation
         drop_cancellable = getattr(self, "_drop_cancellable", None)
         if drop_cancellable:
             drop_cancellable.cancel()
             self._drop_cancellable = None
 
-        # Remove drop target controller and disconnect its internal handlers
+        # Remove drop target controller
         if hasattr(self, "_drop_target") and self._drop_target:
-            with contextlib.suppress(Exception):
-                if hasattr(self, "_dnd_drop_handler_id") and self._dnd_drop_handler_id:
-                    self._drop_target.disconnect(self._dnd_drop_handler_id)
-                if hasattr(self, "_dnd_enter_handler_id") and self._dnd_enter_handler_id:
-                    self._drop_target.disconnect(self._dnd_enter_handler_id)
-                if hasattr(self, "_dnd_leave_handler_id") and self._dnd_leave_handler_id:
-                    self._drop_target.disconnect(self._dnd_leave_handler_id)
-
             self.remove_controller(self._drop_target)
             self._drop_target = None
 
+        self.teardown_all()
         super().do_destroy()

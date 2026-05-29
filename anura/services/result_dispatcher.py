@@ -53,7 +53,8 @@ class ResultDispatcher:
             if candidate.strip() == text.strip():
                 is_primary_url = True
 
-        avg_conf = ocr_result.avg_confidence if ocr_result else 0.0
+        # For non-OCR results (e.g. barcodes), we treat confidence as 100%
+        avg_conf = ocr_result.avg_confidence if ocr_result else 100.0
         bbox = ocr_result.get_bounding_box() if ocr_result else (0, 0, 0, 0)
 
         result = ExtractionResult(

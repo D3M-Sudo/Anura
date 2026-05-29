@@ -64,10 +64,21 @@ class LegacyX11Provider(ScreenshotProvider):
     def cancel(self) -> None:
         """Interrupt an in-flight scrot capture."""
         with self._lock:
+            if self._proc is not None:
+                try:
+                    self._proc.force_exit()
+                except (GLib.Error, RuntimeError):
+                    pass
+                self._proc = None
+
             if self._cancellable is not None and not self._cancellable.is_cancelled():
                 self._cancellable.cancel()
                 logger.debug("LegacyX11Provider: Cancelled in-flight scrot capture.")
             self._cancellable = None
+
+    def destroy(self) -> None:
+        """Clean up resources on provider destruction."""
+        self.cancel()
 
     def capture(self, lang: str, copy: bool, callback: Callable) -> None:
         """Spawn scrot interactively and call callback(success, uri, error)."""
@@ -152,6 +163,15 @@ class LegacyX11Provider(ScreenshotProvider):
             callback(False, None, None)
             return
 
+        # --- 3. Post-processing: wait for filesystem to flush (off-thread) ---
+        # Delegate to background thread to avoid blocking the GTK main loop
+        # with the sleep/retry loop.
+        from anura.core.atomic_task_manager import get_atomic_manager
+
+        get_atomic_manager().execute(self._post_process_background, (callback, output_path))
+
+    def _post_process_background(self, callback: Callable, output_path: str) -> None:
+        """Off-thread verification of output file and URI generation."""
         # --- 3. Retry loop: wait for filesystem to flush the PNG ---
         # scrot may exit before the OS has written all bytes to disk.
         file_ready = False
@@ -169,7 +189,12 @@ class LegacyX11Provider(ScreenshotProvider):
                 f"{_FILE_READY_RETRIES} retries (path={output_path})."
             )
             self._cleanup_file(output_path)
-            callback(False, None, "Screenshot tool produced no output.")
+
+            def _on_failed_idle():
+                callback(False, None, "Screenshot tool produced no output.")
+                return GLib.SOURCE_REMOVE
+
+            GLib.idle_add(_on_failed_idle)
             return
 
         # --- 4. Success: convert path to file:// URI for the OCR pipeline ---
@@ -178,11 +203,21 @@ class LegacyX11Provider(ScreenshotProvider):
         except GLib.Error as e:
             logger.error(f"LegacyX11Provider: Failed to build URI for '{output_path}': {e.message}")
             self._cleanup_file(output_path)
-            callback(False, None, e.message)
+
+            def _on_failed_idle():
+                callback(False, None, e.message)
+                return GLib.SOURCE_REMOVE
+
+            GLib.idle_add(_on_failed_idle)
             return
 
         logger.info(f"LegacyX11Provider: scrot capture successful → {output_path}")
-        callback(True, uri, None)
+
+        def _on_success_idle():
+            callback(True, uri, None)
+            return GLib.SOURCE_REMOVE
+
+        GLib.idle_add(_on_success_idle)
 
     @staticmethod
     def _cleanup_file(path: str) -> None:

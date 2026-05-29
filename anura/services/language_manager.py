@@ -233,7 +233,7 @@ class LanguageManager(GObject.GObject):
     def init_tessdata(self) -> None:
         """
         Ensures the tessdata directory exists and logs its status at startup.
-        Also cleans up orphaned temporary files from interrupted downloads.
+        Also cleans up orphaned temporary files and pools.
         """
         # Hardening: verify Tesseract binary availability at startup
         tess_bin = os.environ.get("TESSERACT_CMD", "tesseract")
@@ -254,24 +254,30 @@ class LanguageManager(GObject.GObject):
                     # Another thread created it between check and makedirs
                     tess_path.mkdir(parents=True, exist_ok=True)
 
-        # Clean up orphaned temp files from crashed/interrupted downloads
-        try:
-            tess_path = Path(TESSDATA_DIR)
-            # Check directory readability first
-            if not os.access(tess_path, os.R_OK | os.X_OK):
-                logger.warning("Anura: Cannot read tessdata directory for cleanup")
-            else:
-                for file_path in tess_path.iterdir():
-                    if file_path.suffix == ".tmp":
-                        try:
-                            file_path.unlink()
-                            logger.warning("Anura: Cleaned up orphaned temporary language file")
-                        except PermissionError:
-                            logger.error("Anura: Permission denied removing orphaned temporary language file")
-                        except OSError:
-                            logger.error("Anura: Failed to remove orphaned temporary language file")
-        except OSError:
-            logger.error("Anura: Error scanning for orphaned temporary language files")
+            # Clean up orphaned temp files from crashed/interrupted downloads
+            try:
+                # Check directory readability first
+                if not os.access(tess_path, os.R_OK | os.X_OK):
+                    logger.warning("Anura: Cannot read tessdata directory for cleanup")
+                else:
+                    for file_path in tess_path.iterdir():
+                        if file_path.suffix == ".tmp":
+                            try:
+                                file_path.unlink()
+                                logger.warning("Anura: Cleaned up orphaned temporary language file")
+                            except (PermissionError, OSError) as e:
+                                logger.error(f"Anura: Failed to remove orphaned temp file: {e}")
+            except OSError:
+                logger.error("Anura: Error scanning for orphaned temporary language files")
+
+            # Clean up multi-language pool directory to prevent orphaned link accumulation
+            pool_path = Path(TESSDATA_POOL_DIR)
+            if pool_path.exists():
+                try:
+                    shutil.rmtree(pool_path)
+                    logger.debug("Anura: Cleaned up tesseract pool directory")
+                except (PermissionError, OSError) as e:
+                    logger.warning(f"Anura: Failed to clear pool directory: {e}")
 
         installed = self.get_downloaded_codes(force=True)
         logger.info(
@@ -552,13 +558,16 @@ class LanguageManager(GObject.GObject):
                 GLib.idle_add(_on_failed_idle, requested_code, priority=GLib.PRIORITY_DEFAULT)
 
     def shutdown(self) -> None:
-        """Shut down the download executor."""
+        """Shut down the download executor and close network sessions."""
         with self._cache_lock:
             executor = self._download_executor
             self._download_executor = None
 
         if executor is not None:
             executor.shutdown(wait=False, cancel_futures=True)
+
+        if hasattr(self, "session") and self.session:
+            self.session.close()
 
     def remove_language(self, code: str) -> None:
         """Thread-safe removal of model file from system."""
