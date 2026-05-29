@@ -11,6 +11,17 @@
       <summary>Default window height</summary>
     </key>
 
+    <key name="color-scheme" type="s">
+      <choices>
+        <choice value="default"/>
+        <choice value="force-light"/>
+        <choice value="force-dark"/>
+      </choices>
+      <default>"default"</default>
+      <summary>Color scheme</summary>
+      <description>The preferred color scheme for the application.</description>
+    </key>
+
     <key name="extra-language" type="s">
       <default>""</default>
       <summary>Secondary OCR language</summary>

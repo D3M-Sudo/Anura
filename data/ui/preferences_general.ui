@@ -12,6 +12,26 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
     <property name="icon-name">emblem-system-symbolic</property>
     <child>
       <object class="AdwPreferencesGroup">
+        <property name="title" translatable="true">Appearance</property>
+        <child>
+          <object class="AdwComboRow" id="color_scheme_combo">
+            <property name="title" translatable="true">Color Scheme</property>
+            <property name="subtitle" translatable="true">The preferred color scheme for the application.</property>
+            <property name="model">
+              <object class="GtkStringList">
+                <items>
+                  <item translatable="true" context="color-scheme">System</item>
+                  <item translatable="true" context="color-scheme">Light</item>
+                  <item translatable="true" context="color-scheme">Dark</item>
+                </items>
+              </object>
+            </property>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="AdwPreferencesGroup">
         <property name="title" translatable="true">Text Extraction</property>
         <child>
           <object class="AdwComboRow" id="extra_language_combo">

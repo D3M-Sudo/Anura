@@ -1544,3 +1544,24 @@ msgstr "Ignora"
 
 #~ msgid "Extracted Text from Anura"
 #~ msgstr "Estrai testo da dovunque"
+
+msgid "Appearance"
+msgstr "Aspetto"
+
+msgid "Color Scheme"
+msgstr "Schema Colore"
+
+msgctxt "color-scheme"
+msgid "System"
+msgstr "Sistema"
+
+msgctxt "color-scheme"
+msgid "Light"
+msgstr "Chiaro"
+
+msgctxt "color-scheme"
+msgid "Dark"
+msgstr "Scuro"
+
+msgid "The preferred color scheme for the application."
+msgstr "Lo schema colore preferito per l'applicazione."
