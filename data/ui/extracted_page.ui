@@ -182,6 +182,19 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
               <class name="footer"/>
             </style>
             <child>
+              <object class="GtkLabel" id="transformer_label">
+                <property name="halign">1</property>
+                <property name="hexpand">true</property>
+                <property name="margin-start">12</property>
+                <property name="margin-top">6</property>
+                <property name="margin-bottom">6</property>
+                <style>
+                  <class name="dim-label"/>
+                  <class name="caption"/>
+                </style>
+              </object>
+            </child>
+            <child>
               <object class="GtkLabel" id="stats_label">
                 <property name="halign">2</property>
                 <property name="hexpand">true</property>

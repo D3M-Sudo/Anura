@@ -180,6 +180,10 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
 
     def _setup_model_quality(self) -> None:
         """Setup model quality combo box."""
+        # Populate the model quality combo box
+        qualities = [_("Fast"), _("Standard"), _("Best")]
+        self.model_quality_combo.set_model(Gtk.StringList.new(qualities))
+
         current = self.settings.get_string("tessdata-model")
         mapping = {"fast": 0, "standard": 1, "best": 2}
         self.model_quality_combo.set_selected(mapping.get(current, 0))

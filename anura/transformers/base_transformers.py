@@ -29,7 +29,11 @@ class MultiLineTransformer(TransformerProtocol):
 
 class ParagraphTransformer(TransformerProtocol):
     def score(self, ocr_result: OcrResult) -> float:
-        breaks = max(1, ocr_result.num_blocks + ocr_result.num_pars - 1)
+        if not ocr_result.words:
+            return 0
+        breaks = ocr_result.num_blocks + ocr_result.num_pars - 1
+        if breaks <= 1:
+            return 0
         # Offset to ensure multi-block text wins over SingleLine/MultiLine in ambiguous cases
         return 100 - (100 / (breaks + 0.05))
 
