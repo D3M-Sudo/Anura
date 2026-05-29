@@ -19,7 +19,7 @@ dependencies = [
 line-length = 120
 target-version = "py312"
 src = ["anura", "build-aux"]
-exclude = ["data/", "po/"]
+exclude = ["data/", "po/", "anura/_release_notes.py"]
 
 [tool.ruff.lint]
 select = [
