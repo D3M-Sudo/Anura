@@ -45,6 +45,8 @@ class SilentRunner:
         ctx = GLib.MainContext.new()
         loop = GLib.MainLoop.new(ctx, False)
         sources = []
+        self._ocr_success = False
+        self._timed_out = False
 
         def check_interrupted():
             if self.interrupted.is_set():
@@ -79,6 +81,7 @@ class SilentRunner:
                     )
 
                     get_clipboard_service().set(result.text)
+                    self._ocr_success = True
                     logger.info("Anura: OCR completed successfully in silent mode.")
                 else:
                     logger.error(f"Anura: Silent mode failed: {error_message}")
@@ -93,9 +96,15 @@ class SilentRunner:
         idle_source.attach(ctx)
         sources.append(idle_source)
 
+        def on_timeout():
+            logger.error("Anura: Silent mode timed out after 60 seconds.")
+            self._timed_out = True
+            loop.quit()
+            return False
+
         # 60s timeout
         timeout_source = GLib.timeout_source_new_seconds(60)
-        timeout_source.set_callback(lambda: loop.quit() or False)
+        timeout_source.set_callback(on_timeout)
         timeout_source.attach(ctx)
         sources.append(timeout_source)
 
@@ -113,4 +122,8 @@ class SilentRunner:
         for source in sources:
             source.destroy()
 
-        return 130 if self.interrupted.is_set() else 0
+        if self.interrupted.is_set():
+            return 130
+        if self._timed_out:
+            return 124  # Standard timeout exit code
+        return 0 if self._ocr_success else 1
