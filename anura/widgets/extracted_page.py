@@ -40,6 +40,7 @@ class ExtractedPage(Adw.NavigationPage):
     }
 
     stats_label: Gtk.Label = Gtk.Template.Child()
+    transformer_label: Gtk.Label = Gtk.Template.Child()
     share_list_box: Gtk.ListBox = Gtk.Template.Child()
     grab_btn: Gtk.Button = Gtk.Template.Child()
     text_copy_btn: Gtk.Button = Gtk.Template.Child()
@@ -247,8 +248,17 @@ class ExtractedPage(Adw.NavigationPage):
 
     @extracted_text.setter  # type: ignore[no-redef]
     def extracted_text(self, text: str) -> None:
+        self.set_extracted_text(text)
+
+    def set_extracted_text(self, text: str, transformer_name: str = "") -> None:
+        """Set the extracted text and optionally show the applied transformer."""
         try:
             self.buffer.set_text(text)
+            if transformer_name:
+                self.transformer_label.set_text(_("Smart Parse: {name}").format(name=transformer_name))
+                self.transformer_label.set_visible(True)
+            else:
+                self.transformer_label.set_visible(False)
             self._force_reflow()
         except (GLib.Error, ValueError) as e:
             logger.error(f"Error setting extracted text: {e}")

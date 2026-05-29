@@ -22,6 +22,7 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
     __gtype_name__ = "PreferencesGeneralPage"
 
     extra_language_combo: Adw.ComboRow = Gtk.Template.Child()
+    magic_processor_switch: Adw.SwitchRow = Gtk.Template.Child()
     autocopy_switch: Adw.SwitchRow = Gtk.Template.Child()
     autolinks_switch: Adw.SwitchRow = Gtk.Template.Child()
     volume_row: Adw.SpinRow = Gtk.Template.Child()
@@ -35,6 +36,9 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
 
         self.settings.bind("autocopy", self.autocopy_switch, "active", Gio.SettingsBindFlags.DEFAULT)
         self.settings.bind("autolinks", self.autolinks_switch, "active", Gio.SettingsBindFlags.DEFAULT)
+        self.settings.bind(
+            "magic-processor-enabled", self.magic_processor_switch, "active", Gio.SettingsBindFlags.DEFAULT
+        )
 
         self._setup_extra_languages()
 

@@ -22,6 +22,11 @@ template $PreferencesGeneralPage : Adw.PreferencesPage {
       use-underline: true;
       subtitle: _("Additional language used in text recognition");
     }
+
+    Adw.SwitchRow magic_processor_switch {
+      title: _("Smart Text Parsing");
+      subtitle: _("Automatically reformat URLs, emails and paragraphs");
+    }
   }
 
   Adw.PreferencesGroup {

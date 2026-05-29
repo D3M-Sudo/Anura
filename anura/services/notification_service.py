@@ -291,3 +291,11 @@ class NotificationService:
                     except (AttributeError, RuntimeError, TypeError, GLib.Error) as e:
                         logger.debug(f"NotificationService: Could not remove notification {notification_id}: {e}")
             self._active_notifications.clear()
+
+
+def get_notification_service() -> NotificationService:
+    """Get the thread-safe NotificationService singleton."""
+    from anura.config import APP_ID
+    from anura.utils.singleton import get_instance
+
+    return get_instance(NotificationService, app_id=APP_ID)

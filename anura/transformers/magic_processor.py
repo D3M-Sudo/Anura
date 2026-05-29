@@ -46,10 +46,10 @@ class MagicProcessor:
         self._transformers.append(transformer)
         logger.debug(f"MagicProcessor: Registered transformer {type(transformer).__name__}")
 
-    def process(self, ocr_data: OcrData, task_id: str | None = None) -> tuple[str, float]:
+    def process(self, ocr_data: OcrData, task_id: str | None = None) -> tuple[str, float, str]:
         """
-        Process OcrData and return transformed text
-        along with the average confidence score.
+        Process OcrData and return transformed text,
+        average confidence score, and the name of the applied transformer.
         """
         # Eliminated redundant data conversion: use OcrWord objects directly.
         # OcrResult in anura/transformers/models.py has been updated to handle
@@ -73,14 +73,16 @@ class MagicProcessor:
                 best_transformer = transformer
 
         # Select best transformer
+        applied_transformer_name = ""
         if best_transformer and best_score > 0:
-            logger.debug(f"Anura Magics: Selected {type(best_transformer).__name__} with score {best_score}")
+            applied_transformer_name = type(best_transformer).__name__.replace("Transformer", "")
+            logger.debug(f"Anura Magics: Selected {applied_transformer_name} with score {best_score}")
             transformed_parts = best_transformer.transform(result)
             final_text = "\n".join(transformed_parts)
         else:
             final_text = result.add_linebreaks()
 
-        return final_text, avg_conf
+        return final_text, avg_conf, applied_transformer_name
 
 
 def get_magic_processor() -> MagicProcessor:

@@ -161,6 +161,15 @@ template $ExtractedPage : Adw.NavigationPage {
     Box {
       styles ["footer"]
 
+      Label transformer_label {
+        halign: start;
+        hexpand: true;
+        margin-start: 12;
+        margin-top: 6;
+        margin-bottom: 6;
+        styles ["dim-label", "caption"]
+      }
+
       Label stats_label {
         halign: end;
         hexpand: true;

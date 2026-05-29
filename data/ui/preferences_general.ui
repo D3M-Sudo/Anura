@@ -20,6 +20,12 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
             <property name="subtitle" translatable="true">Additional language used in text recognition</property>
           </object>
         </child>
+        <child>
+          <object class="AdwSwitchRow" id="magic_processor_switch">
+            <property name="title" translatable="true">Smart Text Parsing</property>
+            <property name="subtitle" translatable="true">Automatically reformat URLs, emails and paragraphs</property>
+          </object>
+        </child>
       </object>
     </child>
     <child>

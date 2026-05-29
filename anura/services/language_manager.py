@@ -33,12 +33,14 @@ from anura.config import (  # noqa: E402
     TESSDATA_BEST_URL,
     TESSDATA_DIR,
     TESSDATA_POOL_DIR,
+    TESSDATA_STANDARD_URL,
     TESSDATA_SYSTEM_DIR,
     TESSDATA_URL,
     USER_AGENT,
 )
 from anura.models.download_state import DownloadState  # noqa: E402
 from anura.models.language_item import LanguageItem  # noqa: E402
+from anura.services.settings import settings  # noqa: E402
 from anura.utils.singleton import get_instance  # noqa: E402
 
 
@@ -230,6 +232,29 @@ class LanguageManager(GObject.GObject):
         self._active_language = language
         self.notify("active_language")
 
+    def _get_model_quality_dir(self, quality: str | None = None) -> Path:
+        """Get the directory for the specified model quality."""
+        if quality is None:
+            quality = settings.get_string("tessdata-model")
+
+        base_dir = Path(TESSDATA_DIR)
+        if quality == "best":
+            return base_dir / "tessdata_best"
+        if quality == "standard":
+            return base_dir / "tessdata"
+        return base_dir
+
+    def _get_model_quality_url(self, quality: str | None = None) -> str:
+        """Get the GitHub base URL for the specified model quality."""
+        if quality is None:
+            quality = settings.get_string("tessdata-model")
+
+        if quality == "best":
+            return TESSDATA_BEST_URL
+        if quality == "standard":
+            return TESSDATA_STANDARD_URL
+        return TESSDATA_URL
+
     def init_tessdata(self) -> None:
         """
         Ensures the tessdata directory exists and logs its status at startup.
@@ -293,13 +318,14 @@ class LanguageManager(GObject.GObject):
             need_update = self._need_update_cache
             if need_update or force:
                 codes: set[str] = set()
+                quality = settings.get_string("tessdata-model")
 
                 # Enhanced logging: Log paths being checked with directory status
-                logger.debug(f"Anura LanguageManager: Scanning user tessdata directory: {TESSDATA_DIR}")
+                tess_path = self._get_model_quality_dir(quality)
+                logger.debug(f"Anura LanguageManager: Scanning user tessdata directory: {tess_path}")
                 logger.debug(f"Anura LanguageManager: Scanning system tessdata directory: {TESSDATA_SYSTEM_DIR}")
 
-                # User-downloaded models (~/.var/app/.../data/anura/tessdata/)
-                tess_path = Path(TESSDATA_DIR)
+                # User-downloaded models (~/.var/app/.../data/anura/tessdata/ or quality subdir)
                 if tess_path.exists():
                     try:
                         user_files = [
@@ -424,18 +450,23 @@ class LanguageManager(GObject.GObject):
             logger.error(f"Anura: Unsafe language code '{code}' -> '{filename_code}'")
             return None
 
+        quality = settings.get_string("tessdata-model")
         tessfile = f"{filename_code}.traineddata"
-        final_path = Path(TESSDATA_DIR) / f"{code}.traineddata"  # Always save with original code
+        quality_dir = self._get_model_quality_dir(quality)
+        quality_dir.mkdir(parents=True, exist_ok=True)
+
+        final_path = quality_dir / f"{code}.traineddata"
         tmp_path = None
-        for url_base in (TESSDATA_BEST_URL, TESSDATA_URL):
-            try:
-                url = url_base + tessfile
-                with tempfile.NamedTemporaryFile(
-                    dir=TESSDATA_DIR,
-                    suffix=".tmp",
-                    delete=False,
-                ) as tmp:
-                    tmp_path = Path(tmp.name)
+
+        url_base = self._get_model_quality_url(quality)
+        try:
+            url = url_base + tessfile
+            with tempfile.NamedTemporaryFile(
+                dir=quality_dir,
+                suffix=".tmp",
+                delete=False,
+            ) as tmp:
+                tmp_path = Path(tmp.name)
 
                 try:
                     # Use central session with consistent headers and timeout
@@ -510,9 +541,9 @@ class LanguageManager(GObject.GObject):
                         except OSError:
                             logger.warning(f"Anura: Failed to clean up temporary file: {tmp_path}")
 
-            except (requests.RequestException, OSError) as e:
-                logger.warning(f"Anura: download failed from {url_base}: {e}")
-                # tmp_path will be cleaned up by the finally block above
+        except (requests.RequestException, OSError) as e:
+            logger.warning(f"Anura: download failed from {url_base}: {e}")
+            # tmp_path will be cleaned up by the finally block above
 
         logger.error(f"Anura: Failed to download model '{code}' from all sources.")
         return None
@@ -567,7 +598,8 @@ class LanguageManager(GObject.GObject):
             logger.error(f"Anura: Blocked invalid language code removal attempt: '{code}'")
             return
 
-        path = Path(TESSDATA_DIR) / f"{code}.traineddata"
+        quality = settings.get_string("tessdata-model")
+        path = self._get_model_quality_dir(quality) / f"{code}.traineddata"
         if not path.exists():
             return
 
@@ -611,17 +643,21 @@ def get_tesseract_config(lang_code: str) -> str:
         logger.error(f"Anura: Invalid language code '{lang_code}' - using 'eng'")
         lang_code = "eng"
 
+    quality = settings.get_string("tessdata-model")
+    quality_dir = get_language_manager()._get_model_quality_dir(quality)
+    quality_dir_str = str(quality_dir)
+
     # If it's a single language, use standard priority logic without pooling
     if "+" not in lang_code:
-        user_model = os.path.join(TESSDATA_DIR, f"{lang_code}.traineddata")
-        if os.path.exists(user_model):
-            return f'--tessdata-dir "{TESSDATA_DIR}" --psm 3 --oem 1'
+        user_model = quality_dir / f"{lang_code}.traineddata"
+        if user_model.exists():
+            return f'--tessdata-dir "{quality_dir_str}" --psm 3 --oem 1'
 
-        system_model = os.path.join(TESSDATA_SYSTEM_DIR, f"{lang_code}.traineddata")
-        if os.path.exists(system_model):
+        system_model = Path(TESSDATA_SYSTEM_DIR) / f"{lang_code}.traineddata"
+        if system_model.exists():
             return f'--tessdata-dir "{TESSDATA_SYSTEM_DIR}" --psm 3 --oem 1'
 
-        return f'--tessdata-dir "{TESSDATA_DIR}" --psm 3 --oem 1'
+        return f'--tessdata-dir "{quality_dir_str}" --psm 3 --oem 1'
 
     # Multi-language: Dynamic Pooling Approach
     codes = lang_code.split("+")
@@ -630,20 +666,20 @@ def get_tesseract_config(lang_code: str) -> str:
     for code in codes:
         # Resolve source
         source_path = None
-        user_path = os.path.join(TESSDATA_DIR, f"{code}.traineddata")
-        system_path = os.path.join(TESSDATA_SYSTEM_DIR, f"{code}.traineddata")
+        user_path = quality_dir / f"{code}.traineddata"
+        system_path = Path(TESSDATA_SYSTEM_DIR) / f"{code}.traineddata"
 
-        if os.path.exists(user_path):
+        if user_path.exists():
             source_path = user_path
-        elif os.path.exists(system_path):
+        elif system_path.exists():
             source_path = system_path
 
         if source_path:
-            dest_path = os.path.join(TESSDATA_POOL_DIR, f"{code}.traineddata")
+            dest_path = Path(TESSDATA_POOL_DIR) / f"{code}.traineddata"
             # Create hard link with fallback to copy (for cross-filesystem)
             try:
-                if os.path.exists(dest_path):
-                    os.unlink(dest_path)
+                if dest_path.exists():
+                    dest_path.unlink()
                 os.link(source_path, dest_path)
             except (OSError, AttributeError):
                 try:

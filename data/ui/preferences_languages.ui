@@ -13,6 +13,19 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
     <child>
       <object class="AdwPreferencesGroup">
         <child>
+          <object class="AdwComboRow" id="model_quality_combo">
+            <property name="title" translatable="true">Model Quality</property>
+            <property name="subtitle" translatable="true">Higher quality is slower but more accurate</property>
+            <property name="model">
+              <object class="GtkStringList"></object>
+            </property>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="AdwPreferencesGroup">
+        <child>
           <object class="GtkBox">
             <property name="orientation">1</property>
             <child>
