@@ -16,7 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
 
       - name: Install flatpak-external-data-checker
         run: |
@@ -60,7 +62,7 @@ jobs:
 
       - name: Create Issue for Manual Updates
         if: steps.check.outputs.has_updates == 'true'
-        uses: actions/github-script@v9
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             const title = '📦 Flatpak Python dependencies need manual update';
@@ -132,7 +134,7 @@ jobs:
           echo "Certifi check completed (exit code: $FEDC_EXIT_CODE)"
 
       - name: Create PR for certifi updates
-        uses: peter-evans/create-pull-request@v8
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c8cb187a5e # v7.0.8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Update certifi"
