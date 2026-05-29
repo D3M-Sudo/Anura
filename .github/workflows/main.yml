@@ -16,10 +16,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
 
       - name: Run Ruff Linter
-        uses: chartboost/ruff-action@v1
+        uses: chartboost/ruff-action@99052d92170366eb6899e1966a014902888c3e80 # v1.1.0
         with:
           # Strict linting with enforcement - no automatic fixes in CI
           args: check --select E,F,W,I --target-version py312
@@ -44,7 +46,7 @@ jobs:
             --cov=anura --cov-report=xml --cov-report=term-missing
 
       - name: Upload coverage report
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # v5.4.0
         with:
           files: coverage.xml
           fail_ci_if_error: false
@@ -61,7 +63,9 @@ jobs:
       XDG_RUNTIME_DIR: /tmp/xdg-runtime-ci
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
 
       - name: Install system dependencies
         run: |
@@ -193,7 +197,7 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-50
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-50@sha256:69b09a4738595460f224424db65636063be8405021ed9033486241b31525a47e
       options: --privileged
 
     steps:
@@ -201,7 +205,9 @@ jobs:
         run: git config --global init.defaultBranch main
 
       - name: Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
 
       - name: Purge build caches and artifacts
         run: |
@@ -217,7 +223,7 @@ jobs:
           echo "✓ Manifest validation passed"
 
       - name: Build Anura Flatpak
-        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        uses: flatpak/flatpak-github-actions/flatpak-builder@40049f75ec50e6bc216d7a4b0811e57a80b15c9d # v6.0.0
         with:
           bundle: io.github.d3msudo.anura.flatpak
           manifest-path: flatpak/io.github.d3msudo.anura.local.json
@@ -277,7 +283,7 @@ jobs:
 
       - name: Upload Flatpak Artifact (Debug)
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a6839979c1cb005d897dea04 # v4.6.1
         with:
           name: io.github.d3msudo.anura-flatpak-${{ github.run_id }}
           path: io.github.d3msudo.anura.flatpak
@@ -285,7 +291,7 @@ jobs:
 
       - name: Upload Flatpak Bundle to Release
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2.2.1
         with:
           files: io.github.d3msudo.anura.flatpak
         env:
