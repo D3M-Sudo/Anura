@@ -4,12 +4,15 @@
 #
 # SPDX-License-Identifier: MIT
 
-import pytest
+# NOTE: gi mocking is handled by the session-scoped `headless_gi_mocks`
+# fixture defined in conftest.py.  Do NOT add module-level sys.modules
+# assignments here — they execute at collection time and poison gi for every
+# other test in the session.
 
-pytest.importorskip("gi")
-
+from pathlib import Path
 import re
-from unittest.mock import patch
+import sys
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -18,7 +21,7 @@ class TestLangCodePattern:
     """Tests for LANG_CODE_PATTERN — the security boundary before Tesseract."""
 
     @pytest.fixture(autouse=True)
-    def import_pattern(self):
+    def import_pattern(self, headless_gi_mocks):  # noqa: ARG002
         from anura.config import LANG_CODE_PATTERN
 
         self.pattern = LANG_CODE_PATTERN
@@ -89,8 +92,27 @@ class TestLangCodePattern:
 class TestGetTesseractConfig:
     """Tests for get_tesseract_config() path resolution logic."""
 
-    def test_user_model_takes_priority(self, tmp_path, monkeypatch):
+    @pytest.fixture(autouse=True)
+    def mock_lm_dependencies(self, monkeypatch, headless_gi_mocks):  # noqa: ARG002
+        import anura.services.language_manager as lm
+
+        mock_settings = MagicMock()
+        mock_settings.get_string.return_value = "standard"
+        monkeypatch.setattr(lm, "settings", mock_settings)
+
+        self.mock_mgr = MagicMock()
+        self.mock_mgr._get_model_quality_dir.return_value = Path("/tmp/anura-user-tessdata")
+        monkeypatch.setattr(lm, "get_language_manager", lambda: self.mock_mgr)
+
+        # TESSDATA_SYSTEM_DIR must be patched on the language_manager module
+        # namespace — that is where get_tesseract_config reads the imported name.
+        monkeypatch.setattr(lm, "TESSDATA_SYSTEM_DIR", str(Path("/tmp/anura-system-tessdata")))
+
+        return lm
+
+    def test_user_model_takes_priority(self, tmp_path, monkeypatch, mock_lm_dependencies):
         """User tessdata directory has priority over system directory."""
+        lm = mock_lm_dependencies
         user_dir = tmp_path / "user-tessdata"
         system_dir = tmp_path / "system-tessdata"
         user_dir.mkdir()
@@ -98,52 +120,43 @@ class TestGetTesseractConfig:
         (user_dir / "ita.traineddata").write_bytes(b"fake")
         (system_dir / "ita.traineddata").write_bytes(b"fake")
 
-        monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
-        import anura.config as cfg
+        self.mock_mgr._get_model_quality_dir.return_value = user_dir
+        monkeypatch.setattr(lm, "TESSDATA_SYSTEM_DIR", str(system_dir))
 
-        monkeypatch.setattr(cfg, "TESSDATA_DIR", str(user_dir))
-        monkeypatch.setattr(cfg, "TESSDATA_SYSTEM_DIR", str(system_dir))
-
-        result = cfg.get_tesseract_config("ita")
+        result = lm.get_tesseract_config("ita")
         assert str(user_dir) in result
 
-    def test_fallback_to_system_dir(self, tmp_path, monkeypatch):
+    def test_fallback_to_system_dir(self, tmp_path, monkeypatch, mock_lm_dependencies):
         """Falls back to system tessdata when user model is missing."""
+        lm = mock_lm_dependencies
         user_dir = tmp_path / "user-tessdata"
         system_dir = tmp_path / "system-tessdata"
         user_dir.mkdir()
         system_dir.mkdir()
         (system_dir / "eng.traineddata").write_bytes(b"fake")
 
-        import anura.config as cfg
+        self.mock_mgr._get_model_quality_dir.return_value = user_dir
+        monkeypatch.setattr(lm, "TESSDATA_SYSTEM_DIR", str(system_dir))
 
-        monkeypatch.setattr(cfg, "TESSDATA_DIR", str(user_dir))
-        monkeypatch.setattr(cfg, "TESSDATA_SYSTEM_DIR", str(system_dir))
-
-        result = cfg.get_tesseract_config("eng")
+        result = lm.get_tesseract_config("eng")
         assert str(system_dir) in result
 
-    def test_invalid_lang_code_defaults_to_eng(self, tmp_path, monkeypatch):
+    def test_invalid_lang_code_defaults_to_eng(self, tmp_path, monkeypatch, mock_lm_dependencies):
         """Invalid lang_code is rejected and falls back to 'eng'."""
-        import anura.config as cfg
+        lm = mock_lm_dependencies
+        monkeypatch.setattr(lm, "TESSDATA_SYSTEM_DIR", str(tmp_path))
 
-        monkeypatch.setattr(cfg, "TESSDATA_DIR", str(tmp_path))
-        monkeypatch.setattr(cfg, "TESSDATA_SYSTEM_DIR", str(tmp_path))
-
-        # Should not raise, should log error and use 'eng'
-        result = cfg.get_tesseract_config("../../etc/passwd")
+        result = lm.get_tesseract_config("../../etc/passwd")
         assert result is not None
         assert "--psm 3" in result
         assert "--oem 1" in result
 
-    def test_config_contains_psm_and_oem(self, tmp_path, monkeypatch):
+    def test_config_contains_psm_and_oem(self, tmp_path, monkeypatch, mock_lm_dependencies):
         """Config string always contains Tesseract mode flags."""
-        import anura.config as cfg
+        lm = mock_lm_dependencies
+        monkeypatch.setattr(lm, "TESSDATA_SYSTEM_DIR", str(tmp_path))
 
-        monkeypatch.setattr(cfg, "TESSDATA_DIR", str(tmp_path))
-        monkeypatch.setattr(cfg, "TESSDATA_SYSTEM_DIR", str(tmp_path))
-
-        result = cfg.get_tesseract_config("eng")
+        result = lm.get_tesseract_config("eng")
         assert "--psm 3" in result
         assert "--oem 1" in result
 
@@ -164,23 +177,20 @@ class TestGetTesseractConfig:
 
         assert config == '--tessdata-dir "/path with spaces/tessdata" --psm 3 --oem 1'
 
-    def test_config_valid_english(self):
+    def test_config_valid_english(self, mock_lm_dependencies):
         """Test Tesseract config generation for valid English."""
-        from anura.config import get_tesseract_config
-
+        lm = mock_lm_dependencies
         with patch("os.path.exists", return_value=True):
-            config = get_tesseract_config("eng")
+            config = lm.get_tesseract_config("eng")
             assert "--tessdata-dir" in config
             assert "--psm 3" in config
             assert "--oem 1" in config
 
-    def test_config_invalid_language(self):
+    def test_config_invalid_language(self, mock_lm_dependencies):
         """Test Tesseract config generation for invalid language."""
-        from anura.config import get_tesseract_config
-
+        lm = mock_lm_dependencies
         with patch("os.path.exists", return_value=False):
-            config = get_tesseract_config("invalid")
-            # Should default to 'eng' and return valid config
+            config = lm.get_tesseract_config("invalid")
             assert "--tessdata-dir" in config
             assert "--psm 3" in config
             assert "--oem 1" in config
@@ -191,45 +201,36 @@ class TestLogLevel:
 
     @pytest.fixture(autouse=True)
     def clean_config_module(self, monkeypatch):
-        """Ensure anura.config is reloaded fresh for each test."""
-        import sys
+        """Reload anura.config to pick up env changes.
 
+        Only the specific sub-module is evicted — not the entire 'anura'
+        package root — to avoid re-triggering the gi import chain in
+        anura/__init__.py during headless runs.
+        """
         monkeypatch.delenv("ANURA_LOG_LEVEL", raising=False)
-        # Remove cached module so reload picks up env changes
         sys.modules.pop("anura.config", None)
-        # Also remove anura package cache to force clean import
-        sys.modules.pop("anura", None)
+        yield
+        sys.modules.pop("anura.config", None)
 
-    def test_default_log_level_is_info(self, monkeypatch):
+    def test_default_log_level_is_info(self, monkeypatch, headless_gi_mocks):  # noqa: ARG002
         """Without ANURA_LOG_LEVEL, LOG_LEVEL defaults to INFO."""
         monkeypatch.delenv("ANURA_LOG_LEVEL", raising=False)
         import anura.config as cfg
 
         assert cfg.LOG_LEVEL == "INFO"
 
-    def test_debug_override(self, monkeypatch):
+    def test_debug_override(self, monkeypatch, headless_gi_mocks):  # noqa: ARG002
         """ANURA_LOG_LEVEL=DEBUG sets LOG_LEVEL to DEBUG."""
-        import sys
-
         monkeypatch.setenv("ANURA_LOG_LEVEL", "DEBUG")
-        # Must reload after env change
-        if "anura.config" in sys.modules:
-            del sys.modules["anura.config"]
-        if "anura" in sys.modules:
-            del sys.modules["anura"]
+        sys.modules.pop("anura.config", None)
         import anura.config as cfg
 
         assert cfg.LOG_LEVEL == "DEBUG"
 
-    def test_invalid_fallback_to_info(self, monkeypatch):
+    def test_invalid_fallback_to_info(self, monkeypatch, headless_gi_mocks):  # noqa: ARG002
         """Invalid ANURA_LOG_LEVEL falls back to INFO."""
-        import sys
-
         monkeypatch.setenv("ANURA_LOG_LEVEL", "VERBOSE")
-        if "anura.config" in sys.modules:
-            del sys.modules["anura.config"]
-        if "anura" in sys.modules:
-            del sys.modules["anura"]
+        sys.modules.pop("anura.config", None)
         import anura.config as cfg
 
         assert cfg.LOG_LEVEL == "INFO"
