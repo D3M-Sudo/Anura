@@ -4,29 +4,24 @@
 #
 # SPDX-License-Identifier: MIT
 
+# NOTE: gi mocking is handled by the session-scoped `headless_gi_mocks`
+# fixture defined in conftest.py.  Do NOT add module-level sys.modules
+# assignments here — they execute at collection time and poison gi for every
+# other test in the session.
+
+from pathlib import Path
+import re
 import sys
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
-# Mock gi for headless environments
-mock_gi = MagicMock()
-sys.modules["gi"] = mock_gi
-sys.modules["gi.repository"] = MagicMock()
-sys.modules["gi.repository.Gio"] = MagicMock()
-sys.modules["gi.repository.GLib"] = MagicMock()
-sys.modules["gi.repository.GObject"] = MagicMock()
-
-from pathlib import Path  # noqa: E402
-import re  # noqa: E402
-from unittest.mock import patch  # noqa: E402
-
-import pytest  # noqa: E402
+import pytest
 
 
 class TestLangCodePattern:
     """Tests for LANG_CODE_PATTERN — the security boundary before Tesseract."""
 
     @pytest.fixture(autouse=True)
-    def import_pattern(self):
+    def import_pattern(self, headless_gi_mocks):  # noqa: ARG002
         from anura.config import LANG_CODE_PATTERN
 
         self.pattern = LANG_CODE_PATTERN
@@ -98,7 +93,7 @@ class TestGetTesseractConfig:
     """Tests for get_tesseract_config() path resolution logic."""
 
     @pytest.fixture(autouse=True)
-    def mock_lm_dependencies(self, monkeypatch):
+    def mock_lm_dependencies(self, monkeypatch, headless_gi_mocks):  # noqa: ARG002
         import anura.services.language_manager as lm
 
         mock_settings = MagicMock()
@@ -106,9 +101,12 @@ class TestGetTesseractConfig:
         monkeypatch.setattr(lm, "settings", mock_settings)
 
         self.mock_mgr = MagicMock()
-        # Default quality dir to something safe
         self.mock_mgr._get_model_quality_dir.return_value = Path("/tmp/anura-user-tessdata")
         monkeypatch.setattr(lm, "get_language_manager", lambda: self.mock_mgr)
+
+        # TESSDATA_SYSTEM_DIR must be patched on the language_manager module
+        # namespace — that is where get_tesseract_config reads the imported name.
+        monkeypatch.setattr(lm, "TESSDATA_SYSTEM_DIR", str(Path("/tmp/anura-system-tessdata")))
 
         return lm
 
@@ -148,7 +146,6 @@ class TestGetTesseractConfig:
         lm = mock_lm_dependencies
         monkeypatch.setattr(lm, "TESSDATA_SYSTEM_DIR", str(tmp_path))
 
-        # Should not raise, should log error and use 'eng'
         result = lm.get_tesseract_config("../../etc/passwd")
         assert result is not None
         assert "--psm 3" in result
@@ -194,7 +191,6 @@ class TestGetTesseractConfig:
         lm = mock_lm_dependencies
         with patch("os.path.exists", return_value=False):
             config = lm.get_tesseract_config("invalid")
-            # Should default to 'eng' and return valid config
             assert "--tessdata-dir" in config
             assert "--psm 3" in config
             assert "--oem 1" in config
@@ -205,45 +201,36 @@ class TestLogLevel:
 
     @pytest.fixture(autouse=True)
     def clean_config_module(self, monkeypatch):
-        """Ensure anura.config is reloaded fresh for each test."""
-        import sys
+        """Reload anura.config to pick up env changes.
 
+        Only the specific sub-module is evicted — not the entire 'anura'
+        package root — to avoid re-triggering the gi import chain in
+        anura/__init__.py during headless runs.
+        """
         monkeypatch.delenv("ANURA_LOG_LEVEL", raising=False)
-        # Remove cached module so reload picks up env changes
         sys.modules.pop("anura.config", None)
-        # Also remove anura package cache to force clean import
-        sys.modules.pop("anura", None)
+        yield
+        sys.modules.pop("anura.config", None)
 
-    def test_default_log_level_is_info(self, monkeypatch):
+    def test_default_log_level_is_info(self, monkeypatch, headless_gi_mocks):  # noqa: ARG002
         """Without ANURA_LOG_LEVEL, LOG_LEVEL defaults to INFO."""
         monkeypatch.delenv("ANURA_LOG_LEVEL", raising=False)
         import anura.config as cfg
 
         assert cfg.LOG_LEVEL == "INFO"
 
-    def test_debug_override(self, monkeypatch):
+    def test_debug_override(self, monkeypatch, headless_gi_mocks):  # noqa: ARG002
         """ANURA_LOG_LEVEL=DEBUG sets LOG_LEVEL to DEBUG."""
-        import sys
-
         monkeypatch.setenv("ANURA_LOG_LEVEL", "DEBUG")
-        # Must reload after env change
-        if "anura.config" in sys.modules:
-            del sys.modules["anura.config"]
-        if "anura" in sys.modules:
-            del sys.modules["anura"]
+        sys.modules.pop("anura.config", None)
         import anura.config as cfg
 
         assert cfg.LOG_LEVEL == "DEBUG"
 
-    def test_invalid_fallback_to_info(self, monkeypatch):
+    def test_invalid_fallback_to_info(self, monkeypatch, headless_gi_mocks):  # noqa: ARG002
         """Invalid ANURA_LOG_LEVEL falls back to INFO."""
-        import sys
-
         monkeypatch.setenv("ANURA_LOG_LEVEL", "VERBOSE")
-        if "anura.config" in sys.modules:
-            del sys.modules["anura.config"]
-        if "anura" in sys.modules:
-            del sys.modules["anura"]
+        sys.modules.pop("anura.config", None)
         import anura.config as cfg
 
         assert cfg.LOG_LEVEL == "INFO"
