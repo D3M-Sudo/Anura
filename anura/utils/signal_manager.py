@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: MIT
 
 from collections.abc import Callable
-from typing import Any, Protocol, runtime_checkable
+from typing import Any
 import weakref
 
 from loguru import logger
@@ -24,15 +24,6 @@ except (ImportError, ValueError):
     class GObject:
         class Object:
             pass
-
-
-@runtime_checkable
-class Teardownable(Protocol):
-    """Protocol for objects that require explicit teardown."""
-
-    def teardown(self) -> None:
-        """Execute cleanup logic."""
-        ...
 
 
 class SignalManagerMixin:
@@ -87,9 +78,10 @@ class SignalManagerMixin:
         if not hasattr(self, "_signal_connections"):
             self._signal_connections: dict[Any, list[int]] = {}
         if not hasattr(self, "_registered_controllers"):
-            self._registered_controllers: weakref.WeakSet[Teardownable] = weakref.WeakSet()
+            # Use Any for type hint to avoid Protocol-related CI crashes (BUG-041/Hardening)
+            self._registered_controllers: weakref.WeakSet[Any] = weakref.WeakSet()
 
-    def register_controller(self, controller: Teardownable) -> None:
+    def register_controller(self, controller: Any) -> None:
         """Register a controller for automatic teardown."""
         self._ensure_state_initialized()
         self._registered_controllers.add(controller)
@@ -135,7 +127,9 @@ class SignalManagerMixin:
         controllers = list(self._registered_controllers)
         for controller in controllers:
             try:
-                if isinstance(controller, Teardownable):
+                # Use hasattr check instead of Protocol/isinstance to avoid SIGABRT
+                # in some GTK environments (CI Hardening).
+                if hasattr(controller, "teardown"):
                     controller.teardown()
             except (AttributeError, RuntimeError, TypeError) as e:
                 logger.warning(f"SignalManagerMixin: Error during controller teardown: {e}")
