@@ -61,16 +61,46 @@ class TestAnuraApplication:
 class TestAnuraWindow:
     @pytest.mark.gtk
     def test_window_init(self):
-        # Window needs compiled resources and UI files
+        # AnuraWindow uses @Gtk.Template which calls gtk_widget_init_template() in
+        # super().__init__().  init_template requires:
+        #   1. A registered GApplication so Gtk.Application.get_default() is non-NULL.
+        #   2. Compiled GResources registered with Gio.Resource._register().
+        #   3. An open GdkDisplay (provided by weston in the gtk-tests CI job).
+        #
+        # Without a registered application the C template machinery follows NULL
+        # child-widget pointers → SIGSEGV (a C signal, not a Python exception, so
+        # try/except cannot catch it).
+        #
+        # Safety contract:
+        #   - Register the application first; skip the test if registration fails.
+        #   - Only then instantiate AnuraWindow.
+        from gi.repository import Adw, Gio
+
+        from anura.services.screenshot_service import ScreenshotService
+        from anura.window import AnuraWindow
+
+        app = Adw.Application(
+            application_id="io.github.d3msudo.anura.test.window",
+            flags=Gio.ApplicationFlags.NON_UNIQUE,
+        )
+        # Attach .settings so AnuraWindow.__init__ can read it (it calls
+        # app.settings after super().__init__() returns).
+        from anura.services.settings import settings as _settings
+        app.settings = _settings
+
         try:
-            from gi.repository import Adw
+            registered = app.register()
+        except Exception as exc:
+            pytest.skip(f"Adw.Application.register() raised: {exc}")
 
-            from anura.services.screenshot_service import ScreenshotService
-            from anura.window import AnuraWindow
+        if not registered:
+            pytest.skip("Adw.Application.register() returned False (D-Bus / display unavailable)")
 
-            app = Adw.Application()
+        try:
             backend = ScreenshotService()
             win = AnuraWindow(backend=backend, application=app)
             assert win is not None
         except Exception as e:
-            pytest.skip(f"Could not init window: {e}")
+            pytest.skip(f"Could not init AnuraWindow: {e}")
+        finally:
+            app.quit()
