@@ -57,8 +57,10 @@ class NotificationService:
     Gio.Notification: Used for action-capable notifications (Flatpak-safe)
     """
 
-    def __init__(self, app_id: str) -> None:
-        self.app_id = app_id
+    def __init__(self, app_id: str | None = None) -> None:
+        from anura.config import APP_ID as _APP_ID
+
+        self.app_id = app_id if app_id is not None else _APP_ID
         self.libnotify_initialized = False
         self._portal = None
         self._notification_id_counter = count()  # Monotonic counter for unique IDs
@@ -295,7 +297,6 @@ class NotificationService:
 
 def get_notification_service() -> NotificationService:
     """Get the thread-safe NotificationService singleton."""
-    from anura.config import APP_ID
     from anura.utils.singleton import get_instance
 
-    return get_instance(NotificationService, app_id=APP_ID)
+    return get_instance(NotificationService)
