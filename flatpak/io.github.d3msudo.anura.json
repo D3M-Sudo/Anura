@@ -242,7 +242,8 @@
                     "url": "http://deb.debian.org/debian/pool/main/i/imlib2/imlib2_1.12.6.orig.tar.xz",
                     "sha256": "669ab28c4589f0ef16d4cc29b260d257f3781d594230d7b3f9ec5773c32a7796"
                 }
-            ]
+            ],
+            "run-autoreconf": true
         },
         {
             "name": "scrot",
