@@ -166,8 +166,9 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         """Capture screenshot and process it for OCR."""
         lang: str = self.get_language()
 
-        # Check if backend is already capturing BEFORE hiding the window
-        if hasattr(self.backend, "_is_capturing") and self.backend._is_capturing:
+        # Check if backend is already capturing BEFORE hiding the window (BUG-040).
+        # Uses the formal GObject property 'is-capturing'.
+        if self.backend.get_property("is-capturing"):
             logger.warning("Anura: Capture already in progress.")
             self.show_toast(_("Capture already in progress"))
             return

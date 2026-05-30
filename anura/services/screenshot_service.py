@@ -34,6 +34,7 @@ from anura.services.language_manager import get_tesseract_config  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
 from anura.utils import validate_image_resource  # noqa: E402
 from anura.utils.portal_advice import detect_portal_advice  # noqa: E402
+from anura.utils.singleton import get_instance  # noqa: E402
 from anura.utils.structural_reconstructor import get_structural_reconstructor  # noqa: E402
 from anura.utils.text_preprocessor import get_text_preprocessor  # noqa: E402
 from anura.utils.validators import sanitize_text  # noqa: E402
@@ -224,6 +225,9 @@ class ScreenshotService(GObject.GObject):
     }
 
     def __init__(self) -> None:
+        # Idempotent guard for singleton pattern
+        if hasattr(self, "_initialized") and self._initialized:
+            return
         GObject.GObject.__init__(self)
 
         from anura.services.screenshot.factory import ScreenshotProviderFactory
@@ -239,21 +243,33 @@ class ScreenshotService(GObject.GObject):
 
         # Configure Tesseract path for Flatpak environment
         _configure_tesseract_path()
+        self._initialized = True
+
+    @GObject.Property(type=bool, default=False)
+    def is_capturing(self) -> bool:
+        """Public property to track capture state (BUG-040)."""
+        return self._is_capturing
+
+    @is_capturing.setter  # type: ignore[no-redef]
+    def is_capturing(self, value: bool) -> None:
+        if self._is_capturing != value:
+            self._is_capturing = value
+            self.notify("is-capturing")
 
     def capture(self, lang: str, copy: bool = False) -> None:
         """Requests a screenshot from the primary provider."""
         # Prevent concurrent capture requests
-        if self._is_capturing:
+        if self.is_capturing:
             logger.warning("Anura Screenshot: Capture already in progress, ignoring request.")
             return
 
-        self._is_capturing = True
+        self.is_capturing = True
 
         def _on_capture_result(success, uri, error):
             if success and uri:
                 # Move URI parsing and file existence check to background thread
                 get_atomic_manager().execute(self._handle_portal_uri_background, (lang, uri, copy), pass_task_id=True)
-                self._is_capturing = False
+                self.is_capturing = False
             elif error:
                 # Log full error context
                 logger.error(f"Anura Screenshot: Capture failed: {error}")
@@ -264,7 +280,7 @@ class ScreenshotService(GObject.GObject):
                     logger.info("Anura Screenshot: Attempting fallback capture...")
                     self.fallback_provider.capture(lang, copy, _on_capture_result)
                 else:
-                    self._is_capturing = False
+                    self.is_capturing = False
                     if is_generic:
                         self._log_portal_environment()
                         self._emit_portal_failure()
@@ -272,12 +288,12 @@ class ScreenshotService(GObject.GObject):
                         self._emit_decode_error(_("Screenshot failed: {reason}").format(reason=error))
             else:
                 # Cancelled by user
-                self._is_capturing = False
+                self.is_capturing = False
 
         try:
             self.provider.capture(lang, copy, _on_capture_result)
         except (GLib.Error, RuntimeError) as e:
-            self._is_capturing = False
+            self.is_capturing = False
             logger.error(f"Anura Screenshot: Provider capture call failed: {e}")
             self._emit_decode_error(_("Failed to initiate screenshot capture."))
 
@@ -712,3 +728,7 @@ class ScreenshotService(GObject.GObject):
                 if not self.cancelable.is_cancelled():
                     self.cancelable.cancel()
                 self.cancelable = None
+
+def get_screenshot_service() -> ScreenshotService:
+    """Get the thread-safe ScreenshotService singleton (BUG-030)."""
+    return get_instance(ScreenshotService)

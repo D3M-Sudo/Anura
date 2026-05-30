@@ -5,11 +5,13 @@
 # SPDX-License-Identifier: MIT
 
 import pytest
+import sys
+from unittest.mock import MagicMock, patch
 
 pytest.importorskip("gi")
 
-
-from unittest.mock import MagicMock, patch
+# Mock Gst before imports
+sys.modules['gi.repository.Gst'] = MagicMock()
 
 from anura.services.tts import TTSService
 

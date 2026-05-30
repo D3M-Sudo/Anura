@@ -52,7 +52,7 @@ from anura.services.notification_service import (
     HAS_LIBNOTIFY,
     NotificationService,
 )
-from anura.services.screenshot_service import ScreenshotService
+from anura.services.screenshot_service import ScreenshotService, get_screenshot_service
 from anura.services.settings import settings
 from anura.utils import cleanup_orphaned_resources
 from anura.utils.signal_manager import SignalManagerMixin
@@ -108,7 +108,7 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         active_lang = self.settings.get_string("active-language")
         cleanup_orphaned_resources(active_lang)
 
-        self.backend = ScreenshotService()
+        self.backend = get_screenshot_service()
         # Signals are now coordinated via OcrController in AnuraWindow for GUI mode.
         # on_decoded and on_error are maintained for Headless/Silent mode entry points.
         self.connect_tracked(self.backend, "decoded", self.on_decoded)
@@ -164,7 +164,7 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         win = self.props.active_window
         if not win:
             if self.backend is None:
-                self.backend = ScreenshotService()
+                self.backend = get_screenshot_service()
             win = AnuraWindow(application=self, backend=self.backend)
             self._setup_window_signals(win)
         win.present()

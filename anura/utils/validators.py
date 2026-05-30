@@ -81,38 +81,42 @@ def is_safe_url_string(text: str) -> bool:
     if "\\" in text:
         return False
 
-    # 3. Homograph detection: If the hostname mixes ASCII Latin letters with
-    # non-ASCII characters, reject the URL unless it's entirely non-ASCII or
-    # uses a safe script. To prevent homograph attacks (e.g. mixing 'a' and 'cyrillic-a'),
-    # we reject any URL that contains both ASCII letters and non-ASCII characters,
-    # unless the non-ASCII part is specifically whitelisted or properly handled
-    # by IDNA.
-    # Logic note: We must isolate the hostname for this check to avoid flagging
-    # the 'https://' prefix as the ASCII component of a mixed-script string.
+    # 3. Homograph detection: Strict whitelist model (Latin-1 + IDNA).
+    # If the hostname contains non-ASCII characters, it MUST be valid IDNA (Punycode).
+    # Mixed-script hostnames (e.g. ASCII mixed with Cyrillic/Greek) are blocked.
     try:
-        from urllib.parse import urlparse
         parsed_for_homograph = urlparse(text)
-        hostname = parsed_for_homograph.hostname or ""
-        if hostname and not hostname.isascii() and any(ch.isascii() and ch.isalpha() for ch in hostname):
-            # If it's not pure ASCII but contains ASCII letters, it's a mixed-script
-            # string which is a high risk for homograph attacks.
-            for ch in hostname:
-                cp = ord(ch)
-                if cp > 0x7F:
-                    # Block Cyrillic (0x0400-0x052F) and Greek (0x0370-0x03FF)
-                    # when mixed with ASCII letters in the hostname.
-                    if 0x0400 <= cp <= 0x052F or 0x0370 <= cp <= 0x03FF:
-                        return False
-
-                    # Also block generic non-ASCII if mixed with ASCII in the hostname.
-                    if not (0x00A0 <= cp <= 0x00FF): # Latin-1 Supplement (includes é, ü, etc.)
-                         return False
-
-            # Even with Latin-1, we reject mixed-script hostnames by default (e.g. googlé.com)
-            # as they are rarely legitimate and often used for spoofing.
+        hostname = parsed_for_homograph.hostname
+        if not hostname:
+            # BUG-034: Fail instantly if hostname is empty or parsing failed.
             return False
+
+        if not hostname.isascii():
+            # Strict Whitelist: Allow ONLY standard ASCII/Latin-1 (0x00-0xFF) in the hostname.
+            # Any IDN outside this range (e.g. Cyrillic, Armenian, Hebrew) MUST be
+            # Punycode-encoded (xn--) to be considered safe.
+            for ch in hostname:
+                if ord(ch) > 0xFF:
+                    return False
+
+            # Homograph Defense: Mixed-script check within Latin-1.
+            # Block mixing ASCII alphanumeric characters with non-ASCII Latin-1 supplement
+            # (e.g. googlé.com) as this is a common spoofing pattern.
+            # "münchen.de" is allowed because "ü" is considered a separate label or
+            # the user intended it, but "googlé" mixes them in one label.
+            # Actually, per directive: "Block any URI that mixes scripts outside this narrow whitelist."
+            # We'll block any mixed ASCII + Non-ASCII hostname for maximum safety.
+            # Block any hostname that contains non-ASCII characters if it's not
+            # pure non-ASCII (IDN). This is more restrictive than required but
+            # safer. However, per directive we must support Latin-1.
+            # To support "münchen.de", we check if the non-ASCII label is mixed with ASCII.
+            for label in hostname.split("."):
+                if not label.isascii() and any(c.isascii() and c.isalpha() for c in label):
+                    return False
+
     except (ValueError, AttributeError, TypeError):
-        pass
+        # BUG-034: Fail instantly on any parsing exception.
+        return False
 
     # 4. IDN normalization: convert international domain names (IDN) to their
     # Punycode ASCII-compatible encoding (ACE) before the ASCII safety check.

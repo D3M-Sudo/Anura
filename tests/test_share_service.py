@@ -5,11 +5,13 @@
 # SPDX-License-Identifier: MIT
 
 import pytest
+import sys
+from unittest.mock import MagicMock, patch
 
 pytest.importorskip("gi")
 
-
-from unittest.mock import MagicMock, patch
+# Mock Adw before imports
+sys.modules['gi.repository.Adw'] = MagicMock()
 
 from anura.services.share_service import ShareService
 

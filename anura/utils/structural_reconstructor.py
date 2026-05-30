@@ -128,8 +128,10 @@ class StructuralReconstructor:
         # but the proximity_threshold check above already handles the gap.
         # If v_dist is negative, it means lines overlap. We usually merge overlapping lines in OCR.
 
+        # Heuristic: also prevent merging if lines are physically too far apart horizontally
+        # (e.g. multi-column layouts). (BUG-036)
         h_diff = abs(line1["left"] - line2["left"])
-        return h_diff <= avg_height * 3
+        return h_diff <= avg_height * 1.5
 
 
 def get_structural_reconstructor() -> StructuralReconstructor:

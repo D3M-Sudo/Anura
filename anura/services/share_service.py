@@ -4,14 +4,16 @@
 #
 # SPDX-License-Identifier: MIT
 
+# Set GTK version requirements before imports
+import contextlib
 from gettext import gettext as _
 from typing import ClassVar
 from urllib.parse import quote
 
 import gi
 
-# Set GTK version requirements before imports
-gi.require_version("Adw", "1")
+with contextlib.suppress(ValueError):
+    gi.require_version("Adw", "1")
 gi.require_version("Gio", "2.0")
 gi.require_version("GLib", "2.0")
 gi.require_version("GObject", "2.0")
@@ -71,8 +73,10 @@ class ShareService(GObject.GObject):
 
         url = url.strip() if url else ""
 
-        # Allow mailto and web+mastodon schemes after passing fundamental checks
-        if url.startswith("mailto:") or url.startswith("web+mastodon:"):
+        # Allow mailto and web+mastodon schemes after passing fundamental checks.
+        # Also allow desktop-common social sharing protocols (BUG-035).
+        _ALLOWED_SCHEMES = ("mailto:", "web+mastodon:", "tg:", "discord:", "whatsapp:")
+        if any(url.startswith(scheme) for scheme in _ALLOWED_SCHEMES):
             return True
 
         # Use centralized uri_validator for http/https URLs (includes hostname validation)

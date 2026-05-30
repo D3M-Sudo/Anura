@@ -68,7 +68,13 @@ class TestScreenshotServiceEnterprise:
             # Minimal init to satisfy the tests
             # We want to use the real class logic but avoid GObject issues
             class PseudoService:
-                pass
+                @property
+                def is_capturing(self):
+                    return self._is_capturing
+
+                @is_capturing.setter
+                def is_capturing(self, value):
+                    self._is_capturing = value
 
             s = PseudoService()
             s.provider = MagicMock()

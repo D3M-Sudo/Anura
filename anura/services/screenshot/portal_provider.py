@@ -56,6 +56,9 @@ class PortalProvider(ScreenshotProvider):
 
     def _on_finish(self, source_object: object, res: Gio.AsyncResult, user_data: tuple) -> None:
         _lang, _copy, callback = user_data
+        uri: str | None = None
+        error: str | None = None
+        success: bool = False
 
         # Clear saved cancellable — this request is done
         with self._lock:
@@ -64,13 +67,14 @@ class PortalProvider(ScreenshotProvider):
         try:
             uri = self.portal.take_screenshot_finish(res)
             if uri:
-                callback(True, uri, None)
+                success = True
             else:
                 # Cancelled by user (portal returned empty URI)
-                callback(False, None, None)
+                success = False
         except GLib.Error as e:
             if e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED):
-                callback(False, None, None)
+                success = False
+                error = None
             else:
                 # Log full error context (domain + code + message)
                 logger.error(
@@ -98,7 +102,16 @@ class PortalProvider(ScreenshotProvider):
                         "screenshot will use fallback if available.",
                     )
 
-                callback(False, None, e.message)
-        except RuntimeError as e:
-            logger.error(f"PortalProvider: Unexpected error: {e}")
-            callback(False, None, str(e))
+                success = False
+                error = e.message
+        except (RuntimeError, TypeError, AttributeError) as e:
+            logger.error(f"PortalProvider: Unexpected error in async finish: {e}")
+            success = False
+            error = str(e)
+        finally:
+            # Hardened: always invoke the callback to prevent state deadlocks
+            # in the ScreenshotService.
+            try:
+                callback(success, uri, error)
+            except (RuntimeError, TypeError) as e:
+                logger.error(f"PortalProvider: Critical error invoking capture callback: {e}")

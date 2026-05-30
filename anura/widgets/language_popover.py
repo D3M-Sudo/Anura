@@ -117,20 +117,39 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
         self.popdown()
 
     def populate_model(self, force: bool = False) -> None:
-        """Populate the language model with available languages."""
+        """Populate the language model with available languages (diff-based, BUG-042)."""
         try:
-            self.lang_list.remove_all()
+            downloaded_codes = set(get_language_manager().get_downloaded_codes(force=force))
 
-            downloaded_codes = get_language_manager().get_downloaded_codes(force=force)
+            # 1. Remove items no longer downloaded
+            i = 0
+            while i < self.lang_list.get_n_items():
+                item: LanguageItem = self.lang_list.get_item(i)  # type: ignore[assignment]
+                if item.code not in downloaded_codes:
+                    self.lang_list.remove(i)
+                else:
+                    i += 1
+
+            # 2. Add new items or update existing ones
+            existing_codes = {self.lang_list.get_item(i).code for i in range(self.lang_list.get_n_items())}
+
             for code in downloaded_codes:
                 title = get_language_manager().get_language(code)
-
                 selected = self.active_language == code
-                self.lang_list.append(LanguageItem(code=code, title=title, selected=selected))
+
+                if code not in existing_codes:
+                    self.lang_list.append(LanguageItem(code=code, title=title, selected=selected))
+                else:
+                    # Update existing item state without re-creating row
+                    for j in range(self.lang_list.get_n_items()):
+                        item = self.lang_list.get_item(j)
+                        if item.code == code:
+                            if item.selected != selected:
+                                item.selected = selected
+                            break
 
             # Fallback to English if current language was removed, emitting only on actual change
-            current_code = self.active_language
-            if current_code not in downloaded_codes:
+            if self.active_language not in downloaded_codes:
                 new_item = get_language_manager().get_language_item("eng")
                 if new_item and self.active_language != "eng":  # emit only if language actually changed
                     self.active_language = "eng"  # type: ignore[method-assign]

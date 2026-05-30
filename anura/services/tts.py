@@ -17,7 +17,8 @@ import gi
 # Set GTK version requirements before imports
 gi.require_version("GLib", "2.0")
 gi.require_version("GObject", "2.0")
-gi.require_version("Gst", "1.0")
+with contextlib.suppress(ValueError):
+    gi.require_version("Gst", "1.0")
 
 from gi.repository import GLib, GObject, Gst  # noqa: E402
 import gtts  # noqa: E402
@@ -220,8 +221,10 @@ class TTSService(GObject.GObject):
         super().__init__()
         logger.debug("Anura TTSService: Initializing TTS service singleton")
 
-        # Pre-cache supported languages in background to avoid UI hang during first use
-        threading.Thread(target=self.get_supported_gtts_languages, daemon=True).start()
+        # Pre-cache supported languages in background to avoid UI hang during first use.
+        # Track the thread reference to ensure it can be joined during shutdown (BUG-033).
+        self._init_thread = threading.Thread(target=self.get_supported_gtts_languages, daemon=True)
+        self._init_thread.start()
         self._speech_dir.mkdir(parents=True, exist_ok=True)
 
         # Initialize all instance attributes (fixes class-level state
@@ -257,49 +260,57 @@ class TTSService(GObject.GObject):
 
     def generate(self, text: str, lang: str = "en") -> str:
         """Thread-safe MP3 generation with proper state management."""
-        # Clean up any previously orphaned file from this instance before starting new generation
-        with self._state_lock:
-            if self._current_speech_file:
-                path = Path(self._current_speech_file)
-                if path.exists():
-                    with contextlib.suppress(OSError):
-                        path.unlink()
-            self._current_speech_file = None
-
         # Input validation: avoid unnecessary gTTS calls for empty/whitespace text
         if not text or not text.strip():
             logger.debug("Anura TTS: Empty text provided, returning empty path")
             return ""
 
-        timestamp = int(time.monotonic() * 1000)
-        filepath = str(self._speech_dir / f"speech_{timestamp}.mp3")
+        # Step 1: Use a unique temporary filename for this generation attempt.
+        # We don't use tempfile.NamedTemporaryFile because gTTS.save() needs a
+        # path it can open itself, and we want to keep the file in _speech_dir
+        # for GStreamer access.
+        import uuid
+        unique_id = uuid.uuid4().hex
+        temp_filepath = str(self._speech_dir / f"gen_{unique_id}.mp3")
 
         tts = gtts.gTTS(text, lang=lang, tld=self._tld)
         logger.info(f"Anura TTS: Generating speech for language: {lang}")
 
+        # Step 2: Perform blocking I/O (save) WITHOUT holding the state lock.
+        # This prevents other threads/tasks from being blocked while we wait
+        # for gTTS to finish writing the file.
         try:
-            tts.save(filepath)
+            tts.save(temp_filepath)
         except (SystemExit, KeyboardInterrupt):
             # Re-raise system exceptions that should terminate the application
             raise
         except (requests.RequestException, OSError) as e:
             logger.error(f"Anura TTS: Failed to save speech file: {e}")
-            path = Path(filepath)
+            path = Path(temp_filepath)
             if path.exists():
                 with contextlib.suppress(OSError):
                     path.unlink()
-            # Don't re-raise: AtomicTaskManager errorback handles exceptions from
-            # the worker thread.  Let it catch the return value "" instead.
             return ""
 
-        logger.debug("Anura TTS: Speech file saved to cache directory")
+        logger.debug(f"Anura TTS: Speech file saved to {temp_filepath}")
 
-        # Thread-safe update of current speech file
+        # Step 3: Atomic update of the shared state under lock.
+        # We also perform cleanup of the OLD current file here to ensure
+        # we don't leak files when switching generations.
         with self._state_lock:
-            self._current_speech_file = filepath
+            # Clean up the previous file if it exists
+            if self._current_speech_file:
+                old_path = Path(self._current_speech_file)
+                if old_path.exists():
+                    with contextlib.suppress(OSError):
+                        old_path.unlink()
+                        logger.debug(f"Anura TTS: Cleaned up previous speech file: {self._current_speech_file}")
 
-        GLib.idle_add(self.emit, "speak", filepath)
-        return filepath
+            # Switch to the new file
+            self._current_speech_file = temp_filepath
+
+        GLib.idle_add(self.emit, "speak", temp_filepath)
+        return temp_filepath
 
     def get_effective_language(self, ocr_lang: str) -> str | None:
         """Return TTS language: user preference or fallback to OCR language."""
@@ -569,7 +580,13 @@ class TTSService(GObject.GObject):
             logger.debug(f"Anura TTS: toggle_pause called in unexpected state {state.value_nick}, ignoring")
 
     def cleanup(self) -> None:
-        """Complete cleanup for application shutdown - prevents broken pipe errors."""
+        """Complete cleanup for application shutdown - prevents broken pipe errors (BUG-033)."""
+        # Ensure the initialization thread is joined to prevent CI hangs/deadlocks.
+        if hasattr(self, "_init_thread") and self._init_thread.is_alive():
+            logger.debug("Anura TTS: Joining initialization thread during cleanup")
+            # Use a small timeout to avoid hanging the main thread if gTTS is stuck.
+            self._init_thread.join(timeout=1.0)
+
         with self._cleanup_lock:
             if self.player:
                 logger.debug("Anura TTS: Performing shutdown cleanup")

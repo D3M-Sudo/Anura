@@ -59,7 +59,12 @@ class OcrController(GObject.GObject, SignalManagerMixin):
 
     def teardown(self) -> None:
         """Unified teardown called by SignalManagerMixin."""
-        self.cleanup()
+        try:
+            self.disconnect_all_signals()
+        except (TypeError, RuntimeError) as e:
+            logger.debug(f"Signal disconnection omitted or failed during teardown: {e}")
+        self._window = None
+        logger.debug("OcrController: Cleaned up and disconnected")
 
     def _setup_connections(self) -> None:
         backend = self._window.backend
@@ -240,11 +245,3 @@ class OcrController(GObject.GObject, SignalManagerMixin):
 
         dialog.open(_win, None, _on_open_image_result)
 
-    def cleanup(self) -> None:
-        """Explicit cleanup to prevent memory leaks."""
-        try:
-            self.disconnect_all_signals()
-        except (TypeError, RuntimeError) as e:
-            logger.debug(f"Signal disconnection omitted or failed during cleanup: {e}")
-        self._window = None
-        logger.debug("OcrController: Cleaned up and disconnected")

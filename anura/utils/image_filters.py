@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: MIT
 
 from abc import ABC, abstractmethod
-import gc
 import threading
 
 from loguru import logger
@@ -199,10 +198,6 @@ class FilterChain:
                 # If a new image was created, track it for cleanup.
                 if result is not prev_result and result is not image:
                     intermediates.append(result)
-
-                # Occasional GC trigger for large buffers
-                if result.size[0] * result.size[1] > 4000000:  # > 4MP
-                    gc.collect()
 
             # Final result is returned; all other intermediates created
             # during the chain MUST be closed to prevent memory leaks.
