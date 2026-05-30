@@ -128,7 +128,8 @@ def pytest_sessionfinish(session, exitstatus):
     try:
         from anura.services.tts import get_tts_service
         get_tts_service().cleanup()
-    except (ImportError, AttributeError, RuntimeError):
+    except (ImportError, AttributeError, RuntimeError, ValueError):
+        # ValueError caught for cases where Gst namespace is absent in headless CI
         pass
 
     # 4. Reset singletons

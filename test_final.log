@@ -1,0 +1,11 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0 -- /app/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /app
+configfile: pyproject.toml
+plugins: cov-7.1.0, timeout-2.4.0
+collecting ... collected 266 items / 9 errors
+
+Ensuring clean session teardown...
+Teardown complete.
+============================== 9 errors in 0.97s ===============================
