@@ -4,16 +4,17 @@
 #
 # SPDX-License-Identifier: MIT
 
-import pytest
 import sys
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("gi")
 
 # Mock Adw before imports
-sys.modules['gi.repository.Adw'] = MagicMock()
+sys.modules["gi.repository.Adw"] = MagicMock()
 
-from anura.services.share_service import ShareService
+from anura.services.share_service import ShareService  # noqa: E402
 
 
 class TestShareServiceEnterprise:
