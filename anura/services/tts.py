@@ -223,6 +223,9 @@ class TTSService(GObject.GObject):
         # Pre-cache supported languages in background to avoid UI hang during first use
         threading.Thread(target=self.get_supported_gtts_languages, daemon=True).start()
         self._speech_dir.mkdir(parents=True, exist_ok=True)
+        # Security: Ensure speech cache directory has restrictive permissions (0700)
+        # as it may contain temporary MP3 files with sensitive OCR text.
+        self._speech_dir.chmod(0o700)
 
         # Initialize all instance attributes (fixes class-level state
         # leaking between instances)

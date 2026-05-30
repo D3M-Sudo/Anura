@@ -280,6 +280,8 @@ class LanguageManager(GObject.GObject):
                 with contextlib.suppress(FileExistsError):
                     # Another thread created it between check and makedirs
                     tess_path.mkdir(parents=True, exist_ok=True)
+                # Security: Ensure tessdata directory has restrictive permissions (0700)
+                tess_path.chmod(0o700)
 
         # Clean up orphaned temp files from crashed/interrupted downloads
         try:
@@ -664,6 +666,8 @@ def get_tesseract_config(lang_code: str) -> str:
     # Multi-language: Dynamic Pooling Approach
     codes = lang_code.split("+")
     os.makedirs(TESSDATA_POOL_DIR, exist_ok=True)
+    # Security: Ensure pool directory has restrictive permissions (0700)
+    os.chmod(TESSDATA_POOL_DIR, 0o700)
 
     for code in codes:
         # Resolve source

@@ -4,12 +4,13 @@
 # SPDX-License-Identifier: MIT
 
 from collections.abc import Callable
+from gettext import gettext as _
 import os
 from pathlib import Path
 import shutil
+import tempfile
 import threading
 import time
-import uuid
 
 from gi.repository import Gio, GLib
 from loguru import logger
@@ -78,7 +79,17 @@ class LegacyX11Provider(ScreenshotProvider):
             callback(False, None, "scrot not found")
             return
 
-        output_path = f"/tmp/anura-shot-{uuid.uuid4().hex}.png"
+        # Security: Create a secure temporary file (0600) to store the screenshot.
+        # This prevents other users on the system from reading the captured pixels.
+        # Use mkstemp to ensure the file is created with restrictive permissions.
+        try:
+            fd, output_path = tempfile.mkstemp(prefix="anura-shot-", suffix=".png")
+            os.close(fd)
+        except (OSError, RuntimeError) as e:
+            logger.error(f"LegacyX11Provider: Failed to create secure temp file: {e}")
+            callback(False, None, _("Failed to create temporary file"))
+            return
+
         argv = [scrot_bin, "-s", output_path]
 
         logger.info(f"LegacyX11Provider: Spawning scrot from '{scrot_bin}'")
@@ -98,12 +109,14 @@ class LegacyX11Provider(ScreenshotProvider):
             logger.error(f"LegacyX11Provider: Failed to spawn scrot: {e.message}")
             with self._lock:
                 self._cancellable = None
+            self._cleanup_artifacts(output_path)
             callback(False, None, e.message)
             return
         except (AttributeError, RuntimeError, TypeError) as e:
             logger.error(f"LegacyX11Provider: Failed to spawn scrot: {e}")
             with self._lock:
                 self._cancellable = None
+            self._cleanup_artifacts(output_path)
             callback(False, None, str(e))
             return
 
@@ -127,16 +140,16 @@ class LegacyX11Provider(ScreenshotProvider):
         except GLib.Error as e:
             if e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED):
                 logger.debug("LegacyX11Provider: scrot capture cancelled.")
-                self._cleanup_file(output_path)
+                self._cleanup_artifacts(output_path)
                 callback(False, None, None)
                 return
             logger.error(f"LegacyX11Provider: Error waiting for scrot process: {e.message}")
-            self._cleanup_file(output_path)
+            self._cleanup_artifacts(output_path)
             callback(False, None, e.message)
             return
         except (AttributeError, RuntimeError, TypeError) as e:
             logger.error(f"LegacyX11Provider: Error waiting for scrot process: {e}")
-            self._cleanup_file(output_path)
+            self._cleanup_artifacts(output_path)
             callback(False, None, str(e))
             return
 
@@ -147,7 +160,7 @@ class LegacyX11Provider(ScreenshotProvider):
                 f"LegacyX11Provider: scrot exited with status {exit_status} — "
                 "user likely cancelled the selection."
             )
-            self._cleanup_file(output_path)
+            self._cleanup_artifacts(output_path)
             # Treat non-zero exit as user cancellation (None error = no error toast)
             callback(False, None, None)
             return
@@ -168,7 +181,7 @@ class LegacyX11Provider(ScreenshotProvider):
                 f"LegacyX11Provider: scrot exited 0 but produced no output after "
                 f"{_FILE_READY_RETRIES} retries (path={output_path})."
             )
-            self._cleanup_file(output_path)
+            self._cleanup_artifacts(output_path)
             callback(False, None, "Screenshot tool produced no output.")
             return
 
@@ -177,7 +190,7 @@ class LegacyX11Provider(ScreenshotProvider):
             uri = GLib.filename_to_uri(output_path, None)
         except GLib.Error as e:
             logger.error(f"LegacyX11Provider: Failed to build URI for '{output_path}': {e.message}")
-            self._cleanup_file(output_path)
+            self._cleanup_artifacts(output_path)
             callback(False, None, e.message)
             return
 
@@ -185,8 +198,8 @@ class LegacyX11Provider(ScreenshotProvider):
         callback(True, uri, None)
 
     @staticmethod
-    def _cleanup_file(path: str) -> None:
-        """Best-effort removal of a temporary screenshot file."""
+    def _cleanup_artifacts(path: str) -> None:
+        """Best-effort removal of the temporary screenshot file."""
         if path:
             p = Path(path)
             if p.exists():
