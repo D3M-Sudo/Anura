@@ -20,7 +20,13 @@ template $PreferencesGeneralPage : Adw.PreferencesPage {
     Adw.ComboRow color_scheme_combo {
       title: _("Color Scheme");
       subtitle: _("The preferred color scheme for the application.");
-      model: StringList {};
+      model: StringList {
+        strings: [
+          C_("color-scheme", "System"),
+          C_("color-scheme", "Light"),
+          C_("color-scheme", "Dark")
+        ]
+      };
     }
   }
 

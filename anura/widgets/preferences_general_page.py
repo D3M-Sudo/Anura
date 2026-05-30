@@ -6,7 +6,6 @@
 
 import contextlib
 from gettext import gettext as _
-from gettext import pgettext
 
 from gi.repository import Adw, Gio, Gtk
 from loguru import logger
@@ -53,13 +52,6 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
 
     def _setup_color_scheme(self) -> None:
         """Initialize color scheme selector from settings."""
-        model = Gtk.StringList.new([
-            pgettext("color-scheme", "System"),
-            pgettext("color-scheme", "Light"),
-            pgettext("color-scheme", "Dark"),
-        ])
-        self.color_scheme_combo.set_model(model)
-
         scheme = self.settings.get_string("color-scheme")
         mapping = {"default": 0, "force-light": 1, "force-dark": 2}
         idx = mapping.get(scheme, 0)
