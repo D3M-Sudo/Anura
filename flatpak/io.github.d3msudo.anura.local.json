@@ -344,8 +344,8 @@
             "sources": [
                 {
                     "type": "archive",
-                    "url": "http://deb.debian.org/debian/pool/main/i/imlib2/imlib2_1.12.6.orig.tar.xz",
-                    "sha256": "669ab28c4589f0ef16d4cc29b260d257f3781d594230d7b3f9ec5773c32a7796"
+                    "url": "https://downloads.sourceforge.net/project/enlightenment/imlib2-src/1.12.6/imlib2-1.12.6.tar.gz",
+                    "sha256": "59743ce82aefa9c1ec9476af608d541b74164714d2928fbd84ff5db6c4399079"
                 }
             ]
         },
