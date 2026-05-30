@@ -16,10 +16,16 @@ except (ImportError, ValueError):
     GObject = MagicMock()
 
 from anura.utils.image_filters import RescaleFilter
-from anura.utils.signal_manager import SignalManagerMixin, Teardownable
+from anura.utils.signal_manager import SignalManagerMixin
 
 
-class MockController(Teardownable):
+class MockController:
+    """Duck-typed controller: exposes teardown() without inheriting from a Protocol.
+
+    Teardownable was removed from signal_manager in BUG-041/Hardening in favour of
+    hasattr()-based duck typing.  Tests use plain classes with a teardown() method.
+    """
+
     def __init__(self, window):
         self.teardown_called = False
         if hasattr(window, "register_controller"):
