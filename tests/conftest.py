@@ -4,59 +4,198 @@
 #
 # SPDX-License-Identifier: MIT
 
+# =============================================================================
+# ARCHITECTURE NOTE — reading order matters
+#
+# pytest loads conftest.py BEFORE collecting any test file.  This means:
+#
+#   1. Module-level code here runs first (sys.path setup, env var reads).
+#   2. Fixtures are registered but execute only when a test requests them.
+#   3. Top-level imports inside *test* files run at collection time, i.e.
+#      AFTER conftest module-level code but BEFORE any fixture body.
+#
+# Consequence for gi mocking (Pillar 2):
+#   We cannot protect against `from gi.repository import X` at module level
+#   inside test files using a fixture alone — the import fires during
+#   collection, before any fixture activates.  The correct contract is:
+#     - test files that need gi at module level use pytest.importorskip("gi")
+#       (skip-on-absence, safe)
+#     - test files that mock gi import nothing from gi at module level and
+#       instead declare `headless_gi_mocks` as a fixture dependency
+#     - anura.main is never imported directly by tests (it is not on the
+#       ignore list but contains module-level gi.require_version calls that
+#       would fire during collection)
+#
+# The ANURA_CI_TEST_MODE env var is therefore set HERE at module level so
+# that any code that reads it at import time (e.g. anura.core.boot) sees it
+# before it runs.
+# =============================================================================
+
 import os
 from pathlib import Path
 import sys
+from unittest.mock import MagicMock
 
 import pytest
 
-# Ensure the project root is on sys.path so `import anura` works
-# without installing the package first.
+# ---------------------------------------------------------------------------
+# Pillar 2 — Set CI mode flag early, at module level, so downstream code
+# that reads os.environ at import time sees it before executing.
+# ---------------------------------------------------------------------------
+_CI_MODE: bool = bool(os.environ.get("ANURA_CI_TEST_MODE", "0").strip("'\" ") not in ("", "0", "false", "False"))
+
+# Ensure the project root is on sys.path so `import anura` works without
+# installing the package first.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+
+# ---------------------------------------------------------------------------
+# Pillar 2 — Centralised, deterministic gi mock injection.
+#
+# Activated only when ANURA_CI_TEST_MODE=1.  Runs at module level (not inside
+# a fixture) so the stubs are in sys.modules before pytest collects test files
+# that import gi at module level.
+#
+# Keys are inserted only if absent so running in an environment where real gi
+# IS installed remains transparent — the real binding wins.
+# ---------------------------------------------------------------------------
+_GI_KEYS: tuple[str, ...] = (
+    "gi",
+    "gi.repository",
+    "gi.repository.Gio",
+    "gi.repository.GLib",
+    "gi.repository.GObject",
+    "gi.repository.Xdp",
+    "gi.repository.Adw",
+    "gi.repository.Gtk",
+    "gi.repository.Gst",
+    "gi.repository.Notify",
+    "gi.repository.GdkPixbuf",
+    "gi.repository.Gdk",
+    "gi.repository.Pango",
+)
+
+_GI_INJECTED: list[str] = []
+
+def _make_module_mock(name: str) -> MagicMock:
+    """Return a MagicMock that pytest.importorskip will accept.
+
+    importorskip validates ``module.__spec__`` after retrieving the module from
+    sys.modules.  A plain MagicMock has ``__spec__`` set to the *spec* argument
+    of the MagicMock constructor (None by default), which makes importorskip
+    raise ``ValueError: <mock>.__spec__ is not set``.  Providing a real
+    ``importlib.machinery.ModuleSpec`` object satisfies the check.
+    """
+    import importlib.machinery
+
+    m = MagicMock(name=name)
+    m.__name__ = name
+    m.__spec__ = importlib.machinery.ModuleSpec(name, loader=None)
+    m.__loader__ = None
+    m.__package__ = name.rsplit(".", 1)[0] if "." in name else name
+    m.__path__ = []
+    return m
+
+
+if _CI_MODE:
+    # Build a coherent mock hierarchy: gi.repository.X attributes should
+    # resolve off the gi.repository mock, not be independent stubs.
+    _mock_gi = _make_module_mock("gi")
+    _mock_repo = _make_module_mock("gi.repository")
+    _mock_gi.repository = _mock_repo
+
+    for _key in _GI_KEYS:
+        if _key not in sys.modules:
+            if _key == "gi":
+                sys.modules[_key] = _mock_gi
+            elif _key == "gi.repository":
+                sys.modules[_key] = _mock_repo
+            else:
+                # e.g. "gi.repository.Gio" → attribute "Gio" on _mock_repo
+                _leaf = _key.rsplit(".", 1)[-1]
+                _leaf_mock = _make_module_mock(_key)
+                setattr(_mock_repo, _leaf, _leaf_mock)
+                sys.modules[_key] = _leaf_mock
+            _GI_INJECTED.append(_key)
+
+
+# ---------------------------------------------------------------------------
+# Pillar 5 — Loguru CI handler.
+#
+# In CI mode: replace the default stderr handler with a thread-safe,
+# enqueue=True file handler.  This avoids conflicts with pytest's stderr
+# capturer and ensures log output from singleton instances (AtomicTaskManager)
+# is captured without I/O contention.
+#
+# Runs at module level (after gi stubs) so the handler is active before any
+# fixture or test code runs — including code that calls logger at import time.
+# ---------------------------------------------------------------------------
+if _CI_MODE:
+    try:
+        from loguru import logger as _logger
+
+        _logger.remove()  # Remove all default handlers (stderr)
+
+        _ci_log_dir = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local" / "state")) / "anura" / "logs"
+        _ci_log_dir.mkdir(parents=True, exist_ok=True)
+        _ci_log_file = _ci_log_dir / "anura_ci_test.log"
+
+        _logger.add(
+            str(_ci_log_file),
+            level="DEBUG",
+            format="{time:HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
+            rotation=None,       # no rotation during a single test run
+            enqueue=True,        # thread-safe async queue — no GLib event loop needed
+            catch=True,
+            encoding="utf-8",
+            mode="w",            # fresh file per run
+        )
+    except Exception:
+        pass  # Never let logging setup break the test suite
+
+
+# ---------------------------------------------------------------------------
+# Pillar 1 — Source-level detection helper (used by Pillar 3 hook).
+# ---------------------------------------------------------------------------
 
 def _module_needs_gi(fspath: object) -> bool:
     """Return True if the test module at *fspath* depends on gi.repository.
 
-    Scans the file content directly rather than relying on the filename or the
-    test function name.  The previous heuristic (``"gi" in str(item.fspath)``)
-    never matched any test file because no file path contains the literal
-    two-character substring "gi" in isolation — it only appeared inside longer
-    words like "github" in the runner's workspace path.
-
-    This function is intentionally kept simple and side-effect-free: it reads
-    the source file once per file (the call-site caches per fspath) and checks
-    for the presence of common gi-dependency patterns.
+    Scans file content for the four canonical gi-dependency patterns.
+    Intentionally side-effect-free: reads source once per call; caching is
+    done at the call-site.
     """
     try:
         src = Path(str(fspath)).read_text(encoding="utf-8", errors="replace")
         return (
-            "import gi" in src
-            or "from gi" in src
-            or 'importorskip("gi")' in src
+            'importorskip("gi")' in src
             or "importorskip('gi')" in src
+            or "from gi.repository" in src
+            or "gi.require_version" in src
         )
     except OSError:
         return False
 
 
+# ---------------------------------------------------------------------------
+# Pillar 3 — Dynamic gtk marker + conditional skip in CI mode.
+#
+# Two behaviours depending on environment:
+#
+#   Real GTK available (ANURA_CI_TEST_MODE not set):
+#     Tag gi-dependent tests with the `gtk` marker so they can be selectively
+#     run or excluded.  No skipping.
+#
+#   ANURA_CI_TEST_MODE=1 (headless CI):
+#     Tag AND skip all `gtk`-marked tests with an informative reason.
+#     Skipped tests appear in the CI report as `s` — fully traceable, no
+#     false failures.
+# ---------------------------------------------------------------------------
+
 def pytest_collection_modifyitems(items: list) -> None:
-    """Add the ``gtk`` marker to every test that depends on gi.repository.
-
-    Bug fixed: the previous implementation used two unreliable heuristics:
-    - ``"gi" in str(item.fspath)``  → never matched (path contains "github",
-      "gi" only as a substring of longer words, never standalone).
-    - ``"gtk" in item.name.lower()`` → only caught tests explicitly named
-      *test_gtk_**, missing the vast majority of gi-dependent tests.
-
-    Result: only 7 out of ~80 gi-dependent tests were tagged, causing the
-    gtk-tests CI job to run almost nothing.
-
-    Fix: scan each file's source once (cached per fspath) for the four
-    patterns that indicate a gi dependency.  A per-call dict is used as the
-    cache so the hook remains stateless across test runs.
-    """
+    """Tag gi-dependent tests; skip them in CI mode."""
     _gi_file_cache: dict[str, bool] = {}
+    skip_marker = pytest.mark.skip(reason="gi/GTK not available in ANURA_CI_TEST_MODE=1")
 
     for item in items:
         fspath_str = str(item.fspath)
@@ -64,47 +203,62 @@ def pytest_collection_modifyitems(items: list) -> None:
         if fspath_str not in _gi_file_cache:
             _gi_file_cache[fspath_str] = _module_needs_gi(item.fspath)
 
-        if _gi_file_cache[fspath_str] or "gtk" in item.name.lower():
-            item.add_marker(pytest.mark.gtk)
+        needs_gtk = _gi_file_cache[fspath_str] or "gtk" in item.name.lower()
 
+        if needs_gtk:
+            item.add_marker(pytest.mark.gtk)
+            if _CI_MODE:
+                item.add_marker(skip_marker)
+
+
+# ---------------------------------------------------------------------------
+# Pillar 2 (fixture) — headless_gi_mocks.
+#
+# For tests that do NOT import gi at module level but need mock gi bindings
+# inside test bodies or fixtures.  Declares the session-scoped stubs as
+# already injected in CI mode (no-op) or injects them on demand otherwise.
+# ---------------------------------------------------------------------------
 
 @pytest.fixture(scope="session")
 def headless_gi_mocks():
-    """Inject MagicMock stubs for gi when the real binding is unavailable.
+    """Ensure MagicMock stubs for gi are present for the test session.
 
-    Session-scoped so mocks are inserted exactly once and the module cache
-    stays stable for the lifetime of the test run.  Tests that mock gi
-    internals (e.g. test_config.py, test_audit_config_types.py) declare
-    this fixture as a dependency; it is intentionally NOT autouse so that
-    test files which use the real gi are not affected.
+    In ANURA_CI_TEST_MODE=1 the stubs are already in sys.modules (inserted at
+    conftest module load time above), so this fixture is a no-op.
 
-    The keys are added only if absent, so running in an environment where gi
-    IS installed (GTK integration tests) is transparent.
+    Outside CI mode, injects stubs only if gi is genuinely absent, so the
+    fixture is safe to declare even in environments where real gi is installed.
     """
-    _GI_KEYS = [
-        "gi",
-        "gi.repository",
-        "gi.repository.Gio",
-        "gi.repository.GLib",
-        "gi.repository.GObject",
-    ]
+    if _CI_MODE:
+        # Already injected at module level — nothing to do.
+        yield
+        return
+
+    # Non-CI path: inject only if gi is missing (e.g. developer laptop without GTK).
     inserted: list[str] = []
+    try:
+        import gi  # noqa: F401
+        yield
+        return
+    except ImportError:
+        pass
+
     for key in _GI_KEYS:
         if key not in sys.modules:
-            from unittest.mock import MagicMock
-            sys.modules[key] = MagicMock()
+            sys.modules[key] = _make_module_mock(key)
             inserted.append(key)
     yield
     for key in inserted:
         sys.modules.pop(key, None)
 
 
+# ---------------------------------------------------------------------------
+# Standard test fixtures
+# ---------------------------------------------------------------------------
+
 @pytest.fixture
 def tmp_tessdata(tmp_path):
-    """
-    Provides a temporary tessdata directory with a fake 'eng.traineddata' file.
-    Useful for testing language model detection without a real Tesseract install.
-    """
+    """Temporary tessdata directory with fake traineddata stubs."""
     tessdata = tmp_path / "tessdata"
     tessdata.mkdir()
     (tessdata / "eng.traineddata").write_bytes(b"fake-model")
@@ -114,56 +268,60 @@ def tmp_tessdata(tmp_path):
 
 @pytest.fixture(autouse=True)
 def isolate_env(monkeypatch, tmp_path):
-    """
-    Isolates all tests from the real user environment.
-    Overrides XDG dirs so tests never touch ~/.local or ~/.cache.
+    """Isolate tests from the real user environment.
+
+    Redirects XDG dirs to tmp_path so tests never touch ~/.local or ~/.cache.
     """
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
     monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "cache"))
     monkeypatch.setenv("TESSDATA_PREFIX_SYSTEM", str(tmp_path / "system-tessdata"))
 
 
+# ---------------------------------------------------------------------------
+# Session teardown + os._exit() with Pillar 6 safe flush
+# ---------------------------------------------------------------------------
+
 def pytest_sessionfinish(session, exitstatus):
-    """
-    Called after the last test, before pytest prints the summary line.
+    """Coordinated session teardown with guaranteed loguru flush before exit.
 
-    We run all service cleanup here, then force-print the summary ourselves
-    via TerminalReporter, and finally call os._exit() to bypass Python's
-    slow non-daemon-thread shutdown (which blocked for 74 s in CI).
+    Sequence (order is critical):
 
-    WHY the explicit terminalreporter.summary_stats() call:
-      Empirically (pytest 9.0.3), both pytest_sessionfinish AND
-      pytest_unconfigure fire BEFORE the "N passed, M skipped" line is
-      written to stdout.  Calling os._exit() in either hook therefore
-      suppresses the summary entirely.  The fix is to invoke the
-      TerminalReporter's summary_stats() method directly — the same call
-      pytest would make internally — so the line appears before we exit.
+      1. Shutdown application singletons (best-effort).
+      2. Flush loguru enqueue handler via logger.complete() — this blocks
+         until the async queue is drained, preventing log loss on os._exit().
+      3. Force-print the pytest summary line (it would be suppressed by
+         os._exit() otherwise).
+      4. os._exit(exitstatus) — bypasses Python's non-daemon thread join
+         (the 74-second hang from GLib/GTK orphan threads).
+
+    Pillar 6 note: os._exit() skips all atexit handlers and __del__ finalizers.
+    logger.complete() MUST be called before os._exit() when enqueue=True is
+    active; otherwise the enqueue thread's buffer is discarded mid-flight.
     """
     print("\nEnsuring clean session teardown...")
 
-    # 1. Shutdown AtomicTaskManager (best-effort; os._exit cleans up the rest)
+    # 1a. Shutdown AtomicTaskManager
     try:
         from anura.core.atomic_task_manager import get_atomic_manager
         get_atomic_manager().shutdown()
     except (ImportError, AttributeError, RuntimeError, ValueError):
         pass
 
-    # 2. Shutdown LanguageManager
+    # 1b. Shutdown LanguageManager
     try:
         from anura.services.language_manager import get_language_manager
         get_language_manager().shutdown()
     except (ImportError, AttributeError, RuntimeError, ValueError):
         pass
 
-    # 3. Cleanup TTSService
+    # 1c. Cleanup TTSService
     try:
         from anura.services.tts import get_tts_service
         get_tts_service().cleanup()
     except (ImportError, AttributeError, RuntimeError, ValueError):
-        # ValueError: Namespace Gst not available
         pass
 
-    # 4. Reset singletons
+    # 1d. Reset singletons
     try:
         from anura.utils.singleton import ThreadSafeSingleton
         ThreadSafeSingleton.reset_for_testing()
@@ -172,11 +330,20 @@ def pytest_sessionfinish(session, exitstatus):
 
     print("Teardown complete.")
 
-    # Force-print the summary line that pytest would normally emit after this
-    # hook returns.  We need it now because os._exit() below will prevent
-    # pytest from reaching its own summary-printing code.
+    # 2. Pillar 6 — flush loguru enqueue queue BEFORE os._exit().
+    #    logger.complete() is synchronous in loguru 0.7.x: it blocks until
+    #    all enqueued records have been processed and written to disk.
+    #    Wrapping in suppress because logger may already be torn down if
+    #    pytest itself removed the handler.
+    if _CI_MODE:
+        try:
+            from loguru import logger as _log
+            _log.complete()
+        except Exception:
+            pass
+
+    # 3. Force-print the summary line before os._exit() suppresses it.
     try:
-        import sys
         tr = session.config.pluginmanager.get_plugin("terminalreporter")
         if tr is not None:
             tr.summary_stats()
@@ -185,7 +352,5 @@ def pytest_sessionfinish(session, exitstatus):
     except Exception:
         pass
 
-    # Force-exit: skips Python's non-daemon-thread join (the 74-second hang).
-    # exitstatus is a pytest.ExitCode enum; int() gives the numeric code
-    # (0 = all passed, 1 = some failed, 2 = interrupted, etc.).
+    # 4. Bypass Python's non-daemon-thread join (avoids 74-second CI hang).
     os._exit(int(exitstatus))
