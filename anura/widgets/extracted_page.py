@@ -401,12 +401,27 @@ class ExtractedPage(Adw.NavigationPage):
             self.listen_pause_btn.set_icon_name(icon)
 
     def update_tts_state(self, playing: bool = False, paused: bool = False) -> None:
-        """Update the TTS UI state (called from TtsController)."""
+        """Update the TTS UI state (called from TtsController).
+
+        States:
+          playing=True  → stack="pause", controls locked (playback active or resumed)
+          paused=True   → stack stays on "pause", icon changes to ▶ (ready to resume)
+          (default)     → stack="button" (idle), controls unlocked (stopped/finished)
+        """
         if playing:
+            # Active playback (initial play OR resume after pause).
+            # swap_controls("playing") sets listen_stack → "pause" child.
             self.swap_controls("playing")
         elif paused:
+            # Playback is paused: keep the pause/stop controls visible (stack="pause"),
+            # just swap the icon to ▶ so user knows they can resume.
+            # Explicitly set stack to "pause" to guard against any edge case where
+            # the stack was moved away (e.g. spinner still active).
+            if self.listen_stack:
+                self.listen_stack.set_visible_child_name("pause")
             self._on_paused(None, True)
         else:
+            # Stopped / finished / error → return to idle state.
             self.swap_controls("stopped")
 
     def _on_tts_error(self, _service: object, message: str) -> None:
