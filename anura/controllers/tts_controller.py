@@ -47,7 +47,14 @@ class TtsController(GObject.GObject, SignalManagerMixin):
             logger.debug("TtsController: Playback finished normally")
 
     def _on_tts_paused(self, _service, is_paused):
-        self._window.extracted_page.update_tts_state(paused=is_paused)
+        if is_paused:
+            # Playback is now paused: show pause icon (▶ to resume), keep stack on "pause".
+            self._window.extracted_page.update_tts_state(paused=True)
+        else:
+            # Playback has resumed: stack must stay on "pause" child (showing ⏸ + stop).
+            # update_tts_state(playing=True) calls swap_controls("playing") which sets
+            # listen_stack to "pause" and re-enables the correct controls.
+            self._window.extracted_page.update_tts_state(playing=True)
 
     def _on_tts_error(self, _service, message):
         self._window.show_toast(message)
