@@ -4,12 +4,13 @@
 # SPDX-License-Identifier: MIT
 
 from collections.abc import Callable
+from gettext import gettext as _
 import os
 from pathlib import Path
 import shutil
+import tempfile
 import threading
 import time
-import uuid
 
 from gi.repository import Gio, GLib
 from loguru import logger
@@ -78,7 +79,17 @@ class LegacyX11Provider(ScreenshotProvider):
             callback(False, None, "scrot not found")
             return
 
-        output_path = f"/tmp/anura-shot-{uuid.uuid4().hex}.png"
+        # Security: Use tempfile.mkstemp() to create a secure temporary file with
+        # 0600 permissions. This prevents symlink attacks and ensures the
+        # screenshot is not world-readable in the shared /tmp directory.
+        try:
+            fd, output_path = tempfile.mkstemp(prefix="anura-shot-", suffix=".png")
+            os.close(fd)
+        except (OSError, RuntimeError) as e:
+            logger.error(f"LegacyX11Provider: Failed to create secure temp file: {e}")
+            callback(False, None, _("Failed to create temporary file"))
+            return
+
         argv = [scrot_bin, "-s", output_path]
 
         logger.info(f"LegacyX11Provider: Spawning scrot from '{scrot_bin}'")
