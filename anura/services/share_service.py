@@ -71,18 +71,40 @@ class ShareService(GObject.GObject):
 
         url = url.strip() if url else ""
 
-        # Allow mailto and web+mastodon schemes after passing fundamental checks
-        if url.startswith("mailto:") or url.startswith("web+mastodon:"):
+        # Use urlparse to extract the scheme for more robust validation
+        try:
+            from urllib.parse import urlparse
+
+            scheme = urlparse(url).scheme.lower()
+        except (ValueError, AttributeError):
+            return False
+
+        # If it's a web URL, use the standard uri_validator (includes hostname checks)
+        if scheme in ("http", "https"):
+            return uri_validator(url)
+
+        # BUG-035: Check if the system has a registered handler for this scheme.
+        # This allows sharing to any installed app (Telegram, Slack, etc.)
+        # that registers a protocol handler.
+        if scheme:
+            try:
+                from gi.repository import Gio
+
+                # Gio.AppInfo.get_default_for_uri_scheme returns None if no handler is found
+                handler = Gio.AppInfo.get_default_for_uri_scheme(scheme)
+                if handler is not None:
+                    return True
+            except (ImportError, ValueError, RuntimeError, TypeError):
+                # Fallback to whitelist if Gio/AppInfo is unavailable or fails
+                pass
+
+        # Fallback Whitelist: Allow common safe schemes if dynamic detection is
+        # unavailable or if running in a restricted/headless environment.
+        safe_schemes = ("mailto", "web+mastodon", "tg", "slack", "zoom", "discord", "whatsapp")
+        if scheme in safe_schemes:
             return True
 
-        # BUG-035: Check for other common safe schemes or if a handler exists.
-        # We allow a set of pre-defined safe protocol schemes.
-        safe_schemes = ("tg:", "slack:", "zoom:", "discord:", "whatsapp:")
-        if any(url.startswith(scheme) for scheme in safe_schemes):
-            return True
-
-        # Use centralized uri_validator for http/https URLs (includes hostname validation)
-        return uri_validator(url)
+        return False
 
     def share(self, provider: str, text: str) -> None:
         """
