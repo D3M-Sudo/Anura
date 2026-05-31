@@ -1613,3 +1613,21 @@ msgstr ""
 #, fuzzy
 #~ msgid "Extracted Text from Anura"
 #~ msgstr "Extrayez du texte depuis n’importe où"
+
+msgctxt "Extracted screen"
+msgid "Copy Selected Text to Clipboard (Ctrl+C)"
+msgstr ""
+
+msgctxt "Extracted screen"
+msgid "Listen to Selected Text (Ctrl+L)"
+msgstr ""
+
+msgctxt "Extracted screen"
+msgid "Share Selection To"
+msgstr ""
+
+msgid "Select all text"
+msgstr ""
+
+msgid "Open preferences to download more languages"
+msgstr ""

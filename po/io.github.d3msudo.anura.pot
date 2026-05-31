@@ -1540,3 +1540,26 @@ msgstr ""
 #: ../data/io.github.d3msudo.anura.metainfo.xml.in:54
 msgid "Extracted text displayed after OCR recognition"
 msgstr ""
+
+#: ../anura/widgets/extracted_page.py:161
+msgctxt "Extracted screen"
+msgid "Copy Selected Text to Clipboard (Ctrl+C)"
+msgstr ""
+
+#: ../anura/widgets/extracted_page.py:162
+msgctxt "Extracted screen"
+msgid "Listen to Selected Text (Ctrl+L)"
+msgstr ""
+
+#: ../anura/widgets/extracted_page.py:163
+msgctxt "Extracted screen"
+msgid "Share Selection To"
+msgstr ""
+
+#: ../anura/widgets/shortcuts_overlay.py:74
+msgid "Select all text"
+msgstr ""
+
+#: ../data/ui/language_popover.blp:87
+msgid "Open preferences to download more languages"
+msgstr ""
