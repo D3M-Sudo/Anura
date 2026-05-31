@@ -75,6 +75,12 @@ class ShareService(GObject.GObject):
         if url.startswith("mailto:") or url.startswith("web+mastodon:"):
             return True
 
+        # BUG-035: Check for other common safe schemes or if a handler exists.
+        # We allow a set of pre-defined safe protocol schemes.
+        safe_schemes = ("tg:", "slack:", "zoom:", "discord:", "whatsapp:")
+        if any(url.startswith(scheme) for scheme in safe_schemes):
+            return True
+
         # Use centralized uri_validator for http/https URLs (includes hostname validation)
         return uri_validator(url)
 

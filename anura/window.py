@@ -30,7 +30,7 @@ from anura.core.atomic_task_manager import get_atomic_manager  # noqa: E402
 from anura.models.context import get_app_context  # noqa: E402
 from anura.services.clipboard_service import get_clipboard_service  # noqa: E402
 from anura.services.language_manager import get_language_manager  # noqa: E402
-from anura.services.screenshot_service import ScreenshotService  # noqa: E402
+from anura.services.screenshot_service import ScreenshotService, get_screenshot_service  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
 from anura.utils import validate_image_resource  # noqa: E402
 from anura.utils.signal_manager import SignalManagerMixin  # noqa: E402
@@ -61,7 +61,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     _clipboard_service: Any | None
     _screenshot_timeout_id: int | None
 
-    def __init__(self, backend: ScreenshotService, **kwargs: object) -> None:
+    def __init__(self, backend: ScreenshotService | None = None, **kwargs: object) -> None:
         super().__init__(**kwargs)
         SignalManagerMixin.__init__(self)
 
@@ -100,6 +100,11 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         self.ocr_controller = OcrController(self)
         self.tts_controller = TtsController(self)
         self.dnd_controller = DndController(self)
+
+        if backend is None:
+            self.backend = get_screenshot_service()
+        else:
+            self.backend = backend
 
         self.connect_tracked(self.extracted_page, "go-back", self.show_welcome_page)  # type: ignore[arg-type]
         self._clipboard_service = None
@@ -167,7 +172,8 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         lang: str = self.get_language()
 
         # Check if backend is already capturing BEFORE hiding the window
-        if hasattr(self.backend, "_is_capturing") and self.backend._is_capturing:
+        # BUG-040: Use public is_busy property instead of private _is_capturing
+        if self.backend.is_busy:
             logger.warning("Anura: Capture already in progress.")
             self.show_toast(_("Capture already in progress"))
             return

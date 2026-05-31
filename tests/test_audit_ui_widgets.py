@@ -63,14 +63,14 @@ try:
 except Exception as _register_exc:
     warnings.warn(
         f"Adw.Application.register() failed: {_register_exc}. "
-        "Falling back to Gtk.init()."
+        "Falling back to Gtk.init().", stacklevel=2
     )
     try:
         Gtk.init()
     except Exception as _init_exc:
         warnings.warn(
             f"Gtk.init() also failed: {_init_exc}. "
-            "@Gtk.Template widgets will likely segfault."
+            "@Gtk.Template widgets will likely segfault.", stacklevel=2
         )
 
 

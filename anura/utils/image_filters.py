@@ -200,8 +200,10 @@ class FilterChain:
                 if result is not prev_result and result is not image:
                     intermediates.append(result)
 
-                # Occasional GC trigger for large buffers
-                if result.size[0] * result.size[1] > 4000000:  # > 4MP
+                # BUG-038: Redundant GC Overhead.
+                # Only trigger manual GC if image is significantly large (>10MP)
+                # to avoid frequent stop-the-world stutters in high-throughput pipelines.
+                if result.size[0] * result.size[1] > 10_000_000:  # > 10MP
                     gc.collect()
 
             # Final result is returned; all other intermediates created

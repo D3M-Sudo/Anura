@@ -703,7 +703,7 @@
         "why_it_is_wrong": "World-readable sensitive data (screenshot pixels) in shared temporary space.",
         "fix_prescription": "Use tempfile.mkstemp() to create the file with 0600 permissions immediately."
       },
-      "status": "OPEN",
+      "status": "FIXED",
       "pattern_matched": "Insecure temporary file",
       "tool_confirmations": [
         "Bandit B108"
@@ -729,7 +729,7 @@
         "description": "Architectural Drift: ScreenshotService is a GObject but does not follow the ThreadSafeSingleton pattern used by Settings or LanguageManager.",
         "fix_prescription": "Refactor to use ThreadSafeSingleton mixin/pattern."
       },
-      "status": "OPEN",
+      "status": "FIXED",
       "pattern_matched": "Inconsistent singleton",
       "tool_confirmations": [],
       "variable_lifecycle": [],
@@ -753,7 +753,7 @@
         "description": "State Deadlock Risk: The _is_capturing flag is set to True at the start of capture() and only reset to False within the _on_capture_result callback. If the underlying provider fails to invoke the callback, the ScreenshotService enters a permanent 'stuck' state.",
         "fix_prescription": "Implement a timeout mechanism or a try...finally guard in the provider to ensure the callback is ALWAYS executed."
       },
-      "status": "OPEN",
+      "status": "FIXED",
       "pattern_matched": "State deadlock",
       "tool_confirmations": [],
       "variable_lifecycle": [],
@@ -777,7 +777,7 @@
         "description": "Race Condition in TTSService: generate() starts by unlinking _current_speech_file under a lock, but then releases the lock to perform I/O and tts.save(). If two calls to generate() happen rapidly, both might enter the 'save' phase with different filepaths, but only the last one updates _current_speech_file. The first file becomes an orphaned leak in /tmp.",
         "fix_prescription": "Use a local variable for the current filepath and only update the shared state after successful save, or use a task queue to serialize generations."
       },
-      "status": "OPEN",
+      "status": "FIXED",
       "pattern_matched": "Race condition on resource cleanup",
       "tool_confirmations": [],
       "variable_lifecycle": [],
@@ -801,7 +801,7 @@
         "description": "Resource Leak in TTSService: The service starts a daemon thread to fetch gTTS languages but never joins or cancels it. In a headless environment without internet, this thread might hang on a socket timeout, outliving the application shutdown if it happens quickly enough.",
         "fix_prescription": "Use a cancellable session or provide a way to terminate the initialization thread during shutdown()."
       },
-      "status": "OPEN",
+      "status": "FIXED",
       "pattern_matched": "Orphaned daemon thread",
       "tool_confirmations": [],
       "variable_lifecycle": [],
@@ -825,7 +825,7 @@
         "description": "Homograph Defense Bypass: The is_safe_url_string check for mixed-script hostnames relies on urlparse(text).hostname. If a malicious URL is passed as 'https://goog\u0430le.com' (with a Cyrillic 'a'), urlparse might fail or return None if the string is malformed in a specific way, causing the entire security check to be skipped. Furthermore, the check only blocks Cyrillic and Greek, missing other script-mixing attacks (e.g., Armenian or Hebrew characters that look like Latin).",
         "fix_prescription": "Use a more robust TLD/IDN validation library or a strict whitelist of allowed Unicode blocks for hostnames."
       },
-      "status": "OPEN",
+      "status": "FIXED",
       "pattern_matched": "Security validation gap",
       "tool_confirmations": [],
       "variable_lifecycle": [],
@@ -873,7 +873,7 @@
         "description": "Heuristic Precision Issue: The h_diff check for merging lines uses a hardcoded multiplier of 3 (avg_height * 3). This is too loose for multi-column text where lines in adjacent columns might be accidentally merged if they start within a few 'line heights' of each other horizontally.",
         "fix_prescription": "Reduce the multiplier or implement a more robust column detection by checking the horizontal overlap ratio between lines."
       },
-      "status": "OPEN",
+      "status": "FIXED",
       "pattern_matched": "Heuristic precision error",
       "tool_confirmations": [],
       "variable_lifecycle": [],
@@ -897,7 +897,7 @@
         "description": "Ambiguous Scoring Logic: ParagraphTransformer returns a score derived from 'breaks', which is num_blocks + num_pars - 1. In a single-block multi-paragraph result, num_blocks is 1, num_pars > 1, so breaks > 1. However, MultiLineTransformer returns a fixed 60.0 for num_lines > 1 and num_blocks == 1 and num_pars == 1. There is a logic gap where a 2-paragraph single-block result might get a score lower than 60.0 (e.g. 100 - (100/2.05) \u2248 51), causing MultiLine to win even if it's clearly a paragraph structure.",
         "fix_prescription": "Adjust the base offset of ParagraphTransformer to always exceed the maximum possible MultiLine/SingleLine score for any result with > 1 paragraph."
       },
-      "status": "OPEN",
+      "status": "FIXED",
       "pattern_matched": "Logic flaw",
       "tool_confirmations": [],
       "variable_lifecycle": [],
@@ -921,7 +921,7 @@
         "description": "Redundant GC Overhead: FilterChain.apply calls gc.collect() explicitly for images > 4MP inside a loop. While intended to prevent OOM, frequent gc.collect() calls in a high-throughput OCR pipeline (e.g. processing a large batch of images) can lead to 'stop-the-world' micro-stutters and reduced overall performance, especially since PIL's intermediate buffers are often re-used or closed immediately anyway.",
         "fix_prescription": "Rely on automatic GC or increase the threshold/frequency of manual collection based on system memory pressure rather than fixed pixel counts."
       },
-      "status": "OPEN",
+      "status": "FIXED",
       "pattern_matched": "Performance anti-pattern",
       "tool_confirmations": [],
       "variable_lifecycle": [],
@@ -945,7 +945,7 @@
         "description": "Redundant Teardown Logic: OcrController.teardown() calls self.cleanup(), but both methods perform roughly the same work (disconnecting signals). This is consistent with other controllers (Tts, Dnd) but indicates a slight architectural bloat where SignalManagerMixin's teardown_all() might already be covering most of this via the connect_tracked() registry.",
         "fix_prescription": "Consolidate cleanup logic into a single method or rely more heavily on SignalManagerMixin's automated tracking."
       },
-      "status": "OPEN",
+      "status": "FIXED",
       "pattern_matched": "Code redundancy",
       "tool_confirmations": [],
       "variable_lifecycle": [],
@@ -969,7 +969,7 @@
         "description": "Fragile Screenshot Lock: AnuraWindow.get_screenshot checks hasattr(self.backend, '_is_capturing') and self.backend._is_capturing to prevent concurrent captures. However, this is accessing a private internal state of ScreenshotService directly from the View layer. Furthermore, if the backend is already capturing, the window simply emits a warning and returns, but it doesn't handle the case where a previous capture might have hung without resetting the flag (referencing BUG-031).",
         "fix_prescription": "Expose a public 'is_busy' property or method on ScreenshotService and implement a manual override/reset in Preferences for hung states."
       },
-      "status": "OPEN",
+      "status": "FIXED",
       "pattern_matched": "Layer violation / Fragile locking",
       "tool_confirmations": [],
       "variable_lifecycle": [],
@@ -993,7 +993,7 @@
         "description": "Inconsistent Signal Teardown: WelcomePage.do_destroy attempts manual disconnection of some signal handlers (e.g. _language_changed_handler_id) but doesn't inherit from SignalManagerMixin or use teardown_all(). While it's a widget and managed by GTK, manual signal tracking is more prone to errors and omissions (like the DnD handlers which are partially covered but complex).",
         "fix_prescription": "Inherit from SignalManagerMixin and use connect_tracked for all signals to ensure automatic, consistent cleanup."
       },
-      "status": "OPEN",
+      "status": "FIXED",
       "pattern_matched": "Inconsistent implementation",
       "tool_confirmations": [],
       "variable_lifecycle": [],
@@ -1017,7 +1017,7 @@
         "description": "UI Flickering Risk: populate_model calls self.lang_list.remove_all() before re-populating from scratch every time the popover is shown or a language is added/removed. For a user with many language models, this can cause a noticeable 'flash' or momentary empty state in the ListBox as the model is rebuilt.",
         "fix_prescription": "Implement a diff-based update for the ListStore or use a Gtk.FilterListModel more effectively to avoid full rebuilds on simple state changes."
       },
-      "status": "OPEN",
+      "status": "FIXED",
       "pattern_matched": "Inefficient UI update",
       "tool_confirmations": [],
       "variable_lifecycle": [],

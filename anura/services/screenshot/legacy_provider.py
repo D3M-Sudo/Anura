@@ -4,12 +4,14 @@
 # SPDX-License-Identifier: MIT
 
 from collections.abc import Callable
+import contextlib
+from gettext import gettext as _
 import os
 from pathlib import Path
 import shutil
+import tempfile
 import threading
 import time
-import uuid
 
 from gi.repository import Gio, GLib
 from loguru import logger
@@ -78,7 +80,16 @@ class LegacyX11Provider(ScreenshotProvider):
             callback(False, None, "scrot not found")
             return
 
-        output_path = f"/tmp/anura-shot-{uuid.uuid4().hex}.png"
+        # Security: Create a temporary file with restrictive (0600) permissions
+        # before passing the path to scrot.
+        try:
+            fd, output_path = tempfile.mkstemp(prefix="anura-shot-", suffix=".png")
+            os.close(fd)
+        except OSError as e:
+            logger.error(f"LegacyX11Provider: Failed to create temporary file: {e}")
+            callback(False, None, _("Failed to create temporary file."))
+            return
+
         argv = [scrot_bin, "-s", output_path]
 
         logger.info(f"LegacyX11Provider: Spawning scrot from '{scrot_bin}'")
@@ -121,68 +132,74 @@ class LegacyX11Provider(ScreenshotProvider):
             self._proc = None
             self._cancellable = None
 
-        # --- 1. Collect exit status ---
         try:
-            proc.wait_finish(res)
-        except GLib.Error as e:
-            if e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED):
-                logger.debug("LegacyX11Provider: scrot capture cancelled.")
+            # --- 1. Collect exit status ---
+            try:
+                proc.wait_finish(res)
+            except GLib.Error as e:
+                if e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED):
+                    logger.debug("LegacyX11Provider: scrot capture cancelled.")
+                    self._cleanup_file(output_path)
+                    callback(False, None, None)
+                    return
+                logger.error(f"LegacyX11Provider: Error waiting for scrot process: {e.message}")
                 self._cleanup_file(output_path)
+                callback(False, None, e.message)
+                return
+            except (AttributeError, RuntimeError, TypeError) as e:
+                logger.error(f"LegacyX11Provider: Error waiting for scrot process: {e}")
+                self._cleanup_file(output_path)
+                callback(False, None, str(e))
+                return
+
+            # --- 2. Non-zero exit = user pressed Esc / tool error ---
+            if not proc.get_if_exited() or proc.get_exit_status() != 0:
+                exit_status = proc.get_exit_status() if proc.get_if_exited() else -1
+                logger.info(
+                    f"LegacyX11Provider: scrot exited with status {exit_status} — "
+                    "user likely cancelled the selection."
+                )
+                self._cleanup_file(output_path)
+                # Treat non-zero exit as user cancellation (None error = no error toast)
                 callback(False, None, None)
                 return
-            logger.error(f"LegacyX11Provider: Error waiting for scrot process: {e.message}")
-            self._cleanup_file(output_path)
-            callback(False, None, e.message)
-            return
+
+            # --- 3. Retry loop: wait for filesystem to flush the PNG ---
+            # scrot may exit before the OS has written all bytes to disk.
+            file_ready = False
+            path = Path(output_path)
+            for attempt in range(_FILE_READY_RETRIES):
+                if path.exists() and path.stat().st_size > 0:
+                    file_ready = True
+                    break
+                if attempt < _FILE_READY_RETRIES - 1:
+                    time.sleep(_FILE_READY_DELAY_S)
+
+            if not file_ready:
+                logger.warning(
+                    f"LegacyX11Provider: scrot exited 0 but produced no output after "
+                    f"{_FILE_READY_RETRIES} retries (path={output_path})."
+                )
+                self._cleanup_file(output_path)
+                callback(False, None, _("Screenshot tool produced no output."))
+                return
+
+            # --- 4. Success: convert path to file:// URI for the OCR pipeline ---
+            try:
+                uri = GLib.filename_to_uri(output_path, None)
+            except GLib.Error as e:
+                logger.error(f"LegacyX11Provider: Failed to build URI for '{output_path}': {e.message}")
+                self._cleanup_file(output_path)
+                callback(False, None, e.message)
+                return
+
+            logger.info(f"LegacyX11Provider: scrot capture successful → {output_path}")
+            callback(True, uri, None)
         except (AttributeError, RuntimeError, TypeError) as e:
-            logger.error(f"LegacyX11Provider: Error waiting for scrot process: {e}")
-            self._cleanup_file(output_path)
-            callback(False, None, str(e))
-            return
-
-        # --- 2. Non-zero exit = user pressed Esc / tool error ---
-        if not proc.get_if_exited() or proc.get_exit_status() != 0:
-            exit_status = proc.get_exit_status() if proc.get_if_exited() else -1
-            logger.info(
-                f"LegacyX11Provider: scrot exited with status {exit_status} — "
-                "user likely cancelled the selection."
-            )
-            self._cleanup_file(output_path)
-            # Treat non-zero exit as user cancellation (None error = no error toast)
-            callback(False, None, None)
-            return
-
-        # --- 3. Retry loop: wait for filesystem to flush the PNG ---
-        # scrot may exit before the OS has written all bytes to disk.
-        file_ready = False
-        path = Path(output_path)
-        for attempt in range(_FILE_READY_RETRIES):
-            if path.exists() and path.stat().st_size > 0:
-                file_ready = True
-                break
-            if attempt < _FILE_READY_RETRIES - 1:
-                time.sleep(_FILE_READY_DELAY_S)
-
-        if not file_ready:
-            logger.warning(
-                f"LegacyX11Provider: scrot exited 0 but produced no output after "
-                f"{_FILE_READY_RETRIES} retries (path={output_path})."
-            )
-            self._cleanup_file(output_path)
-            callback(False, None, "Screenshot tool produced no output.")
-            return
-
-        # --- 4. Success: convert path to file:// URI for the OCR pipeline ---
-        try:
-            uri = GLib.filename_to_uri(output_path, None)
-        except GLib.Error as e:
-            logger.error(f"LegacyX11Provider: Failed to build URI for '{output_path}': {e.message}")
-            self._cleanup_file(output_path)
-            callback(False, None, e.message)
-            return
-
-        logger.info(f"LegacyX11Provider: scrot capture successful → {output_path}")
-        callback(True, uri, None)
+            # BUG-031: Ensure callback is ALWAYS invoked to prevent ScreenshotService deadlock
+            logger.exception(f"LegacyX11Provider: Fatal error in callback wrapper: {e}")
+            with contextlib.suppress(Exception):
+                callback(False, None, str(e))
 
     @staticmethod
     def _cleanup_file(path: str) -> None:

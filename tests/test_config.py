@@ -21,7 +21,7 @@ class TestLangCodePattern:
     """Tests for LANG_CODE_PATTERN — the security boundary before Tesseract."""
 
     @pytest.fixture(autouse=True)
-    def import_pattern(self, headless_gi_mocks):  # noqa: ARG002
+    def import_pattern(self, headless_gi_mocks):
         from anura.config import LANG_CODE_PATTERN
 
         self.pattern = LANG_CODE_PATTERN
@@ -93,7 +93,7 @@ class TestGetTesseractConfig:
     """Tests for get_tesseract_config() path resolution logic."""
 
     @pytest.fixture(autouse=True)
-    def mock_lm_dependencies(self, monkeypatch, headless_gi_mocks):  # noqa: ARG002
+    def mock_lm_dependencies(self, monkeypatch, headless_gi_mocks):
         import anura.services.language_manager as lm
 
         mock_settings = MagicMock()
@@ -212,14 +212,14 @@ class TestLogLevel:
         yield
         sys.modules.pop("anura.config", None)
 
-    def test_default_log_level_is_info(self, monkeypatch, headless_gi_mocks):  # noqa: ARG002
+    def test_default_log_level_is_info(self, monkeypatch, headless_gi_mocks):
         """Without ANURA_LOG_LEVEL, LOG_LEVEL defaults to INFO."""
         monkeypatch.delenv("ANURA_LOG_LEVEL", raising=False)
         import anura.config as cfg
 
         assert cfg.LOG_LEVEL == "INFO"
 
-    def test_debug_override(self, monkeypatch, headless_gi_mocks):  # noqa: ARG002
+    def test_debug_override(self, monkeypatch, headless_gi_mocks):
         """ANURA_LOG_LEVEL=DEBUG sets LOG_LEVEL to DEBUG."""
         monkeypatch.setenv("ANURA_LOG_LEVEL", "DEBUG")
         sys.modules.pop("anura.config", None)
@@ -227,7 +227,7 @@ class TestLogLevel:
 
         assert cfg.LOG_LEVEL == "DEBUG"
 
-    def test_invalid_fallback_to_info(self, monkeypatch, headless_gi_mocks):  # noqa: ARG002
+    def test_invalid_fallback_to_info(self, monkeypatch, headless_gi_mocks):
         """Invalid ANURA_LOG_LEVEL falls back to INFO."""
         monkeypatch.setenv("ANURA_LOG_LEVEL", "VERBOSE")
         sys.modules.pop("anura.config", None)

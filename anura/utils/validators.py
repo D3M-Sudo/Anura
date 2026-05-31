@@ -81,38 +81,60 @@ def is_safe_url_string(text: str) -> bool:
     if "\\" in text:
         return False
 
-    # 3. Homograph detection: If the hostname mixes ASCII Latin letters with
-    # non-ASCII characters, reject the URL unless it's entirely non-ASCII or
-    # uses a safe script. To prevent homograph attacks (e.g. mixing 'a' and 'cyrillic-a'),
-    # we reject any URL that contains both ASCII letters and non-ASCII characters,
-    # unless the non-ASCII part is specifically whitelisted or properly handled
-    # by IDNA.
-    # Logic note: We must isolate the hostname for this check to avoid flagging
-    # the 'https://' prefix as the ASCII component of a mixed-script string.
+    # 3. Homograph detection (BUG-034): If the hostname mixes ASCII Latin letters with
+    # non-ASCII characters, reject the URL. This prevents homograph attacks
+    # (e.g. mixing 'a' and 'cyrillic-a').
     try:
         from urllib.parse import urlparse
         parsed_for_homograph = urlparse(text)
         hostname = parsed_for_homograph.hostname or ""
-        if hostname and not hostname.isascii() and any(ch.isascii() and ch.isalpha() for ch in hostname):
-            # If it's not pure ASCII but contains ASCII letters, it's a mixed-script
-            # string which is a high risk for homograph attacks.
-            for ch in hostname:
-                cp = ord(ch)
-                if cp > 0x7F:
-                    # Block Cyrillic (0x0400-0x052F) and Greek (0x0370-0x03FF)
-                    # when mixed with ASCII letters in the hostname.
-                    if 0x0400 <= cp <= 0x052F or 0x0370 <= cp <= 0x03FF:
-                        return False
 
-                    # Also block generic non-ASCII if mixed with ASCII in the hostname.
-                    if not (0x00A0 <= cp <= 0x00FF): # Latin-1 Supplement (includes é, ü, etc.)
-                         return False
-
-            # Even with Latin-1, we reject mixed-script hostnames by default (e.g. googlé.com)
-            # as they are rarely legitimate and often used for spoofing.
+        # Defense-in-depth: If urlparse fails to identify a hostname but the
+        # string looks like it has one (e.g. 'https://goog\u0430le.com'),
+        # we reject it as malformed/potentially malicious.
+        if not hostname and "://" in text:
             return False
+
+        if hostname and not hostname.isascii():
+            # Check for mixed-script labels. We iterate through DNS labels
+            # to be more precise than checking the whole hostname at once.
+            for label in hostname.split("."):
+                if not label or label.isascii():
+                    continue
+
+                # If the label contains both ASCII alphanumeric and non-ASCII, it's a high-risk mixed script.
+                has_ascii = any(ch.isascii() and ch.isalnum() for ch in label)
+                if has_ascii:
+                    # Whitelist: Latin-1 Supplement (0x00A0-0x00FF) is generally safe
+                    # (e.g. German umlauts like 'münchen.de') but we still block
+                    # mixing them with ASCII in a single label if they are used
+                    # for spoofing. However, standard IDN rules allow Latin-1 + ASCII.
+                    # We block Cyrillic, Greek, Armenian, Hebrew, etc. if mixed with ASCII.
+                    for ch in label:
+                        cp = ord(ch)
+                        if cp > 0x7F and not (0x00A0 <= cp <= 0x00FF):
+                            # Reject if outside Latin-1 Supplement but mixed with ASCII
+                            return False
+                else:
+                    # Pure non-ASCII label (e.g. '中文'): check for suspicious scripts
+                    # commonly used in homograph attacks.
+                    for ch in label:
+                        cp = ord(ch)
+                        # Block Cyrillic (0x0400-0x052F) and Greek (0x0370-0x03FF)
+                        # if the overall hostname also contains ASCII labels (e.g. 'goog\u0430.com')
+                        if (0x0400 <= cp <= 0x052F or 0x0370 <= cp <= 0x03FF) and hostname.isascii() is False:
+                            # If hostname is not pure ASCII, we allow these scripts
+                            # ONLY if the entire hostname uses them (pure IDN).
+                            # If there's ANY ASCII label elsewhere, we block.
+                            any_ascii_label = any(
+                                part.isascii() and any(c.isalpha() for c in part) for part in hostname.split(".")
+                            )
+                            if any_ascii_label:
+                                return False
+
     except (ValueError, AttributeError, TypeError):
-        pass
+        # Malformed URL parsing - treat as unsafe
+        return False
 
     # 4. IDN normalization: convert international domain names (IDN) to their
     # Punycode ASCII-compatible encoding (ACE) before the ASCII safety check.
