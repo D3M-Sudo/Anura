@@ -27,22 +27,27 @@ jobs:
           args: check --select E,F,W,I --target-version py312
 
       - name: Run tests with coverage
+        env:
+          ANURA_CI_TEST_MODE: "1"
         run: |
           pip install uv
           uv sync --dev
           # The --ignore flags below mirror the addopts list in pyproject.toml.
           # They are kept explicit here so the gtk-tests job can override
           # addopts independently and collect those files without them.
+          # Keep in sync with pyproject.toml [tool.pytest.ini_options] addopts.
           uv run pytest tests/ -m "not gtk" \
             --ignore=tests/test_clipboard_service.py \
             --ignore=tests/test_screenshot_service.py \
             --ignore=tests/test_share_service.py \
             --ignore=tests/test_tts_service.py \
             --ignore=tests/test_notification_service.py \
-            --ignore=tests/test_services.py \
             --ignore=tests/test_language_manager.py \
-            --ignore=tests/test_tts.py \
             --ignore=tests/test_tts_initialization.py \
+            --ignore=tests/test_app_lifecycle.py \
+            --ignore=tests/test_widgets.py \
+            --ignore=tests/test_audit_app_logic.py \
+            --ignore=tests/test_integration_cli_enterprise.py \
             --cov=anura --cov-report=xml --cov-report=term-missing
 
       - name: Upload coverage report
