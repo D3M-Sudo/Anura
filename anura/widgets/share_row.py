@@ -25,8 +25,13 @@ class ShareRow(Gtk.ListBoxRow):
         super().__init__()
 
         self.provider_name = provider_name or "email"
-        self.box.set_tooltip_text(_("Share via {name}").format(name=provider_name.capitalize()))
-        self.label.set_label(provider_name.capitalize())
+        display_name = provider_name.capitalize()
+        tooltip = _("Share via {name}").format(name=display_name)
+
+        self.box.set_tooltip_text(tooltip)
+        self.update_property([Gtk.AccessibleProperty.LABEL], [tooltip])
+
+        self.label.set_label(display_name)
         self.image.set_from_icon_name(f"share-{self.provider_name.lower()}-symbolic")
 
     @Gtk.Template.Callback()

@@ -91,6 +91,7 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                             <property name="margin-top">8</property>
                             <property name="hexpand">true</property>
                             <property name="label" translatable="true">Add Language</property>
+                            <property name="tooltip-text" translatable="true">Open preferences to download more languages</property>
                             <signal name="clicked" handler="_on_add_clicked"/>
                           </object>
                         </child>

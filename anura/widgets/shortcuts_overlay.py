@@ -71,6 +71,7 @@ class ShortcutsOverlay(Adw.Window):
             {
                 "category": _("Text Operations"),
                 "shortcuts": [
+                    {"key": "<Control>a", "description": _("Select all text")},
                     {"key": "<Control>c", "description": _("Copy text to clipboard")},
                     {"key": "<Control>l", "description": _("Listen to text (TTS)")},
                     {"key": "<Control><Shift>l", "description": _("Stop text-to-speech")},

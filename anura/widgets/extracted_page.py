@@ -7,6 +7,7 @@
 import contextlib
 from gettext import gettext as _
 from gettext import ngettext
+from gettext import pgettext as C_
 from typing import ClassVar
 
 import gi
@@ -151,6 +152,31 @@ class ExtractedPage(Adw.NavigationPage):
         # Construct the stats label using a single translatable string
         stats = _("{words} | {chars}").format(words=words_text, chars=chars_text)
         self.stats_label.set_text(f"{prefix}{stats}")
+
+        self._update_action_tooltips(bool(selection))
+
+    def _update_action_tooltips(self, has_selection: bool) -> None:
+        """Update tooltips and accessibility labels based on whether text is selected."""
+        if has_selection:
+            copy_tooltip = C_("Extracted screen", "Copy Selected Text to Clipboard (Ctrl+C)")
+            listen_tooltip = C_("Extracted screen", "Listen to Selected Text (Ctrl+L)")
+            share_tooltip = C_("Extracted screen", "Share Selection To")
+        else:
+            copy_tooltip = C_("Extracted screen", "Copy Extracted Text to Clipboard (Ctrl+C)")
+            listen_tooltip = C_("Extracted screen", "Listen to Text (Ctrl+L)")
+            share_tooltip = C_("Extracted screen", "Share To")
+
+        if self.text_copy_btn:
+            self.text_copy_btn.set_tooltip_text(copy_tooltip)
+            self.text_copy_btn.update_property([Gtk.AccessibleProperty.LABEL], [copy_tooltip])
+
+        if self.listen_btn:
+            self.listen_btn.set_tooltip_text(listen_tooltip)
+            self.listen_btn.update_property([Gtk.AccessibleProperty.LABEL], [listen_tooltip])
+
+        if self.share_button:
+            self.share_button.set_tooltip_text(share_tooltip)
+            self.share_button.update_property([Gtk.AccessibleProperty.LABEL], [share_tooltip])
 
     def show_copy_feedback(self) -> None:
         """Temporarily change the copy button icon to a checkmark for UX feedback."""
