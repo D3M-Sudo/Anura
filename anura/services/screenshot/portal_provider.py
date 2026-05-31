@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: MIT
 
 from collections.abc import Callable
+import contextlib
 import threading
 
 from gi.repository import Gio, GLib, Xdp
@@ -62,43 +63,49 @@ class PortalProvider(ScreenshotProvider):
             self._cancellable = None
 
         try:
-            uri = self.portal.take_screenshot_finish(res)
-            if uri:
-                callback(True, uri, None)
-            else:
-                # Cancelled by user (portal returned empty URI)
-                callback(False, None, None)
-        except GLib.Error as e:
-            if e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED):
-                callback(False, None, None)
-            else:
-                # Log full error context (domain + code + message)
-                logger.error(
-                    "PortalProvider: Portal failed to provide a screenshot "
-                    f"(domain={e.domain}, code={e.code}): {e.message}",
-                )
-
-                is_generic = (
-                    e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.FAILED)
-                    and (e.message or "").strip().lower() == "screenshot failed"
-                )
-
-                if is_generic:
-                    logger.warning(
-                        "PortalProvider: xdg-desktop-portal screenshot backend failed (code=0). "
-                        "This is often caused by missing portal backends or an unavailable "
-                        "session bus. Try installing one of: "
-                        "xdg-desktop-portal-gnome, xdg-desktop-portal-gtk, "
-                        "xdg-desktop-portal-kde.",
-                    )
+            try:
+                uri = self.portal.take_screenshot_finish(res)
+                if uri:
+                    callback(True, uri, None)
                 else:
-                    logger.warning(
-                        "PortalProvider: unexpected portal error "
-                        f"(domain={e.domain}, code={e.code}): {e.message} — "
-                        "screenshot will use fallback if available.",
+                    # Cancelled by user (portal returned empty URI)
+                    callback(False, None, None)
+            except GLib.Error as e:
+                if e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED):
+                    callback(False, None, None)
+                else:
+                    # Log full error context (domain + code + message)
+                    logger.error(
+                        "PortalProvider: Portal failed to provide a screenshot "
+                        f"(domain={e.domain}, code={e.code}): {e.message}",
                     )
 
-                callback(False, None, e.message)
-        except RuntimeError as e:
-            logger.error(f"PortalProvider: Unexpected error: {e}")
-            callback(False, None, str(e))
+                    is_generic = (
+                        e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.FAILED)
+                        and (e.message or "").strip().lower() == "screenshot failed"
+                    )
+
+                    if is_generic:
+                        logger.warning(
+                            "PortalProvider: xdg-desktop-portal screenshot backend failed (code=0). "
+                            "This is often caused by missing portal backends or an unavailable "
+                            "session bus. Try installing one of: "
+                            "xdg-desktop-portal-gnome, xdg-desktop-portal-gtk, "
+                            "xdg-desktop-portal-kde.",
+                        )
+                    else:
+                        logger.warning(
+                            "PortalProvider: unexpected portal error "
+                            f"(domain={e.domain}, code={e.code}): {e.message} — "
+                            "screenshot will use fallback if available.",
+                        )
+
+                    callback(False, None, e.message)
+            except RuntimeError as e:
+                logger.error(f"PortalProvider: Unexpected error: {e}")
+                callback(False, None, str(e))
+        except (AttributeError, RuntimeError, TypeError) as e:
+            # BUG-031: Ensure callback is ALWAYS invoked to prevent ScreenshotService deadlock
+            logger.exception(f"PortalProvider: Fatal error in callback wrapper: {e}")
+            with contextlib.suppress(Exception):
+                callback(False, None, str(e))

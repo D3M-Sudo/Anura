@@ -124,12 +124,20 @@ class StructuralReconstructor:
         if v_dist > avg_height * self.proximity_threshold:
             return False
 
-        # Heuristic: also prevent merging if lines are physically too far apart vertically (overlap or huge gap)
-        # but the proximity_threshold check above already handles the gap.
-        # If v_dist is negative, it means lines overlap. We usually merge overlapping lines in OCR.
-
+        # BUG-036: Heuristic Precision Issue.
+        # Tighten horizontal difference check to avoid merging lines from adjacent columns.
+        # We use a smaller multiplier (1.5x avg_height) and ensure significant horizontal overlap.
         h_diff = abs(line1["left"] - line2["left"])
-        return h_diff <= avg_height * 3
+        if h_diff > avg_height * 1.5:
+            return False
+
+        # Calculate horizontal overlap ratio to ensure they are likely in the same column
+        overlap_l = max(line1["left"], line2["left"])
+        overlap_r = min(line1["right"], line2["right"])
+        overlap_w = max(0, overlap_r - overlap_l)
+        min_w = min(line1["width"], line2["width"])
+
+        return not (min_w > 0 and (overlap_w / min_w) < 0.4)
 
 
 def get_structural_reconstructor() -> StructuralReconstructor:

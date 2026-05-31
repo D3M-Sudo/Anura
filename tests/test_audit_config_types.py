@@ -26,7 +26,7 @@ from anura.models.download_state import DownloadState
 
 class TestConfig:
     @pytest.fixture(autouse=True)
-    def mock_lm_dependencies(self, monkeypatch, headless_gi_mocks):  # noqa: ARG002
+    def mock_lm_dependencies(self, monkeypatch, headless_gi_mocks):
         import anura.services.language_manager as lm
 
         mock_settings = MagicMock()

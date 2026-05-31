@@ -34,6 +34,7 @@ from anura.services.language_manager import get_tesseract_config  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
 from anura.utils import validate_image_resource  # noqa: E402
 from anura.utils.portal_advice import detect_portal_advice  # noqa: E402
+from anura.utils.singleton import get_instance  # noqa: E402
 from anura.utils.structural_reconstructor import get_structural_reconstructor  # noqa: E402
 from anura.utils.text_preprocessor import get_text_preprocessor  # noqa: E402
 from anura.utils.validators import sanitize_text  # noqa: E402
@@ -225,6 +226,7 @@ class ScreenshotService(GObject.GObject):
 
     def __init__(self) -> None:
         GObject.GObject.__init__(self)
+        logger.debug("ScreenshotService: Initializing singleton")
 
         from anura.services.screenshot.factory import ScreenshotProviderFactory
 
@@ -239,6 +241,11 @@ class ScreenshotService(GObject.GObject):
 
         # Configure Tesseract path for Flatpak environment
         _configure_tesseract_path()
+
+    @GObject.Property(type=bool, default=False)
+    def is_busy(self) -> bool:
+        """Indicates if a capture is currently in progress."""
+        return self._is_capturing
 
     def capture(self, lang: str, copy: bool = False) -> None:
         """Requests a screenshot from the primary provider."""
@@ -712,3 +719,8 @@ class ScreenshotService(GObject.GObject):
                 if not self.cancelable.is_cancelled():
                     self.cancelable.cancel()
                 self.cancelable = None
+
+
+def get_screenshot_service() -> ScreenshotService:
+    """Get thread-safe screenshot service singleton."""
+    return get_instance(ScreenshotService)

@@ -34,8 +34,9 @@ class ParagraphTransformer(TransformerProtocol):
         breaks = ocr_result.num_blocks + ocr_result.num_pars - 1
         if breaks <= 1:
             return 0
-        # Offset to ensure multi-block text wins over SingleLine/MultiLine in ambiguous cases
-        return 100 - (100 / (breaks + 0.05))
+        # BUG-037: Adjust base offset to always exceed MultiLine (60.0) / SingleLine (50.0)
+        # for any result with multiple paragraphs/blocks.
+        return 60.0 + (40.0 * (1.0 - (1.0 / (breaks + 0.05))))
 
     def transform(self, ocr_result: OcrResult) -> list[str]:
         return [ocr_result.add_linebreaks(block_sep="\n", line_sep=" ")]

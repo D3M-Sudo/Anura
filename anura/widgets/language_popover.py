@@ -119,14 +119,23 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
     def populate_model(self, force: bool = False) -> None:
         """Populate the language model with available languages."""
         try:
-            self.lang_list.remove_all()
-
             downloaded_codes = get_language_manager().get_downloaded_codes(force=force)
-            for code in downloaded_codes:
-                title = get_language_manager().get_language(code)
 
-                selected = self.active_language == code
-                self.lang_list.append(LanguageItem(code=code, title=title, selected=selected))
+            # BUG-042: UI Flickering Risk.
+            # Compare current model with new codes to avoid full remove_all() if unchanged.
+            current_codes = [self.lang_list.get_item(i).code for i in range(self.lang_list.get_n_items())]
+
+            if set(current_codes) != set(downloaded_codes) or force:
+                self.lang_list.remove_all()
+                for code in downloaded_codes:
+                    title = get_language_manager().get_language(code)
+                    selected = self.active_language == code
+                    self.lang_list.append(LanguageItem(code=code, title=title, selected=selected))
+            else:
+                # Only update 'selected' status if set of languages is the same
+                for i in range(self.lang_list.get_n_items()):
+                    item = self.lang_list.get_item(i)
+                    item.selected = self.active_language == item.code
 
             # Fallback to English if current language was removed, emitting only on actual change
             current_code = self.active_language
