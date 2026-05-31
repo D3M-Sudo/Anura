@@ -84,35 +84,37 @@ def is_safe_url_string(text: str) -> bool:
     # 3. Homograph detection: Strict whitelist model (Latin-1 + IDNA).
     # If the hostname contains non-ASCII characters, it MUST be valid IDNA (Punycode).
     # Mixed-script hostnames (e.g. ASCII mixed with Cyrillic/Greek) are blocked.
+    #
+    # NOTE: schemes such as mailto:, web+mastodon:, tg:, discord:, whatsapp: do not
+    # carry a hostname by design — urlparse() returns hostname=None for them.
+    # The homograph check only makes sense for URL schemes that have a netloc
+    # (http, https, ftp, ftps).  For all others we skip this block entirely;
+    # _validate_share_url() already guards those schemes via _ALLOWED_SCHEMES.
+    _SCHEMES_WITH_HOSTNAME = ("http", "https", "ftp", "ftps")
     try:
         parsed_for_homograph = urlparse(text)
+        _scheme = parsed_for_homograph.scheme.lower()
         hostname = parsed_for_homograph.hostname
-        if not hostname:
-            # BUG-034: Fail instantly if hostname is empty or parsing failed.
-            return False
+        if _scheme in _SCHEMES_WITH_HOSTNAME:
+            if not hostname:
+                # BUG-034: Fail instantly if hostname is empty or parsing failed
+                # for URL schemes that are required to have one.
+                return False
 
-        if not hostname.isascii():
-            # Strict Whitelist: Allow ONLY standard ASCII/Latin-1 (0x00-0xFF) in the hostname.
-            # Any IDN outside this range (e.g. Cyrillic, Armenian, Hebrew) MUST be
-            # Punycode-encoded (xn--) to be considered safe.
-            for ch in hostname:
-                if ord(ch) > 0xFF:
-                    return False
+            if not hostname.isascii():
+                # Strict Whitelist: Allow ONLY standard ASCII/Latin-1 (0x00-0xFF) in the hostname.
+                # Any IDN outside this range (e.g. Cyrillic, Armenian, Hebrew) MUST be
+                # Punycode-encoded (xn--) to be considered safe.
+                for ch in hostname:
+                    if ord(ch) > 0xFF:
+                        return False
 
-            # Homograph Defense: Mixed-script check within Latin-1.
-            # Block mixing ASCII alphanumeric characters with non-ASCII Latin-1 supplement
-            # (e.g. googlé.com) as this is a common spoofing pattern.
-            # "münchen.de" is allowed because "ü" is considered a separate label or
-            # the user intended it, but "googlé" mixes them in one label.
-            # Actually, per directive: "Block any URI that mixes scripts outside this narrow whitelist."
-            # We'll block any mixed ASCII + Non-ASCII hostname for maximum safety.
-            # Block any hostname that contains non-ASCII characters if it's not
-            # pure non-ASCII (IDN). This is more restrictive than required but
-            # safer. However, per directive we must support Latin-1.
-            # To support "münchen.de", we check if the non-ASCII label is mixed with ASCII.
-            for label in hostname.split("."):
-                if not label.isascii() and any(c.isascii() and c.isalpha() for c in label):
-                    return False
+                # Homograph Defense: Mixed-script check within Latin-1.
+                # Block mixing ASCII alphanumeric characters with non-ASCII Latin-1 supplement
+                # (e.g. googlé.com) as this is a common spoofing pattern.
+                for label in hostname.split("."):
+                    if not label.isascii() and any(c.isascii() and c.isalpha() for c in label):
+                        return False
 
     except (ValueError, AttributeError, TypeError):
         # BUG-034: Fail instantly on any parsing exception.
