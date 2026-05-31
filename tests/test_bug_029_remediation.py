@@ -5,16 +5,14 @@
 
 import os
 import stat
-import sys
 from unittest.mock import MagicMock, patch
 
-# Mock gi BEFORE importing anything that uses it
-sys.modules["gi"] = MagicMock()
-sys.modules["gi.repository"] = MagicMock()
-sys.modules["gi.repository.Gio"] = MagicMock()
-sys.modules["gi.repository.GLib"] = MagicMock()
+import pytest
 
-from anura.services.screenshot.legacy_provider import LegacyX11Provider  # noqa: E402
+# Respect Pillar 2: skip if gi is missing and not mocked by conftest
+pytest.importorskip("gi")
+
+from anura.services.screenshot.legacy_provider import LegacyX11Provider
 
 
 def test_legacy_x11_provider_secure_temp_file_permissions():
@@ -34,7 +32,7 @@ def test_legacy_x11_provider_secure_temp_file_permissions():
         # Capture the output_path used by the provider
         captured_path = None
 
-        def side_effect(argv, flags):
+        def side_effect(argv, _flags):
             nonlocal captured_path
             captured_path = argv[2]  # scrot -s <output_path>
             return MagicMock()
@@ -44,16 +42,18 @@ def test_legacy_x11_provider_secure_temp_file_permissions():
         # Call capture
         provider.capture("eng", False, lambda *args: None)
 
-        if captured_path is None:
+        if captured_path is None and mock_subprocess_new.called:
             # Fallback for some reason side_effect didn't capture it
             captured_path = mock_subprocess_new.call_args[0][0][2]
 
+        assert captured_path is not None
         assert os.path.exists(captured_path)
 
         # Check permissions
         mode = os.stat(captured_path).st_mode
         permissions = stat.S_IMODE(mode)
 
+        # Ensure it's 0600 (User read/write only)
         assert permissions == 0o600
 
         # Cleanup
