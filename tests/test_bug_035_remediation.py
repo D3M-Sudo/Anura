@@ -18,7 +18,6 @@
 # Marker: @pytest.mark.gtk — routed to the gtk-tests CI job which installs
 # python3-gi and libadwaita-1-dev before running.
 
-import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -54,10 +53,19 @@ class TestBug035Remediation:
         return m
 
     def _patch_gio(self, mock_gio: MagicMock):
-        """Patch both the module-level name and sys.modules (inline import)."""
+        """Patch Gio in all locations _validate_share_url can reach it.
+
+        The method contains an inline `from gi.repository import Gio` that
+        re-imports fresh on every call.  Python resolves this by reading the
+        `Gio` attribute off the `gi.repository` module object already in
+        sys.modules — NOT by looking up `sys.modules["gi.repository.Gio"]`.
+        So we must patch the attribute on the module object itself via
+        `patch("gi.repository.Gio")`, plus the module-level name as a
+        belt-and-suspenders measure.
+        """
         return [
             patch("anura.services.share_service.Gio", mock_gio),
-            patch.dict(sys.modules, {"gi.repository.Gio": mock_gio}),
+            patch("gi.repository.Gio", mock_gio),
         ]
 
     # ------------------------------------------------------------------
