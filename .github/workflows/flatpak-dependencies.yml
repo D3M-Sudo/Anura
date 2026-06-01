@@ -20,9 +20,7 @@ jobs:
 
       - name: Install flatpak-external-data-checker
         run: |
-          curl -LO https://github.com/flathub/flatpak-external-data-checker/releases/latest/download/flatpak-external-data-checker
-          chmod +x flatpak-external-data-checker
-          sudo mv flatpak-external-data-checker /usr/local/bin/
+          pip install flatpak-external-data-checker
 
       - name: Check for available updates
         id: check
