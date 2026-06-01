@@ -1546,13 +1546,7 @@ msgid ""
 msgstr ""
 
 #: ../data/io.github.d3msudo.anura.metainfo.xml.in:38
-msgid ""
-"When the portal backend is unavailable or fails, Anura automatically falls "
-"back to host-side screenshot tools via flatpak-spawn. To enable this "
-"fallback, install at least one screenshot tool on the host system: gnome-"
-"screenshot (recommended), xfce4-screenshooter, spectacle, scrot, maim, or "
-"ImageMagick import. Anura tries them in order and uses the first available "
-"tool."
+msgid "When the portal backend is unavailable or fails, Anura automatically falls back to a built-in X11 capture engine using the mss library. This ensures screenshot capability even on lightweight or legacy X11 desktop environments without extra configuration."
 msgstr ""
 
 #: ../data/io.github.d3msudo.anura.metainfo.xml.in:50

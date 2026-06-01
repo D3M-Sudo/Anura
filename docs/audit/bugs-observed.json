@@ -699,7 +699,7 @@
         "function": "capture"
       },
       "chain_of_thought": {
-        "description": "Insecure temporary file creation in world-writable /tmp directory. scrot is directed to a path without restrictive permissions (0600) being enforced first.",
+        "description": "Insecure temporary file creation in world-writable /tmp directory. The legacy scrot provider was directed to a path without restrictive permissions (0600) being enforced first. Resolved by migrating to a pure-Python mss provider with secure tempfile handling.",
         "why_it_is_wrong": "World-readable sensitive data (screenshot pixels) in shared temporary space.",
         "fix_prescription": "Use tempfile.mkstemp() to create the file with 0600 permissions immediately."
       },

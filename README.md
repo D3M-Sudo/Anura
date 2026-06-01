@@ -89,9 +89,9 @@ Anura captures screenshots through the **XDG Desktop Portal**. The portal fronte
 | Xfce / MATE | `sudo apt install xdg-desktop-portal-gnome` | Backend needed for Screenshot interface |
 | wlroots (Sway, Hyprland) | `sudo apt install xdg-desktop-portal-wlr` | Requires screencast support |
 
-#### Host screenshot fallback (Flatpak + X11 only)
+#### Built-in X11 screenshot fallback
 
-On **X11 sessions**, if the portal fails, Anura automatically falls back to a **bundled `scrot`** inside the sandbox. This is self-contained and requires no host tools.
+On **X11 sessions**, if the portal fails, Anura automatically falls back to a built-in capture engine using the **mss** library. This ensures capability on lightweight or legacy desktops without extra configuration.
 
 ---
 
