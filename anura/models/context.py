@@ -21,7 +21,7 @@ class ApplicationContext:
     has_barcode: bool
     has_tts: bool
     has_libnotify: bool
-    has_scrot: bool
+    has_mss: bool
     is_flatpak: bool
 
     @classmethod
@@ -66,21 +66,21 @@ class ApplicationContext:
         # 5. UI Extras (libnotify)
         has_libnotify = importlib.util.find_spec("gi.repository.Notify") is not None
 
-        # 6. Fallback Audit (scrot)
-        has_scrot = shutil.which("scrot") is not None
+        # 6. Fallback Audit (mss)
+        has_mss = importlib.util.find_spec("mss") is not None
 
         ctx = cls(
             has_ocr=has_ocr,
             has_barcode=has_barcode,
             has_tts=has_tts,
             has_libnotify=has_libnotify,
-            has_scrot=has_scrot,
+            has_mss=has_mss,
             is_flatpak=is_flatpak,
         )
 
         logger.info(
             f"Anura Capabilities: OCR={ctx.has_ocr}, Barcode={ctx.has_barcode}, "
-            f"TTS={ctx.has_tts}, Scrot={ctx.has_scrot}, Flatpak={ctx.is_flatpak}"
+            f"TTS={ctx.has_tts}, MSS={ctx.has_mss}, Flatpak={ctx.is_flatpak}"
         )
         return ctx
 

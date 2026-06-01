@@ -27,7 +27,7 @@ class TestCapabilityAudit(unittest.TestCase):
         self.assertTrue(ctx.has_ocr)
         self.assertTrue(ctx.has_barcode)
         self.assertTrue(ctx.has_tts)
-        self.assertTrue(ctx.has_scrot)
+        self.assertTrue(ctx.has_mss)
         self.assertTrue(ctx.is_flatpak)
 
     @patch("shutil.which")
@@ -44,7 +44,7 @@ class TestCapabilityAudit(unittest.TestCase):
         self.assertFalse(ctx.has_ocr)
         self.assertFalse(ctx.has_barcode)
         self.assertFalse(ctx.has_tts)
-        self.assertFalse(ctx.has_scrot)
+        self.assertFalse(ctx.has_mss)
         self.assertFalse(ctx.is_flatpak)
 
 

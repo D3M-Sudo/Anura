@@ -3,17 +3,16 @@
 #
 # SPDX-License-Identifier: MIT
 
-from .legacy_provider import LegacyX11Provider
+from .mss_provider import MssScreenshotProvider
 from .portal_provider import PortalProvider
 
 
 class ScreenshotProviderFactory:
     """Factory for creating the appropriate screenshot providers.
 
-    Returns a primary (Portal) and an optional fallback (X11/scrot) provider.
-    The fallback is only instantiated when scrot is reachable and the session
-    is on X11 (not Wayland), so ``get_fallback_provider()`` returns None safely
-    on Wayland and headless environments.
+    Returns a primary (Portal) and an optional fallback (mss/X11) provider.
+    The fallback is only instantiated when on X11 (not Wayland), so
+    ``get_fallback_provider()`` returns None safely on Wayland and headless environments.
     """
 
     @staticmethod
@@ -22,7 +21,7 @@ class ScreenshotProviderFactory:
         return PortalProvider()
 
     @staticmethod
-    def get_fallback_provider() -> LegacyX11Provider | None:
-        """Return the X11/scrot fallback provider if available, else None."""
-        legacy = LegacyX11Provider()
-        return legacy if legacy.is_available() else None
+    def get_fallback_provider() -> MssScreenshotProvider | None:
+        """Return the mss-based fallback provider if available, else None."""
+        mss_provider = MssScreenshotProvider()
+        return mss_provider if mss_provider.is_available() else None

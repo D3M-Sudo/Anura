@@ -234,21 +234,13 @@
             "sources": [{"type": "file", "url": "https://files.pythonhosted.org/packages/a0/f4/c67b0b3f1b9245e8d266f0f112c500d50e5b4e83cb6f3b71b6528104182a/requests-2.34.2-py3-none-any.whl", "sha256": "2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0"}]
         },
         {
-            "name": "imlib2",
-            "buildsystem": "autotools",
-            "sources": [
-                {
-                    "type": "archive",
-                    "url": "https://downloads.sourceforge.net/project/enlightenment/imlib2-src/1.12.6/imlib2-1.12.6.tar.gz",
-                    "sha256": "59743ce82aefa9c1ec9476af608d541b74164714d2928fbd84ff5db6c4399079"
-                }
-            ]
-        },
-        {
-            "name": "scrot",
-            "buildsystem": "autotools",
-            "sources": [{"type": "archive", "url": "https://github.com/resurrecting-open-source-projects/scrot/archive/refs/tags/1.11.1.tar.gz", "sha256": "ea9949e80c3c60e335768402f66adad1b119b4c4e9b1daf90dff290f3c1114eb"}],
-            "post-install": ["install -Dm0644 COPYING $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/scrot/COPYING"]
+            "name": "python3-mss",
+            "buildsystem": "simple",
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed mss-10.2.0-py3-none-any.whl",
+                "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/mss-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/mss/LICENSE \\; -quit || true'"
+            ],
+            "sources": [{"type": "file", "url": "https://files.pythonhosted.org/packages/6a/0d/956795f5904d9b4b455581e28509c313a52d2f70b7c9384931a5908872f2/mss-10.2.0-py3-none-any.whl", "sha256": "81f1e72e11832049e396263595f5778b77054868018e69888849498687799580"}]
         },
         {
             "name": "libportal",

@@ -36,14 +36,14 @@ except ImportError:
     gi.repository.Xdp = mock_xdp
 
 from anura.services.screenshot.factory import ScreenshotProviderFactory
-from anura.services.screenshot.legacy_provider import LegacyX11Provider
+from anura.services.screenshot.mss_provider import MssScreenshotProvider
 from anura.services.screenshot.portal_provider import PortalProvider
 
 
-class TestLegacyX11Provider:
+class TestMssScreenshotProvider:
     @pytest.fixture
     def provider(self):
-        return LegacyX11Provider()
+        return MssScreenshotProvider()
 
     def test_availability_no_display(self, provider):
         with patch.dict(os.environ, {}, clear=True):
@@ -53,32 +53,16 @@ class TestLegacyX11Provider:
         with patch.dict(os.environ, {"DISPLAY": ":0", "WAYLAND_DISPLAY": "wayland-0"}):
             assert provider.is_available() is False
 
-    @patch("anura.services.screenshot.legacy_provider._resolve_scrot_binary")
-    def test_availability_x11_with_scrot(self, mock_resolve, provider):
-        mock_resolve.return_value = "/usr/bin/scrot"
+    def test_availability_x11(self, provider):
         with patch.dict(os.environ, {"DISPLAY": ":0"}, clear=True):
             assert provider.is_available() is True
 
-    @patch("anura.services.screenshot.legacy_provider._resolve_scrot_binary")
-    def test_availability_x11_no_scrot(self, mock_resolve, provider):
-        mock_resolve.return_value = None
-        with patch.dict(os.environ, {"DISPLAY": ":0"}, clear=True):
-            assert provider.is_available() is False
-
-    @patch("anura.services.screenshot.legacy_provider.Gio")
-    @patch("anura.services.screenshot.legacy_provider._resolve_scrot_binary")
-    def test_capture_spawns_process(self, mock_resolve, mock_gio, provider):
-        mock_resolve.return_value = "/usr/bin/scrot"
-        mock_proc = MagicMock()
-        mock_gio.Subprocess.new.return_value = mock_proc
-
+    @patch("anura.services.screenshot.mss_provider.mss.mss")
+    def test_capture_starts_thread(self, mock_mss, provider):
         callback = MagicMock()
-        provider.capture("eng", False, callback)
-
-        assert mock_gio.Subprocess.new.called
-        args = mock_gio.Subprocess.new.call_args[0][0]
-        assert args[0] == "/usr/bin/scrot"
-        assert "-s" in args
+        with patch("anura.services.screenshot.mss_provider.threading.Thread") as mock_thread:
+            provider.capture("eng", False, callback)
+            assert mock_thread.called
 
 
 class TestScreenshotProviderFactory:
@@ -87,11 +71,11 @@ class TestScreenshotProviderFactory:
         assert isinstance(provider, PortalProvider)
 
     def test_get_fallback_provider_available(self):
-        with patch.object(LegacyX11Provider, "is_available", return_value=True):
+        with patch.object(MssScreenshotProvider, "is_available", return_value=True):
             provider = ScreenshotProviderFactory.get_fallback_provider()
-            assert isinstance(provider, LegacyX11Provider)
+            assert isinstance(provider, MssScreenshotProvider)
 
     def test_get_fallback_provider_unavailable(self):
-        with patch.object(LegacyX11Provider, "is_available", return_value=False):
+        with patch.object(MssScreenshotProvider, "is_available", return_value=False):
             provider = ScreenshotProviderFactory.get_fallback_provider()
             assert provider is None

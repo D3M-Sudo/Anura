@@ -15,7 +15,7 @@ uv sync --dev
 # 3. Install system dependencies (Ubuntu/Debian)
 sudo apt install python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 \
     blueprint-compiler libportal-gtk4-dev \
-    tesseract-ocr libxml2-utils scrot \
+    tesseract-ocr libxml2-utils \
     gstreamer1.0-plugins-good gstreamer1.0-pulseaudio
 
 # 4. Build with Meson
@@ -103,4 +103,4 @@ uv run ruff format anura/
 - [ ] **Thread Safety**: No UI modifications from secondary threads; use `AtomicTaskManager`.
 - [ ] **Signal Lifecycle**: Use `SignalManagerMixin` for automated cleanup.
 - [ ] **No Telemetry**: Absolute privacy maintained.
-- [ ] **Fallback Security**: `scrot` fallback only active on X11; Wayland relies on Portals.
+- [ ] **Fallback Security**: `mss` fallback only active on X11; Wayland relies on Portals.
