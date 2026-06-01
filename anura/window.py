@@ -162,6 +162,9 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     def _on_screenshot_timeout(self) -> bool:
         """Restore window if portal screenshot doesn't respond within 30s."""
         self._screenshot_timeout_id = None
+        # BUG-031: Cancel active capture to prevent UI interference and reset state
+        if self.backend:
+            self.backend.cancel()
         self.present()
         self.show_toast(_("Screenshot timed out. Please try again."))
         logger.warning("Anura: Screenshot portal timeout — restoring window.")

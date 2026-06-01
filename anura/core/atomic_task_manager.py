@@ -284,17 +284,17 @@ class AtomicTaskManager:
 
     def is_cancelled(self, task_id: str) -> bool:
         """Check if a specific task ID has been cancelled or invalidated."""
-        # 1. Check shared map for isolated processes
-        if (
-            hasattr(self, "_isolated_cancellation_map")
-            and self._isolated_cancellation_map is not None
-            and self._isolated_cancellation_map.get(task_id, False)
-        ):
-            return True
+        # 1. Check shared map for isolated processes.
+        # This map is shared between the main process and the worker process via a Manager.
+        if hasattr(self, "_isolated_cancellation_map") and self._isolated_cancellation_map is not None:
+            # If the task is in the map, its value determines the cancellation state.
+            # This is critical for worker processes where _current_task_id is always None.
+            if task_id in self._isolated_cancellation_map:
+                return self._isolated_cancellation_map.get(task_id, False)
 
-        # 2. Check local state for threads
+        # 2. Check local state for threads (main process only)
         with self._state_lock:
-            # If the task_id is not the current one, it's considered cancelled/obsolete
+            # If the task_id is not the current one, it's considered cancelled/obsolete.
             if task_id != self._current_task_id:
                 return True
             # If it is the current one, check the GIO cancellable

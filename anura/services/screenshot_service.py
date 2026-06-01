@@ -247,6 +247,18 @@ class ScreenshotService(GObject.GObject):
         """Indicates if a capture is currently in progress."""
         return self._is_capturing
 
+    def cancel(self) -> None:
+        """Cancel any in-progress capture operation."""
+        if not self._is_capturing:
+            return
+
+        logger.info("Anura Screenshot: Cancelling active capture...")
+        if self.provider:
+            self.provider.cancel()
+        if self.fallback_provider:
+            self.fallback_provider.cancel()
+        self._is_capturing = False
+
     def capture(self, lang: str, copy: bool = False) -> None:
         """Requests a screenshot from the primary provider."""
         # Prevent concurrent capture requests

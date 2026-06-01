@@ -101,17 +101,7 @@ class ClipboardService(GObject.GObject):
 
         # Capture IDs under lock, then cancel/remove outside to avoid deadlock
         # with GLib's internal main-loop lock (see _clear_active_timeout).
-        with self._state_lock:
-            old_timeout_id = self._clipboard_timeout_id
-            self._clipboard_timeout_id = None
-            if self._cancellable is not None:
-                self._cancellable.cancel()
-                self._cancellable = None
-        if old_timeout_id and old_timeout_id > 0:
-            try:
-                GLib.source_remove(old_timeout_id)
-            except Exception:
-                pass  # Source already fired or removed — safe to ignore.
+        self._clear_active_timeout()
 
         # Gdk.Clipboard.set_text() was removed in GTK4.
         # The correct GTK4 API is set_content() with a ContentProvider wrapping
@@ -145,14 +135,7 @@ class ClipboardService(GObject.GObject):
         and the actual read, so this fallback increases robustness.
         """
         # Capture timeout ID under lock, remove the source outside the lock.
-        with self._state_lock:
-            timeout_id = self._clipboard_timeout_id
-            self._clipboard_timeout_id = None
-        if timeout_id and timeout_id > 0:
-            try:
-                GLib.source_remove(timeout_id)
-            except Exception:
-                pass  # Source already fired or removed — safe to ignore.
+        self._clear_active_timeout()
 
         try:
             # Marshal GTK operations to main thread
@@ -317,12 +300,19 @@ class ClipboardService(GObject.GObject):
         with self._state_lock:
             timeout_id = self._clipboard_timeout_id
             self._clipboard_timeout_id = None
+            if self._cancellable is not None:
+                self._cancellable.cancel()
+                self._cancellable = None
+
         # source_remove called outside the lock to prevent deadlock.
         if timeout_id and timeout_id > 0:
-            try:
-                GLib.source_remove(timeout_id)
-            except Exception:
-                pass  # Source already fired or removed — safe to ignore.
+            # BUG-032: Check if source exists before removing to prevent C-level warnings
+            # on stderr when a one-shot source has already fired and auto-removed.
+            if GLib.MainContext.default().find_source_by_id(timeout_id):
+                try:
+                    GLib.source_remove(timeout_id)
+                except Exception:
+                    pass  # Final safety net
 
     def _on_read_uri_list(self, _sender: GObject.GObject, result: Gio.AsyncResult) -> None:
         """Callback for ``text/uri-list`` clipboard reads (file paths)."""
@@ -362,6 +352,9 @@ class ClipboardService(GObject.GObject):
         second texture attempt also fails, _on_read_texture will stop the
         cycle and emit an error instead of looping again.
         """
+        # BUG-032: Clear previous timeout before assigning new one to avoid leaks.
+        self._clear_active_timeout()
+
         with self._state_lock:
             # Both fallback paths have now been tried — bail out if so.
             if self._fallback_attempted:
@@ -385,6 +378,9 @@ class ClipboardService(GObject.GObject):
 
     def _fallback_to_uri_list_read(self) -> None:
         """Rearm the read state and read the clipboard as a ``text/uri-list``."""
+        # BUG-032: Clear previous timeout before assigning new one to avoid leaks.
+        self._clear_active_timeout()
+
         with self._state_lock:
             if self._cancellable is None or self._cancellable.is_cancelled():
                 self._cancellable = Gio.Cancellable()

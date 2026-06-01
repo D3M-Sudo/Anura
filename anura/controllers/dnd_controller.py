@@ -48,7 +48,12 @@ class DndController(GObject.GObject, SignalManagerMixin):
                 return
 
             lang = self._window.get_language()
-            get_atomic_manager().execute(self._window.backend.decode_image, (lang, file_path))
+            # BUG-029: nested task cancellation. decode_image() internally calls
+            # execute_isolated(), which cancels the active task on the manager.
+            # If we wrap it in another execute() call here, the inner call
+            # cancels the outer one, leading to InterruptedError.
+            # We call decode_image() directly (it handles its own thread/process dispatching).
+            self._window.backend.decode_image(lang, file_path)
 
         except (OSError, RuntimeError, TypeError) as e:
             logger.error(f"DndController: Critical error accessing dropped file: {e}")

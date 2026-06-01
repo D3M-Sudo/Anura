@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: MIT
 
 from abc import ABC, abstractmethod
+import contextlib
 import gc
 import threading
 
@@ -216,6 +217,12 @@ class FilterChain:
                         logger.debug(f"Failed to close intermediate image: {e}")
 
             return result
+        except InterruptedError:
+            # Silently propagate cancellation
+            for img in intermediates:
+                with contextlib.suppress(AttributeError, RuntimeError):
+                    img.close()
+            raise
         except (AttributeError, RuntimeError, TypeError, ValueError, OSError) as e:
             # If the pipeline fails, ensure all successfully created intermediates are closed
             logger.error(f"Filter chain failed: {e}")

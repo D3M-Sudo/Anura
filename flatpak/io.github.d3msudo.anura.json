@@ -17,6 +17,7 @@
         "--filesystem=xdg-documents:ro",
         "--talk-name=org.a11y.Bus",
         "--talk-name=org.freedesktop.portal.Desktop",
+        "--talk-name=org.freedesktop.Notifications",
         "--env=TESSDATA_PREFIX=/app/share/tessdata"
     ],
     "cleanup": [
