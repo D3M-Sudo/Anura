@@ -100,10 +100,7 @@ class ShareService(GObject.GObject):
         # Fallback Whitelist: Allow common safe schemes if dynamic detection is
         # unavailable or if running in a restricted/headless environment.
         safe_schemes = ("mailto", "web+mastodon", "tg", "slack", "zoom", "discord", "whatsapp")
-        if scheme in safe_schemes:
-            return True
-
-        return False
+        return scheme in safe_schemes
 
     def share(self, provider: str, text: str) -> None:
         """

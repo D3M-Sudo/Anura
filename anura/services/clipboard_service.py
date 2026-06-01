@@ -305,14 +305,17 @@ class ClipboardService(GObject.GObject):
                 self._cancellable = None
 
         # source_remove called outside the lock to prevent deadlock.
-        if timeout_id and timeout_id > 0:
+        if (
+            timeout_id
+            and timeout_id > 0
+            and GLib.MainContext.default().find_source_by_id(timeout_id)
+        ):
             # BUG-032: Check if source exists before removing to prevent C-level warnings
             # on stderr when a one-shot source has already fired and auto-removed.
-            if GLib.MainContext.default().find_source_by_id(timeout_id):
-                try:
-                    GLib.source_remove(timeout_id)
-                except Exception:
-                    pass  # Final safety net
+            try:
+                GLib.source_remove(timeout_id)
+            except Exception:
+                pass  # Final safety net
 
     def _on_read_uri_list(self, _sender: GObject.GObject, result: Gio.AsyncResult) -> None:
         """Callback for ``text/uri-list`` clipboard reads (file paths)."""
