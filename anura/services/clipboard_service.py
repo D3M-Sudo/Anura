@@ -101,6 +101,8 @@ class ClipboardService(GObject.GObject):
 
         # Capture IDs under lock, then cancel/remove outside to avoid deadlock
         # with GLib's internal main-loop lock (see _clear_active_timeout).
+        # For set() operations, which are synchronous/one-shot, we can safely
+        # cancel any pending read.
         self._clear_active_timeout()
 
         # Gdk.Clipboard.set_text() was removed in GTK4.
@@ -135,7 +137,11 @@ class ClipboardService(GObject.GObject):
         and the actual read, so this fallback increases robustness.
         """
         # Capture timeout ID under lock, remove the source outside the lock.
-        self._clear_active_timeout()
+        # BUG-043: We must NOT call _clear_active_timeout() here because it
+        # also cancels the cancellable. Since this callback is part of the
+        # async operation, cancelling it now would prevent read_texture_finish()
+        # from succeeding. We only stop the watchdog timer.
+        self._stop_timeout()
 
         try:
             # Marshal GTK operations to main thread
@@ -287,8 +293,24 @@ class ClipboardService(GObject.GObject):
 
         GLib.idle_add(_on_error_idle)
 
+    def _stop_timeout(self) -> None:
+        """Stop the watchdog timer without cancelling the underlying operation."""
+        with self._state_lock:
+            timeout_id = self._clipboard_timeout_id
+            self._clipboard_timeout_id = None
+
+        if (
+            timeout_id
+            and timeout_id > 0
+            and GLib.MainContext.default().find_source_by_id(timeout_id)
+        ):
+            try:
+                GLib.source_remove(timeout_id)
+            except Exception:
+                pass
+
     def _clear_active_timeout(self) -> None:
-        """Atomically remove the in-flight read timeout, if any.
+        """Atomically remove the in-flight read timeout and cancel the operation.
 
         GLib.source_remove() must be called OUTSIDE threading.Lock because it
         may need to acquire GLib's internal main-loop lock.  If the GTK main
@@ -319,7 +341,8 @@ class ClipboardService(GObject.GObject):
 
     def _on_read_uri_list(self, _sender: GObject.GObject, result: Gio.AsyncResult) -> None:
         """Callback for ``text/uri-list`` clipboard reads (file paths)."""
-        self._clear_active_timeout()
+        # BUG-043: Stop the timer but DON'T cancel the operation we're currently finishing.
+        self._stop_timeout()
 
         try:
             stream, _mime = self.clipboard.read_finish(result)
@@ -356,6 +379,7 @@ class ClipboardService(GObject.GObject):
         cycle and emit an error instead of looping again.
         """
         # BUG-032: Clear previous timeout before assigning new one to avoid leaks.
+        # Here we use _clear_active_timeout() because we ARE starting a fresh attempt.
         self._clear_active_timeout()
 
         with self._state_lock:
@@ -382,6 +406,7 @@ class ClipboardService(GObject.GObject):
     def _fallback_to_uri_list_read(self) -> None:
         """Rearm the read state and read the clipboard as a ``text/uri-list``."""
         # BUG-032: Clear previous timeout before assigning new one to avoid leaks.
+        # Here we use _clear_active_timeout() because we ARE starting a fresh attempt.
         self._clear_active_timeout()
 
         with self._state_lock:
