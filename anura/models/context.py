@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: MIT
 
 from dataclasses import dataclass
-import importlib
+import importlib.util
 import os
 from pathlib import Path
 import shutil

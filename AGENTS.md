@@ -28,7 +28,6 @@ anura/
 │   ├── main.py                 AnuraApplication (Adw.Application) - Lightweight Orchestrator
 │   ├── window.py               AnuraWindow — Core UI shell (Composition-based)
 │   ├── config.py               Constants APP_ID, tessdata URL, lang_code validation
-│   ├── atomic_task_manager.py  Single-slot thread pool with UUID versioning (legacy — use core/)
 │   ├── core/                   Modular Core Services
 │   │   ├── atomic_task_manager.py  Single-slot thread pool with UUID versioning
 │   │   ├── boot.py             Hardware bootstrap, Capability Audit
