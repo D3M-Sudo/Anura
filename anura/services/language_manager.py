@@ -281,6 +281,11 @@ class LanguageManager(GObject.GObject):
                     # Another thread created it between check and makedirs
                     tess_path.mkdir(parents=True, exist_ok=True)
 
+            # Security: Ensure tessdata directory has restrictive permissions (0700)
+            if tess_path.exists():
+                with contextlib.suppress(OSError):
+                    tess_path.chmod(0o700)
+
         # Clean up orphaned temp files from crashed/interrupted downloads
         try:
             tess_path = Path(TESSDATA_DIR)
@@ -455,7 +460,11 @@ class LanguageManager(GObject.GObject):
         quality = settings.get_string("tessdata-model")
         tessfile = f"{filename_code}.traineddata"
         quality_dir = self._get_model_quality_dir(quality)
+
+        # Security: Ensure quality-specific tessdata directories have restrictive permissions (0700)
         quality_dir.mkdir(parents=True, exist_ok=True)
+        with contextlib.suppress(OSError):
+            quality_dir.chmod(0o700)
 
         final_path = quality_dir / f"{code}.traineddata"
         tmp_path = None
@@ -663,7 +672,10 @@ def get_tesseract_config(lang_code: str) -> str:
 
     # Multi-language: Dynamic Pooling Approach
     codes = lang_code.split("+")
+    # Security: Ensure tessdata pool directory has restrictive permissions (0700)
     os.makedirs(TESSDATA_POOL_DIR, exist_ok=True)
+    with contextlib.suppress(OSError):
+        os.chmod(TESSDATA_POOL_DIR, 0o700)
 
     for code in codes:
         # Resolve source
