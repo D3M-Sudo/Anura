@@ -1,16 +1,16 @@
-
 import os
-import psutil
-import time
-import sys
 from pathlib import Path
-from loguru import logger
+import sys
+import time
+
+import psutil
 
 # Add repo root to path
 sys.path.insert(0, os.getcwd())
 
-from anura.main import AnuraApplication
 from anura.core.silent_runner import SilentRunner
+from anura.main import AnuraApplication
+
 
 def monitor_resources():
     process = psutil.Process(os.getpid())
@@ -34,7 +34,7 @@ def monitor_resources():
     # 2. Run multiple Silent OCR tasks to stress task manager and check for leaks
     iterations = 5
     for i in range(iterations):
-        print(f"Iteration {i+1}/{iterations}...")
+        print(f"Iteration {i + 1}/{iterations}...")
         runner = SilentRunner(app, sample_image)
         # We need to mock the actual OCR call if Tesseract isn't available or we want it fast
         # but let's see if it works as is.
@@ -59,7 +59,7 @@ def monitor_resources():
     log_file = log_dir / "anura.log"
     if log_file.exists():
         print(f"--- LOG AUDIT ({log_file}) ---")
-        with open(log_file, 'r') as f:
+        with open(log_file) as f:
             lines = f.readlines()
             # Show last 20 lines or errors
             for line in lines[-50:]:
@@ -67,6 +67,7 @@ def monitor_resources():
                     print(line.strip())
     else:
         print("Log file not generated.")
+
 
 if __name__ == "__main__":
     monitor_resources()
