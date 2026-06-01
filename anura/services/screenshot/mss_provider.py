@@ -4,15 +4,13 @@
 # SPDX-License-Identifier: MIT
 
 from collections.abc import Callable
-import contextlib
 from gettext import gettext as _
 import os
 from pathlib import Path
 import tempfile
 import threading
-import uuid
 
-from gi.repository import Gio, GLib
+from gi.repository import GLib
 from loguru import logger
 import mss
 
