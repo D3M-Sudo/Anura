@@ -73,11 +73,18 @@ class TestNotificationServiceEnterprise:
 
     def test_markup_escaping(self, service):
         """Security: Verify that markup in title and body is escaped."""
+        from gi.repository import GLib
+
         service._portal = MagicMock()
+
+        # In mock environment (CI), ensure predictable behavior if GLib is mocked
+        if isinstance(GLib.markup_escape_text, MagicMock):
+            GLib.markup_escape_text.side_effect = lambda x: f"ESCAPED({x})"
+
         unsafe_title = "<b>Bold Title</b>"
         unsafe_body = "Click <a href='http://evil.com'>here</a> & win!"
-        expected_title = "&lt;b&gt;Bold Title&lt;/b&gt;"
-        expected_body = "Click &lt;a href='http://evil.com'&gt;here&lt;/a&gt; &amp; win!"
+        expected_title = GLib.markup_escape_text(unsafe_title)
+        expected_body = GLib.markup_escape_text(unsafe_body)
 
         # 1. Test show() -> _show_portal_notification
         with patch.object(service, "_show_portal_notification", return_value=True) as mock_portal:
@@ -85,8 +92,6 @@ class TestNotificationServiceEnterprise:
             mock_portal.assert_called_once_with(expected_title, expected_body, "normal")
 
         # 2. Test send_notification_with_action()
-        from gi.repository import GLib
-
         with (
             patch("gi.repository.Gio.Notification.new") as mock_new,
             patch("gi.repository.Gio.Application.get_default") as mock_app_get,
