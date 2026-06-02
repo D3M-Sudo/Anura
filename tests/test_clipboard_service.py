@@ -70,7 +70,15 @@ class TestClipboardServiceEnterprise:
         service._cancellable = mock_cancellable
         service._clipboard_timeout_id = 1234
 
-        with patch("gi.repository.GLib.source_remove") as mock_remove:
+        with (
+            patch("gi.repository.GLib.source_remove") as mock_remove,
+            patch("gi.repository.GLib.MainContext.default") as mock_ctx_get,
+        ):
+            mock_ctx = MagicMock()
+            mock_ctx_get.return_value = mock_ctx
+            # Simulate source found
+            mock_ctx.find_source_by_id.return_value = MagicMock()
+
             service.cancel_pending_operations()
             mock_cancellable.cancel.assert_called_once()
             mock_remove.assert_called_with(1234)

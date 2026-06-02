@@ -155,7 +155,10 @@ class OcrController(GObject.GObject, SignalManagerMixin):
             self._window.present()
         self._window.welcome_page.reset_drop_area_state()
         if message:
-            self.emit("error-occurred", message)
+            # BUG-3a: Defer error emission to allow window manager to process
+            # window restoration and grant focus, ensuring get_active_window()
+            # in main.py returns the correct window for toast display.
+            GLib.idle_add(self.emit, "error-occurred", message)
 
     def _on_portal_backend_missing(self, _sender: GObject.GObject) -> None:
         """Reveal the persistent install hint banner."""

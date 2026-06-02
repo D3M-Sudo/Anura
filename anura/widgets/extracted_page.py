@@ -438,6 +438,8 @@ class ExtractedPage(Adw.NavigationPage):
             # Active playback (initial play OR resume after pause).
             # swap_controls("playing") sets listen_stack → "pause" child.
             self.swap_controls("playing")
+            # BUG-1: Reset icon to pause if it was set to start during a pause
+            self._on_paused(None, False)
         elif paused:
             # Playback is paused: keep the pause/stop controls visible (stack="pause"),
             # just swap the icon to ▶ so user knows they can resume.
