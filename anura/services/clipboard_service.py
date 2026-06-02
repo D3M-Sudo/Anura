@@ -143,6 +143,12 @@ class ClipboardService(GObject.GObject):
         # from succeeding. We only stop the watchdog timer.
         self._stop_timeout()
 
+        # Snapshot the cancellable that belongs to THIS async operation.
+        # The finally block uses it to avoid clobbering a newer cancellable
+        # that may have been created by a fallback call (BUG-PASTE).
+        with self._state_lock:
+            operation_cancellable = self._cancellable
+
         try:
             # Marshal GTK operations to main thread
             def process_result() -> None:
@@ -189,9 +195,15 @@ class ClipboardService(GObject.GObject):
                     self._fallback_to_uri_list_read()
                     return
                 finally:
-                    # Clean up cancellable regardless of outcome
+                    # BUG-PASTE: Only clear self._cancellable if it still belongs to
+                    # this operation. A fallback call (e.g. _fallback_to_uri_list_read)
+                    # may have already replaced self._cancellable with a new one for
+                    # the next async stage. Unconditionally setting it to None would
+                    # cause _on_clipboard_timeout to see a stale-cancellable mismatch
+                    # and silently skip the error signal, leaving the spinner stuck.
                     with self._state_lock:
-                        self._cancellable = None
+                        if self._cancellable is operation_cancellable:
+                            self._cancellable = None
 
             GLib.idle_add(process_result)
 
@@ -239,11 +251,17 @@ class ClipboardService(GObject.GObject):
             )
         # Remove the old source outside the lock to avoid potential deadlock
         # with GLib's internal main-loop lock (see _clear_active_timeout).
-        if old_timeout_id and old_timeout_id > 0:
+        # BUG-032: guard with find_source_by_id to prevent C-level g_warning on stderr
+        # when the one-shot source has already fired and auto-removed itself.
+        if (
+            old_timeout_id
+            and old_timeout_id > 0
+            and GLib.MainContext.default().find_source_by_id(old_timeout_id)
+        ):
             try:
                 GLib.source_remove(old_timeout_id)
             except Exception:
-                pass  # Source already fired or removed — safe to ignore.
+                pass  # Final safety net.
 
         mimes = self._available_clipboard_mimes()
 
@@ -610,7 +628,12 @@ class ClipboardService(GObject.GObject):
             timeout_id = self._clipboard_timeout_id
             self._clipboard_timeout_id = None
         # source_remove outside the lock — prevents deadlock with GLib main loop.
-        if timeout_id is not None and timeout_id > 0:
+        # BUG-032: guard with find_source_by_id to prevent C-level g_warning on stderr.
+        if (
+            timeout_id is not None
+            and timeout_id > 0
+            and GLib.MainContext.default().find_source_by_id(timeout_id)
+        ):
             try:
                 GLib.source_remove(timeout_id)
             except Exception:
