@@ -690,16 +690,28 @@ def get_tesseract_config(lang_code: str) -> str:
 
         if source_path:
             dest_path = Path(TESSDATA_POOL_DIR) / f"{code}.traineddata"
-            # Create hard link with fallback to copy (for cross-filesystem)
+            # NEW-004: Create hard link with fallback to copy (for cross-filesystem)
             try:
                 if dest_path.exists():
                     dest_path.unlink()
                 os.link(source_path, dest_path)
-            except (OSError, AttributeError):
+            except OSError as e:
+                import errno
+
+                if e.errno == errno.EXDEV:
+                    # Cross-device link failure: use copy instead, suppress error noise
+                    try:
+                        shutil.copy2(source_path, dest_path)
+                    except OSError as copy_err:
+                        logger.error(f"Anura Pooling: Failed to copy {code}: {copy_err}")
+                else:
+                    logger.error(f"Anura Pooling: Failed to link {code}: {e}")
+            except AttributeError:
+                # Fallback for systems where os.link might be missing
                 try:
                     shutil.copy2(source_path, dest_path)
-                except OSError as e:
-                    logger.error(f"Anura Pooling: Failed to copy {code}: {e}")
+                except OSError as copy_err:
+                    logger.error(f"Anura Pooling: Failed to copy {code}: {copy_err}")
 
     return f'--tessdata-dir "{TESSDATA_POOL_DIR}" --psm 3 --oem 1'
 

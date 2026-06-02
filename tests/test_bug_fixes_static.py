@@ -207,25 +207,26 @@ def test_readme_documents_runtime_requirements() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_extracted_page_disconnects_share_service_signal() -> None:
-    """ExtractedPage.do_dispose must disconnect the share service signal handler."""
+def test_extracted_page_uses_signal_manager_mixin() -> None:
+    """ExtractedPage must use SignalManagerMixin for automated cleanup."""
     text = (ANURA_PKG / "widgets" / "extracted_page.py").read_text()
-    # Check that do_dispose contains disconnect for share service
-    assert "self._share_service.disconnect(self._share_handler_id)" in text, (
-        "ExtractedPage.do_dispose must disconnect the share service signal handler "
-        "(_share_handler_id) to prevent memory leaks."
-    )
+    assert "class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):" in text
+    assert "SignalManagerMixin.__init__(self)" in text
+    assert "self.connect_tracked(" in text
+
+
+def test_extracted_page_disconnects_share_service_signal() -> None:
+    """ExtractedPage must manage share service signal via connect_tracked."""
+    text = (ANURA_PKG / "widgets" / "extracted_page.py").read_text()
+    # Check that share signal is connected via mixin
+    assert "self.connect_tracked(self._share_service, \"share\"" in text
 
 
 def test_extracted_page_tracks_share_handler_id() -> None:
-    """ExtractedPage must track the share service handler ID for cleanup."""
-    text = (ANURA_PKG / "widgets" / "extracted_page.py").read_text()
-    assert "_share_handler_id" in text, (
-        "ExtractedPage must track the share service signal handler ID (_share_handler_id) for cleanup in do_dispose."
-    )
-    assert "_share_handler_id = self._share_service.connect" in text, (
-        "ExtractedPage must store the share service connect() return value in _share_handler_id."
-    )
+    """ExtractedPage tracks share signals via SignalManagerMixin."""
+    # This test is now covered by the mixin usage check.
+    # Manual ID tracking is no longer required as mixin does it.
+    pass
 
 
 # ---------------------------------------------------------------------------

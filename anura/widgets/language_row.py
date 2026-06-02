@@ -88,12 +88,20 @@ class LanguageRow(Gtk.Overlay):
     def update_progress(self, sender: GObject.GObject, code: str, progress: float) -> None:
         """Signal handler for download progress."""
         if self._item and code == self._item.code:
-            GLib.idle_add(self.late_update, code, progress)
+            # NEW-006: Use a single tracked idle ID to throttle UI updates.
+            # This prevents flooding the main loop with redundant progress callbacks
+            # if the download happens faster than the UI can repaint.
+            if hasattr(self, "_progress_idle_id") and self._progress_idle_id:
+                GLib.source_remove(self._progress_idle_id)
+
+            self._progress_idle_id = GLib.idle_add(self.late_update, code, progress)
+            self._idle_ids.add(self._progress_idle_id)
 
     def late_update(self, code: str, progress: float) -> bool:
         """
         Updates the progress bar on the main thread.
         """
+        self._progress_idle_id = 0
         if self._item and self._item.code == code:
             if not self.revealer.get_reveal_child():
                 self.revealer.set_reveal_child(True)
