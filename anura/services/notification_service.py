@@ -141,6 +141,12 @@ class NotificationService:
             logger.warning(f"NotificationService: Invalid priority '{priority}', using 'normal'")
             priority = "normal"
 
+        # Security: Escape Pango markup in title and body to prevent injection attacks
+        # from OCR'd text (phishing, UI spoofing, etc).
+        if GLib:
+            title = GLib.markup_escape_text(title)
+            body = GLib.markup_escape_text(body)
+
         # Try portal first, then fallback to libnotify
         if HAS_PORTAL:
             result = self._show_portal_notification(title, body, priority)
@@ -178,6 +184,12 @@ class NotificationService:
         if not HAS_GIO:
             logger.warning("NotificationService: Gio not available for action notification")
             return
+
+        # Security: Escape Pango markup in title and body to prevent injection attacks
+        # from OCR'd text (phishing, UI spoofing, etc).
+        if GLib:
+            title = GLib.markup_escape_text(title)
+            body = GLib.markup_escape_text(body)
 
         notification = Gio.Notification.new(title)
         notification.set_body(body)
