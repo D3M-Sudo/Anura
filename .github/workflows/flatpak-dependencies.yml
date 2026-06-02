@@ -23,17 +23,23 @@ jobs:
       - name: Check and update Flatpak dependencies
         id: check
         run: |
-          docker run --rm \
-            -v "${{ github.workspace }}:/github/workspace" \
-            ghcr.io/flathub/flatpak-external-data-checker:latest \
-            --update /github/workspace/flatpak/io.github.d3msudo.anura.json || true
+          for manifest in flatpak/io.github.d3msudo.anura.json flatpak/io.github.d3msudo.anura.local.json; do
+            if [ -f "$manifest" ]; then
+              docker run --rm \
+                --user $(id -u):$(id -g) \
+                -v "${{ github.workspace }}:/github/workspace" \
+                ghcr.io/flathub/flatpak-external-data-checker:latest \
+                --update --edit-only \
+                "/github/workspace/$manifest" || true
+            fi
+          done
 
-          if git diff --quiet flatpak/io.github.d3msudo.anura.json; then
+          if git diff --quiet flatpak/io.github.d3msudo.anura.json flatpak/io.github.d3msudo.anura.local.json; then
             echo "has_updates=false" >> $GITHUB_OUTPUT
           else
             echo "has_updates=true" >> $GITHUB_OUTPUT
             echo "Updates found:"
-            git diff flatpak/io.github.d3msudo.anura.json
+            git diff flatpak/io.github.d3msudo.anura.json flatpak/io.github.d3msudo.anura.local.json
           fi
 
       - name: Create PR for dependency updates
