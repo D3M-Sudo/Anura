@@ -108,7 +108,9 @@ class OcrController(GObject.GObject, SignalManagerMixin):
                 body = text[:80] + "…" if len(text) > 80 else text
                 self._notification_service.show(title=_("Text extracted"), body=body, priority="normal")
 
-            GLib.idle_add(self._navigate_to_extracted_page)
+            # NEW-003: Navigate only for the current active task
+            _current_id = getattr(self._window.backend, "_current_task_id", None)
+            GLib.idle_add(self._navigate_to_extracted_page, _current_id)
         except (AttributeError, TypeError, RuntimeError) as e:
             logger.error(f"OcrController: UI Error in _on_shot_done: {e}")
 
@@ -172,7 +174,15 @@ class OcrController(GObject.GObject, SignalManagerMixin):
     def _on_portal_banner_dismissed(self, _banner: Adw.Banner) -> None:
         self._window.portal_banner.set_revealed(False)
 
-    def _navigate_to_extracted_page(self) -> int:
+    def _navigate_to_extracted_page(self, task_id: str | None = None) -> int:
+        # NEW-003: Validate task ID before navigation to prevent jumps during rapid captures
+        if task_id:
+            from anura.core.atomic_task_manager import get_atomic_manager
+
+            if get_atomic_manager().is_cancelled(task_id):
+                logger.debug(f"OcrController: Ignoring navigation for cancelled task {task_id}")
+                return GLib.SOURCE_REMOVE
+
         self._window.split_view.set_show_content(True)
         self._window.extracted_page.text_view.grab_focus()
         return GLib.SOURCE_REMOVE

@@ -4,7 +4,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-import contextlib
 from gettext import gettext as _
 from gettext import ngettext
 from gettext import pgettext as C_
@@ -27,11 +26,12 @@ from anura.core.atomic_task_manager import get_atomic_manager  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
 from anura.services.tts import get_tts_service  # noqa: E402
+from anura.utils.signal_manager import SignalManagerMixin  # noqa: E402
 from anura.widgets.share_row import ShareRow  # noqa: E402
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/extracted_page.ui")
-class ExtractedPage(Adw.NavigationPage):
+class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
     __gtype_name__ = "ExtractedPage"
 
     __gsignals__: ClassVar[dict[str, tuple]] = {
@@ -58,15 +58,12 @@ class ExtractedPage(Adw.NavigationPage):
         # Pre-initialize attributes to avoid AttributeError during failed template init
         self.settings = settings
         self._share_service = None
-        self._share_handler_id = None
         # TTS service reference — initialized post-super() to avoid pre-template access
         self._tts_service = None
-        self._buffer_handler_id = None
-        self._mark_set_handler_id = None
-        self._map_handler_id = None
         self._is_generating_tts = False
 
         super().__init__(**kwargs)
+        SignalManagerMixin.__init__(self)
 
         # Defensive check: ensure critical template components are loaded
         if not self.share_list_box:
@@ -76,15 +73,15 @@ class ExtractedPage(Adw.NavigationPage):
             for provider in self._share_service.providers():
                 self.share_list_box.append(ShareRow(provider))
             # Connect to share signal to automatically popdown the menu
-            self._share_handler_id = self._share_service.connect("share", self._on_share_finished)
+            self.connect_tracked(self._share_service, "share", self._on_share_finished)
 
         try:
             self._tts_service = get_tts_service()
         except (TypeError, RuntimeError, AttributeError) as e:
             logger.warning(f"Failed to initialize TTS service: {e}")
 
-        self._buffer_handler_id = self.buffer.connect("changed", self._on_buffer_changed)
-        self._mark_set_handler_id = self.buffer.connect("mark-set", self._on_mark_set)
+        self.connect_tracked(self.buffer, "changed", self._on_buffer_changed)
+        self.connect_tracked(self.buffer, "mark-set", self._on_mark_set)
 
         # Accessibility: set tooltip for the stats label
         self.stats_label.set_tooltip_text(
@@ -92,7 +89,7 @@ class ExtractedPage(Adw.NavigationPage):
         )
 
         # GTK4 Layout Fix: Force reflow when widget is mapped to ensure correct Pango layout
-        self._map_handler_id = self.text_view.connect("map", lambda _: self._force_reflow())
+        self.connect_tracked(self.text_view, "map", lambda _: self._force_reflow())
 
     def _force_reflow(self) -> None:
         """Force the TextView to recalculate its layout and reflow text.
@@ -236,30 +233,7 @@ class ExtractedPage(Adw.NavigationPage):
             except (AttributeError, RuntimeError) as e:
                 logger.warning(f"Failed to cleanup TTS during dispose: {e}")
 
-        # Disconnect share service signal handler
-        if self._share_service and self._share_handler_id:
-            try:
-                self._share_service.disconnect(self._share_handler_id)
-                self._share_handler_id = None
-            except (TypeError, RuntimeError) as e:
-                logger.warning(f"Failed to cleanup share service during dispose: {e}")
-
-        # Disconnect internal buffer handlers
-        if self._buffer_handler_id:
-            with contextlib.suppress(TypeError, RuntimeError):
-                self.buffer.disconnect(self._buffer_handler_id)
-            self._buffer_handler_id = None
-
-        if self._mark_set_handler_id:
-            with contextlib.suppress(TypeError, RuntimeError):
-                self.buffer.disconnect(self._mark_set_handler_id)
-            self._mark_set_handler_id = None
-
-        # Disconnect map handler
-        if self._map_handler_id:
-            with contextlib.suppress(TypeError, RuntimeError):
-                self.text_view.disconnect(self._map_handler_id)
-            self._map_handler_id = None
+        # SignalManagerMixin handles all disconnects via do_destroy or explicit teardown_all
 
         super().do_dispose()
 
@@ -498,10 +472,9 @@ class ExtractedPage(Adw.NavigationPage):
             if is_playing:
                 self.listen_stack.set_visible_child_name("pause")
             else:
-                # Check if spinner is active before switching to button
-                current_child = self.listen_stack.get_visible_child_name()
-                if current_child != "spinner":
-                    self.listen_stack.set_visible_child_name("button")
+                # NEW-002: Transition back to "button" if we are stopping/erroring.
+                # If state is "stopped" or False, we want an authoritative reset.
+                self.listen_stack.set_visible_child_name("button")
 
     def do_destroy(self) -> None:
         """Clean up signal handlers to prevent memory leaks."""

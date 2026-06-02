@@ -376,9 +376,12 @@ class AtomicTaskManager:
 
         # 1. Thread executor (main process tasks)
         if thread_executor is not None:
-            # Use wait=False for maximum safety in CI/restricted environments.
-            # Lazy initialization ensures these threads only exist when needed.
-            thread_executor.shutdown(wait=False, cancel_futures=True)
+            # NEW-001: Ensure the thread executor is fully disposed.
+            # Since max_workers=1, waiting is generally safe during app shutdown.
+            try:
+                thread_executor.shutdown(wait=True, cancel_futures=True)
+            except Exception as e:
+                logger.debug(f"AtomicTaskManager: Thread executor shutdown warning: {e}")
 
         # 2. Process executor
         # We use wait=False here because ProcessPoolExecutor.shutdown(wait=True)
