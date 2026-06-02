@@ -70,3 +70,34 @@ class TestNotificationServiceEnterprise:
             mock_notif.set_body.assert_called_with("Body")
             mock_notif.set_default_action_and_target.assert_called_with("app.action", variant)
             mock_app.send_notification.assert_called_with("id1", mock_notif)
+
+    def test_markup_escaping(self, service):
+        """Security: Verify that markup in title and body is escaped."""
+        service._portal = MagicMock()
+        unsafe_title = "<b>Bold Title</b>"
+        unsafe_body = "Click <a href='http://evil.com'>here</a> & win!"
+        expected_title = "&lt;b&gt;Bold Title&lt;/b&gt;"
+        expected_body = "Click &lt;a href='http://evil.com'&gt;here&lt;/a&gt; &amp; win!"
+
+        # 1. Test show() -> _show_portal_notification
+        with patch.object(service, "_show_portal_notification", return_value=True) as mock_portal:
+            service.show(unsafe_title, unsafe_body)
+            mock_portal.assert_called_once_with(expected_title, expected_body, "normal")
+
+        # 2. Test send_notification_with_action()
+        from gi.repository import GLib
+
+        with (
+            patch("gi.repository.Gio.Notification.new") as mock_new,
+            patch("gi.repository.Gio.Application.get_default") as mock_app_get,
+        ):
+            mock_notif = MagicMock()
+            mock_new.return_value = mock_notif
+            mock_app = MagicMock()
+            mock_app_get.return_value = mock_app
+
+            variant = GLib.Variant("s", "target")
+            service.send_notification_with_action("id1", unsafe_title, unsafe_body, "app.action", variant)
+
+            mock_new.assert_called_with(expected_title)
+            mock_notif.set_body.assert_called_with(expected_body)
