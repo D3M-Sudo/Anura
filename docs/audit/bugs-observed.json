@@ -451,6 +451,28 @@
       "impact_analysis": {},
       "fix_prescription": {},
       "time_to_detect_seconds": 0
+    },
+    {
+      "id": "P2-005",
+      "severity": "MEDIUM",
+      "confidence_score": 0.7,
+      "personality_detecting": "Memory Surgeon",
+      "personality_agreement": [],
+      "tool_confirmations": [],
+      "location": {
+        "file": "anura/utils/image_filters.py",
+        "line": 200,
+        "function": "apply"
+      },
+      "chain_of_thought": {
+        "description": "Technical risk: In FilterChain.apply, there's a loop to close intermediate images. If 'result' is one of the images in 'intermediates', it might be closed twice or closed before being returned if the logic is not extremely careful."
+      },
+      "status": "FIXED",
+      "pattern_matched": "",
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
     }
   ],
   "tool_execution_log": {
