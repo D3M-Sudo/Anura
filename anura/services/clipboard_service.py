@@ -401,11 +401,22 @@ class ClipboardService(GObject.GObject):
         self._clear_active_timeout()
 
         with self._state_lock:
-            # Both fallback paths have now been tried — bail out if so.
+            # Both fallback paths have now been tried — emit error and stop.
+            # Previously this block logged "giving up" but continued to launch
+            # a third read_texture_async, adding a useless D-Bus round-trip
+            # (~100-300 ms) before the error was finally shown to the user.
             if self._fallback_attempted:
                 logger.warning(
                     "Anura Clipboard: Both texture and URI-list reads failed; giving up.",
                 )
+                self._cancellable = None
+                self._clipboard_timeout_id = None
+
+        if self._fallback_attempted:
+            self._emit_clipboard_error(_("No image in clipboard"))
+            return
+
+        with self._state_lock:
             if self._cancellable is None or self._cancellable.is_cancelled():
                 self._cancellable = Gio.Cancellable()
             cancellable = self._cancellable
