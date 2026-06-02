@@ -64,28 +64,21 @@ class TestClipboardServiceEnterprise:
             assert mock_timeout.called
 
     def test_cancel_pending_operations(self, service):
-        """Test atomic cancellation logic.
-
-        The production code guards GLib.source_remove() with
-        GLib.MainContext.default().find_source_by_id() to suppress C-level
-        warnings when a one-shot source has already auto-removed itself
-        (BUG-032).  We therefore mock the MainContext so that
-        find_source_by_id returns a truthy sentinel — simulating an active
-        source — which lets source_remove proceed and be asserted.
-        """
+        """Test atomic cancellation logic."""
         mock_cancellable = MagicMock()
         mock_cancellable.is_cancelled.return_value = False
         service._cancellable = mock_cancellable
         service._clipboard_timeout_id = 1234
 
-        mock_ctx = MagicMock()
-        mock_ctx.find_source_by_id.return_value = object()  # truthy → source exists
-
         with (
-            patch("gi.repository.GLib.MainContext") as mock_main_context,
             patch("gi.repository.GLib.source_remove") as mock_remove,
+            patch("gi.repository.GLib.MainContext.default") as mock_ctx_get,
         ):
-            mock_main_context.default.return_value = mock_ctx
+            mock_ctx = MagicMock()
+            mock_ctx_get.return_value = mock_ctx
+            # Simulate source found
+            mock_ctx.find_source_by_id.return_value = MagicMock()
+
             service.cancel_pending_operations()
             mock_cancellable.cancel.assert_called_once()
             mock_remove.assert_called_with(1234)

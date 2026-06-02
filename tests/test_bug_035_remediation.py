@@ -137,7 +137,8 @@ class TestBug035Remediation:
         """is_safe_url_string returning False must block validation regardless of Gio."""
         mock_gio = self._gio_mock(has_handler=True)  # handler exists — must NOT matter
 
-        patches = self._patch_gio(mock_gio) + [
+        patches = [
+            *self._patch_gio(mock_gio),
             patch("anura.services.share_service.is_safe_url_string", return_value=False),
         ]
         for p in patches:
@@ -160,7 +161,8 @@ class TestBug035Remediation:
         """HTTP/HTTPS URLs must be validated by uri_validator, not Gio."""
         mock_gio = self._gio_mock(has_handler=False)
 
-        patches = self._patch_gio(mock_gio) + [
+        patches = [
+            *self._patch_gio(mock_gio),
             patch("anura.services.share_service.uri_validator", return_value=True),
         ]
         for p in patches:
