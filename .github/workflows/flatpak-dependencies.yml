@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          ref: development
 
       - name: Check and update Flatpak dependencies
         id: check
@@ -39,6 +41,7 @@ jobs:
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          base: development
           commit-message: "chore(deps): update Flatpak dependencies via FEDC"
           title: "chore(deps): update Flatpak dependencies"
           body: |
