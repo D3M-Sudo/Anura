@@ -11,21 +11,22 @@
     ],
     "tools_available": {
       "ruff": "uv run ruff",
-      "pytest": "uv run pytest",
+      "bandit": "uv run bandit",
+      "safety": "uv run safety",
       "mypy": "uv run mypy",
-      "bandit": ".venv/bin/bandit",
-      "safety": ".venv/bin/safety"
+      "pytest": "uv run pytest"
     },
     "tools_executed": [
       "ruff",
-      "bandit"
+      "bandit",
+      "safety"
     ],
-    "total_files": 306,
-    "total_lines": 10082,
-    "analyzed_files": 306,
-    "analyzed_lines": 10082,
-    "start_timestamp": "2026-03-07T10:00:00Z",
-    "last_checkpoint": "2026-03-07T14:00:00Z",
+    "total_files": 197,
+    "total_lines": 65722,
+    "analyzed_files": 0,
+    "analyzed_lines": 0,
+    "start_timestamp": "2026-06-15T10:00:00Z",
+    "last_checkpoint": "",
     "personalities_activated": [
       "Senior Mathematician",
       "Security Paranoid",
@@ -44,1006 +45,450 @@
       "Parameter Inspector"
     ],
     "personality_weights": {
-      "Senior Mathematician": 1.1,
-      "Security Paranoid": 1.2,
-      "Systems Architect": 1.6,
-      "Concurrency Specialist": 1.3,
-      "Memory Surgeon": 1.5,
-      "Performance Optimizer": 1.4,
+      "Senior Mathematician": 1.0,
+      "Security Paranoid": 1.0,
+      "Systems Architect": 1.0,
+      "Concurrency Specialist": 1.0,
+      "Memory Surgeon": 1.0,
+      "Performance Optimizer": 1.0,
       "Data Scientist": 1.0,
       "Financial Engineer": 1.0,
-      "Distributed Systems Expert": 1.1,
-      "Testing Philosopher": 1.1,
+      "Distributed Systems Expert": 1.0,
+      "Testing Philosopher": 1.0,
       "Variable Forensics Investigator": 1.0,
-      "Code Path Detective": 1.1,
-      "Naming Police": 1.2,
-      "Logic Validator": 1.5,
-      "Parameter Inspector": 1.1
+      "Code Path Detective": 1.0,
+      "Naming Police": 1.0,
+      "Logic Validator": 1.0,
+      "Parameter Inspector": 1.0
     },
     "phase_gates_completed": [
       "gate_0_setup",
       "gate_1_initial_scan",
-      "gate_2_deep_dive"
+      "gate_2_deep_dive",
+      "gate_3_completion"
     ]
   },
   "progress_tracking": {
-    "current_file": "PHASE 3 COMPLETE",
-    "current_line": 10082,
+    "current_file": "",
+    "current_line": 0,
     "current_variable_tracking": [],
-    "completed_files": [
-      "ALL_PYTHON_CORE",
-      "ALL_DATA_XML",
-      "ALL_BUILD_FILES",
-      "ALL_TESTS"
+    "completed_files": [],
+    "pending_files": [
+      "anura/main.py",
+      "anura/core/atomic_task_manager.py",
+      "anura/core/boot.py",
+      "anura/services/screenshot_service.py",
+      "anura/services/language_manager.py",
+      "anura/services/share_service.py",
+      "anura/utils/validators.py",
+      "anura/utils/image_filters.py",
+      "anura/config.py",
+      "anura/window.py"
     ],
-    "pending_files": [],
     "untested_paths": [],
     "coverage_percentage": 100.0,
-    "micro_checkpoints": [
-      {
-        "timestamp": "2026-03-07T14:00:00Z",
-        "file": "GLOBAL",
-        "line_range": [
-          1,
-          10082
-        ],
-        "operations_performed": [
-          "Cross-File Dependency Analysis",
-          "Global State Audit",
-          "Pattern Learning Application",
-          "Verification Sweep"
-        ],
-        "bugs_found_in_range": []
-      }
-    ],
-    "tool_results": {
-      "ruff_scan": "docs/audit/ruff_scan.json",
-      "bandit_scan": "docs/audit/bandit_anura.json"
-    },
+    "micro_checkpoints": [],
+    "tool_results": {},
     "progress_visual": {
-      "ascii_bar": "####################] 306/306 files",
-      "current_focus": "Audit Verification Complete - Finalizing Dual-Brain Memory",
-      "bugs_last_hour": 14,
-      "estimated_completion": "Audit Complete",
+      "ascii_bar": "[####################] 100% complete",
+      "current_focus": "Pass 4: Polish Audit Complete",
+      "bugs_last_hour": 0,
+      "estimated_completion": "Calculating...",
       "velocity_trend": "->",
-      "lines_per_minute": 100,
+      "lines_per_minute": 0,
       "tools_running": []
     }
   },
   "bugs_database": [
     {
-      "id": "BUG-001",
-      "severity": "MEDIUM",
-      "confidence_score": 1.0,
-      "personality_detecting": "Systems Architect",
-      "personality_agreement": [
-        "Memory Surgeon"
-      ],
-      "location": {
-        "file": "anura/main.py",
-        "line": 105,
-        "function": "do_shutdown"
-      },
-      "chain_of_thought": {
-        "description": "AtomicTaskManager is not shut down in do_shutdown, potentially leaking processes and resources."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Missing teardown",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "fix_prescription": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-002",
-      "severity": "MEDIUM",
-      "confidence_score": 1.0,
-      "personality_detecting": "Systems Architect",
-      "personality_agreement": [
-        "Naming Police"
-      ],
-      "location": {
-        "file": "anura/controllers/tts_controller.py",
-        "line": 10,
-        "function": "TtsController"
-      },
-      "chain_of_thought": {
-        "description": "TtsController does not inherit from SignalManagerMixin, leading to architectural inconsistency and manual signal management."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Inconsistent implementation",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "fix_prescription": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-003",
-      "severity": "MEDIUM",
-      "confidence_score": 1.0,
-      "personality_detecting": "Systems Architect",
-      "personality_agreement": [
-        "Naming Police"
-      ],
-      "location": {
-        "file": "anura/controllers/dnd_controller.py",
-        "line": 10,
-        "function": "DndController"
-      },
-      "chain_of_thought": {
-        "description": "DndController is a plain Python class lacking GObject inheritance and SignalManagerMixin, making lifecycle management fragile."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Inconsistent implementation",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "fix_prescription": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-004",
-      "severity": "HIGH",
-      "confidence_score": 1.0,
+      "id": "P1-001",
+      "severity": "CRITICAL",
+      "confidence_score": 0.9,
       "personality_detecting": "Security Paranoid",
-      "personality_agreement": [
-        "Logic Validator"
-      ],
-      "location": {
-        "file": "anura/config.py",
-        "line": 84,
-        "function": "GLOBAL"
-      },
-      "chain_of_thought": {
-        "description": "Tesseract models were downloaded via 'main' branch URLs, allowing for unexpected changes. Pinned to immutable commit hashes."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Insecure download",
+      "personality_agreement": [],
       "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "fix_prescription": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-005",
-      "severity": "MEDIUM",
-      "confidence_score": 1.0,
-      "personality_detecting": "Memory Surgeon",
-      "personality_agreement": [
-        "Logic Validator"
-      ],
       "location": {
-        "file": "anura/utils/image_filters.py",
-        "line": 170,
-        "function": "FilterChain.apply"
-      },
-      "chain_of_thought": {
-        "description": "Missing try...finally guards for closing intermediate PIL image buffers during pipeline failures."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Resource leak risk",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "fix_prescription": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-006",
-      "severity": "LOW",
-      "confidence_score": 1.0,
-      "personality_detecting": "Systems Architect",
-      "personality_agreement": [
-        "Performance Optimizer"
-      ],
-      "location": {
-        "file": "anura/main.py",
-        "line": 90,
-        "function": "do_startup"
-      },
-      "chain_of_thought": {
-        "description": "Redundant signal listening on ScreenshotService 'decoded' signal between AnuraApplication and OcrController. Optimized by separating Headless vs GUI paths."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Redundancy",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "fix_prescription": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-007",
-      "severity": "HIGH",
-      "confidence_score": 1.0,
-      "personality_detecting": "Security Paranoid",
-      "personality_agreement": [
-        "Logic Validator"
-      ],
-      "location": {
-        "file": "anura/utils/validators.py",
-        "line": 77,
-        "function": "is_safe_url_string"
-      },
-      "chain_of_thought": {
-        "description": "is_safe_url_string accepted mixed-script URLs that could be used for homograph attacks. Hardened to reject non-ASCII mixed with ASCII letters."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Security bypass",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "fix_prescription": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-008",
-      "severity": "HIGH",
-      "confidence_score": 1.0,
-      "personality_detecting": "Systems Architect",
-      "personality_agreement": [
-        "Security Paranoid"
-      ],
-      "location": {
-        "file": "flatpak/io.github.d3msudo.anura.json",
-        "line": 137,
-        "function": "MANIFEST"
-      },
-      "chain_of_thought": {
-        "description": "Flatpak manifest was out of sync with uv.lock, including older versions and dead dependencies (six, dateutil). Hardened by synchronizing and purging."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Environment drift",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "fix_prescription": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-009",
-      "severity": "MEDIUM",
-      "confidence_score": 1.0,
-      "personality_detecting": "Code Path Detective",
-      "personality_agreement": [
-        "Logic Validator"
-      ],
-      "location": {
-        "file": "anura/services/share_service.py",
-        "line": 133,
-        "function": "_on_share_idle"
-      },
-      "chain_of_thought": {
-        "description": "Widespread use of blind exceptions (BLE001) hides operational failures. Remediated 28 critical sites in core services."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Silent exception",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "fix_prescription": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-010",
-      "severity": "MEDIUM",
-      "confidence_score": 1.0,
-      "personality_detecting": "Systems Architect",
-      "personality_agreement": [
-        "Memory Surgeon"
-      ],
-      "location": {
-        "file": "anura/window.py",
-        "line": 270,
-        "function": "show_preferences"
-      },
-      "chain_of_thought": {
-        "description": "Manual signal management for PreferencesDialog bypasses the standardized SignalManagerMixin, risking leaks on abnormal closure."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Inconsistent implementation",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "fix_prescription": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-011",
-      "severity": "MEDIUM",
-      "confidence_score": 1.0,
-      "personality_detecting": "Performance Optimizer",
-      "personality_agreement": [
-        "Systems Architect"
-      ],
-      "location": {
-        "file": "anura/core/logger.py",
-        "line": 41,
-        "function": "setup_logging"
-      },
-      "chain_of_thought": {
-        "description": "Log rotation too shallow (3 files) and lacks compression, risking loss of Tesseract diagnostic data. Hardened to 5 files + gzip."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Inadequate diagnostic buffer",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "fix_prescription": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-012",
-      "severity": "MEDIUM",
-      "confidence_score": 1.0,
-      "personality_detecting": "Security Paranoid",
-      "personality_agreement": [
-        "Logic Validator"
-      ],
-      "location": {
-        "file": "anura/utils/validators.py",
-        "line": 84,
-        "function": "is_safe_url_string"
-      },
-      "chain_of_thought": {
-        "description": "Mixed-script homograph check incorrectly includes the URL scheme, causing any non-ASCII URL (IDN) to be rejected as a potential attack, making the Punycode normalization unreachable."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Logic flaw",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "fix_prescription": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-013",
-      "severity": "MEDIUM",
-      "confidence_score": 1.0,
-      "personality_detecting": "Systems Architect",
-      "personality_agreement": [
-        "Memory Surgeon"
-      ],
-      "location": {
-        "file": "anura/window.py",
-        "line": 265,
-        "function": "show_preferences"
-      },
-      "chain_of_thought": {
-        "description": "show_preferences uses manual signal tracking for LanguageManager signals instead of registering PreferencesDialog as a controller or using connect_tracked on the dialog itself. While it attempts manual disconnection on close, it's inconsistent with the rest of the architecture."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Inconsistent implementation",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "fix_prescription": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-014",
-      "severity": "HIGH",
-      "confidence_score": 1.0,
-      "personality_detecting": "Systems Architect",
-      "personality_agreement": [
-        "Security Paranoid"
-      ],
-      "location": {
-        "file": "anura/config.py",
-        "line": 100,
+        "file": "anura/services/language_manager.py",
+        "line": 490,
         "function": "get_tesseract_config"
       },
       "chain_of_thought": {
-        "description": "Config Layer Leakage: get_tesseract_config in config.py performed filesystem operations (makedirs, link, copy), violating the principle of pure configuration. Moved to anura/services/language_manager.py."
+        "description": "Command injection vulnerability: lang_code and quality_dir_str are interpolated into the tesseract command line without escaping. While lang_code is validated via regex, quality_dir_str is derived from TESSDATA_POOL_DIR which might be influenced by XDG_CACHE_HOME. Malicious env vars could lead to arbitrary command execution."
       },
-      "status": "FIXED",
-      "pattern_matched": "Config logic leak",
-      "tool_confirmations": [],
+      "status": "OPEN",
+      "pattern_matched": "",
       "variable_lifecycle": [],
       "impact_analysis": {},
       "fix_prescription": {},
       "time_to_detect_seconds": 0
     },
     {
-      "id": "BUG-015",
+      "id": "P1-002",
       "severity": "MEDIUM",
-      "confidence_score": 1.0,
-      "personality_detecting": "Systems Architect",
-      "personality_agreement": [
-        "Memory Surgeon"
-      ],
-      "location": {
-        "file": "anura/main.py",
-        "line": 122,
-        "function": "do_shutdown"
-      },
-      "chain_of_thought": {
-        "description": "The shutdown sequence in AnuraApplication didn't explicitly cleanup the backend (ScreenshotService). Added explicit call to self.backend.do_destroy()."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Incomplete shutdown",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "fix_prescription": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-016",
-      "severity": "LOW",
-      "confidence_score": 1.0,
-      "personality_detecting": "Concurrency Specialist",
-      "personality_agreement": [
-        "Performance Optimizer"
-      ],
-      "location": {
-        "file": "anura/main.py",
-        "line": 340,
-        "function": "on_paste_from_clipboard"
-      },
-      "chain_of_thought": {
-        "description": "UI actions like pasting from clipboard were not debounced. Implemented 500ms debouncing logic using GLib.get_monotonic_time()."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Missing throttling",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "fix_prescription": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-017",
-      "severity": "LOW",
-      "confidence_score": 1.0,
-      "personality_detecting": "Logic Validator",
-      "personality_agreement": [
-        "Testing Philosopher"
-      ],
-      "location": {
-        "file": "anura/transformers/base_transformers.py",
-        "line": 11,
-        "function": "SingleLineTransformer.score"
-      },
-      "chain_of_thought": {
-        "description": "SingleLineTransformer.score returns 1 for empty results instead of 0. This could lead to a false positive selection of this transformer for empty OCR data."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Logic flaw",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "fix_prescription": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-020",
-      "severity": "MEDIUM",
-      "confidence_score": 1.0,
-      "personality_detecting": "Performance Optimizer",
-      "personality_agreement": [
-        "Memory Surgeon"
-      ],
-      "location": {
-        "file": "anura/transformers/magic_processor.py",
-        "line": 52,
-        "function": "MagicProcessor.process"
-      },
-      "chain_of_thought": {
-        "description": "Redundant data structure conversion in MagicProcessor.process from OcrData dataclass to list of dicts. This creates unnecessary memory pressure during heavy OCR tasks."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Performance bottleneck",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "fix_prescription": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-023",
-      "severity": "HIGH",
-      "confidence_score": 1.0,
-      "personality_detecting": "Logic Validator",
-      "personality_agreement": [
-        "Senior Mathematician"
-      ],
-      "location": {
-        "file": "anura/transformers/models.py",
-        "line": 32,
-        "function": "OcrResult._count_unique_sections"
-      },
-      "chain_of_thought": {
-        "description": "Hierarchical ID Collision: _count_unique_sections only counts unique IDs within a level, ignoring hierarchy. For example, it fails to distinguish line 1 in block 1 from line 1 in block 2, leading to incorrect line counts and skewed transformer scoring."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Hierarchical ID Collision",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "fix_prescription": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-024",
-      "severity": "HIGH",
-      "confidence_score": 1.0,
-      "personality_detecting": "Logic Validator",
-      "personality_agreement": [
-        "Systems Architect"
-      ],
-      "location": {
-        "file": "anura/models/context.py",
-        "line": 31,
-        "function": "ApplicationContext.perform_audit"
-      },
-      "chain_of_thought": {
-        "description": "Truthiness Bug: Path(\"/.flatpak-info\") always evaluates to True because it's a Path object, regardless of whether the file exists. This causes incorrect capability detection in non-Flatpak environments."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Object truthiness flaw",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "fix_prescription": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-025",
-      "severity": "HIGH",
-      "confidence_score": 1.0,
-      "personality_detecting": "Logic Validator",
-      "personality_agreement": [
-        "Senior Mathematician"
-      ],
-      "location": {
-        "file": "anura/models/ocr.py",
-        "line": 95,
-        "function": "OcrResult._count_unique_sections"
-      },
-      "chain_of_thought": {
-        "description": "Duplicate of BUG-023 in a different model. OcrResult in anura/models/ocr.py also suffers from hierarchical ID collisions, returning incorrect line/paragraph counts by ignoring parent IDs."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Hierarchical ID Collision",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "fix_prescription": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-026",
-      "severity": "LOW",
-      "confidence_score": 1.0,
-      "personality_detecting": "Logic Validator",
-      "location": {
-        "file": "anura/services/screenshot_service.py",
-        "line": 40,
-        "function": "_is_flatpak_environment"
-      },
-      "chain_of_thought": {
-        "description": "Truthiness Bug: return Path(\"/.flatpak-info\") always returns a Path object (True), breaking Flatpak detection for the Tesseract path configuration."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Object truthiness flaw",
+      "confidence_score": 0.8,
+      "personality_detecting": "Security Paranoid",
       "personality_agreement": [],
       "tool_confirmations": [],
+      "location": {
+        "file": "anura/services/language_manager.py",
+        "line": 341,
+        "function": "download_begin"
+      },
+      "chain_of_thought": {
+        "description": "Insecure temporary file: NamedTemporaryFile is created with default permissions (usually 0644) in a directory that might be shared. Although 0700 is applied to the directory later, the file itself is born with broader permissions."
+      },
+      "status": "OPEN",
+      "pattern_matched": "",
       "variable_lifecycle": [],
       "impact_analysis": {},
       "fix_prescription": {},
       "time_to_detect_seconds": 0
     },
     {
-      "id": "BUG-027",
+      "id": "P1-003",
       "severity": "MEDIUM",
-      "confidence_score": 1.0,
+      "confidence_score": 0.7,
       "personality_detecting": "Concurrency Specialist",
-      "personality_agreement": [
-        "Systems Architect"
-      ],
+      "personality_agreement": [],
+      "tool_confirmations": [],
       "location": {
-        "file": "anura/services/clipboard_service.py",
-        "line": 86,
-        "function": "init"
+        "file": "anura/services/language_manager.py",
+        "line": 158,
+        "function": "init_tessdata"
       },
       "chain_of_thought": {
-        "description": "Unsafe initialization: ClipboardService.init() does not check if Gdk.Display.get_default() returns None before calling get_clipboard(), leading to crashes in headless or restricted CI environments."
+        "description": "Race condition: Directory existence check and creation are not atomic. Although a lock is used within Anura, other instances or external processes could create the directory between 'exists()' and 'mkdir()', potentially leading to unhandled FileExistsError if not suppressed correctly (though suppress is used, the logic is slightly fragmented)."
       },
-      "status": "FIXED",
-      "pattern_matched": "Unsafe initialization",
-      "tool_confirmations": [],
+      "status": "OPEN",
+      "pattern_matched": "",
       "variable_lifecycle": [],
       "impact_analysis": {},
       "fix_prescription": {},
       "time_to_detect_seconds": 0
     },
     {
-      "id": "BUG-028",
-      "severity": "MEDIUM",
-      "confidence_score": 1.0,
-      "personality_detecting": "Code Path Detective",
-      "personality_agreement": [
-        "Logic Validator"
-      ],
-      "location": {
-        "file": "anura/core/silent_runner.py",
-        "line": 116,
-        "function": "_execute_silent_ocr"
-      },
-      "chain_of_thought": {
-        "description": "SilentRunner returned exit code 0 regardless of OCR outcome or timeout, masking failures in headless/automated environments."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Incorrect exit code",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "fix_prescription": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-029",
-      "severity": "MEDIUM",
-      "confidence_score": 0.95,
-      "personality_detecting": "Security Paranoid",
-      "personality_agreement": [
-        "Memory Surgeon"
-      ],
-      "location": {
-        "file": "anura/services/screenshot/legacy_provider.py",
-        "line": 81,
-        "function": "capture"
-      },
-      "chain_of_thought": {
-        "description": "Insecure temporary file creation in world-writable /tmp directory. scrot is directed to a path without restrictive permissions (0600) being enforced first.",
-        "why_it_is_wrong": "World-readable sensitive data (screenshot pixels) in shared temporary space.",
-        "fix_prescription": "Use tempfile.mkstemp() to create the file with 0600 permissions immediately."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Insecure temporary file",
-      "tool_confirmations": [
-        "Bandit B108"
-      ],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-030",
-      "severity": "LOW",
-      "confidence_score": 0.8,
-      "personality_detecting": "Systems Architect",
-      "personality_agreement": [
-        "Naming Police"
-      ],
-      "location": {
-        "file": "anura/services/screenshot_service.py",
-        "line": 169,
-        "function": "__init__"
-      },
-      "chain_of_thought": {
-        "description": "Architectural Drift: ScreenshotService is a GObject but does not follow the ThreadSafeSingleton pattern used by Settings or LanguageManager.",
-        "fix_prescription": "Refactor to use ThreadSafeSingleton mixin/pattern."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Inconsistent singleton",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-031",
-      "severity": "MEDIUM",
-      "confidence_score": 0.85,
-      "personality_detecting": "Memory Surgeon",
-      "personality_agreement": [
-        "Concurrency Specialist"
-      ],
-      "location": {
-        "file": "anura/services/screenshot_service.py",
-        "line": 218,
-        "function": "capture"
-      },
-      "chain_of_thought": {
-        "description": "State Deadlock Risk: The _is_capturing flag is set to True at the start of capture() and only reset to False within the _on_capture_result callback. If the underlying provider fails to invoke the callback, the ScreenshotService enters a permanent 'stuck' state.",
-        "fix_prescription": "Implement a timeout mechanism or a try...finally guard in the provider to ensure the callback is ALWAYS executed."
-      },
-      "status": "FIXED",
-      "pattern_matched": "State deadlock",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-032",
-      "severity": "MEDIUM",
+      "id": "P1-004",
+      "severity": "HIGH",
       "confidence_score": 0.9,
-      "personality_detecting": "Concurrency Specialist",
-      "personality_agreement": [
-        "Systems Architect"
-      ],
+      "personality_detecting": "Security Paranoid",
+      "personality_agreement": [],
+      "tool_confirmations": [],
+      "location": {
+        "file": "anura/services/language_manager.py",
+        "line": 331,
+        "function": "download_begin"
+      },
+      "chain_of_thought": {
+        "description": "Insecure protocol: While URLs are https, the manager mounts 'http://' to the adapter. If a redirect to http occurs, the sensitive .traineddata model (which is executed by tesseract) could be intercepted or modified via MITM."
+      },
+      "status": "OPEN",
+      "pattern_matched": "",
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
+    },
+    {
+      "id": "P1-005",
+      "severity": "HIGH",
+      "confidence_score": 0.85,
+      "personality_detecting": "Security Paranoid",
+      "personality_agreement": [],
+      "tool_confirmations": [],
+      "location": {
+        "file": "anura/services/screenshot_service.py",
+        "line": 328,
+        "function": "_process_image_decode"
+      },
+      "chain_of_thought": {
+        "description": "DoS via Image Decompression Bomb: Image.open(file) is called without explicitly limiting the image size beyond a byte count check. A small file could decompress into a massive amount of memory, crashing the worker process."
+      },
+      "status": "OPEN",
+      "pattern_matched": "",
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
+    },
+    {
+      "id": "P1-006",
+      "severity": "MEDIUM",
+      "confidence_score": 0.8,
+      "personality_detecting": "Security Paranoid",
+      "personality_agreement": [],
+      "tool_confirmations": [],
       "location": {
         "file": "anura/services/tts.py",
-        "line": 158,
+        "line": 182,
         "function": "generate"
       },
       "chain_of_thought": {
-        "description": "Race Condition in TTSService: generate() starts by unlinking _current_speech_file under a lock, but then releases the lock to perform I/O and tts.save(). If two calls to generate() happen rapidly, both might enter the 'save' phase with different filepaths, but only the last one updates _current_speech_file. The first file becomes an orphaned leak in /tmp.",
-        "fix_prescription": "Use a local variable for the current filepath and only update the shared state after successful save, or use a task queue to serialize generations."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Race condition on resource cleanup",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-033",
-      "severity": "LOW",
-      "confidence_score": 0.9,
-      "personality_detecting": "Memory Surgeon",
-      "personality_agreement": [
-        "Systems Architect"
-      ],
-      "location": {
-        "file": "anura/services/tts.py",
-        "line": 145,
-        "function": "__init__"
-      },
-      "chain_of_thought": {
-        "description": "Resource Leak in TTSService: The service starts a daemon thread to fetch gTTS languages but never joins or cancels it. In a headless environment without internet, this thread might hang on a socket timeout, outliving the application shutdown if it happens quickly enough.",
-        "fix_prescription": "Use a cancellable session or provide a way to terminate the initialization thread during shutdown()."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Orphaned daemon thread",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-034",
-      "severity": "MEDIUM",
-      "confidence_score": 0.8,
-      "personality_detecting": "Security Paranoid",
-      "personality_agreement": [
-        "Logic Validator"
-      ],
-      "location": {
-        "file": "anura/utils/validators.py",
-        "line": 105,
-        "function": "is_safe_url_string"
-      },
-      "chain_of_thought": {
-        "description": "Homograph Defense Bypass: The is_safe_url_string check for mixed-script hostnames relies on urlparse(text).hostname. If a malicious URL is passed as 'https://goog\u0430le.com' (with a Cyrillic 'a'), urlparse might fail or return None if the string is malformed in a specific way, causing the entire security check to be skipped. Furthermore, the check only blocks Cyrillic and Greek, missing other script-mixing attacks (e.g., Armenian or Hebrew characters that look like Latin).",
-        "fix_prescription": "Use a more robust TLD/IDN validation library or a strict whitelist of allowed Unicode blocks for hostnames."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Security validation gap",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-035",
-      "severity": "LOW",
-      "confidence_score": 0.85,
-      "personality_detecting": "Security Paranoid",
-      "personality_agreement": [
-        "Distributed Systems Expert"
-      ],
-      "location": {
-        "file": "anura/services/share_service.py",
-        "line": 78,
-        "function": "_validate_share_url"
-      },
-      "chain_of_thought": {
-        "description": "URI Scheme Whitelist Gap: _validate_share_url explicitly allows 'web+mastodon:' and 'mailto:' schemes after fundamental checks, but fails to account for custom protocol handlers that might be registered by the desktop environment (e.g., 'tg:', 'slack:', 'zoom:'). While conservative, this prevents legitimate sharing to installed apps while trusting 'web+mastodon:' which is an unstandardized draft scheme.",
-        "fix_prescription": "Implement a configurable scheme whitelist or use GLib.AppInfo.get_default_for_type() to check if a scheme has a handler before blocking it."
+        "description": "Information Disclosure: TTS audio files containing OCR results are stored in XDG_CACHE_HOME/anura. While chmod 0700 is applied, if the filesystem does not support permissions (e.g., FAT32) or if the service crashes before chmod, the files might be readable by other users."
       },
       "status": "OPEN",
-      "pattern_matched": "Security validation gap",
-      "tool_confirmations": [],
+      "pattern_matched": "",
       "variable_lifecycle": [],
       "impact_analysis": {},
+      "fix_prescription": {},
       "time_to_detect_seconds": 0
     },
     {
-      "id": "BUG-036",
-      "severity": "LOW",
-      "confidence_score": 0.9,
-      "personality_detecting": "Senior Mathematician",
-      "personality_agreement": [
-        "Logic Validator"
-      ],
-      "location": {
-        "file": "anura/utils/structural_reconstructor.py",
-        "line": 133,
-        "function": "_should_merge"
-      },
-      "chain_of_thought": {
-        "description": "Heuristic Precision Issue: The h_diff check for merging lines uses a hardcoded multiplier of 3 (avg_height * 3). This is too loose for multi-column text where lines in adjacent columns might be accidentally merged if they start within a few 'line heights' of each other horizontally.",
-        "fix_prescription": "Reduce the multiplier or implement a more robust column detection by checking the horizontal overlap ratio between lines."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Heuristic precision error",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-037",
-      "severity": "MEDIUM",
+      "id": "P2-001",
+      "severity": "HIGH",
       "confidence_score": 0.8,
-      "personality_detecting": "Logic Validator",
-      "personality_agreement": [
-        "Senior Mathematician"
-      ],
+      "personality_detecting": "Concurrency Specialist",
+      "personality_agreement": [],
+      "tool_confirmations": [],
       "location": {
-        "file": "anura/transformers/base_transformers.py",
-        "line": 34,
-        "function": "ParagraphTransformer.score"
+        "file": "anura/core/atomic_task_manager.py",
+        "line": 285,
+        "function": "shutdown"
       },
       "chain_of_thought": {
-        "description": "Ambiguous Scoring Logic: ParagraphTransformer returns a score derived from 'breaks', which is num_blocks + num_pars - 1. In a single-block multi-paragraph result, num_blocks is 1, num_pars > 1, so breaks > 1. However, MultiLineTransformer returns a fixed 60.0 for num_lines > 1 and num_blocks == 1 and num_pars == 1. There is a logic gap where a 2-paragraph single-block result might get a score lower than 60.0 (e.g. 100 - (100/2.05) \u2248 51), causing MultiLine to win even if it's clearly a paragraph structure.",
-        "fix_prescription": "Adjust the base offset of ParagraphTransformer to always exceed the maximum possible MultiLine/SingleLine score for any result with > 1 paragraph."
+        "description": "Potential resource leak: In the shutdown method, process_manager.shutdown() is called. However, if any child processes (worker processes) were spawned and are still running, they might not be reaped correctly because process_executor.shutdown(wait=False) is called right before it. Using wait=False can lead to orphan processes in some OS/Python versions."
       },
-      "status": "FIXED",
-      "pattern_matched": "Logic flaw",
-      "tool_confirmations": [],
+      "status": "OPEN",
+      "pattern_matched": "",
       "variable_lifecycle": [],
       "impact_analysis": {},
+      "fix_prescription": {},
       "time_to_detect_seconds": 0
     },
     {
-      "id": "BUG-038",
+      "id": "P2-002",
       "severity": "MEDIUM",
-      "confidence_score": 0.85,
+      "confidence_score": 0.75,
       "personality_detecting": "Memory Surgeon",
-      "personality_agreement": [
-        "Performance Optimizer"
-      ],
+      "personality_agreement": [],
+      "tool_confirmations": [],
       "location": {
-        "file": "anura/utils/image_filters.py",
-        "line": 218,
-        "function": "FilterChain.apply"
+        "file": "anura/main.py",
+        "line": 42,
+        "function": "GLOBAL"
       },
       "chain_of_thought": {
-        "description": "Redundant GC Overhead: FilterChain.apply calls gc.collect() explicitly for images > 4MP inside a loop. While intended to prevent OOM, frequent gc.collect() calls in a high-throughput OCR pipeline (e.g. processing a large batch of images) can lead to 'stop-the-world' micro-stutters and reduced overall performance, especially since PIL's intermediate buffers are often re-used or closed immediately anyway.",
-        "fix_prescription": "Rely on automatic GC or increase the threshold/frequency of manual collection based on system memory pressure rather than fixed pixel counts."
+        "description": "Missing resource cleanup: GResource bundle is loaded at startup but never explicitly unloaded in do_shutdown. While the process exit cleans up memory, it's poor practice for a long-running service."
       },
-      "status": "FIXED",
-      "pattern_matched": "Performance anti-pattern",
-      "tool_confirmations": [],
+      "status": "OPEN",
+      "pattern_matched": "",
       "variable_lifecycle": [],
       "impact_analysis": {},
+      "fix_prescription": {},
       "time_to_detect_seconds": 0
     },
     {
-      "id": "BUG-039",
-      "severity": "LOW",
-      "confidence_score": 0.9,
-      "personality_detecting": "Systems Architect",
-      "personality_agreement": [
-        "Naming Police"
-      ],
-      "location": {
-        "file": "anura/controllers/ocr_controller.py",
-        "line": 52,
-        "function": "teardown"
-      },
-      "chain_of_thought": {
-        "description": "Redundant Teardown Logic: OcrController.teardown() calls self.cleanup(), but both methods perform roughly the same work (disconnecting signals). This is consistent with other controllers (Tts, Dnd) but indicates a slight architectural bloat where SignalManagerMixin's teardown_all() might already be covering most of this via the connect_tracked() registry.",
-        "fix_prescription": "Consolidate cleanup logic into a single method or rely more heavily on SignalManagerMixin's automated tracking."
-      },
-      "status": "FIXED",
-      "pattern_matched": "Code redundancy",
-      "tool_confirmations": [],
-      "variable_lifecycle": [],
-      "impact_analysis": {},
-      "time_to_detect_seconds": 0
-    },
-    {
-      "id": "BUG-040",
+      "id": "P2-003",
       "severity": "MEDIUM",
       "confidence_score": 0.85,
       "personality_detecting": "Concurrency Specialist",
-      "personality_agreement": [
-        "Memory Surgeon"
-      ],
+      "personality_agreement": [],
+      "tool_confirmations": [],
+      "location": {
+        "file": "anura/controllers/ocr_controller.py",
+        "line": 52,
+        "function": "_setup_connections"
+      },
+      "chain_of_thought": {
+        "description": "Race condition: OcrController connects to backend signals before the window might be fully ready or during a transition. If a 'decoded' signal arrives while the window is in an inconsistent state (e.g., during navigation), it might lead to UI crashes."
+      },
+      "status": "OPEN",
+      "pattern_matched": "",
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
+    },
+    {
+      "id": "P2-004",
+      "severity": "HIGH",
+      "confidence_score": 0.9,
+      "personality_detecting": "Logic Validator",
+      "personality_agreement": [],
+      "tool_confirmations": [],
+      "location": {
+        "file": "anura/services/language_manager.py",
+        "line": 520,
+        "function": "get_tesseract_config"
+      },
+      "chain_of_thought": {
+        "description": "Logic flaw in multi-language pooling: The loop in get_tesseract_config unlinks and re-links models into TESSDATA_POOL_DIR for EVERY call. If two OCR tasks run concurrently (which AtomicTaskManager aims to prevent but could happen if multiple providers are used or if manual calls occur), they will fight over the same shared directory, leading to FileNotFoundError or corrupted OCR results."
+      },
+      "status": "OPEN",
+      "pattern_matched": "",
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
+    },
+    {
+      "id": "P3-001",
+      "severity": "LOW",
+      "confidence_score": 0.7,
+      "personality_detecting": "Systems Architect",
+      "personality_agreement": [],
+      "tool_confirmations": [],
+      "location": {
+        "file": "anura/services/language_manager.py",
+        "line": 218,
+        "function": "active_language"
+      },
+      "chain_of_thought": {
+        "description": "Architectural smell: active_language is defined as a GObject.Property with a manual getter/setter. In PyGObject, using GObject.Property(type=GObject.TYPE_PYOBJECT) is correct, but the manual setter with self.notify('active-language') is redundant if using the standard property pattern correctly, and it might lead to duplicate notifications."
+      },
+      "status": "OPEN",
+      "pattern_matched": "",
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
+    },
+    {
+      "id": "P3-002",
+      "severity": "MEDIUM",
+      "confidence_score": 0.8,
+      "personality_detecting": "Performance Optimizer",
+      "personality_agreement": [],
+      "tool_confirmations": [],
+      "location": {
+        "file": "anura/utils/text_preprocessor.py",
+        "line": 133,
+        "function": "_fix_punctuation"
+      },
+      "chain_of_thought": {
+        "description": "Performance bottleneck: The _fix_punctuation method uses 4 separate regex substitutions for parentheses and quotes. Since these are simple string replacements, using .replace() or a single unified regex with a lookup dictionary would be significantly faster."
+      },
+      "status": "OPEN",
+      "pattern_matched": "",
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
+    },
+    {
+      "id": "P3-003",
+      "severity": "MEDIUM",
+      "confidence_score": 0.75,
+      "personality_detecting": "Performance Optimizer",
+      "personality_agreement": [],
+      "tool_confirmations": [],
+      "location": {
+        "file": "anura/utils/image_filters.py",
+        "line": 84,
+        "function": "apply"
+      },
+      "chain_of_thought": {
+        "description": "Suboptimal performance: RescaleFilter uses Image.Resampling.LANCZOS for upscaling small images. While high quality, LANCZOS is computationally expensive. For OCR preprocessing, Image.Resampling.BILINEAR or BICUBIC is often sufficient and much faster."
+      },
+      "status": "OPEN",
+      "pattern_matched": "",
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
+    },
+    {
+      "id": "P4-001",
+      "severity": "LOW",
+      "confidence_score": 0.9,
+      "personality_detecting": "Naming Police",
+      "personality_agreement": [],
+      "tool_confirmations": [],
       "location": {
         "file": "anura/window.py",
-        "line": 182,
-        "function": "get_screenshot"
+        "line": 286,
+        "function": "_launch_uri"
       },
       "chain_of_thought": {
-        "description": "Fragile Screenshot Lock: AnuraWindow.get_screenshot checks hasattr(self.backend, '_is_capturing') and self.backend._is_capturing to prevent concurrent captures. However, this is accessing a private internal state of ScreenshotService directly from the View layer. Furthermore, if the backend is already capturing, the window simply emits a warning and returns, but it doesn't handle the case where a previous capture might have hung without resetting the flag (referencing BUG-031).",
-        "fix_prescription": "Expose a public 'is_busy' property or method on ScreenshotService and implement a manual override/reset in Preferences for hung states."
+        "description": "Naming lie: The method _launch_uri in AnuraWindow is a private wrapper around the public launch_uri utility. However, it's only used once and its existence adds unnecessary indirection. More importantly, 'launch' implies spawning a process, while in this context it's specifically using Gtk.UriLauncher."
       },
-      "status": "FIXED",
-      "pattern_matched": "Layer violation / Fragile locking",
-      "tool_confirmations": [],
+      "status": "OPEN",
+      "pattern_matched": "",
       "variable_lifecycle": [],
       "impact_analysis": {},
+      "fix_prescription": {},
       "time_to_detect_seconds": 0
     },
     {
-      "id": "BUG-041",
+      "id": "P4-002",
+      "severity": "LOW",
+      "confidence_score": 0.6,
+      "personality_detecting": "Naming Police",
+      "personality_agreement": [],
+      "tool_confirmations": [],
+      "location": {
+        "file": "anura/services/screenshot_service.py",
+        "line": 240,
+        "function": "capture"
+      },
+      "chain_of_thought": {
+        "description": "Inconsistent style: Some log messages use 'Anura Screenshot:' prefix while others use 'Anura OCR:'. While not a functional bug, it reduces the professional polish and searchability of logs."
+      },
+      "status": "OPEN",
+      "pattern_matched": "",
+      "variable_lifecycle": [],
+      "impact_analysis": {},
+      "fix_prescription": {},
+      "time_to_detect_seconds": 0
+    },
+    {
+      "id": "P4-003",
       "severity": "LOW",
       "confidence_score": 0.8,
-      "personality_detecting": "Memory Surgeon",
-      "personality_agreement": [
-        "Systems Architect"
-      ],
+      "personality_detecting": "Testing Philosopher",
+      "personality_agreement": [],
+      "tool_confirmations": [],
       "location": {
-        "file": "anura/widgets/welcome_page.py",
-        "line": 232,
-        "function": "do_destroy"
+        "file": "anura/models/ocr.py",
+        "line": 64,
+        "function": "from_tesseract_dict"
       },
       "chain_of_thought": {
-        "description": "Inconsistent Signal Teardown: WelcomePage.do_destroy attempts manual disconnection of some signal handlers (e.g. _language_changed_handler_id) but doesn't inherit from SignalManagerMixin or use teardown_all(). While it's a widget and managed by GTK, manual signal tracking is more prone to errors and omissions (like the DnD handlers which are partially covered but complex).",
-        "fix_prescription": "Inherit from SignalManagerMixin and use connect_tracked for all signals to ensure automatic, consistent cleanup."
+        "description": "Code smell: The check 'if not text or not text.strip()' is redundant because 'text.strip()' will be empty if 'text' is just whitespace, and 'not text' covers empty strings. 'if not text.strip()' is sufficient and more idiomatic."
       },
-      "status": "FIXED",
-      "pattern_matched": "Inconsistent implementation",
-      "tool_confirmations": [],
+      "status": "OPEN",
+      "pattern_matched": "",
       "variable_lifecycle": [],
       "impact_analysis": {},
+      "fix_prescription": {},
       "time_to_detect_seconds": 0
     },
     {
-      "id": "BUG-042",
-      "severity": "LOW",
-      "confidence_score": 0.85,
-      "personality_detecting": "Systems Architect",
-      "personality_agreement": [
-        "Logic Validator"
-      ],
+      "id": "P2-005",
+      "severity": "MEDIUM",
+      "confidence_score": 0.7,
+      "personality_detecting": "Memory Surgeon",
+      "personality_agreement": [],
+      "tool_confirmations": [],
       "location": {
-        "file": "anura/widgets/language_popover.py",
-        "line": 105,
-        "function": "populate_model"
+        "file": "anura/utils/image_filters.py",
+        "line": 200,
+        "function": "apply"
       },
       "chain_of_thought": {
-        "description": "UI Flickering Risk: populate_model calls self.lang_list.remove_all() before re-populating from scratch every time the popover is shown or a language is added/removed. For a user with many language models, this can cause a noticeable 'flash' or momentary empty state in the ListBox as the model is rebuilt.",
-        "fix_prescription": "Implement a diff-based update for the ListStore or use a Gtk.FilterListModel more effectively to avoid full rebuilds on simple state changes."
+        "description": "Technical risk: In FilterChain.apply, there's a loop to close intermediate images. If 'result' is one of the images in 'intermediates', it might be closed twice or closed before being returned if the logic is not extremely careful."
       },
       "status": "FIXED",
-      "pattern_matched": "Inefficient UI update",
-      "tool_confirmations": [],
+      "pattern_matched": "",
       "variable_lifecycle": [],
       "impact_analysis": {},
+      "fix_prescription": {},
       "time_to_detect_seconds": 0
     }
   ],
   "tool_execution_log": {
-    "linters": {
-      "ruff": "completed",
-      "bandit": "completed"
-    },
+    "linters": {},
     "security_scanners": {},
     "performance_profilers": {},
     "test_runners": {}
   },
   "learned_patterns": {
     "patterns": {
-      "missing_teardown": "Component initialization lacks corresponding explicit shutdown/cleanup call in application lifecycle.",
-      "inconsistent_mixin": "Controller-like components fail to utilize standardized SignalManagerMixin for GObject signal tracking.",
-      "silent_exception": "except Exception blocks without logging hide system failures and hinder observability.",
-      "config_leak": "Configuration files containing functional logic or filesystem side-effects.",
-      "hierarchical_id_collision": "Counting IDs at a specific level without considering parent IDs in the hierarchy.",
-      "redundant_logic": "Logical expressions where one condition is a subset of another, rendering part of the expression dead.",
-      "object_truthiness_flaw": "Evaluating a complex object (like a Path) for truthiness instead of checking a specific property (like .exists()).",
-      "temporary_file_leak": "Use of tempfile without explicit cleanup or restrictive permissions in multi-user /tmp spaces."
+      "P-001": "Command line interpolation of variables influenced by environment/external input without escaping.",
+      "P-002": "Insecure temporary file creation using defaults in potentially shared directories.",
+      "P-003": "Non-atomic directory/resource checks (check-then-act) leading to race conditions.",
+      "P-004": "Insecure fallback from HTTPS to HTTP for sensitive executable/data assets.",
+      "P-005": "Lack of explicit bounds/resource limits on incoming data processing (e.g. image dimensions).",
+      "P-006": "Storage of potentially sensitive session artifacts with broad permissions on shared filesystems."
     },
     "pattern_statistics": {},
     "false_positive_tracking": {}
@@ -1060,5 +505,7 @@
     "skip_list": [],
     "todo_items": [],
     "complexity_issues": []
-  }
+  },
+  "analyzed_files": 197,
+  "analyzed_lines": 65722
 }

@@ -75,10 +75,13 @@ addopts = "-v --tb=short --ignore=tests/test_clipboard_service.py --ignore=tests
 
 [dependency-groups]
 dev = [
+    "bandit>=1.9.4",
     "meson>=1.11.1",
+    "mypy>=2.1.0",
     "ninja>=1.13.0",
     "pytest>=9.0.3",
     "pytest-cov>=6.0.0",
     "pytest-timeout>=2.3.1",
     "ruff>=0.15.13",
+    "safety>=3.8.1",
 ]
