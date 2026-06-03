@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: MIT
 
 from typing import ClassVar
-from gi.repository import GObject, GLib
+import weakref
+
+from gi.repository import GObject
 from loguru import logger
 import requests
 
@@ -28,7 +30,6 @@ class TtsController(GObject.GObject, SignalManagerMixin):
     def __init__(self, window):
         GObject.GObject.__init__(self)
         SignalManagerMixin.__init__(self)
-        import weakref
 
         self._window = weakref.proxy(window)
         self._tts_service = get_tts_service()

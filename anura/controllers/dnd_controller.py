@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: MIT
 
+from typing import ClassVar
+
 from gi.repository import GObject
 from loguru import logger
 
