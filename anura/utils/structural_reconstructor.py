@@ -39,7 +39,6 @@ class StructuralReconstructor:
 
         words = ocr_result.words
         lines = []
-        # NEW-014: Explicit type hint for current_line to satisfy static analysis.
         current_line: list[Any] = []
         last_line_id: object = -1
 

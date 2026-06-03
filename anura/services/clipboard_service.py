@@ -300,14 +300,15 @@ class ClipboardService(GObject.GObject):
     def _remove_source(self, timeout_id: int | None) -> None:
         """Safely remove a GLib source ID if it still exists."""
         if timeout_id is not None and timeout_id > 0:
-            try:
-                # Use find_source_by_id to prevent GLib "Source ID ... was not found" warnings
-                # on stderr for one-shot sources that have already fired.
-                if GLib.MainContext.default().find_source_by_id(timeout_id):
+            # BUG-032: Check if source exists before removing to prevent C-level warnings
+            # on stderr when a one-shot source has already fired and auto-removed.
+            ctx = GLib.MainContext.default()
+            if ctx and ctx.find_source_by_id(timeout_id):
+                try:
                     GLib.source_remove(timeout_id)
-            except (AttributeError, RuntimeError, TypeError, GLib.Error):
-                # If lookup fails or source is removed between check and remove, ignore.
-                pass
+                except (AttributeError, RuntimeError, TypeError, GLib.Error):
+                    # Source might have fired between check and removal.
+                    pass
 
     def _clear_active_timeout(self) -> None:
         """Atomically remove the in-flight read timeout and cancel the operation.
@@ -573,7 +574,7 @@ class ClipboardService(GObject.GObject):
             active_cancellable = self._cancellable
             self._clipboard_timeout_id = None
 
-        if not active_cancellable.is_cancelled():
+        if active_cancellable and not active_cancellable.is_cancelled():
             logger.warning("Anura Clipboard: Read operation timed out after 10s, cancelling.")
             active_cancellable.cancel()
 
