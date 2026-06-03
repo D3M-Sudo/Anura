@@ -4,6 +4,7 @@ anura/core/dialogs.py
 anura/main.py
 anura/services/clipboard_service.py
 anura/services/language_manager.py
+anura/services/screenshot/legacy_provider.py
 anura/services/screenshot_service.py
 anura/services/share_service.py
 anura/services/tts.py

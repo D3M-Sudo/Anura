@@ -634,7 +634,7 @@ class LanguageManager(GObject.GObject):
             logger.error(f"Anura: OS error removing language '{code}': {e}")
 
 
-def get_tesseract_config(lang_code: str) -> str:
+def get_tesseract_config(lang_code: str, task_id: str | None = None) -> str:
     """
     Returns Tesseract config string with correct --tessdata-dir.
 
@@ -645,6 +645,7 @@ def get_tesseract_config(lang_code: str) -> str:
 
     Args:
         lang_code: The ISO 639-2 language code (e.g., 'eng', 'eng+ita')
+        task_id: Optional ID for task-isolated pooling (prevents race conditions).
 
     Returns:
         Config string with --tessdata-dir pointing to the correct directory.
@@ -672,10 +673,17 @@ def get_tesseract_config(lang_code: str) -> str:
 
     # Multi-language: Dynamic Pooling Approach
     codes = lang_code.split("+")
+
+    # BUG-P1-REPRO / NEW-007: Use task-isolated subdirectories to prevent race conditions.
+    # If no task_id provided (e.g. CLI or legacy call), fallback to shared directory.
+    pool_dir = Path(TESSDATA_POOL_DIR)
+    if task_id:
+        pool_dir = pool_dir / task_id
+
     # Security: Ensure tessdata pool directory has restrictive permissions (0700)
-    os.makedirs(TESSDATA_POOL_DIR, exist_ok=True)
+    pool_dir.mkdir(parents=True, exist_ok=True)
     with contextlib.suppress(OSError):
-        os.chmod(TESSDATA_POOL_DIR, 0o700)
+        pool_dir.chmod(0o700)
 
     for code in codes:
         # Resolve source
@@ -689,7 +697,7 @@ def get_tesseract_config(lang_code: str) -> str:
             source_path = system_path
 
         if source_path:
-            dest_path = Path(TESSDATA_POOL_DIR) / f"{code}.traineddata"
+            dest_path = pool_dir / f"{code}.traineddata"
             # NEW-004: Create hard link with fallback to copy (for cross-filesystem)
             try:
                 if dest_path.exists():
@@ -713,7 +721,7 @@ def get_tesseract_config(lang_code: str) -> str:
                 except OSError as copy_err:
                     logger.error(f"Anura Pooling: Failed to copy {code}: {copy_err}")
 
-    return f'--tessdata-dir "{TESSDATA_POOL_DIR}" --psm 3 --oem 1'
+    return f'--tessdata-dir "{pool_dir}" --psm 3 --oem 1'
 
 
 # Thread-safe singleton instance for global app access

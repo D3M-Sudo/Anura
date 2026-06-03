@@ -92,6 +92,8 @@ class LanguageRow(Gtk.Overlay):
             # This prevents flooding the main loop with redundant progress callbacks
             # if the download happens faster than the UI can repaint.
             if hasattr(self, "_progress_idle_id") and self._progress_idle_id:
+                # NEW-010: Safe pruning from tracking set when removing the source.
+                self._idle_ids.discard(self._progress_idle_id)
                 GLib.source_remove(self._progress_idle_id)
 
             self._progress_idle_id = GLib.idle_add(self.late_update, code, progress)
@@ -101,7 +103,11 @@ class LanguageRow(Gtk.Overlay):
         """
         Updates the progress bar on the main thread.
         """
-        self._progress_idle_id = 0
+        # NEW-010: Cleanup tracking set for naturally completed sources.
+        if hasattr(self, "_progress_idle_id") and self._progress_idle_id:
+            self._idle_ids.discard(self._progress_idle_id)
+            self._progress_idle_id = 0
+
         if self._item and self._item.code == code:
             if not self.revealer.get_reveal_child():
                 self.revealer.set_reveal_child(True)

@@ -108,8 +108,9 @@ class OcrController(GObject.GObject, SignalManagerMixin):
                 body = text[:80] + "…" if len(text) > 80 else text
                 self._notification_service.show(title=_("Text extracted"), body=body, priority="normal")
 
-            # NEW-003: Navigate only for the current active task
-            _current_id = getattr(self._window.backend, "_current_task_id", None)
+            # NEW-003 / NEW-008: Navigate only for the current active task
+            # backend.current_task_id is now a public GObject property.
+            _current_id = self._window.backend.current_task_id
             GLib.idle_add(self._navigate_to_extracted_page, _current_id)
         except (AttributeError, TypeError, RuntimeError) as e:
             logger.error(f"OcrController: UI Error in _on_shot_done: {e}")

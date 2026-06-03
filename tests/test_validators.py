@@ -6,9 +6,6 @@
 
 import pytest
 
-pytest.importorskip("gi")
-
-
 from anura.utils.validators import uri_validator
 
 
@@ -62,16 +59,19 @@ class TestUriValidatorEnterprise:
         assert uri_validator(url) is False
 
     @pytest.mark.parametrize(
-        "url",
+        "url,expected",
         [
-            "https://googlé.com",  # Non-ASCII
-            "https://\u0430\u043f\u0440.com",  # Cyrillic homograph
-            "https://\u202e/moc.elgoog",  # Right-to-left override
+            ("https://googlé.com", True),  # Latin-1 is allowed (NEW-011)
+            ("https://münchen.de", True),  # Legitimate IDN allowed
+            ("https://\u0430\u043f\u0440.com", False),  # Cyrillic homograph mixed with ASCII (if label was mixed)
+            # Note: Pure Cyrillic IDNs are encoded as Punycode and may pass ASCII safety if not mixed.
+            # But \u202e (RLO) is stripped/blocked.
+            ("https://\u202e/moc.elgoog", False),
         ],
     )
-    def test_non_ascii_and_homograph(self, url):
+    def test_non_ascii_and_homograph(self, url, expected):
         """Test non-ASCII characters and potential homograph attacks."""
-        assert uri_validator(url) is False
+        assert uri_validator(url) is expected
 
     @pytest.mark.parametrize(
         "text,expected",

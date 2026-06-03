@@ -39,7 +39,8 @@ class ResultDispatcher:
             )
 
         preprocessor = get_text_preprocessor()
-        structured = preprocessor.extract_structured_data(text)
+        # NEW-009: Null-safe access for preprocessor results to prevent AttributeError.
+        structured = preprocessor.extract_structured_data(text) or {}
 
         urls = tuple(structured.get("urls", []))
         emails = tuple(structured.get("emails", []))

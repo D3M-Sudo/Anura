@@ -46,7 +46,7 @@ class StructuralReconstructor:
             if task_id and i % 50 == 0 and get_atomic_manager().is_cancelled(task_id):
                 raise InterruptedError(f"Task {task_id} was cancelled")
 
-            line_id = (word.block_num, word.par_num, word.line_num)
+            line_id: tuple[int, int, int] = (word.block_num, word.par_num, word.line_num)
             if line_id != last_line_id:
                 if current_line:
                     lines.append(self._process_line(current_line))
