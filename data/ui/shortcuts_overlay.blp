@@ -36,6 +36,9 @@ template $ShortcutsOverlay : Adw.Window {
 
       Gtk.SearchEntry search_entry {
         placeholder-text: _("Search shortcuts...");
+        accessibility {
+          label: _("Search shortcuts");
+        }
       }
 
       Gtk.Stack stack {

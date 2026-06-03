@@ -19,7 +19,6 @@ anura/widgets/shortcuts_overlay.py
 anura/widgets/welcome_page.py
 anura/window.py
 data/io.github.d3msudo.anura.desktop.in
-data/io.github.d3msudo.anura.metainfo.xml.in
 data/ui/extracted_page.blp
 data/ui/language_popover.blp
 data/ui/language_row.blp
