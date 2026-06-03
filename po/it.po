@@ -1315,6 +1315,10 @@ msgstr "Nessun risultato trovato"
 #: ../data/ui/shortcuts_overlay.blp:62
 msgid "Try a different search term"
 msgstr "Prova con un termine di ricerca diverso"
+#: ../data/ui/shortcuts_overlay.blp:40
+msgid "Search shortcuts"
+msgstr "Cerca scorciatoie"
+
 
 #: ../data/ui/extracted_page.blp:13
 msgid "Extracted"
@@ -1354,6 +1358,7 @@ msgctxt "Extracted screen"
 msgid "Stop listening (Ctrl+Shift+L)"
 msgstr "Interrompi ascolto (Ctrl+Shift+L)"
 
+#: ../data/ui/extracted_page.blp:94 ../data/ui/extracted_page.blp:96
 #: ../data/ui/extracted_page.blp:66 ../data/ui/extracted_page.blp:90
 #: ../data/ui/extracted_page.blp:100
 msgctxt "Extracted screen"
@@ -1368,12 +1373,7 @@ msgstr "Pausa/Riprendi ascolto (Ctrl+Alt+L)"
 #: ../data/ui/extracted_page.blp:87
 msgctxt "Extracted screen"
 msgid "Pause or resume listening"
-msgstr ""
-
-#: ../data/ui/extracted_page.blp:94 ../data/ui/extracted_page.blp:96
-msgctxt "Extracted screen"
-msgid "Stop listening"
-msgstr ""
+msgstr "Pausa o riprendi ascolto"
 
 #: ../data/ui/extracted_page.blp:107 ../data/ui/extracted_page.blp:109
 msgctxt "Extracted screen"
@@ -1685,27 +1685,3 @@ msgstr ""
 
 msgid "Open preferences to download more languages"
 msgstr ""
-
-msgctxt "Welcome screen"
-msgid "Take a Screenshot"
-msgstr "Cattura schermata"
-
-msgctxt "Welcome screen"
-msgid "Open Image"
-msgstr "Apri immagine"
-
-msgctxt "Welcome screen"
-msgid "Paste Image"
-msgstr "Incolla immagine"
-
-msgctxt "Extracted screen"
-msgid "Stop listening (Ctrl+Shift+L)"
-msgstr "Interrompi ascolto (Ctrl+Shift+L)"
-
-msgctxt "Extracted screen"
-msgid "Pause/Resume listening (Ctrl+Alt+L)"
-msgstr "Pausa/Riprendi ascolto (Ctrl+Alt+L)"
-
-#: ../data/ui/shortcuts_overlay.blp:40
-msgid "Search shortcuts"
-msgstr "Cerca scorciatoie"
