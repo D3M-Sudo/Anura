@@ -82,13 +82,25 @@ class TestUriValidatorEnterprise:
             ("Text with \uD800 surrogate", "Text with surrogate"),
             ("Text with \u202E RLO", "Text with RLO"),
             ("Mixed \uE000 and \n inside", "Mixed and \n inside"),
+            ("Text with \u088F unassigned", "Text with unassigned"),  # Cn category
+            ("e\u0301", "é"),  # NFC Normalization: 'e' + combining acute -> 'é'
         ],
     )
     def test_sanitize_text_hardening(self, text, expected):
-        """Test that sanitize_text strips dangerous Unicode categories."""
+        """Test that sanitize_text strips dangerous Unicode categories and normalizes."""
         from anura.utils.validators import sanitize_text
 
         assert sanitize_text(text) == expected
+
+    def test_sanitize_text_length_limit(self):
+        """Test that sanitize_text enforces the MAX_TEXT_LENGTH limit."""
+        from anura.config import MAX_TEXT_LENGTH
+        from anura.utils.validators import sanitize_text
+
+        long_text = "a" * (MAX_TEXT_LENGTH + 100)
+        sanitized = sanitize_text(long_text)
+        assert len(sanitized) == MAX_TEXT_LENGTH
+        assert sanitized == "a" * MAX_TEXT_LENGTH
 
     @pytest.mark.parametrize(
         "url",
