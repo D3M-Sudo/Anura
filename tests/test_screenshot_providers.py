@@ -70,13 +70,17 @@ class TestLegacyX11Provider:
     def test_capture_spawns_process(self, mock_resolve, mock_gio, provider):
         mock_resolve.return_value = "/usr/bin/scrot"
         mock_proc = MagicMock()
-        mock_gio.Subprocess.new.return_value = mock_proc
+        mock_launcher = MagicMock()
+        mock_launcher.spawnv.return_value = mock_proc
+        mock_gio.SubprocessLauncher.new.return_value = mock_launcher
 
         callback = MagicMock()
         provider.capture("eng", False, callback)
 
-        assert mock_gio.Subprocess.new.called
-        args = mock_gio.Subprocess.new.call_args[0][0]
+        # The provider now uses SubprocessLauncher (not Subprocess.new) so that
+        # X11-critical env vars (DISPLAY, XAUTHORITY) are explicitly forwarded.
+        assert mock_gio.SubprocessLauncher.new.called
+        args = mock_launcher.spawnv.call_args[0][0]
         assert args[0] == "/usr/bin/scrot"
         assert "-s" in args
 
