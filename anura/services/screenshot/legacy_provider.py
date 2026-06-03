@@ -91,7 +91,15 @@ class LegacyX11Provider(ScreenshotProvider):
             callback(False, None, _("Failed to create temporary file."))
             return
 
-        argv = [scrot_bin, "-s", output_path]
+        # BUG-scrot-overwrite: tempfile.mkstemp() creates the output file before
+        # scrot is launched (necessary for secure temp file creation). scrot 1.11.x
+        # calls scrotCheckIfOverwriteFile() which detects the pre-existing empty
+        # file and silently renames the output to <name>_000.png, leaving the
+        # original path at 0 bytes. Anura polls the original path and reports
+        # "Screenshot tool produced no output." even though the capture succeeded.
+        # Fix: pass --overwrite so scrotCheckIfOverwriteFile() returns immediately
+        # and scrot writes directly to the path created by mkstemp().
+        argv = [scrot_bin, "--overwrite", "-s", output_path]
 
         logger.info(f"LegacyX11Provider: Spawning scrot from '{scrot_bin}'")
 
