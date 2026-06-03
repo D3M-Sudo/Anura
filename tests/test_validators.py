@@ -6,9 +6,6 @@
 
 import pytest
 
-pytest.importorskip("gi")
-
-
 from anura.utils.validators import uri_validator
 
 
