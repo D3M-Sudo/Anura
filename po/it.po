@@ -1663,3 +1663,26 @@ msgstr ""
 
 msgid "Open preferences to download more languages"
 msgstr ""
+
+msgctxt "Welcome screen"
+msgid "Take a Screenshot"
+msgstr "Cattura schermata"
+
+msgctxt "Welcome screen"
+msgid "Open Image"
+msgstr "Apri immagine"
+
+msgctxt "Welcome screen"
+msgid "Paste Image"
+msgstr "Incolla immagine"
+
+msgctxt "Extracted screen"
+msgid "Stop listening (Ctrl+Shift+L)"
+msgstr "Interrompi ascolto (Ctrl+Shift+L)"
+
+msgctxt "Extracted screen"
+msgid "Pause/Resume listening (Ctrl+Alt+L)"
+msgstr "Pausa/Riprendi ascolto (Ctrl+Alt+L)"
+
+msgid "Search shortcuts"
+msgstr "Cerca scorciatoie"
