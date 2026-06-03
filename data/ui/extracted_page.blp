@@ -37,6 +37,7 @@ template $ExtractedPage : Adw.NavigationPage {
           label: C_("Extracted screen", "Copy extracted text to clipboard");
         }
         icon-name: "edit-copy-symbolic";
+        styles ["anura-button"]
       }
 
       [start]
@@ -52,6 +53,7 @@ template $ExtractedPage : Adw.NavigationPage {
               label: C_("Extracted screen", "Listen to text");
             }
             icon-name: "audio-speakers-symbolic";
+            styles ["anura-button"]
           };
         }
 
@@ -59,11 +61,12 @@ template $ExtractedPage : Adw.NavigationPage {
           name: "cancel";
           child: Button listen_cancel_btn {
             action-name: "app.listen_cancel";
-            tooltip-text: C_("Extracted screen", "Cancel listening to text");
+            tooltip-text: C_("Extracted screen", "Stop listening (Ctrl+Shift+L)");
             accessibility {
-              label: C_("Extracted screen", "Cancel listening to text");
+              label: C_("Extracted screen", "Stop listening");
             }
             icon-name: "media-playback-stop-symbolic";
+            styles ["anura-button"]
           };
         }
 
@@ -82,20 +85,22 @@ template $ExtractedPage : Adw.NavigationPage {
 
             Button listen_pause_btn {
               action-name: "app.listen_pause";
-              tooltip-text: C_("Extracted screen", "Pause/Resume listening");
+              tooltip-text: C_("Extracted screen", "Pause/Resume listening (Ctrl+Alt+L)");
               accessibility {
                 label: C_("Extracted screen", "Pause or resume listening");
               }
               icon-name: "media-playback-pause-symbolic";
+              styles ["anura-button"]
             }
 
             Button {
               action-name: "app.listen_cancel";
-              tooltip-text: C_("Extracted screen", "Stop listening");
+              tooltip-text: C_("Extracted screen", "Stop listening (Ctrl+Shift+L)");
               accessibility {
                 label: C_("Extracted screen", "Stop listening");
               }
               icon-name: "media-playback-stop-symbolic";
+              styles ["anura-button"]
             }
           };
         }

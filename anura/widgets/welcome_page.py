@@ -25,6 +25,7 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
 
     spinner: Gtk.Spinner = Gtk.Template.Child()
     welcome: Adw.StatusPage = Gtk.Template.Child()
+    screenshot_button: Gtk.Button = Gtk.Template.Child()
     lang_combo: Gtk.MenuButton = Gtk.Template.Child()
     language_popover: LanguagePopover = Gtk.Template.Child()
     drop_button: Gtk.Button = Gtk.Template.Child()

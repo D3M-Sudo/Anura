@@ -56,10 +56,13 @@ template $WelcomePage : Adw.NavigationPage {
             orientation: vertical;
             spacing: 12;
 
-            Button {
+            Button screenshot_button {
               action-name: "app.get_screenshot";
               tooltip-text: C_("Welcome screen", "Take a Screenshot (Ctrl+G)");
-              styles ["pill", "suggested-action"]
+              accessibility {
+                label: C_("Welcome screen", "Take a Screenshot");
+              }
+              styles ["pill", "suggested-action", "anura-button"]
               
               child: Box {
                 halign: center;
@@ -75,7 +78,10 @@ template $WelcomePage : Adw.NavigationPage {
             Button {
               action-name: "app.open_image";
               tooltip-text: C_("Welcome screen", "Open Image (Ctrl+O)");
-              styles ["pill"]
+              accessibility {
+                label: C_("Welcome screen", "Open Image");
+              }
+              styles ["pill", "anura-button"]
 
               child: Box {
                 halign: center;
@@ -91,7 +97,10 @@ template $WelcomePage : Adw.NavigationPage {
              Button {
               action-name: "app.paste_from_clipboard";
               tooltip-text: C_("Welcome screen", "Paste Image from Clipboard (Ctrl+V)");
-              styles ["pill"]
+              accessibility {
+                label: C_("Welcome screen", "Paste Image");
+              }
+              styles ["pill", "anura-button"]
 
               child: Box {
                 halign: center;
@@ -106,7 +115,10 @@ template $WelcomePage : Adw.NavigationPage {
 
             Button drop_button {
               tooltip-text: C_("Welcome screen", "Drop image here");
-              styles ["pill"]
+              accessibility {
+                label: C_("Welcome screen", "Drop image here");
+              }
+              styles ["pill", "anura-button"]
 
               child: Box {
                 halign: center;

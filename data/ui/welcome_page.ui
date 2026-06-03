@@ -57,12 +57,16 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                     <property name="orientation">1</property>
                     <property name="spacing">12</property>
                     <child>
-                      <object class="GtkButton">
+                      <object class="GtkButton" id="screenshot_button">
                         <property name="action-name">app.get_screenshot</property>
                         <property name="tooltip-text" translatable="true" context="Welcome screen">Take a Screenshot (Ctrl+G)</property>
+                        <accessibility>
+                          <property name="label" translatable="true" context="Welcome screen">Take a Screenshot</property>
+                        </accessibility>
                         <style>
                           <class name="pill"/>
                           <class name="suggested-action"/>
+                          <class name="anura-button"/>
                         </style>
                         <property name="child">
                           <object class="GtkBox">
@@ -87,8 +91,12 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                       <object class="GtkButton">
                         <property name="action-name">app.open_image</property>
                         <property name="tooltip-text" translatable="true" context="Welcome screen">Open Image (Ctrl+O)</property>
+                        <accessibility>
+                          <property name="label" translatable="true" context="Welcome screen">Open Image</property>
+                        </accessibility>
                         <style>
                           <class name="pill"/>
+                          <class name="anura-button"/>
                         </style>
                         <property name="child">
                           <object class="GtkBox">
@@ -113,8 +121,12 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                       <object class="GtkButton">
                         <property name="action-name">app.paste_from_clipboard</property>
                         <property name="tooltip-text" translatable="true" context="Welcome screen">Paste Image from Clipboard (Ctrl+V)</property>
+                        <accessibility>
+                          <property name="label" translatable="true" context="Welcome screen">Paste Image</property>
+                        </accessibility>
                         <style>
                           <class name="pill"/>
+                          <class name="anura-button"/>
                         </style>
                         <property name="child">
                           <object class="GtkBox">
@@ -138,8 +150,12 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                     <child>
                       <object class="GtkButton" id="drop_button">
                         <property name="tooltip-text" translatable="true" context="Welcome screen">Drop image here</property>
+                        <accessibility>
+                          <property name="label" translatable="true" context="Welcome screen">Drop image here</property>
+                        </accessibility>
                         <style>
                           <class name="pill"/>
+                          <class name="anura-button"/>
                         </style>
                         <property name="child">
                           <object class="GtkBox">
