@@ -96,7 +96,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         self.connect_tracked(share_action, "activate", self._on_share)
         self.add_action(share_action)
 
-        self.backend = backend
+        self.backend = backend  # type: ignore[assignment]
         self.ocr_controller = OcrController(self)
         self.tts_controller = TtsController(self)
         self.dnd_controller = DndController(self)

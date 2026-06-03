@@ -68,7 +68,7 @@ class OcrController(GObject.GObject, SignalManagerMixin):
             self.disconnect_all_signals()
         except (TypeError, RuntimeError) as e:
             logger.debug(f"Signal disconnection failed during teardown: {e}")
-        self._window = None
+        self._window = None  # type: ignore[assignment]
         logger.debug("OcrController: Torn down and disconnected")
 
     def _setup_connections(self) -> None:

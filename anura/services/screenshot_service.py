@@ -94,7 +94,7 @@ def run_ocr_pipeline(
                 for k in _ENV_KEYS:
                     os.environ[k] = tmp_dir
 
-                with Image.open(file_path) as img:
+                with Image.open(file_path) as img:  # type: ignore[assignment]
                     # 1. Barcode Detection
                     from anura.utils.barcode_detector import detect_barcodes
 

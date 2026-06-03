@@ -64,7 +64,7 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
     __gtype_name__ = "AnuraApplication"
 
     def __init__(self, version: str | None = None) -> None:
-        super().__init__(application_id=APP_ID, flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
+        super().__init__(application_id=APP_ID, flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)  # type: ignore[call-arg]
         SignalManagerMixin.__init__(self)
         self.backend: ScreenshotService | None = None
         self.version = version

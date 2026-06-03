@@ -73,7 +73,7 @@ class RescaleFilter(ImageFilterBase):
         if width < 1000 or height < 1000:
             scale_factor = 2
             logger.debug(f"Filter: Rescaling image by {scale_factor}x")
-            return image.resize((width * scale_factor, height * scale_factor), Image.Resampling.LANCZOS)
+            return image.resize((width * scale_factor, height * scale_factor), Image.Resampling.BILINEAR)
         return image
 
 

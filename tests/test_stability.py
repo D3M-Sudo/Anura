@@ -3,7 +3,9 @@ from unittest.mock import MagicMock, patch
 from PIL import Image
 import pytest
 
-# Mock GI imports if not available for non-GTK tests
+# Mock GI imports if not available for non-GTK tests.
+# E402: This block must come BEFORE pytestmark (a non-import statement)
+# and BEFORE anura.* imports because ruff enforces the order.
 try:
     import gi
 
@@ -15,8 +17,18 @@ except (ImportError, ValueError):
     HAS_GI = False
     GObject = MagicMock()
 
-from anura.utils.image_filters import RescaleFilter
-from anura.utils.signal_manager import SignalManagerMixin, Teardownable
+# Module-level skipif for all tests that require a live GTK environment.
+# Without a display server (Xvfb, Wayland, X11), Adw.Application cannot
+# initialize and the lifecycle test cannot construct AnuraWindow.
+pytestmark = pytest.mark.skipif(
+    not HAS_GI,
+    reason="GTK environment (gi) not available — required for AnuraWindow lifecycle test",
+)
+
+# anura.* imports come after the mock GI / pytestmark block.
+# E402: This is intentional — pytestmark and conditional skips must run first.
+from anura.utils.image_filters import RescaleFilter  # noqa: E402
+from anura.utils.signal_manager import SignalManagerMixin, Teardownable  # noqa: E402
 
 
 class MockController(Teardownable):
@@ -72,6 +84,8 @@ def test_rescale_allowed_on_high_memory():
 @pytest.mark.timeout(30)
 def test_lifecycle_teardown_loop():
     """Stress test window lifecycle to verify signal and controller cleanup."""
+    if not HAS_GI:
+        pytest.skip("GTK environment not available")
     pytest.importorskip("gi.repository.Adw")
     from gi.repository import Adw
 

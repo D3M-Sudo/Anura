@@ -7,6 +7,7 @@ from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
 import multiprocessing
+import multiprocessing.managers
 import threading
 import traceback
 import uuid
@@ -69,8 +70,8 @@ class AtomicTaskManager:
         self._current_task_id: str | None = None
         self._cancellable: Gio.Cancellable | None = None
         self._executor: ThreadPoolExecutor | None = None
-        self._process_executor = None
-        self._process_manager = None
+        self._process_executor: ProcessPoolExecutor | None = None
+        self._process_manager: multiprocessing.managers.SyncManager | None = None
         self._isolated_cancellation_map = None
         self._state_lock = threading.Lock()
         logger.debug("AtomicTaskManager: Initialized (lazy executors)")
@@ -329,6 +330,8 @@ class AtomicTaskManager:
 
         # Use default errorback if none provided
         eb = errorback or self._default_errorback
+        if result.error is None:
+            return GLib.SOURCE_REMOVE
         try:
             eb(result.error, result.traceback_str)
         except (AttributeError, TypeError, RuntimeError) as e:
