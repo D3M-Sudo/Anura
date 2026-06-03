@@ -39,8 +39,8 @@ class StructuralReconstructor:
 
         words = ocr_result.words
         lines = []
-        current_line = []
-        last_line_id = -1
+        current_line: list[Any] = []
+        last_line_id: object = -1
 
         for i, word in enumerate(words):
             if task_id and i % 50 == 0 and get_atomic_manager().is_cancelled(task_id):
