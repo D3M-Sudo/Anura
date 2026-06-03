@@ -1348,15 +1348,22 @@ msgctxt "Extracted screen"
 msgid "Listen to text"
 msgstr ""
 
-#: ../data/ui/extracted_page.blp:62 ../data/ui/extracted_page.blp:64
+#: ../data/ui/extracted_page.blp:64 ../data/ui/extracted_page.blp:88
+#: ../data/ui/extracted_page.blp:98
 msgctxt "Extracted screen"
-msgid "Cancel listening to text"
-msgstr ""
+msgid "Stop listening (Ctrl+Shift+L)"
+msgstr "Interrompi ascolto (Ctrl+Shift+L)"
+
+#: ../data/ui/extracted_page.blp:66 ../data/ui/extracted_page.blp:90
+#: ../data/ui/extracted_page.blp:100
+msgctxt "Extracted screen"
+msgid "Stop listening"
+msgstr "Interrompi ascolto"
 
 #: ../data/ui/extracted_page.blp:85
 msgctxt "Extracted screen"
-msgid "Pause/Resume listening"
-msgstr ""
+msgid "Pause/Resume listening (Ctrl+Alt+L)"
+msgstr "Pausa/Riprendi ascolto (Ctrl+Alt+L)"
 
 #: ../data/ui/extracted_page.blp:87
 msgctxt "Extracted screen"
@@ -1432,34 +1439,49 @@ msgctxt "Welcome screen"
 msgid "Take a Screenshot (Ctrl+G)"
 msgstr "Cattura schermata"
 
-#: ../data/ui/welcome_page.blp:69
+#: ../data/ui/welcome_page.blp:63
+msgctxt "Welcome screen"
+msgid "Take a Screenshot"
+msgstr "Cattura schermata"
+
+#: ../data/ui/welcome_page.blp:72
 msgid "_Take a Screenshot"
 msgstr "_Fai uno screenshot"
 
-#: ../data/ui/welcome_page.blp:77
+#: ../data/ui/welcome_page.blp:80
 msgctxt "Welcome screen"
 msgid "Open Image (Ctrl+O)"
 msgstr "Apri immagine"
 
-#: ../data/ui/welcome_page.blp:85
+#: ../data/ui/welcome_page.blp:82
+msgctxt "Welcome screen"
+msgid "Open Image"
+msgstr "Apri immagine"
+
+#: ../data/ui/welcome_page.blp:91
 msgid "_Open Image"
 msgstr "_Apri immagine"
 
-#: ../data/ui/welcome_page.blp:93
+#: ../data/ui/welcome_page.blp:99
 msgctxt "Welcome screen"
 msgid "Paste Image from Clipboard (Ctrl+V)"
 msgstr "Incolla immagine dagli appunti"
 
 #: ../data/ui/welcome_page.blp:101
+msgctxt "Welcome screen"
+msgid "Paste Image"
+msgstr "Incolla immagine"
+
+#: ../data/ui/welcome_page.blp:110
 msgid "_Paste Image"
 msgstr "Incolla immagine"
 
-#: ../data/ui/welcome_page.blp:108
+#: ../data/ui/welcome_page.blp:117
 msgctxt "Welcome screen"
 msgid "Drop image here"
 msgstr "Trascina l'immagine qui"
 
-#: ../data/ui/welcome_page.blp:116
+#: ../data/ui/welcome_page.blp:125
 msgid "_Drop Image"
 msgstr "Trascina immagine"
 
@@ -1684,5 +1706,6 @@ msgctxt "Extracted screen"
 msgid "Pause/Resume listening (Ctrl+Alt+L)"
 msgstr "Pausa/Riprendi ascolto (Ctrl+Alt+L)"
 
+#: ../data/ui/shortcuts_overlay.blp:40
 msgid "Search shortcuts"
 msgstr "Cerca scorciatoie"
