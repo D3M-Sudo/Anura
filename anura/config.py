@@ -36,6 +36,10 @@ TESSDATA_POOL_DIR = str(Path(XDG_CACHE_HOME) / "anura" / "tessdata_pool")
 MAX_IMAGE_SIZE_MB = 50
 MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024
 
+# Maximum length for extracted text (1,000,000 characters) to prevent DoS
+# from excessively large OCR output and expensive downstream processing.
+MAX_TEXT_LENGTH = 1_000_000
+
 
 def _get_tessdata_system_dir() -> str:
     """

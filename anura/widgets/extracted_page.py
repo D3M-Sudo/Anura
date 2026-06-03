@@ -44,7 +44,6 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
     text_copy_btn: Gtk.Button = Gtk.Template.Child()
     listen_stack: Gtk.Stack = Gtk.Template.Child()
     listen_btn: Gtk.Button = Gtk.Template.Child()
-    listen_cancel_btn: Gtk.Button = Gtk.Template.Child()
     listen_pause_btn: Gtk.Button = Gtk.Template.Child()
     listen_spinner: Gtk.Spinner = Gtk.Template.Child()
     share_button: Gtk.MenuButton = Gtk.Template.Child()

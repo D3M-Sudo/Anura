@@ -126,7 +126,7 @@ def run_ocr_pipeline(
                     ocr_data = pytesseract.image_to_data(
                         enhanced_img,
                         lang=lang,
-                        config=get_tesseract_config(lang),
+                        config=get_tesseract_config(lang, task_id=task_id),
                         output_type=Output.DICT,
                     )
                     ocr_result = OcrResult.from_tesseract_dict(ocr_data)
@@ -192,11 +192,15 @@ def _configure_tesseract_path() -> None:
         pytesseract.pytesseract.tesseract_cmd = flatpak_tess_bin
         logger.info(f"Anura OCR: Using Flatpak Tesseract at {flatpak_tess_bin}")
     else:
-        # Use system Tesseract from PATH
-        os.environ.pop("TESSERACT_CMD", None)
-        # Reset pytesseract.tesseract_cmd to default 'tesseract' to allow PATH search
-        pytesseract.pytesseract.tesseract_cmd = "tesseract"
-        logger.debug("Anura OCR: Using system Tesseract from PATH")
+        # Use system Tesseract from PATH.
+        # NEW-012: Only clear the override if it was specifically set to the Flatpak path.
+        # This preserves user-defined TESSERACT_CMD environment variables.
+        if os.environ.get("TESSERACT_CMD") == flatpak_tess_bin:
+            os.environ.pop("TESSERACT_CMD", None)
+
+        # Update pytesseract.tesseract_cmd but respect existing ENV if set
+        pytesseract.pytesseract.tesseract_cmd = os.environ.get("TESSERACT_CMD", "tesseract")
+        logger.debug(f"Anura OCR: Using Tesseract at '{pytesseract.pytesseract.tesseract_cmd}'")
 
     # Final validation: check if tesseract binary is actually reachable
     tess_bin = pytesseract.pytesseract.tesseract_cmd
@@ -247,6 +251,11 @@ class ScreenshotService(GObject.GObject):
         """Indicates if a capture is currently in progress."""
         return self._is_capturing
 
+    @GObject.Property(type=str)
+    def current_task_id(self) -> str | None:
+        """Return the ID of the current active task (NEW-008)."""
+        return getattr(self, "_current_task_id", None)
+
     def cancel(self) -> None:
         """Cancel any in-progress capture operation."""
         if not self._is_capturing:
@@ -269,9 +278,15 @@ class ScreenshotService(GObject.GObject):
         self._is_capturing = True
 
         def _on_capture_result(success, uri, error):
+            # Track the most recent task ID for navigation interlock (NEW-008).
+            # This is cleared when the capture finishes or fails.
+            self._current_task_id = None
             if success and uri:
                 # Move URI parsing and file existence check to background thread
-                get_atomic_manager().execute(self._handle_portal_uri_background, (lang, uri, copy), pass_task_id=True)
+                task_id = get_atomic_manager().execute(
+                    self._handle_portal_uri_background, (lang, uri, copy), pass_task_id=True
+                )
+                self._current_task_id = task_id
                 self._is_capturing = False
             elif error:
                 # Log full error context
@@ -503,7 +518,10 @@ class ScreenshotService(GObject.GObject):
                 raise InterruptedError(f"Task {task_id} was cancelled before Tesseract")
 
             ocr_data = pytesseract.image_to_data(
-                enhanced_img, lang=lang, config=get_tesseract_config(lang), output_type=Output.DICT
+                enhanced_img,
+                lang=lang,
+                config=get_tesseract_config(lang, task_id=task_id),
+                output_type=Output.DICT,
             )
 
             ocr_result = OcrResult.from_tesseract_dict(ocr_data)

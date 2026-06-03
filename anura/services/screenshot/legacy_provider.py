@@ -24,8 +24,9 @@ _FLATPAK_SCROT_BIN = "/app/bin/scrot"
 
 # Retry parameters for waiting for scrot to flush its output file to disk.
 # scrot exits before the filesystem has necessarily flushed the PNG, so we
-# poll briefly rather than assuming the file is ready immediately.
-_FILE_READY_RETRIES = 10
+# poll rather than assuming the file is ready immediately.
+# NEW-016: Increase retries to 50 (5 seconds total) to handle slow filesystems.
+_FILE_READY_RETRIES = 50
 _FILE_READY_DELAY_S = 0.1  # 100 ms between retries
 
 
@@ -176,9 +177,11 @@ class LegacyX11Provider(ScreenshotProvider):
                     time.sleep(_FILE_READY_DELAY_S)
 
             if not file_ready:
-                logger.warning(
-                    f"LegacyX11Provider: scrot exited 0 but produced no output after "
-                    f"{_FILE_READY_RETRIES} retries (path={output_path})."
+                # NEW-016: Log diagnostic info on failure to help triage disk/sandbox issues.
+                logger.error(
+                    f"LegacyX11Provider: scrot (X11) exited successfully but output file "
+                    f"is missing or empty after 5s polling. (path={output_path}, "
+                    f"exists={path.exists()}, size={path.stat().st_size if path.exists() else 'N/A'})"
                 )
                 self._cleanup_file(output_path)
                 callback(False, None, _("Screenshot tool produced no output."))

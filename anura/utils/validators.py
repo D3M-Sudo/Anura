@@ -14,7 +14,11 @@ from urllib.parse import urlparse
 
 from loguru import logger
 
-from anura.config import MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB
+from anura.config import (
+    MAX_IMAGE_SIZE_BYTES,
+    MAX_IMAGE_SIZE_MB,
+    MAX_TEXT_LENGTH,
+)
 
 # Pre-compiled regex for C0 control characters (0x00-0x1F) and DEL (0x7F).
 # Note: C1 controls (0x80-0x9F) are handled by is_safe_url_string's isascii() check.
@@ -40,24 +44,45 @@ def sanitize_text(text: str) -> str:
     Sanitize text using heuristics to correct common OCR errors and remove artifacts.
     Also strips dangerous control and format characters to prevent terminal injection
     and spoofing attacks.
+
+    Features:
+    - Unicode NFC normalization for consistent representation.
+    - Strict length limiting to prevent Denial of Service (DoS).
+    - Advanced Unicode category filtering (Cc, Cf, Co, Cs, Cn).
     """
     if not text:
         return ""
 
-    # 1. Defense-in-depth: Strip non-printable Unicode Control (Cc), Format (Cf),
-    # Private Use (Co), and Surrogate (Cs) characters, but preserve legitimate
-    # formatting like \n, \r, and \t.
-    # This prevents Null byte injection, Bell characters, RTL override spoofing,
-    # and obfuscation using private-use or surrogate characters.
+    # 1. Security: Unicode Normalization (NFC)
+    # Ensures consistent representation and prevents bypasses using combining characters.
+    text = unicodedata.normalize("NFC", text)
+
+    # 2. Security: Enforce hard length limit to prevent resource exhaustion (DoS)
+    # during downstream processing (e.g., complex regex in transformers).
+    if len(text) > MAX_TEXT_LENGTH:
+        logger.warning(
+            f"Sanitization: Text truncated from {len(text)} to {MAX_TEXT_LENGTH} characters."
+        )
+        text = text[:MAX_TEXT_LENGTH]
+
+    # 3. Defense-in-depth: Strip dangerous or non-printable Unicode categories:
+    # - Cc (Control): Null bytes, Bell, etc.
+    # - Cf (Format): RTL override, Zero-width space, etc.
+    # - Co (Private Use): Non-standard internal characters.
+    # - Cs (Surrogate): UTF-16 surrogate halves (invalid in UTF-8).
+    # - Cn (Unassigned): Reserved but currently undefined characters.
+    # Legitimate formatting (\n, \r, \t) is preserved.
     text = "".join(
-        ch for ch in text if unicodedata.category(ch) not in ("Cc", "Cf", "Co", "Cs") or ch in "\n\r\t"
+        ch
+        for ch in text
+        if unicodedata.category(ch) not in ("Cc", "Cf", "Co", "Cs", "Cn") or ch in "\n\r\t"
     )
 
-    # 2. Normalize horizontal whitespace (squash multiple spaces/tabs)
+    # 4. Normalization: horizontal whitespace (squash multiple spaces/tabs)
     # Note: \n and \r are preserved by the [ \t]+ pattern.
     text = re.sub(r"[ \t]+", " ", text)
 
-    # 3. Fix common OCR mistakes in URLs/Emails if they look like them
+    # 5. Fix common OCR mistakes in URLs/Emails if they look like them
     # e.g. "http: //" -> "http://"
     text = re.sub(r"(https?|ftp|file):\s+/{2}", r"\1://", text)
 
@@ -102,13 +127,17 @@ def is_safe_url_string(text: str) -> bool:
                 if not label or label.isascii():
                     continue
 
-                # BUG-034: Homograph Defense.
-                # If the label contains both ASCII alphanumeric and non-ASCII, it's a high-risk mixed script.
-                # We reject ANY label that mixes ASCII and non-ASCII by default (e.g., googlé.com)
-                # to maintain a conservative security posture, as expected by the test suite.
+                # BUG-034 / NEW-011: Homograph Defense.
+                # We reject ANY label that mixes ASCII alphanumeric and non-ASCII (e.g., googlé.com)
+                # UNLESS the non-ASCII characters are safe Latin-1 supplements (0x00A0-0x00FF).
+                # This allows legitimate domains like münchen.de while blocking high-risk
+                # scripts like Cyrillic or Greek being mixed with ASCII.
                 has_ascii = any(ch.isascii() and ch.isalnum() for ch in label)
                 if has_ascii:
-                    return False
+                    # Allow Latin-1 supplements (covers most European languages)
+                    has_high_risk = any(ord(ch) > 0xFF for ch in label)
+                    if has_high_risk:
+                        return False
 
                 # Pure non-ASCII label (e.g. '中文'): check for suspicious scripts
                 # commonly used in homograph attacks when mixed with ASCII labels in the domain.

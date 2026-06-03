@@ -239,11 +239,7 @@ class ClipboardService(GObject.GObject):
             )
         # Remove the old source outside the lock to avoid potential deadlock
         # with GLib's internal main-loop lock (see _clear_active_timeout).
-        if old_timeout_id and old_timeout_id > 0:
-            try:
-                GLib.source_remove(old_timeout_id)
-            except Exception:
-                pass  # Source already fired or removed — safe to ignore.
+        self._remove_source(old_timeout_id)
 
         mimes = self._available_clipboard_mimes()
 
@@ -304,14 +300,15 @@ class ClipboardService(GObject.GObject):
     def _remove_source(self, timeout_id: int | None) -> None:
         """Safely remove a GLib source ID if it still exists."""
         if timeout_id is not None and timeout_id > 0:
-            try:
-                # BUG-032: Check if source exists before removing to prevent C-level warnings
-                # on stderr when a one-shot source has already fired and auto-removed.
-                ctx = GLib.MainContext.default()
-                if ctx and ctx.find_source_by_id(timeout_id):
+            # BUG-032: Check if source exists before removing to prevent C-level warnings
+            # on stderr when a one-shot source has already fired and auto-removed.
+            ctx = GLib.MainContext.default()
+            if ctx and ctx.find_source_by_id(timeout_id):
+                try:
                     GLib.source_remove(timeout_id)
-            except Exception:
-                pass
+                except (AttributeError, RuntimeError, TypeError, GLib.Error):
+                    # Source might have fired between check and removal.
+                    pass
 
     def _clear_active_timeout(self) -> None:
         """Atomically remove the in-flight read timeout and cancel the operation.
@@ -577,7 +574,7 @@ class ClipboardService(GObject.GObject):
             active_cancellable = self._cancellable
             self._clipboard_timeout_id = None
 
-        if not active_cancellable.is_cancelled():
+        if active_cancellable and not active_cancellable.is_cancelled():
             logger.warning("Anura Clipboard: Read operation timed out after 10s, cancelling.")
             active_cancellable.cancel()
 

@@ -56,18 +56,6 @@ template $ExtractedPage : Adw.NavigationPage {
         }
 
         StackPage {
-          name: "cancel";
-          child: Button listen_cancel_btn {
-            action-name: "app.listen_cancel";
-            tooltip-text: C_("Extracted screen", "Cancel listening to text");
-            accessibility {
-              label: C_("Extracted screen", "Cancel listening to text");
-            }
-            icon-name: "media-playback-stop-symbolic";
-          };
-        }
-
-        StackPage {
           name: "spinner";
           child: Gtk.Spinner listen_spinner {
             halign: center;
