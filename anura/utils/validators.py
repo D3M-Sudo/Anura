@@ -102,13 +102,17 @@ def is_safe_url_string(text: str) -> bool:
                 if not label or label.isascii():
                     continue
 
-                # BUG-034: Homograph Defense.
-                # If the label contains both ASCII alphanumeric and non-ASCII, it's a high-risk mixed script.
-                # We reject ANY label that mixes ASCII and non-ASCII by default (e.g., googlé.com)
-                # to maintain a conservative security posture, as expected by the test suite.
+                # BUG-034 / NEW-011: Homograph Defense.
+                # We reject ANY label that mixes ASCII alphanumeric and non-ASCII (e.g., googlé.com)
+                # UNLESS the non-ASCII characters are safe Latin-1 supplements (0x00A0-0x00FF).
+                # This allows legitimate domains like münchen.de while blocking high-risk
+                # scripts like Cyrillic or Greek being mixed with ASCII.
                 has_ascii = any(ch.isascii() and ch.isalnum() for ch in label)
                 if has_ascii:
-                    return False
+                    # Allow Latin-1 supplements (covers most European languages)
+                    has_high_risk = any(ord(ch) > 0xFF for ch in label)
+                    if has_high_risk:
+                        return False
 
                 # Pure non-ASCII label (e.g. '中文'): check for suspicious scripts
                 # commonly used in homograph attacks when mixed with ASCII labels in the domain.

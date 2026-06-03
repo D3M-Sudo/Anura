@@ -7,6 +7,7 @@
 import contextlib
 import os
 from pathlib import Path
+import shutil
 import time
 
 from loguru import logger
@@ -74,7 +75,7 @@ def _cleanup_tts_cache(cutoff_time: float) -> None:
 
 def _cleanup_tessdata_pool(active_lang_code: str) -> None:
     """
-    Remove stale models from the pool that are not needed for the active language.
+    Remove stale models and task-isolated directories from the pool.
 
     Args:
         active_lang_code: The currently active language code (e.g. 'eng' or 'eng+ita')
@@ -87,18 +88,29 @@ def _cleanup_tessdata_pool(active_lang_code: str) -> None:
         needed_codes = set(active_lang_code.split("+"))
         removed_count = 0
 
+        # Clean top-level models (legacy/fallback)
         for file_path in pool_dir.glob("*.traineddata"):
-            stem = file_path.name[:-12]  # Remove .traineddata
+            stem = file_path.name[: -len(".traineddata")]
             if stem not in needed_codes:
-                try:
+                with contextlib.suppress(OSError):
                     file_path.unlink()
                     removed_count += 1
-                    logger.debug(f"Anura Cleanup: Removed stale pool model: {file_path.name}")
+
+        # NEW-007: Clean task-isolated subdirectories older than 1 hour.
+        # Active directories from the current session are preserved.
+        one_hour_ago = time.time() - 3600
+        for item in pool_dir.iterdir():
+            if item.is_dir():
+                try:
+                    # If directory is old, remove it entirely
+                    if item.stat().st_mtime < one_hour_ago:
+                        shutil.rmtree(item)
+                        removed_count += 1
                 except OSError as e:
-                    logger.warning(f"Anura Cleanup: Failed to remove stale model {file_path.name}: {e}")
+                    logger.debug(f"Anura Cleanup: Failed to remove old pool dir {item.name}: {e}")
 
         if removed_count > 0:
-            logger.info(f"Anura Cleanup: Removed {removed_count} stale pool models")
+            logger.info(f"Anura Cleanup: Removed {removed_count} stale pool assets")
 
     except OSError as e:
         logger.error(f"Anura Cleanup: Error scanning tessdata pool directory: {e}")
