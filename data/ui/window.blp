@@ -29,16 +29,17 @@ template $AnuraWindow : Adw.ApplicationWindow {
         revealed: false;
       }
 
-      Adw.NavigationSplitView split_view {
+      Adw.NavigationView navigation_view {
         hexpand: true;
         vexpand: true;
-        collapsed: true;
 
-        [sidebar]
-        $WelcomePage welcome_page {}
+        $WelcomePage welcome_page {
+          tag: "welcome";
+        }
 
-        [content]
-        $ExtractedPage extracted_page {}
+        $ExtractedPage extracted_page {
+          tag: "extracted";
+        }
       }
     }
   }

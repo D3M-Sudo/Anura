@@ -58,9 +58,6 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
         # Pre-initialize attributes to avoid AttributeError during failed template init
         self.settings = settings
         self._share_service = None
-        # TTS service reference — initialized post-super() to avoid pre-template access
-        self._tts_service = None
-        self._is_generating_tts = False
 
         super().__init__(**kwargs)
         SignalManagerMixin.__init__(self)
@@ -75,11 +72,6 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
             # Connect to share signal to automatically popdown the menu
             self.connect_tracked(self._share_service, "share", self._on_share_finished)
 
-        try:
-            self._tts_service = get_tts_service()
-        except (TypeError, RuntimeError, AttributeError) as e:
-            logger.warning(f"Failed to initialize TTS service: {e}")
-
         self.connect_tracked(self.buffer, "changed", self._on_buffer_changed)
         self.connect_tracked(self.buffer, "mark-set", self._on_mark_set)
 
@@ -88,24 +80,6 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
             _("Shows character and word count. If text is selected, shows selection stats.")
         )
 
-        # GTK4 Layout Fix: Force reflow when widget is mapped to ensure correct Pango layout
-        self.connect_tracked(self.text_view, "map", lambda _: self._force_reflow())
-
-    def _force_reflow(self) -> None:
-        """Force the TextView to recalculate its layout and reflow text.
-
-        This addresses a GTK4/Pango issue where programmatic text injection
-        doesn't always trigger a re-layout until manual interaction occurs.
-        """
-        if not self.text_view:
-            return
-
-        # Strategy: Toggle wrap-mode to invalidate Pango cache and force re-layout.
-        # This is more reliable in GTK4 than queue_resize() alone for programmatic text injection.
-        current_wrap = self.text_view.get_wrap_mode()
-        self.text_view.set_wrap_mode(Gtk.WrapMode.NONE)
-        self.text_view.set_wrap_mode(current_wrap)
-        self.text_view.queue_resize()
 
     def _on_buffer_changed(self, buffer: Gtk.TextBuffer) -> None:
         """Update action sensitivities when buffer changes."""
@@ -206,35 +180,15 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
         self.emit("go-back", 1)
 
     def do_unmap(self) -> None:
-        """Handle widget unmapping - stop TTS playback when widget is no longer visible."""
-        # X11 Constraint: stop TTS and reset UI controls to prevent stale state
-        # on the next visit.
-        if self._tts_service:
-            try:
-                self._tts_service.stop_speaking()
-            except (AttributeError, RuntimeError) as e:
-                logger.warning(f"Failed to stop TTS during unmap: {e}")
-        self._is_generating_tts = False
-        if self.listen_spinner:
-            self.listen_spinner.stop()
-        if self.listen_stack:
-            self.listen_stack.set_visible_child_name("button")
-        self.swap_controls(False)
-        if self.listen_pause_btn:
-            self.listen_pause_btn.set_icon_name("media-playback-pause-symbolic")
+        """Handle widget unmapping."""
+        # Note: TTS stop is now handled by TtsController if needed,
+        # but typically we want playback to continue if window is just minimized,
+        # unless it's unmapped due to navigation back to welcome.
         Gtk.Widget.do_unmap(self)
 
     def do_dispose(self) -> None:
-        """Handle widget disposal - clean up TTS and share resources."""
-        # X11 Constraint: Ensure TTS is stopped and resources are cleaned up
-        if self._tts_service:
-            try:
-                self._tts_service.stop_speaking()
-            except (AttributeError, RuntimeError) as e:
-                logger.warning(f"Failed to cleanup TTS during dispose: {e}")
-
+        """Handle widget disposal."""
         # SignalManagerMixin handles all disconnects via do_destroy or explicit teardown_all
-
         super().do_dispose()
 
     @GObject.Property(type=str)
@@ -252,6 +206,10 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
 
     def set_extracted_text(self, text: str, transformer_name: str = "") -> None:
         """Set the extracted text and optionally show the applied transformer."""
+        GLib.idle_add(self._set_text_internal, text, transformer_name)
+
+    def _set_text_internal(self, text: str, transformer_name: str) -> bool:
+        """Atomic UI update for extracted text."""
         try:
             self.buffer.set_text(text)
             if transformer_name:
@@ -259,9 +217,9 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
                 self.transformer_label.set_visible(True)
             else:
                 self.transformer_label.set_visible(False)
-            self._force_reflow()
         except (GLib.Error, ValueError) as e:
             logger.error(f"Error setting extracted text: {e}")
+        return GLib.SOURCE_REMOVE
 
     def get_active_text(self) -> str:
         """Get selected text if available, otherwise the full text."""
@@ -271,210 +229,57 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
             return self.buffer.get_text(start, end, False)
         return self.extracted_text
 
-    def listen(self) -> None:
-        """Start TTS playback for the extracted text."""
-        # Prevent concurrent TTS generation requests
-        if self._is_generating_tts:
-            logger.warning("Anura TTS: Generation already in progress, ignoring request.")
-            return
-
-        tts_service_instance = get_tts_service()
-
-        # Defensive check: ensure critical template components are loaded
-        if not self.listen_stack:
-            logger.error("ExtractedPage: listen_stack not found in template")
-            return
-
-        # If already paused, resume instead of starting over
-        if self._tts_service and self.listen_stack.get_visible_child_name() == "pause":
-            self.listen_pause()
-            return
-
-        self._is_generating_tts = True
-
-        # X11 Constraint: Set UI to generating state (Spinner) immediately and keep it active
-        # during entire generate phase until GStreamer reaches PLAYING state
-        self.swap_controls(False)  # Disable other controls
-        self._set_spinner_active(True)
-
-        # Store reference for cleanup if not already stored
-        if self._tts_service is None:
-            self._tts_service = tts_service_instance
-
-        # Resolve TTS language: explicit user preference (tts-language) wins,
-        # otherwise map the OCR language (Tesseract 3-letter, e.g. "ita") to
-        # the gTTS code (ISO 639-1, e.g. "it"). Fetch the OCR language from
-        # GSettings directly so this widget doesn't depend on an accessor on
-        # its parent window.
-        ocr_lang = self.settings.get_string("active-language")
-        tts_lang = tts_service_instance.get_effective_language(ocr_lang)
-
-        if not tts_lang:
-            self._is_generating_tts = False
-            self._set_spinner_active(False)
-            self.swap_controls(False)
-            msg = _("Text-to-speech is not available for this language")
-            window = self.get_root()
-            if window and hasattr(window, "show_toast"):
-                window.show_toast(msg)
-            return
-
-        try:
-            get_atomic_manager().execute(
-                tts_service_instance.generate,
-                (self.get_active_text(), tts_lang),
-                callback=self._on_generated,
-                errorback=self._on_generate_error,
-            )
-        except (AttributeError, RuntimeError, TypeError) as e:
-            self._is_generating_tts = False
-            self._set_spinner_active(False)
-            self.swap_controls(False)
-            logger.exception(f"Anura TTS: Failed to initiate speech generation: {e}")
-
-    def _set_spinner_active(self, active: bool) -> None:
-        """X11 Constraint: Switch Stack between button and spinner."""
-        if active:
-            # Ensure spinner is properly aligned to prevent UI shifting
-            if self.listen_stack:
-                self.listen_stack.set_visible_child_name("spinner")
-            # Explicitly start the spinner animation
-            if self.listen_spinner:
-                self.listen_spinner.start()
-        else:
-            # Stop spinner animation before switching
-            if self.listen_spinner:
-                self.listen_spinner.stop()
-            # Note: Don't set stack here - let swap_controls handle it to avoid conflicts
-
     def _on_share_finished(self, _service: object, _success: bool) -> None:
         """Handle share completion - close the popover."""
         popover = self.share_button.get_popover()
         if popover:
             popover.popdown()
 
-    def _on_generate_error(self, error: Exception, traceback_str: str | None = None) -> None:
-        """Handle generation errors (called on main thread by AtomicTaskManager)."""
-        self._is_generating_tts = False
-        # Force stack back to button state on error — the spinner must not persist.
-        # We bypass _set_spinner_active + swap_controls here because swap_controls
-        # intentionally refuses to switch away from "spinner" (to avoid conflicts
-        # during normal flow). On error, we need an unconditional reset.
-        if self.listen_spinner:
-            self.listen_spinner.stop()
-        if self.listen_stack:
-            self.listen_stack.set_visible_child_name("button")
-        self.swap_controls(False)
-
-        # Determine error message by type - check specific exceptions first
-        if isinstance(error, TimeoutError):
-            msg = _("Request timed out. Please try again.")
-        elif isinstance(error, (requests.RequestException, OSError)):
-            msg = _("Network error. Please check your internet connection.")
-        else:
-            msg = _("Text-to-speech failed. Please try again.")
-
-        # Get the root window and call its show_toast method
-        window = self.get_root()
-        if window and hasattr(window, "show_toast"):
-            window.show_toast(msg)
-
-    def listen_cancel(self) -> None:
-        """Stop TTS playback (public method)."""
-        self._on_listen_stop()
-
-    def _on_listen_stop(self) -> None:
-        """Stop TTS playback."""
-        tts_service_instance = get_tts_service()
-        tts_service_instance.stop_speaking()
-        self.swap_controls(False)
-
-    def listen_pause(self) -> None:
-        """Pause/Resume TTS playback."""
-        tts_service_instance = get_tts_service()
-        tts_service_instance.toggle_pause()
-
-    def _on_paused(self, _service: object, is_paused: bool) -> None:
-        """Handle TTS pause/resume signal."""
-        if self.listen_pause_btn:
-            icon = "media-playback-start-symbolic" if is_paused else "media-playback-pause-symbolic"
-            self.listen_pause_btn.set_icon_name(icon)
-
-    def update_tts_state(self, playing: bool = False, paused: bool = False) -> None:
-        """Update the TTS UI state (called from TtsController).
+    def update_tts_state(self, state: str) -> None:
+        """Update the TTS UI state (called from TtsController via AnuraWindow).
 
         States:
-          playing=True  → stack="pause", controls locked (playback active or resumed)
-          paused=True   → stack stays on "pause", icon changes to ▶ (ready to resume)
-          (default)     → stack="button" (idle), controls unlocked (stopped/finished)
+          generating → stack="spinner", controls locked
+          playing    → stack="pause", controls locked, icon=pause
+          paused     → stack="pause", controls locked, icon=play
+          idle       → stack="button", controls unlocked
         """
-        if playing:
-            # Active playback (initial play OR resume after pause).
-            # swap_controls("playing") sets listen_stack → "pause" child.
-            self.swap_controls("playing")
-            # BUG-1: Reset icon to pause if it was set to start during a pause
-            self._on_paused(None, False)
-        elif paused:
-            # Playback is paused: keep the pause/stop controls visible (stack="pause"),
-            # just swap the icon to ▶ so user knows they can resume.
-            # Explicitly set stack to "pause" to guard against any edge case where
-            # the stack was moved away (e.g. spinner still active).
+        if state == "generating":
+            self.swap_controls(True)
+            if self.listen_stack:
+                self.listen_stack.set_visible_child_name("spinner")
+            if self.listen_spinner:
+                self.listen_spinner.start()
+
+        elif state == "playing":
+            self.swap_controls(True)
             if self.listen_stack:
                 self.listen_stack.set_visible_child_name("pause")
-            self._on_paused(None, True)
-        else:
-            # Stopped / finished / error → return to idle state.
-            self.swap_controls("stopped")
+            if self.listen_spinner:
+                self.listen_spinner.stop()
+            if self.listen_pause_btn:
+                self.listen_pause_btn.set_icon_name("media-playback-pause-symbolic")
 
-    def _on_tts_error(self, _service: object, message: str) -> None:
-        """Handle TTS error signal."""
-        self._on_listen_end(_service, False)
-        window = self.get_root()
-        if window and hasattr(window, "show_toast"):
-            window.show_toast(message)
-
-    def _on_generated(self, filepath: str | None) -> None:
-        """Callback when TTS generation completes.
-
-        The 'speak' signal triggers TtsController to call play(), so
-        calling it here would create a duplicate GStreamer pipeline.
-        """
-        self._is_generating_tts = False
-        if not filepath:
-            self._set_spinner_active(False)
-            self.swap_controls(False)
-            return
-
-        self._set_spinner_active(False)
-
-    def _on_listen_end(self, service: object, success: bool) -> None:
-        """Handle TTS playback completion."""
-        # Don't disconnect the signal handler - it should persist for multiple TTS operations
-        self.emit("on-listen-stop")
-        self._set_spinner_active(False)
-        self.swap_controls(False)
-
-        # Reset pause button icon
-        if self.listen_pause_btn:
-            self.listen_pause_btn.set_icon_name("media-playback-pause-symbolic")
-
-    def swap_controls(self, state: bool | str = False) -> None:
-        """Enable or disable interactive controls during TTS playback."""
-        # Handle both legacy boolean state and new descriptive string states
-        is_playing = state is True or state == "playing"
-
-        if self.grab_btn:
-            self.grab_btn.set_sensitive(not is_playing)
-        if self.text_copy_btn:
-            self.text_copy_btn.set_sensitive(not is_playing)
-        if self.listen_stack:
-            # Unified stack management: handle both pause/play and spinner states
-            if is_playing:
+        elif state == "paused":
+            self.swap_controls(True)
+            if self.listen_stack:
                 self.listen_stack.set_visible_child_name("pause")
-            else:
-                # NEW-002: Transition back to "button" if we are stopping/erroring.
-                # If state is "stopped" or False, we want an authoritative reset.
+            if self.listen_pause_btn:
+                self.listen_pause_btn.set_icon_name("media-playback-start-symbolic")
+
+        else:  # idle or default
+            self.swap_controls(False)
+            if self.listen_stack:
                 self.listen_stack.set_visible_child_name("button")
+            if self.listen_spinner:
+                self.listen_spinner.stop()
+
+    def swap_controls(self, locked: bool) -> None:
+        """Enable or disable interactive controls during TTS playback."""
+        if self.grab_btn:
+            self.grab_btn.set_sensitive(not locked)
+        if self.text_copy_btn:
+            self.text_copy_btn.set_sensitive(not locked)
 
     def do_destroy(self) -> None:
         """Clean up signal handlers to prevent memory leaks."""
