@@ -1,5 +1,6 @@
 anura/controllers/dnd_controller.py
 anura/controllers/ocr_controller.py
+anura/controllers/tts_controller.py
 anura/core/dialogs.py
 anura/main.py
 anura/services/clipboard_service.py

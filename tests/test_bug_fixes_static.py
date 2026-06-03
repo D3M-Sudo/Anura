@@ -35,29 +35,29 @@ def _find_method(tree: ast.Module, class_name: str, method_name: str) -> ast.Fun
     raise AssertionError(f"{class_name}.{method_name} not found")
 
 
-def test_extracted_page_listen_does_not_call_self_get_language() -> None:
-    tree, _ = _load_module_source("widgets/extracted_page.py")
-    listen_fn = _find_method(tree, "ExtractedPage", "listen")
+def test_tts_controller_request_listen_does_not_call_self_get_language() -> None:
+    tree, _ = _load_module_source("controllers/tts_controller.py")
+    listen_fn = _find_method(tree, "TtsController", "request_listen")
     for node in ast.walk(listen_fn):
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
             is_self = isinstance(node.func.value, ast.Name) and node.func.value.id == "self"
             if is_self and node.func.attr == "get_language":
                 raise AssertionError(
-                    "ExtractedPage.listen() must not call self.get_language() — "
-                    "that method only exists on AnuraWindow.",
+                    "TtsController.request_listen() must not call self.get_language() — "
+                    "it should use settings or language manager directly.",
                 )
 
 
-def test_extracted_page_listen_uses_tts_effective_language() -> None:
+def test_tts_controller_request_listen_uses_tts_effective_language() -> None:
     """Resolve the gTTS code via TTSService.get_effective_language() so the
     Tesseract→ISO 639-1 mapping (e.g. 'ita'→'it') and the user's tts-language
     override are both honoured."""
-    _tree, text = _load_module_source("widgets/extracted_page.py")
+    _tree, text = _load_module_source("controllers/tts_controller.py")
     assert "get_effective_language(" in text, (
-        "ExtractedPage.listen() must call get_effective_language() to resolve "
+        "TtsController.request_listen() must call get_effective_language() to resolve "
         "the TTS language code from the OCR setting."
     )
-    assert "active-language" in text, "ExtractedPage.listen() must read the OCR language from GSettings."
+    assert "active-language" in text, "TtsController.request_listen() must read the OCR language from GSettings."
 
 
 # ---------------------------------------------------------------------------

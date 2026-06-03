@@ -6,9 +6,6 @@
 
 import pytest
 
-pytest.importorskip("gi")
-
-
 from anura.utils.validators import uri_validator
 
 
@@ -62,16 +59,19 @@ class TestUriValidatorEnterprise:
         assert uri_validator(url) is False
 
     @pytest.mark.parametrize(
-        "url",
+        "url,expected",
         [
-            "https://googlé.com",  # Non-ASCII
-            "https://\u0430\u043f\u0440.com",  # Cyrillic homograph
-            "https://\u202e/moc.elgoog",  # Right-to-left override
+            ("https://googlé.com", True),  # Latin-1 is allowed (NEW-011)
+            ("https://münchen.de", True),  # Legitimate IDN allowed
+            ("https://\u0430\u043f\u0440.com", False),  # Cyrillic homograph mixed with ASCII (if label was mixed)
+            # Note: Pure Cyrillic IDNs are encoded as Punycode and may pass ASCII safety if not mixed.
+            # But \u202e (RLO) is stripped/blocked.
+            ("https://\u202e/moc.elgoog", False),
         ],
     )
-    def test_non_ascii_and_homograph(self, url):
+    def test_non_ascii_and_homograph(self, url, expected):
         """Test non-ASCII characters and potential homograph attacks."""
-        assert uri_validator(url) is False
+        assert uri_validator(url) is expected
 
     @pytest.mark.parametrize(
         "text,expected",
@@ -82,13 +82,25 @@ class TestUriValidatorEnterprise:
             ("Text with \uD800 surrogate", "Text with surrogate"),
             ("Text with \u202E RLO", "Text with RLO"),
             ("Mixed \uE000 and \n inside", "Mixed and \n inside"),
+            ("Text with \u088F unassigned", "Text with unassigned"),  # Cn category
+            ("e\u0301", "é"),  # NFC Normalization: 'e' + combining acute -> 'é'
         ],
     )
     def test_sanitize_text_hardening(self, text, expected):
-        """Test that sanitize_text strips dangerous Unicode categories."""
+        """Test that sanitize_text strips dangerous Unicode categories and normalizes."""
         from anura.utils.validators import sanitize_text
 
         assert sanitize_text(text) == expected
+
+    def test_sanitize_text_length_limit(self):
+        """Test that sanitize_text enforces the MAX_TEXT_LENGTH limit."""
+        from anura.config import MAX_TEXT_LENGTH
+        from anura.utils.validators import sanitize_text
+
+        long_text = "a" * (MAX_TEXT_LENGTH + 100)
+        sanitized = sanitize_text(long_text)
+        assert len(sanitized) == MAX_TEXT_LENGTH
+        assert sanitized == "a" * MAX_TEXT_LENGTH
 
     @pytest.mark.parametrize(
         "url",

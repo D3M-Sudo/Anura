@@ -35,6 +35,10 @@ class OcrController(GObject.GObject, SignalManagerMixin):
         "text-extracted": (GObject.SignalFlags.RUN_LAST, None, (str, bool)),
         "uri-detected": (GObject.SignalFlags.RUN_LAST, None, (str, bool)),
         "error-occurred": (GObject.SignalFlags.RUN_LAST, None, (str,)),
+        "extraction-completed": (GObject.SignalFlags.RUN_LAST, None, (str, str)),  # text, applied_name
+        "status-changed": (GObject.SignalFlags.RUN_LAST, None, (str,)),
+        "capture-portal-missing": (GObject.SignalFlags.RUN_LAST, None, (str,)),
+        "navigation-requested": (GObject.SignalFlags.RUN_LAST, None, (str,)),
     }
 
     def __init__(self, window: "AnuraWindow") -> None:
@@ -78,16 +82,6 @@ class OcrController(GObject.GObject, SignalManagerMixin):
 
     def _on_shot_done(self, _sender: GObject.GObject, text: str, copy: bool, ocr_result: "OcrResult") -> None:
         """Handle successful screenshot capture and OCR processing."""
-        was_screenshot = False
-        if hasattr(self._window, "_screenshot_timeout_id") and self._window._screenshot_timeout_id is not None:
-            GLib.source_remove(self._window._screenshot_timeout_id)
-            self._window._screenshot_timeout_id = None
-            was_screenshot = True
-
-        if was_screenshot:
-            self._window.present()
-        self._window.welcome_page.reset_drop_area_state()
-
         if not text:
             self.emit("error-occurred", _("No text found. Try to grab another region."))
             return
@@ -100,7 +94,7 @@ class OcrController(GObject.GObject, SignalManagerMixin):
                 except Exception as e:
                     logger.error(f"OcrController: MagicProcessor failed: {e}")
 
-            self._window.extracted_page.set_extracted_text(text, applied_name)
+            self.emit("extraction-completed", text, applied_name)
             extraction_result = self._dispatcher.dispatch(text, ocr_result)
             self._handle_extraction_result(extraction_result, copy)
 
@@ -108,11 +102,12 @@ class OcrController(GObject.GObject, SignalManagerMixin):
                 body = text[:80] + "…" if len(text) > 80 else text
                 self._notification_service.show(title=_("Text extracted"), body=body, priority="normal")
 
-            # NEW-003: Navigate only for the current active task
-            _current_id = getattr(self._window.backend, "_current_task_id", None)
+            # NEW-003 / NEW-008: Navigate only for the current active task
+            # backend.current_task_id is now a public GObject property.
+            _current_id = self._window.backend.current_task_id
             GLib.idle_add(self._navigate_to_extracted_page, _current_id)
         except (AttributeError, TypeError, RuntimeError) as e:
-            logger.error(f"OcrController: UI Error in _on_shot_done: {e}")
+            logger.error(f"OcrController: Error in _on_shot_done: {e}")
 
     def _handle_extraction_result(self, result: "ExtractionResult", copy_requested: bool) -> None:
         """Handle the extraction result, emitting signals for side effects."""
@@ -140,22 +135,10 @@ class OcrController(GObject.GObject, SignalManagerMixin):
 
     def _on_status_changed(self, _sender: GObject.GObject, status_msg: str) -> None:
         """Handle status updates from backend to prevent Zombie UI."""
-        if hasattr(self._window, "show_status"):
-            self._window.show_status(status_msg)
-        elif hasattr(self._window, "welcome_page"):
-            self._window.welcome_page.set_status(status_msg)
+        self.emit("status-changed", status_msg)
 
     def _on_shot_error(self, _sender: GObject.GObject, message: str) -> None:
         """Handle screenshot capture errors."""
-        was_screenshot = False
-        if hasattr(self._window, "_screenshot_timeout_id") and self._window._screenshot_timeout_id is not None:
-            GLib.source_remove(self._window._screenshot_timeout_id)
-            self._window._screenshot_timeout_id = None
-            was_screenshot = True
-
-        if was_screenshot:
-            self._window.present()
-        self._window.welcome_page.reset_drop_area_state()
         if message:
             # BUG-3a: Defer error emission to allow window manager to process
             # window restoration and grant focus, ensuring get_active_window()
@@ -166,8 +149,7 @@ class OcrController(GObject.GObject, SignalManagerMixin):
         """Reveal the persistent install hint banner."""
         try:
             advice = detect_portal_advice()
-            self._window.portal_banner.set_title(advice.short_message)
-            self._window.portal_banner.set_revealed(True)
+            self.emit("capture-portal-missing", advice.short_message)
         except (AttributeError, RuntimeError) as e:
             logger.error(f"OcrController: Error handling portal backend missing: {e}")
 
@@ -183,8 +165,7 @@ class OcrController(GObject.GObject, SignalManagerMixin):
                 logger.debug(f"OcrController: Ignoring navigation for cancelled task {task_id}")
                 return GLib.SOURCE_REMOVE
 
-        self._window.split_view.set_show_content(True)
-        self._window.extracted_page.text_view.grab_focus()
+        self.emit("navigation-requested", "extracted")
         return GLib.SOURCE_REMOVE
 
     def open_image(self) -> None:

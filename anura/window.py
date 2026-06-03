@@ -47,7 +47,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     __gtype_name__ = "AnuraWindow"
 
     toast_overlay: Adw.ToastOverlay = Gtk.Template.Child()
-    split_view: Adw.NavigationSplitView = Gtk.Template.Child()
+    navigation_view: Adw.NavigationView = Gtk.Template.Child()
     welcome_page: WelcomePage = Gtk.Template.Child()
     extracted_page: ExtractedPage = Gtk.Template.Child()
     portal_banner: Adw.Banner = Gtk.Template.Child()
@@ -100,6 +100,8 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         self.ocr_controller = OcrController(self)
         self.tts_controller = TtsController(self)
         self.dnd_controller = DndController(self)
+
+        self._setup_controller_signals()
 
         if backend is None:
             self.backend = get_screenshot_service()
@@ -294,8 +296,74 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
 
     def show_welcome_page(self, *_args: object) -> None:
         """Show the welcome page and hide the extracted content."""
-        self.split_view.set_show_content(False)
-        self.extracted_page._on_listen_stop()
+        self.navigation_view.pop_to_tag("welcome")
+        self.tts_controller.stop()
+
+    def _setup_controller_signals(self) -> None:
+        """Connect to controller signals to mediate UI updates."""
+        # OCR Controller signals
+        self.connect_tracked(self.ocr_controller, "extraction-completed", self._on_extraction_completed)
+        self.connect_tracked(self.ocr_controller, "error-occurred", self._on_ocr_error)
+        self.connect_tracked(self.ocr_controller, "status-changed", self._on_ocr_status_changed)
+        self.connect_tracked(self.ocr_controller, "capture-portal-missing", self._on_portal_missing)
+        self.connect_tracked(self.ocr_controller, "navigation-requested", self._on_navigation_requested)
+
+        # DnD Controller signals
+        self.connect_tracked(self.dnd_controller, "error-occurred", self._on_dnd_error)
+
+        # TTS Controller signals
+        self.connect_tracked(self.tts_controller, "state-changed", self._on_tts_state_changed)
+        self.connect_tracked(self.tts_controller, "error-occurred", self._on_tts_error)
+
+    def _on_extraction_completed(self, _controller: OcrController, text: str, applied_name: str) -> None:
+        """Mediate OCR result to the UI."""
+        self._cleanup_screenshot_state()
+        self.welcome_page.reset_drop_area_state()
+        self.extracted_page.set_extracted_text(text, applied_name)
+
+    def _on_ocr_error(self, _controller: OcrController, message: str) -> None:
+        """Handle OCR error signal."""
+        self._cleanup_screenshot_state()
+        self.welcome_page.reset_drop_area_state()
+        if message:
+            self.show_toast(message)
+
+    def _on_ocr_status_changed(self, _controller: OcrController, status_msg: str) -> None:
+        """Update UI status during OCR."""
+        self.welcome_page.set_status(status_msg)
+
+    def _on_portal_missing(self, _controller: OcrController, message: str) -> None:
+        """Show the portal missing banner."""
+        self.portal_banner.set_title(message)
+        self.portal_banner.set_revealed(True)
+
+    def _on_navigation_requested(self, _controller: OcrController, tag: str) -> None:
+        """Handle navigation requests from controllers."""
+        if tag == "extracted":
+            self.navigation_view.push_by_tag("extracted")
+            self.extracted_page.text_view.grab_focus()
+
+    def _on_dnd_error(self, _controller: DndController, message: str) -> None:
+        """Handle DnD error signal."""
+        self.welcome_page.reset_drop_area_state()
+        if message:
+            self.show_toast(message)
+
+    def _on_tts_state_changed(self, _controller: TtsController, state: str) -> None:
+        """Mediate TTS state to the UI."""
+        self.extracted_page.update_tts_state(state)
+
+    def _on_tts_error(self, _controller: TtsController, message: str) -> None:
+        """Handle TTS error signal."""
+        if message:
+            self.show_toast(message)
+
+    def _cleanup_screenshot_state(self) -> None:
+        """Restore window state after screenshot attempt."""
+        if self._screenshot_timeout_id is not None:
+            GLib.source_remove(self._screenshot_timeout_id)
+            self._screenshot_timeout_id = None
+        self.present()
 
     def _on_share(self, _action: Gio.SimpleAction, variant: GLib.Variant) -> None:
         """Dispatch share action to the correct provider."""
@@ -317,16 +385,17 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         launch_uri(url, window=self, error_callback=lambda msg: self.show_toast(msg))
 
     def on_listen(self) -> None:
-        """Trigger TTS playback on the extracted page."""
-        self.extracted_page.listen()
+        """Trigger TTS playback."""
+        text = self.extracted_page.get_active_text()
+        self.tts_controller.request_listen(text)
 
     def on_listen_cancel(self) -> None:
         """Cancel TTS playback."""
-        self.extracted_page.listen_cancel()
+        self.tts_controller.stop()
 
     def on_listen_pause(self) -> None:
         """Toggle TTS pause/resume."""
-        self.extracted_page.listen_pause()
+        self.tts_controller.toggle_pause()
 
     def close_popovers(self) -> None:
         """Close all open popovers."""

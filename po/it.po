@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: anura\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-03 12:31+0000\n"
+"POT-Creation-Date: 2026-06-03 12:34+0000\n"
 "PO-Revision-Date: 2026-05-20 19:05+0200\n"
 "Last-Translator: d3m-sudo\n"
 "Language-Team: Italian <https://hosted.weblate.org/projects/anura/default/it/"
@@ -961,17 +961,17 @@ msgstr ""
 #: ../anura/widgets/extracted_page.py:158
 msgctxt "Extracted screen"
 msgid "Copy Selected Text to Clipboard (Ctrl+C)"
-msgstr "Copia il testo estratto negli appunti"
+msgstr ""
 
 #: ../anura/widgets/extracted_page.py:159
 msgctxt "Extracted screen"
 msgid "Listen to Selected Text (Ctrl+L)"
-msgstr "Copia il testo estratto negli appunti"
+msgstr ""
 
 #: ../anura/widgets/extracted_page.py:160
 msgctxt "Extracted screen"
 msgid "Share Selection To"
-msgstr "Copia il testo estratto negli appunti"
+msgstr ""
 
 #: ../anura/widgets/extracted_page.py:162
 msgctxt "Extracted screen"
@@ -981,7 +981,7 @@ msgstr "Copia testo estratto negli appunti"
 #: ../anura/widgets/extracted_page.py:163
 msgctxt "Extracted screen"
 msgid "Listen to Text (Ctrl+L)"
-msgstr "Copia il testo estratto negli appunti"
+msgstr ""
 
 #: ../anura/widgets/extracted_page.py:164
 msgctxt "Extracted screen"
@@ -991,7 +991,7 @@ msgstr "Condividi con"
 #: ../anura/widgets/extracted_page.py:258
 #, python-brace-format
 msgid "Smart Parse: {name}"
-msgstr "Copia il testo estratto negli appunti"
+msgstr ""
 
 #: ../anura/widgets/extracted_page.py:316
 msgid "Text-to-speech is not available for this language"
@@ -1356,7 +1356,7 @@ msgstr "Cerca scorciatoie..."
 
 #: ../data/ui/shortcuts_overlay.blp:40
 msgid "Search shortcuts"
-msgstr "Cerca scorciatoie"
+msgstr ""
 
 #: ../data/ui/shortcuts_overlay.blp:64
 msgid "No results found"
@@ -1381,32 +1381,32 @@ msgstr "Cattura schermata"
 #: ../data/ui/extracted_page.blp:37
 msgctxt "Extracted screen"
 msgid "Copy extracted text to clipboard"
-msgstr "Copia il testo estratto negli appunti"
+msgstr ""
 
 #: ../data/ui/extracted_page.blp:53
 msgctxt "Extracted screen"
 msgid "Listen to text"
-msgstr "Copia il testo estratto negli appunti"
+msgstr ""
 
 #: ../data/ui/extracted_page.blp:64 ../data/ui/extracted_page.blp:98
 msgctxt "Extracted screen"
 msgid "Stop listening (Ctrl+Shift+L)"
-msgstr "Interrompi ascolto (Ctrl+Shift+L)"
+msgstr ""
 
 #: ../data/ui/extracted_page.blp:66 ../data/ui/extracted_page.blp:100
 msgctxt "Extracted screen"
 msgid "Stop listening"
-msgstr "Interrompi ascolto"
+msgstr ""
 
 #: ../data/ui/extracted_page.blp:88
 msgctxt "Extracted screen"
 msgid "Pause/Resume listening (Ctrl+Alt+L)"
-msgstr "Pausa/Riprendi ascolto (Ctrl+Alt+L)"
+msgstr ""
 
 #: ../data/ui/extracted_page.blp:90
 msgctxt "Extracted screen"
 msgid "Pause or resume listening"
-msgstr "Pausa o riprendi ascolto"
+msgstr ""
 
 #: ../data/ui/extracted_page.blp:112 ../data/ui/extracted_page.blp:114
 msgctxt "Extracted screen"
@@ -1416,7 +1416,7 @@ msgstr "Apri menu"
 #: ../data/ui/extracted_page.blp:124
 msgctxt "Extracted screen"
 msgid "Share text to other applications"
-msgstr "Copia il testo estratto negli appunti"
+msgstr ""
 
 #: ../data/ui/extracted_page.blp:207 ../data/ui/welcome_page.blp:172
 msgid "About Anura"
@@ -1470,7 +1470,7 @@ msgstr "Cattura schermata"
 #: ../data/ui/welcome_page.blp:63
 msgctxt "Welcome screen"
 msgid "Take a Screenshot"
-msgstr "Cattura schermata"
+msgstr ""
 
 #: ../data/ui/welcome_page.blp:72
 msgid "_Take a Screenshot"
@@ -1484,7 +1484,7 @@ msgstr "Apri immagine"
 #: ../data/ui/welcome_page.blp:82
 msgctxt "Welcome screen"
 msgid "Open Image"
-msgstr "Apri immagine"
+msgstr ""
 
 #: ../data/ui/welcome_page.blp:91
 msgid "_Open Image"
@@ -1498,7 +1498,7 @@ msgstr "Incolla immagine dagli appunti"
 #: ../data/ui/welcome_page.blp:101
 msgctxt "Welcome screen"
 msgid "Paste Image"
-msgstr "Incolla immagine"
+msgstr ""
 
 #: ../data/ui/welcome_page.blp:110
 msgid "_Paste Image"
