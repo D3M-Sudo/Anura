@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: anura\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-30 19:02+0000\n"
+"POT-Creation-Date: 2026-06-03 12:24+0000\n"
 "PO-Revision-Date: 2024-04-18 13:03+0000\n"
 "Last-Translator: Ryo Nakano <ryonakaknock3@gmail.com>\n"
 "Language-Team: Japanese <https://hosted.weblate.org/projects/anura/default/"
@@ -19,76 +19,92 @@ msgstr ""
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: ../anura/controllers/dnd_controller.py:39
+#: ../anura/controllers/dnd_controller.py:45
 msgid "Failed to load dropped file (invalid path)."
 msgstr ""
 
-#: ../anura/controllers/dnd_controller.py:47
-#: ../anura/services/screenshot_service.py:393 ../anura/window.py:210
+#: ../anura/controllers/dnd_controller.py:52
+#: ../anura/services/screenshot_service.py:412 ../anura/window.py:221
 msgid "Invalid image file"
 msgstr ""
 
-#: ../anura/controllers/dnd_controller.py:56
+#: ../anura/controllers/dnd_controller.py:65
 msgid "Failed to process the file."
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:86
+#: ../anura/controllers/tts_controller.py:67
+msgid "Text-to-speech is not available for this language"
+msgstr ""
+
+#: ../anura/controllers/tts_controller.py:101
+msgid "Request timed out. Please try again."
+msgstr ""
+
+#: ../anura/controllers/tts_controller.py:103
+msgid "Network error. Please check your internet connection."
+msgstr ""
+
+#: ../anura/controllers/tts_controller.py:105
+msgid "Text-to-speech failed. Please try again."
+msgstr ""
+
+#: ../anura/controllers/ocr_controller.py:87
 msgid "No text found. Try to grab another region."
 msgstr "テキストが見つかりません。別の領域を選択してみてください。"
 
-#: ../anura/controllers/ocr_controller.py:103
+#: ../anura/controllers/ocr_controller.py:106
 msgid "Text extracted"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:124
+#: ../anura/controllers/ocr_controller.py:129
 #, python-brace-format
 msgid "{n} email found in text"
 msgid_plural "{n} emails found in text"
 msgstr[0] ""
 
-#: ../anura/controllers/ocr_controller.py:130
+#: ../anura/controllers/ocr_controller.py:135
 #, python-brace-format
 msgid "{n} phone number found in text"
 msgid_plural "{n} phone numbers found in text"
 msgstr[0] ""
 
-#: ../anura/controllers/ocr_controller.py:174
+#: ../anura/controllers/ocr_controller.py:177
 msgid "Choose an image for extraction"
 msgstr "画像を開いてテキストを抽出"
 
-#: ../anura/controllers/ocr_controller.py:177
+#: ../anura/controllers/ocr_controller.py:180
 msgid "All supported images"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:209
+#: ../anura/controllers/ocr_controller.py:212
 msgid "PNG images (*.png)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:210
+#: ../anura/controllers/ocr_controller.py:213
 msgid "JPEG images (*.jpg)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:211
+#: ../anura/controllers/ocr_controller.py:214
 msgid "WebP images (*.webp)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:212
+#: ../anura/controllers/ocr_controller.py:215
 msgid "AVIF images (*.avif)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:213
+#: ../anura/controllers/ocr_controller.py:216
 msgid "TIFF images (*.tif)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:214
+#: ../anura/controllers/ocr_controller.py:217
 msgid "BMP images (*.bmp)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:215
+#: ../anura/controllers/ocr_controller.py:218
 msgid "GIF images (*.gif)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:218
+#: ../anura/controllers/ocr_controller.py:221
 msgid "All files (*)"
 msgstr ""
 
@@ -104,7 +120,7 @@ msgstr ""
 msgid "Run OCR without UI (copy result to clipboard)"
 msgstr ""
 
-#: ../anura/main.py:203 ../anura/main.py:349 ../anura/window.py:232
+#: ../anura/main.py:203 ../anura/main.py:349 ../anura/window.py:243
 msgid "Text copied to clipboard"
 msgstr "テキストをクリップボードにコピーしました"
 
@@ -149,7 +165,7 @@ msgstr ""
 msgid "Bug fixes and improvements."
 msgstr ""
 
-#: ../anura/main.py:400 ../anura/services/screenshot_service.py:575
+#: ../anura/main.py:400 ../anura/services/screenshot_service.py:594
 msgid "No text found."
 msgstr "結果なし"
 
@@ -165,111 +181,119 @@ msgstr ""
 msgid "Cancelled"
 msgstr ""
 
-#: ../anura/services/clipboard_service.py:180
-#: ../anura/services/clipboard_service.py:196
-#: ../anura/services/clipboard_service.py:214
-#: ../anura/services/clipboard_service.py:423
-#: ../anura/services/clipboard_service.py:453
-#: ../anura/services/clipboard_service.py:467
-#: ../anura/services/clipboard_service.py:479
-#: ../anura/services/clipboard_service.py:487
-#: ../anura/services/clipboard_service.py:498
-#: ../anura/services/clipboard_service.py:512
-#: ../anura/services/clipboard_service.py:524
+#: ../anura/services/clipboard_service.py:169
+#: ../anura/services/clipboard_service.py:185
+#: ../anura/services/clipboard_service.py:203
+#: ../anura/services/clipboard_service.py:441
+#: ../anura/services/clipboard_service.py:471
+#: ../anura/services/clipboard_service.py:485
+#: ../anura/services/clipboard_service.py:497
+#: ../anura/services/clipboard_service.py:505
+#: ../anura/services/clipboard_service.py:516
+#: ../anura/services/clipboard_service.py:530
+#: ../anura/services/clipboard_service.py:542
 msgid "No image in clipboard"
 msgstr "クリップボードに画像なし"
 
-#: ../anura/services/clipboard_service.py:568
+#: ../anura/services/clipboard_service.py:586
 msgid "Clipboard read operation timed out."
 msgstr ""
 
-#: ../anura/services/tts.py:446
+#: ../anura/services/tts.py:454
 #, python-brace-format
 msgid "GStreamer playback error: {error}"
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:73
-#: ../anura/services/screenshot_service.py:435
+#: ../anura/services/screenshot_service.py:74
+#: ../anura/services/screenshot_service.py:454
 msgid "The selected image file is empty."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:113
+#: ../anura/services/screenshot_service.py:114
 msgid "Enhancing image..."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:124
+#: ../anura/services/screenshot_service.py:125
 msgid "Running Tesseract OCR..."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:136
+#: ../anura/services/screenshot_service.py:137
 msgid "Reconstructing structure..."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:143
+#: ../anura/services/screenshot_service.py:144
 msgid "Magic processing..."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:180
+#: ../anura/services/screenshot_service.py:181
 msgid "Failed to process image in isolated process."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:272
+#: ../anura/services/screenshot_service.py:291
 #, python-brace-format
 msgid "Screenshot failed: {reason}"
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:282
+#: ../anura/services/screenshot_service.py:301
 msgid "Failed to initiate screenshot capture."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:293
-#: ../anura/services/screenshot_service.py:303
+#: ../anura/services/screenshot_service.py:312
+#: ../anura/services/screenshot_service.py:322
 msgid "Can't take a screenshot."
 msgstr "スクリーンショットを撮影できません。"
 
-#: ../anura/services/screenshot_service.py:414
-#: ../anura/services/screenshot_service.py:595
+#: ../anura/services/screenshot_service.py:433
+#: ../anura/services/screenshot_service.py:614
 msgid "Invalid language code specified."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:534
+#: ../anura/services/screenshot_service.py:553
 msgid "Failed to read image file."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:537
+#: ../anura/services/screenshot_service.py:556
 msgid "OCR engine failed to process image."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:540
-#: ../anura/services/screenshot_service.py:545
+#: ../anura/services/screenshot_service.py:559
+#: ../anura/services/screenshot_service.py:564
 msgid "Failed to decode data."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:612
+#: ../anura/services/screenshot_service.py:631
 msgid "Extracting text..."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:655
+#: ../anura/services/screenshot_service.py:674
 msgid "OCR processing failed. Please try again."
 msgstr ""
 
-#: ../anura/services/share_service.py:184
+#: ../anura/services/screenshot/legacy_provider.py:90
+msgid "Failed to create temporary file."
+msgstr ""
+
+#: ../anura/services/screenshot/legacy_provider.py:184
+msgid "Screenshot tool produced no output."
+msgstr ""
+
+#: ../anura/services/share_service.py:208
 msgid "Select Mastodon Instance"
 msgstr ""
 
-#: ../anura/services/share_service.py:185
+#: ../anura/services/share_service.py:209
 msgid "Choose your Mastodon instance to share the extracted text:"
 msgstr ""
 
-#: ../anura/services/share_service.py:191
+#: ../anura/services/share_service.py:215
 msgid "Cancel"
 msgstr ""
 
-#: ../anura/services/share_service.py:230
+#: ../anura/services/share_service.py:254
 msgid "Cannot show dialog without active window"
 msgstr ""
 
-#: ../anura/services/share_service.py:349
+#: ../anura/services/share_service.py:373
 msgid "Extracted Text"
 msgstr ""
 
@@ -857,11 +881,11 @@ msgid ""
 "desktop (e.g. xdg-desktop-portal-gnome, -kde, -wlr) and re-login."
 msgstr ""
 
-#: ../anura/utils/validators.py:294
+#: ../anura/utils/validators.py:310
 msgid "Invalid URL blocked for security"
 msgstr ""
 
-#: ../anura/utils/validators.py:308
+#: ../anura/utils/validators.py:324
 msgid "Failed to open link"
 msgstr ""
 
@@ -910,51 +934,65 @@ msgstr ""
 msgid "Auto (follow OCR language)"
 msgstr ""
 
-#: ../anura/widgets/extracted_page.py:90
+#: ../anura/widgets/extracted_page.py:77
 msgid ""
 "Shows character and word count. If text is selected, shows selection stats."
 msgstr ""
 
-#: ../anura/widgets/extracted_page.py:140
+#: ../anura/widgets/extracted_page.py:109
 msgid "Selection: "
 msgstr ""
 
-#: ../anura/widgets/extracted_page.py:148
+#: ../anura/widgets/extracted_page.py:117
 #, python-brace-format
 msgid "{n} word"
 msgid_plural "{n} words"
 msgstr[0] ""
 
-#: ../anura/widgets/extracted_page.py:149
+#: ../anura/widgets/extracted_page.py:118
 #, python-brace-format
 msgid "{n} character"
 msgid_plural "{n} characters"
 msgstr[0] ""
 
-#: ../anura/widgets/extracted_page.py:152
+#: ../anura/widgets/extracted_page.py:121
 #, python-brace-format
 msgid "{words} | {chars}"
 msgstr ""
 
-#: ../anura/widgets/extracted_page.py:258
+#: ../anura/widgets/extracted_page.py:129
+msgctxt "Extracted screen"
+msgid "Copy Selected Text to Clipboard (Ctrl+C)"
+msgstr ""
+
+#: ../anura/widgets/extracted_page.py:130
+msgctxt "Extracted screen"
+msgid "Listen to Selected Text (Ctrl+L)"
+msgstr ""
+
+#: ../anura/widgets/extracted_page.py:131
+msgctxt "Extracted screen"
+msgid "Share Selection To"
+msgstr ""
+
+#: ../anura/widgets/extracted_page.py:133
+msgctxt "Extracted screen"
+msgid "Copy Extracted Text to Clipboard (Ctrl+C)"
+msgstr ""
+
+#: ../anura/widgets/extracted_page.py:134
+msgctxt "Extracted screen"
+msgid "Listen to Text (Ctrl+L)"
+msgstr ""
+
+#: ../anura/widgets/extracted_page.py:135
+msgctxt "Extracted screen"
+msgid "Share To"
+msgstr ""
+
+#: ../anura/widgets/extracted_page.py:213
 #, python-brace-format
 msgid "Smart Parse: {name}"
-msgstr ""
-
-#: ../anura/widgets/extracted_page.py:316
-msgid "Text-to-speech is not available for this language"
-msgstr ""
-
-#: ../anura/widgets/extracted_page.py:371
-msgid "Request timed out. Please try again."
-msgstr ""
-
-#: ../anura/widgets/extracted_page.py:373
-msgid "Network error. Please check your internet connection."
-msgstr ""
-
-#: ../anura/widgets/extracted_page.py:375
-msgid "Text-to-speech failed. Please try again."
 msgstr ""
 
 #: ../anura/widgets/preferences_languages_page.py:76
@@ -977,50 +1015,50 @@ msgstr ""
 msgid "Best"
 msgstr ""
 
-#: ../anura/widgets/share_row.py:28
+#: ../anura/widgets/share_row.py:29
 #, python-brace-format
 msgid "Share via {name}"
 msgstr ""
 
-#: ../anura/widgets/welcome_page.py:100
+#: ../anura/widgets/welcome_page.py:101
 #, fuzzy
 msgid "Drop image to extract text"
 msgstr "画像を開いてテキストを抽出"
 
-#: ../anura/widgets/welcome_page.py:112 ../anura/widgets/welcome_page.py:268
+#: ../anura/widgets/welcome_page.py:113 ../anura/widgets/welcome_page.py:269
 msgid "Extract text from anywhere"
 msgstr "テキストを抽出します"
 
-#: ../anura/widgets/welcome_page.py:192
+#: ../anura/widgets/welcome_page.py:193
 msgid "No file data received from drop"
 msgstr ""
 
-#: ../anura/widgets/welcome_page.py:205
+#: ../anura/widgets/welcome_page.py:206
 msgid "No valid file found in drop"
 msgstr ""
 
-#: ../anura/widgets/welcome_page.py:214
+#: ../anura/widgets/welcome_page.py:215
 msgid "Only local files can be dropped"
 msgstr ""
 
-#: ../anura/widgets/welcome_page.py:223
+#: ../anura/widgets/welcome_page.py:224
 msgid ""
 "File not accessible. Ensure Anura has permission to access this location."
 msgstr ""
 
-#: ../anura/widgets/welcome_page.py:230
+#: ../anura/widgets/welcome_page.py:231
 msgid "Only images can be processed that way."
 msgstr ""
 
-#: ../anura/widgets/welcome_page.py:236
+#: ../anura/widgets/welcome_page.py:237
 msgid "Failed to process dropped file"
 msgstr ""
 
-#: ../anura/widgets/welcome_page.py:256
+#: ../anura/widgets/welcome_page.py:257
 msgid "Processing..."
 msgstr ""
 
-#: ../anura/widgets/welcome_page.py:260
+#: ../anura/widgets/welcome_page.py:261
 msgid "Drop image file here"
 msgstr ""
 
@@ -1049,105 +1087,109 @@ msgid "Text Operations"
 msgstr ""
 
 #: ../anura/widgets/shortcuts_overlay.py:74
-msgid "Copy text to clipboard"
+msgid "Select all text"
 msgstr ""
 
 #: ../anura/widgets/shortcuts_overlay.py:75
-msgid "Listen to text (TTS)"
+msgid "Copy text to clipboard"
 msgstr ""
 
 #: ../anura/widgets/shortcuts_overlay.py:76
+msgid "Listen to text (TTS)"
+msgstr ""
+
+#: ../anura/widgets/shortcuts_overlay.py:77
 msgid "Stop text-to-speech"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:81
+#: ../anura/widgets/shortcuts_overlay.py:82
 msgid "Application"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:83
+#: ../anura/widgets/shortcuts_overlay.py:84
 msgid "Open preferences"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:84
 #: ../anura/widgets/shortcuts_overlay.py:85
 #: ../anura/widgets/shortcuts_overlay.py:86
+#: ../anura/widgets/shortcuts_overlay.py:87
 msgid "Show keyboard shortcuts"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:87
 #: ../anura/widgets/shortcuts_overlay.py:88
+#: ../anura/widgets/shortcuts_overlay.py:89
 msgid "Quit application"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:93
+#: ../anura/widgets/shortcuts_overlay.py:94
 msgid "Navigation"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:95
+#: ../anura/widgets/shortcuts_overlay.py:96
 msgid "Close dialog/go back"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:96
+#: ../anura/widgets/shortcuts_overlay.py:97
 msgid "Navigate between widgets"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:97
+#: ../anura/widgets/shortcuts_overlay.py:98
 msgid "Navigate backwards"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:102
+#: ../anura/widgets/shortcuts_overlay.py:103
 msgid "Advanced"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:104
+#: ../anura/widgets/shortcuts_overlay.py:105
 msgid "Open image file (advanced)"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:105
+#: ../anura/widgets/shortcuts_overlay.py:106
 msgid "Show help"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:106
+#: ../anura/widgets/shortcuts_overlay.py:107
 msgid "Open application menu"
 msgstr ""
 
-#: ../anura/window.py:137
+#: ../anura/window.py:144
 msgid "Tesseract OCR not found on system"
 msgstr ""
 
-#: ../anura/window.py:143
+#: ../anura/window.py:150
 msgid "TTS dependencies (gTTS/GStreamer) missing"
 msgstr ""
 
-#: ../anura/window.py:161
+#: ../anura/window.py:171
 msgid "Screenshot timed out. Please try again."
 msgstr ""
 
-#: ../anura/window.py:172
+#: ../anura/window.py:183
 msgid "Capture already in progress"
 msgstr ""
 
-#: ../anura/window.py:193
+#: ../anura/window.py:204
 msgid "Failed to capture screenshot"
 msgstr "スクリーンショットサービスの初期化に失敗しました。"
 
-#: ../anura/window.py:216
+#: ../anura/window.py:227
 msgid "Failed to load image file"
 msgstr ""
 
-#: ../anura/window.py:220
+#: ../anura/window.py:231
 msgid "Error loading file"
 msgstr ""
 
-#: ../anura/window.py:230
+#: ../anura/window.py:241
 msgid "Selection copied to clipboard"
 msgstr ""
 
-#: ../anura/window.py:235
+#: ../anura/window.py:246
 msgid "No text to copy"
 msgstr "結果なし"
 
-#: ../anura/window.py:296
+#: ../anura/window.py:373
 msgid "No text to share."
 msgstr ""
 
@@ -1280,6 +1322,10 @@ msgstr ""
 msgid "Add Language"
 msgstr "言語を追加"
 
+#: ../data/ui/language_popover.blp:87
+msgid "Open preferences to download more languages"
+msgstr ""
+
 #: ../data/ui/preferences_dialog.blp:13 ../data/ui/extracted_page.blp:188
 #: ../data/ui/welcome_page.blp:148
 msgid "Preferences"
@@ -1316,19 +1362,9 @@ msgstr "スクリーンショットを撮る(_T)"
 msgid "Take a screenshot"
 msgstr "スクリーンショットを撮る"
 
-#: ../data/ui/extracted_page.blp:35
-msgctxt "Extracted screen"
-msgid "Copy Extracted Text to Clipboard (Ctrl+C)"
-msgstr ""
-
 #: ../data/ui/extracted_page.blp:37
 msgctxt "Extracted screen"
 msgid "Copy extracted text to clipboard"
-msgstr ""
-
-#: ../data/ui/extracted_page.blp:50
-msgctxt "Extracted screen"
-msgid "Listen to Text (Ctrl+L)"
 msgstr ""
 
 #: ../data/ui/extracted_page.blp:52
@@ -1359,11 +1395,6 @@ msgstr ""
 #: ../data/ui/extracted_page.blp:107 ../data/ui/extracted_page.blp:109
 msgctxt "Extracted screen"
 msgid "Open menu"
-msgstr ""
-
-#: ../data/ui/extracted_page.blp:117
-msgctxt "Extracted screen"
-msgid "Share To"
 msgstr ""
 
 #: ../data/ui/extracted_page.blp:119
@@ -1556,21 +1587,3 @@ msgstr ""
 
 #~ msgid "Automatically open links extracted from QR codes"
 #~ msgstr "QR コードのリンクを自動的に開きます"
-
-msgctxt "Extracted screen"
-msgid "Copy Selected Text to Clipboard (Ctrl+C)"
-msgstr ""
-
-msgctxt "Extracted screen"
-msgid "Listen to Selected Text (Ctrl+L)"
-msgstr ""
-
-msgctxt "Extracted screen"
-msgid "Share Selection To"
-msgstr ""
-
-msgid "Select all text"
-msgstr ""
-
-msgid "Open preferences to download more languages"
-msgstr ""
