@@ -1,11 +1,8 @@
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 
 def test_legacy_x11_provider_timing_race(headless_gi_mocks):
     """[NEW-016] Verify that scrot polling handles slow disk flush via increased retries."""
-    import time
 
     from anura.services.screenshot.legacy_provider import LegacyX11Provider
 
