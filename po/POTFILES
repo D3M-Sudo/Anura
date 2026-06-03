@@ -4,6 +4,7 @@ anura/core/dialogs.py
 anura/main.py
 anura/services/clipboard_service.py
 anura/services/language_manager.py
+anura/services/screenshot/legacy_provider.py
 anura/services/screenshot_service.py
 anura/services/share_service.py
 anura/services/tts.py
@@ -17,7 +18,6 @@ anura/widgets/shortcuts_overlay.py
 anura/widgets/welcome_page.py
 anura/window.py
 data/io.github.d3msudo.anura.desktop.in
-data/io.github.d3msudo.anura.metainfo.xml.in
 data/ui/extracted_page.blp
 data/ui/language_popover.blp
 data/ui/language_row.blp

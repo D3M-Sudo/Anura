@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: anura\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-30 19:02+0000\n"
+"POT-Creation-Date: 2026-06-03 12:32+0000\n"
 "PO-Revision-Date: 2024-02-23 09:02+0000\n"
 "Last-Translator: Philip Goto <philip.goto@gmail.com>\n"
 "Language-Team: Dutch <https://hosted.weblate.org/projects/anura/default/nl/"
@@ -21,78 +21,78 @@ msgstr ""
 "X-Poedit-SearchPath-3: anura\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 
-#: ../anura/controllers/dnd_controller.py:39
+#: ../anura/controllers/dnd_controller.py:38
 msgid "Failed to load dropped file (invalid path)."
 msgstr ""
 
-#: ../anura/controllers/dnd_controller.py:47
-#: ../anura/services/screenshot_service.py:393 ../anura/window.py:210
+#: ../anura/controllers/dnd_controller.py:46
+#: ../anura/services/screenshot_service.py:412 ../anura/window.py:219
 msgid "Invalid image file"
 msgstr ""
 
-#: ../anura/controllers/dnd_controller.py:56
+#: ../anura/controllers/dnd_controller.py:60
 msgid "Failed to process the file."
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:86
+#: ../anura/controllers/ocr_controller.py:92
 msgid "No text found. Try to grab another region."
 msgstr "Geen tekst gevonden. Probeer een ander gebied te selecteren."
 
-#: ../anura/controllers/ocr_controller.py:103
+#: ../anura/controllers/ocr_controller.py:109
 msgid "Text extracted"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:124
+#: ../anura/controllers/ocr_controller.py:132
 #, python-brace-format
 msgid "{n} email found in text"
 msgid_plural "{n} emails found in text"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../anura/controllers/ocr_controller.py:130
+#: ../anura/controllers/ocr_controller.py:138
 #, python-brace-format
 msgid "{n} phone number found in text"
 msgid_plural "{n} phone numbers found in text"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../anura/controllers/ocr_controller.py:174
+#: ../anura/controllers/ocr_controller.py:193
 msgid "Choose an image for extraction"
 msgstr "Afbeelding openen om tekst te extraheren"
 
-#: ../anura/controllers/ocr_controller.py:177
+#: ../anura/controllers/ocr_controller.py:196
 msgid "All supported images"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:209
+#: ../anura/controllers/ocr_controller.py:228
 msgid "PNG images (*.png)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:210
+#: ../anura/controllers/ocr_controller.py:229
 msgid "JPEG images (*.jpg)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:211
+#: ../anura/controllers/ocr_controller.py:230
 msgid "WebP images (*.webp)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:212
+#: ../anura/controllers/ocr_controller.py:231
 msgid "AVIF images (*.avif)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:213
+#: ../anura/controllers/ocr_controller.py:232
 msgid "TIFF images (*.tif)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:214
+#: ../anura/controllers/ocr_controller.py:233
 msgid "BMP images (*.bmp)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:215
+#: ../anura/controllers/ocr_controller.py:234
 msgid "GIF images (*.gif)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:218
+#: ../anura/controllers/ocr_controller.py:237
 msgid "All files (*)"
 msgstr ""
 
@@ -108,7 +108,7 @@ msgstr ""
 msgid "Run OCR without UI (copy result to clipboard)"
 msgstr ""
 
-#: ../anura/main.py:203 ../anura/main.py:349 ../anura/window.py:232
+#: ../anura/main.py:203 ../anura/main.py:349 ../anura/window.py:241
 msgid "Text copied to clipboard"
 msgstr "Tekst naar klembord gekopieerd"
 
@@ -153,7 +153,7 @@ msgstr ""
 msgid "Bug fixes and improvements."
 msgstr ""
 
-#: ../anura/main.py:400 ../anura/services/screenshot_service.py:575
+#: ../anura/main.py:400 ../anura/services/screenshot_service.py:594
 msgid "No text found."
 msgstr "Geen resultaten gevonden"
 
@@ -169,111 +169,119 @@ msgstr ""
 msgid "Cancelled"
 msgstr ""
 
-#: ../anura/services/clipboard_service.py:180
-#: ../anura/services/clipboard_service.py:196
-#: ../anura/services/clipboard_service.py:214
-#: ../anura/services/clipboard_service.py:423
-#: ../anura/services/clipboard_service.py:453
-#: ../anura/services/clipboard_service.py:467
-#: ../anura/services/clipboard_service.py:479
-#: ../anura/services/clipboard_service.py:487
-#: ../anura/services/clipboard_service.py:498
-#: ../anura/services/clipboard_service.py:512
-#: ../anura/services/clipboard_service.py:524
+#: ../anura/services/clipboard_service.py:169
+#: ../anura/services/clipboard_service.py:185
+#: ../anura/services/clipboard_service.py:203
+#: ../anura/services/clipboard_service.py:441
+#: ../anura/services/clipboard_service.py:471
+#: ../anura/services/clipboard_service.py:485
+#: ../anura/services/clipboard_service.py:497
+#: ../anura/services/clipboard_service.py:505
+#: ../anura/services/clipboard_service.py:516
+#: ../anura/services/clipboard_service.py:530
+#: ../anura/services/clipboard_service.py:542
 msgid "No image in clipboard"
 msgstr "Geen afbeelding op het klem­bord"
 
-#: ../anura/services/clipboard_service.py:568
+#: ../anura/services/clipboard_service.py:586
 msgid "Clipboard read operation timed out."
 msgstr ""
 
-#: ../anura/services/tts.py:446
+#: ../anura/services/tts.py:454
 #, python-brace-format
 msgid "GStreamer playback error: {error}"
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:73
-#: ../anura/services/screenshot_service.py:435
+#: ../anura/services/screenshot_service.py:74
+#: ../anura/services/screenshot_service.py:454
 msgid "The selected image file is empty."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:113
+#: ../anura/services/screenshot_service.py:114
 msgid "Enhancing image..."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:124
+#: ../anura/services/screenshot_service.py:125
 msgid "Running Tesseract OCR..."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:136
+#: ../anura/services/screenshot_service.py:137
 msgid "Reconstructing structure..."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:143
+#: ../anura/services/screenshot_service.py:144
 msgid "Magic processing..."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:180
+#: ../anura/services/screenshot_service.py:181
 msgid "Failed to process image in isolated process."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:272
+#: ../anura/services/screenshot_service.py:291
 #, python-brace-format
 msgid "Screenshot failed: {reason}"
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:282
+#: ../anura/services/screenshot_service.py:301
 msgid "Failed to initiate screenshot capture."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:293
-#: ../anura/services/screenshot_service.py:303
+#: ../anura/services/screenshot_service.py:312
+#: ../anura/services/screenshot_service.py:322
 msgid "Can't take a screenshot."
 msgstr "Kan geen scherm­afdruk maken."
 
-#: ../anura/services/screenshot_service.py:414
-#: ../anura/services/screenshot_service.py:595
+#: ../anura/services/screenshot_service.py:433
+#: ../anura/services/screenshot_service.py:614
 msgid "Invalid language code specified."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:534
+#: ../anura/services/screenshot_service.py:553
 msgid "Failed to read image file."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:537
+#: ../anura/services/screenshot_service.py:556
 msgid "OCR engine failed to process image."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:540
-#: ../anura/services/screenshot_service.py:545
+#: ../anura/services/screenshot_service.py:559
+#: ../anura/services/screenshot_service.py:564
 msgid "Failed to decode data."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:612
+#: ../anura/services/screenshot_service.py:631
 msgid "Extracting text..."
 msgstr ""
 
-#: ../anura/services/screenshot_service.py:655
+#: ../anura/services/screenshot_service.py:674
 msgid "OCR processing failed. Please try again."
 msgstr ""
 
-#: ../anura/services/share_service.py:184
+#: ../anura/services/screenshot/legacy_provider.py:90
+msgid "Failed to create temporary file."
+msgstr ""
+
+#: ../anura/services/screenshot/legacy_provider.py:184
+msgid "Screenshot tool produced no output."
+msgstr ""
+
+#: ../anura/services/share_service.py:208
 msgid "Select Mastodon Instance"
 msgstr ""
 
-#: ../anura/services/share_service.py:185
+#: ../anura/services/share_service.py:209
 msgid "Choose your Mastodon instance to share the extracted text:"
 msgstr ""
 
-#: ../anura/services/share_service.py:191
+#: ../anura/services/share_service.py:215
 msgid "Cancel"
 msgstr ""
 
-#: ../anura/services/share_service.py:230
+#: ../anura/services/share_service.py:254
 msgid "Cannot show dialog without active window"
 msgstr ""
 
-#: ../anura/services/share_service.py:349
+#: ../anura/services/share_service.py:373
 msgid "Extracted Text"
 msgstr ""
 
@@ -861,11 +869,11 @@ msgid ""
 "desktop (e.g. xdg-desktop-portal-gnome, -kde, -wlr) and re-login."
 msgstr ""
 
-#: ../anura/utils/validators.py:294
+#: ../anura/utils/validators.py:310
 msgid "Invalid URL blocked for security"
 msgstr ""
 
-#: ../anura/utils/validators.py:308
+#: ../anura/utils/validators.py:324
 msgid "Failed to open link"
 msgstr ""
 
@@ -914,32 +922,62 @@ msgstr ""
 msgid "Auto (follow OCR language)"
 msgstr ""
 
-#: ../anura/widgets/extracted_page.py:90
+#: ../anura/widgets/extracted_page.py:88
 msgid ""
 "Shows character and word count. If text is selected, shows selection stats."
 msgstr ""
 
-#: ../anura/widgets/extracted_page.py:140
+#: ../anura/widgets/extracted_page.py:138
 msgid "Selection: "
 msgstr ""
 
-#: ../anura/widgets/extracted_page.py:148
+#: ../anura/widgets/extracted_page.py:146
 #, python-brace-format
 msgid "{n} word"
 msgid_plural "{n} words"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../anura/widgets/extracted_page.py:149
+#: ../anura/widgets/extracted_page.py:147
 #, python-brace-format
 msgid "{n} character"
 msgid_plural "{n} characters"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../anura/widgets/extracted_page.py:152
+#: ../anura/widgets/extracted_page.py:150
 #, python-brace-format
 msgid "{words} | {chars}"
+msgstr ""
+
+#: ../anura/widgets/extracted_page.py:158
+msgctxt "Extracted screen"
+msgid "Copy Selected Text to Clipboard (Ctrl+C)"
+msgstr ""
+
+#: ../anura/widgets/extracted_page.py:159
+msgctxt "Extracted screen"
+msgid "Listen to Selected Text (Ctrl+L)"
+msgstr ""
+
+#: ../anura/widgets/extracted_page.py:160
+msgctxt "Extracted screen"
+msgid "Share Selection To"
+msgstr ""
+
+#: ../anura/widgets/extracted_page.py:162
+msgctxt "Extracted screen"
+msgid "Copy Extracted Text to Clipboard (Ctrl+C)"
+msgstr ""
+
+#: ../anura/widgets/extracted_page.py:163
+msgctxt "Extracted screen"
+msgid "Listen to Text (Ctrl+L)"
+msgstr ""
+
+#: ../anura/widgets/extracted_page.py:164
+msgctxt "Extracted screen"
+msgid "Share To"
 msgstr ""
 
 #: ../anura/widgets/extracted_page.py:258
@@ -983,50 +1021,50 @@ msgstr ""
 msgid "Best"
 msgstr ""
 
-#: ../anura/widgets/share_row.py:28
+#: ../anura/widgets/share_row.py:29
 #, python-brace-format
 msgid "Share via {name}"
 msgstr ""
 
-#: ../anura/widgets/welcome_page.py:100
+#: ../anura/widgets/welcome_page.py:102
 #, fuzzy
 msgid "Drop image to extract text"
 msgstr "Afbeelding openen om tekst te extraheren"
 
-#: ../anura/widgets/welcome_page.py:112 ../anura/widgets/welcome_page.py:268
+#: ../anura/widgets/welcome_page.py:114 ../anura/widgets/welcome_page.py:270
 msgid "Extract text from anywhere"
 msgstr "Extraheer tekst vanuit elke bron"
 
-#: ../anura/widgets/welcome_page.py:192
+#: ../anura/widgets/welcome_page.py:194
 msgid "No file data received from drop"
 msgstr ""
 
-#: ../anura/widgets/welcome_page.py:205
+#: ../anura/widgets/welcome_page.py:207
 msgid "No valid file found in drop"
 msgstr ""
 
-#: ../anura/widgets/welcome_page.py:214
+#: ../anura/widgets/welcome_page.py:216
 msgid "Only local files can be dropped"
 msgstr ""
 
-#: ../anura/widgets/welcome_page.py:223
+#: ../anura/widgets/welcome_page.py:225
 msgid ""
 "File not accessible. Ensure Anura has permission to access this location."
 msgstr ""
 
-#: ../anura/widgets/welcome_page.py:230
+#: ../anura/widgets/welcome_page.py:232
 msgid "Only images can be processed that way."
 msgstr ""
 
-#: ../anura/widgets/welcome_page.py:236
+#: ../anura/widgets/welcome_page.py:238
 msgid "Failed to process dropped file"
 msgstr ""
 
-#: ../anura/widgets/welcome_page.py:256
+#: ../anura/widgets/welcome_page.py:258
 msgid "Processing..."
 msgstr ""
 
-#: ../anura/widgets/welcome_page.py:260
+#: ../anura/widgets/welcome_page.py:262
 msgid "Drop image file here"
 msgstr ""
 
@@ -1055,105 +1093,109 @@ msgid "Text Operations"
 msgstr ""
 
 #: ../anura/widgets/shortcuts_overlay.py:74
-msgid "Copy text to clipboard"
+msgid "Select all text"
 msgstr ""
 
 #: ../anura/widgets/shortcuts_overlay.py:75
-msgid "Listen to text (TTS)"
+msgid "Copy text to clipboard"
 msgstr ""
 
 #: ../anura/widgets/shortcuts_overlay.py:76
+msgid "Listen to text (TTS)"
+msgstr ""
+
+#: ../anura/widgets/shortcuts_overlay.py:77
 msgid "Stop text-to-speech"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:81
+#: ../anura/widgets/shortcuts_overlay.py:82
 msgid "Application"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:83
+#: ../anura/widgets/shortcuts_overlay.py:84
 msgid "Open preferences"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:84
 #: ../anura/widgets/shortcuts_overlay.py:85
 #: ../anura/widgets/shortcuts_overlay.py:86
+#: ../anura/widgets/shortcuts_overlay.py:87
 msgid "Show keyboard shortcuts"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:87
 #: ../anura/widgets/shortcuts_overlay.py:88
+#: ../anura/widgets/shortcuts_overlay.py:89
 msgid "Quit application"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:93
+#: ../anura/widgets/shortcuts_overlay.py:94
 msgid "Navigation"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:95
+#: ../anura/widgets/shortcuts_overlay.py:96
 msgid "Close dialog/go back"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:96
+#: ../anura/widgets/shortcuts_overlay.py:97
 msgid "Navigate between widgets"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:97
+#: ../anura/widgets/shortcuts_overlay.py:98
 msgid "Navigate backwards"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:102
+#: ../anura/widgets/shortcuts_overlay.py:103
 msgid "Advanced"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:104
+#: ../anura/widgets/shortcuts_overlay.py:105
 msgid "Open image file (advanced)"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:105
+#: ../anura/widgets/shortcuts_overlay.py:106
 msgid "Show help"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:106
+#: ../anura/widgets/shortcuts_overlay.py:107
 msgid "Open application menu"
 msgstr ""
 
-#: ../anura/window.py:137
+#: ../anura/window.py:142
 msgid "Tesseract OCR not found on system"
 msgstr ""
 
-#: ../anura/window.py:143
+#: ../anura/window.py:148
 msgid "TTS dependencies (gTTS/GStreamer) missing"
 msgstr ""
 
-#: ../anura/window.py:161
+#: ../anura/window.py:169
 msgid "Screenshot timed out. Please try again."
 msgstr ""
 
-#: ../anura/window.py:172
+#: ../anura/window.py:181
 msgid "Capture already in progress"
 msgstr ""
 
-#: ../anura/window.py:193
+#: ../anura/window.py:202
 msgid "Failed to capture screenshot"
 msgstr "Schermafdruk nemen"
 
-#: ../anura/window.py:216
+#: ../anura/window.py:225
 msgid "Failed to load image file"
 msgstr ""
 
-#: ../anura/window.py:220
+#: ../anura/window.py:229
 msgid "Error loading file"
 msgstr ""
 
-#: ../anura/window.py:230
+#: ../anura/window.py:239
 msgid "Selection copied to clipboard"
 msgstr ""
 
-#: ../anura/window.py:235
+#: ../anura/window.py:244
 msgid "No text to copy"
 msgstr "Geen resultaten gevonden"
 
-#: ../anura/window.py:296
+#: ../anura/window.py:305
 msgid "No text to share."
 msgstr ""
 
@@ -1286,13 +1328,17 @@ msgstr ""
 msgid "Add Language"
 msgstr "Taal toevoegen"
 
-#: ../data/ui/preferences_dialog.blp:13 ../data/ui/extracted_page.blp:188
-#: ../data/ui/welcome_page.blp:148
+#: ../data/ui/language_popover.blp:87
+msgid "Open preferences to download more languages"
+msgstr ""
+
+#: ../data/ui/preferences_dialog.blp:13 ../data/ui/extracted_page.blp:193
+#: ../data/ui/welcome_page.blp:160
 msgid "Preferences"
 msgstr "Voorkeuren"
 
 #: ../data/ui/shortcuts_overlay.blp:13 ../data/ui/shortcuts_overlay.blp:25
-#: ../data/ui/extracted_page.blp:196 ../data/ui/welcome_page.blp:155
+#: ../data/ui/extracted_page.blp:201 ../data/ui/welcome_page.blp:167
 msgid "Keyboard Shortcuts"
 msgstr "Sneltoetsen"
 
@@ -1300,12 +1346,16 @@ msgstr "Sneltoetsen"
 msgid "Search shortcuts..."
 msgstr ""
 
-#: ../data/ui/shortcuts_overlay.blp:61
+#: ../data/ui/shortcuts_overlay.blp:40
+msgid "Search shortcuts"
+msgstr ""
+
+#: ../data/ui/shortcuts_overlay.blp:64
 #, fuzzy
 msgid "No results found"
 msgstr "Geen resultaten gevonden"
 
-#: ../data/ui/shortcuts_overlay.blp:62
+#: ../data/ui/shortcuts_overlay.blp:65
 msgid "Try a different search term"
 msgstr ""
 
@@ -1322,70 +1372,55 @@ msgstr "_Schermafdruk nemen"
 msgid "Take a screenshot"
 msgstr "Schermafdruk nemen"
 
-#: ../data/ui/extracted_page.blp:35
-msgctxt "Extracted screen"
-msgid "Copy Extracted Text to Clipboard (Ctrl+C)"
-msgstr ""
-
 #: ../data/ui/extracted_page.blp:37
 msgctxt "Extracted screen"
 msgid "Copy extracted text to clipboard"
 msgstr ""
 
-#: ../data/ui/extracted_page.blp:50
-msgctxt "Extracted screen"
-msgid "Listen to Text (Ctrl+L)"
-msgstr ""
-
-#: ../data/ui/extracted_page.blp:52
+#: ../data/ui/extracted_page.blp:53
 msgctxt "Extracted screen"
 msgid "Listen to text"
 msgstr ""
 
-#: ../data/ui/extracted_page.blp:62 ../data/ui/extracted_page.blp:64
+#: ../data/ui/extracted_page.blp:64 ../data/ui/extracted_page.blp:98
 msgctxt "Extracted screen"
-msgid "Cancel listening to text"
+msgid "Stop listening (Ctrl+Shift+L)"
 msgstr ""
 
-#: ../data/ui/extracted_page.blp:85
-msgctxt "Extracted screen"
-msgid "Pause/Resume listening"
-msgstr ""
-
-#: ../data/ui/extracted_page.blp:87
-msgctxt "Extracted screen"
-msgid "Pause or resume listening"
-msgstr ""
-
-#: ../data/ui/extracted_page.blp:94 ../data/ui/extracted_page.blp:96
+#: ../data/ui/extracted_page.blp:66 ../data/ui/extracted_page.blp:100
 msgctxt "Extracted screen"
 msgid "Stop listening"
 msgstr ""
 
-#: ../data/ui/extracted_page.blp:107 ../data/ui/extracted_page.blp:109
+#: ../data/ui/extracted_page.blp:88
+msgctxt "Extracted screen"
+msgid "Pause/Resume listening (Ctrl+Alt+L)"
+msgstr ""
+
+#: ../data/ui/extracted_page.blp:90
+msgctxt "Extracted screen"
+msgid "Pause or resume listening"
+msgstr ""
+
+#: ../data/ui/extracted_page.blp:112 ../data/ui/extracted_page.blp:114
 msgctxt "Extracted screen"
 msgid "Open menu"
 msgstr ""
 
-#: ../data/ui/extracted_page.blp:117
-msgctxt "Extracted screen"
-msgid "Share To"
-msgstr ""
-
-#: ../data/ui/extracted_page.blp:119
+#: ../data/ui/extracted_page.blp:124
 msgctxt "Extracted screen"
 msgid "Share text to other applications"
 msgstr ""
 
-#: ../data/ui/extracted_page.blp:202 ../data/ui/welcome_page.blp:160
+#: ../data/ui/extracted_page.blp:207 ../data/ui/welcome_page.blp:172
 msgid "About Anura"
 msgstr "Over anura"
 
-#: ../data/ui/extracted_page.blp:217
+#: ../data/ui/extracted_page.blp:222
 msgid "Open image"
 msgstr "Afbeelding openen"
 
-#: ../data/ui/extracted_page.blp:218
+#: ../data/ui/extracted_page.blp:223
 msgid "Paste from clipboard"
 msgstr "Plakken van klembord"
 
@@ -1425,42 +1460,57 @@ msgctxt "Welcome screen"
 msgid "Take a Screenshot (Ctrl+G)"
 msgstr "_Schermafdruk nemen"
 
-#: ../data/ui/welcome_page.blp:69
+#: ../data/ui/welcome_page.blp:63
+msgctxt "Welcome screen"
+msgid "Take a Screenshot"
+msgstr ""
+
+#: ../data/ui/welcome_page.blp:72
 msgid "_Take a Screenshot"
 msgstr "_Schermafdruk nemen"
 
-#: ../data/ui/welcome_page.blp:77
+#: ../data/ui/welcome_page.blp:80
 #, fuzzy
 msgctxt "Welcome screen"
 msgid "Open Image (Ctrl+O)"
 msgstr "Afbeelding _openen"
 
-#: ../data/ui/welcome_page.blp:85
+#: ../data/ui/welcome_page.blp:82
+msgctxt "Welcome screen"
+msgid "Open Image"
+msgstr ""
+
+#: ../data/ui/welcome_page.blp:91
 msgid "_Open Image"
 msgstr "Afbeelding _openen"
 
-#: ../data/ui/welcome_page.blp:93
+#: ../data/ui/welcome_page.blp:99
 #, fuzzy
 msgctxt "Welcome screen"
 msgid "Paste Image from Clipboard (Ctrl+V)"
 msgstr "Plakken van klembord"
 
 #: ../data/ui/welcome_page.blp:101
+msgctxt "Welcome screen"
+msgid "Paste Image"
+msgstr ""
+
+#: ../data/ui/welcome_page.blp:110
 #, fuzzy
 msgid "_Paste Image"
 msgstr "Afbeelding plakken"
 
-#: ../data/ui/welcome_page.blp:108
+#: ../data/ui/welcome_page.blp:117 ../data/ui/welcome_page.blp:119
 msgctxt "Welcome screen"
 msgid "Drop image here"
 msgstr ""
 
-#: ../data/ui/welcome_page.blp:116
+#: ../data/ui/welcome_page.blp:128
 #, fuzzy
 msgid "_Drop Image"
 msgstr "Afbeelding _openen"
 
-#: ../data/ui/welcome_page.blp:167
+#: ../data/ui/welcome_page.blp:179
 msgid "⭐ Star on GitHub"
 msgstr "⭐ Ster geven op GitHub"
 
@@ -1480,80 +1530,6 @@ msgstr ""
 msgid "Extract Text to Clipboard"
 msgstr ""
 
-#: ../data/io.github.d3msudo.anura.metainfo.xml.in:7
-msgid "Extract text from anywhere on your screen"
-msgstr ""
-
-#: ../data/io.github.d3msudo.anura.metainfo.xml.in:9
-msgid ""
-"Anura is an intuitive text extraction tool (OCR) designed for the GNOME "
-"desktop. It allows you to quickly grab text from any source on your screen, "
-"including videos, PDFs, images, or protected web pages."
-msgstr ""
-
-#: ../data/io.github.d3msudo.anura.metainfo.xml.in:14
-msgid "Key features include:"
-msgstr ""
-
-#: ../data/io.github.d3msudo.anura.metainfo.xml.in:16
-msgid "High-accuracy OCR powered by Tesseract."
-msgstr ""
-
-#: ../data/io.github.d3msudo.anura.metainfo.xml.in:17
-msgid "Built-in QR code decoding and link following."
-msgstr ""
-
-#: ../data/io.github.d3msudo.anura.metainfo.xml.in:18
-msgid "Support for multiple languages with on-demand model download."
-msgstr ""
-
-#: ../data/io.github.d3msudo.anura.metainfo.xml.in:19
-msgid "Privacy-focused: no telemetry and no anonymous data collection."
-msgstr ""
-
-#: ../data/io.github.d3msudo.anura.metainfo.xml.in:20
-msgid ""
-"Modern GTK4 / Libadwaita interface following GNOME Human Interface "
-"Guidelines."
-msgstr ""
-
-#: ../data/io.github.d3msudo.anura.metainfo.xml.in:22
-msgid ""
-"Network access is used exclusively for two purposes: downloading Tesseract "
-"OCR language models on demand (sourced from GitHub), and the optional text-"
-"to-speech feature powered by Google TTS. No user data or extracted text is "
-"ever transmitted externally."
-msgstr ""
-
-#: ../data/io.github.d3msudo.anura.metainfo.xml.in:28
-msgid ""
-"Screenshot capture uses the XDG Desktop Portal interface, which requires a "
-"portal backend to be installed on the host. GNOME and KDE typically ship one "
-"by default (xdg-desktop-portal-gnome / xdg-desktop-portal-kde). On other "
-"desktops you may need to install a backend explicitly: xdg-desktop-portal-"
-"gtk on LXQt / Xfce / MATE, xdg-desktop-portal-wlr on wlroots-based "
-"compositors. Without a backend the system cannot grant Anura access to the "
-"screen and the \"Take a screenshot\" action will fail."
-msgstr ""
-
-#: ../data/io.github.d3msudo.anura.metainfo.xml.in:38
-msgid ""
-"When the portal backend is unavailable or fails, Anura automatically falls "
-"back to host-side screenshot tools via flatpak-spawn. To enable this "
-"fallback, install at least one screenshot tool on the host system: gnome-"
-"screenshot (recommended), xfce4-screenshooter, spectacle, scrot, maim, or "
-"ImageMagick import. Anura tries them in order and uses the first available "
-"tool."
-msgstr ""
-
-#: ../data/io.github.d3msudo.anura.metainfo.xml.in:50
-msgid "Main interface showing the text extraction screen (dark theme)"
-msgstr ""
-
-#: ../data/io.github.d3msudo.anura.metainfo.xml.in:54
-msgid "Extracted text displayed after OCR recognition"
-msgstr ""
-
 #~ msgid "Math / Equation Detection"
 #~ msgstr "Wiskunde / vergelijkingsdetectiemodule"
 
@@ -1562,21 +1538,3 @@ msgstr ""
 
 #~ msgid "Automatically open links extracted from QR codes"
 #~ msgstr "Automatisch links van QR-codes openen"
-
-msgctxt "Extracted screen"
-msgid "Copy Selected Text to Clipboard (Ctrl+C)"
-msgstr ""
-
-msgctxt "Extracted screen"
-msgid "Listen to Selected Text (Ctrl+L)"
-msgstr ""
-
-msgctxt "Extracted screen"
-msgid "Share Selection To"
-msgstr ""
-
-msgid "Select all text"
-msgstr ""
-
-msgid "Open preferences to download more languages"
-msgstr ""
