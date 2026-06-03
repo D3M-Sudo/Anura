@@ -11,10 +11,11 @@ from gi.repository import GLib, GObject, Gtk
 from anura.config import RESOURCE_PREFIX
 from anura.models.language_item import LanguageItem
 from anura.services.language_manager import get_language_manager
+from anura.utils.signal_manager import SignalManagerMixin
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/language_row.ui")
-class LanguageRow(Gtk.Overlay):
+class LanguageRow(Gtk.Overlay, SignalManagerMixin):
     __gtype_name__ = "LanguageRow"
 
     label: Gtk.Label = Gtk.Template.Child()
@@ -29,13 +30,14 @@ class LanguageRow(Gtk.Overlay):
 
     def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
+        SignalManagerMixin.__init__(self)
 
         # Instance-level idle ID tracking to prevent cross-instance interference.
         # Uses a set so completed (auto-removed) source IDs can be pruned.
         self._idle_ids: set[int] = set()
 
-        self._downloading_handler_id = get_language_manager().connect("downloading", self.update_progress)
-        self._downloaded_handler_id = get_language_manager().connect("downloaded", self.on_downloaded)
+        self.connect_tracked(get_language_manager(), "downloading", self.update_progress)
+        self.connect_tracked(get_language_manager(), "downloaded", self.on_downloaded)
 
         # Deferred UI update to ensure item is set
         idle_id = GLib.idle_add(self._idle_update_ui)
@@ -157,15 +159,5 @@ class LanguageRow(Gtk.Overlay):
                 GLib.source_remove(idle_id)
         self._idle_ids.clear()
 
-        # Disconnect signal handlers
-        if self._downloading_handler_id is not None:
-            with contextlib.suppress(TypeError, RuntimeError):
-                get_language_manager().disconnect(self._downloading_handler_id)
-            self._downloading_handler_id = None
-
-        if self._downloaded_handler_id is not None:
-            with contextlib.suppress(TypeError, RuntimeError):
-                get_language_manager().disconnect(self._downloaded_handler_id)
-            self._downloaded_handler_id = None
-
+        self.teardown_all()
         super().do_destroy()

@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: MIT
 
+from typing import ClassVar
+
 from gi.repository import GObject
 from loguru import logger
 
@@ -14,6 +16,12 @@ class DndController(GObject.GObject, SignalManagerMixin):
     """
     Decoupled controller for Drag-and-Drop operations.
     """
+
+    __gsignals__: ClassVar[dict[str, tuple]] = {
+        "processing-started": (GObject.SignalFlags.RUN_LAST, None, ()),
+        "processing-finished": (GObject.SignalFlags.RUN_LAST, None, ()),
+        "error-occurred": (GObject.SignalFlags.RUN_LAST, None, (str,)),
+    }
 
     def __init__(self, window):
         GObject.GObject.__init__(self)
@@ -34,16 +42,14 @@ class DndController(GObject.GObject, SignalManagerMixin):
 
         if not file_path:
             logger.error("DndController: Received invalid or null path.")
-            self._window.welcome_page.reset_drop_area_state()
-            self._window.show_toast(_("Failed to load dropped file (invalid path)."))
+            self.emit("error-occurred", _("Failed to load dropped file (invalid path)."))
             return
 
         try:
             is_valid, _size, error = validate_image_resource(file_path)
             if not is_valid:
                 logger.error(f"DndController OCR: {error}")
-                self._window.welcome_page.reset_drop_area_state()
-                self._window.show_toast(_(error) if error else _("Invalid image file"))
+                self.emit("error-occurred", _(error) if error else _("Invalid image file"))
                 return
 
             lang = self._window.get_language()
@@ -56,8 +62,7 @@ class DndController(GObject.GObject, SignalManagerMixin):
 
         except (OSError, RuntimeError, TypeError) as e:
             logger.error(f"DndController: Critical error accessing dropped file: {e}")
-            self._window.welcome_page.reset_drop_area_state()
-            self._window.show_toast(_("Failed to process the file."))
+            self.emit("error-occurred", _("Failed to process the file."))
 
     def teardown(self) -> None:
         """Unified teardown called by SignalManagerMixin."""
