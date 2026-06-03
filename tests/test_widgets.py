@@ -42,10 +42,7 @@ class TestExtractedPageEnterprise:
 
     @pytest.fixture
     def widget(self):
-        with (
-            patch("anura.widgets.extracted_page.get_share_service"),
-            patch("anura.widgets.extracted_page.get_tts_service"),
-        ):
+        with patch("anura.widgets.extracted_page.get_share_service"):
             return ExtractedPage()
 
     @pytest.mark.gtk
@@ -73,36 +70,36 @@ class TestExtractedPageEnterprise:
 
     @pytest.mark.gtk
     def test_listen_state_transitions(self, widget):
-        """Test UI state transitions when starting/stopping TTS."""
+        """Test UI state transitions when starting/stopping TTS via state updates."""
         widget.buffer.set_text("Read me aloud")
 
         # Mock settings for the widget
         widget.settings = MagicMock()
         widget.settings.get_string.return_value = "eng"
 
-        with patch("anura.widgets.extracted_page.get_atomic_manager") as mock_get_manager:
-            mock_manager = MagicMock()
-            mock_get_manager.return_value = mock_manager
-            widget.listen()
-            # Should be in generating state (spinner)
-            assert widget.listen_stack.get_visible_child_name() == "spinner"
-            # swap_controls(False) was called in listen(), so buttons should be sensitive
-            assert widget.grab_btn.get_sensitive() is True
+        # Transition to generating state
+        widget.update_tts_state("generating")
+        # Should be in generating state (spinner)
+        assert widget.listen_stack.get_visible_child_name() == "spinner"
+        # controls should be locked
+        assert widget.grab_btn.get_sensitive() is False
 
-            # Simulate generation success
-            # The 'speak' signal from TTSService would normally trigger this via TtsController
-            # In this test, we simulate what the controller does
-            widget._on_generated("/tmp/speech.mp3")
-            widget.update_tts_state(playing=True)
+        # Transition to playing state
+        widget.update_tts_state("playing")
+        # Should be in playing state (pause button)
+        assert widget.listen_stack.get_visible_child_name() == "pause"
+        assert widget.listen_pause_btn.get_icon_name() == "media-playback-pause-symbolic"
 
-            # Should be in playing state (pause button)
-            assert widget.listen_stack.get_visible_child_name() == "pause"
+        # Transition to paused state
+        widget.update_tts_state("paused")
+        assert widget.listen_stack.get_visible_child_name() == "pause"
+        assert widget.listen_pause_btn.get_icon_name() == "media-playback-start-symbolic"
 
-            # Simulate playback end
-            widget._on_listen_end(None, True)
-            # Should be back to initial state (button)
-            assert widget.listen_stack.get_visible_child_name() == "button"
-            assert widget.grab_btn.get_sensitive() is True
+        # Transition to idle state
+        widget.update_tts_state("idle")
+        # Should be back to initial state (button)
+        assert widget.listen_stack.get_visible_child_name() == "button"
+        assert widget.grab_btn.get_sensitive() is True
 
     @pytest.mark.gtk
     def test_copy_feedback(self, widget):
