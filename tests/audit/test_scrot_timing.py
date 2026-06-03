@@ -1,25 +1,12 @@
-import sys
 from unittest.mock import MagicMock, patch
 
-
-# Mock gi
-class MockGi:
-    @staticmethod
-    def require_version(a, b):
-        pass
+import pytest
 
 
-if "gi" not in sys.modules:
-    mock_gi = MagicMock()
-    mock_gi.require_version = MockGi.require_version
-    sys.modules["gi"] = mock_gi
-    sys.modules["gi.repository"] = MagicMock()
-    sys.modules["gi.repository.Gio"] = MagicMock()
-    sys.modules["gi.repository.GLib"] = MagicMock()
+def test_legacy_x11_provider_timing_race(headless_gi_mocks):
+    """[NEW-016] Verify that scrot polling handles slow disk flush via increased retries."""
+    import time
 
-
-def test_legacy_x11_provider_timing_race():
-    """[NEW-016] Verify that scrot polling can fail if disk flush is slow."""
     from anura.services.screenshot.legacy_provider import LegacyX11Provider
 
     provider = LegacyX11Provider()
@@ -44,4 +31,5 @@ def test_legacy_x11_provider_timing_race():
         args, _kwargs = mock_callback.call_args
         assert args[0] is False
         assert "no output" in args[2]
-        assert mock_sleep.call_count == 9
+        # NEW-016: Implementation now retries 50 times (49 sleeps)
+        assert mock_sleep.call_count == 49

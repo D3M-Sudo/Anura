@@ -239,11 +239,7 @@ class ClipboardService(GObject.GObject):
             )
         # Remove the old source outside the lock to avoid potential deadlock
         # with GLib's internal main-loop lock (see _clear_active_timeout).
-        if old_timeout_id and old_timeout_id > 0:
-            try:
-                GLib.source_remove(old_timeout_id)
-            except Exception:
-                pass  # Source already fired or removed — safe to ignore.
+        self._remove_source(old_timeout_id)
 
         mimes = self._available_clipboard_mimes()
 
@@ -305,12 +301,12 @@ class ClipboardService(GObject.GObject):
         """Safely remove a GLib source ID if it still exists."""
         if timeout_id is not None and timeout_id > 0:
             try:
-                # BUG-032: Check if source exists before removing to prevent C-level warnings
-                # on stderr when a one-shot source has already fired and auto-removed.
-                ctx = GLib.MainContext.default()
-                if ctx and ctx.find_source_by_id(timeout_id):
+                # Use find_source_by_id to prevent GLib "Source ID ... was not found" warnings
+                # on stderr for one-shot sources that have already fired.
+                if GLib.MainContext.default().find_source_by_id(timeout_id):
                     GLib.source_remove(timeout_id)
-            except Exception:
+            except (AttributeError, RuntimeError, TypeError, GLib.Error):
+                # If lookup fails or source is removed between check and remove, ignore.
                 pass
 
     def _clear_active_timeout(self) -> None:
