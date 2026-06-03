@@ -99,10 +99,24 @@ class LegacyX11Provider(ScreenshotProvider):
             self._cancellable = cancellable
 
         try:
-            proc = Gio.Subprocess.new(
-                argv,
+            # BUG-scrot-env: Gio.Subprocess does not guarantee full environment
+            # inheritance inside the Flatpak sandbox, and XAUTHORITY in
+            # particular may be absent or point to a path not accessible from
+            # the subprocess.  Without a valid XAUTHORITY scrot cannot perform
+            # the interactive XGrabPointer call and exits 0 without writing any
+            # output.  Use SubprocessLauncher to explicitly forward the
+            # X11-critical variables from the parent process environment.
+            launcher = Gio.SubprocessLauncher.new(
                 Gio.SubprocessFlags.STDERR_PIPE | Gio.SubprocessFlags.STDOUT_PIPE,
             )
+            for var in ("DISPLAY", "XAUTHORITY", "XSOCK", "DBUS_SESSION_BUS_ADDRESS"):
+                value = os.environ.get(var)
+                if value is not None:
+                    launcher.setenv(var, value, True)
+                    logger.debug(f"LegacyX11Provider: forwarding {var}={value}")
+                else:
+                    logger.debug(f"LegacyX11Provider: {var} not set in parent environment")
+            proc = launcher.spawnv(argv)
             with self._lock:
                 self._proc = proc
         except GLib.Error as e:

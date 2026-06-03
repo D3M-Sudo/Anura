@@ -277,14 +277,22 @@ class ScreenshotService(GObject.GObject):
                 # Log full error context
                 logger.error(f"Anura Screenshot: Capture failed: {error}")
 
-                # Check if it's a generic failure that might benefit from fallback
-                is_generic = "screenshot failed" in error.lower()
-                if is_generic and self.fallback_provider:
+                # Check if it's a generic portal failure that should be retried
+                # via the X11 fallback provider (portal not available).
+                # IMPORTANT: this callback is reused by the fallback provider too,
+                # so "is_generic" will be False when the fallback itself reports
+                # an error (e.g. "Screenshot tool produced no output.").  In that
+                # case we must still clear _is_capturing or the app appears frozen
+                # and the window close button stops working (BUG-shutdown).
+                is_portal_failure = "screenshot failed" in error.lower()
+                if is_portal_failure and self.fallback_provider:
                     logger.info("Anura Screenshot: Attempting fallback capture...")
                     self.fallback_provider.capture(lang, copy, _on_capture_result)
                 else:
+                    # BUG-shutdown fix: always clear the flag before emitting any
+                    # signal so shutdown handlers never observe a stuck busy state.
                     self._is_capturing = False
-                    if is_generic:
+                    if is_portal_failure:
                         self._log_portal_environment()
                         self._emit_portal_failure()
                     else:
