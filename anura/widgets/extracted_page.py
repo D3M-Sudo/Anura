@@ -178,9 +178,6 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
 
     def do_unmap(self) -> None:
         """Handle widget unmapping."""
-        # Note: TTS stop is now handled by TtsController if needed,
-        # but typically we want playback to continue if window is just minimized,
-        # unless it's unmapped due to navigation back to welcome.
         Gtk.Widget.do_unmap(self)
 
     def do_dispose(self) -> None:
@@ -233,21 +230,13 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
             popover.popdown()
 
     def update_tts_state(self, state: str) -> None:
-        """Update the TTS UI state (called from TtsController via AnuraWindow).
-
-        States:
-          generating → stack="spinner", controls locked
-          playing    → stack="pause", controls locked, icon=pause
-          paused     → stack="pause", controls locked, icon=play
-          idle       → stack="button", controls unlocked
-        """
+        """Update the TTS UI state (called from TtsController via AnuraWindow)."""
         if state == "generating":
             self.swap_controls(True)
             if self.listen_stack:
                 self.listen_stack.set_visible_child_name("spinner")
             if self.listen_spinner:
                 self.listen_spinner.start()
-
         elif state == "playing":
             self.swap_controls(True)
             if self.listen_stack:
@@ -256,15 +245,13 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
                 self.listen_spinner.stop()
             if self.listen_pause_btn:
                 self.listen_pause_btn.set_icon_name("media-playback-pause-symbolic")
-
         elif state == "paused":
             self.swap_controls(True)
             if self.listen_stack:
                 self.listen_stack.set_visible_child_name("pause")
             if self.listen_pause_btn:
                 self.listen_pause_btn.set_icon_name("media-playback-start-symbolic")
-
-        else:  # idle or default
+        else:  # idle
             self.swap_controls(False)
             if self.listen_stack:
                 self.listen_stack.set_visible_child_name("button")

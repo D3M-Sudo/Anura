@@ -35,11 +35,10 @@ class OcrController(GObject.GObject, SignalManagerMixin):
         "text-extracted": (GObject.SignalFlags.RUN_LAST, None, (str, bool)),
         "uri-detected": (GObject.SignalFlags.RUN_LAST, None, (str, bool)),
         "error-occurred": (GObject.SignalFlags.RUN_LAST, None, (str,)),
-        "extraction-started": (GObject.SignalFlags.RUN_LAST, None, ()),
         "extraction-completed": (GObject.SignalFlags.RUN_LAST, None, (str, str)),  # text, applied_name
         "status-changed": (GObject.SignalFlags.RUN_LAST, None, (str,)),
-        "capture-portal-missing": (GObject.SignalFlags.RUN_LAST, None, (str,)),  # advice message
-        "navigation-requested": (GObject.SignalFlags.RUN_LAST, None, (str,)),  # page tag
+        "capture-portal-missing": (GObject.SignalFlags.RUN_LAST, None, (str,)),
+        "navigation-requested": (GObject.SignalFlags.RUN_LAST, None, (str,)),
     }
 
     def __init__(self, window: "AnuraWindow") -> None:
@@ -95,9 +94,7 @@ class OcrController(GObject.GObject, SignalManagerMixin):
                 except Exception as e:
                     logger.error(f"OcrController: MagicProcessor failed: {e}")
 
-            # Emit decoupled signal instead of direct UI manipulation
             self.emit("extraction-completed", text, applied_name)
-
             extraction_result = self._dispatcher.dispatch(text, ocr_result)
             self._handle_extraction_result(extraction_result, copy)
 
@@ -167,7 +164,6 @@ class OcrController(GObject.GObject, SignalManagerMixin):
                 logger.debug(f"OcrController: Ignoring navigation for cancelled task {task_id}")
                 return GLib.SOURCE_REMOVE
 
-        # Absolute Decoupling: Controller emits an intent, Window mediates the UI action.
         self.emit("navigation-requested", "extracted")
         return GLib.SOURCE_REMOVE
 

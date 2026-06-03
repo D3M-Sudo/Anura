@@ -52,7 +52,6 @@ class TtsController(GObject.GObject, SignalManagerMixin):
         if not text or not text.strip():
             return
 
-        # If already paused, resume instead of starting over
         if self._tts_service.player and not self._tts_service.is_playing():
             self.toggle_pause()
             return
@@ -92,7 +91,6 @@ class TtsController(GObject.GObject, SignalManagerMixin):
         if not filepath:
             self.emit("state-changed", "idle")
             return
-        # We don't call play() here because the 'speak' signal from service will trigger it
 
     def _on_generate_error(self, error: Exception, traceback_str: str | None = None):
         """Callback when generation fails."""

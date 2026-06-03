@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: anura\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-03 12:24+0000\n"
+"POT-Creation-Date: 2026-06-03 15:39+0000\n"
 "PO-Revision-Date: 2024-02-02 19:01+0000\n"
 "Last-Translator: Sabri Ünal <libreajans@gmail.com>\n"
 "Language-Team: Turkish <https://hosted.weblate.org/projects/anura/default/tr/"
@@ -32,81 +32,81 @@ msgstr ""
 msgid "Failed to process the file."
 msgstr ""
 
-#: ../anura/controllers/tts_controller.py:67
+#: ../anura/controllers/tts_controller.py:66
 msgid "Text-to-speech is not available for this language"
 msgstr ""
 
-#: ../anura/controllers/tts_controller.py:101
+#: ../anura/controllers/tts_controller.py:99
 msgid "Request timed out. Please try again."
 msgstr ""
 
-#: ../anura/controllers/tts_controller.py:103
+#: ../anura/controllers/tts_controller.py:101
 msgid "Network error. Please check your internet connection."
 msgstr ""
 
-#: ../anura/controllers/tts_controller.py:105
+#: ../anura/controllers/tts_controller.py:103
 msgid "Text-to-speech failed. Please try again."
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:87
+#: ../anura/controllers/ocr_controller.py:86
 msgid "No text found. Try to grab another region."
 msgstr "Metin bulunamadı. Başka bir bölge yakalamayı deneyin."
 
-#: ../anura/controllers/ocr_controller.py:106
+#: ../anura/controllers/ocr_controller.py:103
 msgid "Text extracted"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:129
+#: ../anura/controllers/ocr_controller.py:126
 #, python-brace-format
 msgid "{n} email found in text"
 msgid_plural "{n} emails found in text"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../anura/controllers/ocr_controller.py:135
+#: ../anura/controllers/ocr_controller.py:132
 #, python-brace-format
 msgid "{n} phone number found in text"
 msgid_plural "{n} phone numbers found in text"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../anura/controllers/ocr_controller.py:177
+#: ../anura/controllers/ocr_controller.py:173
 msgid "Choose an image for extraction"
 msgstr "Metin ayıklamak için görüntüyü aç"
 
-#: ../anura/controllers/ocr_controller.py:180
+#: ../anura/controllers/ocr_controller.py:176
 msgid "All supported images"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:212
+#: ../anura/controllers/ocr_controller.py:208
 msgid "PNG images (*.png)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:213
+#: ../anura/controllers/ocr_controller.py:209
 msgid "JPEG images (*.jpg)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:214
+#: ../anura/controllers/ocr_controller.py:210
 msgid "WebP images (*.webp)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:215
+#: ../anura/controllers/ocr_controller.py:211
 msgid "AVIF images (*.avif)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:216
+#: ../anura/controllers/ocr_controller.py:212
 msgid "TIFF images (*.tif)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:217
+#: ../anura/controllers/ocr_controller.py:213
 msgid "BMP images (*.bmp)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:218
+#: ../anura/controllers/ocr_controller.py:214
 msgid "GIF images (*.gif)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:221
+#: ../anura/controllers/ocr_controller.py:217
 msgid "All files (*)"
 msgstr ""
 
@@ -994,7 +994,7 @@ msgctxt "Extracted screen"
 msgid "Share To"
 msgstr ""
 
-#: ../anura/widgets/extracted_page.py:213
+#: ../anura/widgets/extracted_page.py:210
 #, python-brace-format
 msgid "Smart Parse: {name}"
 msgstr ""

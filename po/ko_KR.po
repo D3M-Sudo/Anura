@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: anura 1.4.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-03 12:24+0000\n"
+"POT-Creation-Date: 2026-06-03 15:39+0000\n"
 "PO-Revision-Date: 2023-10-29 23:00+0900\n"
 "Last-Translator: Seong Jin Kim <mirusu400@naver.com>\n"
 "Language-Team: \n"
@@ -31,79 +31,79 @@ msgstr ""
 msgid "Failed to process the file."
 msgstr ""
 
-#: ../anura/controllers/tts_controller.py:67
+#: ../anura/controllers/tts_controller.py:66
 msgid "Text-to-speech is not available for this language"
 msgstr ""
 
-#: ../anura/controllers/tts_controller.py:101
+#: ../anura/controllers/tts_controller.py:99
 msgid "Request timed out. Please try again."
 msgstr ""
 
-#: ../anura/controllers/tts_controller.py:103
+#: ../anura/controllers/tts_controller.py:101
 msgid "Network error. Please check your internet connection."
 msgstr ""
 
-#: ../anura/controllers/tts_controller.py:105
+#: ../anura/controllers/tts_controller.py:103
 msgid "Text-to-speech failed. Please try again."
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:87
+#: ../anura/controllers/ocr_controller.py:86
 msgid "No text found. Try to grab another region."
 msgstr "텍스트를 발견하지 못했습니다. 다른 영역을 선택해보세요."
 
-#: ../anura/controllers/ocr_controller.py:106
+#: ../anura/controllers/ocr_controller.py:103
 msgid "Text extracted"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:129
+#: ../anura/controllers/ocr_controller.py:126
 #, python-brace-format
 msgid "{n} email found in text"
 msgid_plural "{n} emails found in text"
 msgstr[0] ""
 
-#: ../anura/controllers/ocr_controller.py:135
+#: ../anura/controllers/ocr_controller.py:132
 #, python-brace-format
 msgid "{n} phone number found in text"
 msgid_plural "{n} phone numbers found in text"
 msgstr[0] ""
 
-#: ../anura/controllers/ocr_controller.py:177
+#: ../anura/controllers/ocr_controller.py:173
 msgid "Choose an image for extraction"
 msgstr "이미지를 열어 텍스트 추출"
 
-#: ../anura/controllers/ocr_controller.py:180
+#: ../anura/controllers/ocr_controller.py:176
 msgid "All supported images"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:212
+#: ../anura/controllers/ocr_controller.py:208
 msgid "PNG images (*.png)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:213
+#: ../anura/controllers/ocr_controller.py:209
 msgid "JPEG images (*.jpg)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:214
+#: ../anura/controllers/ocr_controller.py:210
 msgid "WebP images (*.webp)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:215
+#: ../anura/controllers/ocr_controller.py:211
 msgid "AVIF images (*.avif)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:216
+#: ../anura/controllers/ocr_controller.py:212
 msgid "TIFF images (*.tif)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:217
+#: ../anura/controllers/ocr_controller.py:213
 msgid "BMP images (*.bmp)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:218
+#: ../anura/controllers/ocr_controller.py:214
 msgid "GIF images (*.gif)"
 msgstr ""
 
-#: ../anura/controllers/ocr_controller.py:221
+#: ../anura/controllers/ocr_controller.py:217
 msgid "All files (*)"
 msgstr ""
 
@@ -989,7 +989,7 @@ msgctxt "Extracted screen"
 msgid "Share To"
 msgstr ""
 
-#: ../anura/widgets/extracted_page.py:213
+#: ../anura/widgets/extracted_page.py:210
 #, python-brace-format
 msgid "Smart Parse: {name}"
 msgstr ""
