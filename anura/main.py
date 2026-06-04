@@ -325,7 +325,7 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         DialogManager.show_preferences(self.get_active_window())
 
     def on_about(self, *_) -> None:
-        DialogManager.show_about(self.get_active_window(), self.version, self._get_release_notes())
+        DialogManager.show_about(self.get_active_window(), self.version)
 
     def on_github_star(self, *_) -> None:
         launch_uri("https://github.com/D3M-Sudo/Anura", window=self.props.active_window)

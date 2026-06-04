@@ -15,6 +15,7 @@ import time
 from typing import ClassVar
 from urllib.request import url2pathname
 
+import contextlib
 import gi
 
 # Set GTK version requirements before imports
@@ -45,6 +46,36 @@ def _is_flatpak_environment() -> bool:
     return Path("/.flatpak-info").exists() or "FLATPAK_ID" in os.environ
 
 
+@contextlib.contextmanager
+def _temp_dir_context():
+    """
+    Context manager to manage a transactional temporary directory and
+    redirect temporary environment variables (TMPDIR, TEMP, TMP).
+
+    BUG-003 fix: ProcessPoolExecutor reuses worker processes across tasks,
+    so mutations to os.environ persist into future invocations. Save the
+    original values and restore them in a finally block to keep the worker
+    environment clean for the next task.
+    """
+    import tempfile
+
+    with tempfile.TemporaryDirectory(prefix="anura-worker-") as tmp_dir:
+        _ENV_KEYS = ("TMPDIR", "TEMP", "TMP")
+        _saved_env = {k: os.environ.get(k) for k in _ENV_KEYS}
+        try:
+            for k in _ENV_KEYS:
+                os.environ[k] = tmp_dir
+            yield tmp_dir
+        finally:
+            # Restore original env values so the reused worker process
+            # is not contaminated for subsequent OCR tasks.
+            for k, v in _saved_env.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+
+
 def run_ocr_pipeline(
     lang: str,
     file_path: str,
@@ -56,8 +87,6 @@ def run_ocr_pipeline(
     Isolated OCR pipeline to bypass Python's GIL.
     Runs in a separate process via ProcessPoolExecutor.
     """
-    import tempfile
-
     # Configure Tesseract path in the child process
     _configure_tesseract_path()
 
@@ -76,25 +105,10 @@ def run_ocr_pipeline(
         start_time = time.time()
 
         # Transactional I/O: Create a temporary directory for all worker artifacts
-        with tempfile.TemporaryDirectory(prefix="anura-worker-") as tmp_dir:
-            # Point Tesseract-related env vars to the transactional directory so
-            # any .tmp or log files created by Tesseract are automatically cleaned
-            # up when the context manager exits.
-            #
-            # BUG-003 fix: ProcessPoolExecutor reuses worker processes across tasks,
-            # so mutations to os.environ persist into future invocations.  Save the
-            # original values and restore them in a finally block to keep the worker
-            # environment clean for the next task (or for any other code that reads
-            # TMPDIR/TEMP/TMP in the same process).
-            # BUG-003: save original env values; restore in finally so the
-            # reused worker process is not contaminated for future tasks.
-            _ENV_KEYS = ("TMPDIR", "TEMP", "TMP")
-            _saved_env = {k: os.environ.get(k) for k in _ENV_KEYS}
-            try:
-                for k in _ENV_KEYS:
-                    os.environ[k] = tmp_dir
-
-                with Image.open(file_path) as img:  # type: ignore[assignment]
+        # and point Tesseract-related env vars to it so any .tmp or log files
+        # are automatically cleaned up.
+        with _temp_dir_context():
+            with Image.open(file_path) as img:  # type: ignore[assignment]
                     # 1. Barcode Detection
                     from anura.utils.barcode_detector import detect_barcodes
 
@@ -164,15 +178,6 @@ def run_ocr_pipeline(
 
                     logger.info(f"Anura OCR (Isolated): Completed in {time.time() - start_time:.3f}s")
                     return True, cleaned_text, None, ocr_result
-
-            finally:
-                # Restore original env values so the reused worker process
-                # is not contaminated for subsequent OCR tasks.
-                for k, v in _saved_env.items():
-                    if v is None:
-                        os.environ.pop(k, None)
-                    else:
-                        os.environ[k] = v
 
     except InterruptedError:
         return False, None, None, None

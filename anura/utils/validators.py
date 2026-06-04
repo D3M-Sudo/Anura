@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 import re
 import unicodedata
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 
 from loguru import logger
 
@@ -89,6 +89,79 @@ def sanitize_text(text: str) -> str:
     return text.strip()
 
 
+def _check_homograph_mixed_script(hostname: str) -> bool:
+    """
+    Check if the hostname contains suspicious mixed-script characters
+    commonly used in homograph attacks.
+    """
+    if not hostname or hostname.isascii():
+        return True
+
+    # Check for mixed-script labels. We iterate through DNS labels
+    # to be more precise than checking the whole hostname at once.
+    for label in hostname.split("."):
+        if not label or label.isascii():
+            continue
+
+        # BUG-034 / NEW-011: Homograph Defense.
+        # We reject ANY label that mixes ASCII alphanumeric and non-ASCII (e.g., googlé.com)
+        # UNLESS the non-ASCII characters are safe Latin-1 supplements (0x00A0-0x00FF).
+        # This allows legitimate domains like münchen.de while blocking high-risk
+        # scripts like Cyrillic or Greek being mixed with ASCII.
+        has_ascii = any(ch.isascii() and ch.isalnum() for ch in label)
+        if has_ascii:
+            # Allow Latin-1 supplements (covers most European languages)
+            has_high_risk = any(ord(ch) > 0xFF for ch in label)
+            if has_high_risk:
+                return False
+
+        # Pure non-ASCII label (e.g. '中文'): check for suspicious scripts
+        # commonly used in homograph attacks when mixed with ASCII labels in the domain.
+        for ch in label:
+            cp = ord(ch)
+            # Block Cyrillic (0x0400-0x052F) and Greek (0x0370-0x03FF)
+            # if the overall hostname also contains ASCII labels (e.g. 'goog\u0430.com')
+            if (0x0400 <= cp <= 0x052F or 0x0370 <= cp <= 0x03FF) and hostname.isascii() is False:
+                # If hostname is not pure ASCII, we allow these scripts
+                # ONLY if the entire hostname uses them (pure IDN).
+                # If there's ANY ASCII label elsewhere, we block.
+                any_ascii_label = any(
+                    part.isascii() and any(c.isalpha() for c in part) for part in hostname.split(".")
+                )
+                if any_ascii_label:
+                    return False
+    return True
+
+
+def _normalize_idn_punycode(text: str) -> str:
+    """
+    Convert international domain names (IDN) to their Punycode
+    ASCII-compatible encoding (ACE).
+    """
+    if text.isascii():
+        return text
+
+    try:
+        parsed = urlparse(text)
+        if parsed.hostname and not parsed.hostname.isascii():
+            # Encode each DNS label separately; skip empty labels (leading dots etc.)
+            punycode_labels = []
+            for label in parsed.hostname.split("."):
+                if not label or label.isascii():
+                    punycode_labels.append(label)
+                else:
+                    punycode_labels.append(label.encode("idna").decode("ascii"))
+            punycode_host = ".".join(punycode_labels)
+            # Rebuild the netloc, preserving port and userinfo if present
+            netloc = parsed.netloc.replace(parsed.hostname, punycode_host, 1)
+            return urlunparse(parsed._replace(netloc=netloc))
+    except (UnicodeError, ValueError, UnicodeDecodeError):
+        # IDNA encoding failed (e.g. label too long, invalid character set):
+        # fall through to returning the original text which will be rejected by isascii()
+        pass
+    return text
+
+
 def is_safe_url_string(text: str) -> bool:
     """
     Perform fundamental security checks on a URL string.
@@ -110,7 +183,6 @@ def is_safe_url_string(text: str) -> bool:
     # non-ASCII characters, reject the URL. This prevents homograph attacks
     # (e.g. mixing 'a' and 'cyrillic-a').
     try:
-        from urllib.parse import urlparse
         parsed_for_homograph = urlparse(text)
         hostname = parsed_for_homograph.hostname or ""
 
@@ -120,40 +192,8 @@ def is_safe_url_string(text: str) -> bool:
         if not hostname and "://" in text:
             return False
 
-        if hostname and not hostname.isascii():
-            # Check for mixed-script labels. We iterate through DNS labels
-            # to be more precise than checking the whole hostname at once.
-            for label in hostname.split("."):
-                if not label or label.isascii():
-                    continue
-
-                # BUG-034 / NEW-011: Homograph Defense.
-                # We reject ANY label that mixes ASCII alphanumeric and non-ASCII (e.g., googlé.com)
-                # UNLESS the non-ASCII characters are safe Latin-1 supplements (0x00A0-0x00FF).
-                # This allows legitimate domains like münchen.de while blocking high-risk
-                # scripts like Cyrillic or Greek being mixed with ASCII.
-                has_ascii = any(ch.isascii() and ch.isalnum() for ch in label)
-                if has_ascii:
-                    # Allow Latin-1 supplements (covers most European languages)
-                    has_high_risk = any(ord(ch) > 0xFF for ch in label)
-                    if has_high_risk:
-                        return False
-
-                # Pure non-ASCII label (e.g. '中文'): check for suspicious scripts
-                # commonly used in homograph attacks when mixed with ASCII labels in the domain.
-                for ch in label:
-                    cp = ord(ch)
-                    # Block Cyrillic (0x0400-0x052F) and Greek (0x0370-0x03FF)
-                    # if the overall hostname also contains ASCII labels (e.g. 'goog\u0430.com')
-                    if (0x0400 <= cp <= 0x052F or 0x0370 <= cp <= 0x03FF) and hostname.isascii() is False:
-                        # If hostname is not pure ASCII, we allow these scripts
-                        # ONLY if the entire hostname uses them (pure IDN).
-                        # If there's ANY ASCII label elsewhere, we block.
-                        any_ascii_label = any(
-                            part.isascii() and any(c.isalpha() for c in part) for part in hostname.split(".")
-                        )
-                        if any_ascii_label:
-                            return False
+        if not _check_homograph_mixed_script(hostname):
+            return False
 
     except (ValueError, AttributeError, TypeError):
         # Malformed URL parsing - treat as unsafe
@@ -161,31 +201,7 @@ def is_safe_url_string(text: str) -> bool:
 
     # 4. IDN normalization: convert international domain names (IDN) to their
     # Punycode ASCII-compatible encoding (ACE) before the ASCII safety check.
-    # This allows legitimate URLs like https://münchen.de or https://中文.com
-    # while still rejecting homograph attacks — Punycode is always ASCII, so
-    # the isascii() check below still catches unencoded non-ASCII that isn't
-    # a valid hostname label (e.g. invisible Unicode in the path/query).
-    if not text.isascii():
-        try:
-            from urllib.parse import urlunparse
-            # urlparse already available from homograph check scope
-            parsed = urlparse(text)
-            if parsed.hostname and not parsed.hostname.isascii():
-                # Encode each DNS label separately; skip empty labels (leading dots etc.)
-                punycode_labels = []
-                for label in parsed.hostname.split("."):
-                    if not label or label.isascii():
-                        punycode_labels.append(label)
-                    else:
-                        punycode_labels.append(label.encode("idna").decode("ascii"))
-                punycode_host = ".".join(punycode_labels)
-                # Rebuild the netloc, preserving port and userinfo if present
-                netloc = parsed.netloc.replace(parsed.hostname, punycode_host, 1)
-                text = urlunparse(parsed._replace(netloc=netloc))
-        except (UnicodeError, ValueError, UnicodeDecodeError):
-            # IDNA encoding failed (e.g. label too long, invalid character set):
-            # fall through to the isascii() guard which will reject the URL.
-            pass
+    text = _normalize_idn_punycode(text)
 
     # ASCII safety check: after IDN normalization, any remaining non-ASCII
     # characters indicate invalid or potentially malicious input.
