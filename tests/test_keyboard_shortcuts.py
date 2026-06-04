@@ -107,7 +107,9 @@ class TestKeyboardShortcuts:
 
             mock_app = MagicMock()
             mock_app.add_action.side_effect = lambda action: actions_added.append(action.get_name())
-            mock_app.set_accels_for_action.side_effect = lambda action_name, accels: accels_set.append((action_name, accels))
+            mock_app.set_accels_for_action.side_effect = (
+                lambda action_name, accels: accels_set.append((action_name, accels))
+            )
 
             registry = ActionRegistry(mock_app)
             registry.setup_actions()
