@@ -39,3 +39,7 @@
 ## 2026-05-28 - Histogram-based Statistics Optimization
 **Learning:** Calculating image statistics (like the mean) directly from a pre-computed histogram is significantly faster (~2x on 4K images) than using `ImageStat.Stat(image)`. `ImageStat.Stat` often triggers its own full-image traversal if the internal cache is cold or invalidated, whereas a histogram summation is O(bins) rather than O(pixels).
 **Action:** If a histogram is already available or required for other logic (like thresholding or adaptive enhancements), derive dependent statistics (mean, median, dark/light pixel ratios) directly from the histogram to avoid redundant pixel passes.
+
+## 2026-06-05 - Fast String Sanitization with str.translate and Category Caching
+**Learning:** For bulk text sanitization (stripping specific Unicode categories), a character-by-character loop with `unicodedata.category()` is extremely slow. Using `str.translate()` with a pre-calculated table for the first 256 characters provides a ~100x speedup for ASCII/Latin-1 text. For Unicode text, combining `str.translate()` with a dictionary-based category cache (`_CAT_CACHE`) and a list comprehension yields significant performance gains by avoiding redundant C extension calls for repeated characters.
+**Action:** Use `str.translate()` for bulk character removal/mapping in hot paths. Implement hybrid approaches with caching for Unicode characters beyond the 0-255 range to maintain performance while supporting the full Unicode space.
