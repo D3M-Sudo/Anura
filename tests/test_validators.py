@@ -159,3 +159,18 @@ class TestUriValidatorEnterprise:
         url = "https://google.com"
         assert uri_validator(url) == uri_validator(url)
         assert uri_validator(url) is True
+
+    def test_sanitize_text_newline_squashing(self):
+        """Test that excessive consecutive newlines are squashed (Security Enhancement)."""
+        from anura.utils.validators import sanitize_text
+
+        # 3 or more newlines squashed to 2
+        assert sanitize_text("A\n\n\nB") == "A\n\nB"
+        assert sanitize_text("A\n\n\n\n\nB") == "A\n\nB"
+
+        # CRLF normalization and squashing
+        assert sanitize_text("A\r\n\r\n\r\nB") == "A\n\nB"
+
+        # 1 or 2 newlines preserved
+        assert sanitize_text("A\nB") == "A\nB"
+        assert sanitize_text("A\n\nB") == "A\n\nB"
