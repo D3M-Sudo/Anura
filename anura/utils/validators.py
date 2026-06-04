@@ -86,6 +86,13 @@ def sanitize_text(text: str) -> str:
     # e.g. "http: //" -> "http://"
     text = re.sub(r"(https?|ftp|file):\s+/{2}", r"\1://", text)
 
+    # 6. Security: Squash excessive consecutive newlines (limit to 2).
+    # Prevents UI-level DoS where malformed OCR or malicious input could
+    # render thousands of empty lines, displacing the UI.
+    # We first normalize CRLF to LF to ensure the regex catches all cases.
+    text = text.replace("\r\n", "\n")
+    text = re.sub(r"\n{3,}", "\n\n", text)
+
     return text.strip()
 
 
