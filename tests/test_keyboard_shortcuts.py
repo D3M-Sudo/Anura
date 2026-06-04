@@ -105,17 +105,11 @@ class TestKeyboardShortcuts:
             actions_added = []
             accels_set = []
 
-            class MockApp:
-                def __init__(self):
-                    pass
-
-                def add_action(self, action):
-                    actions_added.append(action.get_name())
-
-                def set_accels_for_action(self, action_name, accels):
-                    accels_set.append((action_name, accels))
-
-            mock_app = MockApp()
+            # Use MagicMock for the app to avoid AttributeErrors when ActionRegistry
+            # accesses app methods (e.g. self.app.get_screenshot).
+            mock_app = MagicMock()
+            mock_app.add_action = lambda action: actions_added.append(action.get_name())
+            mock_app.set_accels_for_action = lambda name, accels: accels_set.append((name, accels))
             registry = ActionRegistry(mock_app)
             registry.setup_actions()
 

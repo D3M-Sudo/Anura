@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: MIT
 
 import contextlib
+import functools
 import ipaddress
 import os
 from pathlib import Path
@@ -37,14 +38,10 @@ _SANITIZE_TABLE = str.maketrans(
         if chr(i) not in _SAFE_CHARS and unicodedata.category(chr(i)) in _BAD_CATEGORIES
     }
 )
-_CAT_CACHE: dict[str, str] = {}
-
-
+@functools.lru_cache(maxsize=1024)
 def _get_category(ch: str) -> str:
-    """Get Unicode category with local caching for performance."""
-    cat = unicodedata.category(ch)
-    _CAT_CACHE[ch] = cat
-    return cat
+    """Get Unicode category with LRU caching for performance."""
+    return unicodedata.category(ch)
 
 # Centralized patterns for structured data detection (URLs, Emails, etc.)
 # Used across TextPreprocessor, Transformers, and ResultDispatcher.
@@ -102,13 +99,8 @@ def sanitize_text(text: str) -> str:
     # This is significantly faster than calling unicodedata.category() for every character.
     if not text.isascii():
         bad = _BAD_CATEGORIES
-        cache = _CAT_CACHE
         text = "".join(
-            [
-                ch
-                for ch in text
-                if ord(ch) < 256 or (cache.get(ch) or _get_category(ch)) not in bad
-            ]
+            [ch for ch in text if ord(ch) < 256 or _get_category(ch) not in bad]
         )
 
     # 4. Normalization: horizontal whitespace (squash multiple spaces/tabs)
@@ -235,7 +227,8 @@ def is_safe_url_string(text: str) -> bool:
     # 5. Clean and normalize text using heuristics
     # sanitize_text also strips Cc/Cf as defense-in-depth, but is_safe_url_string
     # has already rejected all non-ASCII characters by this point.
-    text = sanitize_text(text)
+    # Note: result is True/False, sanitize_text is called for side-effects if any,
+    # but since strings are immutable and we return True, this call was redundant.
 
     return True
 
