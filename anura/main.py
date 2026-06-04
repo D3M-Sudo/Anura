@@ -191,7 +191,14 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         controller = win.ocr_controller
         self.connect_tracked(controller, "text-extracted", self._on_text_extracted)
         self.connect_tracked(controller, "uri-detected", self._on_uri_detected)
-        self.connect_tracked(controller, "error-occurred", self._on_error_occurred)
+        # NOTE: "error-occurred" is intentionally NOT connected here.
+        # AnuraWindow._on_ocr_error (handler connected in window.py) already
+        # handles this signal with show_toast() + UI cleanup. Connecting it
+        # again here caused a double-notification burst confirmed by debug log
+        # (handler_id=1493 from window.py + handler_id=1505 from main.py both
+        # firing for every single emit("error-occurred")).
+        # Fatal-dialog logic for missing portal/fallback has been moved into
+        # AnuraWindow._on_ocr_error where the window context is always available.
 
     def _on_text_extracted(self, _controller, text: str, copy_requested: bool) -> None:
         is_window_active = bool(self.get_active_window())
@@ -407,6 +414,14 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
             self.notification_service.show_notification(title=_("Anura OCR"), body=_("Text extracted."))
 
     def on_error(self, _sender, message: str) -> None:
+        # When a window is present, OcrController._on_shot_error already
+        # handles this signal and shows the notification via AnuraWindow.
+        # Firing here too produces a duplicate burst (confirmed by debug log:
+        # handler_id=103 from main.py fires alongside handler_id=1484 from
+        # ocr_controller.py for every emit("error"), multiplying the
+        # notification count by 2+ per event).
+        if self.get_active_window():
+            return
         if message and message != _("Cancelled"):
             GLib.idle_add(
                 lambda: (
