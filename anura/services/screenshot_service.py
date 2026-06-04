@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: MIT
 
 from collections.abc import Callable
+import contextlib
 from gettext import gettext as _
 import os
 from pathlib import Path
@@ -15,7 +16,6 @@ import time
 from typing import ClassVar
 from urllib.request import url2pathname
 
-import contextlib
 import gi
 
 # Set GTK version requirements before imports
