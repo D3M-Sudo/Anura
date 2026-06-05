@@ -70,7 +70,13 @@ class LegacyX11Provider(ScreenshotProvider):
             if self._cancellable is not None and not self._cancellable.is_cancelled():
                 self._cancellable.cancel()
                 logger.debug("LegacyX11Provider: Cancelled in-flight scrot capture.")
+            if self._proc is not None:
+                # BUG-044: force_exit() is required to terminate the underlying scrot
+                # process; otherwise it remains orphaned in the background.
+                self._proc.force_exit()
+                logger.debug("LegacyX11Provider: Terminated scrot process.")
             self._cancellable = None
+            self._proc = None
 
     def capture(self, lang: str, copy: bool, callback: Callable) -> None:
         """Spawn scrot interactively and call callback(success, uri, error)."""
@@ -91,7 +97,9 @@ class LegacyX11Provider(ScreenshotProvider):
             callback(False, None, _("Failed to create temporary file."))
             return
 
-        argv = [scrot_bin, "-s", output_path]
+        # NEW-016: Use -o (overwrite) to ensure scrot doesn't fail if the
+        # temporary file created by mkstemp already exists on disk.
+        argv = [scrot_bin, "-s", "-o", output_path]
 
         logger.info(f"LegacyX11Provider: Spawning scrot from '{scrot_bin}'")
 

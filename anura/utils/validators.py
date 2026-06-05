@@ -179,8 +179,19 @@ def is_safe_url_string(text: str) -> bool:
                     else:
                         punycode_labels.append(label.encode("idna").decode("ascii"))
                 punycode_host = ".".join(punycode_labels)
-                # Rebuild the netloc, preserving port and userinfo if present
-                netloc = parsed.netloc.replace(parsed.hostname, punycode_host, 1)
+                # Rebuild the netloc explicitly to prevent spoofing where the
+                # hostname might appear in the userinfo part.
+                # Rebuild using components: [userinfo@]hostname[:port]
+                netloc = ""
+                if parsed.username is not None:
+                    userinfo = parsed.username
+                    if parsed.password is not None:
+                        userinfo += ":" + parsed.password
+                    netloc += userinfo + "@"
+                netloc += punycode_host
+                if parsed.port is not None:
+                    netloc += ":" + str(parsed.port)
+
                 text = urlunparse(parsed._replace(netloc=netloc))
         except (UnicodeError, ValueError, UnicodeDecodeError):
             # IDNA encoding failed (e.g. label too long, invalid character set):
