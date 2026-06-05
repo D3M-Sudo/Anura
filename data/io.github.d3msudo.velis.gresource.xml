@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/io/github/d3msudo/velis">
+    <file preprocess="xml-stripblanks">window.ui</file>
+    <file preprocess="xml-stripblanks">welcome_page.ui</file>
+    <file preprocess="xml-stripblanks">extracted_page.ui</file>
+    <file preprocess="xml-stripblanks">history_page.ui</file>
+    <file preprocess="xml-stripblanks">preferences_dialog.ui</file>
+  </gresource>
+</gresources>

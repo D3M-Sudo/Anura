@@ -1,36 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<interface domain="io.github.d3msudo.anura">
+<interface domain="velis">
   <requires lib="gtk" version="4.0"/>
-  <template class="AnuraWindow" parent="AdwApplicationWindow">
-    <property name="default-width">480</property>
-    <property name="default-height">480</property>
-    <property name="width-request">360</property>
-    <property name="height-request">360</property>
-    <property name="icon-name">io.github.d3msudo.anura</property>
+  <template class="VelisWindow" parent="AdwApplicationWindow">
+    <property name="default-width">800</property>
+    <property name="default-height">600</property>
+    <property name="title" translatable="true">Velis</property>
     <child type="content">
       <object class="AdwToastOverlay" id="toast_overlay">
         <child>
           <object class="GtkBox">
             <property name="orientation">1</property>
             <child>
-              <object class="AdwBanner" id="portal_banner">
-                <property name="title" translatable="true">Screenshot portal unavailable. Install xdg-desktop-portal-gtk (or the backend matching your desktop) and re-login.</property>
-                <property name="button-label" translatable="true">Dismiss</property>
-                <property name="revealed">false</property>
+              <object class="AdwHeaderBar">
+                <child type="end">
+                  <object class="GtkMenuButton">
+                    <property name="icon-name">open-menu-symbolic</property>
+                    <property name="menu-model">primary_menu</property>
+                  </object>
+                </child>
               </object>
             </child>
             <child>
-              <object class="AdwNavigationView" id="navigation_view">
-                <property name="hexpand">true</property>
-                <property name="vexpand">true</property>
+              <object class="AdwNavigationView" id="nav_view">
                 <child>
-                  <object class="WelcomePage" id="welcome_page">
+                  <object class="AdwNavigationPage">
                     <property name="tag">welcome</property>
+                    <property name="title" translatable="true">Velis</property>
+                    <child>
+                      <object class="WelcomePage" id="welcome_page"/>
+                    </child>
                   </object>
                 </child>
                 <child>
-                  <object class="ExtractedPage" id="extracted_page">
+                  <object class="AdwNavigationPage">
                     <property name="tag">extracted</property>
+                    <property name="title" translatable="true">Extracted Text</property>
+                    <child>
+                      <object class="ExtractedPage" id="extracted_page"/>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwNavigationPage">
+                    <property name="tag">history</property>
+                    <property name="title" translatable="true">History</property>
+                    <child>
+                      <object class="HistoryPage" id="history_page"/>
+                    </child>
                   </object>
                 </child>
               </object>
@@ -40,4 +56,16 @@
       </object>
     </child>
   </template>
+  <menu id="primary_menu">
+    <section>
+      <item>
+        <attribute name="label" translatable="true">Preferences</attribute>
+        <attribute name="action">win.preferences</attribute>
+      </item>
+      <item>
+        <attribute name="label" translatable="true">Keyboard Shortcuts</attribute>
+        <attribute name="action">win.shortcuts</attribute>
+      </item>
+    </section>
+  </menu>
 </interface>

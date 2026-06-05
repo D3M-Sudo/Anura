@@ -1,0 +1,170 @@
+{
+    "app-id": "io.github.d3msudo.velis",
+    "runtime": "org.gnome.Platform",
+    "runtime-version": "50",
+    "sdk": "org.gnome.Sdk",
+    "command": "velis",
+    "finish-args": [
+        "--share=network",
+        "--share=ipc",
+        "--socket=x11",
+        "--socket=wayland",
+        "--socket=pulseaudio",
+        "--device=dri",
+        "--filesystem=xdg-pictures:ro",
+        "--filesystem=xdg-download:ro",
+        "--filesystem=xdg-desktop:ro",
+        "--filesystem=xdg-documents:ro",
+        "--talk-name=org.a11y.Bus",
+        "--talk-name=org.freedesktop.portal.Desktop",
+        "--talk-name=org.freedesktop.Notifications",
+        "--env=TESSDATA_PREFIX=/app/share/tessdata"
+    ],
+    "cleanup": [
+        "/include",
+        "/lib/pkgconfig",
+        "/share/aclocal",
+        "/share/pkgconfig",
+        "*.la",
+        "*.a"
+    ],
+    "modules": [
+        {
+            "name": "leptonica",
+            "buildsystem": "autotools",
+            "cleanup": ["/bin"],
+            "config-opts": ["--disable-static", "--with-libpng", "--with-jpeg", "--with-libtiff", "--with-zlib"],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://github.com/DanBloomberg/leptonica/releases/download/1.84.1/leptonica-1.84.1.tar.gz",
+                    "sha256": "2b3e1254b1cca381e77c819b59ca99774ff43530209b9aeb511e1d46588a64f6"
+                }
+            ]
+        },
+        {
+            "name": "tesseract",
+            "buildsystem": "autotools",
+            "cleanup": ["/include", "/lib/pkgconfig"],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://github.com/tesseract-ocr/tesseract/archive/refs/tags/5.3.4.tar.gz",
+                    "sha256": "141afc12b34a14bb691a939b4b122db0d51bd38feda7f41696822bacea7710c7"
+                }
+            ],
+            "config-opts": ["--disable-graphics", "--disable-legacy", "--disable-training"]
+        },
+        {
+            "name": "tessdata",
+            "buildsystem": "simple",
+            "build-commands": [
+                "install -Dm0644 eng.traineddata $FLATPAK_DEST/share/tessdata/eng.traineddata"
+            ],
+            "sources": [
+                {"type": "file", "url": "https://github.com/tesseract-ocr/tessdata_fast/raw/923915d4ced2a7235221788285785a29c4a42d4a/eng.traineddata", "sha256": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2"}
+            ]
+        },
+        {
+            "name": "python3-pillow",
+            "buildsystem": "simple",
+            "build-commands": ["pip3 install --no-deps --no-build-isolation --prefix=/app ."],
+            "sources": [
+                {"type": "archive", "url": "https://files.pythonhosted.org/packages/8c/21/c2bcdd5906101a30244eaffc1b6e6ce71a31bd0742a01eb89e660ebfac2d/pillow-12.2.0.tar.gz", "sha256": "a830b1a40919539d07806aa58e1b114df53ddd43213d9c8b75847eee6c0182b5"}
+            ]
+        },
+        {
+            "name": "python3-pybind11",
+            "buildsystem": "simple",
+            "build-commands": ["pip3 install --no-deps --no-build-isolation --prefix=/app ."],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://files.pythonhosted.org/packages/d2/c1/72b9622fcb32ff98b054f724e213c7f70d6898baa714f4516288456ceaba/pybind11-2.13.6.tar.gz",
+                    "sha256": "ba6af10348c12b24e92fa086b39cfba0eff619b61ac77c406167d813b096d39a"
+                }
+            ]
+        },
+        {
+            "name": "python3-zxing-cpp",
+            "buildsystem": "simple",
+            "build-commands": ["pip3 install --no-deps --no-build-isolation --prefix=/app ."],
+            "build-options": {
+                "env": {
+                    "pybind11_DIR": "/app/lib/python3.13/site-packages/pybind11/share/cmake/pybind11"
+                }
+            },
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://files.pythonhosted.org/packages/f1/c6/ac2a12cdc2b1c296804fc6a65bf112b607825ca7f47742a5aca541134711/zxing_cpp-3.0.0.tar.gz",
+                    "sha256": "703353304de24d947bd68044fac4e062953a7b64029de6941ba8ffeb4476b60d"
+                }
+            ]
+        },
+        {
+            "name": "python3-pytesseract",
+            "buildsystem": "simple",
+            "build-commands": ["pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed pytesseract-0.3.13-py3-none-any.whl"],
+            "sources": [{"type": "file", "url": "https://files.pythonhosted.org/packages/7a/33/8312d7ce74670c9d39a532b2c246a853861120486be9443eebf048043637/pytesseract-0.3.13-py3-none-any.whl", "sha256": "7a99c6c2ac598360693d83a416e36e0b33a67638bb9d77fdcac094a3589d4b34"}]
+        },
+        {
+            "name": "python3-gTTS",
+            "buildsystem": "simple",
+            "build-commands": ["pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed gTTS-2.5.4-py3-none-any.whl"],
+            "sources": [{"type": "file", "url": "https://files.pythonhosted.org/packages/e3/6c/8b8b1fdcaee7e268536f1bb00183a5894627726b54a9ddc6fc9909888447/gTTS-2.5.4-py3-none-any.whl", "sha256": "5dd579377f9f5546893bc26315ab1f846933dc27a054764b168f141065ca8436"}]
+        },
+        {
+            "name": "python3-loguru",
+            "buildsystem": "simple",
+            "build-commands": ["pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed loguru-0.7.3-py3-none-any.whl"],
+            "sources": [{"type": "file", "url": "https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl", "sha256": "31a33c10c8e1e10422bfd431aeb5d351c7cf7fa671e3c4df004162264b28220c"}]
+        },
+        {
+            "name": "python3-requests",
+            "buildsystem": "simple",
+            "build-commands": ["pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed requests-2.34.2-py3-none-any.whl"],
+            "sources": [{"type": "file", "url": "https://files.pythonhosted.org/packages/a0/f4/c67b0b3f1b9245e8d266f0f112c500d50e5b4e83cb6f3b71b6528104182a/requests-2.34.2-py3-none-any.whl", "sha256": "2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0"}]
+        },
+        {
+            "name": "imlib2",
+            "buildsystem": "autotools",
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://downloads.sourceforge.net/project/enlightenment/imlib2-src/1.12.6/imlib2-1.12.6.tar.gz",
+                    "sha256": "59743ce82aefa9c1ec9476af608d541b74164714d2928fbd84ff5db6c4399079"
+                }
+            ]
+        },
+        {
+            "name": "scrot",
+            "buildsystem": "autotools",
+            "sources": [{"type": "archive", "url": "https://github.com/resurrecting-open-source-projects/scrot/archive/refs/tags/1.11.1.tar.gz", "sha256": "ea9949e80c3c60e335768402f66adad1b119b4c4e9b1daf90dff290f3c1114eb"}]
+        },
+        {
+            "name": "libportal",
+            "buildsystem": "meson",
+            "config-opts": ["-Ddocs=false", "-Dtests=false", "-Dintrospection=true", "-Dbackend-gtk3=disabled", "-Dbackend-gtk4=enabled"],
+            "cleanup": ["/share/vala"],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/flatpak/libportal.git",
+                    "tag": "0.9.1",
+                    "commit": "8f5dc8d192f6e31dafe69e35219e3b707bde71ce"
+                }
+            ]
+        },
+        {
+            "name": "velis",
+            "buildsystem": "meson",
+            "sources": [
+                {
+                    "type": "dir",
+                    "path": "."
+                }
+            ]
+        }
+    ]
+}

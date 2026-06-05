@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface domain="velis">
+  <requires lib="gtk" version="4.0"/>
+  <template class="HistoryPage" parent="GtkBox">
+    <property name="orientation">1</property>
+    <child>
+      <object class="AdwHeaderBar">
+        <child type="start">
+          <object class="GtkButton">
+            <property name="icon-name">go-previous-symbolic</property>
+            <signal name="clicked" handler="on_back_clicked"/>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkScrolledWindow">
+        <property name="hexpand">true</property>
+        <property name="vexpand">true</property>
+        <child>
+          <object class="GtkListBox" id="history_list">
+            <property name="selection-mode">0</property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>

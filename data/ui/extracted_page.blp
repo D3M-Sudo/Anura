@@ -1,224 +1,57 @@
-// This file is part of Anura.
-// Copyright (C) 2022-2025 Andrey Maksimov (Frog)
-// Copyright (C) 2026 D3M-Sudo (Anura)
-//
-// SPDX-License-Identifier: MIT
-
 using Gtk 4.0;
 using Adw 1;
 
-translation-domain 'io.github.d3msudo.anura';
+template $ExtractedPage : Gtk.Box {
+  orientation: vertical;
 
-template $ExtractedPage : Adw.NavigationPage {
-  title: _("Extracted");
-  styles ["extracted-page"]
-
-  Adw.ToolbarView {
-
-    [top]
-    Adw.HeaderBar headerbar {
-
-      [start]
-      Adw.SplitButton grab_btn {
-        action-name: "app.get_screenshot";
-        tooltip-text: _("Take a Screenshot (Ctrl+G)");
-        accessibility {
-          label: _("Take a screenshot");
-        }
-        icon-name: "camera-photo-symbolic";
-        menu-model: grab_menu;
-      }
-
-      [start]
-      Button text_copy_btn {
-        action-name: "app.copy_to_clipboard";
-        tooltip-text: C_("Extracted screen", "Copy Extracted Text to Clipboard (Ctrl+C)");
-        accessibility {
-          label: C_("Extracted screen", "Copy extracted text to clipboard");
-        }
-        icon-name: "edit-copy-symbolic";
-        styles ["anura-button"]
-      }
-
-      [start]
-      Stack listen_stack {
-        transition-type: crossfade;
-
-        StackPage {
-          name: "button";
-          child: Button listen_btn {
-            action-name: "app.listen";
-            tooltip-text: C_("Extracted screen", "Listen to Text (Ctrl+L)");
-            accessibility {
-              label: C_("Extracted screen", "Listen to text");
-            }
-            icon-name: "audio-speakers-symbolic";
-            styles ["anura-button"]
-          };
-        }
-
-        StackPage {
-          name: "cancel";
-          child: Button listen_cancel_btn {
-            action-name: "app.listen_cancel";
-            tooltip-text: C_("Extracted screen", "Stop listening (Ctrl+Shift+L)");
-            accessibility {
-              label: C_("Extracted screen", "Stop listening");
-            }
-            icon-name: "media-playback-stop-symbolic";
-            styles ["anura-button"]
-          };
-        }
-
-        StackPage {
-          name: "spinner";
-          child: Gtk.Spinner listen_spinner {
-            halign: center;
-            valign: center;
-          };
-        }
-
-        StackPage {
-          name: "pause";
-          child: Box {
-            styles ["linked"]
-
-            Button listen_pause_btn {
-              action-name: "app.listen_pause";
-              tooltip-text: C_("Extracted screen", "Pause/Resume listening (Ctrl+Alt+L)");
-              accessibility {
-                label: C_("Extracted screen", "Pause or resume listening");
-              }
-              icon-name: "media-playback-pause-symbolic";
-              styles ["anura-button"]
-            }
-
-            Button {
-              action-name: "app.listen_cancel";
-              tooltip-text: C_("Extracted screen", "Stop listening (Ctrl+Shift+L)");
-              accessibility {
-                label: C_("Extracted screen", "Stop listening");
-              }
-              icon-name: "media-playback-stop-symbolic";
-              styles ["anura-button"]
-            }
-          };
-        }
-      }
-
-      [end]
-      MenuButton {
-        icon-name: "open-menu-symbolic";
-        tooltip-text: C_("Extracted screen", "Open menu");
-        accessibility {
-          label: C_("Extracted screen", "Open menu");
-        }
-        menu-model: primary_menu;
-      }
-
-      [end]
-      MenuButton share_button {
-        icon-name: "emblem-shared-symbolic";
-        tooltip-text: C_("Extracted screen", "Share To");
-        accessibility {
-          label: C_("Extracted screen", "Share text to other applications");
-        }
-        popover: Popover {
-
-          styles ["menu"]
-
-          child: ListBox share_list_box {
-            margin-end: 4;
-            margin-top: 4;
-            margin-start: 4;
-            margin-bottom: 4;
-          };
-        };
-      }
+  Adw.HeaderBar {
+    [start]
+    Gtk.Button {
+      icon-name: "go-previous-symbolic";
+      clicked => $on_back_clicked();
     }
 
-    ScrolledWindow text_scrollview {
-      hexpand: true;
-      vexpand: true;
-      hscrollbar-policy: never;
-      propagate-natural-width: false;
-      width-request: 150; // Consente il rimpicciolimento fluido sotto la dimensione ideale del testo
+    [end]
+    Gtk.ToggleButton side_by_side_toggle {
+      icon-name: "view-dual-symbolic";
+      tooltip-text: "Toggle Side-by-Side View";
+    }
+  }
 
-      TextView text_view {
-        hexpand: true;
-        vexpand: true;
-        width-request: 100;
-        wrap-mode: word; // Sostituisce word_char per evitare di troncare le parole a metà
+  Gtk.Paned paned {
+    position: 400;
 
-        // Margini interni nativi di GtkTextView per il testo
-        left-margin: 14;
-        right-margin: 14;
+    start-child: Gtk.ScrolledWindow {
+      visible: bind side_by_side_toggle.active;
+      Gtk.Image source_image {
+        pixel-size: -1;
+      }
+    };
+
+    end-child: Gtk.ScrolledWindow {
+      Gtk.TextView text_view {
+        wrap-mode: word_char;
+        left-margin: 12;
+        right-margin: 12;
         top-margin: 12;
         bottom-margin: 12;
-        pixels-above-lines: 4;
-        pixels-below-lines: 4;
-
-        buffer: TextBuffer buffer {};
       }
-    }
-
-    [bottom]
-    Box {
-      styles ["footer"]
-
-      Label transformer_label {
-        halign: start;
-        hexpand: true;
-        margin-start: 12;
-        margin-top: 6;
-        margin-bottom: 6;
-        styles ["dim-label", "caption"]
-      }
-
-      Label stats_label {
-        halign: end;
-        hexpand: true;
-        margin-end: 12;
-        margin-top: 6;
-        margin-bottom: 6;
-        styles ["dim-label"]
-      }
-    }
-  }
-}
-
-menu primary_menu {
-  section {
-    item {
-      label: _("Preferences");
-      action: "app.preferences";
-      icon: "preferences-system-symbolic";
-    }
+    };
   }
 
-  section {
-    item {
-      label: _("Keyboard Shortcuts");
-      action: "app.shortcuts";
-      icon: "preferences-desktop-keyboard-shortcuts-symbolic";
+  Gtk.ActionBar {
+    Gtk.Button {
+      icon-name: "edit-copy-symbolic";
+      clicked => $on_copy_clicked();
     }
-
-    item {
-      label: _("About Anura");
-      action: "app.about";
-      icon: "help-about-symbolic";
+    Gtk.Button {
+      icon-name: "audio-x-generic-symbolic";
+      clicked => $on_listen_clicked();
     }
-
-    item {
-      label: _("Report an Issue");
-      action: "app.report_issue";
-      icon: "dialog-warning-symbolic";
+    Gtk.Button {
+      icon-name: "external-link-symbolic";
+      label: "Translate";
+      clicked => $on_translate_clicked();
     }
   }
-}
-
-
-menu grab_menu {
-    item (_("Open image"), "app.open_image", "folder-open-symbolic")
-    item (_("Paste from clipboard"), "app.paste_from_clipboard", "edit-paste-symbolic")
 }

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="velis">
+  <schema id="io.github.d3msudo.velis" path="/io/github/d3msudo/velis/">
+    <key name="window-width" type="i">
+      <default>800</default>
+      <summary>Window width</summary>
+    </key>
+    <key name="window-height" type="i">
+      <default>600</summary>
+      <summary>Window height</summary>
+    </key>
+    <key name="active-language" type="s">
+      <default>'eng'</default>
+      <summary>Active OCR language</summary>
+    </key>
+    <key name="translate-endpoint" type="s">
+      <default>'https://libretranslate.com'</default>
+      <summary>LibreTranslate API endpoint</summary>
+    </key>
+    <key name="translate-api-key" type="s">
+      <default>''</default>
+      <summary>LibreTranslate API key</summary>
+    </key>
+    <key name="history-limit-items" type="i">
+      <default>100</default>
+      <summary>Maximum number of history items</summary>
+    </key>
+    <key name="history-limit-mb" type="i">
+      <default>500</default>
+      <summary>Maximum size of history in MB</summary>
+    </key>
+    <key name="regex-patterns" type="as">
+      <default>[]</default>
+      <summary>User-defined regex patterns (JSON stringified list)</summary>
+    </key>
+  </schema>
+</schemalist>

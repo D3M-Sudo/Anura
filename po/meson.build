@@ -1,3 +1,2 @@
-i18n.gettext('io.github.d3msudo.anura',
-    preset: 'glib'
-)
+# po/meson.build
+i18n.gettext(APP_ID, preset: 'glib')

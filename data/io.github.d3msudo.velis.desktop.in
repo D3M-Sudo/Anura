@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Velis
+Comment=Extract text from anywhere on your screen
+Exec=velis
+Icon=io.github.d3msudo.velis
+Terminal=false
+Type=Application
+Categories=Utility;GNOME;GTK;
+StartupNotify=true
+DBusActivatable=true
+X-Purism-FormFactor=Workstation;Mobile;

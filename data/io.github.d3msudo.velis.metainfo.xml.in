@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.d3msudo.velis</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Velis</name>
+  <summary>High-performance OCR with smart workflows</summary>
+  <description>
+    <p>
+      Velis is a modern OCR application designed for the GNOME desktop. It allows you to quickly extract text from screenshots, images, or your clipboard.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>Fast OCR using Tesseract</li>
+      <li>Smart Regex workflows for automated data extraction</li>
+      <li>Local history archive with image snippets</li>
+      <li>Built-in translation support via LibreTranslate</li>
+      <li>Side-by-side verification view</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">io.github.d3msudo.velis.desktop</launchable>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/D3M-Sudo/Velis/main/data/screenshots/velis-main.png</image>
+    </screenshot>
+  </screenshots>
+  <url type="homepage">https://github.com/D3M-Sudo/Velis</url>
+  <developer_name>D3M-Sudo</developer_name>
+  <content_rating type="oars-1.1" />
+  <releases>
+    <release version="0.1.0" date="2026-06-15" />
+  </releases>
+</component>

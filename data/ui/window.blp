@@ -1,46 +1,28 @@
-// This file is part of Anura.
-// Copyright (C) 2022-2025 Andrey Maksimov (Frog)
-// Copyright (C) 2026 D3M-Sudo (Anura)
-//
-// SPDX-License-Identifier: MIT
-
 using Gtk 4.0;
 using Adw 1;
 
-translation-domain 'io.github.d3msudo.anura';
+template $VelisWindow : Adw.ApplicationWindow {
+  default-width: 800;
+  default-height: 600;
+  title: "Velis";
 
-template $AnuraWindow : Adw.ApplicationWindow {
-  default-width: 480;
-  default-height: 480;
-  width-request: 360;
-  height-request: 360;
-  
-  icon-name: "io.github.d3msudo.anura";
-
-  [content]
-  Adw.ToastOverlay toast_overlay {
-
-    Gtk.Box {
-      orientation: vertical;
-
-      Adw.Banner portal_banner {
-        title: _("Screenshot portal unavailable. Install xdg-desktop-portal-gtk (or the backend matching your desktop) and re-login.");
-        button-label: _("Dismiss");
-        revealed: false;
+  content: Adw.ToastOverlay {
+    child: Adw.NavigationView nav_view {
+      Adw.NavigationPage {
+        tag: "welcome";
+        title: "Velis";
+        child: $WelcomePage welcome_page {};
       }
-
-      Adw.NavigationView navigation_view {
-        hexpand: true;
-        vexpand: true;
-
-        $WelcomePage welcome_page {
-          tag: "welcome";
-        }
-
-        $ExtractedPage extracted_page {
-          tag: "extracted";
-        }
+      Adw.NavigationPage {
+        tag: "extracted";
+        title: "Extracted Text";
+        child: $ExtractedPage extracted_page {};
       }
-    }
-  }
+      Adw.NavigationPage {
+        tag: "history";
+        title: "History";
+        child: $HistoryPage history_page {};
+      }
+    };
+  };
 }
