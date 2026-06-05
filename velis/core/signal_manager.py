@@ -17,9 +17,8 @@ class SignalManagerMixin:
             import gi
             gi.require_version("GObject", "2.0")
             from gi.repository import GObject
-            if isinstance(self, GObject.Object):
-                if GObject.signal_lookup("destroy", self.__class__):
-                    self.connect("destroy", lambda _: self.teardown_all())
+            if isinstance(self, GObject.Object) and GObject.signal_lookup("destroy", self.__class__):
+                self.connect("destroy", lambda _: self.teardown_all())
         except (ImportError, ValueError, Exception):
             pass
 

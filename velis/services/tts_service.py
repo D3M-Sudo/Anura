@@ -1,15 +1,4 @@
 # velis/services/tts_service.py
-try:
-    import gi
-    gi.require_version("Gst", "1.0")
-    from gi.repository import GLib, GObject, Gst
-    HAS_GST = True
-except (ImportError, ValueError):
-    HAS_GST = False
-    class GObject:
-        class Object: pass
-        SignalFlags = type('SignalFlags', (), {'RUN_LAST': 1})
-
 import os
 import uuid
 
@@ -17,6 +6,17 @@ import gtts
 
 from velis.utils.singleton import get_instance
 
+try:
+    import gi
+    gi.require_version("Gst", "1.0")
+    from gi.repository import GObject, Gst
+    HAS_GST = True
+except (ImportError, ValueError):
+    HAS_GST = False
+    class GObject:
+        class Object:
+            pass
+        SignalFlags = type('SignalFlags', (), {'RUN_LAST': 1})
 
 class TtsService(GObject.Object if HAS_GST else object):
     if HAS_GST:
@@ -37,9 +37,8 @@ class TtsService(GObject.Object if HAS_GST else object):
             bus.connect("message", self._on_message)
 
     def _on_message(self, bus, message):
-        if HAS_GST:
-            if message.type == Gst.MessageType.EOS or message.type == Gst.MessageType.ERROR:
-                self.stop()
+        if HAS_GST and (message.type == Gst.MessageType.EOS or message.type == Gst.MessageType.ERROR):
+            self.stop()
 
     def speak(self, text, lang='en'):
         if not HAS_GST:
@@ -61,7 +60,7 @@ class TtsService(GObject.Object if HAS_GST else object):
         if self._temp_file and os.path.exists(self._temp_file):
             try:
                 os.remove(self._temp_file)
-            except:
+            except OSError:
                 pass
             self._temp_file = None
         self.emit('playback-stopped')

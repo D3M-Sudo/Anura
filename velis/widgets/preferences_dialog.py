@@ -1,4 +1,6 @@
 # velis/widgets/preferences_dialog.py
+from velis.services.settings_service import get_settings
+
 try:
     import gi
     gi.require_version("Adw", "1")
@@ -8,12 +10,11 @@ try:
 except (ImportError, ValueError):
     HAS_GTK = False
     class Adw:
-        class PreferencesDialog: pass
+        class PreferencesDialog:
+            pass
     class Gtk:
-        def Template(*args, **kwargs): return lambda x: x
-
-from velis.services.settings_service import get_settings
-
+        def Template(*args, **kwargs):
+            return lambda x: x
 
 @Gtk.Template(resource_path="/io/github/d3msudo/velis/preferences_dialog.ui")
 class PreferencesDialog(Adw.PreferencesDialog):
@@ -34,17 +35,22 @@ class PreferencesDialog(Adw.PreferencesDialog):
         if not HAS_GTK:
             return
 
-        # Bind language row
-        # (In a real app we would populate the model with Tesseract languages)
         model = Gtk.StringList.new(["eng", "ita", "fra", "deu", "spa"])
         self.language_row.set_model(model)
 
-        # Simple binding for settings
-        self.settings.settings.bind("translate-endpoint", self.translate_endpoint_row, "text", Gio.SettingsBindFlags.DEFAULT)
-        self.settings.settings.bind("translate-api-key", self.translate_api_key_row, "text", Gio.SettingsBindFlags.DEFAULT)
+        self.settings.settings.bind(
+            "translate-endpoint",
+            self.translate_endpoint_row,
+            "text",
+            Gio.SettingsBindFlags.DEFAULT
+        )
+        self.settings.settings.bind(
+            "translate-api-key",
+            self.translate_api_key_row,
+            "text",
+            Gio.SettingsBindFlags.DEFAULT
+        )
 
-        # Language binding needs conversion from index to string usually,
-        # let's do a simple connection for now
         self.language_row.connect("notify::selected", self._on_language_changed)
 
     def _on_language_changed(self, *args):

@@ -1,4 +1,6 @@
 # velis/widgets/history_page.py
+from velis.services.history_service import get_history_service
+
 try:
     import gi
     gi.require_version("Gtk", "4.0")
@@ -8,11 +10,10 @@ try:
 except (ImportError, ValueError):
     HAS_GTK = False
     class Gtk:
-        class Box: pass
-        def Template(*args, **kwargs): return lambda x: x
-
-from velis.services.history_service import get_history_service
-
+        class Box:
+            pass
+        def Template(*args, **kwargs):
+            return lambda x: x
 
 @Gtk.Template(resource_path="/io/github/d3msudo/velis/history_page.ui")
 class HistoryPage(Gtk.Box):
