@@ -342,6 +342,26 @@
         {
             "name": "imlib2",
             "buildsystem": "autotools",
+            "config-opts": [
+                "--with-png",
+                "--with-jpeg",
+                "--with-zlib",
+                "--without-gif",
+                "--without-tiff",
+                "--without-bmp",
+                "--without-xbm",
+                "--without-xpm",
+                "--without-heif",
+                "--without-j2k",
+                "--without-avif",
+                "--without-webp",
+                "--without-id3",
+                "--without-ps",
+                "--with-loader-dir=/app/lib/imlib2/loaders"
+            ],
+            "post-install": [
+                "ls /app/lib/imlib2/loaders/png.so || (echo 'FATAL: imlib2 PNG loader missing' && exit 1)"
+            ],
             "sources": [
                 {
                     "type": "archive",

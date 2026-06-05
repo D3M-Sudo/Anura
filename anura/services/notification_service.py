@@ -264,7 +264,7 @@ class NotificationService:
         """Auto-dismiss a portal notification by removing it via the portal API."""
         try:
             if self._portal is not None:
-                self._portal.remove_notification(notification_id, None, None, None)
+                self._portal.remove_notification(notification_id)
                 logger.debug(f"NotificationService: Dismissed portal notification: {notification_id}")
         except (AttributeError, RuntimeError, TypeError, GLib.Error) as e:
             logger.debug(f"NotificationService: Failed to dismiss portal notification: {e}")
@@ -301,7 +301,7 @@ class NotificationService:
             if self._portal is not None:
                 for notification_id in list(self._active_notifications):
                     try:
-                        self._portal.remove_notification(notification_id, None, None, None)
+                        self._portal.remove_notification(notification_id)
                     except (AttributeError, RuntimeError, TypeError, GLib.Error) as e:
                         logger.debug(f"NotificationService: Could not remove notification {notification_id}: {e}")
             self._active_notifications.clear()

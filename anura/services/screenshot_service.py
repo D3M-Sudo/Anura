@@ -706,6 +706,18 @@ class ScreenshotService(GObject.GObject):
 
                 GLib.idle_add(_on_status_idle)
 
+            # BUG-nav-block: self._current_task_id holds the ID of the
+            # execute() task that called decode_image() (task A). When
+            # execute_isolated() runs below, AtomicTaskManager cancels task A
+            # and sets _current_task_id to the isolated task B. But the service's
+            # own self._current_task_id is still task A. When _on_shot_done
+            # reads backend.current_task_id it gets task A, is_cancelled(A)
+            # returns True, and navigation to ExtractedPage is silently blocked.
+            # Fix: clear _current_task_id now so backend.current_task_id returns
+            # None, causing _navigate_to_extracted_page to skip the guard and
+            # open ExtractedPage correctly after a successful scrot capture.
+            self._current_task_id = None
+
             get_atomic_manager().execute_isolated(
                 run_ocr_pipeline,
                 (lang, file, mode),

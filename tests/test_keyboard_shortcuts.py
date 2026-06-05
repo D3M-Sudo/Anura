@@ -106,8 +106,12 @@ class TestKeyboardShortcuts:
             accels_set = []
 
             class MockApp:
-                def __init__(self):
-                    pass
+                # ActionRegistry calls self.app.<callback> for every action
+                # it registers. Without __getattr__ these attribute accesses
+                # raise AttributeError before add_action() is ever called,
+                # leaving actions_added empty and the assertion failing.
+                def __getattr__(self, name):
+                    return lambda *_: None
 
                 def add_action(self, action):
                     actions_added.append(action.get_name())

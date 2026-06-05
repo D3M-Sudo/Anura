@@ -91,7 +91,15 @@ class LegacyX11Provider(ScreenshotProvider):
             callback(False, None, _("Failed to create temporary file."))
             return
 
-        argv = [scrot_bin, "-s", output_path]
+        # BUG-scrot-overwrite: tempfile.mkstemp() creates the output file before
+        # scrot is launched (necessary for secure temp file creation). scrot 1.11.x
+        # calls scrotCheckIfOverwriteFile() which detects the pre-existing empty
+        # file and silently renames the output to <name>_000.png, leaving the
+        # original path at 0 bytes. Anura polls the original path and reports
+        # "Screenshot tool produced no output." even though the capture succeeded.
+        # Fix: pass --overwrite so scrotCheckIfOverwriteFile() returns immediately
+        # and scrot writes directly to the path created by mkstemp().
+        argv = [scrot_bin, "--overwrite", "-s", output_path]
 
         logger.info(f"LegacyX11Provider: Spawning scrot from '{scrot_bin}'")
 
@@ -100,10 +108,24 @@ class LegacyX11Provider(ScreenshotProvider):
             self._cancellable = cancellable
 
         try:
-            proc = Gio.Subprocess.new(
-                argv,
+            # Gio.Subprocess.new() does not guarantee full environment
+            # inheritance inside the Flatpak sandbox. XAUTHORITY in particular
+            # can be absent or point to a path unreachable from the subprocess:
+            # without it scrot cannot call XGrabPointer and exits 0 without
+            # writing any output (silent failure, exists=True, size=0).
+            # SubprocessLauncher lets us forward the X11-critical variables
+            # explicitly from the parent process environment.
+            launcher = Gio.SubprocessLauncher.new(
                 Gio.SubprocessFlags.STDERR_PIPE | Gio.SubprocessFlags.STDOUT_PIPE,
             )
+            for var in ("DISPLAY", "XAUTHORITY", "XSOCK", "DBUS_SESSION_BUS_ADDRESS"):
+                value = os.environ.get(var)
+                if value is not None:
+                    launcher.setenv(var, value, True)
+                    logger.debug(f"LegacyX11Provider: forwarding {var}={value}")
+                else:
+                    logger.debug(f"LegacyX11Provider: {var} not set in parent env")
+            proc = launcher.spawnv(argv)
             with self._lock:
                 self._proc = proc
         except GLib.Error as e:

@@ -325,7 +325,22 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         """Handle OCR error signal."""
         self._cleanup_screenshot_state()
         self.welcome_page.reset_drop_area_state()
-        if message:
+        if not message:
+            return
+        # For total capture failure with no fallback available, show a fatal
+        # error dialog instead of a toast (previously handled in
+        # AnuraApplication._on_error_occurred; moved here to avoid the double
+        # notification burst caused by connecting error-occurred twice).
+        from anura.services.screenshot_service import get_screenshot_service
+        backend = get_screenshot_service()
+        if "screenshot failed" in message.lower() and not getattr(backend, "fallback_provider", None):
+            from anura.utils.dialog_manager import DialogManager
+            error_body = _(
+                "Anura could not capture a screenshot because no suitable "
+                "portal backend or fallback tool was found."
+            )
+            DialogManager.show_fatal_error(self, _("Capture Failed"), error_body)
+        else:
             self.show_toast(message)
 
     def _on_ocr_status_changed(self, _controller: OcrController, status_msg: str) -> None:
