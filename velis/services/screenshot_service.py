@@ -1,19 +1,19 @@
 # velis/services/screenshot_service.py
-from loguru import logger
-
-from velis.utils.singleton import get_instance
-
 try:
     import gi
     gi.require_version("Xdp", "1.0")
-    from gi.repository import GObject, Xdp
+    from gi.repository import GLib, GObject, Xdp
     HAS_GI = True
 except (ImportError, ValueError):
     HAS_GI = False
     class GObject:
-        class Object:
-            pass
+        class Object: pass
         SignalFlags = type('SignalFlags', (), {'RUN_LAST': 1})
+
+from loguru import logger
+
+from velis.utils.singleton import get_instance
+
 
 class ScreenshotService(GObject.Object if HAS_GI else object):
     if HAS_GI:

@@ -3,19 +3,15 @@ try:
     import gi
     gi.require_version("Gtk", "4.0")
     gi.require_version("Adw", "1")
-    from gi.repository import Gdk, GLib, Gtk
+    from gi.repository import Adw, Gdk, GLib, Gtk
     HAS_GTK = True
 except (ImportError, ValueError):
     HAS_GTK = False
     class Gtk:
-        class Box:
-            pass
-        def Template(*args, **kwargs):
-            return lambda x: x
+        class Box: pass
+        def Template(*args, **kwargs): return lambda x: x
     class GLib:
-        @staticmethod
-        def Variant(*args, **kwargs):
-            return None
+        def Variant(*args, **kwargs): return None
 
 @Gtk.Template(resource_path="/io/github/d3msudo/velis/welcome_page.ui")
 class WelcomePage(Gtk.Box):

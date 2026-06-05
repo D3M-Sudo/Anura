@@ -3,19 +3,18 @@ import gi
 
 gi.require_version("Adw", "1")
 gi.require_version("Gtk", "4.0")
+from gi.repository import Adw, Gio, GLib, Gtk
+from loguru import logger
 
-from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
-from loguru import logger  # noqa: E402
-
-from velis.core.atomic_task_manager import get_atomic_manager  # noqa: E402
-from velis.core.signal_manager import SignalManagerMixin  # noqa: E402
-from velis.services.history_service import get_history_service  # noqa: E402
-from velis.services.ocr_service import get_ocr_service  # noqa: E402
-from velis.services.regex_service import get_regex_service  # noqa: E402
-from velis.services.screenshot_service import get_screenshot_service  # noqa: E402
-from velis.services.settings_service import get_settings  # noqa: E402
-from velis.services.tts_service import get_tts_service  # noqa: E402
-from velis.widgets.preferences_dialog import PreferencesDialog  # noqa: E402
+from velis.core.atomic_task_manager import get_atomic_manager
+from velis.core.signal_manager import SignalManagerMixin
+from velis.services.history_service import get_history_service
+from velis.services.ocr_service import get_ocr_service
+from velis.services.regex_service import get_regex_service
+from velis.services.screenshot_service import get_screenshot_service
+from velis.services.settings_service import get_settings
+from velis.services.tts_service import get_tts_service
+from velis.widgets.preferences_dialog import PreferencesDialog
 
 
 @Gtk.Template(resource_path="/io/github/d3msudo/velis/window.ui")

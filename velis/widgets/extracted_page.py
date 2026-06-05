@@ -1,4 +1,17 @@
 # velis/widgets/extracted_page.py
+try:
+    import gi
+    gi.require_version("Gtk", "4.0")
+    from gi.repository import Adw, Gdk, Gio, GLib, Gtk
+    HAS_GTK = True
+except (ImportError, ValueError):
+    HAS_GTK = False
+    class Gtk:
+        class Box: pass
+        def Template(*args, **kwargs): return lambda x: x
+    class Gio:
+        class AsyncResult: pass
+
 from loguru import logger
 
 from velis.core.atomic_task_manager import get_atomic_manager
@@ -7,18 +20,6 @@ from velis.services.translation_service import get_translation_service
 from velis.services.tts_service import get_tts_service
 from velis.utils.file_utils import save_text_to_file
 
-try:
-    import gi
-    gi.require_version("Gtk", "4.0")
-    from gi.repository import Gtk
-    HAS_GTK = True
-except (ImportError, ValueError):
-    HAS_GTK = False
-    class Gtk:
-        class Box:
-            pass
-        def Template(*args, **kwargs):
-            return lambda x: x
 
 @Gtk.Template(resource_path="/io/github/d3msudo/velis/extracted_page.ui")
 class ExtractedPage(Gtk.Box):
@@ -96,6 +97,7 @@ class ExtractedPage(Gtk.Box):
             )
 
         def _on_translation_finished(self, translated_text):
+            # Append translated text or replace? Let's append with a separator
             buffer = self.text_view.get_buffer()
             current_text = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), False)
             new_text = current_text + "\n\n--- Translation ---\n\n" + translated_text

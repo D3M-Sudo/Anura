@@ -15,7 +15,7 @@ except (ImportError, ValueError):
     HAS_GLIB = False
 
 class AtomicTaskResult:
-    def __init__(self, task_id: str, data: object = None, error: Exception | None = None):
+    def __init__(self, task_id: str, data: object = None, error: Exception = None):
         self.task_id = task_id
         self.data = data
         self.error = error
