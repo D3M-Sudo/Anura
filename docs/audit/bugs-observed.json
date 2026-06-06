@@ -19,7 +19,7 @@
     "analyzed_files": 309,
     "analyzed_lines": 86723,
     "start_timestamp": "2026-06-03T20:30:00Z",
-    "last_checkpoint": "2026-06-03T22:30:00Z",
+    "last_checkpoint": "2026-06-03T22:45:00Z",
     "personalities_activated": [
       "Senior Mathematician",
       "Security Paranoid",
@@ -80,7 +80,7 @@
     },
     "progress_visual": {
       "ascii_bar": "[####################] 309/309 files",
-      "current_focus": "Audit Complete - Finalizing findings",
+      "current_focus": "Audit Complete - All findings documented",
       "bugs_last_hour": 1,
       "estimated_completion": "DONE",
       "velocity_trend": "->",
@@ -99,6 +99,7 @@
       "location": {"file": "anura/services/language_manager.py", "line": 288, "function": "init_tessdata"},
       "chain_of_thought": {
         "description": "Unconditional deletion of .tmp files in TESSDATA_DIR at startup. If multiple instances of Anura are started concurrently, one instance might delete the temporary download file of another instance. This differs from the age-based cleanup in cleanup.py.",
+        "root_cause": "Shared directory cleanup logic lacks instance-awareness or age-based thresholding.",
         "impact": "Failed language downloads if two instances start at the same time."
       },
       "variable_lifecycle": [],
@@ -107,7 +108,8 @@
         "risk": "Low probability, but race condition is present."
       },
       "fix_prescription": {
-        "approach": "Use age-based cleanup (e.g. 1 hour) instead of unconditional deletion.",
+        "immediate": "Use age-based cleanup (e.g. 1 hour) instead of unconditional deletion.",
+        "proper": "Implement an instance lock file or use unique temporary prefixes per instance.",
         "effort": "LOW"
       },
       "status": "OPEN",
@@ -124,6 +126,7 @@
       "location": {"file": "anura/transformers/models.py", "line": 39, "function": "OcrResult._count_unique_sections"},
       "chain_of_thought": {
         "description": "Set comprehension has incompatible type Set[tuple[Any, Any]]; expected Set[tuple[Any]]. The mypy error suggests a type mismatch in how layout sections are counted.",
+        "root_cause": "Mismatch between set comprehension structure and the expected return type for composite keys.",
         "impact": "Static analysis failure and potential subtle logic errors in structural reconstruction."
       },
       "variable_lifecycle": [],
@@ -149,12 +152,16 @@
       "location": {"file": "anura/core/silent_runner.py", "line": 33, "function": "on_signal"},
       "chain_of_thought": {
         "description": "Unused variable 'frame' in signal handler.",
+        "root_cause": "Boilerplate parameter required by signal.signal but not used in the application-specific handler.",
         "impact": "Dead code/clutter."
       },
       "variable_lifecycle": [],
-      "impact_analysis": {},
+      "impact_analysis": {
+        "immediate": "None",
+        "risk": "Minor maintainability issue."
+      },
       "fix_prescription": {
-        "approach": "Prefix with underscore or remove.",
+        "approach": "Prefix with underscore or remove if possible via varargs.",
         "effort": "TRIVIAL"
       },
       "status": "OPEN",
@@ -171,12 +178,13 @@
       "location": {"file": "anura/controllers/ocr_controller.py", "line": 95, "function": "_on_shot_done"},
       "chain_of_thought": {
         "description": "Redundant Magic Processing. ScreenshotService already performs magic processing during the OCR pipeline (often in a background process). OcrController repeats this on the main thread when receiving the 'decoded' signal.",
+        "root_cause": "Architectural layering leak where the Controller re-performs expensive logic already handled by the Service layer.",
         "impact": "Wasted CPU cycles and potential UI micro-stutters on the main thread during extraction."
       },
       "variable_lifecycle": [],
       "impact_analysis": {
         "immediate": "Unnecessary work on UI thread.",
-        "risk": "Poor performance on low-end hardware."
+        "risk": "Poor performance on low-end hardware or with large OCR results."
       },
       "fix_prescription": {
         "approach": "Remove redundant MagicProcessor call from OcrController and use the results already provided in text/ocr_result.",
