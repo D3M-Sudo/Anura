@@ -191,14 +191,8 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         controller = win.ocr_controller
         self.connect_tracked(controller, "text-extracted", self._on_text_extracted)
         self.connect_tracked(controller, "uri-detected", self._on_uri_detected)
-        # NOTE: "error-occurred" is intentionally NOT connected here.
-        # AnuraWindow._on_ocr_error (handler connected in window.py) already
-        # handles this signal with show_toast() + UI cleanup. Connecting it
-        # again here caused a double-notification burst confirmed by debug log
-        # (handler_id=1493 from window.py + handler_id=1505 from main.py both
-        # firing for every single emit("error-occurred")).
-        # Fatal-dialog logic for missing portal/fallback has been moved into
-        # AnuraWindow._on_ocr_error where the window context is always available.
+        # BUG-003: "error-occurred" is intentionally NOT connected here to avoid
+        # duplicate notifications. It is handled by AnuraWindow._on_ocr_error.
 
     def _on_text_extracted(self, _controller, text: str, copy_requested: bool) -> None:
         is_window_active = bool(self.get_active_window())

@@ -10,7 +10,7 @@ Provides an elegant cheat sheet with all available keyboard shortcuts.
 """
 
 from gettext import gettext as _
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import gi
 
@@ -37,6 +37,8 @@ class ShortcutsOverlay(Adw.Window):
     search_entry: Gtk.SearchEntry = Gtk.Template.Child()
     shortcuts_list: Gtk.ListBox = Gtk.Template.Child()
     stack: Gtk.Stack = Gtk.Template.Child()
+
+    shortcuts_data: list[dict[str, Any]]
 
     def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
@@ -185,7 +187,9 @@ class ShortcutsOverlay(Adw.Window):
 
         for group, rows in self._groups:
             visible_count = 0
-            for child_row in rows:
+            # Convert Collection to list for safe indexing (BUG-005)
+            rows_list = list(rows)
+            for child_row in rows_list:
                 title = child_row.get_title().lower()
                 if not query or query in title:
                     child_row.set_visible(True)
