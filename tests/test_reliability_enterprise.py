@@ -65,8 +65,14 @@ class TestReliabilityEnterprise:
 
         with patch.object(lm_mod, "TESSDATA_DIR", str(tmp_path)):
             # Create a partial/corrupted file
+            import time
+
             corrupted = tmp_path / "fra.traineddata.tmp"
             corrupted.touch()
+
+            # Set mtime to 2 hours ago to trigger age-based cleanup
+            old_time = time.time() - 7200
+            os.utime(corrupted, (old_time, old_time))
 
             with patch("shutil.which", return_value="/usr/bin/tesseract"), patch("os.access", return_value=True):
                 # init_tessdata should clean up .tmp files
