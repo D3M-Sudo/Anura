@@ -5,7 +5,6 @@
 # SPDX-License-Identifier: MIT
 
 from collections.abc import Callable
-import contextlib
 from gettext import gettext as _
 import os
 from pathlib import Path
@@ -156,11 +155,7 @@ def run_ocr_pipeline(
 
     try:
         from PIL import Image
-        import pytesseract
-        from pytesseract import Output
 
-        from anura.transformers.magic_processor import get_magic_processor
-        from anura.utils.structural_reconstructor import get_structural_reconstructor
         from anura.utils.text_preprocessor import get_text_preprocessor
 
         if not Path(file_path).exists() or Path(file_path).stat().st_size == 0:
@@ -187,10 +182,8 @@ def run_ocr_pipeline(
                 for k in _ENV_KEYS:
                     os.environ[k] = tmp_dir
 
-                with Image.open(file_path) as img:
+                with Image.open(file_path) as img:  # type: ignore[assignment]
                     # 1. Barcode Detection
-                    from anura.utils.barcode_detector import detect_barcodes
-
                     barcode_result = _pipeline_detect_barcodes(img, start_time)
                     if barcode_result:
                         return barcode_result
@@ -530,13 +523,7 @@ class ScreenshotService(GObject.GObject):
             logger.error(f"Anura OCR: Attempted to process 0-byte image file: {file}")
             return None, _("The selected image file is empty."), None
 
-        # BUG-008: Ensure we only pass filenames or file-like objects to Image.open
-        if isinstance(file, Image.Image):
-            img_context = contextlib.nullcontext(file)
-        else:
-            img_context = Image.open(file)
-
-        with img_context as img:
+        with Image.open(file) as img:
             image_size = img.size
             logger.debug(f"Anura OCR: Processing image size: {image_size[0]}x{image_size[1]}")
 
@@ -547,7 +534,7 @@ class ScreenshotService(GObject.GObject):
                     raise InterruptedError(f"Task {task_id} was cancelled before OCR")
 
                 if img.mode != "L":
-                    img = img.convert("L")  # type: ignore[assignment]
+                    img = img.convert("L")
                 extracted, ocr_result = self._try_ocr_extraction(img, lang, start_time, task_id=task_id)
 
         return extracted, error_message, ocr_result

@@ -185,10 +185,7 @@ def _parse_and_validate_hostname(text: str) -> bool:
         if not hostname and "://" in text:
             return False
 
-        if not _check_hostname_homograph(hostname):
-            return False
-
-        return True
+        return _check_hostname_homograph(hostname)
 
     except (ValueError, AttributeError, TypeError):
         # Malformed URL parsing - treat as unsafe
