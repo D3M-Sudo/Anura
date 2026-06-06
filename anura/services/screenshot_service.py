@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: MIT
 
 from collections.abc import Callable
+import contextlib
 from gettext import gettext as _
 import os
 from pathlib import Path
@@ -94,7 +95,7 @@ def run_ocr_pipeline(
                 for k in _ENV_KEYS:
                     os.environ[k] = tmp_dir
 
-                with Image.open(file_path) as img:  # type: ignore[assignment]
+                with Image.open(file_path) as img:
                     # 1. Barcode Detection
                     from anura.utils.barcode_detector import detect_barcodes
 
@@ -107,7 +108,7 @@ def run_ocr_pipeline(
 
                     # 2. Pre-processing
                     if img.mode != "L":
-                        img = img.convert("L")
+                        img = img.convert("L")  # type: ignore[assignment]
 
                     logger.debug("Isolated: Enhancing image...")
                     if status_callback:
@@ -468,7 +469,13 @@ class ScreenshotService(GObject.GObject):
             logger.error(f"Anura OCR: Attempted to process 0-byte image file: {file}")
             return None, _("The selected image file is empty."), None
 
-        with Image.open(file) as img:
+        # BUG-008: Ensure we only pass filenames or file-like objects to Image.open
+        if isinstance(file, Image.Image):
+            img_context = contextlib.nullcontext(file)
+        else:
+            img_context = Image.open(file)
+
+        with img_context as img:
             image_size = img.size
             logger.debug(f"Anura OCR: Processing image size: {image_size[0]}x{image_size[1]}")
 
@@ -479,7 +486,7 @@ class ScreenshotService(GObject.GObject):
                     raise InterruptedError(f"Task {task_id} was cancelled before OCR")
 
                 if img.mode != "L":
-                    img = img.convert("L")
+                    img = img.convert("L")  # type: ignore[assignment]
                 extracted, ocr_result = self._try_ocr_extraction(img, lang, start_time, task_id=task_id)
 
         return extracted, error_message, ocr_result

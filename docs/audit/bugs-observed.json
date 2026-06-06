@@ -1,21 +1,25 @@
 {
   "session_metadata": {
     "repository_path": ".",
-    "languages_detected": ["Python", "Blueprint", "C", "Shell", "Meson", "CSS"],
+    "languages_detected": ["Python", "Blueprint", "GTK-UI", "Meson", "Shell", "PO"],
     "tools_available": {
       "ruff": "uv run ruff",
+      "mypy": "uv run mypy",
       "bandit": "uv run bandit",
       "safety": "uv run safety",
-      "mypy": "uv run mypy",
+      "pylint": "uv run pylint",
+      "vulture": "uv run vulture",
+      "radon": "uv run radon",
+      "semgrep": "uv run semgrep",
       "pytest": "uv run pytest"
     },
-    "tools_executed": ["ruff", "mypy", "bandit", "safety", "pytest"],
-    "total_files": 197,
-    "total_lines": 65722,
-    "analyzed_files": 47,
-    "analyzed_lines": 8291,
-    "start_timestamp": "2026-06-03T17:19:00Z",
-    "last_checkpoint": "2026-06-03T17:40:00Z",
+    "tools_executed": ["ruff", "bandit", "safety", "vensure", "radon", "semgrep", "mypy", "pylint", "pytest"],
+    "total_files": 213,
+    "total_lines": 66408,
+    "analyzed_files": 0,
+    "analyzed_lines": 0,
+    "start_timestamp": "2026-06-03T20:30:00Z",
+    "last_checkpoint": "",
     "personalities_activated": [
       "Senior Mathematician", "Security Paranoid", "Systems Architect",
       "Concurrency Specialist", "Memory Surgeon", "Performance Optimizer",
@@ -24,127 +28,76 @@
       "Code Path Detective", "Naming Police", "Logic Validator", "Parameter Inspector"
     ],
     "personality_weights": {
-      "Senior Mathematician": 1.0, "Security Paranoid": 1.4,
-      "Systems Architect": 1.0, "Concurrency Specialist": 1.5,
-      "Memory Surgeon": 1.0, "Performance Optimizer": 1.5,
+      "Senior Mathematician": 1.0, "Security Paranoid": 1.0,
+      "Systems Architect": 1.0, "Concurrency Specialist": 1.0,
+      "Memory Surgeon": 1.0, "Performance Optimizer": 1.0,
       "Data Scientist": 1.0, "Financial Engineer": 1.0,
       "Distributed Systems Expert": 1.0, "Testing Philosopher": 1.0,
-      "Variable Forensics Investigator": 1.2, "Code Path Detective": 1.0,
-      "Naming Police": 1.0, "Logic Validator": 1.2, "Parameter Inspector": 1.3
+      "Variable Forensics Investigator": 1.0, "Code Path Detective": 1.0,
+      "Naming Police": 1.0, "Logic Validator": 1.0, "Parameter Inspector": 1.0
     },
-    "phase_gates_completed": ["gate_0_setup", "gate_1_initial_scan", "gate_2_deep_dive", "gate_3_completion"]
+    "phase_gates_completed": ["gate_0_setup", "gate_1_initial_scan"]
   },
   "progress_tracking": {
-    "current_file": "SWEEP_COMPLETE",
+    "current_file": "",
     "current_line": 0,
     "current_variable_tracking": [],
-    "completed_files": [
-      "anura/services/language_manager.py", "anura/core/atomic_task_manager.py",
-      "anura/services/screenshot_service.py", "anura/utils/image_filters.py",
-      "anura/main.py", "anura/controllers/ocr_controller.py",
-      "anura/window.py", "anura/services/clipboard_service.py",
-      "anura/controllers/tts_controller.py", "anura/controllers/dnd_controller.py",
-      "anura/services/tts.py", "anura/services/share_service.py",
-      "anura/services/notification_service.py", "anura/services/result_dispatcher.py",
-      "anura/services/settings.py", "anura/core/silent_runner.py",
-      "anura/core/dialogs.py", "anura/core/boot.py",
-      "anura/core/resources.py", "anura/core/action_registry.py",
-      "anura/utils/validators.py", "anura/utils/barcode_detector.py",
-      "anura/utils/signal_manager.py", "anura/utils/singleton.py",
-      "anura/utils/structural_reconstructor.py", "anura/utils/text_preprocessor.py",
-      "anura/utils/cleanup.py", "anura/utils/portal_advice.py",
-      "anura/models/ocr.py", "anura/models/context.py",
-      "anura/models/download_state.py", "anura/models/language_item.py",
-      "anura/transformers/magic_processor.py", "anura/transformers/base_transformers.py",
-      "anura/transformers/email_transformer.py", "anura/transformers/url_transformer.py",
-      "anura/transformers/models.py", "anura/config.py",
-      "anura/services/screenshot/base.py", "anura/services/screenshot/factory.py",
-      "anura/services/screenshot/legacy_provider.py", "anura/services/screenshot/portal_provider.py",
-      "anura/widgets/welcome_page.py", "anura/widgets/preferences_dialog.py",
-      "anura/widgets/preferences_general_page.py", "anura/widgets/preferences_languages_page.py",
-      "anura/widgets/shortcuts_overlay.py", "anura/widgets/extracted_page.py"
-    ],
+    "completed_files": [],
     "pending_files": [],
     "untested_paths": [],
-    "coverage_percentage": 23.9,
+    "coverage_percentage": 0,
     "micro_checkpoints": [],
     "tool_results": {
-      "ruff": {"errors": 0, "status": "CLEAN"},
-      "mypy": {"real_errors": 31, "filtered_false_positives": 50, "status": "WARNINGS"},
-      "bandit": {"errors": 0, "status": "CLEAN"},
-      "safety": {
-        "errors": 5, "status": "VULNERABILITIES",
-        "details": [
-          {"id": "85681", "package": "pip", "version": "24.0", "cve": "CVE-2026-1703", "severity": "HIGH", "fix": "upgrade to >=26.0", "description": "Path Traversal via incorrect directory containment check"},
-          {"id": "SFTY-20260420-60812", "package": "pip", "version": "24.0", "cve": "CVE-2026-3219", "severity": "MEDIUM", "fix": "upgrade to >26.0.1", "description": "Interpretation Conflict handling concatenated tar and ZIP"},
-          {"id": "75180", "package": "pip", "version": "24.0", "cve": "PVE-2025-75180", "severity": "HIGH", "fix": "upgrade to >=25.0", "description": "Maliciously crafted wheel files can execute unauthorized code"},
-          {"id": "79883", "package": "pip", "version": "24.0", "cve": "CVE-2025-8869", "severity": "HIGH", "fix": "upgrade to >=25.2", "description": "Arbitrary File Overwrite via symbolic link validation"},
-          {"id": "SFTY-20260427-69629", "package": "pip", "version": "24.0", "cve": "CVE-2026-6357", "severity": "MEDIUM", "fix": "upgrade to >=26.1", "description": "Inclusion of Functionality from Untrusted Control Sphere"}
-        ]
-      },
-      "pytest": {"passed": 60, "failed": 1, "skipped": 20, "status": "FAILURES"}
+      "ruff": {"status": "SUCCESS", "findings": 0},
+      "bandit": {"status": "SUCCESS", "findings": 0},
+      "safety": {"status": "SUCCESS", "findings": 0},
+      "mypy": {"status": "WARNINGS", "findings": "Multiple attribute and import errors reported"},
+      "vulture": {"status": "WARNINGS", "findings": "Unused methods and variables detected"},
+      "radon": {"status": "SUCCESS", "findings": "All files Rank A"},
+      "semgrep": {"status": "SUCCESS", "findings": 0},
+      "pylint": {"status": "WARNINGS", "findings": "Linting and import errors reported"},
+      "pytest": {"status": "SUCCESS", "findings": "143 passed, 20 skipped"}
     },
     "progress_visual": {
-      "ascii_bar": "[####--------------] 47/197 files (24%)",
-      "current_focus": "SWEEP COMPLETE - All important files analyzed",
+      "ascii_bar": "[--------------------] 0/0 files",
+      "current_focus": "Initialization",
       "bugs_last_hour": 0,
-      "estimated_completion": "All critical+important files done",
+      "estimated_completion": "",
       "velocity_trend": "->",
       "lines_per_minute": 0,
       "tools_running": []
     }
   },
-  "bugs_database": [
-    {"id": "H-001", "severity": "MEDIUM", "confidence_score": 0.6, "personality_detecting": "Security Paranoid", "personality_agreement": ["Logic Validator", "Variable Forensics Investigator"], "tool_confirmations": ["mypy:attr-defined"], "location": {"file": "anura/core/atomic_task_manager.py", "line": 112, "function": "_ensure_process_executor_locked"}, "chain_of_thought": {"description": "mypy reports 'None has no attribute dict' at line 112. Type annotation gap between __init__ default and actual runtime value."}, "status": "FIXED", "pattern_matched": "P-TYPE-GAP", "variable_lifecycle": [{"event": "birth", "line": 73, "type": "None", "value": "None"}, {"event": "mutation", "line": 111, "type": "SyncManager", "value": "ctx.Manager()"}], "impact_analysis": {"immediate": "No runtime impact", "risk": "mypy can't validate safety downstream"}, "fix_prescription": {"approach": "Add Union type annotation", "effort": "TRIVIAL"}, "time_to_detect_seconds": 30},
-    {"id": "H-002", "severity": "MEDIUM", "confidence_score": 0.7, "personality_detecting": "Concurrency Specialist", "personality_agreement": ["Logic Validator"], "tool_confirmations": ["mypy:arg-type"], "location": {"file": "anura/core/atomic_task_manager.py", "line": 333, "function": "_handle_error"}, "chain_of_thought": {"description": "mypy reports '_default_errorback receives Exception | None but expects Exception'. Defensive None guard needed."}, "status": "FIXED", "pattern_matched": "P-NULL-SAFETY", "variable_lifecycle": [], "impact_analysis": {"immediate": "Potential TypeError if None error passed", "risk": "Defensive guard needed"}, "fix_prescription": {"approach": "Add None guard before calling eb()", "effort": "TRIVIAL"}, "time_to_detect_seconds": 15},
-    {"id": "H-003", "severity": "MEDIUM", "confidence_score": 0.7, "personality_detecting": "Memory Surgeon", "personality_agreement": ["Concurrency Specialist"], "tool_confirmations": [], "location": {"file": "anura/core/atomic_task_manager.py", "line": 393, "function": "shutdown"}, "chain_of_thought": {"description": "Process executor shut down with wait=False to prevent deadlock. Can leave orphan worker processes."}, "status": "FIXED", "pattern_matched": "P-RESOURCE-LEAK", "variable_lifecycle": [], "impact_analysis": {"immediate": "Orphan processes possible during shutdown", "risk": "Zombie processes"}, "fix_prescription": {"approach": "Add brief wait or force_terminate", "effort": "LOW"}, "time_to_detect_seconds": 45},
-    {"id": "H-004", "severity": "MEDIUM", "confidence_score": 0.65, "personality_detecting": "Parameter Inspector", "personality_agreement": ["Variable Forensics Investigator"], "tool_confirmations": ["mypy:assignment"], "location": {"file": "anura/main.py", "line": 67, "function": "AnuraApplication.__init__"}, "chain_of_thought": {"description": "mypy MRO issue with SignalManagerMixin. Runtime is correct - false positive."}, "status": "FIXED", "pattern_matched": "P-MRO-FALSE-POSITIVE", "variable_lifecycle": [], "impact_analysis": {"immediate": "No runtime impact", "risk": "None"}, "fix_prescription": {"approach": "Type: ignore comment or restructure MRO", "effort": "TRIVIAL"}, "time_to_detect_seconds": 20},
-    {"id": "H-005", "severity": "MEDIUM", "confidence_score": 0.6, "personality_detecting": "Variable Forensics Investigator", "personality_agreement": [], "tool_confirmations": ["mypy:assignment"], "location": {"file": "anura/services/screenshot_service.py", "line": 110, "function": "run_ocr_pipeline"}, "chain_of_thought": {"description": "mypy reports Image vs ImageFile type mismatch from PIL subclassing."}, "status": "FIXED", "pattern_matched": "P-TYPE-ANNOTATION", "variable_lifecycle": [{"event": "birth", "line": 97, "type": "ImageFile", "value": "Image.open(file_path)"}, {"event": "mutation", "line": 110, "type": "Image", "value": "img.convert('L')"}], "impact_analysis": {"immediate": "No runtime impact", "risk": "mypy false negatives"}, "fix_prescription": {"approach": "Add explicit type annotation", "effort": "TRIVIAL"}, "time_to_detect_seconds": 15},
-    {"id": "H-006", "severity": "MEDIUM", "confidence_score": 0.7, "personality_detecting": "Performance Optimizer", "personality_agreement": ["Senior Mathematician"], "tool_confirmations": [], "location": {"file": "anura/utils/image_filters.py", "line": 76, "function": "RescaleFilter.apply"}, "chain_of_thought": {"description": "LANCZOS upscaling unnecessarily expensive for OCR preprocessing. BILINEAR sufficient."}, "status": "FIXED", "pattern_matched": "P-PERF-OPTIMIZATION", "variable_lifecycle": [], "impact_analysis": {"immediate": "Unnecessary CPU time", "risk": "Lower CPU usage with BILINEAR"}, "fix_prescription": {"approach": "Replace LANCZOS with BILINEAR", "effort": "TRIVIAL"}, "time_to_detect_seconds": 10},
-    {"id": "H-007", "severity": "MEDIUM", "confidence_score": 0.6, "personality_detecting": "Testing Philosopher", "personality_agreement": ["Code Path Detective"], "tool_confirmations": ["pytest"], "location": {"file": "tests/test_keyboard_shortcuts.py", "line": 0, "function": "test_shortcuts_action_setup_method_exists"}, "chain_of_thought": {"description": "Only failing test. Test may be out of sync with implementation."}, "status": "FIXED", "pattern_matched": "P-TEST-DRIFT", "variable_lifecycle": [], "impact_analysis": {"immediate": "1 test failure", "risk": "Possible regression"}, "fix_prescription": {"approach": "Inspect and fix test", "effort": "LOW"}, "time_to_detect_seconds": 5},
-    {"id": "H-008", "severity": "MEDIUM", "confidence_score": 0.7, "personality_detecting": "Logic Validator", "personality_agreement": ["Variable Forensics Investigator"], "tool_confirmations": ["mypy:assignment"], "location": {"file": "anura/controllers/ocr_controller.py", "line": 71, "function": "OcrController.teardown"}, "chain_of_thought": {"description": "mypy: _window assigned None but typed as CallableProxyType. Runtime correct."}, "status": "FIXED", "pattern_matched": "P-TYPE-ANNOTATION", "variable_lifecycle": [{"event": "birth", "line": 48, "type": "CallableProxyType[AnuraWindow]", "value": "weakref.proxy(window)"}, {"event": "mutation", "line": 71, "type": "None", "value": "None"}], "impact_analysis": {"immediate": "No runtime impact", "risk": "mypy false negatives"}, "fix_prescription": {"approach": "Update type annotation to include None", "effort": "TRIVIAL"}, "time_to_detect_seconds": 10},
-    {"id": "H-009", "severity": "MEDIUM", "confidence_score": 0.65, "personality_detecting": "Parameter Inspector", "personality_agreement": [], "tool_confirmations": ["mypy:assignment"], "location": {"file": "anura/window.py", "line": 99, "function": "AnuraWindow.__init__"}, "chain_of_thought": {"description": "mypy: backend parameter can be None but typed as ScreenshotService."}, "status": "FIXED", "pattern_matched": "P-TYPE-ANNOTATION", "variable_lifecycle": [], "impact_analysis": {"immediate": "No runtime impact", "risk": "mypy false negatives"}, "fix_prescription": {"approach": "Update type annotation", "effort": "TRIVIAL"}, "time_to_detect_seconds": 10}
-  ],
+  "bugs_database": [],
   "tool_execution_log": {
-    "linters": {
-      "ruff": {"status": "EXECUTED", "errors": 0, "warnings": 0, "timestamp": "2026-06-03T17:19:05Z"},
-      "mypy": {"status": "EXECUTED", "real_errors": 31, "warnings": 0, "timestamp": "2026-06-03T17:19:18Z"}
-    },
-    "security_scanners": {
-      "bandit": {"status": "EXECUTED", "issues": 0, "timestamp": "2026-06-03T17:19:45Z"},
-      "safety": {"status": "EXECUTED", "vulnerabilities": 5, "timestamp": "2026-06-03T17:32:00Z", "note": "All 5 in pip 24.0 - dev dependency only, not runtime risk"}
-    },
+    "linters": {},
+    "security_scanners": {},
     "performance_profilers": {},
-    "test_runners": {
-      "pytest": {"status": "EXECUTED", "passed": 60, "failed": 1, "skipped": 20, "timestamp": "2026-06-03T17:22:14Z"}
-    }
+    "test_runners": {}
   },
   "learned_patterns": {
     "patterns": {
-      "P-TYPE-GAP": "Type annotation gaps between __init__ defaults and actual runtime values",
-      "P-NULL-SAFETY": "Missing None guards in error handling paths",
-      "P-RESOURCE-LEAK": "Documented resource cleanup tradeoffs in shutdown paths",
-      "P-MRO-FALSE-POSITIVE": "Multiple inheritance MRO causing mypy false positives",
-      "P-TYPE-ANNOTATION": "PIL type mismatches due to subclassing and reassignment",
-      "P-PERF-OPTIMIZATION": "Using expensive algorithms where cheaper alternatives suffice",
-      "P-TEST-DRIFT": "Tests becoming out of sync with implementation changes"
+      "P-IMPORT-INCOMPLETE": "Using submodules of a package without explicitly importing them (e.g. import importlib then using importlib.util)",
+      "P-TYPE-ANNOTATION-OVER-STRICT": "Typing an attribute without | None but assigning None during teardown or initialization",
+      "P-REDUNDANT-SIGNAL-CONNECT": "Connecting to the same signal in multiple layers (App vs Window) leading to duplicate side effects",
+      "P-MISSING-NONE-GUARD": "Passing optional values to functions that expect non-None values without checking",
+      "P-COMPREHENSION-TYPE-MISMATCH": "Set or list comprehension producing types that do not match the target annotation"
     },
     "pattern_statistics": {
-      "P-TYPE-ANNOTATION": {"count": 4, "files": ["screenshot_service.py", "ocr_controller.py", "window.py", "atomic_task_manager.py"]},
-      "P-NULL-SAFETY": {"count": 1, "files": ["atomic_task_manager.py"]},
-      "P-PERF-OPTIMIZATION": {"count": 1, "files": ["image_filters.py"]}
+      "P-IMPORT-INCOMPLETE": {"count": 1, "files": ["anura/models/context.py"]},
+      "P-TYPE-ANNOTATION-OVER-STRICT": {"count": 1, "files": ["anura/controllers/ocr_controller.py"]},
+      "P-REDUNDANT-SIGNAL-CONNECT": {"count": 1, "files": ["anura/main.py"]},
+      "P-MISSING-NONE-GUARD": {"count": 1, "files": ["anura/core/atomic_task_manager.py"]},
+      "P-COMPREHENSION-TYPE-MISMATCH": {"count": 2, "files": ["anura/transformers/models.py", "anura/models/ocr.py"]}
     },
     "false_positive_tracking": {}
   },
-  "checkpoint_history": [
-    {"timestamp": "2026-06-03T17:27:00Z", "action": "deep_dive_complete", "files_analyzed": 8, "bugs_found": 9, "tools_validated": ["ruff", "mypy", "bandit", "pytest"]},
-    {"timestamp": "2026-06-03T17:40:00Z", "action": "sweep_complete", "files_analyzed": 47, "bugs_found": 9, "tools_validated": ["ruff", "mypy", "bandit", "safety", "pytest"], "note": "All critical and important Python files analyzed. Remaining 150 files are __init__.py, auto-generated, or test files."}
-  ],
+  "checkpoint_history": [],
   "phase_gates": {
     "gate_0_setup": true,
     "gate_1_initial_scan": true,
-    "gate_2_deep_dive": true,
-    "gate_3_completion": true
+    "gate_2_deep_dive": false,
+    "gate_3_completion": false
   },
   "execution_metrics": {
     "stuck_detection_counter": {},

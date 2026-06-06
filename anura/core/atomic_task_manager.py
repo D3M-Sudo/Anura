@@ -7,7 +7,7 @@ from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
 import multiprocessing
-import multiprocessing.managers
+from multiprocessing.managers import DictProxy, SyncManager
 import threading
 import traceback
 import uuid
@@ -71,8 +71,8 @@ class AtomicTaskManager:
         self._cancellable: Gio.Cancellable | None = None
         self._executor: ThreadPoolExecutor | None = None
         self._process_executor: ProcessPoolExecutor | None = None
-        self._process_manager: multiprocessing.managers.SyncManager | None = None
-        self._isolated_cancellation_map = None
+        self._process_manager: SyncManager | None = None
+        self._isolated_cancellation_map: DictProxy | None = None
         self._state_lock = threading.Lock()
         logger.debug("AtomicTaskManager: Initialized (lazy executors)")
 

@@ -33,6 +33,7 @@ class OcrResult:
         return getattr(obj, attr, None)
 
     def _count_unique_sections(self, level: str) -> int:
+        keys: set[tuple[Any, ...]]
         if level == "block_num":
             keys = {(self._get_val(w, "block_num"),) for w in self.words}
         elif level == "par_num":
