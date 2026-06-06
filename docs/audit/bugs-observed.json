@@ -19,7 +19,7 @@
     "analyzed_files": 309,
     "analyzed_lines": 86723,
     "start_timestamp": "2026-06-03T20:30:00Z",
-    "last_checkpoint": "2026-06-03T22:45:00Z",
+    "last_checkpoint": "2026-06-03T23:15:00Z",
     "personalities_activated": [
       "Senior Mathematician",
       "Security Paranoid",
@@ -80,8 +80,8 @@
     },
     "progress_visual": {
       "ascii_bar": "[####################] 309/309 files",
-      "current_focus": "Audit Complete - All findings documented",
-      "bugs_last_hour": 1,
+      "current_focus": "Fixing Phase Complete - Finalizing documentation",
+      "bugs_last_hour": 0,
       "estimated_completion": "DONE",
       "velocity_trend": "->",
       "lines_per_minute": 0,
@@ -112,7 +112,7 @@
         "proper": "Implement an instance lock file or use unique temporary prefixes per instance.",
         "effort": "LOW"
       },
-      "status": "OPEN",
+      "status": "FIXED",
       "pattern_matched": "RACE-CONDITION",
       "time_to_detect_seconds": 300
     },
@@ -125,21 +125,20 @@
       "tool_confirmations": ["mypy:misc"],
       "location": {"file": "anura/transformers/models.py", "line": 39, "function": "OcrResult._count_unique_sections"},
       "chain_of_thought": {
-        "description": "Set comprehension has incompatible type Set[tuple[Any, Any]]; expected Set[tuple[Any]]. The mypy error suggests a type mismatch in how layout sections are counted.",
-        "root_cause": "Mismatch between set comprehension structure and the expected return type for composite keys.",
-        "impact": "Static analysis failure and potential subtle logic errors in structural reconstruction."
+        "description": "Set comprehension has incompatible type Set[tuple[Any, Any]]; expected Set[tuple[Any]].",
+        "root_cause": "Noise from a local variable 'keys' that changes tuple-arity across branches. The function return type is correct.",
+        "impact": "Static analysis noise."
       },
       "variable_lifecycle": [],
       "impact_analysis": {
-        "immediate": "Mypy type errors.",
-        "risk": "Minimal runtime impact if types are implicitly compatible but breaks strict typing."
+        "immediate": "None",
+        "risk": "None"
       },
       "fix_prescription": {
-        "approach": "Fix the set comprehension to match the expected return type or adjust type annotations.",
-        "effort": "LOW"
+        "approach": "N/A - marked invalid."
       },
-      "status": "OPEN",
-      "pattern_matched": "TYPE-MISMATCH",
+      "status": "INVALID",
+      "pattern_matched": "MYPY-NOISE-POLIVALENT-VAR",
       "time_to_detect_seconds": 60
     },
     {
@@ -161,10 +160,10 @@
         "risk": "Minor maintainability issue."
       },
       "fix_prescription": {
-        "approach": "Prefix with underscore or remove if possible via varargs.",
+        "approach": "Rename to _frame to signal intentional omission.",
         "effort": "TRIVIAL"
       },
-      "status": "OPEN",
+      "status": "FIXED",
       "pattern_matched": "UNUSED-CODE",
       "time_to_detect_seconds": 10
     },
@@ -177,21 +176,21 @@
       "tool_confirmations": [],
       "location": {"file": "anura/controllers/ocr_controller.py", "line": 95, "function": "_on_shot_done"},
       "chain_of_thought": {
-        "description": "Redundant Magic Processing. ScreenshotService already performs magic processing during the OCR pipeline (often in a background process). OcrController repeats this on the main thread when receiving the 'decoded' signal.",
+        "description": "Redundant Magic Processing. ScreenshotService already performs magic processing during the OCR pipeline. OcrController repeats this on the main thread.",
         "root_cause": "Architectural layering leak where the Controller re-performs expensive logic already handled by the Service layer.",
-        "impact": "Wasted CPU cycles and potential UI micro-stutters on the main thread during extraction."
+        "impact": "Wasted CPU cycles on main thread.",
+        "note": "fix requires adding applied_name to decoded signal payload — out of scope for this session"
       },
       "variable_lifecycle": [],
       "impact_analysis": {
         "immediate": "Unnecessary work on UI thread.",
-        "risk": "Poor performance on low-end hardware or with large OCR results."
+        "risk": "Poor performance on low-end hardware."
       },
       "fix_prescription": {
-        "approach": "Remove redundant MagicProcessor call from OcrController and use the results already provided in text/ocr_result.",
-        "effort": "LOW"
+        "approach": "Architectural refactor of signal payload."
       },
-      "status": "OPEN",
-      "pattern_matched": "REDUNDANT-WORK",
+      "status": "DEFERRED",
+      "pattern_matched": "DEFERRED-ARCH-REFACTOR",
       "time_to_detect_seconds": 600
     }
   ],
@@ -218,7 +217,9 @@
       "RACE-CONDITION": "Unsynchronized file operations during initialization",
       "TYPE-MISMATCH": "Incompatible collection types in comprehensions",
       "UNUSED-CODE": "Dead variables or parameters in callbacks",
-      "REDUNDANT-WORK": "Repeating expensive operations already handled by lower layers"
+      "REDUNDANT-WORK": "Repeating expensive operations already handled by lower layers",
+      "MYPY-NOISE-POLIVALENT-VAR": "Mypy errors on local variables that change type across branches when the return value is type-correct. Not a real bug — verify return type before filing.",
+      "DEFERRED-ARCH-REFACTOR": "Real issue confirmed but fix requires interface changes across multiple layers. Document and defer to dedicated refactor session."
     },
     "pattern_statistics": {},
     "false_positive_tracking": {}

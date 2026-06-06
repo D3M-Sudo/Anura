@@ -30,7 +30,7 @@ class SilentRunner:
             self._restore_signal_handlers()
 
     def _setup_signal_handlers(self):
-        def on_signal(signum, frame):
+        def on_signal(signum, _frame):
             logger.info(f"Anura: Received signal {signum}, shutting down silently...")
             self.interrupted.set()
 
