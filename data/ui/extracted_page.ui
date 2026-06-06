@@ -206,6 +206,7 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                 <style>
                   <class name="dim-label"/>
                   <class name="caption"/>
+                  <class name="anura-fade-in"/>
                 </style>
               </object>
             </child>

@@ -4,6 +4,8 @@
 #
 # SPDX-License-Identifier: MIT
 
+from gettext import gettext as _
+
 from gi.repository import GObject, Gtk
 
 from anura.config import RESOURCE_PREFIX
@@ -24,6 +26,11 @@ class LanguagePopoverRow(Gtk.ListBoxRow):
         super().__init__()
         self.lang = lang
         self.title.set_label(self.lang.title)
+
+        # Accessibility: set tooltip and label for screen readers
+        tooltip = _("Select {language}").format(language=self.lang.title)
+        self.set_tooltip_text(tooltip)
+        self.update_property([Gtk.AccessibleProperty.LABEL], [tooltip])
 
         self.lang.bind_property(
             "selected",
