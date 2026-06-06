@@ -45,6 +45,98 @@ def _is_flatpak_environment() -> bool:
     return Path("/.flatpak-info").exists() or "FLATPAK_ID" in os.environ
 
 
+def _pipeline_detect_barcodes(img, start_time: float) -> tuple[bool, str | None, str | None, OcrResult | None] | None:
+    """Stage 1: Barcode Detection"""
+    from anura.utils.barcode_detector import detect_barcodes
+
+    results = detect_barcodes(img)
+    if results:
+        raw_extracted = "\n".join([res.text for res in results])
+        extracted = sanitize_text(raw_extracted)
+        logger.info(f"Anura ZXing (Isolated): Code(s) detected in {time.time() - start_time:.3f}s")
+        return True, extracted, None, None
+    return None
+
+
+def _pipeline_enhance_image(img, preprocessing_mode: str, task_id, status_callback) -> Image.Image:
+    """Stage 2: grayscale conversion + enhancement"""
+    if img.mode != "L":
+        img = img.convert("L")
+
+    logger.debug("Isolated: Enhancing image...")
+    if status_callback:
+        status_callback(_("Enhancing image..."))
+    preprocessor = get_text_preprocessor()
+    enhanced_img = (
+        preprocessor.enhance_image(img, task_id=task_id) if preprocessing_mode != "off" else img
+    )
+    return enhanced_img
+
+
+def _pipeline_run_tesseract(enhanced_img, lang: str, task_id, status_callback) -> OcrResult:
+    """Stage 3: Tesseract execution and OcrResult construction"""
+    from pytesseract import Output
+
+    logger.debug("Isolated: Running Tesseract OCR...")
+    if status_callback:
+        status_callback(_("Running Tesseract OCR..."))
+    ocr_data = pytesseract.image_to_data(
+        enhanced_img,
+        lang=lang,
+        config=get_tesseract_config(lang, task_id=task_id),
+        output_type=Output.DICT,
+    )
+    return OcrResult.from_tesseract_dict(ocr_data)
+
+
+def _pipeline_reconstruct(ocr_result: OcrResult, task_id, status_callback) -> tuple[str, float]:
+    """Stage 4: Structural reconstruction"""
+    logger.debug("Isolated: Reconstructing structure...")
+    if status_callback:
+        status_callback(_("Reconstructing structure..."))
+    reconstructor = get_structural_reconstructor()
+    return reconstructor.reconstruct(ocr_result, task_id=task_id)
+
+
+def _pipeline_magic_process(ocr_result: OcrResult, task_id, status_callback) -> tuple[str, float]:
+    """Stage 5: Magic processing"""
+    from anura.transformers.magic_processor import get_magic_processor
+
+    logger.debug("Isolated: Magic processing...")
+    if status_callback:
+        status_callback(_("Magic processing..."))
+    magic_processor = get_magic_processor()
+    processed_text, magic_conf, _applied_name = magic_processor.process(ocr_result, task_id=task_id)
+    return processed_text, magic_conf
+
+
+def _pipeline_select_and_clean(
+    spatially_reconstructed: str,
+    recon_conf: float,
+    processed_text: str,
+    magic_conf: float,
+    preprocessing_mode: str,
+    preprocessor,
+) -> str:
+    """Stage 6+7: Selection and cleanup"""
+    # 6. Selection
+    if spatially_reconstructed.strip() and (
+        (len(spatially_reconstructed) > len(processed_text) * 1.2 and recon_conf >= magic_conf * 0.95)
+        or recon_conf > magic_conf
+    ):
+        processed_text = spatially_reconstructed
+
+    # 7. Final Cleanup
+    if preprocessing_mode == "full":
+        cleaned_text = preprocessor.clean_extracted_text(processed_text)
+    elif preprocessing_mode == "image-only":
+        cleaned_text = sanitize_text(processed_text)
+    else:
+        cleaned_text = processed_text.strip()
+
+    return sanitize_text(cleaned_text)
+
+
 def run_ocr_pipeline(
     lang: str,
     file_path: str,
@@ -98,69 +190,38 @@ def run_ocr_pipeline(
                     # 1. Barcode Detection
                     from anura.utils.barcode_detector import detect_barcodes
 
-                    results = detect_barcodes(img)
-                    if results:
-                        raw_extracted = "\n".join([res.text for res in results])
-                        extracted = sanitize_text(raw_extracted)
-                        logger.info(f"Anura ZXing (Isolated): Code(s) detected in {time.time() - start_time:.3f}s")
-                        return True, extracted, None, None
+                    barcode_result = _pipeline_detect_barcodes(img, start_time)
+                    if barcode_result:
+                        return barcode_result
 
                     # 2. Pre-processing
-                    if img.mode != "L":
-                        img = img.convert("L")
-
-                    logger.debug("Isolated: Enhancing image...")
-                    if status_callback:
-                        status_callback(_("Enhancing image..."))
-                    preprocessor = get_text_preprocessor()
-                    enhanced_img = (
-                        preprocessor.enhance_image(img, task_id=task_id)
-                        if preprocessing_mode != "off"
-                        else img
+                    enhanced_img = _pipeline_enhance_image(
+                        img, preprocessing_mode, task_id, status_callback
                     )
 
                     # 3. Tesseract OCR
-                    logger.debug("Isolated: Running Tesseract OCR...")
-                    if status_callback:
-                        status_callback(_("Running Tesseract OCR..."))
-                    ocr_data = pytesseract.image_to_data(
-                        enhanced_img,
-                        lang=lang,
-                        config=get_tesseract_config(lang, task_id=task_id),
-                        output_type=Output.DICT,
-                    )
-                    ocr_result = OcrResult.from_tesseract_dict(ocr_data)
+                    ocr_result = _pipeline_run_tesseract(enhanced_img, lang, task_id, status_callback)
 
                     # 4. Reconstruction
-                    logger.debug("Isolated: Reconstructing structure...")
-                    if status_callback:
-                        status_callback(_("Reconstructing structure..."))
-                    reconstructor = get_structural_reconstructor()
-                    spatially_reconstructed, recon_conf = reconstructor.reconstruct(ocr_result, task_id=task_id)
+                    spatially_reconstructed, recon_conf = _pipeline_reconstruct(
+                        ocr_result, task_id, status_callback
+                    )
 
                     # 5. Magic Processing
-                    logger.debug("Isolated: Magic processing...")
-                    if status_callback:
-                        status_callback(_("Magic processing..."))
-                    magic_processor = get_magic_processor()
-                    processed_text, magic_conf, _applied_name = magic_processor.process(ocr_result, task_id=task_id)
+                    processed_text, magic_conf = _pipeline_magic_process(
+                        ocr_result, task_id, status_callback
+                    )
 
-                    # 6. Selection
-                    if spatially_reconstructed.strip() and (
-                        (len(spatially_reconstructed) > len(processed_text) * 1.2 and recon_conf >= magic_conf * 0.95)
-                        or recon_conf > magic_conf
-                    ):
-                        processed_text = spatially_reconstructed
-
-                    # 7. Final Cleanup
-                    if preprocessing_mode == "full":
-                        cleaned_text = preprocessor.clean_extracted_text(processed_text)
-                    elif preprocessing_mode == "image-only":
-                        cleaned_text = sanitize_text(processed_text)
-                    else:
-                        cleaned_text = processed_text.strip()
-
-                    cleaned_text = sanitize_text(cleaned_text)
+                    # 6+7. Selection and Cleanup
+                    preprocessor = get_text_preprocessor()
+                    cleaned_text = _pipeline_select_and_clean(
+                        spatially_reconstructed,
+                        recon_conf,
+                        processed_text,
+                        magic_conf,
+                        preprocessing_mode,
+                        preprocessor,
+                    )
 
                     logger.info(f"Anura OCR (Isolated): Completed in {time.time() - start_time:.3f}s")
                     return True, cleaned_text, None, ocr_result
