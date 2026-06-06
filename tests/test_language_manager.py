@@ -91,8 +91,14 @@ class TestLanguageManagerEnterprise:
 
     def test_init_tessdata_cleanup(self, manager, tmp_path):
         """Test that init_tessdata cleans up orphaned .tmp files."""
+        import time
+
         orphan = tmp_path / "eng.traineddata.tmp"
         orphan.touch()
+
+        # Set mtime to 2 hours ago to trigger age-based cleanup
+        old_time = time.time() - 7200
+        os.utime(orphan, (old_time, old_time))
 
         with patch("shutil.which", return_value="/usr/bin/tesseract"):
             manager.init_tessdata()

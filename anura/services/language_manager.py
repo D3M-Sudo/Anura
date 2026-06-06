@@ -296,8 +296,13 @@ class LanguageManager(GObject.GObject):
                 for file_path in tess_path.iterdir():
                     if file_path.suffix == ".tmp":
                         try:
-                            file_path.unlink()
-                            logger.warning("Anura: Cleaned up orphaned temporary language file")
+                            # NEW-017: Only delete .tmp files older than 1 hour to avoid
+                            # interrupting active downloads from other instances.
+                            if time.time() - file_path.stat().st_mtime > 3600:
+                                file_path.unlink()
+                                logger.warning(
+                                    f"Anura: Cleaned up orphaned temporary file: {file_path.name}"
+                                )
                         except PermissionError:
                             logger.error("Anura: Permission denied removing orphaned temporary language file")
                         except OSError:
