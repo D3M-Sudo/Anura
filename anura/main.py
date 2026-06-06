@@ -191,8 +191,14 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         controller = win.ocr_controller
         self.connect_tracked(controller, "text-extracted", self._on_text_extracted)
         self.connect_tracked(controller, "uri-detected", self._on_uri_detected)
-        # BUG-003: "error-occurred" is intentionally NOT connected here to avoid
-        # duplicate notifications. It is handled by AnuraWindow._on_ocr_error.
+        # NOTE: "error-occurred" is intentionally NOT connected here.
+        # AnuraWindow._on_ocr_error (handler connected in window.py) already
+        # handles this signal with show_toast() + UI cleanup. Connecting it
+        # again here caused a double-notification burst confirmed by debug log
+        # (handler_id=1493 from window.py + handler_id=1505 from main.py both
+        # firing for every single emit("error-occurred")).
+        # Fatal-dialog logic for missing portal/fallback has been moved into
+        # AnuraWindow._on_ocr_error where the window context is always available.
 
     def _on_text_extracted(self, _controller, text: str, copy_requested: bool) -> None:
         is_window_active = bool(self.get_active_window())
@@ -326,7 +332,7 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         DialogManager.show_preferences(self.get_active_window())
 
     def on_about(self, *_) -> None:
-        DialogManager.show_about(self.get_active_window(), self.version, self._get_release_notes())
+        DialogManager.show_about(self.get_active_window(), self.version)
 
     def on_github_star(self, *_) -> None:
         launch_uri("https://github.com/D3M-Sudo/Anura", window=self.props.active_window)

@@ -105,7 +105,6 @@ class OcrResult:
         Count unique layout sections at a given level (block, paragraph, line).
         Uses composite keys to prevent hierarchical ID collisions.
         """
-        keys: set[tuple[Any, ...]]
         if level == "block_num":
             keys = {(w.block_num,) for w in self.words}
         elif level == "par_num":
