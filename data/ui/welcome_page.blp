@@ -134,11 +134,10 @@ template $WelcomePage : Adw.NavigationPage {
             Box drop_area {
               visible: false;
               margin-top: 12;
+              styles ["card", "anura-slide-up"]
               height-request: 80;
               halign: fill;
               valign: center;
-              styles ["card"]
-
               Label drop_area_label {
                 label: _("Drop image file here");
                 halign: center;

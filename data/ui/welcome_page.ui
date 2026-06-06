@@ -185,6 +185,7 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                         <property name="valign">3</property>
                         <style>
                           <class name="card"/>
+                          <class name="anura-slide-up"/>
                         </style>
                         <child>
                           <object class="GtkLabel" id="drop_area_label">
