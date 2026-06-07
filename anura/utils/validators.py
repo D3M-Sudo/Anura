@@ -29,9 +29,7 @@ _CONTROL_CHARS_RE = re.compile(r"[\x00-\x1f\x7f]")
 _DISCARD_CATEGORIES = {"Cc", "Cf", "Co", "Cs", "Cn"}
 _KEEP_CHARS = {"\n", "\r", "\t"}
 _LATIN1_TRANSLATE = {
-    i: None
-    for i in range(256)
-    if unicodedata.category(chr(i)) in _DISCARD_CATEGORIES and chr(i) not in _KEEP_CHARS
+    i: None for i in range(256) if unicodedata.category(chr(i)) in _DISCARD_CATEGORIES and chr(i) not in _KEEP_CHARS
 }
 
 # Centralized patterns for structured data detection (URLs, Emails, etc.)
@@ -88,9 +86,7 @@ def sanitize_text(text: str) -> str:
     # secondary filtered iteration for high-codepoint categories.
     # Use max() as a fast way to detect if any character is outside the Latin-1 range.
     if text and max(text) > "\xff":
-        text = "".join(
-            ch for ch in text if ord(ch) < 256 or unicodedata.category(ch) not in _DISCARD_CATEGORIES
-        )
+        text = "".join(ch for ch in text if ord(ch) < 256 or unicodedata.category(ch) not in _DISCARD_CATEGORIES)
 
     # 4. Normalization: horizontal whitespace (squash multiple spaces/tabs)
     # Note: \n and \r are preserved by the [ \t]+ pattern.
@@ -172,8 +168,20 @@ def _normalize_idn(text: str) -> str | None:
                 else:
                     punycode_labels.append(label.encode("idna").decode("ascii"))
             punycode_host = ".".join(punycode_labels)
-            # Rebuild the netloc, preserving port and userinfo if present
-            netloc = parsed.netloc.replace(parsed.hostname, punycode_host, 1)
+
+            # 5. Security: Rebuild the netloc explicitly using rpartition (BUG-047).
+            # This isolates the userinfo from the host/port part, preventing
+            # accidental replacement of hostname strings within the userinfo.
+            # It also preserves the original percent-encoding of the userinfo.
+            userinfo, at, host_port = parsed.netloc.rpartition("@")
+            if at:
+                # Replace only the hostname portion of the host:port string
+                new_host_port = host_port.replace(parsed.hostname, punycode_host, 1)
+                netloc = f"{userinfo}{at}{new_host_port}"
+            else:
+                # No userinfo present
+                netloc = host_port.replace(parsed.hostname, punycode_host, 1)
+
             return urlunparse(parsed._replace(netloc=netloc))
         return text
     except (UnicodeError, ValueError, UnicodeDecodeError):
