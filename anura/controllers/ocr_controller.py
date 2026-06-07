@@ -13,7 +13,6 @@ from loguru import logger
 
 from anura.services.notification_service import get_notification_service
 from anura.services.result_dispatcher import get_result_dispatcher
-from anura.services.settings import settings
 from anura.utils import uri_validator
 from anura.utils.portal_advice import detect_portal_advice
 from anura.utils.signal_manager import SignalManagerMixin
