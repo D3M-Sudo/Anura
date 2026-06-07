@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: anura\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-05-15 17:00+0000\n"
-"PO-Revision-Date: 2026-05-24 22:13+0000\n"
+"PO-Revision-Date: 2026-06-08 18:01+0000\n"
 "Last-Translator: Libre <6n0n1m0s@proton.me>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/anura/anura/es/>"
 "\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 2026.6.dev0\n"
+"X-Generator: Weblate 2026.6\n"
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-SearchPath-0: data/ui\n"
 "X-Poedit-SearchPath-1: data/com.github.d3msudo.anura.desktop.in\n"
@@ -124,7 +124,6 @@ msgid "Greek"
 msgstr "Griego"
 
 #: anura/language_manager.py:101
-#, fuzzy
 msgid "English, Middle"
 msgstr "Inglés, Medio (1100-1500)"
 
@@ -161,7 +160,6 @@ msgid "French"
 msgstr "Francés"
 
 #: anura/language_manager.py:116
-#, fuzzy
 msgid "French, Middle"
 msgstr "Francés, Medio (c. 1400-1600)"
 
@@ -354,7 +352,6 @@ msgid "Oriya"
 msgstr "Oriya"
 
 #: anura/language_manager.py:167
-#, fuzzy
 msgid "Panjabi"
 msgstr "Panyabí; Punyabí"
 
@@ -367,7 +364,6 @@ msgid "Portuguese"
 msgstr "Portugués"
 
 #: anura/language_manager.py:170
-#, fuzzy
 msgid "Pushto"
 msgstr "Pastún; Pashtun"
 
@@ -472,7 +468,6 @@ msgid "Turkish"
 msgstr "Turco"
 
 #: anura/language_manager.py:196
-#, fuzzy
 msgid "Uighur"
 msgstr "Uigur; Uighur; Uyghur"
 
@@ -548,7 +543,7 @@ msgstr "Texto copiado al portapapeles"
 
 #: anura/main.py:744
 msgid "No text available to copy"
-msgstr ""
+msgstr "Ningún texto disponible para copiar"
 
 #: anura/main.py:833 anura/main.py:847 anura/main.py:857 anura/main.py:874
 msgid "Anura OCR"
@@ -564,7 +559,7 @@ msgstr "Texto extraído y copiado al portapapeles."
 
 #: anura/main.py:858
 msgid "Text extracted successfully."
-msgstr ""
+msgstr "Texto extraído correctamente."
 
 #: anura/main.py:866
 msgid "Cancelled"
@@ -586,20 +581,20 @@ msgstr "No hay imágenes en el portapapeles"
 #: anura/services/clipboard_service.py:633
 #: anura/services/clipboard_service.py:642
 msgid "No text in clipboard"
-msgstr ""
+msgstr "Sin texto en el portapapeles"
 
 #: anura/services/clipboard_service.py:675
 msgid "Clipboard read operation timed out."
-msgstr ""
+msgstr "Portapapeles lee operación vencida."
 
 #: anura/services/screenshot_service.py:131
 msgid "Failed to initiate screenshot capture."
-msgstr ""
+msgstr "Incorrecto al iniciar captura de pantallazo."
 
 #: anura/services/screenshot_service.py:186
 #, python-brace-format
 msgid "Screenshot failed: {reason}"
-msgstr ""
+msgstr "Pantallazo incorrecto: {reason}"
 
 #: anura/services/screenshot_service.py:202
 #: anura/services/screenshot_service.py:225
@@ -614,7 +609,7 @@ msgstr "Código de idioma especificado no válido."
 
 #: anura/services/screenshot_service.py:509 anura/window.py:428
 msgid "The selected image file is empty."
-msgstr ""
+msgstr "El archivo de la imagen seleccionada está vacío."
 
 #: anura/services/screenshot_service.py:594
 msgid "Failed to read image file."
@@ -630,9 +625,8 @@ msgid "Failed to decode data."
 msgstr "Error al decodificar los datos."
 
 #: anura/services/screenshot_service.py:636
-#, fuzzy
 msgid "No text found."
-msgstr "No hay resultados"
+msgstr "Ningún texto encontrado."
 
 #: anura/services/share_service.py:181
 msgid "Select Mastodon Instance"
@@ -648,7 +642,7 @@ msgstr "Cancelar"
 
 #: anura/services/share_service.py:227
 msgid "Cannot show dialog without active window"
-msgstr ""
+msgstr "No se puede mostrar diálogo sin ventana activa"
 
 #: anura/services/share_service.py:345
 msgid "Extracted Text"
@@ -656,13 +650,15 @@ msgstr "Texto extraído"
 
 #: anura/utils/portal_advice.py:85
 msgid "LXQt"
-msgstr ""
+msgstr "LXQt"
 
 #: anura/utils/portal_advice.py:86
 msgid ""
 "Screenshot portal is not configured for LXQt. See the README for the LXQt "
 "setup steps."
 msgstr ""
+"Portal del pantallazo no está configurado para LXQt. Consulte el README para "
+"los pasos de configuración de LXQt."
 
 #: anura/utils/portal_advice.py:88
 msgid ""
@@ -674,7 +670,7 @@ msgstr ""
 
 #: anura/utils/portal_advice.py:99
 msgid "KDE Plasma"
-msgstr ""
+msgstr "KDE Plasma"
 
 #: anura/utils/portal_advice.py:100
 msgid ""
@@ -686,10 +682,13 @@ msgid ""
 "Screenshot failed. On KDE Plasma, install xdg-desktop-portal-kde (e.g. sudo "
 "apt install xdg-desktop-portal-kde) and log out and back in."
 msgstr ""
+"Pantallazo incorrecto. En KDE Plasma, instale xdg-desktop-portal-kde (p.ej. "
+"sudo apt install xdg-desktop-portal-kde) y salga de la sesión y vuelva a "
+"entrar."
 
 #: anura/utils/portal_advice.py:111
 msgid "your wlroots compositor"
-msgstr ""
+msgstr "tu compositor wlroots"
 
 #: anura/utils/portal_advice.py:112
 msgid ""
@@ -705,7 +704,7 @@ msgstr ""
 
 #: anura/utils/portal_advice.py:125
 msgid "GNOME"
-msgstr ""
+msgstr "GNOME"
 
 #: anura/utils/portal_advice.py:126
 msgid ""
@@ -718,6 +717,9 @@ msgid ""
 "Screenshot failed. On GNOME / Ubuntu, install xdg-desktop-portal-gnome (e.g."
 " sudo apt install xdg-desktop-portal-gnome) and log out and back in."
 msgstr ""
+"Pantallazo incorrecto. En GNOME / Ubuntu, instale xdg-desktop-portal-gnome "
+"(p.ej. sudo apt install xdg-desktop-portal-gnome) y cierra la sesión y "
+"vuelva a entrar."
 
 #: anura/utils/portal_advice.py:147
 msgid ""
@@ -735,13 +737,15 @@ msgstr ""
 
 #: anura/utils/portal_advice.py:158
 msgid "your desktop"
-msgstr ""
+msgstr "tu escritorio"
 
 #: anura/utils/portal_advice.py:159
 msgid ""
 "Screenshot portal unavailable. Install the xdg-desktop-portal backend "
 "matching your desktop."
 msgstr ""
+"Portal de pantallazo indisponible. Instala el backend xdg-desktop-portal "
+"coincidente con su escritorio."
 
 #: anura/utils/portal_advice.py:161
 msgid ""
@@ -790,97 +794,96 @@ msgstr ""
 #: anura/widgets/share_row.py:27
 #, python-brace-format
 msgid "Share via {name}"
-msgstr ""
+msgstr "Compartir por medio de {name}"
 
 #: anura/widgets/shortcuts_overlay.py:59
 msgid "Screenshot & OCR"
-msgstr ""
+msgstr "Pantallazo y OCR"
 
 #: anura/widgets/shortcuts_overlay.py:61
 msgid "Take screenshot"
-msgstr ""
+msgstr "Tomar pantallazo"
 
 #: anura/widgets/shortcuts_overlay.py:62
 msgid "Take screenshot and copy to clipboard"
-msgstr ""
+msgstr "Tomar pantallazo y copiar al portapapeles"
 
 #: anura/widgets/shortcuts_overlay.py:63
 msgid "Open image file"
-msgstr ""
+msgstr "Abre el archivo de imagen"
 
 #: anura/widgets/shortcuts_overlay.py:64
 msgid "Paste image from clipboard"
-msgstr ""
+msgstr "Pega imagen desde portapapeles"
 
 #: anura/widgets/shortcuts_overlay.py:69
 msgid "Text Operations"
-msgstr ""
+msgstr "Operaciones Textuales"
 
 #: anura/widgets/shortcuts_overlay.py:71
 msgid "Copy text to clipboard"
-msgstr ""
+msgstr "Copia texto al portapapeles"
 
 #: anura/widgets/shortcuts_overlay.py:72
 msgid "Listen to text (TTS)"
-msgstr ""
+msgstr "Escuchar texto (TTS)"
 
 #: anura/widgets/shortcuts_overlay.py:73
 msgid "Stop text-to-speech"
-msgstr ""
+msgstr "Detener la conversión de texto a voz"
 
 #: anura/widgets/shortcuts_overlay.py:78
 msgid "Application"
-msgstr ""
+msgstr "Aplicación"
 
 #: anura/widgets/shortcuts_overlay.py:80
 msgid "Open preferences"
-msgstr ""
+msgstr "Abre preferencias"
 
 #: anura/widgets/shortcuts_overlay.py:81 anura/widgets/shortcuts_overlay.py:82
 #: anura/widgets/shortcuts_overlay.py:83
 msgid "Show keyboard shortcuts"
-msgstr ""
+msgstr "Mostrar atajos de teclado"
 
 #: anura/widgets/shortcuts_overlay.py:84 anura/widgets/shortcuts_overlay.py:85
 msgid "Quit application"
-msgstr ""
+msgstr "Salir de aplicación"
 
 #: anura/widgets/shortcuts_overlay.py:90
 msgid "Navigation"
-msgstr ""
+msgstr "Navegación"
 
 #: anura/widgets/shortcuts_overlay.py:92
 msgid "Close dialog/go back"
-msgstr ""
+msgstr "Cerrar diálogo/volver"
 
 #: anura/widgets/shortcuts_overlay.py:93
 msgid "Navigate between widgets"
-msgstr ""
+msgstr "Navegar entre los widget"
 
 #: anura/widgets/shortcuts_overlay.py:94
 msgid "Navigate backwards"
-msgstr ""
+msgstr "Retroceder navegación"
 
 #: anura/widgets/shortcuts_overlay.py:99
 msgid "Advanced"
-msgstr ""
+msgstr "Avanzado"
 
 #: anura/widgets/shortcuts_overlay.py:101
 msgid "Open image file (advanced)"
-msgstr ""
+msgstr "Abre archivo de imagen (avanzado)"
 
 #: anura/widgets/shortcuts_overlay.py:102
 msgid "Show help"
-msgstr ""
+msgstr "Mostrar ayuda"
 
 #: anura/widgets/shortcuts_overlay.py:103
 msgid "Open application menu"
-msgstr ""
+msgstr "Abre el menú de aplicación"
 
 #: anura/widgets/welcome_page.py:100
-#, fuzzy
 msgid "Drop image to extract text"
-msgstr "Abrir imagen para extraer texto"
+msgstr "Abandonar imagen para extraer texto"
 
 #: anura/widgets/welcome_page.py:112 anura/widgets/welcome_page.py:344
 msgid "Extract text from anywhere"
@@ -888,31 +891,31 @@ msgstr "Extraer texto de cualquier lugar"
 
 #: anura/widgets/welcome_page.py:202
 msgid "No file data received from drop"
-msgstr ""
+msgstr "No se recibieron datos de archivo desde abandono"
 
 #: anura/widgets/welcome_page.py:215
 msgid "No valid file found in drop"
-msgstr ""
+msgstr "Ningún archivo válido encontrado en gota"
 
 #: anura/widgets/welcome_page.py:224
 msgid "Only local files can be dropped"
-msgstr ""
+msgstr "Solo los archivos locales pueden ser abandonados"
 
 #: anura/widgets/welcome_page.py:306
 msgid "Only images can be processed that way."
-msgstr ""
+msgstr "Solo las imágenes pueden ser procesadas de esa manera."
 
 #: anura/widgets/welcome_page.py:277 anura/widgets/welcome_page.py:312
 msgid "Failed to process dropped file"
-msgstr ""
+msgstr "Incorrecto al procesar archivo arrastrado"
 
 #: anura/widgets/welcome_page.py:332
 msgid "Processing..."
-msgstr ""
+msgstr "Procesando…"
 
 #: anura/widgets/welcome_page.py:336
 msgid "Drop image file here"
-msgstr ""
+msgstr "Arrastre el archivo de imagen aquí"
 
 #: anura/services/clipboard_service.py:521
 #: anura/services/screenshot_service.py:468 anura/window.py:145
@@ -942,8 +945,8 @@ msgstr "URL abierto automáticamente"
 #, python-brace-format
 msgid "{n} email found in text"
 msgid_plural "{n} emails found in text"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{n} correo-e encontrado en el texto"
+msgstr[1] "{n} correos-e encontrados en el texto"
 
 #: anura/window.py:299
 #, python-brace-format
@@ -958,15 +961,15 @@ msgstr "Elegir una imagen para extracción"
 
 #: anura/window.py:356
 msgid "All supported images"
-msgstr ""
+msgstr "Todas las imágenes proporcionadas"
 
 #: anura/window.py:370
 msgid "PNG images"
-msgstr ""
+msgstr "Imágenes PNG"
 
 #: anura/window.py:374
 msgid "JPEG images"
-msgstr ""
+msgstr "imágenes JPEG"
 
 #: anura/window.py:446
 #, python-brace-format
@@ -990,7 +993,7 @@ msgstr "No se puede acceder al archivo: {path}"
 
 #: anura/window.py:501
 msgid "Corrupt or unsupported image file"
-msgstr ""
+msgstr "Archivo de imagen corrupto o no admitido"
 
 #: anura/window.py:505
 #, fuzzy
@@ -998,9 +1001,8 @@ msgid "Unsupported image format"
 msgstr "Formato de archivo no compatible."
 
 #: anura/window.py:509 anura/window.py:514
-#, fuzzy
 msgid "Failed to validate image file"
-msgstr "Error al cargar archivo de imagen"
+msgstr "Incorrecto al validar archivo de imagen"
 
 #: anura/window.py:521 anura/window.py:525
 msgid "Failed to load image file"
@@ -1017,19 +1019,19 @@ msgstr "No hay texto para compartir."
 
 #: anura/main.py:800 anura/window.py:704
 msgid "Invalid URL blocked for security"
-msgstr ""
+msgstr "URL no válida bloqueada por motivos de seguridad"
 
 #: anura/window.py:713
 msgid "Failed to open link"
-msgstr ""
+msgstr "Incorrecto al abrir enlace"
 
 #: anura/main.py:641
 msgid "Report an Issue"
-msgstr ""
+msgstr "Informar una Incidencia"
 
 #: anura/language_manager.py:90
 msgid "Chinese - Simplified (vertical)"
-msgstr ""
+msgstr "Chino simplificado (vertical)"
 
 #: anura/language_manager.py:92
 msgid "Chinese - Traditional (vertical)"
@@ -1040,18 +1042,20 @@ msgid ""
 "Built with Tesseract OCR, GTK4, Libadwaita, and other open source "
 "components."
 msgstr ""
+"Construido con Tesseract OCR, GTK4, Libadwaita y otros componentes de código "
+"abierto."
 
 #: anura/window.py:123
 msgid "Failed to load dropped file (invalid path)."
-msgstr ""
+msgstr "Incorrecto al cargar el archivo arrastrado (ruta no válida)."
 
 #: anura/window.py:159
 msgid "Failed to process the file."
-msgstr ""
+msgstr "Incorrecto al procesar el archivo."
 
 #: anura/window.py:261
 msgid "QR Code URL Detected"
-msgstr ""
+msgstr "Detectado URL del Código QR"
 
 #: anura/window.py:275
 msgid "URL copied to clipboard"
@@ -1063,7 +1067,7 @@ msgstr ""
 
 #: anura/window.py:382
 msgid "AVIF images"
-msgstr ""
+msgstr "Imágenes AVIF"
 
 #: anura/window.py:386
 msgid "TIFF images"
@@ -1071,20 +1075,20 @@ msgstr ""
 
 #: anura/window.py:390
 msgid "BMP images"
-msgstr ""
+msgstr "Imágenes BMP"
 
 #: anura/window.py:394
 msgid "GIF images"
-msgstr ""
+msgstr "Imágenes GIF"
 
 #: anura/window.py:401
 msgid "All files (*)"
-msgstr ""
+msgstr "Todos los archivos (*)"
 
 #: anura/services/tts.py:373
 #, python-brace-format
 msgid "GStreamer playback error: {error}"
-msgstr ""
+msgstr "Error de reproducción de GStreamer: {error}"
 
 #, fuzzy
 #~ msgid "Math / Equation Detection"
