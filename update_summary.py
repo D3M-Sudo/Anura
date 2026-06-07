@@ -11,21 +11,30 @@ open_bugs = [b for b in bugs if b["status"] == "OPEN"]
 deferred = len([b for b in bugs if b["status"] == "DEFERRED"])
 invalid = len([b for b in bugs if b["status"] == "INVALID"])
 
+stats = data["progress_tracking"]
+meta = data["session_metadata"]
+
 summary = f"""# Bug Hunt Progress Report
-Generated: {data['session_metadata']['last_checkpoint']}
+Generated: {meta['last_checkpoint']}
 
 ## Statistics
-- Files analyzed: {data['session_metadata']['analyzed_files']}/{data['session_metadata']['total_files']} ({data['progress_tracking']['coverage_percentage']}%)
+- Files analyzed: {meta['analyzed_files']}/{meta['total_files']} ({stats['coverage_percentage']}%)
 - Bugs Found: {len(bugs)} (Fixed: {fixed}, Open: {len(open_bugs)}, Deferred: {deferred}, Invalid: {invalid})
-- Tools Executed: {', '.join(data['session_metadata']['tools_executed'])}
+- Tools Executed: {', '.join(meta['tools_executed'])}
 
 ## Open Findings
 """
 
 for b in open_bugs:
     loc = f"{b['location']['file']}:{b['location']['line']}"
-    summary += f"| {b['id']} | {loc} | {b['severity']} | {b['chain_of_thought']['description'][:100]}... | {b['status']} |\n"
+    desc = f"{b['chain_of_thought']['description'][:100]}..."
+    summary += f"| {b['id']} | {loc} | {b['severity']} | {desc} | {b['status']} |\n"
 
-summary += "\n## Recent Activity\n- Completed deep dive of core services.\n- Integrated static analysis findings from Mypy and Vulture.\n- Identified several low-severity type mismatches and potential resource leaks."
+summary += (
+    "\n## Recent Activity\n"
+    "- Completed deep dive of core services.\n"
+    "- Integrated static analysis findings from Mypy and Vulture.\n"
+    "- Identified several low-severity type mismatches and potential resource leaks."
+)
 
 summary_path.write_text(summary)
