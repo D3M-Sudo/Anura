@@ -1,7 +1,13 @@
 {
   "session_metadata": {
     "repository_path": ".",
-    "languages_detected": ["Python", "Blueprint", "Meson", "Shell", "CSS"],
+    "languages_detected": [
+      "Python",
+      "Blueprint",
+      "Meson",
+      "Shell",
+      "CSS"
+    ],
     "tools_available": {
       "ruff": "uv run ruff",
       "mypy": "uv run mypy",
@@ -13,7 +19,17 @@
       "semgrep": "uv run semgrep",
       "pytest": "uv run pytest"
     },
-    "tools_executed": ["ruff", "mypy", "bandit", "safety", "pylint", "vulture", "radon", "semgrep", "pytest"],
+    "tools_executed": [
+      "ruff",
+      "mypy",
+      "bandit",
+      "safety",
+      "pylint",
+      "vulture",
+      "radon",
+      "semgrep",
+      "pytest"
+    ],
     "total_files": 309,
     "total_lines": 86723,
     "analyzed_files": 309,
@@ -54,7 +70,12 @@
       "Logic Validator": 1.1,
       "Parameter Inspector": 1.0
     },
-    "phase_gates_completed": ["gate_0_setup", "gate_1_initial_scan", "gate_2_deep_dive", "gate_3_completion"]
+    "phase_gates_completed": [
+      "gate_0_setup",
+      "gate_1_initial_scan",
+      "gate_2_deep_dive",
+      "gate_3_completion"
+    ]
   },
   "progress_tracking": {
     "current_file": "COMPLETE",
@@ -68,15 +89,44 @@
     "coverage_percentage": 100.0,
     "micro_checkpoints": [],
     "tool_results": {
-      "ruff": {"status": "CLEAN", "errors": 0},
-      "mypy": {"status": "ERRORS", "errors": 19},
-      "bandit": {"status": "CLEAN", "errors": 0},
-      "safety": {"status": "CLEAN", "errors": 0},
-      "pylint": {"status": "ERRORS", "errors": 98, "note": "Many import-errors due to missing gi"},
-      "vulture": {"status": "UNUSED", "findings": 8},
-      "radon": {"status": "COMPLETED", "note": "Several modules with MI < 65"},
-      "semgrep": {"status": "CLEAN", "errors": 0},
-      "pytest": {"status": "PASS", "passed": 143, "skipped": 20}
+      "ruff": {
+        "status": "CLEAN",
+        "errors": 0
+      },
+      "mypy": {
+        "status": "ERRORS",
+        "errors": 73
+      },
+      "bandit": {
+        "status": "CLEAN",
+        "errors": 0
+      },
+      "safety": {
+        "status": "CLEAN",
+        "errors": 0
+      },
+      "pylint": {
+        "status": "ERRORS",
+        "errors": 98,
+        "note": "Many import-errors due to missing gi"
+      },
+      "vulture": {
+        "status": "UNUSED",
+        "findings": 60
+      },
+      "radon": {
+        "status": "COMPLETED",
+        "note": "Several modules with MI < 65"
+      },
+      "semgrep": {
+        "status": "CLEAN",
+        "errors": 0
+      },
+      "pytest": {
+        "status": "PASS",
+        "passed": 143,
+        "skipped": 20
+      }
     },
     "progress_visual": {
       "ascii_bar": "[####################] 309/309 files",
@@ -94,9 +144,15 @@
       "severity": "MEDIUM",
       "confidence_score": 0.9,
       "personality_detecting": "Concurrency Specialist",
-      "personality_agreement": ["Logic Validator"],
+      "personality_agreement": [
+        "Logic Validator"
+      ],
       "tool_confirmations": [],
-      "location": {"file": "anura/services/language_manager.py", "line": 288, "function": "init_tessdata"},
+      "location": {
+        "file": "anura/services/language_manager.py",
+        "line": 288,
+        "function": "init_tessdata"
+      },
       "chain_of_thought": {
         "description": "Unconditional deletion of .tmp files in TESSDATA_DIR at startup. If multiple instances of Anura are started concurrently, one instance might delete the temporary download file of another instance. This differs from the age-based cleanup in cleanup.py.",
         "root_cause": "Shared directory cleanup logic lacks instance-awareness or age-based thresholding.",
@@ -121,9 +177,17 @@
       "severity": "MEDIUM",
       "confidence_score": 1.0,
       "personality_detecting": "Logic Validator",
-      "personality_agreement": ["Variable Forensics Investigator"],
-      "tool_confirmations": ["mypy:misc"],
-      "location": {"file": "anura/transformers/models.py", "line": 39, "function": "OcrResult._count_unique_sections"},
+      "personality_agreement": [
+        "Variable Forensics Investigator"
+      ],
+      "tool_confirmations": [
+        "mypy:misc"
+      ],
+      "location": {
+        "file": "anura/transformers/models.py",
+        "line": 39,
+        "function": "OcrResult._count_unique_sections"
+      },
       "chain_of_thought": {
         "description": "Set comprehension has incompatible type Set[tuple[Any, Any]]; expected Set[tuple[Any]].",
         "root_cause": "Noise from a local variable 'keys' that changes tuple-arity across branches. The function return type is correct.",
@@ -147,8 +211,14 @@
       "confidence_score": 1.0,
       "personality_detecting": "Naming Police",
       "personality_agreement": [],
-      "tool_confirmations": ["vulture"],
-      "location": {"file": "anura/core/silent_runner.py", "line": 33, "function": "on_signal"},
+      "tool_confirmations": [
+        "vulture"
+      ],
+      "location": {
+        "file": "anura/core/silent_runner.py",
+        "line": 33,
+        "function": "on_signal"
+      },
       "chain_of_thought": {
         "description": "Unused variable 'frame' in signal handler.",
         "root_cause": "Boilerplate parameter required by signal.signal but not used in the application-specific handler.",
@@ -172,14 +242,20 @@
       "severity": "MEDIUM",
       "confidence_score": 0.95,
       "personality_detecting": "Performance Optimizer",
-      "personality_agreement": ["Systems Architect"],
+      "personality_agreement": [
+        "Systems Architect"
+      ],
       "tool_confirmations": [],
-      "location": {"file": "anura/controllers/ocr_controller.py", "line": 95, "function": "_on_shot_done"},
+      "location": {
+        "file": "anura/controllers/ocr_controller.py",
+        "line": 95,
+        "function": "_on_shot_done"
+      },
       "chain_of_thought": {
         "description": "Redundant Magic Processing. ScreenshotService already performs magic processing during the OCR pipeline. OcrController repeats this on the main thread.",
         "root_cause": "Architectural layering leak where the Controller re-performs expensive logic already handled by the Service layer.",
         "impact": "Wasted CPU cycles on main thread.",
-        "note": "fix requires adding applied_name to decoded signal payload — out of scope for this session"
+        "note": "fix requires adding applied_name to decoded signal payload \u2014 out of scope for this session"
       },
       "variable_lifecycle": [],
       "impact_analysis": {
@@ -192,24 +268,133 @@
       "status": "DEFERRED",
       "pattern_matched": "DEFERRED-ARCH-REFACTOR",
       "time_to_detect_seconds": 600
+    },
+    {
+      "id": "NEW-021",
+      "severity": "LOW",
+      "confidence_score": 1.0,
+      "personality_detecting": "Logic Validator",
+      "personality_agreement": [],
+      "tool_confirmations": [
+        "mypy:misc"
+      ],
+      "location": {
+        "file": "anura/transformers/models.py",
+        "line": 39,
+        "function": "OcrResult._count_unique_sections"
+      },
+      "chain_of_thought": {
+        "description": "Set comprehension has incompatible type Set[tuple[Any, Any]]; expected Set[tuple[Any]].",
+        "root_cause": "Mismatch between comprehension output and expected type hint.",
+        "impact": "Static analysis noise and potential type errors in consumers."
+      },
+      "status": "OPEN",
+      "pattern_matched": "TYPE-MISMATCH"
+    },
+    {
+      "id": "NEW-022",
+      "severity": "LOW",
+      "confidence_score": 0.95,
+      "personality_detecting": "Performance Optimizer",
+      "personality_agreement": [
+        "Systems Architect"
+      ],
+      "location": {
+        "file": "anura/transformers/magic_processor.py",
+        "line": 56,
+        "function": "process"
+      },
+      "chain_of_thought": {
+        "description": "Redundant data structure creation. MagicProcessor converts OcrResult to an internal OcrResult wrapper on every call, even though they share underlying data.",
+        "root_cause": "Historical evolution where two different OcrResult classes were defined in different modules.",
+        "impact": "Minor memory overhead and CPU cycles for list creation."
+      },
+      "status": "OPEN",
+      "pattern_matched": "REDUNDANT-WORK"
+    },
+    {
+      "id": "NEW-023",
+      "severity": "MEDIUM",
+      "confidence_score": 0.9,
+      "personality_detecting": "Concurrency Specialist",
+      "personality_agreement": [
+        "Logic Validator"
+      ],
+      "location": {
+        "file": "anura/core/atomic_task_manager.py",
+        "line": 158,
+        "function": "result_wrapper"
+      },
+      "chain_of_thought": {
+        "description": "Missing explicit InterruptedError handling in result_wrapper. While general Exception is caught, InterruptedError (raised by task cancellation) might lead to confusing logs or incorrect errorback triggers if not handled as a known 'silent' failure.",
+        "root_cause": "Incomplete exception specification in the async callback wrapper.",
+        "impact": "Potential error toasts for cancelled tasks."
+      },
+      "status": "OPEN",
+      "pattern_matched": "RACE-CONDITION"
+    },
+    {
+      "id": "NEW-024",
+      "severity": "LOW",
+      "confidence_score": 0.85,
+      "personality_detecting": "Memory Surgeon",
+      "personality_agreement": [
+        "Variable Forensics Investigator"
+      ],
+      "location": {
+        "file": "anura/services/clipboard_service.py",
+        "line": 286,
+        "function": "_on_clipboard_timeout"
+      },
+      "chain_of_thought": {
+        "description": "Watchdog timer ID might persist if an operation completes exactly when the timer fires. Although _stop_timeout is called in callbacks, a race condition could leave a stale ID if not careful.",
+        "root_cause": "Asynchronous callback vs timeout firing race condition.",
+        "impact": "Minor resource leak (GLib source IDs)."
+      },
+      "status": "OPEN",
+      "pattern_matched": "UNUSED-CODE"
     }
   ],
   "tool_execution_log": {
     "linters": {
-      "ruff": {"status": "EXECUTED", "timestamp": "2026-06-03T20:45:00Z"},
-      "pylint": {"status": "EXECUTED", "timestamp": "2026-06-03T20:46:00Z"},
-      "vulture": {"status": "EXECUTED", "timestamp": "2026-06-03T20:47:00Z"}
+      "ruff": {
+        "status": "EXECUTED",
+        "timestamp": "2026-06-03T20:45:00Z"
+      },
+      "pylint": {
+        "status": "EXECUTED",
+        "timestamp": "2026-06-03T20:46:00Z"
+      },
+      "vulture": {
+        "status": "EXECUTED",
+        "timestamp": "2026-06-03T20:47:00Z"
+      }
     },
     "security_scanners": {
-      "bandit": {"status": "EXECUTED", "timestamp": "2026-06-03T20:45:00Z"},
-      "safety": {"status": "EXECUTED", "timestamp": "2026-06-03T20:45:00Z"},
-      "semgrep": {"status": "EXECUTED", "timestamp": "2026-06-03T20:48:00Z"}
+      "bandit": {
+        "status": "EXECUTED",
+        "timestamp": "2026-06-03T20:45:00Z"
+      },
+      "safety": {
+        "status": "EXECUTED",
+        "timestamp": "2026-06-03T20:45:00Z"
+      },
+      "semgrep": {
+        "status": "EXECUTED",
+        "timestamp": "2026-06-03T20:48:00Z"
+      }
     },
     "performance_profilers": {
-      "radon": {"status": "EXECUTED", "timestamp": "2026-06-03T20:47:00Z"}
+      "radon": {
+        "status": "EXECUTED",
+        "timestamp": "2026-06-03T20:47:00Z"
+      }
     },
     "test_runners": {
-      "pytest": {"status": "EXECUTED", "timestamp": "2026-06-03T20:53:00Z"}
+      "pytest": {
+        "status": "EXECUTED",
+        "timestamp": "2026-06-03T20:53:00Z"
+      }
     }
   },
   "learned_patterns": {
@@ -218,11 +403,12 @@
       "TYPE-MISMATCH": "Incompatible collection types in comprehensions",
       "UNUSED-CODE": "Dead variables or parameters in callbacks",
       "REDUNDANT-WORK": "Repeating expensive operations already handled by lower layers",
-      "MYPY-NOISE-POLIVALENT-VAR": "Mypy errors on local variables that change type across branches when the return value is type-correct. Not a real bug — verify return type before filing.",
+      "MYPY-NOISE-POLIVALENT-VAR": "Mypy errors on local variables that change type across branches when the return value is type-correct. Not a real bug \u2014 verify return type before filing.",
       "DEFERRED-ARCH-REFACTOR": "Real issue confirmed but fix requires interface changes across multiple layers. Document and defer to dedicated refactor session."
     },
     "pattern_statistics": {},
-    "false_positive_tracking": {}
+    "false_positive_tracking": {},
+    "ASYNC-TIMEOUT-RACE": "Race condition between async operation completion and its watchdog timeout firing."
   },
   "checkpoint_history": [],
   "phase_gates": {
@@ -235,6 +421,9 @@
     "stuck_detection_counter": {},
     "skip_list": [],
     "todo_items": [],
-    "complexity_issues": ["anura/services/screenshot_service.py", "anura/services/language_manager.py"]
+    "complexity_issues": [
+      "anura/services/screenshot_service.py",
+      "anura/services/language_manager.py"
+    ]
   }
 }

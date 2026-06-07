@@ -1,0 +1,124 @@
+anura/transformers/models.py:39: error: Set comprehension has incompatible type Set[tuple[Any, Any]]; expected Set[tuple[Any]]  [misc]
+anura/transformers/models.py:42: error: Set comprehension has incompatible type Set[tuple[Any, Any, Any]]; expected Set[tuple[Any]]  [misc]
+anura/models/ocr.py:111: error: Set comprehension has incompatible type Set[tuple[int, int]]; expected Set[tuple[int]]  [misc]
+anura/models/ocr.py:113: error: Set comprehension has incompatible type Set[tuple[int, int, int]]; expected Set[tuple[int]]  [misc]
+anura/models/language_item.py:7: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/models/language_item.py:7: note: Did you mean "cgi"?
+anura/widgets/share_row.py:9: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/widgets/share_row.py:9: note: Did you mean "cgi"?
+anura/widgets/language_popover_row.py:9: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/widgets/language_popover_row.py:9: note: Did you mean "cgi"?
+anura/utils/singleton.py:28: error: "__new__" must return a class instance (got "T")  [misc]
+anura/utils/singleton.py:72: error: Incompatible return value type (got "ThreadSafeSingleton", expected "T")  [return-value]
+anura/utils/singleton.py:72: error: Argument 1 to "ThreadSafeSingleton" has incompatible type "type[T@get_instance]"; expected "type[T@__new__]"  [arg-type]
+anura/widgets/shortcuts_overlay.py:15: error: Cannot find implementation or library stub for module named "gi"  [import-not-found]
+anura/widgets/shortcuts_overlay.py:15: note: Did you mean "cgi"?
+anura/widgets/shortcuts_overlay.py:22: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/widgets/shortcuts_overlay.py:22: note: Did you mean "cgi"?
+anura/widgets/shortcuts_overlay.py:131: error: Value of type "Collection[str]" is not indexable  [index]
+anura/widgets/shortcuts_overlay.py:134: error: Value of type "Collection[str]" is not indexable  [index]
+anura/utils/validators.py:384: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/utils/validators.py:384: note: Did you mean "cgi"?
+anura/utils/signal_manager.py:14: error: Cannot find implementation or library stub for module named "gi"  [import-not-found]
+anura/utils/signal_manager.py:14: note: Did you mean "cgi"?
+anura/utils/signal_manager.py:18: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/utils/signal_manager.py:18: note: Did you mean "cgi"?
+anura/utils/signal_manager.py:24: error: Name "GObject" already defined (possibly by an import)  [no-redef]
+anura/utils/barcode_detector.py:15: error: Cannot find implementation or library stub for module named "zxingcpp"  [import-not-found]
+anura/services/settings.py:10: error: Cannot find implementation or library stub for module named "gi"  [import-not-found]
+anura/services/settings.py:10: note: Did you mean "cgi"?
+anura/services/settings.py:15: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/services/settings.py:15: note: Did you mean "cgi"?
+anura/services/notification_service.py:12: error: Cannot find implementation or library stub for module named "gi"  [import-not-found]
+anura/services/notification_service.py:12: note: Did you mean "cgi"?
+anura/services/notification_service.py:22: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/services/notification_service.py:22: note: Did you mean "cgi"?
+anura/services/screenshot/portal_provider.py:10: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/services/screenshot/portal_provider.py:10: note: Did you mean "cgi"?
+anura/services/screenshot/legacy_provider.py:16: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/services/screenshot/legacy_provider.py:16: note: Did you mean "cgi"?
+anura/models/context.py:47: error: Cannot find implementation or library stub for module named "zxingcpp"  [import-not-found]
+anura/models/context.py:56: error: Cannot find implementation or library stub for module named "gi"  [import-not-found]
+anura/models/context.py:56: note: Did you mean "cgi"?
+anura/models/context.py:59: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/models/context.py:59: note: Did you mean "cgi"?
+anura/core/resources.py:9: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/core/resources.py:9: note: Did you mean "cgi"?
+anura/core/atomic_task_manager.py:15: error: Cannot find implementation or library stub for module named "gi"  [import-not-found]
+anura/core/atomic_task_manager.py:15: note: Did you mean "cgi"?
+anura/core/atomic_task_manager.py:21: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/core/atomic_task_manager.py:21: note: Did you mean "cgi"?
+anura/core/atomic_task_manager.py:113: error: Incompatible types in assignment (expression has type "DictProxy[Any, Any]", variable has type "None")  [assignment]
+anura/core/action_registry.py:7: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/core/action_registry.py:7: note: Did you mean "cgi"?
+anura/services/tts.py:16: error: Cannot find implementation or library stub for module named "gi"  [import-not-found]
+anura/services/tts.py:16: note: Did you mean "cgi"?
+anura/services/tts.py:23: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/services/tts.py:23: note: Did you mean "cgi"?
+anura/services/tts.py:24: error: Skipping analyzing "gtts": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+anura/services/language_manager.py:19: error: Cannot find implementation or library stub for module named "gi"  [import-not-found]
+anura/services/language_manager.py:19: note: Did you mean "cgi"?
+anura/services/language_manager.py:26: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/services/language_manager.py:26: note: Did you mean "cgi"?
+anura/utils/image_filters.py:57: error: Library stubs not installed for "psutil"  [import-untyped]
+anura/utils/image_filters.py:57: note: Hint: "python3 -m pip install types-psutil"
+anura/utils/image_filters.py:57: note: (or run "mypy --install-types" to install all missing stub packages)
+anura/services/share_service.py:11: error: Cannot find implementation or library stub for module named "gi"  [import-not-found]
+anura/services/share_service.py:11: note: Did you mean "cgi"?
+anura/services/share_service.py:20: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/services/share_service.py:20: note: Did you mean "cgi"?
+anura/services/clipboard_service.py:14: error: Cannot find implementation or library stub for module named "gi"  [import-not-found]
+anura/services/clipboard_service.py:14: note: Did you mean "cgi"?
+anura/services/clipboard_service.py:22: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/services/clipboard_service.py:22: note: Did you mean "cgi"?
+anura/services/clipboard_service.py:58: error: Cannot determine type of "_state_lock"  [has-type]
+anura/services/clipboard_service.py:59: error: Cannot determine type of "_clipboard"  [has-type]
+anura/controllers/dnd_controller.py:8: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/controllers/dnd_controller.py:8: note: Did you mean "cgi"?
+anura/controllers/dnd_controller.py:8: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+anura/controllers/tts_controller.py:9: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/controllers/tts_controller.py:9: note: Did you mean "cgi"?
+anura/widgets/preferences_general_page.py:10: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/widgets/preferences_general_page.py:10: note: Did you mean "cgi"?
+anura/widgets/language_row.py:9: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/widgets/language_row.py:9: note: Did you mean "cgi"?
+anura/widgets/language_row.py:96: error: Cannot determine type of "_progress_idle_id"  [has-type]
+anura/widgets/language_row.py:98: error: Cannot determine type of "_progress_idle_id"  [has-type]
+anura/widgets/language_row.py:99: error: Cannot determine type of "_progress_idle_id"  [has-type]
+anura/widgets/language_popover.py:9: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/widgets/language_popover.py:9: note: Did you mean "cgi"?
+anura/widgets/extracted_page.py:12: error: Cannot find implementation or library stub for module named "gi"  [import-not-found]
+anura/widgets/extracted_page.py:12: note: Did you mean "cgi"?
+anura/widgets/extracted_page.py:20: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/widgets/extracted_page.py:20: note: Did you mean "cgi"?
+anura/widgets/preferences_languages_page.py:9: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/widgets/preferences_languages_page.py:9: note: Did you mean "cgi"?
+anura/widgets/welcome_page.py:11: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/widgets/welcome_page.py:11: note: Did you mean "cgi"?
+anura/services/screenshot_service.py:18: error: Cannot find implementation or library stub for module named "gi"  [import-not-found]
+anura/services/screenshot_service.py:18: note: Did you mean "cgi"?
+anura/services/screenshot_service.py:25: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/services/screenshot_service.py:25: note: Did you mean "cgi"?
+anura/services/screenshot_service.py:28: error: Skipping analyzing "pytesseract": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+anura/services/screenshot_service.py:526: error: Argument 1 to "open" has incompatible type "str | Image | object"; expected "str | bytes | PathLike[str] | PathLike[bytes] | IO[bytes]"  [arg-type]
+anura/services/screenshot_service.py:537: error: Incompatible types in assignment (expression has type "Image", variable has type "ImageFile")  [assignment]
+anura/widgets/preferences_dialog.py:7: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/widgets/preferences_dialog.py:7: note: Did you mean "cgi"?
+anura/core/silent_runner.py:9: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/core/silent_runner.py:9: note: Did you mean "cgi"?
+anura/core/silent_runner.py:22: error: Need type annotation for "_old_handlers" (hint: "_old_handlers: dict[<type>, <type>] = ...")  [var-annotated]
+anura/core/dialogs.py:9: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/core/dialogs.py:9: note: Did you mean "cgi"?
+anura/controllers/ocr_controller.py:11: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/controllers/ocr_controller.py:11: note: Did you mean "cgi"?
+anura/window.py:12: error: Cannot find implementation or library stub for module named "gi"  [import-not-found]
+anura/window.py:12: note: Did you mean "cgi"?
+anura/window.py:22: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/window.py:22: note: Did you mean "cgi"?
+anura/window.py:337: error: Cannot find implementation or library stub for module named "anura.utils.dialog_manager"  [import-not-found]
+anura/main.py:26: error: Cannot find implementation or library stub for module named "gi"  [import-not-found]
+anura/main.py:26: note: Did you mean "cgi"?
+anura/main.py:35: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/main.py:35: note: Did you mean "cgi"?
+anura/main.py:316: error: Cannot find implementation or library stub for module named "anura._release_notes"  [import-not-found]
+Found 73 errors in 38 files (checked 60 source files)
