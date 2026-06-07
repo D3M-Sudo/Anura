@@ -25,6 +25,15 @@ from anura.config import (
 # Using a regex is ~13x faster than a manual loop for control character detection.
 _CONTROL_CHARS_RE = re.compile(r"[\x00-\x1f\x7f]")
 
+# Performance constants for sanitize_text
+_DISCARD_CATEGORIES = {"Cc", "Cf", "Co", "Cs", "Cn"}
+_KEEP_CHARS = {"\n", "\r", "\t"}
+_LATIN1_TRANSLATE = {
+    i: None
+    for i in range(256)
+    if unicodedata.category(chr(i)) in _DISCARD_CATEGORIES and chr(i) not in _KEEP_CHARS
+}
+
 # Centralized patterns for structured data detection (URLs, Emails, etc.)
 # Used across TextPreprocessor, Transformers, and ResultDispatcher.
 EMAIL_PATTERN = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,15}"
@@ -60,9 +69,7 @@ def sanitize_text(text: str) -> str:
     # 2. Security: Enforce hard length limit to prevent resource exhaustion (DoS)
     # during downstream processing (e.g., complex regex in transformers).
     if len(text) > MAX_TEXT_LENGTH:
-        logger.warning(
-            f"Sanitization: Text truncated from {len(text)} to {MAX_TEXT_LENGTH} characters."
-        )
+        logger.warning(f"Sanitization: Text truncated from {len(text)} to {MAX_TEXT_LENGTH} characters.")
         text = text[:MAX_TEXT_LENGTH]
 
     # 3. Defense-in-depth: Strip dangerous or non-printable Unicode categories:
@@ -72,11 +79,18 @@ def sanitize_text(text: str) -> str:
     # - Cs (Surrogate): UTF-16 surrogate halves (invalid in UTF-8).
     # - Cn (Unassigned): Reserved but currently undefined characters.
     # Legitimate formatting (\n, \r, \t) is preserved.
-    text = "".join(
-        ch
-        for ch in text
-        if unicodedata.category(ch) not in ("Cc", "Cf", "Co", "Cs", "Cn") or ch in "\n\r\t"
-    )
+    #
+    # Performance Optimization: Use a two-pass approach.
+    # Pass 1: str.translate() for the Latin-1 range (fast C-level pass).
+    text = text.translate(_LATIN1_TRANSLATE)
+
+    # Pass 2: Check for non-Latin-1 characters. Only if present, perform a
+    # secondary filtered iteration for high-codepoint categories.
+    # Use max() as a fast way to detect if any character is outside the Latin-1 range.
+    if text and max(text) > "\xff":
+        text = "".join(
+            ch for ch in text if ord(ch) < 256 or unicodedata.category(ch) not in _DISCARD_CATEGORIES
+        )
 
     # 4. Normalization: horizontal whitespace (squash multiple spaces/tabs)
     # Note: \n and \r are preserved by the [ \t]+ pattern.
