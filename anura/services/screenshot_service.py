@@ -54,7 +54,7 @@ def _pipeline_detect_barcodes(img, start_time: float) -> tuple[bool, str | None,
         raw_extracted = "\n".join([res.text for res in results])
         extracted = sanitize_text(raw_extracted)
         logger.info(f"Anura ZXing (Isolated): Code(s) detected in {time.time() - start_time:.3f}s")
-        return True, extracted, None, None
+        return True, extracted, None, None, ""
     return None
 
 
@@ -98,16 +98,16 @@ def _pipeline_reconstruct(ocr_result: OcrResult, task_id, status_callback) -> tu
     return reconstructor.reconstruct(ocr_result, task_id=task_id)
 
 
-def _pipeline_magic_process(ocr_result: OcrResult, task_id, status_callback) -> tuple[str, float]:
-    """Stage 5: Magic processing"""
+def _pipeline_magic_process(ocr_result: OcrResult, task_id, status_callback) -> tuple[str, float, str]:
+    """Stage 5: Magic processing — returns (processed_text, confidence, applied_name)."""
     from anura.transformers.magic_processor import get_magic_processor
 
     logger.debug("Isolated: Magic processing...")
     if status_callback:
         status_callback(_("Magic processing..."))
     magic_processor = get_magic_processor()
-    processed_text, magic_conf, _applied_name = magic_processor.process(ocr_result, task_id=task_id)
-    return processed_text, magic_conf
+    processed_text, magic_conf, applied_name = magic_processor.process(ocr_result, task_id=task_id)
+    return processed_text, magic_conf, applied_name
 
 
 def _pipeline_select_and_clean(
@@ -159,7 +159,7 @@ def run_ocr_pipeline(
         from anura.utils.text_preprocessor import get_text_preprocessor
 
         if not Path(file_path).exists() or Path(file_path).stat().st_size == 0:
-            return False, "", _("The selected image file is empty."), None
+            return False, "", _("The selected image file is empty."), None, ""
 
         start_time = time.time()
 
@@ -202,7 +202,10 @@ def run_ocr_pipeline(
                     )
 
                     # 5. Magic Processing
-                    processed_text, magic_conf = _pipeline_magic_process(
+                    # FIX BUG-H-003: capture applied_name so callers don't need to re-run
+                    # MagicProcessor on the raw OcrResult (which would bypass pipeline
+                    # selection logic and double the processing cost on the main thread).
+                    processed_text, magic_conf, applied_name = _pipeline_magic_process(
                         ocr_result, task_id, status_callback
                     )
 
@@ -218,7 +221,7 @@ def run_ocr_pipeline(
                     )
 
                     logger.info(f"Anura OCR (Isolated): Completed in {time.time() - start_time:.3f}s")
-                    return True, cleaned_text, None, ocr_result
+                    return True, cleaned_text, None, ocr_result, applied_name
 
             finally:
                 # Restore original env values so the reused worker process
@@ -229,11 +232,27 @@ def run_ocr_pipeline(
                     else:
                         os.environ[k] = v
 
+                # FIX BUG-H-007: remove the task-isolated tessdata pool subdirectory
+                # created by get_tesseract_config() for multi-language OCR.
+                # Previously these accumulated for the entire session (cleanup was
+                # startup-only).  We clean up eagerly here — still inside the isolated
+                # worker — so no disk bloat occurs during long batch sessions.
+                if task_id:
+                    from anura.config import TESSDATA_POOL_DIR
+                    pool_task_dir = Path(TESSDATA_POOL_DIR) / task_id
+                    if pool_task_dir.is_dir():
+                        import contextlib
+                        with contextlib.suppress(OSError):
+                            shutil.rmtree(pool_task_dir)
+                            logger.debug(
+                                f"Anura OCR (Isolated): Cleaned up tessdata pool dir for task {task_id}"
+                            )
+
     except InterruptedError:
-        return False, None, None, None
+        return False, None, None, None, ""
     except (OSError, RuntimeError, TypeError, AttributeError) as e:
         logger.exception(f"Anura OCR (Isolated) Error: {e}")
-        return False, "", _("Failed to process image in isolated process."), None
+        return False, "", _("Failed to process image in isolated process."), None, ""
 
 
 def _configure_tesseract_path() -> None:
@@ -273,7 +292,7 @@ class ScreenshotService(GObject.GObject):
 
     __gsignals__: ClassVar[dict[str, tuple]] = {
         "error": (GObject.SignalFlags.RUN_LAST, None, (str,)),
-        "decoded": (GObject.SignalFlags.RUN_FIRST, None, (str, bool, object)),
+        "decoded": (GObject.SignalFlags.RUN_FIRST, None, (str, bool, object, str)),
         # Emitted when the host's xdg-desktop-portal screenshot backend is
         # missing/broken (libportal generic-failure pattern). Consumers
         # typically use this to reveal a persistent install hint banner;
@@ -351,7 +370,17 @@ class ScreenshotService(GObject.GObject):
                 is_generic = "screenshot failed" in error.lower()
                 if is_generic and self.fallback_provider:
                     logger.info("Anura Screenshot: Attempting fallback capture...")
-                    self.fallback_provider.capture(lang, copy, _on_capture_result)
+                    # FIX BUG-H-002: wrap symmetrically with primary provider call to
+                    # guarantee _is_capturing is reset even if the fallback raises before
+                    # its callback is ever scheduled.
+                    try:
+                        self.fallback_provider.capture(lang, copy, _on_capture_result)
+                    except (GLib.Error, RuntimeError, AttributeError) as e:
+                        self._is_capturing = False
+                        logger.error(f"Anura Screenshot: Fallback provider raised: {e}")
+                        self._emit_decode_error(
+                            _("Screenshot failed: {reason}").format(reason=str(e))
+                        )
                 else:
                     self._is_capturing = False
                     if is_generic:
@@ -479,29 +508,32 @@ class ScreenshotService(GObject.GObject):
             is_valid, _size, error = validate_image_resource(file)
             if not is_valid:
                 logger.error(f"Anura OCR: {error}")
-                return False, "", _(error) if error else _("Invalid image file"), None
+                return False, "", _(error) if error else _("Invalid image file"), None, ""
 
         start_time = time.time()
 
         try:
-            extracted, error_message, ocr_result = self._process_image_decode(file, lang, start_time, task_id=task_id)
+            extracted, error_message, ocr_result, applied_name = self._process_image_decode(
+                file, lang, start_time, task_id=task_id
+            )
         except InterruptedError:
             logger.debug(f"Anura OCR: Task {task_id} was cancelled during processing.")
-            return False, None, None, None
+            return False, None, None, None, ""
         except (OSError, RuntimeError, TypeError, AttributeError) as e:
             extracted, error_message = self._handle_decode_exception(e)
             ocr_result = None
+            applied_name = ""
         finally:
             self._cleanup_temporary_file(file, is_physical_file, remove_source)
 
-        return self._format_decode_result(extracted, error_message, ocr_result)
+        return self._format_decode_result(extracted, error_message, ocr_result, applied_name)
 
-    def _validate_decode_inputs(self, lang: str) -> tuple[bool, str | None, str | None, OcrResult | None]:
+    def _validate_decode_inputs(self, lang: str) -> tuple[bool, str | None, str | None, OcrResult | None, str]:
         """Validate language code for OCR processing."""
         if not lang or not re.match(LANG_CODE_PATTERN, lang):
             logger.error(f"Anura: Invalid language code '{lang}' for OCR")
-            return (False, "", _("Invalid language code specified."), None)
-        return (True, None, None, None)
+            return (False, "", _("Invalid language code specified."), None, "")
+        return (True, None, None, None, "")
 
     def _determine_file_type(self, file: str | Image.Image | object, _remove_source: bool) -> bool:
         """Determine if file is a physical file."""
@@ -513,15 +545,20 @@ class ScreenshotService(GObject.GObject):
         lang: str,
         start_time: float,
         task_id: str | None = None,
-    ) -> tuple[str | None, str | None, OcrResult | None]:
-        """Process image for QR code detection and OCR."""
+    ) -> tuple[str | None, str | None, OcrResult | None, str]:
+        """Process image for QR code detection and OCR.
+
+        Returns:
+            (extracted_text, error_message, ocr_result, applied_name)
+        """
         extracted = None
         error_message = None
         ocr_result = None
+        applied_name = ""
 
         if isinstance(file, str) and Path(file).exists() and Path(file).stat().st_size == 0:
             logger.error(f"Anura OCR: Attempted to process 0-byte image file: {file}")
-            return None, _("The selected image file is empty."), None
+            return None, _("The selected image file is empty."), None, ""
 
         with Image.open(file) as img:
             image_size = img.size
@@ -535,9 +572,11 @@ class ScreenshotService(GObject.GObject):
 
                 if img.mode != "L":
                     img = img.convert("L")
-                extracted, ocr_result = self._try_ocr_extraction(img, lang, start_time, task_id=task_id)
+                extracted, ocr_result, applied_name = self._try_ocr_extraction(
+                    img, lang, start_time, task_id=task_id
+                )
 
-        return extracted, error_message, ocr_result
+        return extracted, error_message, ocr_result, applied_name
 
     def _try_barcode_detection(self, img: Image.Image, start_time: float) -> str | None:
         """Try to detect and decode QR codes and Barcodes from image using zxing-cpp."""
@@ -557,8 +596,16 @@ class ScreenshotService(GObject.GObject):
 
     def _try_ocr_extraction(
         self, img: Image.Image, lang: str, start_time: float, task_id: str | None = None
-    ) -> tuple[str | None, OcrResult | None]:
-        """Try to extract text using Tesseract OCR with preprocessing and Magic Transformers."""
+    ) -> tuple[str | None, OcrResult | None, str]:
+        """Try to extract text using Tesseract OCR with preprocessing and Magic Transformers.
+
+        Returns:
+            (cleaned_text, ocr_result, applied_name) — applied_name is the MagicProcessor
+            transformer that was selected (empty string when magic-processing is disabled or
+            when the reconstructor won the selection contest).  Surfaced here so callers can
+            forward it via the 'decoded' signal without re-running MagicProcessor a second
+            time on the main thread (FIX BUG-H-003).
+        """
         try:
             from pytesseract import Output
 
@@ -588,13 +635,15 @@ class ScreenshotService(GObject.GObject):
             spatially_reconstructed, recon_conf = reconstructor.reconstruct(ocr_result, task_id=task_id)
 
             magic_processor = get_magic_processor()
-            processed_text, magic_conf, _applied_name = magic_processor.process(ocr_result, task_id=task_id)
+            processed_text, magic_conf, applied_name = magic_processor.process(ocr_result, task_id=task_id)
 
             if spatially_reconstructed.strip() and (
                 (len(spatially_reconstructed) > len(processed_text) * 1.2 and recon_conf >= magic_conf * 0.95)
                 or recon_conf > magic_conf
             ):
                 processed_text = spatially_reconstructed
+                # Reconstructor won: the magic-transformer name is no longer representative
+                applied_name = ""
 
             if mode == "full":
                 cleaned_text = preprocessor.clean_extracted_text(processed_text)
@@ -608,13 +657,13 @@ class ScreenshotService(GObject.GObject):
             duration = time.time() - start_time
             logger.info(f"Anura OCR: Text extraction and Magics completed in {duration:.3f}s")
 
-            return cleaned_text, ocr_result
+            return cleaned_text, ocr_result, applied_name
         except InterruptedError:
             logger.debug("Anura OCR: Cancellation intercepted, re-raising InterruptedError")
             raise
         except (OSError, RuntimeError, TypeError, AttributeError) as e:
             logger.debug(f"Anura OCR: OCR extraction or Magic processing failed: {e}")
-            return None, None
+            return None, None, ""
 
     def _handle_decode_exception(self, e: Exception) -> tuple[str | None, str | None]:
         """Handle exceptions during image decoding."""
@@ -657,14 +706,15 @@ class ScreenshotService(GObject.GObject):
         extracted: str | None,
         error_message: str | None,
         ocr_result: OcrResult | None = None,
-    ) -> tuple[bool, str | None, str | None, OcrResult | None]:
-        """Format the final decode result."""
+        applied_name: str = "",
+    ) -> tuple[bool, str | None, str | None, OcrResult | None, str]:
+        """Format the final decode result — returns a 5-tuple including applied_name."""
         if extracted:
-            return (True, extracted, None, ocr_result)
+            return (True, extracted, None, ocr_result, applied_name)
         elif error_message:
-            return (False, "", error_message, None)
+            return (False, "", error_message, None, "")
         else:
-            return (False, "", _("No text found."), None)
+            return (False, "", _("No text found."), None, "")
 
     def decode_image(
         self,
@@ -704,12 +754,16 @@ class ScreenshotService(GObject.GObject):
             GLib.idle_add(_on_status_idle, _("Extracting text..."))
 
             def _on_isolated_complete(result_tuple):
-                success, extracted, error_message, ocr_result = result_tuple
+                # FIX BUG-H-003: unpack 5-tuple — run_ocr_pipeline now returns applied_name
+                # to avoid re-running MagicProcessor in OcrController._on_shot_done.
+                success, extracted, error_message, ocr_result, applied_name = (
+                    result_tuple if len(result_tuple) == 5 else (*result_tuple, "")
+                )
                 if success:
 
                     def _on_decoded_idle():
                         try:
-                            self.emit("decoded", extracted, copy, ocr_result)
+                            self.emit("decoded", extracted, copy, ocr_result, applied_name)
                         except (RuntimeError, TypeError) as e:
                             logger.exception(f"Anura: Failed to emit decoded signal (isolated): {e}")
                         return GLib.SOURCE_REMOVE
@@ -782,20 +836,23 @@ class ScreenshotService(GObject.GObject):
             )
             return True
 
-        success, extracted, error_message, ocr_result = self.decode_image_sync(
+        success, extracted, error_message, ocr_result, applied_name = self.decode_image_sync(
             lang, file, remove_source, task_id=task_id
         )
 
         if success:
 
-            def _on_decoded_idle(text: str, cp: bool, ocr_res: OcrResult | None) -> bool:
+            def _on_decoded_idle(text: str, cp: bool, ocr_res: OcrResult | None, aname: str) -> bool:
                 try:
-                    self.emit("decoded", text, cp, ocr_res)
+                    self.emit("decoded", text, cp, ocr_res, aname)
                 except (RuntimeError, TypeError) as e:
                     logger.exception(f"Anura: Failed to emit decoded signal: {e}")
                 return GLib.SOURCE_REMOVE
 
-            GLib.idle_add(_on_decoded_idle, extracted, copy, ocr_result, priority=GLib.PRIORITY_DEFAULT)
+            GLib.idle_add(
+                _on_decoded_idle, extracted, copy, ocr_result, applied_name,
+                priority=GLib.PRIORITY_DEFAULT,
+            )
         else:
 
             def _on_decode_error_idle(msg: str | None) -> bool:

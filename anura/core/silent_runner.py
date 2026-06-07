@@ -65,7 +65,9 @@ class SilentRunner:
                 return False
 
             try:
-                success, text, error_message, ocr_result = self.app._decode_image_synchronously(self.file_path)
+                success, text, error_message, ocr_result, _applied_name = (
+                    self.app._decode_image_synchronously(self.file_path)
+                )
 
                 if self.interrupted.is_set():
                     loop.quit()

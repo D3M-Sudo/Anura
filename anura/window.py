@@ -130,8 +130,11 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         height: int = max(300, self.settings.get_int("window-height"))  # Min 300px
         self.set_default_size(width, height)
 
-        # Connect to surface scale changes to handle multi-monitor DPI scaling
-        self.connect("notify::scale-factor", self._on_scale_factor_changed)
+        # Connect to surface scale changes to handle multi-monitor DPI scaling.
+        # FIX BUG-H-006: use connect_tracked (not plain connect) so teardown_all()
+        # explicitly disconnects this handler. GTK4 auto-disconnects self-signals on
+        # destroy, but consistent use of connect_tracked enforces the pattern uniformly.
+        self.connect_tracked(self, "notify::scale-factor", self._on_scale_factor_changed)
 
     def _apply_capability_constraints(self) -> None:
         """Apply UI sensitivity constraints based on the boot-time capability audit."""

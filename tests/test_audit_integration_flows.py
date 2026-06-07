@@ -28,15 +28,15 @@ class TestIntegrationFlows:
         share_called = []
         with patch.object(share_service, "share") as mock_share:
 
-            def on_decoded(service, text, copy, ocr_result):
+            def on_decoded(service, text, copy, ocr_result, applied_name):
                 share_service.share("email", text)
                 share_called.append(text)
 
             screenshot_service.connect("decoded", on_decoded)
 
             # Manually trigger decoded signal (simulating successful OCR)
-            # Signal signature: (str, bool, object) — text, copy_requested, ocr_result
-            screenshot_service.emit("decoded", decoded_text, False, None)
+            # Signal signature: (str, bool, object, str) — text, copy_requested, ocr_result, applied_name
+            screenshot_service.emit("decoded", decoded_text, False, None, "")
 
             assert decoded_text in share_called
             mock_share.assert_called_once_with("email", decoded_text)
@@ -51,13 +51,13 @@ class TestIntegrationFlows:
         # Track if TTS generate was called
         with patch.object(tts_service, "generate", return_value="/tmp/test.mp3") as mock_gen:
 
-            def on_decoded(service, text, copy, ocr_result):
+            def on_decoded(service, text, copy, ocr_result, applied_name):
                 tts_service.generate(text, lang="en")
 
             screenshot_service.connect("decoded", on_decoded)
 
-            # Signal signature: (str, bool, object) — text, copy_requested, ocr_result
-            screenshot_service.emit("decoded", extracted_text, False, None)
+            # Signal signature: (str, bool, object, str) — text, copy_requested, ocr_result, applied_name
+            screenshot_service.emit("decoded", extracted_text, False, None, "")
 
             mock_gen.assert_called_once_with(extracted_text, lang="en")
 

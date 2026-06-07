@@ -78,10 +78,10 @@ class TestScreenshotServiceEnterprise:
 
     def test_validate_decode_inputs(self, service):
         """Test language code validation."""
-        valid, _, _, _ = ScreenshotService._validate_decode_inputs(service, "eng")
+        valid, _, _, _, _ = ScreenshotService._validate_decode_inputs(service, "eng")
         assert valid is True
 
-        invalid, _, err, _ = ScreenshotService._validate_decode_inputs(service, "invalid-code!!")
+        invalid, _, err, _, _ = ScreenshotService._validate_decode_inputs(service, "invalid-code!!")
         assert invalid is False
         assert "Invalid language code" in err
 
@@ -101,19 +101,19 @@ class TestScreenshotServiceEnterprise:
     def test_format_decode_result(self, service):
         """Test result formatting for various OCR outcomes."""
         # Success
-        s, t, e, _ = ScreenshotService._format_decode_result(service, "Extracted Text", None)
+        s, t, e, _, _aname = ScreenshotService._format_decode_result(service, "Extracted Text", None)
         assert s is True
         assert t == "Extracted Text"
         assert e is None
 
         # Explicit Error
-        s, t, e, _ = ScreenshotService._format_decode_result(service, None, "Fatal Error")
+        s, t, e, _, _aname = ScreenshotService._format_decode_result(service, None, "Fatal Error")
         assert s is False
         assert t == ""
         assert e == "Fatal Error"
 
         # No Text Found
-        s, t, e, _ = ScreenshotService._format_decode_result(service, None, None)
+        s, t, e, _, _aname = ScreenshotService._format_decode_result(service, None, None)
         assert s is False
         assert "No text found" in e
 

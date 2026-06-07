@@ -301,7 +301,7 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
     def _decode_image_synchronously(self, file_path: str):
         if self.backend:
             return self.backend.decode_image_sync(self.settings.get_string("active-language"), file_path)
-        return False, None, "Backend not initialized", None
+        return False, None, "Backend not initialized", None, ""
 
     def _get_release_notes(self) -> str:
         """Get release notes from generated _release_notes module.
@@ -390,7 +390,7 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         if parameter:
             launch_uri(parameter.get_string().strip(), window=self.get_active_window())
 
-    def on_decoded(self, _sender, text: str, copy: bool, ocr_result: object) -> None:
+    def on_decoded(self, _sender, text: str, copy: bool, ocr_result: object, applied_name: str = "") -> None:
         win = self.get_active_window()
         if win:
             # When UI is present, OcrController handles it via signals

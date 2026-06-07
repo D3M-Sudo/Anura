@@ -86,24 +86,24 @@ class TestScreenshotService:
     @pytest.mark.gtk
     def test_validate_decode_inputs(self):
         service = ScreenshotService()
-        valid, _, _, _ = service._validate_decode_inputs("eng")
+        valid, _, _, _, _ = service._validate_decode_inputs("eng")
         assert valid is True
 
-        invalid, _, _, _ = service._validate_decode_inputs("invalid!")
+        invalid, _, _, _, _ = service._validate_decode_inputs("invalid!")
         assert invalid is False
 
     @pytest.mark.gtk
     def test_format_decode_result(self):
         service = ScreenshotService()
-        success, text, err, _ocr = service._format_decode_result("Extracted", None)
+        success, text, err, _ocr, _aname = service._format_decode_result("Extracted", None)
         assert success is True
         assert text == "Extracted"
 
-        success, text, err, _ocr = service._format_decode_result(None, "Error")
+        success, text, err, _ocr, _aname = service._format_decode_result(None, "Error")
         assert success is False
         assert err == "Error"
 
-        success, text, err, _ocr = service._format_decode_result(None, None)
+        success, text, err, _ocr, _aname = service._format_decode_result(None, None)
         assert success is False
         assert "No text found" in err
 
