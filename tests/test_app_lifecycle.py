@@ -53,10 +53,10 @@ class TestAppLifecycleEnterprise:
 
     def test_decode_image_synchronously_success(self, app):
         """Test synchronous decoding used in silent mode."""
-        app.backend.decode_image_sync.return_value = (True, "Extracted Text", None, None)
+        app.backend.decode_image_sync.return_value = (True, "Extracted Text", None, None, "")
         app.settings.get_string.return_value = "eng"
 
-        success, text, _, _ = app._decode_image_synchronously("/tmp/test.png")
+        success, text, _, _, _aname = app._decode_image_synchronously("/tmp/test.png")
         assert success is True
         assert text == "Extracted Text"
         app.backend.decode_image_sync.assert_called_with("eng", "/tmp/test.png")
@@ -64,14 +64,14 @@ class TestAppLifecycleEnterprise:
     def test_decode_image_synchronously_failures(self, app):
         """Test synchronous decoding error paths."""
         # File not found
-        app.backend.decode_image_sync.return_value = (False, None, "File not found", None)
-        s, _, e, _ = app._decode_image_synchronously("missing.png")
+        app.backend.decode_image_sync.return_value = (False, None, "File not found", None, "")
+        s, _, e, _, _aname = app._decode_image_synchronously("missing.png")
         assert s is False
         assert "not found" in e
 
         # Permission denied
-        app.backend.decode_image_sync.return_value = (False, None, "Permission denied", None)
-        s, _, e, _ = app._decode_image_synchronously("secret.png")
+        app.backend.decode_image_sync.return_value = (False, None, "Permission denied", None, "")
+        s, _, e, _, _aname = app._decode_image_synchronously("secret.png")
         assert s is False
         assert "Permission denied" in e
 
