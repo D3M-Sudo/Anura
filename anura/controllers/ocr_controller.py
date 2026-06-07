@@ -14,7 +14,6 @@ from loguru import logger
 from anura.services.notification_service import get_notification_service
 from anura.services.result_dispatcher import get_result_dispatcher
 from anura.services.settings import settings
-from anura.transformers.magic_processor import get_magic_processor
 from anura.utils import uri_validator
 from anura.utils.portal_advice import detect_portal_advice
 from anura.utils.signal_manager import SignalManagerMixin
@@ -80,20 +79,26 @@ class OcrController(GObject.GObject, SignalManagerMixin):
 
         self.connect_tracked(self._window.portal_banner, "button-clicked", self._on_portal_banner_dismissed)
 
-    def _on_shot_done(self, _sender: GObject.GObject, text: str, copy: bool, ocr_result: "OcrResult") -> None:
-        """Handle successful screenshot capture and OCR processing."""
+    def _on_shot_done(
+        self,
+        _sender: GObject.GObject,
+        text: str,
+        copy: bool,
+        ocr_result: "OcrResult",
+        applied_name: str,
+    ) -> None:
+        """Handle successful screenshot capture and OCR processing.
+
+        FIX BUG-H-003: applied_name is now forwarded from the OCR pipeline (service layer)
+        so MagicProcessor is NOT run a second time here.  The pipeline already selected the
+        best text and cleaned it; re-processing the raw OcrResult on the main thread would
+        both waste CPU and potentially produce a different (worse) result.
+        """
         if not text:
             self.emit("error-occurred", _("No text found. Try to grab another region."))
             return
 
         try:
-            applied_name = ""
-            if settings.get_boolean("magic-processor-enabled") and ocr_result:
-                try:
-                    text, _conf, applied_name = get_magic_processor().process(ocr_result)
-                except Exception as e:
-                    logger.error(f"OcrController: MagicProcessor failed: {e}")
-
             self.emit("extraction-completed", text, applied_name)
             extraction_result = self._dispatcher.dispatch(text, ocr_result)
             self._handle_extraction_result(extraction_result, copy)

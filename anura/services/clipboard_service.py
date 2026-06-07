@@ -353,7 +353,12 @@ class ClipboardService(GObject.GObject):
             self._fallback_to_texture_read()
             return
 
-        cancellable = self._cancellable
+        # FIX BUG-H-005: capture _cancellable under _state_lock so a concurrent call to
+        # cancel_pending_operations() (which holds _state_lock and sets _cancellable=None)
+        # cannot race with this read.  _stop_timeout() above deliberately does NOT cancel
+        # _cancellable (BUG-043), so the lock just guards the snapshot.
+        with self._state_lock:
+            cancellable = self._cancellable
         self._read_stream_to_bytes(
             stream,
             cancellable,
