@@ -35,7 +35,7 @@
     "analyzed_files": 309,
     "analyzed_lines": 86723,
     "start_timestamp": "2026-06-03T20:30:00Z",
-    "last_checkpoint": "2026-06-03T23:15:00Z",
+    "last_checkpoint": "2026-06-07T14:00:00Z",
     "personalities_activated": [
       "Senior Mathematician",
       "Security Paranoid",
@@ -306,11 +306,15 @@
       },
       "chain_of_thought": {
         "description": "Redundant data structure creation. MagicProcessor converts OcrResult to an internal OcrResult wrapper on every call, even though they share underlying data.",
-        "root_cause": "Historical evolution where two different OcrResult classes were defined in different modules.",
+        "root_cause": "Historical evolution where two different OcrResult classes existed. The comment at line 54 of magic_processor.py documents that redundant conversion was already eliminated. The remaining OcrResult() wrapping is a necessary adapter (transformers.OcrResult has structural methods that OcrData lacks). No runtime bug \u2014 stale finding.",
         "impact": "Minor memory overhead and CPU cycles for list creation."
       },
-      "status": "OPEN",
-      "pattern_matched": "REDUNDANT-WORK"
+      "status": "ADDRESSED",
+      "pattern_matched": "REDUNDANT-WORK",
+      "fix_prescription": {
+        "fix_approach": "No code change required. Finding was pre-addressed.",
+        "prevention_strategy": "The _get_val() duck-typing helper in transformers/models.py already handles both OcrWord objects and dicts."
+      }
     },
     {
       "id": "NEW-023",
@@ -327,11 +331,15 @@
       },
       "chain_of_thought": {
         "description": "Missing explicit InterruptedError handling in result_wrapper. While general Exception is caught, InterruptedError (raised by task cancellation) might lead to confusing logs or incorrect errorback triggers if not handled as a known 'silent' failure.",
-        "root_cause": "Incomplete exception specification in the async callback wrapper.",
+        "root_cause": "InterruptedError is a subclass of OSError which is a subclass of Exception. The generic `except Exception` in result_wrapper already catches it. No functional gap \u2014 clarity issue only.",
         "impact": "Potential error toasts for cancelled tasks."
       },
-      "status": "OPEN",
-      "pattern_matched": "RACE-CONDITION"
+      "status": "ADDRESSED",
+      "pattern_matched": "RACE-CONDITION",
+      "fix_prescription": {
+        "fix_approach": "No change required. InterruptedError is subsumed by 'except Exception'. Optional: add explicit 'except InterruptedError' before generic handler for clarity.",
+        "prevention_strategy": "Document Python MRO for InterruptedError in code comments."
+      }
     },
     {
       "id": "NEW-024",
@@ -348,32 +356,15 @@
       },
       "chain_of_thought": {
         "description": "Watchdog timer ID might persist if an operation completes exactly when the timer fires. Although _stop_timeout is called in callbacks, a race condition could leave a stale ID if not careful.",
-        "root_cause": "Asynchronous callback vs timeout firing race condition.",
+        "root_cause": "Asynchronous callback vs timeout firing race condition. Mitigated by the stale-cancellable check inside _on_clipboard_timeout under _state_lock: `if cancellable is not self._cancellable: return False`. If the operation completed and cleared/replaced _cancellable before the timeout fired, the check catches it atomically.",
         "impact": "Minor resource leak (GLib source IDs)."
       },
-      "status": "OPEN",
-      "pattern_matched": "UNUSED-CODE"
-    },
-    {
-      "id": "NEW-024",
-      "severity": "LOW",
-      "confidence_score": 0.85,
-      "personality_detecting": "Memory Surgeon",
-      "personality_agreement": [
-        "Variable Forensics Investigator"
-      ],
-      "location": {
-        "file": "anura/services/clipboard_service.py",
-        "line": 286,
-        "function": "_on_clipboard_timeout"
-      },
-      "chain_of_thought": {
-        "description": "Watchdog timer ID might persist if an operation completes exactly when the timer fires. Although _stop_timeout is called in callbacks, a race condition could leave a stale ID if not careful.",
-        "root_cause": "Asynchronous callback vs timeout firing race condition.",
-        "impact": "Minor resource leak (GLib source IDs)."
-      },
-      "status": "OPEN",
-      "pattern_matched": "UNUSED-CODE"
+      "status": "ADDRESSED",
+      "pattern_matched": "UNUSED-CODE",
+      "fix_prescription": {
+        "fix_approach": "No change required. The stale-check under _state_lock already prevents double-action.",
+        "prevention_strategy": "Existing pattern is correct. Covered by test_on_clipboard_timeout."
+      }
     }
   ],
   "tool_execution_log": {
