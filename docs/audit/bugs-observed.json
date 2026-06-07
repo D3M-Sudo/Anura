@@ -35,7 +35,7 @@
     "analyzed_files": 309,
     "analyzed_lines": 86723,
     "start_timestamp": "2026-06-03T20:30:00Z",
-    "last_checkpoint": "2026-06-07T14:00:00Z",
+    "last_checkpoint": "2026-06-07T15:00:00Z",
     "personalities_activated": [
       "Senior Mathematician",
       "Security Paranoid",
@@ -253,7 +253,7 @@
       },
       "chain_of_thought": {
         "description": "Redundant Magic Processing. ScreenshotService already performs magic processing during the OCR pipeline. OcrController repeats this on the main thread.",
-        "root_cause": "Architectural layering leak where the Controller re-performs expensive logic already handled by the Service layer.",
+        "root_cause": "Architectural layering leak where the Controller re-performed expensive MagicProcessor logic already handled by the pipeline. Fixed by PR #258 (BUG-H-003): the 'decoded' signal now carries applied_name as a 4th argument; OcrController._on_shot_done no longer calls get_magic_processor() \u2014 the import was removed.",
         "impact": "Wasted CPU cycles on main thread.",
         "note": "fix requires adding applied_name to decoded signal payload \u2014 out of scope for this session"
       },
@@ -263,9 +263,10 @@
         "risk": "Poor performance on low-end hardware."
       },
       "fix_prescription": {
-        "approach": "Architectural refactor of signal payload."
+        "fix_approach": "Extended 'decoded' signal to (str, bool, object, str). applied_name propagated through run_ocr_pipeline, _try_ocr_extraction, _format_decode_result. OcrController._on_shot_done accepts applied_name directly.",
+        "prevention_strategy": "Integration test verifies MagicProcessor.process() called exactly once per OCR request."
       },
-      "status": "DEFERRED",
+      "status": "FIXED",
       "pattern_matched": "DEFERRED-ARCH-REFACTOR",
       "time_to_detect_seconds": 600
     },
@@ -285,11 +286,15 @@
       },
       "chain_of_thought": {
         "description": "Set comprehension has incompatible type Set[tuple[Any, Any]]; expected Set[tuple[Any]].",
-        "root_cause": "Mismatch between comprehension output and expected type hint.",
+        "root_cause": "Mismatch between set-comprehension output arities and mypy's inferred type. Mypy inferred Set[tuple[Any]] from branch 1, then flagged branches 2 and 3 (2- and 3-element tuples) as incompatible. Fixed by adding an explicit annotation: keys: set[tuple[Any, ...]] before the first branch.",
         "impact": "Static analysis noise and potential type errors in consumers."
       },
-      "status": "OPEN",
-      "pattern_matched": "TYPE-MISMATCH"
+      "status": "FIXED",
+      "pattern_matched": "TYPE-MISMATCH",
+      "fix_prescription": {
+        "fix_approach": "Added 'keys: set[tuple[Any, ...]]' annotation in _count_unique_sections (transformers/models.py). Runtime behaviour unchanged \u2014 len() works on any set.",
+        "prevention_strategy": "Variadic tuple[Any, ...] is the canonical mypy annotation for heterogeneous-arity tuple sets."
+      }
     },
     {
       "id": "NEW-022",

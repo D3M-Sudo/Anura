@@ -33,6 +33,10 @@ class OcrResult:
         return getattr(obj, attr, None)
 
     def _count_unique_sections(self, level: str) -> int:
+        # FIX NEW-021: annotate with variadic tuple syntax so mypy accepts all three
+        # set-comprehension arities (1-, 2-, 3-element tuples) without [misc] errors.
+        # Runtime behaviour is unchanged — len() works on any set of tuples.
+        keys: set[tuple[Any, ...]]
         if level == "block_num":
             keys = {(self._get_val(w, "block_num"),) for w in self.words}
         elif level == "par_num":
