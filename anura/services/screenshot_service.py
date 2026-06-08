@@ -143,7 +143,7 @@ def run_ocr_pipeline(
     preprocessing_mode: str,
     task_id: str | None = None,
     status_callback: Callable | None = None,
-) -> tuple[bool, str | None, str | None, OcrResult | None]:
+) -> tuple[bool, str | None, str | None, OcrResult | None, str]:
     """
     Isolated OCR pipeline to bypass Python's GIL.
     Runs in a separate process via ProcessPoolExecutor.
@@ -493,7 +493,7 @@ class ScreenshotService(GObject.GObject):
         file: str | Image.Image | object,
         remove_source: bool = False,
         task_id: str | None = None,
-    ) -> tuple[bool, str | None, str | None, OcrResult | None]:
+    ) -> tuple[bool, str | None, str | None, OcrResult | None, str]:
         """
         Synchronously decodes the image to find QR codes or extract text using Tesseract OCR.
         Supports file paths (str) and binary streams (BytesIO).

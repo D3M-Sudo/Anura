@@ -9,11 +9,11 @@
 
 ## Riepilogo Esecutivo
 
-| Priorità | Totale | Nuovi | Regressioni |
-|----------|--------|-------|-------------|
-| 🔴 Alta  | 0      | 0     | 0           |
-| 🟡 Media | 1      | 1     | 0           |
-| 🟢 Bassa | 2      | 2     | 0           |
+| Priorità | Totale | Nuovi | Risolti | Regressioni |
+|----------|--------|-------|---------|-------------|
+| 🔴 Alta  | 0      | 0     | 0       | 0           |
+| 🟡 Media | 1      | 0     | 1       | 0           |
+| 🟢 Bassa | 2      | 0     | 2       | 0           |
 
 **Regressioni verificate (H-001 → H-009): INTEGRE ✅** — tutti i fix precedenti sono stati verificati nel codebase.
 
@@ -39,7 +39,7 @@
 
 ---
 
-### 🟡 BUG-NEW-001 — TTS Logic Flaw: Ripresa audio errata su nuova richiesta con player in pausa
+### 🟢 RISOLTO — BUG-NEW-001 — TTS Logic Flaw: Ripresa audio errata su nuova richiesta con player in pausa
 
 **Priorità:** MEDIA
 **File:** `anura/controllers/tts_controller.py:65-68`
@@ -84,12 +84,15 @@ if self._tts_service.player:
         return
 ```
 
+### Soluzione Applicata
+Ho implementato un controllo esplicito dello stato GStreamer (`get_state(0)`) e un meccanismo di tracking del testo corrente (`self._current_text`) in `TtsController`. Il resume viene ora attivato solo se lo stato è effettivamente `PAUSED` e il testo richiesto è identico a quello in corso. Ogni variazione del testo forza una nuova generazione audio. (Data fix: 2026-06-08)
+
 #### Strategia di Prevenzione
 Aggiungere un test unitario che verifichi il comportamento di `request_listen` quando chiamato con un nuovo testo mentre il sistema è in stato `PAUSED`.
 
 ---
 
-### 🟢 BUG-NEW-002 — Type Hint Mismatch: Annotazioni obsolete in `run_ocr_pipeline` e `decode_image_sync`
+### 🟢 RISOLTO — BUG-NEW-002 — Type Hint Mismatch: Annotazioni obsolete in `run_ocr_pipeline` e `decode_image_sync`
 
 **Priorità:** BASSA
 **File:** `anura/services/screenshot_service.py:126, 458`
@@ -123,12 +126,15 @@ Mancato allineamento della documentazione dei tipi durante una modifica struttur
 Aggiornare le annotazioni per includere il quinto elemento (str):
 `tuple[bool, str | None, str | None, OcrResult | None, str]`
 
+### Soluzione Applicata
+Ho aggiornato le signature di `run_ocr_pipeline` e `decode_image_sync` in `anura/services/screenshot_service.py` per includere correttamente il quinto elemento (`str` per `applied_name`) nel valore di ritorno di tipo `tuple`. (Data fix: 2026-06-08)
+
 #### Strategia di Prevenzione
 Utilizzare strumenti di linting/typing (come `ruff` con plugin per i docstring o `mypy`) nel workflow di CI per intercettare questi mismatch automaticamente.
 
 ---
 
-### 🟢 BUG-NEW-003 — gTTS Blocking: Salvataggio audio sincrono non cancellabile
+### 🟢 RISOLTO — BUG-NEW-003 — gTTS Blocking: Salvataggio audio sincrono non cancellabile
 
 **Priorità:** BASSA
 **File:** `anura/services/tts.py:284`
@@ -157,6 +163,11 @@ Mancanza di supporto alla cancellazione nell'API sincrona di `gtts`.
 #### Fix Suggerito
 1. Passare esplicitamente un parametro `timeout` al costruttore di `gTTS` (se disponibile nella versione in uso) per limitare l'attesa.
 2. Avviare il download in un processo isolato (simile all'OCR) che può essere terminato brutalmente in caso di cancellazione del task.
+
+### Soluzione Applicata
+Ho applicato due mitigazioni in `TTSService.generate`:
+1. Viene ora passato il parametro `timeout=REQUEST_TIMEOUT` (30s) al costruttore `gTTS`.
+2. Ho implementato un doppio check del `_generation_id` (pre-save e post-save). Se il task risulta obsoleto subito dopo il salvataggio (operazione bloccante), il file viene eliminato immediatamente e la funzione ritorna una stringa vuota, prevenendo la propagazione di risultati stale. (Data fix: 2026-06-08)
 
 #### Strategia di Prevenzione
 Monitorare la dimensione della coda del pool di task e loggare un warning se i task pendenti superano una soglia critica, indicando potenziale saturazione per blocco I/O.

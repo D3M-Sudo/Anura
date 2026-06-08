@@ -25,6 +25,7 @@ import gtts  # noqa: E402
 from loguru import logger  # noqa: E402
 import requests  # noqa: E402
 
+from anura.config import REQUEST_TIMEOUT  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
 from anura.utils.singleton import get_instance  # noqa: E402
 
@@ -276,12 +277,27 @@ class TTSService(GObject.GObject):
         filename = f"speech_{uuid.uuid4().hex}.mp3"
         filepath = str(self._speech_dir / filename)
 
-        tts = gtts.gTTS(text, lang=lang, tld=self._tld)
-        logger.info(f"Anura TTS: Generating speech for language: {lang}")
+        # FIX BUG-NEW-003: check for stale task before initiating network I/O.
+        # Although AtomicTaskManager scarts the result later, we can avoid
+        # unnecessary network traffic and thread pool saturation by checking
+        # the current generation ID here.
+        with self._state_lock:
+            current_gen = self._generation_id
+
+        tts = gtts.gTTS(text, lang=lang, tld=self._tld, timeout=REQUEST_TIMEOUT)
+        logger.info(f"Anura TTS: Generating speech for language: {lang} (timeout={REQUEST_TIMEOUT}s)")
 
         try:
             # Perform blocking I/O without holding the state lock
             tts.save(filepath)
+
+            # Re-check generation after save to immediately discard if stale
+            with self._state_lock:
+                if current_gen != self._generation_id:
+                    logger.debug(f"Anura TTS: Discarding stale speech file {filename} after save")
+                    with contextlib.suppress(OSError):
+                        Path(filepath).unlink()
+                    return ""
         except (SystemExit, KeyboardInterrupt):
             # Re-raise system exceptions that should terminate the application
             raise
