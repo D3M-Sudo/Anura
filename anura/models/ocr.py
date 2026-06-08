@@ -105,6 +105,11 @@ class OcrResult:
         Count unique layout sections at a given level (block, paragraph, line).
         Uses composite keys to prevent hierarchical ID collisions.
         """
+        # FIX BUG-NEW-A: annotate with variadic tuple syntax so mypy accepts all
+        # three set-comprehension arities (1-, 2-, 3-element tuples) without
+        # [misc] errors.  Parallel fix to NEW-021 in transformers/models.py.
+        # Runtime behaviour is unchanged — len() works on any set of tuples.
+        keys: set[tuple[int, ...]]
         if level == "block_num":
             keys = {(w.block_num,) for w in self.words}
         elif level == "par_num":
