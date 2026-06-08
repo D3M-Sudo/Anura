@@ -25,6 +25,7 @@ import gtts  # noqa: E402
 from loguru import logger  # noqa: E402
 import requests  # noqa: E402
 
+from anura.config import REQUEST_TIMEOUT  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
 from anura.utils.singleton import get_instance  # noqa: E402
 
@@ -276,7 +277,9 @@ class TTSService(GObject.GObject):
         filename = f"speech_{uuid.uuid4().hex}.mp3"
         filepath = str(self._speech_dir / filename)
 
-        tts = gtts.gTTS(text, lang=lang, tld=self._tld)
+        # Security: Pass REQUEST_TIMEOUT to prevent indefinite hangs if Google TTS
+        # service is unresponsive, mitigating potential Denial of Service (DoS).
+        tts = gtts.gTTS(text, lang=lang, tld=self._tld, timeout=REQUEST_TIMEOUT)
         logger.info(f"Anura TTS: Generating speech for language: {lang}")
 
         try:
