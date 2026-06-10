@@ -499,7 +499,7 @@ class LanguageManager(GObject.GObject):
                             f"Anura: Download of {code} blocked. Size {total_size} bytes "
                             f"exceeds maximum allowed size ({MAX_MODEL_SIZE_MB}MB)."
                         )
-                        return None
+                        raise ValueError(f"Download size {total_size} exceeds security limit")
 
                     downloaded = 0
 
@@ -523,7 +523,7 @@ class LanguageManager(GObject.GObject):
                                         f"Anura: Download of {code} aborted. Cumulative size "
                                         f"exceeds maximum allowed size ({MAX_MODEL_SIZE_MB}MB)."
                                     )
-                                    return None
+                                    raise ValueError("Cumulative download size exceeds security limit")
 
                                 # Throttle progress updates (max 10/sec)
                                 now = time.monotonic()
@@ -576,7 +576,7 @@ class LanguageManager(GObject.GObject):
                         except OSError:
                             logger.warning(f"Anura: Failed to clean up temporary file: {tmp_path}")
 
-        except (requests.RequestException, OSError) as e:
+        except (requests.RequestException, OSError, ValueError) as e:
             logger.warning(f"Anura: download failed from {url_base}: {e}")
             # tmp_path will be cleaned up by the finally block above
 
