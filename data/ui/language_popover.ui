@@ -47,6 +47,9 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                     <property name="vexpand">true</property>
                     <child>
                       <object class="GtkListBox" id="list_view">
+                        <accessibility>
+                          <property name="label" translatable="true">Language list</property>
+                        </accessibility>
                         <property name="selection-mode">1</property>
                         <signal name="row-activated" handler="_on_language_activate"/>
                       </object>

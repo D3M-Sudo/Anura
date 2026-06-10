@@ -30,6 +30,7 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
     language_popover: LanguagePopover = Gtk.Template.Child()
     drop_button: Gtk.Button = Gtk.Template.Child()
     drop_area: Gtk.Box = Gtk.Template.Child()
+    drop_revealer: Gtk.Revealer = Gtk.Template.Child()
     drop_area_label: Gtk.Label = Gtk.Template.Child()
 
     _language_changed_handler_id: int | None = None
@@ -85,9 +86,9 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
     def _on_drop_button_clicked(self, _: Gtk.Button) -> None:
         """Toggle the visibility of the dedicated drop area."""
         try:
-            is_visible = self.drop_area.get_visible()
-            self.drop_area.set_visible(not is_visible)
-            if not is_visible:
+            is_revealed = self.drop_revealer.get_reveal_child()
+            self.drop_revealer.set_reveal_child(not is_revealed)
+            if not is_revealed:
                 self.drop_button.add_css_class("suggested-action")
             else:
                 self.drop_button.remove_css_class("suggested-action")
@@ -97,7 +98,7 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
     def _on_dnd_enter(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float) -> Gdk.DragAction:
         """Visual feedback when drag enters the drop area."""
         try:
-            self.drop_area.set_visible(True)
+            self.drop_revealer.set_reveal_child(True)
             self.drop_area.add_css_class("drag-hover")
             self.welcome.set_description(_("Drop image to extract text"))
         except (AttributeError, RuntimeError) as e:
@@ -108,9 +109,9 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         """Remove visual feedback when drag leaves the drop area."""
         try:
             self.drop_area.remove_css_class("drag-hover")
-            # Only hide if it wasn't already visible (user clicked button)
+            # Only hide if it wasn't already revealed (user clicked button)
             if not self.drop_button.has_css_class("suggested-action"):
-                self.drop_area.set_visible(False)
+                self.drop_revealer.set_reveal_child(False)
             self.welcome.set_description(_("Extract text from anywhere"))
         except (AttributeError, RuntimeError) as e:
             logger.exception(f"Anura: Failed to handle DnD leave: {e}")
@@ -265,7 +266,7 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         """Reset the drop area to its initial state (called after OCR completes)."""
         self._set_drop_area_processing_state(False)
         self.hide_spinner()
-        self.drop_area.set_visible(False)
+        self.drop_revealer.set_reveal_child(False)
         self.drop_button.remove_css_class("suggested-action")
         self.welcome.set_description(_("Extract text from anywhere"))
 
