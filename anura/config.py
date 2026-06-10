@@ -40,6 +40,11 @@ MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024
 # from excessively large OCR output and expensive downstream processing.
 MAX_TEXT_LENGTH = 1_000_000
 
+# Maximum size for a downloaded Tesseract model (250MB) to prevent disk
+# exhaustion Denial of Service (DoS) attacks from compromised/malicious sources.
+MAX_MODEL_SIZE_MB = 250
+MAX_MODEL_SIZE_BYTES = MAX_MODEL_SIZE_MB * 1024 * 1024
+
 
 def _get_tessdata_system_dir() -> str:
     """

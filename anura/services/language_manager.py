@@ -29,6 +29,8 @@ import requests  # noqa: E402
 
 from anura.config import (  # noqa: E402
     LANG_CODE_PATTERN,
+    MAX_MODEL_SIZE_BYTES,
+    MAX_MODEL_SIZE_MB,
     REQUEST_TIMEOUT,
     TESSDATA_BEST_URL,
     TESSDATA_DIR,
@@ -490,6 +492,15 @@ class LanguageManager(GObject.GObject):
                     response.raise_for_status()
 
                     total_size = int(response.headers.get("content-length", 0))
+
+                    # Security: check Content-Length header before starting download
+                    if total_size > MAX_MODEL_SIZE_BYTES:
+                        logger.error(
+                            f"Anura: Download of {code} blocked. Size {total_size} bytes "
+                            f"exceeds maximum allowed size ({MAX_MODEL_SIZE_MB}MB)."
+                        )
+                        return None
+
                     downloaded = 0
 
                     # Throttle progress updates to prevent main loop saturation
@@ -505,6 +516,14 @@ class LanguageManager(GObject.GObject):
                             if chunk:
                                 f.write(chunk)
                                 downloaded += len(chunk)
+
+                                # Security: catch cases where Content-Length was missing or incorrect
+                                if downloaded > MAX_MODEL_SIZE_BYTES:
+                                    logger.error(
+                                        f"Anura: Download of {code} aborted. Cumulative size "
+                                        f"exceeds maximum allowed size ({MAX_MODEL_SIZE_MB}MB)."
+                                    )
+                                    return None
 
                                 # Throttle progress updates (max 10/sec)
                                 now = time.monotonic()
