@@ -34,9 +34,9 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                   <property name="label" translatable="true" context="Extracted screen">Copy extracted text to clipboard</property>
                 </accessibility>
                 <property name="icon-name">edit-copy-symbolic</property>
-          <style>
-            <class name="anura-button"/>
-          </style>
+                <style>
+                  <class name="anura-button"/>
+                </style>
               </object>
             </child>
             <child type="start">
@@ -53,9 +53,9 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                           <property name="label" translatable="true" context="Extracted screen">Listen to text</property>
                         </accessibility>
                         <property name="icon-name">audio-speakers-symbolic</property>
-                <style>
-                  <class name="anura-button"/>
-                </style>
+                        <style>
+                          <class name="anura-button"/>
+                        </style>
                       </object>
                     </property>
                   </object>
@@ -66,14 +66,14 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                     <property name="child">
                       <object class="GtkButton" id="listen_cancel_btn">
                         <property name="action-name">app.listen_cancel</property>
-                <property name="tooltip-text" translatable="true" context="Extracted screen">Stop listening (Ctrl+Shift+L)</property>
+                        <property name="tooltip-text" translatable="true" context="Extracted screen">Stop listening (Ctrl+Shift+L)</property>
                         <accessibility>
-                  <property name="label" translatable="true" context="Extracted screen">Stop listening</property>
+                          <property name="label" translatable="true" context="Extracted screen">Stop listening</property>
                         </accessibility>
                         <property name="icon-name">media-playback-stop-symbolic</property>
-                <style>
-                  <class name="anura-button"/>
-                </style>
+                        <style>
+                          <class name="anura-button"/>
+                        </style>
                       </object>
                     </property>
                   </object>
@@ -85,6 +85,9 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                       <object class="GtkSpinner" id="listen_spinner">
                         <property name="halign">3</property>
                         <property name="valign">3</property>
+                        <accessibility>
+                          <property name="label" translatable="true">Generating audio</property>
+                        </accessibility>
                       </object>
                     </property>
                   </object>
@@ -100,27 +103,27 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                         <child>
                           <object class="GtkButton" id="listen_pause_btn">
                             <property name="action-name">app.listen_pause</property>
-                    <property name="tooltip-text" translatable="true" context="Extracted screen">Pause/Resume listening (Ctrl+Alt+L)</property>
+                            <property name="tooltip-text" translatable="true" context="Extracted screen">Pause/Resume listening (Ctrl+Alt+L)</property>
                             <accessibility>
                               <property name="label" translatable="true" context="Extracted screen">Pause or resume listening</property>
                             </accessibility>
                             <property name="icon-name">media-playback-pause-symbolic</property>
-                    <style>
-                      <class name="anura-button"/>
-                    </style>
+                            <style>
+                              <class name="anura-button"/>
+                            </style>
                           </object>
                         </child>
                         <child>
                           <object class="GtkButton">
                             <property name="action-name">app.listen_cancel</property>
-                    <property name="tooltip-text" translatable="true" context="Extracted screen">Stop listening (Ctrl+Shift+L)</property>
+                            <property name="tooltip-text" translatable="true" context="Extracted screen">Stop listening (Ctrl+Shift+L)</property>
                             <accessibility>
                               <property name="label" translatable="true" context="Extracted screen">Stop listening</property>
                             </accessibility>
                             <property name="icon-name">media-playback-stop-symbolic</property>
-                    <style>
-                      <class name="anura-button"/>
-                    </style>
+                            <style>
+                              <class name="anura-button"/>
+                            </style>
                           </object>
                         </child>
                       </object>
@@ -153,6 +156,9 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                     </style>
                     <property name="child">
                       <object class="GtkListBox" id="share_list_box">
+                        <accessibility>
+                          <property name="label" translatable="true">Share providers</property>
+                        </accessibility>
                         <property name="margin-end">4</property>
                         <property name="margin-top">4</property>
                         <property name="margin-start">4</property>
@@ -174,6 +180,9 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
             <property name="width-request">150</property>
             <child>
               <object class="GtkTextView" id="text_view">
+                <accessibility>
+                  <property name="label" translatable="true">Extracted text</property>
+                </accessibility>
                 <property name="hexpand">true</property>
                 <property name="vexpand">true</property>
                 <property name="width-request">100</property>

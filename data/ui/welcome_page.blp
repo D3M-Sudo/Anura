@@ -131,20 +131,24 @@ template $WelcomePage : Adw.NavigationPage {
               };
             }
 
-            Box drop_area {
-              visible: false;
-              margin-top: 12;
-              styles ["card", "anura-slide-up"]
-              height-request: 80;
-              halign: fill;
-              valign: center;
-              Label drop_area_label {
-                label: _("Drop image file here");
-                halign: center;
+            Revealer drop_revealer {
+              transition-type: slide_up;
+              reveal-child: false;
+
+              Box drop_area {
+                margin-top: 12;
+                styles ["card", "anura-slide-up"]
+                height-request: 80;
+                halign: fill;
                 valign: center;
-                hexpand: true;
-                vexpand: true;
-                styles ["dim-label"]
+                Label drop_area_label {
+                  label: _("Drop image file here");
+                  halign: center;
+                  valign: center;
+                  hexpand: true;
+                  vexpand: true;
+                  styles ["dim-label"]
+                }
               }
             }
           };

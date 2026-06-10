@@ -47,6 +47,9 @@ template $LanguagePopover : Popover {
           vexpand: true;
 
           ListBox list_view {
+            accessibility {
+              label: _("Language list");
+            }
             selection-mode: single;
             row-activated => $_on_language_activate();
           }

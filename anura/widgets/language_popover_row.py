@@ -21,6 +21,7 @@ class LanguagePopoverRow(Gtk.ListBoxRow):
     # Widgets
     title: Gtk.Label = Gtk.Template.Child()
     selection: Gtk.Image = Gtk.Template.Child()
+    selection_revealer: Gtk.Revealer = Gtk.Template.Child()
 
     def __init__(self, lang: LanguageItem) -> None:
         super().__init__()
@@ -34,7 +35,7 @@ class LanguagePopoverRow(Gtk.ListBoxRow):
 
         self.lang.bind_property(
             "selected",
-            self.selection,
-            "visible",
+            self.selection_revealer,
+            "reveal-child",
             GObject.BindingFlags.SYNC_CREATE,
         )

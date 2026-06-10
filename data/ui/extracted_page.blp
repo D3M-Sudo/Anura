@@ -75,6 +75,9 @@ template $ExtractedPage : Adw.NavigationPage {
           child: Gtk.Spinner listen_spinner {
             halign: center;
             valign: center;
+            accessibility {
+              label: _("Generating audio");
+            }
           };
         }
 
@@ -128,6 +131,9 @@ template $ExtractedPage : Adw.NavigationPage {
           styles ["menu"]
 
           child: ListBox share_list_box {
+            accessibility {
+              label: _("Share providers");
+            }
             margin-end: 4;
             margin-top: 4;
             margin-start: 4;
@@ -145,6 +151,9 @@ template $ExtractedPage : Adw.NavigationPage {
       width-request: 150; // Consente il rimpicciolimento fluido sotto la dimensione ideale del testo
 
       TextView text_view {
+        accessibility {
+          label: _("Extracted text");
+        }
         hexpand: true;
         vexpand: true;
         width-request: 100;
