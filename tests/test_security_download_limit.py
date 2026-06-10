@@ -8,8 +8,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from anura.services.language_manager import LanguageManager
 from anura.config import MAX_MODEL_SIZE_BYTES
+from anura.services.language_manager import LanguageManager
+
 
 class TestSecurityDownloadLimit:
     """Security tests for LanguageManager download size enforcement."""
