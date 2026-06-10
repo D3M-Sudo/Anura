@@ -138,14 +138,14 @@ class TestWelcomePageEnterprise:
     @pytest.mark.gtk
     def test_drop_button_toggle(self, widget):
         """Test that the drop area visibility is toggled by the button."""
-        initial_visible = widget.drop_area.get_visible()
+        initial_revealed = widget.drop_revealer.get_reveal_child()
         # In GTK4, we use activate() or emit("clicked")
         widget.drop_button.emit("clicked")
-        assert widget.drop_area.get_visible() == (not initial_visible)
+        assert widget.drop_revealer.get_reveal_child() == (not initial_revealed)
         assert widget.drop_button.has_css_class("suggested-action")
 
         widget.drop_button.emit("clicked")
-        assert widget.drop_area.get_visible() == initial_visible
+        assert widget.drop_revealer.get_reveal_child() == initial_revealed
         assert not widget.drop_button.has_css_class("suggested-action")
 
     @pytest.mark.gtk
@@ -163,12 +163,12 @@ class TestWelcomePageEnterprise:
     @pytest.mark.gtk
     def test_reset_drop_area_state(self, widget):
         """Test resetting the drop area after processing."""
-        widget.drop_area.set_visible(True)
+        widget.drop_revealer.set_reveal_child(True)
         widget.show_spinner()
 
         widget.reset_drop_area_state()
 
-        assert widget.drop_area.get_visible() is False
+        assert widget.drop_revealer.get_reveal_child() is False
         assert widget.spinner.get_visible() is False
         assert not widget.drop_button.has_css_class("suggested-action")
 
