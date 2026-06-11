@@ -6,7 +6,6 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-import requests
 
 from anura.config import MAX_MODEL_SIZE_BYTES
 from anura.services.language_manager import get_language_manager
