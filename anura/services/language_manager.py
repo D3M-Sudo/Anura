@@ -29,6 +29,7 @@ import requests  # noqa: E402
 
 from anura.config import (  # noqa: E402
     LANG_CODE_PATTERN,
+    MAX_MODEL_SIZE_BYTES,
     REQUEST_TIMEOUT,
     TESSDATA_BEST_URL,
     TESSDATA_DIR,
@@ -286,15 +287,23 @@ class LanguageManager(GObject.GObject):
                 with contextlib.suppress(OSError):
                     tess_path.chmod(0o700)
 
-        # Clean up orphaned temp files from crashed/interrupted downloads
+        # Clean up orphaned temp files from crashed/interrupted downloads.
+        # This scans the root tessdata directory and its quality-specific subdirs.
         try:
             tess_path = Path(TESSDATA_DIR)
-            # Check directory readability first
-            if not os.access(tess_path, os.R_OK | os.X_OK):
-                logger.warning("Anura: Cannot read tessdata directory for cleanup")
-            else:
-                for file_path in tess_path.iterdir():
-                    if file_path.suffix == ".tmp":
+            # Scan root and standard quality subdirectories
+            scan_dirs = [tess_path, tess_path / "tessdata", tess_path / "tessdata_best"]
+
+            for scan_dir in scan_dirs:
+                if not scan_dir.exists():
+                    continue
+
+                if not os.access(scan_dir, os.R_OK | os.X_OK):
+                    logger.warning(f"Anura: Cannot read directory for cleanup: {scan_dir}")
+                    continue
+
+                for file_path in scan_dir.iterdir():
+                    if file_path.is_file() and file_path.suffix == ".tmp":
                         try:
                             # NEW-017: Only delete .tmp files older than 1 hour to avoid
                             # interrupting active downloads from other instances.
@@ -304,9 +313,13 @@ class LanguageManager(GObject.GObject):
                                     f"Anura: Cleaned up orphaned temporary file: {file_path.name}"
                                 )
                         except PermissionError:
-                            logger.error("Anura: Permission denied removing orphaned temporary language file")
+                            logger.error(
+                                f"Anura: Permission denied removing orphaned file in {scan_dir.name}"
+                            )
                         except OSError:
-                            logger.error("Anura: Failed to remove orphaned temporary language file")
+                            logger.error(
+                                f"Anura: Failed to remove orphaned file in {scan_dir.name}"
+                            )
         except OSError:
             logger.error("Anura: Error scanning for orphaned temporary language files")
 
@@ -489,7 +502,19 @@ class LanguageManager(GObject.GObject):
                     response = self.session.get(url, timeout=REQUEST_TIMEOUT, stream=True)
                     response.raise_for_status()
 
-                    total_size = int(response.headers.get("content-length", 0))
+                    try:
+                        total_size = int(response.headers.get("content-length", 0))
+                    except (ValueError, TypeError):
+                        total_size = 0
+
+                    # Security: Enforce download size limit via Content-Length header (DoS prevention)
+                    if total_size > MAX_MODEL_SIZE_BYTES:
+                        logger.error(
+                            f"Anura: Blocked oversized model download: {total_size} bytes "
+                            f"(max {MAX_MODEL_SIZE_BYTES})"
+                        )
+                        return None
+
                     downloaded = 0
 
                     # Throttle progress updates to prevent main loop saturation
@@ -505,6 +530,15 @@ class LanguageManager(GObject.GObject):
                             if chunk:
                                 f.write(chunk)
                                 downloaded += len(chunk)
+
+                                # Security: Monitor cumulative downloaded bytes to prevent DoS via
+                                # chunked encoding without Content-Length or spoofed headers.
+                                if downloaded > MAX_MODEL_SIZE_BYTES:
+                                    logger.error(
+                                        f"Anura: Aborted oversized model download (stream): {downloaded} bytes "
+                                        f"(max {MAX_MODEL_SIZE_BYTES})"
+                                    )
+                                    return None
 
                                 # Throttle progress updates (max 10/sec)
                                 now = time.monotonic()

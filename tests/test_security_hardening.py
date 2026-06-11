@@ -34,7 +34,7 @@ class TestSecurityHardeningLogic:
         assert is_safe_url_string("https://g\u043e\u043e\u0433le.com") is False
 
     def test_is_safe_url_string_punycode_homograph(self):
-        # аpple.com in Punycode (with Cyrillic 'а')
+        # аpple.com in Punycode (with Cyrillic 'а')  # noqa: RUF003
         assert is_safe_url_string("https://xn--pple-43d.com") is False
         # googlé.com in Punycode - should be SAFE (Latin-1 supplement)
         assert is_safe_url_string("https://xn--googl-fsa.com") is True
