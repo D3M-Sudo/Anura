@@ -39,3 +39,7 @@
 ## 2026-05-28 - Histogram-based Statistics Optimization
 **Learning:** Calculating image statistics (like the mean) directly from a pre-computed histogram is significantly faster (~2x on 4K images) than using `ImageStat.Stat(image)`. `ImageStat.Stat` often triggers its own full-image traversal if the internal cache is cold or invalidated, whereas a histogram summation is O(bins) rather than O(pixels).
 **Action:** If a histogram is already available or required for other logic (like thresholding or adaptive enhancements), derive dependent statistics (mean, median, dark/light pixel ratios) directly from the histogram to avoid redundant pixel passes.
+
+## 2026-05-29 - Single-Pass Layout Statistics Optimization
+**Learning:** Consolidating multiple layout property accesses (num_lines, num_pars, num_blocks) into a single-pass cached property using `@cached_property` significantly reduces redundant O(N) traversals. In Magic processing where multiple transformers score the same OcrResult, this reduces the cost from up to 6*O(N) to 1*O(N) for the initial pass and O(1) thereafter.
+**Action:** Use `@cached_property` to store multiple related statistics computed during a single traversal of a collection, especially for immutable data objects used in multi-stage pipelines.
