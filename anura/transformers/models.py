@@ -7,6 +7,7 @@
 
 from dataclasses import dataclass, field
 import enum
+from functools import cached_property
 from typing import Any, Protocol
 
 
@@ -32,36 +33,41 @@ class OcrResult:
             return obj.get(attr)
         return getattr(obj, attr, None)
 
-    def _count_unique_sections(self, level: str) -> int:
-        # FIX NEW-021: annotate with variadic tuple syntax so mypy accepts all three
-        # set-comprehension arities (1-, 2-, 3-element tuples) without [misc] errors.
-        # Runtime behaviour is unchanged — len() works on any set of tuples.
-        keys: set[tuple[Any, ...]]
-        if level == "block_num":
-            keys = {(self._get_val(w, "block_num"),) for w in self.words}
-        elif level == "par_num":
-            keys = {(self._get_val(w, "block_num"), self._get_val(w, "par_num")) for w in self.words}
-        elif level == "line_num":
-            keys = {
-                (self._get_val(w, "block_num"), self._get_val(w, "par_num"), self._get_val(w, "line_num"))
-                for w in self.words
-            }
-        else:
-            keys = {(self._get_val(w, level),) for w in self.words}
+    @cached_property
+    def _layout_stats(self) -> dict[str, int]:
+        """
+        Calculate layout statistics in a single pass and cache the result.
+        Reduces complexity from up to 6*O(N) down to 1*O(N) for Magic processing.
+        """
+        blocks: set[tuple[Any, ...]] = set()
+        pars: set[tuple[Any, ...]] = set()
+        lines: set[tuple[Any, ...]] = set()
 
-        return len(keys)
+        for w in self.words:
+            b = self._get_val(w, "block_num")
+            p = self._get_val(w, "par_num")
+            ln = self._get_val(w, "line_num")
+            blocks.add((b,))
+            pars.add((b, p))
+            lines.add((b, p, ln))
+
+        return {
+            "block_num": len(blocks),
+            "par_num": len(pars),
+            "line_num": len(lines),
+        }
 
     @property
     def num_lines(self) -> int:
-        return self._count_unique_sections("line_num")
+        return self._layout_stats["line_num"]
 
     @property
     def num_pars(self) -> int:
-        return self._count_unique_sections("par_num")
+        return self._layout_stats["par_num"]
 
     @property
     def num_blocks(self) -> int:
-        return self._count_unique_sections("block_num")
+        return self._layout_stats["block_num"]
 
     def add_linebreaks(
         self,
