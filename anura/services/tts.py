@@ -25,7 +25,7 @@ import gtts  # noqa: E402
 from loguru import logger  # noqa: E402
 import requests  # noqa: E402
 
-from anura.config import REQUEST_TIMEOUT  # noqa: E402
+from anura.config import MAX_TTS_TEXT_LENGTH, REQUEST_TIMEOUT  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
 from anura.utils.singleton import get_instance  # noqa: E402
 
@@ -272,6 +272,15 @@ class TTSService(GObject.GObject):
         if not text or not text.strip():
             logger.debug("Anura TTS: Empty text provided, returning empty path")
             return ""
+
+        # Security: Enforce hard length limit for TTS requests to prevent resource
+        # exhaustion (DoS).
+        if len(text) > MAX_TTS_TEXT_LENGTH:
+            logger.warning(
+                f"Anura TTS: Text exceeds maximum length ({len(text)} > {MAX_TTS_TEXT_LENGTH}). "
+                "Truncating for safety."
+            )
+            text = text[:MAX_TTS_TEXT_LENGTH]
 
         # Use uuid to ensure zero filename collisions during high-frequency requests
         filename = f"speech_{uuid.uuid4().hex}.mp3"
