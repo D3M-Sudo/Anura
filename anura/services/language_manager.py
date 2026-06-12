@@ -461,6 +461,12 @@ class LanguageManager(GObject.GObject):
 
     def download_begin(self, code: str, cancellable: Gio.Cancellable | None = None) -> str | None:
         """Performs the physical download of the .traineddata file atomically."""
+        # Security: Validate lang_code is a valid ISO 639-2 code to prevent path traversal
+        # and ensure we only download legitimate language models.
+        if not code or not re.match(LANG_CODE_PATTERN, code):
+            logger.error(f"Anura: Blocked invalid language code download attempt: '{code}'")
+            return None
+
         # Hardening: verify Tesseract binary availability before downloading models
         tess_bin = os.environ.get("TESSERACT_CMD", "tesseract")
         if not shutil.which(tess_bin):
