@@ -123,10 +123,23 @@ class TestUriValidatorEnterprise:
             "https://user:pass@google.com",
             "http://admin@evil.com",
             "https://:password@github.com",
+            "http://:@google.com",
+            "http://@google.com",
         ],
     )
     def test_userinfo_spoofing(self, url):
         """Test prevention of userinfo spoofing."""
+        assert uri_validator(url) is False
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "http://google.com:abc",
+            "https://google.com:123a",
+        ],
+    )
+    def test_invalid_ports(self, url):
+        """Test rejection of malformed port numbers."""
         assert uri_validator(url) is False
 
     @pytest.mark.parametrize(

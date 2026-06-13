@@ -364,9 +364,17 @@ def uri_validator(text: str) -> bool:
         if not (res.scheme in ("http", "https") and bool(res.netloc)):
             return False
 
-        # Security: Reject URLs with userinfo (username or password)
-        # This prevents spoofing attacks like http://google.com@evil.com
-        if res.username or res.password:
+        # Security: Validate that the port is a valid integer if present.
+        # urlparse.port raises ValueError if the port is malformed (e.g. :abc).
+        try:
+            _ = res.port
+        except ValueError:
+            return False
+
+        # Security: Reject URLs with any userinfo (username or password).
+        # This prevents spoofing attacks like http://google.com@evil.com.
+        # Robust check: if '@' is in netloc, it contains userinfo even if empty.
+        if "@" in res.netloc:
             return False
 
         # Use hostname for validation (excludes port and userinfo)
