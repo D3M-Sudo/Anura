@@ -1,0 +1,24 @@
+Using CPython 3.12.13 interpreter at: /home/jules/.pyenv/versions/3.12.13/bin/python3
+Creating virtual environment at: .venv
+Downloading nltk (1.5MiB)
+Downloading meson (1.0MiB)
+Downloading pydantic-core (2.0MiB)
+Downloading pillow (6.8MiB)
+Downloading ast-serialize (1.2MiB)
+Downloading mypy (14.4MiB)
+Downloading zxing-cpp (1.0MiB)
+Downloading ruff (10.9MiB)
+Downloading pygments (1.2MiB)
+Downloading cryptography (4.5MiB)
+ Downloaded zxing-cpp
+ Downloaded ast-serialize
+ Downloaded pydantic-core
+ Downloaded ruff
+ Downloaded pillow
+ Downloaded cryptography
+ Downloaded meson
+ Downloaded pygments
+ Downloaded nltk
+ Downloaded mypy
+Installed 67 packages in 108ms
+All checks passed!

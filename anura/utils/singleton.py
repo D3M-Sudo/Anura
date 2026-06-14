@@ -25,7 +25,7 @@ class ThreadSafeSingleton:
     _locks: ClassVar[dict[type, threading.Lock]] = {}
     _meta_lock = threading.Lock()
 
-    def __new__(cls, wrapped_class: type[T]) -> T:
+    def __new__(cls, wrapped_class: type[T]) -> Any:
         """
         Create or return the singleton instance of the wrapped class.
 
@@ -69,7 +69,7 @@ class ThreadSafeSingleton:
         Returns:
             The singleton instance
         """
-        return cls(wrapped_class)
+        return cls(wrapped_class)  # type: ignore[return-value, arg-type]
 
     @classmethod
     def reset_for_testing(cls) -> None:

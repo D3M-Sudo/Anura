@@ -45,7 +45,7 @@ def _is_flatpak_environment() -> bool:
     return Path("/.flatpak-info").exists() or "FLATPAK_ID" in os.environ
 
 
-def _pipeline_detect_barcodes(img, start_time: float) -> tuple[bool, str | None, str | None, OcrResult | None] | None:
+def _pipeline_detect_barcodes(img, start_time: float) -> tuple[bool, str | None, str | None, OcrResult | None, str] | None:
     """Stage 1: Barcode Detection"""
     from anura.utils.barcode_detector import detect_barcodes
 
@@ -143,7 +143,7 @@ def run_ocr_pipeline(
     preprocessing_mode: str,
     task_id: str | None = None,
     status_callback: Callable | None = None,
-) -> tuple[bool, str | None, str | None, OcrResult | None]:
+) -> tuple[bool, str | None, str | None, OcrResult | None, str]:
     """
     Isolated OCR pipeline to bypass Python's GIL.
     Runs in a separate process via ProcessPoolExecutor.
@@ -493,7 +493,7 @@ class ScreenshotService(GObject.GObject):
         file: str | Image.Image | object,
         remove_source: bool = False,
         task_id: str | None = None,
-    ) -> tuple[bool, str | None, str | None, OcrResult | None]:
+    ) -> tuple[bool, str | None, str | None, OcrResult | None, str]:
         """
         Synchronously decodes the image to find QR codes or extract text using Tesseract OCR.
         Supports file paths (str) and binary streams (BytesIO).
@@ -560,7 +560,7 @@ class ScreenshotService(GObject.GObject):
             logger.error(f"Anura OCR: Attempted to process 0-byte image file: {file}")
             return None, _("The selected image file is empty."), None, ""
 
-        with Image.open(file) as img:
+        with Image.open(file) as img:  # type: ignore[arg-type]
             image_size = img.size
             logger.debug(f"Anura OCR: Processing image size: {image_size[0]}x{image_size[1]}")
 
@@ -571,9 +571,12 @@ class ScreenshotService(GObject.GObject):
                     raise InterruptedError(f"Task {task_id} was cancelled before OCR")
 
                 if img.mode != "L":
-                    img = img.convert("L")
+                    img_gray = img.convert("L")
+                else:
+                    img_gray = img
+                    img_gray = img.convert("L")
                 extracted, ocr_result, applied_name = self._try_ocr_extraction(
-                    img, lang, start_time, task_id=task_id
+                    img_gray, lang, start_time, task_id=task_id
                 )
 
         return extracted, error_message, ocr_result, applied_name

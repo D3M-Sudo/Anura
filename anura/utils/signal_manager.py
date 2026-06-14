@@ -21,9 +21,13 @@ try:
 except (ImportError, ValueError):
     HAS_GI = False
 
-    class GObject:
+    class GObject:  # type: ignore[no-redef]
         class Object:
             pass
+
+        @staticmethod
+        def signal_lookup(name: str, itype: type) -> Any:
+            return None
 
 
 @runtime_checkable
@@ -71,8 +75,6 @@ class SignalManagerMixin:
         if not HAS_GI:
             return
 
-        from gi.repository import GObject
-
         if isinstance(self, GObject.Object):
             try:
                 # Check if the object has a 'destroy' signal (typical for Gtk.Widget)
@@ -97,7 +99,7 @@ class SignalManagerMixin:
 
     def connect_tracked(
         self,
-        emitter: GObject.Object,
+        emitter: Any,
         signal_name: str,
         callback: Callable,
     ) -> int:

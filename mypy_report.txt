@@ -1,7 +1,3 @@
-anura/transformers/models.py:39: error: Set comprehension has incompatible type Set[tuple[Any, Any]]; expected Set[tuple[Any]]  [misc]
-anura/transformers/models.py:42: error: Set comprehension has incompatible type Set[tuple[Any, Any, Any]]; expected Set[tuple[Any]]  [misc]
-anura/models/ocr.py:111: error: Set comprehension has incompatible type Set[tuple[int, int]]; expected Set[tuple[int]]  [misc]
-anura/models/ocr.py:113: error: Set comprehension has incompatible type Set[tuple[int, int, int]]; expected Set[tuple[int]]  [misc]
 anura/models/language_item.py:7: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
 anura/models/language_item.py:7: note: Did you mean "cgi"?
 anura/widgets/share_row.py:9: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
@@ -17,8 +13,8 @@ anura/widgets/shortcuts_overlay.py:22: error: Cannot find implementation or libr
 anura/widgets/shortcuts_overlay.py:22: note: Did you mean "cgi"?
 anura/widgets/shortcuts_overlay.py:131: error: Value of type "Collection[str]" is not indexable  [index]
 anura/widgets/shortcuts_overlay.py:134: error: Value of type "Collection[str]" is not indexable  [index]
-anura/utils/validators.py:384: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
-anura/utils/validators.py:384: note: Did you mean "cgi"?
+anura/utils/validators.py:417: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
+anura/utils/validators.py:417: note: Did you mean "cgi"?
 anura/utils/signal_manager.py:14: error: Cannot find implementation or library stub for module named "gi"  [import-not-found]
 anura/utils/signal_manager.py:14: note: Did you mean "cgi"?
 anura/utils/signal_manager.py:18: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
@@ -100,8 +96,18 @@ anura/services/screenshot_service.py:18: note: Did you mean "cgi"?
 anura/services/screenshot_service.py:25: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
 anura/services/screenshot_service.py:25: note: Did you mean "cgi"?
 anura/services/screenshot_service.py:28: error: Skipping analyzing "pytesseract": module is installed, but missing library stubs or py.typed marker  [import-untyped]
-anura/services/screenshot_service.py:526: error: Argument 1 to "open" has incompatible type "str | Image | object"; expected "str | bytes | PathLike[str] | PathLike[bytes] | IO[bytes]"  [arg-type]
-anura/services/screenshot_service.py:537: error: Incompatible types in assignment (expression has type "Image", variable has type "ImageFile")  [assignment]
+anura/services/screenshot_service.py:57: error: Incompatible return value type (got "tuple[bool, str, None, None, str]", expected "tuple[bool, str | None, str | None, OcrResult | None] | None")  [return-value]
+anura/services/screenshot_service.py:162: error: Incompatible return value type (got "tuple[bool, str, str, None, str]", expected "tuple[bool, str | None, str | None, OcrResult | None]")  [return-value]
+anura/services/screenshot_service.py:224: error: Incompatible return value type (got "tuple[bool, str, None, OcrResult, str]", expected "tuple[bool, str | None, str | None, OcrResult | None]")  [return-value]
+anura/services/screenshot_service.py:252: error: Incompatible return value type (got "tuple[bool, None, None, None, str]", expected "tuple[bool, str | None, str | None, OcrResult | None]")  [return-value]
+anura/services/screenshot_service.py:255: error: Incompatible return value type (got "tuple[bool, str, str, None, str]", expected "tuple[bool, str | None, str | None, OcrResult | None]")  [return-value]
+anura/services/screenshot_service.py:503: error: Incompatible return value type (got "tuple[bool, str | None, str | None, OcrResult | None, str]", expected "tuple[bool, str | None, str | None, OcrResult | None]")  [return-value]
+anura/services/screenshot_service.py:511: error: Incompatible return value type (got "tuple[bool, str, str, None, str]", expected "tuple[bool, str | None, str | None, OcrResult | None]")  [return-value]
+anura/services/screenshot_service.py:521: error: Incompatible return value type (got "tuple[bool, None, None, None, str]", expected "tuple[bool, str | None, str | None, OcrResult | None]")  [return-value]
+anura/services/screenshot_service.py:529: error: Incompatible return value type (got "tuple[bool, str | None, str | None, OcrResult | None, str]", expected "tuple[bool, str | None, str | None, OcrResult | None]")  [return-value]
+anura/services/screenshot_service.py:563: error: Argument 1 to "open" has incompatible type "str | Image | object"; expected "str | bytes | PathLike[str] | PathLike[bytes] | IO[bytes]"  [arg-type]
+anura/services/screenshot_service.py:574: error: Incompatible types in assignment (expression has type "Image", variable has type "ImageFile")  [assignment]
+anura/services/screenshot_service.py:839: error: Need more than 4 values to unpack (5 expected)  [misc]
 anura/widgets/preferences_dialog.py:7: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
 anura/widgets/preferences_dialog.py:7: note: Did you mean "cgi"?
 anura/core/silent_runner.py:9: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
@@ -115,10 +121,10 @@ anura/window.py:12: error: Cannot find implementation or library stub for module
 anura/window.py:12: note: Did you mean "cgi"?
 anura/window.py:22: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
 anura/window.py:22: note: Did you mean "cgi"?
-anura/window.py:337: error: Cannot find implementation or library stub for module named "anura.utils.dialog_manager"  [import-not-found]
+anura/window.py:340: error: Cannot find implementation or library stub for module named "anura.utils.dialog_manager"  [import-not-found]
 anura/main.py:26: error: Cannot find implementation or library stub for module named "gi"  [import-not-found]
 anura/main.py:26: note: Did you mean "cgi"?
 anura/main.py:35: error: Cannot find implementation or library stub for module named "gi.repository"  [import-not-found]
 anura/main.py:35: note: Did you mean "cgi"?
 anura/main.py:316: error: Cannot find implementation or library stub for module named "anura._release_notes"  [import-not-found]
-Found 73 errors in 38 files (checked 60 source files)
+Found 79 errors in 36 files (checked 60 source files)
