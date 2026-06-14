@@ -6,7 +6,13 @@
 
 from anura.utils.cleanup import cleanup_orphaned_resources, get_cache_info
 from anura.utils.portal_advice import PortalAdvice, detect_portal_advice
-from anura.utils.validators import is_safe_url_string, mask_url, uri_validator, validate_image_resource
+from anura.utils.validators import (
+    is_safe_url_string,
+    mask_url,
+    sanitize_text,
+    uri_validator,
+    validate_image_resource,
+)
 
 __all__ = [
     "PortalAdvice",
@@ -15,6 +21,7 @@ __all__ = [
     "get_cache_info",
     "is_safe_url_string",
     "mask_url",
+    "sanitize_text",
     "uri_validator",
     "validate_image_resource",
 ]
