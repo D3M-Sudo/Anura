@@ -32,12 +32,11 @@ from anura.core.atomic_task_manager import get_atomic_manager  # noqa: E402
 from anura.models.ocr import OcrResult  # noqa: E402
 from anura.services.language_manager import get_tesseract_config  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
-from anura.utils import validate_image_resource  # noqa: E402
+from anura.utils import mask_url, sanitize_text, validate_image_resource  # noqa: E402
 from anura.utils.portal_advice import detect_portal_advice  # noqa: E402
 from anura.utils.singleton import get_instance  # noqa: E402
 from anura.utils.structural_reconstructor import get_structural_reconstructor  # noqa: E402
 from anura.utils.text_preprocessor import get_text_preprocessor  # noqa: E402
-from anura.utils.validators import sanitize_text  # noqa: E402
 
 
 def _is_flatpak_environment() -> bool:
@@ -407,7 +406,7 @@ class ScreenshotService(GObject.GObject):
             else:
                 filename = GLib.Uri.unescape_string(uri)
         except (ValueError, GLib.Error) as e:
-            logger.error(f"Anura Screenshot: Failed to parse URI '{uri}': {e}")
+            logger.error(f"Anura Screenshot: Failed to parse URI '{mask_url(uri)}': {e}")
             self._emit_decode_error(_("Can't take a screenshot."))
             return False
 

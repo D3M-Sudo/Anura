@@ -46,6 +46,35 @@ EMAIL_RE = re.compile(EMAIL_PATTERN, re.IGNORECASE)
 URL_RE = re.compile(URL_PATTERN, re.IGNORECASE)
 
 
+def mask_url(url: str) -> str:
+    """
+    Redact sensitive information (userinfo) from a URL for safe logging.
+    Ensures that credentials are not leaked in the local rotary logs.
+
+    Args:
+        url: The URL string to mask.
+
+    Returns:
+        The URL with userinfo replaced by placeholders.
+    """
+    if not url:
+        return ""
+    try:
+        from urllib.parse import urlparse, urlunparse
+
+        parsed = urlparse(url)
+        if "@" in parsed.netloc:
+            # Isolate userinfo from host/port part using rpartition.
+            # This preserves the host and port while redacting the credentials.
+            _, at, host_port = parsed.netloc.rpartition("@")
+            new_netloc = f"***:***{at}{host_port}"
+            return urlunparse(parsed._replace(netloc=new_netloc))
+        return url
+    except (ValueError, AttributeError, TypeError):
+        # If parsing fails, return a safe placeholder to prevent any potential leak.
+        return "[REDACTED INVALID URL]"
+
+
 def sanitize_text(text: str) -> str:
     """
     Sanitize text using heuristics to correct common OCR errors and remove artifacts.
@@ -418,7 +447,7 @@ def launch_uri(url: str, window=None, error_callback=None) -> None:
 
     url = url.strip() if url else ""
     if not uri_validator(url):
-        logger.warning(f"Anura: Blocked invalid URL launch: {url}")
+        logger.warning(f"Anura: Blocked invalid URL launch: {mask_url(url)}")
         msg = _("Invalid URL blocked for security")
         if error_callback:
             error_callback(msg)
