@@ -6,15 +6,16 @@ msgstr ""
 "Project-Id-Version: anura\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-05-15 17:00+0000\n"
-"PO-Revision-Date: 2023-12-09 07:05+0000\n"
-"Last-Translator: 复予 <1530207757@qq.com>\n"
-"Language-Team: Chinese (Simplified) <https://hosted.weblate.org/projects/anura/default/zh_Hans/>\n"
+"PO-Revision-Date: 2026-06-16 07:01+0000\n"
+"Last-Translator: reducedradius <feixiang512@outlook.com>\n"
+"Language-Team: Chinese (Simplified Han script) <https://hosted.weblate.org/"
+"projects/anura/anura/zh_Hans/>\n"
 "Language: zh_Hans\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.3-dev\n"
+"X-Generator: Weblate 2026.7.dev0\n"
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-SearchPath-0: data/ui\n"
 "X-Poedit-SearchPath-1: data/com.github.d3msudo.anura.desktop.in\n"
@@ -121,7 +122,7 @@ msgstr "宗喀语"
 
 #: anura/language_manager.py:99
 msgid "Greek"
-msgstr ""
+msgstr "希腊语"
 
 #: anura/language_manager.py:101
 msgid "English, Middle"
@@ -181,7 +182,7 @@ msgstr "加利西亚语"
 
 #: anura/language_manager.py:121
 msgid "Greek, Ancient"
-msgstr ""
+msgstr "古希腊语"
 
 #: anura/language_manager.py:122
 msgid "Gujarati"
@@ -521,7 +522,7 @@ msgstr ""
 
 #: anura/main.py:640
 msgid "Changelog"
-msgstr ""
+msgstr "更新日志"
 
 #: anura/main.py:683 anura/main.py:703
 msgid "Failed to Open Browser"
@@ -852,7 +853,7 @@ msgstr ""
 
 #: anura/widgets/shortcuts_overlay.py:99
 msgid "Advanced"
-msgstr ""
+msgstr "高级设置"
 
 #: anura/widgets/shortcuts_overlay.py:101
 msgid "Open image file (advanced)"
@@ -946,7 +947,7 @@ msgstr "打开图像以提取文本"
 
 #: anura/window.py:356
 msgid "All supported images"
-msgstr ""
+msgstr "所有支持的图像"
 
 #: anura/window.py:370
 msgid "PNG images"
@@ -1014,7 +1015,7 @@ msgstr ""
 
 #: anura/language_manager.py:90
 msgid "Chinese - Simplified (vertical)"
-msgstr ""
+msgstr "中文 - 简体（竖直）"
 
 #: anura/language_manager.py:92
 msgid "Chinese - Traditional (vertical)"
@@ -1064,7 +1065,7 @@ msgstr ""
 
 #: anura/window.py:401
 msgid "All files (*)"
-msgstr ""
+msgstr "所有文件 (*)"
 
 #: anura/services/tts.py:373
 #, python-brace-format
