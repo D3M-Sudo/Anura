@@ -99,6 +99,28 @@ def sanitize_text(text: str) -> str:
     return text.strip()
 
 
+def mask_url(url: str) -> str:
+    """
+    Redact sensitive userinfo (credentials) from a URL for safe logging.
+    Example: 'https://user:pass@example.com' -> 'https://***:***@example.com'
+    """
+    if not isinstance(url, str) or "://" not in url:
+        return url
+
+    try:
+        # Use rpartition on netloc to robustly isolate credentials (BUG-047 pattern)
+        parsed = urlparse(url)
+        if "@" in parsed.netloc:
+            _, at, host_port = parsed.netloc.rpartition("@")
+            # Replace userinfo with asterisks to prevent credential leakage in logs
+            masked_netloc = f"***:***{at}{host_port}"
+            return parsed._replace(netloc=masked_netloc).geturl()
+        return url
+    except (ValueError, AttributeError, TypeError):
+        # If parsing fails, return a safe placeholder to avoid leaking anything
+        return "<malformed-url-redacted>"
+
+
 def _check_hostname_homograph(hostname: str) -> bool:
     """
     Helper for is_safe_url_string to perform homograph detection (BUG-034).
@@ -418,7 +440,7 @@ def launch_uri(url: str, window=None, error_callback=None) -> None:
 
     url = url.strip() if url else ""
     if not uri_validator(url):
-        logger.warning(f"Anura: Blocked invalid URL launch: {url}")
+        logger.warning(f"Anura: Blocked invalid URL launch: {mask_url(url)}")
         msg = _("Invalid URL blocked for security")
         if error_callback:
             error_callback(msg)
@@ -432,7 +454,7 @@ def launch_uri(url: str, window=None, error_callback=None) -> None:
         try:
             launcher.launch_finish(result)
         except GLib.Error as e:
-            logger.error(f"Anura: Failed to launch URI: {e.message}")
+            logger.error(f"Anura: Failed to launch URI ({mask_url(url)}): {e.message}")
             msg = _("Failed to open link")
             if error_callback:
                 error_callback(msg)
