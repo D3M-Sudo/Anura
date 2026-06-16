@@ -132,7 +132,7 @@ class ShareService(GObject.GObject):
                 # Security: validate URL before launching (defense in depth)
                 # Use static method to avoid circular imports and instance creation
                 if not ShareService._validate_share_url(share_link):
-                    logger.warning(f"Anura Share: Blocked invalid URL: {share_link}")
+                    logger.warning(f"Anura Share: Blocked invalid URL: {mask_url(share_link)}")
                     return
 
                 self.launcher.set_uri(share_link)

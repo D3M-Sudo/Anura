@@ -99,6 +99,38 @@ def sanitize_text(text: str) -> str:
     return text.strip()
 
 
+def mask_url(url: str) -> str:
+    """
+    Redact sensitive userinfo (credentials) from a URL for safe logging.
+    Example: 'https://user:pass@example.com' -> 'https://***:***@example.com'
+    """
+    if not url:
+        return ""
+    try:
+        from urllib.parse import urlparse, urlunparse
+
+        parsed = urlparse(url)
+        if not parsed.netloc or "@" not in parsed.netloc:
+            return url
+
+        # Use rpartition to robustly split userinfo from host:port
+        userinfo, at, host_port = parsed.netloc.rpartition("@")
+        if not at:
+            return url
+
+        # Redact the userinfo part
+        if ":" in userinfo:
+            masked_userinfo = "***:***"
+        else:
+            masked_userinfo = "***"
+
+        new_netloc = f"{masked_userinfo}{at}{host_port}"
+        return urlunparse(parsed._replace(netloc=new_netloc))
+    except (ValueError, AttributeError, TypeError):
+        # If parsing fails on a potentially malformed URL, redact fully to be safe.
+        return "[MASKED URL]"
+
+
 def _check_hostname_homograph(hostname: str) -> bool:
     """
     Helper for is_safe_url_string to perform homograph detection (BUG-034).
@@ -418,7 +450,7 @@ def launch_uri(url: str, window=None, error_callback=None) -> None:
 
     url = url.strip() if url else ""
     if not uri_validator(url):
-        logger.warning(f"Anura: Blocked invalid URL launch: {url}")
+        logger.warning(f"Anura: Blocked invalid URL launch: {mask_url(url)}")
         msg = _("Invalid URL blocked for security")
         if error_callback:
             error_callback(msg)
