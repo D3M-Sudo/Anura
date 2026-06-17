@@ -5,7 +5,7 @@
 
 import pytest
 
-from anura.utils.validators import is_safe_url_string, uri_validator
+from anura.utils.validators import is_safe_url_string, mask_url, uri_validator
 
 
 class TestSentinelUriSecurity:
@@ -96,3 +96,21 @@ class TestSentinelUriSecurity:
         normalized = _normalize_idn(url)
         assert ":password@" in normalized
         assert "xn--mnchen-3ya.de" in normalized
+
+    @pytest.mark.parametrize(
+        "url,expected",
+        [
+            ("https://user:pass@example.com", "https://***@example.com"),
+            ("https://user@example.com", "https://***@example.com"),
+            ("https://:pass@example.com", "https://***@example.com"),
+            ("https://example.com/path", "https://example.com/path"),
+            ("http://admin:secret@192.168.1.1:8080/config", "http://***@192.168.1.1:8080/config"),
+            ("mailto:user@example.com", "mailto:user@example.com"),  # mailto doesn't use netloc in urlparse usually
+            ("ftp://anonymous:guest@ftp.example.com", "ftp://***@ftp.example.com"),
+            ("", ""),
+            (None, ""),
+            ("malformed:url", "malformed:url"),
+        ],
+    )
+    def test_mask_url(self, url, expected):
+        assert mask_url(url) == expected

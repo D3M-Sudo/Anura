@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 import re
 import unicodedata
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 
 from loguru import logger
 
@@ -97,6 +97,33 @@ def sanitize_text(text: str) -> str:
     text = re.sub(r"(https?|ftp|file):\s+/{2}", r"\1://", text)
 
     return text.strip()
+
+
+def mask_url(url: str) -> str:
+    """
+    Redact userinfo (username and password) from a URL string for safe logging.
+    Example: http://user:pass@example.com -> http://***@example.com
+    """
+    if not url:
+        return ""
+    try:
+        # Use urlparse to decompose the URI
+        parsed = urlparse(url)
+        if not parsed.netloc or "@" not in parsed.netloc:
+            return url
+
+        # Isolate userinfo from host:port using rpartition to be robust
+        # against '@' appearing in the host portion (though rare/invalid).
+        _userinfo, at, host_port = parsed.netloc.rpartition("@")
+
+        # Replace userinfo with a mask while preserving the '@' and host:port
+        new_netloc = f"***{at}{host_port}"
+
+        # Reconstruct the URL without credentials
+        return urlunparse(parsed._replace(netloc=new_netloc))
+    except (ValueError, AttributeError, TypeError):
+        # Fallback for malformed URLs
+        return "[MASKED_URL]"
 
 
 def _check_hostname_homograph(hostname: str) -> bool:
@@ -418,7 +445,7 @@ def launch_uri(url: str, window=None, error_callback=None) -> None:
 
     url = url.strip() if url else ""
     if not uri_validator(url):
-        logger.warning(f"Anura: Blocked invalid URL launch: {url}")
+        logger.warning(f"Anura: Blocked invalid URL launch: {mask_url(url)}")
         msg = _("Invalid URL blocked for security")
         if error_callback:
             error_callback(msg)
