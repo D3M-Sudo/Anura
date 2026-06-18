@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: MIT
 
 from dataclasses import dataclass
+from functools import cached_property
 from typing import Any
 
 
@@ -36,7 +37,7 @@ class ExtractionResult:
     is_primary_url: bool = False
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class OcrResult:
     """Immutable encapsulation of recognized text and layout information."""
 
@@ -100,35 +101,35 @@ class OcrResult:
 
         return left, top, right - left, bottom - top
 
-    def _count_unique_sections(self, level: str) -> int:
+    @cached_property
+    def _layout_stats(self) -> dict[str, int]:
         """
-        Count unique layout sections at a given level (block, paragraph, line).
-        Uses composite keys to prevent hierarchical ID collisions.
+        Calculate layout statistics in a single pass and cache the result.
+        Reduces complexity from 3 * O(N) to 1 * O(N) for Magic/Structural analysis.
         """
-        # FIX BUG-NEW-A: annotate with variadic tuple syntax so mypy accepts all
-        # three set-comprehension arities (1-, 2-, 3-element tuples) without
-        # [misc] errors.  Parallel fix to NEW-021 in transformers/models.py.
-        # Runtime behaviour is unchanged — len() works on any set of tuples.
-        keys: set[tuple[int, ...]]
-        if level == "block_num":
-            keys = {(w.block_num,) for w in self.words}
-        elif level == "par_num":
-            keys = {(w.block_num, w.par_num) for w in self.words}
-        elif level == "line_num":
-            keys = {(w.block_num, w.par_num, w.line_num) for w in self.words}
-        else:
-            keys = {(getattr(w, level),) for w in self.words}
+        blocks: set[tuple[int]] = set()
+        pars: set[tuple[int, int]] = set()
+        lines: set[tuple[int, int, int]] = set()
 
-        return len(keys)
+        for w in self.words:
+            blocks.add((w.block_num,))
+            pars.add((w.block_num, w.par_num))
+            lines.add((w.block_num, w.par_num, w.line_num))
+
+        return {
+            "block_num": len(blocks),
+            "par_num": len(pars),
+            "line_num": len(lines),
+        }
 
     @property
     def num_lines(self) -> int:
-        return self._count_unique_sections("line_num")
+        return self._layout_stats["line_num"]
 
     @property
     def num_pars(self) -> int:
-        return self._count_unique_sections("par_num")
+        return self._layout_stats["par_num"]
 
     @property
     def num_blocks(self) -> int:
-        return self._count_unique_sections("block_num")
+        return self._layout_stats["block_num"]
