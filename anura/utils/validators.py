@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 import re
 import unicodedata
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 
 from loguru import logger
 
@@ -44,6 +44,34 @@ URL_PATTERN = (
 # Regex objects for performance
 EMAIL_RE = re.compile(EMAIL_PATTERN, re.IGNORECASE)
 URL_RE = re.compile(URL_PATTERN, re.IGNORECASE)
+
+
+def mask_url(url: str) -> str:
+    """
+    Redact userinfo (username:password) from a URI for safe logging.
+
+    Args:
+        url: The URI to mask.
+
+    Returns:
+        The URI with userinfo replaced by '***'.
+    """
+    if not url:
+        return ""
+
+    try:
+        parsed = urlparse(url)
+        if not parsed.netloc:
+            return url
+
+        _, at, host_port = parsed.netloc.rpartition("@")
+        if at:
+            # Redact userinfo but preserve host, port, path, etc.
+            return urlunparse(parsed._replace(netloc=f"***{at}{host_port}"))
+        return url
+    except (ValueError, AttributeError, TypeError):
+        # Fallback for malformed URLs
+        return "***"
 
 
 def sanitize_text(text: str) -> str:
@@ -418,7 +446,7 @@ def launch_uri(url: str, window=None, error_callback=None) -> None:
 
     url = url.strip() if url else ""
     if not uri_validator(url):
-        logger.warning(f"Anura: Blocked invalid URL launch: {url}")
+        logger.warning(f"Anura: Blocked invalid URL launch: {mask_url(url)}")
         msg = _("Invalid URL blocked for security")
         if error_callback:
             error_callback(msg)
