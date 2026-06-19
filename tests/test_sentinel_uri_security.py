@@ -5,7 +5,7 @@
 
 import pytest
 
-from anura.utils.validators import is_safe_url_string, uri_validator
+from anura.utils.validators import is_safe_url_string, mask_url, uri_validator
 
 
 class TestSentinelUriSecurity:
@@ -96,3 +96,21 @@ class TestSentinelUriSecurity:
         normalized = _normalize_idn(url)
         assert ":password@" in normalized
         assert "xn--mnchen-3ya.de" in normalized
+
+    @pytest.mark.parametrize(
+        "url,expected",
+        [
+            ("https://user:pass@example.com", "https://***@example.com"),
+            ("http://admin@google.com", "http://***@google.com"),
+            ("https://:password@github.com", "https://***@github.com"),
+            ("http://user:@example.com", "http://***@example.com"),
+            ("https://example.com/path", "https://example.com/path"),
+            ("mailto:user@example.com", "mailto:user@example.com"),
+            ("invalid-url", "invalid-url"),
+            (None, None),
+            ("", ""),
+        ],
+    )
+    def test_mask_url_redaction(self, url, expected):
+        """Test that mask_url correctly redacts credentials."""
+        assert mask_url(url) == expected
