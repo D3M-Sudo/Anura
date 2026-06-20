@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 import re
 import unicodedata
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 
 from loguru import logger
 
@@ -99,6 +99,33 @@ def sanitize_text(text: str) -> str:
     return text.strip()
 
 
+def mask_url(url: str) -> str:
+    """
+    Redact userinfo (credentials) from a URL for safe logging.
+    Example: http://user:pass@google.com -> http://***:***@google.com
+    """
+    if not url:
+        return ""
+    try:
+        parsed = urlparse(url)
+        if not parsed.netloc or "@" not in parsed.netloc:
+            return url
+
+        userinfo, at, host_port = parsed.netloc.rpartition("@")
+        if ":" in userinfo:
+            user, sep, password = userinfo.partition(":")
+            masked_user = "***" if user else ""
+            masked_password = "***" if password else ""
+            masked_userinfo = f"{masked_user}{sep}{masked_password}"
+        else:
+            masked_userinfo = "***"
+
+        netloc = f"{masked_userinfo}{at}{host_port}"
+        return urlunparse(parsed._replace(netloc=netloc))
+    except (ValueError, AttributeError):
+        return url
+
+
 def _check_hostname_homograph(hostname: str) -> bool:
     """
     Helper for is_safe_url_string to perform homograph detection (BUG-034).
@@ -167,8 +194,6 @@ def _normalize_idn(text: str) -> str | None:
         return text
 
     try:
-        from urllib.parse import urlparse, urlunparse
-
         # 4. IDN normalization: convert international domain names (IDN) to their
         # Punycode ASCII-compatible encoding (ACE) before the ASCII safety check.
         # This allows legitimate URLs like https://münchen.de or https://中文.com
@@ -213,8 +238,6 @@ def _parse_and_validate_hostname(text: str) -> bool:
     Orchestrates the homograph detection check.
     """
     try:
-        from urllib.parse import urlparse
-
         parsed_for_homograph = urlparse(text)
         hostname = parsed_for_homograph.hostname or ""
 
@@ -418,7 +441,7 @@ def launch_uri(url: str, window=None, error_callback=None) -> None:
 
     url = url.strip() if url else ""
     if not uri_validator(url):
-        logger.warning(f"Anura: Blocked invalid URL launch: {url}")
+        logger.warning(f"Anura: Blocked invalid URL launch: {mask_url(url)}")
         msg = _("Invalid URL blocked for security")
         if error_callback:
             error_callback(msg)
