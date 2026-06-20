@@ -549,8 +549,7 @@ class ClipboardService(GObject.GObject):
             GLib.idle_add(_on_error_idle)
             return
 
-        file_uri_str = str(file_uri)
-        logger.debug(f"Anura Clipboard: loaded image from clipboard file URI ({mask_url(file_uri_str)}).")
+        logger.debug(f"Anura Clipboard: loaded image from clipboard file URI ({path}).")
 
         def _on_success_idle(tex):
             self.emit("paste_from_clipboard", tex)

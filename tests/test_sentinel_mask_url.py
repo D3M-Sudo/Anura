@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: MIT
 
 import pytest
+
 from anura.utils.validators import mask_url
+
 
 class TestMaskUrl:
     @pytest.mark.parametrize(
