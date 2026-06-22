@@ -46,6 +46,46 @@ EMAIL_RE = re.compile(EMAIL_PATTERN, re.IGNORECASE)
 URL_RE = re.compile(URL_PATTERN, re.IGNORECASE)
 
 
+def mask_url(url: str) -> str:
+    """
+    Redact credentials (username:password) from a URL for safe logging.
+
+    Args:
+        url: The URL string to mask.
+
+    Returns:
+        The URL with userinfo redacted, or the original string if no userinfo found.
+    """
+    if not url or not isinstance(url, str):
+        return str(url)
+
+    try:
+        from urllib.parse import urlparse, urlunparse
+
+        parsed = urlparse(url)
+        # Use rpartition('@') to safely isolate userinfo from host/port.
+        # This handles cases where userinfo might contain encoded '@' characters.
+        if "@" in parsed.netloc:
+            _, at, host_port = parsed.netloc.rpartition("@")
+            masked_netloc = f"***{at}{host_port}"
+            return urlunparse(parsed._replace(netloc=masked_netloc))
+
+        return url
+    except (ValueError, AttributeError, TypeError):
+        # Fallback for malformed URLs that fail parsing:
+        # Only redact if @ is present BEFORE the first slash after the scheme separator.
+        if "@" in url and "://" in url:
+            scheme, sep, rest = url.partition("://")
+            # Find the first slash after the scheme (start of path)
+            first_slash = rest.find("/")
+            authority = rest[:first_slash] if first_slash != -1 else rest
+            if "@" in authority:
+                _, at, host_port = authority.rpartition("@")
+                path = rest[first_slash:] if first_slash != -1 else ""
+                return f"{scheme}{sep}***{at}{host_port}{path}"
+        return url
+
+
 def sanitize_text(text: str) -> str:
     """
     Sanitize text using heuristics to correct common OCR errors and remove artifacts.
@@ -418,7 +458,7 @@ def launch_uri(url: str, window=None, error_callback=None) -> None:
 
     url = url.strip() if url else ""
     if not uri_validator(url):
-        logger.warning(f"Anura: Blocked invalid URL launch: {url}")
+        logger.warning(f"Anura: Blocked invalid URL launch: {mask_url(url)}")
         msg = _("Invalid URL blocked for security")
         if error_callback:
             error_callback(msg)
