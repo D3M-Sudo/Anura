@@ -6,8 +6,9 @@ msgstr ""
 "Project-Id-Version: anura\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-05-15 17:00+0000\n"
-"PO-Revision-Date: 2026-06-16 07:01+0000\n"
-"Last-Translator: reducedradius <feixiang512@outlook.com>\n"
+"PO-Revision-Date: 2026-06-23 15:01+0000\n"
+"Last-Translator: reducedradius "
+"<flytothehighest@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Simplified Han script) <https://hosted.weblate.org/"
 "projects/anura/anura/zh_Hans/>\n"
 "Language: zh_Hans\n"
@@ -78,7 +79,7 @@ msgstr "保加利亚语"
 
 #: anura/language_manager.py:86
 msgid "Catalan"
-msgstr ""
+msgstr "加泰罗尼亚语"
 
 #: anura/language_manager.py:87
 msgid "Cebuano"
@@ -150,7 +151,7 @@ msgstr "波斯语"
 
 #: anura/language_manager.py:110
 msgid "Filipino"
-msgstr ""
+msgstr "菲律宾语"
 
 #: anura/language_manager.py:111
 msgid "Finnish"
@@ -346,7 +347,7 @@ msgstr "挪威语"
 
 #: anura/language_manager.py:162
 msgid "Occitan"
-msgstr ""
+msgstr "欧西坦语"
 
 #: anura/language_manager.py:163
 msgid "Oriya"
@@ -546,7 +547,7 @@ msgstr ""
 
 #: anura/main.py:833 anura/main.py:847 anura/main.py:857 anura/main.py:874
 msgid "Anura OCR"
-msgstr ""
+msgstr "Anura OCR"
 
 #: anura/main.py:834
 msgid "No text found. Try to grab another region."
@@ -616,7 +617,7 @@ msgstr ""
 
 #: anura/services/screenshot_service.py:597
 msgid "OCR engine failed to process image."
-msgstr ""
+msgstr "OCR引擎未能处理图像。"
 
 #: anura/services/screenshot_service.py:600
 #: anura/services/screenshot_service.py:606
@@ -637,7 +638,7 @@ msgstr ""
 
 #: anura/services/share_service.py:188
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: anura/services/share_service.py:227
 msgid "Cannot show dialog without active window"
@@ -698,7 +699,7 @@ msgstr ""
 
 #: anura/utils/portal_advice.py:125
 msgid "GNOME"
-msgstr ""
+msgstr "GNOME"
 
 #: anura/utils/portal_advice.py:126
 msgid ""
@@ -788,11 +789,11 @@ msgstr ""
 
 #: anura/widgets/shortcuts_overlay.py:61
 msgid "Take screenshot"
-msgstr ""
+msgstr "截取屏幕截图"
 
 #: anura/widgets/shortcuts_overlay.py:62
 msgid "Take screenshot and copy to clipboard"
-msgstr ""
+msgstr "截取屏幕截图并复制至剪贴板"
 
 #: anura/widgets/shortcuts_overlay.py:63
 msgid "Open image file"
@@ -1061,7 +1062,7 @@ msgstr ""
 
 #: anura/window.py:394
 msgid "GIF images"
-msgstr ""
+msgstr "GIF动图"
 
 #: anura/window.py:401
 msgid "All files (*)"
