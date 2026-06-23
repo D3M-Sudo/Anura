@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 import re
 import unicodedata
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 
 from loguru import logger
 
@@ -44,6 +44,36 @@ URL_PATTERN = (
 # Regex objects for performance
 EMAIL_RE = re.compile(EMAIL_PATTERN, re.IGNORECASE)
 URL_RE = re.compile(URL_PATTERN, re.IGNORECASE)
+
+
+def mask_url(url: str) -> str:
+    """
+    Redact userinfo (credentials) from a URL string.
+
+    Args:
+        url: The URL to mask.
+
+    Returns:
+        The URL with username:password replaced by <redacted>,
+        or the original string if it's not a valid URL or has no userinfo.
+    """
+    if not url:
+        return ""
+
+    try:
+        res = urlparse(url)
+        # Robust check: if '@' is in netloc, it contains userinfo even if empty.
+        # This matches the check in uri_validator.
+        if "@" in res.netloc:
+            # Isolate userinfo from host:port
+            userinfo, at, host_port = res.netloc.rpartition("@")
+            if at:
+                # Replace everything before the last '@' with <redacted>
+                netloc = f"<redacted>@{host_port}"
+                return urlunparse(res._replace(netloc=netloc))
+        return url
+    except (ValueError, AttributeError):
+        return url
 
 
 def sanitize_text(text: str) -> str:
@@ -418,7 +448,7 @@ def launch_uri(url: str, window=None, error_callback=None) -> None:
 
     url = url.strip() if url else ""
     if not uri_validator(url):
-        logger.warning(f"Anura: Blocked invalid URL launch: {url}")
+        logger.warning(f"Anura: Blocked invalid URL launch: {mask_url(url)}")
         msg = _("Invalid URL blocked for security")
         if error_callback:
             error_callback(msg)

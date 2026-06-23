@@ -20,7 +20,7 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Adw, Gio, GLib, GObject, Gtk  # noqa: E402
 from loguru import logger  # noqa: E402
 
-from anura.utils import is_safe_url_string, uri_validator  # noqa: E402
+from anura.utils import is_safe_url_string, mask_url, uri_validator  # noqa: E402
 from anura.utils.singleton import get_instance  # noqa: E402
 
 
@@ -132,7 +132,7 @@ class ShareService(GObject.GObject):
                 # Security: validate URL before launching (defense in depth)
                 # Use static method to avoid circular imports and instance creation
                 if not ShareService._validate_share_url(share_link):
-                    logger.warning(f"Anura Share: Blocked invalid URL: {share_link}")
+                    logger.warning(f"Anura Share: Blocked invalid URL: {mask_url(share_link)}")
                     return
 
                 self.launcher.set_uri(share_link)
