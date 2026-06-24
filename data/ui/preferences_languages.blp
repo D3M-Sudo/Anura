@@ -68,6 +68,9 @@ template $PreferencesLanguagesPage : Adw.PreferencesPage {
           Button {
             icon-name: "list-add-symbolic";
             tooltip-text: _("Add language");
+            accessibility {
+              label: _("Add language");
+            }
             clicked => $_on_add_language();
 
             styles ["flat"]

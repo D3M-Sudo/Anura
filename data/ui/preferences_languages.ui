@@ -75,6 +75,9 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                         </child>
                         <child>
                           <object class="GtkButton">
+                            <accessibility>
+                              <property name="label" translatable="true">Add language</property>
+                            </accessibility>
                             <property name="icon-name">list-add-symbolic</property>
                             <property name="tooltip-text" translatable="true">Add language</property>
                             <signal name="clicked" handler="_on_add_language"/>

@@ -37,7 +37,7 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
         </child>
         <child>
           <object class="GtkStack" id="views">
-            <property name="vexpand">false</property>
+            <property name="vexpand">true</property>
             <property name="transition-type">1</property>
             <child>
               <object class="GtkStackPage">
@@ -45,6 +45,8 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                 <property name="child">
                   <object class="GtkScrolledWindow">
                     <property name="vexpand">true</property>
+                    <property name="max-content-height">300</property>
+                    <property name="propagate-natural-height">true</property>
                     <child>
                       <object class="GtkListBox" id="list_view">
                         <accessibility>
@@ -89,21 +91,29 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                             </style>
                           </object>
                         </child>
-                        <child>
-                          <object class="GtkButton">
-                            <property name="margin-top">8</property>
-                            <property name="hexpand">true</property>
-                            <property name="label" translatable="true">Add Language</property>
-                            <property name="tooltip-text" translatable="true">Open preferences to download more languages</property>
-                            <signal name="clicked" handler="_on_add_clicked"/>
-                          </object>
-                        </child>
                       </object>
                     </child>
                   </object>
                 </property>
               </object>
             </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkSeparator"></object>
+        </child>
+        <child>
+          <object class="GtkButton">
+            <property name="margin-bottom">6</property>
+            <property name="margin-end">6</property>
+            <property name="margin-start">6</property>
+            <property name="margin-top">6</property>
+            <property name="label" translatable="true">Manage Languages…</property>
+            <property name="tooltip-text" translatable="true">Open preferences to download more languages</property>
+            <signal name="clicked" handler="_on_add_clicked"/>
+            <style>
+              <class name="flat"/>
+            </style>
           </object>
         </child>
       </object>
