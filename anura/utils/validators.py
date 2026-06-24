@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 import re
 import unicodedata
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 
 from loguru import logger
 
@@ -44,6 +44,44 @@ URL_PATTERN = (
 # Regex objects for performance
 EMAIL_RE = re.compile(EMAIL_PATTERN, re.IGNORECASE)
 URL_RE = re.compile(URL_PATTERN, re.IGNORECASE)
+
+
+def mask_url(url: str) -> str:
+    """
+    Redact userinfo (credentials) from a URL string for safe logging.
+    Example: 'https://user:pass@google.com' -> 'https://***:***@google.com'
+    """
+    if not url or not isinstance(url, str):
+        return url
+
+    try:
+        parsed = urlparse(url)
+        if not parsed.netloc or "@" not in parsed.netloc:
+            return url
+
+        # Isolate userinfo from host/port
+        userinfo, at, host_port = parsed.netloc.rpartition("@")
+
+        if not at:
+            return url
+
+        # Mask userinfo while preserving structure (username:password)
+        if ":" in userinfo:
+            user, _, password = userinfo.partition(":")
+            masked_userinfo = f"{'***' if user else ''}:{'***' if password else ''}"
+        elif userinfo:
+            masked_userinfo = "***"
+        else:
+            masked_userinfo = ""
+
+        new_netloc = f"{masked_userinfo}{at}{host_port}"
+        return urlunparse(parsed._replace(netloc=new_netloc))
+    except (ValueError, AttributeError, TypeError):
+        # If parsing fails, be conservative and return a generic masked string
+        # if it looks like it might contain credentials.
+        if "@" in url and "://" in url:
+            return "url://***@masked"
+        return url
 
 
 def sanitize_text(text: str) -> str:
@@ -418,7 +456,7 @@ def launch_uri(url: str, window=None, error_callback=None) -> None:
 
     url = url.strip() if url else ""
     if not uri_validator(url):
-        logger.warning(f"Anura: Blocked invalid URL launch: {url}")
+        logger.warning(f"Anura: Blocked invalid URL launch: {mask_url(url)}")
         msg = _("Invalid URL blocked for security")
         if error_callback:
             error_callback(msg)
