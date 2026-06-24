@@ -15,6 +15,7 @@ from anura.config import RESOURCE_PREFIX
 from anura.models.language_item import LanguageItem
 from anura.services.language_manager import get_language_manager
 from anura.services.settings import settings
+from anura.utils import mask_url
 from anura.utils.signal_manager import SignalManagerMixin
 from anura.widgets.language_popover import LanguagePopover
 
@@ -213,7 +214,7 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         local_path = gfile.get_path()
 
         if not local_path:
-            logger.error(f"DnD: URI has no local path: {uris[0]}")
+            logger.error(f"DnD: URI has no local path: {mask_url(uris[0])}")
             self._show_error_toast(_("Only local files can be dropped"))
             return
 
