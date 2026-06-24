@@ -6,7 +6,7 @@
 from typing import ClassVar
 import weakref
 
-from gi.repository import GObject
+from gi.repository import GObject, Gst
 from loguru import logger
 import requests
 
@@ -33,6 +33,7 @@ class TtsController(GObject.GObject, SignalManagerMixin):
 
         self._window = weakref.proxy(window)
         self._tts_service = get_tts_service()
+        self._current_text: str | None = None
 
         # Register for automatic teardown
         if hasattr(window, "register_controller"):
@@ -52,10 +53,18 @@ class TtsController(GObject.GObject, SignalManagerMixin):
         if not text or not text.strip():
             return
 
-        if self._tts_service.player and not self._tts_service.is_playing():
-            self.toggle_pause()
-            return
+        # FIX BUG-NEW-001: Implement explicit GStreamer state check and text delta check.
+        # If the player is PAUSED and the text matches what we're currently playing,
+        # resume. If the text has changed, we MUST generate a new speech file
+        # regardless of the player's current state.
+        if self._tts_service.player:
+            _, state, _ = self._tts_service.player.get_state(0)
+            if state == Gst.State.PAUSED and text == self._current_text:
+                logger.debug("TtsController: Resuming paused playback for identical text")
+                self.toggle_pause()
+                return
 
+        self._current_text = text
         self.emit("state-changed", "generating")
 
         ocr_lang = settings.get_string("active-language")
