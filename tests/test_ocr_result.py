@@ -43,8 +43,9 @@ class TestOcrDataModel(unittest.TestCase):
 
     def test_slots_presence(self):
         result = OcrResult.from_tesseract_dict(self.raw_data)
-        # frozen=True + slots=True means no __dict__
-        self.assertFalse(hasattr(result, "__dict__"))
+        # OcrResult: removed slots=True to allow __dict__ for @cached_property
+        self.assertTrue(hasattr(result, "__dict__"))
+        # OcrWord: still has slots=True (immutable per-word data)
         word = result.words[0]
         self.assertFalse(hasattr(word, "__dict__"))
 
