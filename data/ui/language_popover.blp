@@ -92,7 +92,10 @@ template $LanguagePopover : Popover {
     Separator {}
 
     Button {
-      margin: 6;
+      margin-top: 6;
+      margin-bottom: 6;
+      margin-start: 6;
+      margin-end: 6;
       label: _("Manage Languages…");
       tooltip-text: _("Open preferences to download more languages");
       clicked => $_on_add_clicked();
