@@ -24,6 +24,9 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
         </child>
         <child>
           <object class="GtkButton" id="install_btn">
+            <accessibility>
+              <property name="label" translatable="true" context="Preferences Language Row">Install language</property>
+            </accessibility>
             <property name="icon-name">folder-download-symbolic</property>
             <property name="tooltip-text" translatable="true" context="Preferences Language Row">Install language</property>
             <signal name="clicked" handler="_on_download"/>
@@ -34,6 +37,9 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
         </child>
         <child>
           <object class="GtkButton" id="remove_btn">
+            <accessibility>
+              <property name="label" translatable="true" context="Preferences Language Row">Remove language</property>
+            </accessibility>
             <property name="visible" bind-source="install_btn" bind-property="visible" bind-flags="sync-create|invert-boolean|bidirectional"/>
             <property name="icon-name">user-trash-symbolic</property>
             <property name="tooltip-text" translatable="true" context="Preferences Language Row">Remove language</property>

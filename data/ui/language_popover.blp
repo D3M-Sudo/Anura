@@ -37,7 +37,7 @@ template $LanguagePopover : Popover {
     // Separator {}
 
     Stack views {
-      vexpand: false;
+      vexpand: true;
       transition-type: crossfade;
 
       StackPage {
@@ -45,6 +45,8 @@ template $LanguagePopover : Popover {
 
         child: ScrolledWindow {
           vexpand: true;
+          max-content-height: 300;
+          propagate-natural-height: true;
 
           ListBox list_view {
             accessibility {
@@ -82,17 +84,19 @@ template $LanguagePopover : Popover {
               label: _("No Results Found");
               styles ["heading"]
             }
-
-            Button {
-              margin-top: 8;
-              hexpand: true;
-              label: _("Add Language");
-              tooltip-text: _("Open preferences to download more languages");
-              clicked => $_on_add_clicked();
-            }
           }
         };
       }
+    }
+
+    Separator {}
+
+    Button {
+      margin: 6;
+      label: _("Manage Languages…");
+      tooltip-text: _("Open preferences to download more languages");
+      clicked => $_on_add_clicked();
+      styles ["flat"]
     }
   }
 }
