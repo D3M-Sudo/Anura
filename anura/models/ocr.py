@@ -94,12 +94,29 @@ class OcrResult:
         if not self.words:
             return 0, 0, 0, 0
 
-        left = min(w.left for w in self.words)
-        top = min(w.top for w in self.words)
-        right = max(w.left + w.width for w in self.words)
-        bottom = max(w.top + w.height for w in self.words)
+        # Optimization: Single-pass traversal to find min/max coordinates.
+        # Reduces complexity from 4 * O(N) to 1 * O(N), which is significantly
+        # faster for results containing thousands of words.
+        first_word = self.words[0]
+        min_x = first_word.left
+        min_y = first_word.top
+        max_x = first_word.left + first_word.width
+        max_y = first_word.top + first_word.height
 
-        return left, top, right - left, bottom - top
+        for i in range(1, len(self.words)):
+            w = self.words[i]
+            if w.left < min_x:
+                min_x = w.left
+            if w.top < min_y:
+                min_y = w.top
+            r = w.left + w.width
+            if r > max_x:
+                max_x = r
+            b = w.top + w.height
+            if b > max_y:
+                max_y = b
+
+        return min_x, min_y, max_x - min_x, max_y - min_y
 
     @cached_property
     def _layout_stats(self) -> dict[str, int]:
