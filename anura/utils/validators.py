@@ -27,7 +27,9 @@ _CONTROL_CHARS_RE = re.compile(r"[\x00-\x1f\x7f]")
 
 # Performance constants for sanitize_text
 _DISCARD_CATEGORIES = {"Cc", "Cf", "Co", "Cs", "Cn"}
-_KEEP_CHARS = {"\n", "\r", "\t"}
+# Security: \r (Carriage Return) is intentionally NOT preserved to prevent terminal
+# UI spoofing and cursor manipulation attacks. Legitimate newlines (\n) are kept.
+_KEEP_CHARS = {"\n", "\t"}
 _LATIN1_TRANSLATE = {
     i: None for i in range(256) if unicodedata.category(chr(i)) in _DISCARD_CATEGORIES and chr(i) not in _KEEP_CHARS
 }
@@ -105,7 +107,8 @@ def sanitize_text(text: str) -> str:
     # - Co (Private Use): Non-standard internal characters.
     # - Cs (Surrogate): UTF-16 surrogate halves (invalid in UTF-8).
     # - Cn (Unassigned): Reserved but currently undefined characters.
-    # Legitimate formatting (\n, \r, \t) is preserved.
+    # Legitimate formatting (\n, \t) is preserved. \r is removed to prevent
+    # terminal UI spoofing.
     #
     # Performance Optimization: Use a two-pass approach.
     # Pass 1: str.translate() for the Latin-1 range (fast C-level pass).
@@ -118,7 +121,7 @@ def sanitize_text(text: str) -> str:
         text = "".join(ch for ch in text if ord(ch) < 256 or unicodedata.category(ch) not in _DISCARD_CATEGORIES)
 
     # 4. Normalization: horizontal whitespace (squash multiple spaces/tabs)
-    # Note: \n and \r are preserved by the [ \t]+ pattern.
+    # Note: \n is preserved by the [ \t]+ pattern.
     text = re.sub(r"[ \t]+", " ", text)
 
     # 5. Fix common OCR mistakes in URLs/Emails if they look like them
@@ -275,6 +278,12 @@ def is_safe_url_string(text: str) -> bool:
     # 2. Security: Block backslashes to prevent URL spoofing and bypasses.
     # Browsers often normalize \ to / which can lead to parsing discrepancies.
     if "\\" in text:
+        return False
+
+    # Security: Block characters that are illegal in URLs and can be used for
+    # injection attacks (HTML/XSS/Command injection).
+    # <, >, and " are explicitly prohibited per RFC 3986.
+    if any(ch in text for ch in '<>"'):
         return False
 
     # 3. Homograph detection (BUG-034): If the hostname mixes ASCII Latin letters with
