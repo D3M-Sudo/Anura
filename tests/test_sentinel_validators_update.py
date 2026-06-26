@@ -1,5 +1,5 @@
-import pytest
-from anura.utils.validators import sanitize_text, is_safe_url_string
+from anura.utils.validators import is_safe_url_string, sanitize_text
+
 
 def test_sanitize_text_strips_carriage_return():
     """Verify that \r is now stripped to prevent terminal UI spoofing."""
