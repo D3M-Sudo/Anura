@@ -27,7 +27,7 @@ _CONTROL_CHARS_RE = re.compile(r"[\x00-\x1f\x7f]")
 
 # Performance constants for sanitize_text
 _DISCARD_CATEGORIES = {"Cc", "Cf", "Co", "Cs", "Cn"}
-_KEEP_CHARS = {"\n", "\r", "\t"}
+_KEEP_CHARS = {"\n", "\t"}
 _LATIN1_TRANSLATE = {
     i: None for i in range(256) if unicodedata.category(chr(i)) in _DISCARD_CATEGORIES and chr(i) not in _KEEP_CHARS
 }
@@ -272,9 +272,10 @@ def is_safe_url_string(text: str) -> bool:
     if len(text) > 2000:
         return False
 
-    # 2. Security: Block backslashes to prevent URL spoofing and bypasses.
-    # Browsers often normalize \ to / which can lead to parsing discrepancies.
-    if "\\" in text:
+    # 2. Security: Block backslashes and other unsafe characters to prevent URL spoofing,
+    # injection, and bypasses. Browsers often normalize \ to / which can lead to
+    # parsing discrepancies. We also block <, >, and " per RFC 3986.
+    if any(c in text for c in ("\\", "<", ">", '"')):
         return False
 
     # 3. Homograph detection (BUG-034): If the hostname mixes ASCII Latin letters with
