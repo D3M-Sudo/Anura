@@ -45,6 +45,22 @@ URL_PATTERN = (
 EMAIL_RE = re.compile(EMAIL_PATTERN, re.IGNORECASE)
 URL_RE = re.compile(URL_PATTERN, re.IGNORECASE)
 
+# Standard URI schemes that should NOT have their userinfo-like blocks masked
+# when appearing in schemeless contexts (e.g. mailto: emails).
+_SAFE_URI_SCHEMES = (
+    "http",
+    "https",
+    "ftp",
+    "file",
+    "mailto",
+    "web+mastodon",
+    "tg",
+    "slack",
+    "zoom",
+    "discord",
+    "whatsapp",
+)
+
 
 def mask_url(url: str) -> str:
     """
@@ -63,12 +79,28 @@ def mask_url(url: str) -> str:
         from urllib.parse import urlparse, urlunparse
 
         parsed = urlparse(url)
+
+        # 1. Standard schemed URL with netloc credentials
         if "@" in parsed.netloc:
             # Isolate userinfo from host/port part using rpartition.
             # This preserves the host and port while redacting the credentials.
             _, at, host_port = parsed.netloc.rpartition("@")
             new_netloc = f"***:***{at}{host_port}"
             return urlunparse(parsed._replace(netloc=new_netloc))
+
+        # 2. Schemeless URL or malformed string treated as path/scheme by urlparse
+        # Example: "user:pass@example.com" (parsed as scheme="user", path="pass@example.com")
+        if "@" in url:
+            # Only mask if @ appears before the first slash (if any) to avoid
+            # redacting valid @ characters in paths or query strings.
+            first_slash = url.find("/")
+            at_index = url.rfind("@", 0, first_slash if first_slash != -1 else None)
+
+            if at_index != -1:
+                # Standard schemes to preserve (emails in mailto: should not be masked)
+                if not parsed.scheme or parsed.scheme.lower() not in _SAFE_URI_SCHEMES:
+                    return f"***:***{url[at_index:]}"
+
         return url
     except (ValueError, AttributeError, TypeError):
         # If parsing fails, return a safe placeholder to prevent any potential leak.
