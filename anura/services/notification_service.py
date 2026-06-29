@@ -188,8 +188,8 @@ class NotificationService:
         # Security: Escape Pango markup in title and body to prevent injection attacks
         # from OCR'd text (phishing, UI spoofing, etc).
         if GLib:
-            title = GLib.markup_escape_text(title)
-            body = GLib.markup_escape_text(body)
+            title = GLib.markup_escape_text(title) if title else ""
+            body = GLib.markup_escape_text(body) if body else ""
 
         notification = Gio.Notification.new(title)
         notification.set_body(body)
