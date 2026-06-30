@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: MIT
 
 import pytest
+
 from anura.utils.validators import is_safe_url_string, sanitize_text
+
 
 class TestSentinelHardeningVerification:
     """Verification tests for security hardening of URI and text sanitization."""
