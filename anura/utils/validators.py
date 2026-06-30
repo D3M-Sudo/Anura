@@ -137,7 +137,7 @@ def sanitize_text(text: str) -> str:
     # - Co (Private Use): Non-standard internal characters.
     # - Cs (Surrogate): UTF-16 surrogate halves (invalid in UTF-8).
     # - Cn (Unassigned): Reserved but currently undefined characters.
-    # Legitimate formatting (\n, \r, \t) is preserved.
+    # Legitimate formatting (\n, \t) is preserved; \r is stripped for security.
     #
     # Performance Optimization: Use a two-pass approach.
     # Pass 1: str.translate() for the Latin-1 range (fast C-level pass).
@@ -306,8 +306,9 @@ def is_safe_url_string(text: str) -> bool:
 
     # 2. Security: Block backslashes and other unsafe characters to prevent URL spoofing,
     # injection, and bypasses. Browsers often normalize \ to / which can lead to
-    # parsing discrepancies. We also block <, >, and " per RFC 3986.
-    if any(c in text for c in ("\\", "<", ">", '"')):
+    # parsing discrepancies. We also block <, >, ", |, ^, `, {, and } per RFC 3986
+    # and general security safety recommendations.
+    if any(c in text for c in ("\\", "<", ">", '"', "|", "^", "`", "{", "}")):
         return False
 
     # 3. Homograph detection (BUG-034): If the hostname mixes ASCII Latin letters with
@@ -334,11 +335,6 @@ def is_safe_url_string(text: str) -> bool:
     # Note: Regex is ~13x faster than a manual loop for this check.
     if _CONTROL_CHARS_RE.search(text):
         return False
-
-    # 5. Clean and normalize text using heuristics
-    # sanitize_text also strips Cc/Cf as defense-in-depth, but is_safe_url_string
-    # has already rejected all non-ASCII characters by this point.
-    text = sanitize_text(text)
 
     return True
 
