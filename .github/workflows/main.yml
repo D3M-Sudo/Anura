@@ -23,8 +23,9 @@ jobs:
       - name: Run Ruff Linter
         uses: astral-sh/ruff-action@0ce1b0bf8b818ef400413f810f8a11cdbda0034b # v4.0.0
         with:
-          # Strict linting with enforcement - no automatic fixes in CI
-          args: check --select E,F,W,I --target-version py312
+          # Strict linting with enforcement - no automatic fixes in CI.
+          # Uses configuration from pyproject.toml.
+          args: check --target-version py312
 
       - name: Run tests with coverage
         env:

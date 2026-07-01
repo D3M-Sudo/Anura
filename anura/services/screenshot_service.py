@@ -432,7 +432,78 @@ class ScreenshotService(GObject.GObject):
                 logger.exception(f"Anura: Failed to emit error: {message} ({e})")
             return GLib.SOURCE_REMOVE
 
-        GLib.idle_add(_on_error_idle)
+        GLib.idle_add(_on_error_idle, priority=GLib.PRIORITY_DEFAULT)
+
+    def _emit_decoded(self, text: str, copy: bool, ocr_result: OcrResult | None, applied_name: str) -> None:
+        """Helper to emit decoded signal on the main thread."""
+
+        def _on_decoded_idle():
+            try:
+                self.emit("decoded", text, copy, ocr_result, applied_name)
+            except (RuntimeError, TypeError) as e:
+                logger.exception(f"Anura: Failed to emit decoded signal: {e}")
+            return GLib.SOURCE_REMOVE
+
+        GLib.idle_add(_on_decoded_idle, priority=GLib.PRIORITY_DEFAULT)
+
+    def _emit_status(self, status_msg: str) -> None:
+        """Helper to emit status-changed signal on the main thread."""
+
+        def _on_status_idle():
+            try:
+                self.emit("status-changed", status_msg)
+            except (RuntimeError, TypeError) as e:
+                logger.debug(f"Failed to emit status-changed: {e}")
+            return GLib.SOURCE_REMOVE
+
+        GLib.idle_add(_on_status_idle)
+
+    def _decode_image_isolated(
+        self,
+        lang: str,
+        file: str,
+        copy: bool = False,
+        remove_source: bool = False,
+    ) -> None:
+        """Triggers isolated OCR pipeline execution to bypass GIL."""
+        mode = settings.get_string("ocr-preprocessing")
+        self._emit_status(_("Extracting text..."))
+
+        def _on_isolated_complete(result_tuple):
+            # FIX BUG-H-003: unpack 5-tuple — run_ocr_pipeline now returns applied_name
+            # to avoid re-running MagicProcessor in OcrController._on_shot_done.
+            success, extracted, error_message, ocr_result, applied_name = (
+                result_tuple if len(result_tuple) == 5 else (*result_tuple, "")
+            )
+            if success:
+                self._emit_decoded(extracted, copy, ocr_result, applied_name)
+            elif error_message:
+                self._emit_decode_error(error_message)
+            else:
+                self._emit_decode_error("")
+
+            if remove_source:
+                get_atomic_manager().execute(Path(file).unlink, ())
+
+        def _on_isolated_error(error, _traceback_str):
+            logger.error(f"Anura OCR (Isolated): Process error: {error}")
+            self._emit_decode_error(_("OCR processing failed. Please try again."))
+
+        def _on_isolated_status(status_msg):
+            self._emit_status(status_msg)
+
+        # BUG-nav-block: clear _current_task_id now so backend.current_task_id returns
+        # None, causing _navigate_to_extracted_page to skip the guard and
+        # open ExtractedPage correctly after a successful scrot capture.
+        self._current_task_id = None
+
+        get_atomic_manager().execute_isolated(
+            run_ocr_pipeline,
+            (lang, file, mode),
+            callback=_on_isolated_complete,
+            errorback=_on_isolated_error,
+            status_callback=_on_isolated_status,
+        )
 
     # Environment variables surfaced when the portal screenshot fails. These
     # tell us which desktop/session backend should be answering the portal
@@ -730,109 +801,12 @@ class ScreenshotService(GObject.GObject):
         # Validate language code before processing
         if not lang or not re.match(LANG_CODE_PATTERN, lang):
             logger.error(f"Anura: Invalid language code '{lang}' for OCR")
-
-            def _on_invalid_lang_error_idle() -> bool:
-                try:
-                    self.emit("error", _("Invalid language code specified."))
-                except (RuntimeError, TypeError) as e:
-                    logger.exception(f"Anura: Failed to emit invalid language code error: {e}")
-                return GLib.SOURCE_REMOVE
-
-            GLib.idle_add(_on_invalid_lang_error_idle, priority=GLib.PRIORITY_DEFAULT)
+            self._emit_decode_error(_("Invalid language code specified."))
             return False
 
         # If it's a physical file, we can use process isolation to bypass the GIL
         if isinstance(file, str) and Path(file).exists():
-            mode = settings.get_string("ocr-preprocessing")
-
-            # Initial status feedback
-            def _on_status_idle(status_msg):
-                self.emit("status-changed", status_msg)
-                return GLib.SOURCE_REMOVE
-
-            GLib.idle_add(_on_status_idle, _("Extracting text..."))
-
-            def _on_isolated_complete(result_tuple):
-                # FIX BUG-H-003: unpack 5-tuple — run_ocr_pipeline now returns applied_name
-                # to avoid re-running MagicProcessor in OcrController._on_shot_done.
-                success, extracted, error_message, ocr_result, applied_name = (
-                    result_tuple if len(result_tuple) == 5 else (*result_tuple, "")
-                )
-                if success:
-
-                    def _on_decoded_idle():
-                        try:
-                            self.emit("decoded", extracted, copy, ocr_result, applied_name)
-                        except (RuntimeError, TypeError) as e:
-                            logger.exception(f"Anura: Failed to emit decoded signal (isolated): {e}")
-                        return GLib.SOURCE_REMOVE
-
-                    GLib.idle_add(_on_decoded_idle)
-                elif error_message:
-
-                    def _on_error_idle():
-                        try:
-                            self.emit("error", error_message)
-                        except (RuntimeError, TypeError) as e:
-                            logger.exception(f"Anura: Failed to emit error signal (isolated): {e}")
-                        return GLib.SOURCE_REMOVE
-
-                    GLib.idle_add(_on_error_idle)
-                else:
-
-                    def _on_silent_idle():
-                        try:
-                            self.emit("error", "")
-                        except (RuntimeError, TypeError) as e:
-                            logger.exception(f"Anura: Failed to emit silent error signal (isolated): {e}")
-                        return GLib.SOURCE_REMOVE
-
-                    GLib.idle_add(_on_silent_idle)
-
-                if remove_source:
-                    get_atomic_manager().execute(Path(file).unlink, ())
-
-            def _on_isolated_error(error, traceback_str):
-                logger.error(f"Anura OCR (Isolated): Process error: {error}")
-
-                def _on_error_idle():
-                    try:
-                        self.emit("error", _("OCR processing failed. Please try again."))
-                    except (RuntimeError, TypeError) as e:
-                        logger.exception(f"Anura: Failed to emit isolated process error signal: {e}")
-                    return GLib.SOURCE_REMOVE
-
-                GLib.idle_add(_on_error_idle)
-
-            def _on_isolated_status(status_msg):
-                def _on_status_idle():
-                    try:
-                        self.emit("status-changed", status_msg)
-                    except (RuntimeError, TypeError) as e:
-                        logger.debug(f"Failed to emit status-changed: {e}")
-                    return GLib.SOURCE_REMOVE
-
-                GLib.idle_add(_on_status_idle)
-
-            # BUG-nav-block: self._current_task_id holds the ID of the
-            # execute() task that called decode_image() (task A). When
-            # execute_isolated() runs below, AtomicTaskManager cancels task A
-            # and sets _current_task_id to the isolated task B. But the service's
-            # own self._current_task_id is still task A. When _on_shot_done
-            # reads backend.current_task_id it gets task A, is_cancelled(A)
-            # returns True, and navigation to ExtractedPage is silently blocked.
-            # Fix: clear _current_task_id now so backend.current_task_id returns
-            # None, causing _navigate_to_extracted_page to skip the guard and
-            # open ExtractedPage correctly after a successful scrot capture.
-            self._current_task_id = None
-
-            get_atomic_manager().execute_isolated(
-                run_ocr_pipeline,
-                (lang, file, mode),
-                callback=_on_isolated_complete,
-                errorback=_on_isolated_error,
-                status_callback=_on_isolated_status,
-            )
+            self._decode_image_isolated(lang, file, copy, remove_source)
             return True
 
         success, extracted, error_message, ocr_result, applied_name = self.decode_image_sync(
@@ -840,28 +814,9 @@ class ScreenshotService(GObject.GObject):
         )
 
         if success:
-
-            def _on_decoded_idle(text: str, cp: bool, ocr_res: OcrResult | None, aname: str) -> bool:
-                try:
-                    self.emit("decoded", text, cp, ocr_res, aname)
-                except (RuntimeError, TypeError) as e:
-                    logger.exception(f"Anura: Failed to emit decoded signal: {e}")
-                return GLib.SOURCE_REMOVE
-
-            GLib.idle_add(
-                _on_decoded_idle, extracted, copy, ocr_result, applied_name,
-                priority=GLib.PRIORITY_DEFAULT,
-            )
+            self._emit_decoded(extracted, copy, ocr_result, applied_name)
         else:
-
-            def _on_decode_error_idle(msg: str | None) -> bool:
-                try:
-                    self.emit("error", msg)
-                except (RuntimeError, TypeError) as e:
-                    logger.exception(f"Anura: Failed to emit decode error: {e}")
-                return GLib.SOURCE_REMOVE
-
-            GLib.idle_add(_on_decode_error_idle, error_message, priority=GLib.PRIORITY_DEFAULT)
+            self._emit_decode_error(error_message)
 
         return False
 
