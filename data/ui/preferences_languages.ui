@@ -149,6 +149,7 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                                   <object class="AdwStatusPage">
                                     <property name="icon-name">system-search-symbolic</property>
                                     <property name="title" translatable="true">No Results Found</property>
+                                    <property name="description" translatable="true">Try a different search term</property>
                                     <style>
                                       <class name="compact"/>
                                     </style>
