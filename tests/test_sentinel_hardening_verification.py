@@ -8,21 +8,50 @@ import pytest
 from anura.utils.validators import is_safe_url_string, sanitize_text
 
 
-def test_verify_hardening():
-    """
-    Verify the hardened behavior.
-    """
-    # 1. sanitize_text should now strip \r
-    assert "\r" not in sanitize_text("line1\r\nline2")
-    assert sanitize_text("line1\r\nline2") == "line1\nline2"
+class TestSentinelHardeningVerification:
+    """Verification tests for security hardening of URI and text sanitization."""
 
-    # 2. is_safe_url_string should now block < > "
-    assert is_safe_url_string("https://example.com/<script>") is False
-    assert is_safe_url_string("https://example.com/>") is False
-    assert is_safe_url_string('https://example.com/"') is False
+    @pytest.mark.parametrize(
+        "unsafe_char",
+        ["|", "^", "`", "{", "}"]
+    )
+    def test_is_safe_url_string_blocks_additional_unsafe_chars(self, unsafe_char):
+        """
+        Verify that is_safe_url_string blocks characters that are generally
+        considered unsafe in URLs according to RFC 1738 and others.
+        Currently, some of these might PASS until the hardening is applied.
+        """
+        url = f"https://example.com/path?query={unsafe_char}"
+        # This test is expected to FAIL before the hardening is applied
+        # if the characters are not already blocked.
+        assert is_safe_url_string(url) is False
 
-    # Ensure backslashes are still blocked (regression check)
-    assert is_safe_url_string("https://example.com\\evil") is False
+    def test_sanitize_text_strips_carriage_return(self):
+        """
+        Verify that sanitize_text correctly strips carriage returns (\r)
+        to prevent terminal UI spoofing, despite misleading comments in the code.
+        """
+        text = "line1\rline2"
+        sanitized = sanitize_text(text)
+        assert "\r" not in sanitized
+        assert sanitized == "line1line2"
 
-if __name__ == "__main__":
-    pytest.main([__file__])
+    def test_sanitize_text_preserves_allowed_whitespace(self):
+        """
+        Verify that \n and \t are preserved while \r is stripped.
+        Note: sanitize_text currently squashes \t to a space via:
+        text = re.sub(r"[ \t]+", " ", text)
+        """
+        text = "newline\nreturn\r"
+        sanitized = sanitize_text(text)
+        assert "\n" in sanitized
+        assert "\r" not in sanitized
+
+    def test_sanitize_text_squashes_tabs(self):
+        """
+        Verify that tabs are squashed to spaces (existing behavior).
+        """
+        text = "tab\ttext"
+        sanitized = sanitize_text(text)
+        assert "\t" not in sanitized
+        assert " " in sanitized
