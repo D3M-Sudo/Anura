@@ -96,10 +96,9 @@ def mask_url(url: str) -> str:
             first_slash = url.find("/")
             at_index = url.rfind("@", 0, first_slash if first_slash != -1 else None)
 
-            if at_index != -1:
+            if at_index != -1 and (not parsed.scheme or parsed.scheme.lower() not in _SAFE_URI_SCHEMES):
                 # Standard schemes to preserve (emails in mailto: should not be masked)
-                if not parsed.scheme or parsed.scheme.lower() not in _SAFE_URI_SCHEMES:
-                    return f"***:***{url[at_index:]}"
+                return f"***:***{url[at_index:]}"
 
         return url
     except (ValueError, AttributeError, TypeError):
