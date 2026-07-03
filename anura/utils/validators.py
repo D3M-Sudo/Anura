@@ -332,10 +332,7 @@ def is_safe_url_string(text: str) -> bool:
     # 4. Block C0 control characters (0x00-0x1F) and DEL (0x7F)
     # BEFORE strip/sanitize to catch malicious trailing/injected characters.
     # Note: Regex is ~13x faster than a manual loop for this check.
-    if _CONTROL_CHARS_RE.search(text):
-        return False
-
-    return True
+    return not _CONTROL_CHARS_RE.search(text)
 
 
 def validate_image_resource(
