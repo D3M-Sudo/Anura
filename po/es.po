@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: anura\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-05-15 17:00+0000\n"
-"PO-Revision-Date: 2026-06-13 11:01+0000\n"
+"PO-Revision-Date: 2026-07-04 08:01+0000\n"
 "Last-Translator: Libre <6n0n1m0s@proton.me>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/anura/anura/es/>"
 "\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 2026.7.dev0\n"
+"X-Generator: Weblate 2026.7.1.dev0\n"
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-SearchPath-0: data/ui\n"
 "X-Poedit-SearchPath-1: data/com.github.d3msudo.anura.desktop.in\n"
@@ -772,11 +772,15 @@ msgid ""
 "screenshot portal. Install the xdg-desktop-portal backend matching your "
 "desktop (e.g. xdg-desktop-portal-gnome, -kde, -wlr) and re-login."
 msgstr ""
+"Captura de pantalla incorrecta. Tu sesión de escritorio no parece exponer un "
+"portal de capturas de pantalla que funcione. Instala el backend de xdg‐"
+"desktop‐portal compatible con tu entorno de escritorio (p.ej., xdg-desktop-"
+"portal-gnome, -kde, -wlr) y vuelve a iniciar sesión."
 
 #: anura/widgets/extracted_page.py:101 anura/widgets/extracted_page.py:108
 #, python-format
 msgid "Words: %d | Characters: %d"
-msgstr ""
+msgstr "Palabras: %d | Caracteres: %d"
 
 #: anura/widgets/extracted_page.py:299
 msgid "Request timed out. Please try again."
@@ -788,7 +792,7 @@ msgstr "Error de red. Por favor, compruebe su conexión a Internet."
 
 #: anura/widgets/extracted_page.py:303
 msgid "Text-to-speech failed. Please try again."
-msgstr ""
+msgstr "Texto a habla incorrecta. Inténtelo de nuevo."
 
 #: anura/widgets/preferences_general_page.py:117
 #, python-brace-format
@@ -914,7 +918,7 @@ msgstr "No se recibieron datos de archivo desde abandono"
 
 #: anura/widgets/welcome_page.py:215
 msgid "No valid file found in drop"
-msgstr "Ningún archivo válido encontrado en gota"
+msgstr "Ningún archivo válido encontrado al abandonar"
 
 #: anura/widgets/welcome_page.py:224
 msgid "Only local files can be dropped"
@@ -948,9 +952,8 @@ msgid "Failed to load dropped file"
 msgstr "Error al cargar archivo arrastrado"
 
 #: anura/window.py:201
-#, fuzzy
 msgid "Failed to capture screenshot"
-msgstr "Tomar una foto"
+msgstr "Ha fallado al capturas pantallazo"
 
 #: anura/window.py:208
 msgid "Screenshot service did not respond."
@@ -971,8 +974,8 @@ msgstr[1] "{n} correos-e encontrados en el texto"
 #, python-brace-format
 msgid "{n} phone number found in text"
 msgid_plural "{n} phone numbers found in text"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{n} número de teléfono encontrado en el texto"
+msgstr[1] "{n} números de teléfono encontrados en el texto"
 
 #: anura/window.py:350
 msgid "Choose an image for extraction"
@@ -1015,9 +1018,8 @@ msgid "Corrupt or unsupported image file"
 msgstr "Archivo de imagen corrupto o no admitido"
 
 #: anura/window.py:505
-#, fuzzy
 msgid "Unsupported image format"
-msgstr "Formato de archivo no compatible."
+msgstr "Formato de imagen no admitido"
 
 #: anura/window.py:509 anura/window.py:514
 msgid "Failed to validate image file"
@@ -1028,9 +1030,8 @@ msgid "Failed to load image file"
 msgstr "Error al cargar archivo de imagen"
 
 #: anura/window.py:536
-#, fuzzy
 msgid "No text to copy"
-msgstr "No hay texto para compartir."
+msgstr "No hay texto para compartir"
 
 #: anura/window.py:688
 msgid "No text to share."
@@ -1078,11 +1079,11 @@ msgstr "Detectado URL del Código QR"
 
 #: anura/window.py:275
 msgid "URL copied to clipboard"
-msgstr ""
+msgstr "URL copiado al portapapeles"
 
 #: anura/window.py:378
 msgid "WebP images"
-msgstr ""
+msgstr "Imágenes WebP"
 
 #: anura/window.py:382
 msgid "AVIF images"
@@ -1090,7 +1091,7 @@ msgstr "Imágenes AVIF"
 
 #: anura/window.py:386
 msgid "TIFF images"
-msgstr ""
+msgstr "Imágenes TIFF"
 
 #: anura/window.py:390
 msgid "BMP images"
