@@ -1,0 +1,36 @@
+[
+  {
+    "cell": null,
+    "code": "SIM103",
+    "end_location": {
+      "column": 16,
+      "row": 338
+    },
+    "filename": "/app/anura/utils/validators.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "return not _CONTROL_CHARS_RE.search(text)",
+          "end_location": {
+            "column": 16,
+            "row": 338
+          },
+          "location": {
+            "column": 5,
+            "row": 335
+          }
+        }
+      ],
+      "message": "Replace with `return not _CONTROL_CHARS_RE.search(text)`"
+    },
+    "location": {
+      "column": 5,
+      "row": 335
+    },
+    "message": "Return the condition `not _CONTROL_CHARS_RE.search(text)` directly",
+    "noqa_row": 335,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/needless-bool"
+  }
+]

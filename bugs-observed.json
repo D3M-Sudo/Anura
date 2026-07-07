@@ -1,0 +1,82 @@
+{
+  "session_metadata": {
+    "repository_path": "/app",
+    "languages_detected": ["Python"],
+    "tools_available": {"uv": "latest", "ruff": "latest", "bandit": "latest", "pytest": "latest"},
+    "tools_executed": ["ruff", "bandit", "pytest"],
+    "total_files": 105,
+    "total_lines": 16577,
+    "analyzed_files": 6,
+    "analyzed_lines": 2963,
+    "start_timestamp": "2026-07-05T03:14:07Z",
+    "last_checkpoint": "2026-07-05T03:14:07Z",
+    "personalities_activated": ["Security Paranoid", "Logic Validator", "Concurrency Specialist", "Systems Architect", "Performance Optimizer", "Memory Surgeon"],
+    "personality_weights": {
+      "Logic Validator": 1.2,
+      "Security Paranoid": 1.0,
+      "Concurrency Specialist": 1.0,
+      "Systems Architect": 1.0,
+      "Performance Optimizer": 1.0,
+      "Memory Surgeon": 1.0
+    },
+    "phase_gates_completed": ["GATE 0"]
+  },
+  "progress_tracking": {
+    "current_file": "anura/services/share_service.py",
+    "current_line": 414,
+    "completed_files": [
+      "anura/utils/validators.py",
+      "anura/utils/text_preprocessor.py",
+      "anura/core/atomic_task_manager.py",
+      "anura/services/tts.py",
+      "anura/services/screenshot_service.py",
+      "anura/services/share_service.py"
+    ],
+    "bugs_found_in_range": [],
+    "progress_visual": {
+      "ascii_bar": "[#-------------------] 6/105 files",
+      "current_focus": "Core Services Audit",
+      "bugs_last_hour": 1,
+      "estimated_completion": "8 hours",
+      "velocity_trend": "->",
+      "lines_per_minute": 50,
+      "tools_running": []
+    }
+  },
+  "bugs_database": [
+    {
+      "id": "BUG-001",
+      "severity": "LOW",
+      "confidence_score": 1.0,
+      "personality_detecting": "Logic Validator",
+      "tool_confirmations": ["ruff"],
+      "location": {"file": "anura/utils/validators.py", "line": 335},
+      "status": "FIXED",
+      "pattern_matched": "Needless boolean return",
+      "fix_prescription": {"Immediate": "Return the condition directly."}
+    }
+  ],
+  "tool_execution_log": {
+    "linters": {"ruff": "1 issue found and fixed"},
+    "security_scanners": {"bandit": "0 issues found"},
+    "test_runners": {"pytest": "170 passed, 20 skipped"}
+  },
+  "learned_patterns": {
+    "patterns": {},
+    "pattern_statistics": {},
+    "false_positive_tracking": {}
+  },
+  "checkpoint_history": [],
+  "phase_gates": {
+    "gate_0_setup": true,
+    "gate_1_initial_scan": true,
+    "gate_2_deep_dive": false,
+    "gate_3_completion": false
+  },
+  "execution_metrics": {
+    "stuck_detection_counter": {},
+    "skip_list": [],
+    "todo_items": [],
+    "complexity_issues": []
+  }
+}
