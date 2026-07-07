@@ -4,6 +4,8 @@
 #
 # MIT License
 
+import threading
+
 from loguru import logger
 
 from anura.core.atomic_task_manager import get_atomic_manager
@@ -21,12 +23,17 @@ class MagicProcessor:
     def __init__(self) -> None:
         self._transformers: list[ITransformer] = []
         self._initialized = False
+        self._lock = threading.Lock()
 
     def _ensure_initialized(self):
         if self._initialized:
             return
 
-        from anura.transformers.base_transformers import (
+        with self._lock:
+            if self._initialized:
+                return
+
+            from anura.transformers.base_transformers import (
             MultiLineTransformer,
             ParagraphTransformer,
             SingleLineTransformer,
