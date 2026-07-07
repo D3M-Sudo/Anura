@@ -255,9 +255,12 @@ jobs:
           fi
           echo "✓ Found $UI_COUNT .ui file(s)"
           MISSING=0
-          for file in $(grep -oP '(?<=<file[^>]*>)[^<]+\.ui' "$GRESOURCE_XML" | sed 's|ui/||'); do
-            if ! echo "$UI_FILES" | grep -q "/$file$"; then
-              echo "✗ Missing: $file"
+          # Use python for robust regex matching of .ui files in gresource.xml
+          for file in $(python3 -c "import re; xml = open('$GRESOURCE_XML').read(); print('\n'.join(re.findall(r'<file[^>]*>([^<]+\.ui)</file>', xml)))"); do
+            # Strip potential ui/ prefix if present in gresource.xml
+            clean_file=$(echo "$file" | sed 's|^ui/||')
+            if ! echo "$UI_FILES" | grep -q "/$clean_file$"; then
+              echo "✗ Missing: $clean_file"
               MISSING=$((MISSING + 1))
             fi
           done
@@ -270,7 +273,8 @@ jobs:
       - name: Smoke Test - Headless Runtime
         run: |
           echo "=== Installing bundle for smoke test ==="
-          flatpak install --user --noninteractive --bundle io.github.d3msudo.anura.flatpak
+          # Use --no-pull to avoid attempting to contact flathub during bundle install
+          flatpak install --user --noninteractive --no-pull --bundle io.github.d3msudo.anura.flatpak
           echo "=== Running smoke test ==="
           if ! xvfb-run -a flatpak run \
               --env=NO_AT_BRIDGE=1 \
