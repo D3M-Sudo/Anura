@@ -116,8 +116,9 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
             <property name="margin-end">6</property>
             <property name="margin-start">6</property>
             <property name="margin-top">6</property>
-            <property name="label" translatable="true">Manage Languages…</property>
-            <property name="tooltip-text" translatable="true">Open preferences to download more languages</property>
+            <property name="label" translatable="true">_Manage Languages…</property>
+            <property name="use-underline">true</property>
+            <property name="tooltip-text" translatable="true">Open preferences to download more languages (Ctrl+,)</property>
             <signal name="clicked" handler="_on_add_clicked"/>
             <style>
               <class name="flat"/>
