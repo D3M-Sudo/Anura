@@ -337,7 +337,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         from anura.services.screenshot_service import get_screenshot_service
         backend = get_screenshot_service()
         if "screenshot failed" in message.lower() and not getattr(backend, "fallback_provider", None):
-            from anura.utils.dialog_manager import DialogManager
+            from anura.core.dialogs import DialogManager
             error_body = _(
                 "Anura could not capture a screenshot because no suitable "
                 "portal backend or fallback tool was found."
