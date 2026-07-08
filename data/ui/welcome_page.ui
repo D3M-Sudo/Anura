@@ -30,6 +30,9 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
             <child type="start">
               <object class="GtkSpinner" id="spinner">
                 <property name="visible">false</property>
+                <accessibility>
+                  <property name="label" translatable="true">Extracting text</property>
+                </accessibility>
               </object>
             </child>
             <child type="end">
@@ -220,16 +223,24 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
       <item>
         <attribute name="label" translatable="true">Preferences</attribute>
         <attribute name="action">app.preferences</attribute>
+        <attribute name="icon">preferences-system-symbolic</attribute>
       </item>
     </section>
     <section>
       <item>
         <attribute name="label" translatable="true">Keyboard Shortcuts</attribute>
         <attribute name="action">app.shortcuts</attribute>
+        <attribute name="icon">preferences-desktop-keyboard-shortcuts-symbolic</attribute>
       </item>
       <item>
         <attribute name="label" translatable="true">About Anura</attribute>
         <attribute name="action">app.about</attribute>
+        <attribute name="icon">help-about-symbolic</attribute>
+      </item>
+      <item>
+        <attribute name="label" translatable="true">Report an Issue</attribute>
+        <attribute name="action">app.report_issue</attribute>
+        <attribute name="icon">dialog-warning-symbolic</attribute>
       </item>
     </section>
     <section>
