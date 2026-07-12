@@ -110,15 +110,11 @@ class ClipboardService(GObject.GObject):
         # a GLib.Variant string, which is supported across all GTK4 backends
         # (X11, Wayland, Broadway).
         content = Gdk.ContentProvider.new_for_value(GLib.Variant("s", value))
+        # Gdk.Clipboard.set_content() returns True if the content was set.
+        # We don't need a watchdog for a one-shot synchronous set operation
+        # that doesn't involve any async callback or stream read.
+        # Removing the leaked timeout (BUG-NEW-CS-001).
         self.clipboard.set_content(content)
-
-        # Set timeout as expected by tests and for robustness
-        with self._state_lock:
-            self._clipboard_timeout_id = GLib.timeout_add_seconds(
-                self.CLIPBOARD_TIMEOUT_SECONDS,
-                self._on_clipboard_timeout,
-                None,
-            )
 
         logger.debug(f"Anura Clipboard: Text successfully copied: {value[:50]}...")
 
