@@ -549,7 +549,15 @@ class LanguageManager(GObject.GObject):
                                 # Throttle progress updates (max 10/sec)
                                 now = time.monotonic()
                                 if now - last_progress_time >= 0.1:  # 100ms throttle
+                                    # Update the persistent DownloadState object (BUG-NEW-LM-001)
+                                    with self._cache_lock:
+                                        if code in self.loading_languages:
+                                            state = self.loading_languages[code]
+                                            state.total = total_size
+                                            state.progress = downloaded
+
                                     if total_size > 0:
+                                        # Robust calculation to avoid division by zero (BUG-NEW-LM-002)
                                         progress = int(downloaded * 100 / total_size)
                                         # Only emit if progress actually changed
                                         if progress != last_progress_value:
