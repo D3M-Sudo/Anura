@@ -7,7 +7,7 @@ license = { text = "MIT" }
 dependencies = [
     "gtts>=2.5.4",
     "loguru>=0.7.3",
-    "pillow>=12.2.0",
+    "pillow>=12.3.0",
     "pytesseract>=0.3.13",
     "pyzbar>=0.1.9",
     "requests>=2.34.2",
