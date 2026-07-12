@@ -29,38 +29,26 @@ jobs:
       - name: Check for available updates
         id: check
         run: |
-          # Run FEDC in dry-run mode to see what would be updated
-          set +e
-          OUTPUT=$(flatpak-external-data-checker \
-            --dry-run \
-            --verbose \
-            flatpak/io.github.d3msudo.anura.json 2>&1)
-          FEDC_EXIT_CODE=$?
-          set -e
+          for manifest in flatpak/io.github.d3msudo.anura.json flatpak/io.github.d3msudo.anura.local.json; do
+            if [ -f "$manifest" ]; then
+              docker run --rm \
+                --user $(id -u):$(id -g) \
+                -v "${{ github.workspace }}:/github/workspace" \
+                ghcr.io/flathub/flatpak-external-data-checker:latest \
+                --update --edit-only \
+                "/github/workspace/$manifest" || true
+            fi
+          done
 
-          # FEDC exits with code 1 when updates are available, which is expected
-          if [ $FEDC_EXIT_CODE -ne 0 ] && [ $FEDC_EXIT_CODE -ne 1 ]; then
-            echo "Error: flatpak-external-data-checker failed with exit code $FEDC_EXIT_CODE"
-            echo "$OUTPUT"
-            exit 1
-          fi
-
-          echo "$OUTPUT"
-          
-          # Filter Python dependencies (excluding certifi which is auto-updated)
-          PYTHON_UPDATES=$(echo "$OUTPUT" | grep -E "python3-(pillow|pytesseract|click|gTTS|six|dateutil|loguru|pyzbar|urllib3|charset-normalizer|idna|requests|certifi)" || true)
-          
-          # Check if there are any manual updates needed
-          if [ -n "$PYTHON_UPDATES" ]; then
-            echo "has_updates=true" >> $GITHUB_OUTPUT
-            echo "updates<<EOF" >> $GITHUB_OUTPUT
-            echo "$PYTHON_UPDATES" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
-          else
+          if git diff --quiet flatpak/io.github.d3msudo.anura.json flatpak/io.github.d3msudo.anura.local.json; then
             echo "has_updates=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_updates=true" >> $GITHUB_OUTPUT
+            echo "Updates found:"
+            git diff flatpak/io.github.d3msudo.anura.json flatpak/io.github.d3msudo.anura.local.json
           fi
 
-      - name: Create Issue for Manual Updates
+      - name: Create PR for dependency updates
         if: steps.check.outputs.has_updates == 'true'
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
@@ -137,11 +125,14 @@ jobs:
         uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c8cb187a5e # v7.0.8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "Update certifi"
-          title: "Update certifi"
+          base: development
+          commit-message: "chore(deps): update Flatpak dependencies via FEDC"
+          title: "chore(deps): update Flatpak dependencies"
           body: |
-            Automated update of certifi (SSL certificates).
+            Automated update of Flatpak dependencies via flatpak-external-data-checker.
 
-            This is a security-critical dependency updated automatically.
-          branch: update-certifi
+            Only sources with `x-checker-data` in the manifest are updated.
+            Please review and test before merging.
+          branch: update-flatpak-deps
           delete-branch: true
+          labels: dependencies
