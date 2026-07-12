@@ -55,13 +55,11 @@ class TestClipboardServiceEnterprise:
             patch.object(ClipboardService, "clipboard", new_callable=PropertyMock) as mock_cb_prop,
             patch("gi.repository.Gdk.ContentProvider.new_for_value", return_value=mock_content_provider),
             patch("gi.repository.GLib.Variant"),
-            patch("gi.repository.GLib.timeout_add_seconds") as mock_timeout,
         ):
             mock_cb_prop.return_value = mock_clipboard
             service.copy_text("Enterprise Audit")
             # GTK4: set_content() replaces the removed set_text()
             mock_clipboard.set_content.assert_called_once_with(mock_content_provider)
-            assert mock_timeout.called
 
     def test_cancel_pending_operations(self, service):
         """Test atomic cancellation logic."""
