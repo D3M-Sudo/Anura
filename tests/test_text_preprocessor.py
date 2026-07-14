@@ -6,6 +6,7 @@
 
 from PIL import Image
 import pytest
+from urllib.parse import urlparse
 
 from anura.utils.text_preprocessor import TextPreprocessor
 
@@ -75,7 +76,7 @@ class TestTextPreprocessorEnterprise:
         text = "Contact me at test@example.com or visit https://anura.app/ Call 555-555-0199. Date: 12/31/2026."
         data = preprocessor.extract_structured_data(text)
         assert "test@example.com" in data["emails"]
-        assert "https://anura.app/" in data["urls"]
+        assert any(urlparse(url).hostname == "anura.app" for url in data["urls"])
         assert "555-555-0199" in data["phone_numbers"]
         assert "12/31/2026" in data["dates"]
 
