@@ -7,7 +7,7 @@ license = { text = "MIT" }
 dependencies = [
     "gtts>=2.5.4",
     "loguru>=0.7.3",
-    "pillow>=12.2.0",
+    "pillow>=12.3.0",
     "psutil>=7.2.2",
     "pytesseract>=0.3.13",
     "requests>=2.34.2",
@@ -76,13 +76,13 @@ addopts = "-v --tb=short --ignore=tests/test_clipboard_service.py --ignore=tests
 [dependency-groups]
 dev = [
     "bandit>=1.9.4",
-    "meson>=1.11.1",
+    "meson>=1.11.2",
     "mypy>=2.1.0",
     "ninja>=1.13.0",
-    "pytest>=9.0.3",
+    "pytest>=9.1.1",
     "pytest-cov>=6.0.0",
     "pytest-timeout>=2.3.1",
-    "ruff>=0.15.13",
+    "ruff>=0.15.21",
     "safety>=3.8.1",
     "vulture>=2.16",
 ]
