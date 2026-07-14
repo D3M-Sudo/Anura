@@ -1,59 +1,395 @@
-# validators.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Copyright 2026 D3M-Sudo (Anura fork and modifications)
+# SPDX-License-Identifier: MIT
 
 import contextlib
 import ipaddress
+import os
+from pathlib import Path
 import re
+import unicodedata
 from urllib.parse import urlparse
 
-# Pre-compiled regex for control characters (0x00-0x1F) and DEL (0x7F)
+from loguru import logger
+
+from anura.config import (
+    MAX_IMAGE_SIZE_BYTES,
+    MAX_IMAGE_SIZE_MB,
+    MAX_TEXT_LENGTH,
+)
+
+# Pre-compiled regex for C0 control characters (0x00-0x1F) and DEL (0x7F).
+# Note: C1 controls (0x80-0x9F) are handled by is_safe_url_string's isascii() check.
 # Using a regex is ~13x faster than a manual loop for control character detection.
 _CONTROL_CHARS_RE = re.compile(r"[\x00-\x1f\x7f]")
+
+# Performance constants for sanitize_text
+_DISCARD_CATEGORIES = {"Cc", "Cf", "Co", "Cs", "Cn"}
+_KEEP_CHARS = {"\n", "\t"}
+_LATIN1_TRANSLATE = {
+    i: None for i in range(256) if unicodedata.category(chr(i)) in _DISCARD_CATEGORIES and chr(i) not in _KEEP_CHARS
+}
+
+# Centralized patterns for structured data detection (URLs, Emails, etc.)
+# Used across TextPreprocessor, Transformers, and ResultDispatcher.
+EMAIL_PATTERN = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,15}"
+URL_PATTERN = (
+    r"(?:(?:https?|ftp|file):\/\/|www\.)"
+    r"(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#\/%=~_|$?!:,.])*"
+    r"(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[A-Z0-9+&@#\/%=~_|$])"
+)
+
+# Regex objects for performance
+EMAIL_RE = re.compile(EMAIL_PATTERN, re.IGNORECASE)
+URL_RE = re.compile(URL_PATTERN, re.IGNORECASE)
+
+# Standard URI schemes that should NOT have their userinfo-like blocks masked
+# when appearing in schemeless contexts (e.g. mailto: emails).
+_SAFE_URI_SCHEMES = (
+    "http",
+    "https",
+    "ftp",
+    "file",
+    "mailto",
+    "web+mastodon",
+    "tg",
+    "slack",
+    "zoom",
+    "discord",
+    "whatsapp",
+)
+
+
+def mask_url(url: str) -> str:
+    """
+    Redact sensitive information (userinfo) from a URL for safe logging.
+    Ensures that credentials are not leaked in the local rotary logs.
+
+    Args:
+        url: The URL string to mask.
+
+    Returns:
+        The URL with userinfo replaced by placeholders.
+    """
+    if not url:
+        return ""
+    try:
+        from urllib.parse import urlparse, urlunparse
+
+        parsed = urlparse(url)
+
+        # 1. Standard schemed URL with netloc credentials
+        if "@" in parsed.netloc:
+            # Isolate userinfo from host/port part using rpartition.
+            # This preserves the host and port while redacting the credentials.
+            _, at, host_port = parsed.netloc.rpartition("@")
+            new_netloc = f"***:***{at}{host_port}"
+            return urlunparse(parsed._replace(netloc=new_netloc))
+
+        # 2. Schemeless URL or malformed string treated as path/scheme by urlparse
+        # Example: "user:pass@example.com" (parsed as scheme="user", path="pass@example.com")
+        if "@" in url:
+            # Only mask if @ appears before the first slash (if any) to avoid
+            # redacting valid @ characters in paths or query strings.
+            first_slash = url.find("/")
+            at_index = url.rfind("@", 0, first_slash if first_slash != -1 else None)
+
+            if at_index != -1 and (not parsed.scheme or parsed.scheme.lower() not in _SAFE_URI_SCHEMES):
+                # Standard schemes to preserve (emails in mailto: should not be masked)
+                return f"***:***{url[at_index:]}"
+
+        return url
+    except (ValueError, AttributeError, TypeError):
+        # If parsing fails, return a safe placeholder to prevent any potential leak.
+        return "[REDACTED INVALID URL]"
 
 
 def sanitize_text(text: str) -> str:
     """
     Sanitize text using heuristics to correct common OCR errors and remove artifacts.
-    Inspired by NormCap's cleaning logic.
+    Also strips dangerous control and format characters to prevent terminal injection
+    and spoofing attacks.
+
+    Features:
+    - Unicode NFC normalization for consistent representation.
+    - Strict length limiting to prevent Denial of Service (DoS).
+    - Advanced Unicode category filtering (Cc, Cf, Co, Cs, Cn).
     """
     if not text:
         return ""
 
-    # 1. Normalize whitespace (squash multiple spaces/tabs)
+    # 1. Security: Unicode Normalization (NFC)
+    # Ensures consistent representation and prevents bypasses using combining characters.
+    text = unicodedata.normalize("NFC", text)
+
+    # 2. Security: Enforce hard length limit to prevent resource exhaustion (DoS)
+    # during downstream processing (e.g., complex regex in transformers).
+    if len(text) > MAX_TEXT_LENGTH:
+        logger.warning(f"Sanitization: Text truncated from {len(text)} to {MAX_TEXT_LENGTH} characters.")
+        text = text[:MAX_TEXT_LENGTH]
+
+    # 3. Defense-in-depth: Strip dangerous or non-printable Unicode categories:
+    # - Cc (Control): Null bytes, Bell, etc.
+    # - Cf (Format): RTL override, Zero-width space, etc.
+    # - Co (Private Use): Non-standard internal characters.
+    # - Cs (Surrogate): UTF-16 surrogate halves (invalid in UTF-8).
+    # - Cn (Unassigned): Reserved but currently undefined characters.
+    # Legitimate formatting (\n, \t) is preserved; \r is stripped for security.
+    #
+    # Performance Optimization: Use a two-pass approach.
+    # Pass 1: str.translate() for the Latin-1 range (fast C-level pass).
+    text = text.translate(_LATIN1_TRANSLATE)
+
+    # Pass 2: Check for non-Latin-1 characters. Only if present, perform a
+    # secondary filtered iteration for high-codepoint categories.
+    # Use max() as a fast way to detect if any character is outside the Latin-1 range.
+    if text and max(text) > "\xff":
+        text = "".join(ch for ch in text if ord(ch) < 256 or unicodedata.category(ch) not in _DISCARD_CATEGORIES)
+
+    # 4. Normalization: horizontal whitespace (squash multiple spaces/tabs)
+    # Note: \n and \r are preserved by the [ \t]+ pattern.
     text = re.sub(r"[ \t]+", " ", text)
 
-    # 2. Fix common OCR mistakes in URLs/Emails if they look like them
+    # 5. Fix common OCR mistakes in URLs/Emails if they look like them
     # e.g. "http: //" -> "http://"
     text = re.sub(r"(https?|ftp|file):\s+/{2}", r"\1://", text)
 
-    # 3. Remove known artifacts (e.g. single trailing characters from layout)
-    # This is a basic version, TextPreprocessor has more advanced logic.
-
     return text.strip()
+
+
+def _check_hostname_homograph(hostname: str) -> bool:
+    """
+    Helper for is_safe_url_string to perform homograph detection (BUG-034).
+    If the hostname mixes ASCII Latin letters with non-ASCII characters, reject it.
+    """
+    if not hostname:
+        return True
+
+    # 1. Normalize Punycode hostnames back to Unicode for analysis (SENTINEL-FIX).
+    # This ensures that homograph attacks cannot bypass security filters by being
+    # pre-encoded as Punycode.
+    effective_hostname = hostname
+    if hostname.isascii() and "xn--" in hostname.lower():
+        try:
+            # Use 'idna' codec to decode Punycode labels back to Unicode.
+            # This allows the homograph detector to see the real characters.
+            effective_hostname = hostname.encode("ascii").decode("idna")
+        except (UnicodeError, ValueError):
+            # Malformed Punycode — treat as unsafe to be conservative.
+            return False
+
+    if effective_hostname and not effective_hostname.isascii():
+        # Check for mixed-script labels. We iterate through DNS labels
+        # to be more precise than checking the whole hostname at once.
+        for label in effective_hostname.split("."):
+            if not label or label.isascii():
+                continue
+
+            # BUG-034 / NEW-011: Homograph Defense.
+            # We reject ANY label that mixes ASCII alphanumeric and non-ASCII (e.g., googlé.com)
+            # UNLESS the non-ASCII characters are safe Latin-1 supplements (0x00A0-0x00FF).
+            # This allows legitimate domains like münchen.de while blocking high-risk
+            # scripts like Cyrillic or Greek being mixed with ASCII.
+            has_ascii = any(ch.isascii() and ch.isalnum() for ch in label)
+            if has_ascii:
+                # Allow Latin-1 supplements (covers most European languages)
+                has_high_risk = any(ord(ch) > 0xFF for ch in label)
+                if has_high_risk:
+                    return False
+
+            # Pure non-ASCII label (e.g. '中文'): check for suspicious scripts
+            # commonly used in homograph attacks when mixed with ASCII labels in the domain.
+            for ch in label:
+                cp = ord(ch)
+                # Block Cyrillic (0x0400-0x052F) and Greek (0x0370-0x03FF)
+                # if the overall hostname also contains ASCII labels (e.g. 'goog\u0430.com')
+                if 0x0400 <= cp <= 0x052F or 0x0370 <= cp <= 0x03FF:
+                    # If effective_hostname is not pure ASCII, we allow these scripts
+                    # ONLY if the entire hostname uses them (pure IDN).
+                    # If there's ANY ASCII label elsewhere, we block.
+                    any_ascii_label = any(
+                        part.isascii() and any(c.isalpha() for c in part)
+                        for part in effective_hostname.split(".")
+                    )
+                    if any_ascii_label:
+                        return False
+    return True
+
+
+def _normalize_idn(text: str) -> str | None:
+    """
+    Helper for is_safe_url_string to normalize international domain names (IDN).
+    Converts hostname labels to Punycode ASCII-compatible encoding (ACE).
+    """
+    if text.isascii():
+        return text
+
+    try:
+        from urllib.parse import urlparse, urlunparse
+
+        # 4. IDN normalization: convert international domain names (IDN) to their
+        # Punycode ASCII-compatible encoding (ACE) before the ASCII safety check.
+        # This allows legitimate URLs like https://münchen.de or https://中文.com
+        # while still rejecting homograph attacks — Punycode is always ASCII, so
+        # the isascii() check below still catches unencoded non-ASCII that isn't
+        # a valid hostname label (e.g. invisible Unicode in the path/query).
+        parsed = urlparse(text)
+        if parsed.hostname and not parsed.hostname.isascii():
+            # Encode each DNS label separately; skip empty labels (leading dots etc.)
+            punycode_labels = []
+            for label in parsed.hostname.split("."):
+                if not label or label.isascii():
+                    punycode_labels.append(label)
+                else:
+                    punycode_labels.append(label.encode("idna").decode("ascii"))
+            punycode_host = ".".join(punycode_labels)
+
+            # 5. Security: Rebuild the netloc explicitly using rpartition (BUG-047).
+            # This isolates the userinfo from the host/port part, preventing
+            # accidental replacement of hostname strings within the userinfo.
+            # It also preserves the original percent-encoding of the userinfo.
+            userinfo, at, host_port = parsed.netloc.rpartition("@")
+            if at:
+                # Replace only the hostname portion of the host:port string
+                new_host_port = host_port.replace(parsed.hostname, punycode_host, 1)
+                netloc = f"{userinfo}{at}{new_host_port}"
+            else:
+                # No userinfo present
+                netloc = host_port.replace(parsed.hostname, punycode_host, 1)
+
+            return urlunparse(parsed._replace(netloc=netloc))
+        return text
+    except (UnicodeError, ValueError, UnicodeDecodeError):
+        # IDNA encoding failed (e.g. label too long, invalid character set):
+        # fall through to the isascii() guard which will reject the URL.
+        return None
+
+
+def _parse_and_validate_hostname(text: str) -> bool:
+    """
+    Helper for is_safe_url_string to parse the URL and validate the hostname.
+    Orchestrates the homograph detection check.
+    """
+    try:
+        from urllib.parse import urlparse
+
+        parsed_for_homograph = urlparse(text)
+        hostname = parsed_for_homograph.hostname or ""
+
+        # Defense-in-depth: If urlparse fails to identify a hostname but the
+        # string looks like it has one (e.g. 'https://goog\u0430le.com'),
+        # we reject it as malformed/potentially malicious.
+        if not hostname and "://" in text:
+            return False
+
+        return _check_hostname_homograph(hostname)
+
+    except (ValueError, AttributeError, TypeError):
+        # Malformed URL parsing - treat as unsafe
+        return False
+
 
 def is_safe_url_string(text: str) -> bool:
     """
     Perform fundamental security checks on a URL string.
     Checks for length, control characters, and ASCII-only characters.
     """
-    if text is None:
+    if not isinstance(text, str):
         return False
 
-    # Defense-in-depth: limit URL length BEFORE processing
-    if len(text) > 2048:
+    # 1. Defense-in-depth: limit URL length BEFORE processing (standard limit)
+    if len(text) > 2000:
         return False
 
-    # Block control characters (0x00-0x1F) and DEL (0x7F) BEFORE strip/sanitize
-    # to catch malicious trailing characters.
-    if _CONTROL_CHARS_RE.search(text):
+    # 2. Security: Block backslashes and other unsafe characters to prevent URL spoofing,
+    # injection, and bypasses. Browsers often normalize \ to / which can lead to
+    # parsing discrepancies. We also block <, >, ", |, ^, `, {, and } per RFC 3986
+    # and general security safety recommendations.
+    if any(c in text for c in ("\\", "<", ">", '"', "|", "^", "`", "{", "}")):
         return False
 
-    # Clean and normalize text using heuristics
-    text = sanitize_text(text)
+    # 3. Homograph detection (BUG-034): If the hostname mixes ASCII Latin letters with
+    # non-ASCII characters, reject the URL.
+    if not _parse_and_validate_hostname(text):
+        return False
 
-    # Ensure URL is ASCII-only (prevent Unicode homograph attacks).
-    return text.isascii()
+    # 4. IDN normalization: convert international domain names (IDN) to their
+    # Punycode ASCII-compatible encoding (ACE) before the ASCII safety check.
+    normalized = _normalize_idn(text)
+    if normalized is None:
+        return False
+
+    if normalized != text:
+        text = normalized
+
+    # ASCII safety check: after IDN normalization, any remaining non-ASCII
+    # characters indicate invalid or potentially malicious input.
+    if not text.isascii():
+        return False
+
+    # 4. Block C0 control characters (0x00-0x1F) and DEL (0x7F)
+    # BEFORE strip/sanitize to catch malicious trailing/injected characters.
+    # Note: Regex is ~13x faster than a manual loop for this check.
+    return not _CONTROL_CHARS_RE.search(text)
+
+
+def validate_image_resource(
+    resource: str | bytes | object,
+) -> tuple[bool, int, str | None]:
+    """
+    Centralized validation for image resources.
+    Checks for existence, accessibility, and size to prevent DoS and crashes.
+
+    Args:
+        resource: File path (str), raw bytes, or stream-like object.
+
+    Returns:
+        tuple: (is_valid, size_in_bytes, error_message)
+    """
+    size = 0
+
+    try:
+        if isinstance(resource, str):
+            # Security: Use is_file() instead of exists() to ensure we're not
+            # attempting to process directories, FIFOs, or device files as images.
+            path = Path(resource)
+            if not path.is_file():
+                return False, 0, "File not found"
+            if not os.access(resource, os.R_OK):
+                return False, 0, "Permission denied"
+            size = path.stat().st_size
+        elif isinstance(resource, bytes):
+            size = len(resource)
+        elif hasattr(resource, "getbuffer"):
+            # Handle BytesIO and similar
+            size = resource.getbuffer().nbytes
+        elif hasattr(resource, "seek") and hasattr(resource, "tell"):
+            # General stream fallback
+            curr = resource.tell()
+            resource.seek(0, os.SEEK_END)
+            size = resource.tell()
+            resource.seek(curr, os.SEEK_SET)
+        else:
+            return False, 0, "Unsupported resource type"
+
+        if size == 0:
+            return False, 0, "Image file is empty"
+
+        if size > MAX_IMAGE_SIZE_BYTES:
+            mb_size = round(size / (1024 * 1024), 1)
+            return (
+                False,
+                size,
+                f"Image too large: {mb_size}MB (max {MAX_IMAGE_SIZE_MB}MB)",
+            )
+
+        return True, size, None
+
+    except (AttributeError, RuntimeError, TypeError, ValueError, OSError) as e:
+        logger.error(f"Validation: Unexpected error: {e}")
+        return False, 0, f"Validation error: {e}"
 
 
 def uri_validator(text: str) -> bool:
@@ -82,9 +418,17 @@ def uri_validator(text: str) -> bool:
         if not (res.scheme in ("http", "https") and bool(res.netloc)):
             return False
 
-        # Security: Reject URLs with userinfo (username or password)
-        # This prevents spoofing attacks like http://google.com@evil.com
-        if res.username or res.password:
+        # Security: Validate that the port is a valid integer if present.
+        # urlparse.port raises ValueError if the port is malformed (e.g. :abc).
+        try:
+            _ = res.port
+        except ValueError:
+            return False
+
+        # Security: Reject URLs with any userinfo (username or password).
+        # This prevents spoofing attacks like http://google.com@evil.com.
+        # Robust check: if '@' is in netloc, it contains userinfo even if empty.
+        if "@" in res.netloc:
             return False
 
         # Use hostname for validation (excludes port and userinfo)
@@ -110,3 +454,43 @@ def uri_validator(text: str) -> bool:
         return False
     except ValueError:
         return False
+
+
+def launch_uri(url: str, window=None, error_callback=None) -> None:
+    """
+    Centralized URI launching with security validation and UI feedback.
+
+    Args:
+        url: The URI to launch.
+        window: The parent window for the launcher.
+        error_callback: Optional callback for error messages. If not provided,
+                        it attempts to show a toast or alert dialog.
+    """
+    from gettext import gettext as _
+
+    from gi.repository import Gio, GLib, Gtk
+
+    url = url.strip() if url else ""
+    if not uri_validator(url):
+        logger.warning(f"Anura: Blocked invalid URL launch: {mask_url(url)}")
+        msg = _("Invalid URL blocked for security")
+        if error_callback:
+            error_callback(msg)
+        elif window and hasattr(window, "show_toast"):
+            window.show_toast(msg)
+        return
+
+    launcher = Gtk.UriLauncher.new(url)
+
+    def on_launch_finish(_launcher: object, result: Gio.AsyncResult) -> None:
+        try:
+            launcher.launch_finish(result)
+        except GLib.Error as e:
+            logger.error(f"Anura: Failed to launch URI: {e.message}")
+            msg = _("Failed to open link")
+            if error_callback:
+                error_callback(msg)
+            elif window and hasattr(window, "show_toast"):
+                window.show_toast(msg)
+
+    launcher.launch(window, None, on_launch_finish)

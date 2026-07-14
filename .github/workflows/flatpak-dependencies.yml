@@ -16,11 +16,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          ref: development
+          persist-credentials: false
 
-      - name: Check and update Flatpak dependencies
+      - name: Install flatpak-external-data-checker
+        run: |
+          curl -LO https://github.com/flathub/flatpak-external-data-checker/releases/latest/download/flatpak-external-data-checker
+          chmod +x flatpak-external-data-checker
+          sudo mv flatpak-external-data-checker /usr/local/bin/
+
+      - name: Check for available updates
         id: check
         run: |
           for manifest in flatpak/io.github.d3msudo.anura.json flatpak/io.github.d3msudo.anura.local.json; do
@@ -44,7 +50,79 @@ jobs:
 
       - name: Create PR for dependency updates
         if: steps.check.outputs.has_updates == 'true'
-        uses: peter-evans/create-pull-request@v8
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const title = '📦 Flatpak Python dependencies need manual update';
+            const body = `## Available Updates
+
+            The following Python dependencies in the Flatpak manifest have updates available:
+
+            \`\`\`
+            ${{ steps.check.outputs.updates }}
+            \`\`\`
+
+            ### Action Required
+            These dependencies require manual testing before update:
+            - gTTS - API may change
+            - Pillow - Breaking changes possible
+            - pytesseract - Check compatibility with tesseract version
+            - Others - Verify runtime compatibility
+
+            ### Files to update
+            - \`flatpak/io.github.d3msudo.anura.json\`
+
+            Run locally:
+            \`\`\`bash
+            flatpak-external-data-checker --update flatpak/io.github.d3msudo.anura.json
+            flatpak-builder builddir flatpak/io.github.d3msudo.anura.json --force-clean
+            \`\`\`
+
+            _This issue was automatically created by the Flatpak dependency checker._`;
+
+            // Check if an open issue already exists
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'dependencies',
+              creator: 'github-actions[bot]'
+            });
+
+            const existing = issues.data.find(i => i.title === title);
+
+            if (!existing) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['dependencies']
+              });
+            }
+
+      - name: Auto-update certifi only
+        run: |
+          # Apply only certifi updates automatically (security-critical, stable API)
+          # FEDC exits with code 1 when it applies updates, 0 when no updates needed
+          set +e
+          flatpak-external-data-checker \
+            --update \
+            --filter python3-certifi \
+            flatpak/io.github.d3msudo.anura.json
+          FEDC_EXIT_CODE=$?
+          set -e
+
+          # Exit code 1 means updates were applied (expected), 0 means no updates needed
+          if [ $FEDC_EXIT_CODE -ne 0 ] && [ $FEDC_EXIT_CODE -ne 1 ]; then
+            echo "Error: flatpak-external-data-checker failed with exit code $FEDC_EXIT_CODE"
+            exit 1
+          fi
+
+          echo "Certifi check completed (exit code: $FEDC_EXIT_CODE)"
+
+      - name: Create PR for certifi updates
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c8cb187a5e # v7.0.8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           base: development

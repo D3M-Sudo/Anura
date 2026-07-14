@@ -17,8 +17,10 @@ import zxingcpp
 
 class BarcodeResult(NamedTuple):
     """Result of a barcode/QR code detection."""
+
     text: str
     format: str
+
 
 def detect_barcodes(image: Image.Image) -> list[BarcodeResult]:
     """
@@ -34,7 +36,6 @@ def detect_barcodes(image: Image.Image) -> list[BarcodeResult]:
         # zxingcpp can read directly from PIL images if they are in a supported format.
         # It's generally better to pass it a numpy array or a memoryview.
         # Pillow's Image.tobytes() or simply passing the image might work depending on version.
-        # Based on NormCap's implementation, it uses memoryview.
 
         # Ensure image is in a mode zxing-cpp likes (RGB or Grayscale)
         if image.mode not in ("RGB", "L"):
@@ -51,6 +52,6 @@ def detect_barcodes(image: Image.Image) -> list[BarcodeResult]:
             logger.info(f"Anura ZXing: Detected {len(barcode_results)} codes")
 
         return barcode_results
-    except Exception as e:
+    except (ImportError, RuntimeError, AttributeError, TypeError) as e:
         logger.debug(f"Anura ZXing: Detection failed or zxing-cpp not available: {e}")
         return []

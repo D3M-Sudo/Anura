@@ -13,6 +13,19 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
     <child>
       <object class="AdwPreferencesGroup">
         <child>
+          <object class="AdwComboRow" id="model_quality_combo">
+            <property name="title" translatable="true">Model Quality</property>
+            <property name="subtitle" translatable="true">Higher quality is slower but more accurate</property>
+            <property name="model">
+              <object class="GtkStringList"></object>
+            </property>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="AdwPreferencesGroup">
+        <child>
           <object class="GtkBox">
             <property name="orientation">1</property>
             <child>
@@ -62,6 +75,9 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                         </child>
                         <child>
                           <object class="GtkButton">
+                            <accessibility>
+                              <property name="label" translatable="true">Add language</property>
+                            </accessibility>
                             <property name="icon-name">list-add-symbolic</property>
                             <property name="tooltip-text" translatable="true">Add language</property>
                             <signal name="clicked" handler="_on_add_language"/>
@@ -133,6 +149,7 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                                   <object class="AdwStatusPage">
                                     <property name="icon-name">system-search-symbolic</property>
                                     <property name="title" translatable="true">No Results Found</property>
+                                    <property name="description" translatable="true">Try a different search term</property>
                                     <style>
                                       <class name="compact"/>
                                     </style>

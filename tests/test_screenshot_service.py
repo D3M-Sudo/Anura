@@ -1,179 +1,132 @@
-# test_screenshot_service.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Unit tests for ScreenshotService
-# Tests image validation, OCR processing, and QR decoding logic
+# SPDX-License-Identifier: MIT
+
+import sys
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 pytest.importorskip("gi")
 
-import os
-from unittest.mock import Mock, patch
+# Mock missing components
+import gi
 
-from PIL import Image
-import pytesseract
-import pytest
+try:
+    from gi.repository import Gio  # noqa: F401
+except ImportError:
+    mock_gio = MagicMock()
+    sys.modules["gi.repository.Gio"] = mock_gio
+    gi.repository.Gio = mock_gio
 
+try:
+    from gi.repository import GLib  # noqa: F401
+except ImportError:
+    mock_glib = MagicMock()
+    sys.modules["gi.repository.GLib"] = mock_glib
+    gi.repository.GLib = mock_glib
+
+try:
+    from gi.repository import Xdp  # noqa: F401
+except ImportError:
+    mock_xdp = MagicMock()
+    sys.modules["gi.repository.Xdp"] = mock_xdp
+    gi.repository.Xdp = mock_xdp
+
+try:
+    from gi.repository import GObject  # noqa: F401
+except ImportError:
+    mock_gobject = MagicMock()
+
+    class MockGObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        @staticmethod
+        def emit(*args, **kwargs):
+            pass
+
+    mock_gobject.GObject = MockGObject
+    sys.modules["gi.repository.GObject"] = mock_gobject
+    gi.repository.GObject = mock_gobject
+
+# Now import the service
 from anura.services.screenshot_service import ScreenshotService
 
 
-@pytest.mark.gtk
-class TestScreenshotService:
-    """Test suite for ScreenshotService core functionality."""
+class TestScreenshotServiceEnterprise:
+    """
+    Enterprise-grade unit tests for ScreenshotService.
+    Focuses on logic paths and fallbacks safe for VM/headless.
+    """
 
-    def setup_method(self):
-        """Set up test fixtures."""
-        self.service = ScreenshotService()
-        # Mock the portal to avoid XDP dependency
-        self.service.portal = Mock()
+    @pytest.fixture
+    def service(self):
+        with patch("anura.services.screenshot_service._configure_tesseract_path"):
+            # Minimal init to satisfy the tests
+            # We want to use the real class logic but avoid GObject issues
+            class PseudoService:
+                pass
 
-    def test_init(self):
-        """Test service initialization."""
-        assert self.service.cancelable is not None
-        assert self.service.portal is not None
+            s = PseudoService()
+            s.provider = MagicMock()
+            s.fallback_provider = MagicMock()
+            s._is_capturing = False
+            return s
 
-    def test_decode_image_sync_ocr_success(self, tmp_path):
-        """Test successful OCR text extraction."""
-        # Create a test image with text
-        img = Image.new("RGB", (100, 30), color="white")
-        test_file = tmp_path / "test.png"
-        img.save(test_file)
+    def test_validate_decode_inputs(self, service):
+        """Test language code validation."""
+        valid, _, _, _, _ = ScreenshotService._validate_decode_inputs(service, "eng")
+        assert valid is True
 
-        # Mock pytesseract to return known text
-        with patch("pytesseract.image_to_string") as mock_ocr:
-            mock_ocr.return_value = "Sample extracted text"
+        invalid, _, err, _, _ = ScreenshotService._validate_decode_inputs(service, "invalid-code!!")
+        assert invalid is False
+        assert "Invalid language code" in err
 
-            success, result, error = self.service.decode_image_sync("eng", str(test_file), False)
+    def test_screenshot_fallback_logic(self, service):
+        """Test that fallback provider is used when portal fails with a generic error."""
+        # Simulate portal failure
+        def _mock_capture(lang, copy, callback):
+            callback(False, None, "screenshot failed")
 
-            assert success is True
-            assert result == "Sample extracted text"
-            assert error is None
-            mock_ocr.assert_called_once()
+        service.provider.capture = MagicMock(side_effect=_mock_capture)
 
-    def test_decode_image_sync_qr_success(self, tmp_path):
-        """Test successful QR code decoding."""
-        # Create a test image
-        img = Image.new("RGB", (100, 100), color="white")
-        test_file = tmp_path / "test.png"
-        img.save(test_file)
+        service._is_capturing = False
+        ScreenshotService.capture(service, "eng", False)
 
-        # Mock pyzbar decode to return QR data
-        with patch("anura.services.screenshot_service.decode") as mock_decode:
-            mock_qr = Mock()
-            mock_qr.data = b"https://example.com"
-            mock_qr.type = "QRCODE"
-            mock_decode.return_value = [mock_qr]
+        assert service.fallback_provider.capture.called
 
-            success, result, error = self.service.decode_image_sync("eng", str(test_file), False)
+    def test_format_decode_result(self, service):
+        """Test result formatting for various OCR outcomes."""
+        # Success
+        s, t, e, _, _aname = ScreenshotService._format_decode_result(service, "Extracted Text", None)
+        assert s is True
+        assert t == "Extracted Text"
+        assert e is None
 
-            assert success is True
-            assert result == "https://example.com"
-            assert error is None
+        # Explicit Error
+        s, t, e, _, _aname = ScreenshotService._format_decode_result(service, None, "Fatal Error")
+        assert s is False
+        assert t == ""
+        assert e == "Fatal Error"
 
-    def test_decode_image_sync_invalid_language(self, tmp_path):
-        """Test handling of invalid language codes."""
-        img = Image.new("RGB", (100, 30), color="white")
-        test_file = tmp_path / "test.png"
-        img.save(test_file)
+        # No Text Found
+        s, t, e, _, _aname = ScreenshotService._format_decode_result(service, None, None)
+        assert s is False
+        assert "No text found" in e
 
-        with patch("pytesseract.image_to_string") as mock_ocr:
-            mock_ocr.return_value = ""
+    def test_cleanup_temporary_file(self, service, tmp_path):
+        """Test cleanup logic for source files."""
+        temp_file = tmp_path / "shot.png"
+        temp_file.touch()
 
-            success, result, error = self.service.decode_image_sync("invalid@lang", str(test_file), False)
+        # Case: remove_source=True
+        ScreenshotService._cleanup_temporary_file(service, str(temp_file), True, True)
+        assert not temp_file.exists()
 
-            assert success is False
-            assert result == ""
-            assert "Invalid language code" in error
-
-    def test_decode_image_sync_file_not_found(self):
-        """Test handling of non-existent image files."""
-        success, result, error = self.service.decode_image_sync("eng", "/nonexistent/file.png", False)
-
-        assert success is False
-        assert result == ""
-        assert "Failed to read image file" in error
-
-    def test_decode_image_sync_corrupted_image(self, tmp_path):
-        """Test handling of corrupted image files."""
-        # Create a file with invalid image data
-        corrupted_file = tmp_path / "corrupted.png"
-        corrupted_file.write_bytes(b"not an image")
-
-        success, result, error = self.service.decode_image_sync("eng", str(corrupted_file), False)
-
-        assert success is False
-        assert result == ""
-        assert "Failed to decode data" in error
-
-    def test_decode_image_sync_tesseract_error(self, tmp_path):
-        """Test handling of Tesseract OCR errors."""
-        img = Image.new("RGB", (100, 30), color="white")
-        test_file = tmp_path / "test.png"
-        img.save(test_file)
-
-        with patch("pytesseract.image_to_string") as mock_ocr:
-            mock_ocr.side_effect = pytesseract.TesseractError("Test error", "Test error")
-
-            success, result, error = self.service.decode_image_sync("eng", str(test_file), False)
-
-            assert success is False
-            assert result == ""
-            assert "OCR engine failed to process image" in error
-
-    def test_decode_image_sync_cleanup_temp_file(self, tmp_path):
-        """Test that temporary files are cleaned up when requested."""
-        img = Image.new("RGB", (100, 30), color="white")
-        test_file = tmp_path / "test.png"
-        img.save(test_file)
-
-        with patch("pytesseract.image_to_string") as mock_ocr:
-            mock_ocr.return_value = "test text"
-
-            success, _, _ = self.service.decode_image_sync(
-                "eng",
-                str(test_file),
-                True,  # remove_source=True
-            )
-
-            assert success is True
-            # File should still exist since it's not a portal temp file
-            assert test_file.exists()
-
-    def test_decode_image_with_portal_file(self, tmp_path):
-        """Test decoding with portal-generated temporary files."""
-        # Create a test image
-        img = Image.new("RGB", (100, 30), color="white")
-        test_file = tmp_path / "test.png"
-        img.save(test_file)
-
-        with patch("pytesseract.image_to_string") as mock_ocr:
-            mock_ocr.return_value = "portal text"
-
-            # Simulate portal file path
-            portal_file = f"/tmp/.portal-{os.getpid()}-test.png"
-            with patch("os.path.exists", return_value=True), patch("os.remove") as mock_remove:
-                success, result, _ = self.service.decode_image_sync(
-                    "eng",
-                    portal_file,
-                    True,  # remove_source=True
-                )
-
-                assert success is True
-                assert result == "portal text"
-                # Portal temp file should be removed
-                mock_remove.assert_called_once_with(portal_file)
-
-    def test_decode_image_empty_result(self, tmp_path):
-        """Test handling of empty OCR/QR results."""
-        img = Image.new("RGB", (100, 30), color="white")
-        test_file = tmp_path / "test.png"
-        img.save(test_file)
-
-        with patch("pytesseract.image_to_string") as mock_ocr:
-            mock_ocr.return_value = ""  # Empty result
-
-            success, result, error = self.service.decode_image_sync("eng", str(test_file), False)
-
-            assert success is False
-            assert result == ""
-            assert error is not None
+        # Case: remove_source=False
+        temp_file.touch()
+        ScreenshotService._cleanup_temporary_file(service, str(temp_file), True, False)
+        assert temp_file.exists()

@@ -1,3 +1,9 @@
+// This file is part of Anura.
+// Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+// Copyright (C) 2026 D3M-Sudo (Anura)
+//
+// SPDX-License-Identifier: MIT
+
 using Gtk 4.0;
 using Adw 1;
 
@@ -26,6 +32,9 @@ template $WelcomePage : Adw.NavigationPage {
         [start]
         Gtk.Spinner spinner {
           visible: false;
+          accessibility {
+            label: _("Extracting text");
+          }
         }
 
         [end]
@@ -50,10 +59,13 @@ template $WelcomePage : Adw.NavigationPage {
             orientation: vertical;
             spacing: 12;
 
-            Button {
+            Button screenshot_button {
               action-name: "app.get_screenshot";
               tooltip-text: C_("Welcome screen", "Take a Screenshot (Ctrl+G)");
-              styles ["pill", "suggested-action"]
+              accessibility {
+                label: C_("Welcome screen", "Take a Screenshot");
+              }
+              styles ["pill", "suggested-action", "anura-button"]
               
               child: Box {
                 halign: center;
@@ -69,7 +81,10 @@ template $WelcomePage : Adw.NavigationPage {
             Button {
               action-name: "app.open_image";
               tooltip-text: C_("Welcome screen", "Open Image (Ctrl+O)");
-              styles ["pill"]
+              accessibility {
+                label: C_("Welcome screen", "Open Image");
+              }
+              styles ["pill", "anura-button"]
 
               child: Box {
                 halign: center;
@@ -85,7 +100,10 @@ template $WelcomePage : Adw.NavigationPage {
              Button {
               action-name: "app.paste_from_clipboard";
               tooltip-text: C_("Welcome screen", "Paste Image from Clipboard (Ctrl+V)");
-              styles ["pill"]
+              accessibility {
+                label: C_("Welcome screen", "Paste Image");
+              }
+              styles ["pill", "anura-button"]
 
               child: Box {
                 halign: center;
@@ -100,7 +118,10 @@ template $WelcomePage : Adw.NavigationPage {
 
             Button drop_button {
               tooltip-text: C_("Welcome screen", "Drop image here");
-              styles ["pill"]
+              accessibility {
+                label: C_("Welcome screen", "Drop image here");
+              }
+              styles ["pill", "anura-button"]
 
               child: Box {
                 halign: center;
@@ -113,21 +134,24 @@ template $WelcomePage : Adw.NavigationPage {
               };
             }
 
-            Box drop_area {
-              visible: false;
-              margin-top: 12;
-              height-request: 80;
-              halign: fill;
-              valign: center;
-              styles ["card"]
+            Revealer drop_revealer {
+              transition-type: slide_up;
+              reveal-child: false;
 
-              Label drop_area_label {
-                label: _("Drop image file here");
-                halign: center;
+              Box drop_area {
+                margin-top: 12;
+                styles ["card", "anura-slide-up"]
+                height-request: 80;
+                halign: fill;
                 valign: center;
-                hexpand: true;
-                vexpand: true;
-                styles ["dim-label"]
+                Label drop_area_label {
+                  label: _("Drop image file here");
+                  halign: center;
+                  valign: center;
+                  hexpand: true;
+                  vexpand: true;
+                  styles ["dim-label"]
+                }
               }
             }
           };
@@ -141,6 +165,7 @@ menu primary_menu {
     item {
       label: _("Preferences");
       action: "app.preferences";
+      icon: "preferences-system-symbolic";
     }
   }
 
@@ -148,11 +173,19 @@ menu primary_menu {
     item {
       label: _("Keyboard Shortcuts");
       action: "app.shortcuts";
+      icon: "preferences-desktop-keyboard-shortcuts-symbolic";
     }
 
     item {
       label: _("About Anura");
       action: "app.about";
+      icon: "help-about-symbolic";
+    }
+
+    item {
+      label: _("Report an Issue");
+      action: "app.report_issue";
+      icon: "dialog-warning-symbolic";
     }
   }
 

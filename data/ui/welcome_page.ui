@@ -30,6 +30,9 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
             <child type="start">
               <object class="GtkSpinner" id="spinner">
                 <property name="visible">false</property>
+                <accessibility>
+                  <property name="label" translatable="true">Extracting text</property>
+                </accessibility>
               </object>
             </child>
             <child type="end">
@@ -57,12 +60,16 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                     <property name="orientation">1</property>
                     <property name="spacing">12</property>
                     <child>
-                      <object class="GtkButton">
+                      <object class="GtkButton" id="screenshot_button">
                         <property name="action-name">app.get_screenshot</property>
                         <property name="tooltip-text" translatable="true" context="Welcome screen">Take a Screenshot (Ctrl+G)</property>
+                        <accessibility>
+                          <property name="label" translatable="true" context="Welcome screen">Take a Screenshot</property>
+                        </accessibility>
                         <style>
                           <class name="pill"/>
                           <class name="suggested-action"/>
+                          <class name="anura-button"/>
                         </style>
                         <property name="child">
                           <object class="GtkBox">
@@ -87,8 +94,12 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                       <object class="GtkButton">
                         <property name="action-name">app.open_image</property>
                         <property name="tooltip-text" translatable="true" context="Welcome screen">Open Image (Ctrl+O)</property>
+                        <accessibility>
+                          <property name="label" translatable="true" context="Welcome screen">Open Image</property>
+                        </accessibility>
                         <style>
                           <class name="pill"/>
+                          <class name="anura-button"/>
                         </style>
                         <property name="child">
                           <object class="GtkBox">
@@ -113,8 +124,12 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                       <object class="GtkButton">
                         <property name="action-name">app.paste_from_clipboard</property>
                         <property name="tooltip-text" translatable="true" context="Welcome screen">Paste Image from Clipboard (Ctrl+V)</property>
+                        <accessibility>
+                          <property name="label" translatable="true" context="Welcome screen">Paste Image</property>
+                        </accessibility>
                         <style>
                           <class name="pill"/>
+                          <class name="anura-button"/>
                         </style>
                         <property name="child">
                           <object class="GtkBox">
@@ -138,8 +153,12 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                     <child>
                       <object class="GtkButton" id="drop_button">
                         <property name="tooltip-text" translatable="true" context="Welcome screen">Drop image here</property>
+                        <accessibility>
+                          <property name="label" translatable="true" context="Welcome screen">Drop image here</property>
+                        </accessibility>
                         <style>
                           <class name="pill"/>
+                          <class name="anura-button"/>
                         </style>
                         <property name="child">
                           <object class="GtkBox">
@@ -161,25 +180,31 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                       </object>
                     </child>
                     <child>
-                      <object class="GtkBox" id="drop_area">
-                        <property name="visible">false</property>
-                        <property name="margin-top">12</property>
-                        <property name="height-request">80</property>
-                        <property name="halign">0</property>
-                        <property name="valign">3</property>
-                        <style>
-                          <class name="card"/>
-                        </style>
+                      <object class="GtkRevealer" id="drop_revealer">
+                        <property name="transition-type">4</property>
+                        <property name="reveal-child">false</property>
                         <child>
-                          <object class="GtkLabel" id="drop_area_label">
-                            <property name="label" translatable="true">Drop image file here</property>
-                            <property name="halign">3</property>
-                            <property name="valign">3</property>
-                            <property name="hexpand">true</property>
-                            <property name="vexpand">true</property>
+                          <object class="GtkBox" id="drop_area">
+                            <property name="margin-top">12</property>
                             <style>
-                              <class name="dim-label"/>
+                              <class name="card"/>
+                              <class name="anura-slide-up"/>
                             </style>
+                            <property name="height-request">80</property>
+                            <property name="halign">0</property>
+                            <property name="valign">3</property>
+                            <child>
+                              <object class="GtkLabel" id="drop_area_label">
+                                <property name="label" translatable="true">Drop image file here</property>
+                                <property name="halign">3</property>
+                                <property name="valign">3</property>
+                                <property name="hexpand">true</property>
+                                <property name="vexpand">true</property>
+                                <style>
+                                  <class name="dim-label"/>
+                                </style>
+                              </object>
+                            </child>
                           </object>
                         </child>
                       </object>
@@ -198,16 +223,24 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
       <item>
         <attribute name="label" translatable="true">Preferences</attribute>
         <attribute name="action">app.preferences</attribute>
+        <attribute name="icon">preferences-system-symbolic</attribute>
       </item>
     </section>
     <section>
       <item>
         <attribute name="label" translatable="true">Keyboard Shortcuts</attribute>
         <attribute name="action">app.shortcuts</attribute>
+        <attribute name="icon">preferences-desktop-keyboard-shortcuts-symbolic</attribute>
       </item>
       <item>
         <attribute name="label" translatable="true">About Anura</attribute>
         <attribute name="action">app.about</attribute>
+        <attribute name="icon">help-about-symbolic</attribute>
+      </item>
+      <item>
+        <attribute name="label" translatable="true">Report an Issue</attribute>
+        <attribute name="action">app.report_issue</attribute>
+        <attribute name="icon">dialog-warning-symbolic</attribute>
       </item>
     </section>
     <section>

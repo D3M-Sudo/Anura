@@ -1,6 +1,9 @@
-# shortcuts_overlay.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Copyright 2026 D3M-Sudo (Anura fork and modifications)
+# SPDX-License-Identifier: MIT
+
 """
 Keyboard shortcuts overlay widget for Anura OCR.
 Provides an elegant cheat sheet with all available keyboard shortcuts.
@@ -68,6 +71,7 @@ class ShortcutsOverlay(Adw.Window):
             {
                 "category": _("Text Operations"),
                 "shortcuts": [
+                    {"key": "<Control>a", "description": _("Select all text")},
                     {"key": "<Control>c", "description": _("Copy text to clipboard")},
                     {"key": "<Control>l", "description": _("Listen to text (TTS)")},
                     {"key": "<Control><Shift>l", "description": _("Stop text-to-speech")},
@@ -226,7 +230,7 @@ def show_shortcuts_overlay(parent_window: Gtk.Window) -> None:
     try:
         overlay = ShortcutsOverlay(transient_for=parent_window)
         overlay.present()
-    except Exception as e:
+    except (AttributeError, RuntimeError, TypeError, GLib.Error) as e:
         from loguru import logger
 
         logger.error(f"Failed to show shortcuts overlay: {e}")

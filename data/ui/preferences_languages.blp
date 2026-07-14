@@ -1,3 +1,9 @@
+// This file is part of Anura.
+// Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+// Copyright (C) 2026 D3M-Sudo (Anura)
+//
+// SPDX-License-Identifier: MIT
+
 using Gtk 4.0;
 using Gio 2.0;
 using Adw 1;
@@ -10,13 +16,20 @@ template $PreferencesLanguagesPage : Adw.PreferencesPage {
   icon-name: "preferences-desktop-locale-symbolic";
 
   Adw.PreferencesGroup {
+    Adw.ComboRow model_quality_combo {
+      title: _("Model Quality");
+      subtitle: _("Higher quality is slower but more accurate");
+    }
+  }
+
+  Adw.PreferencesGroup {
     Box {
       orientation: vertical;
 
       SearchBar search_bar {
-      show-close-button: true;
+        show-close-button: true;
 
-      SearchEntry language_search_entry {
+        SearchEntry language_search_entry {
         accessibility {
           label: _("Search Languages");
         }
@@ -55,6 +68,9 @@ template $PreferencesLanguagesPage : Adw.PreferencesPage {
           Button {
             icon-name: "list-add-symbolic";
             tooltip-text: _("Add language");
+            accessibility {
+              label: _("Add language");
+            }
             clicked => $_on_add_language();
 
             styles ["flat"]
@@ -107,6 +123,7 @@ template $PreferencesLanguagesPage : Adw.PreferencesPage {
                 child: Adw.StatusPage {
                   icon-name: "system-search-symbolic";
                   title: _("No Results Found");
+                  description: _("Try a different search term");
                   styles ["compact"]
                 };
               }

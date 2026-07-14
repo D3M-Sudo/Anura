@@ -1,3 +1,9 @@
+// This file is part of Anura.
+// Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+// Copyright (C) 2026 D3M-Sudo (Anura)
+//
+// SPDX-License-Identifier: MIT
+
 using Gtk 4.0;
 using Adw 1;
 
@@ -11,13 +17,6 @@ template $ExtractedPage : Adw.NavigationPage {
 
     [top]
     Adw.HeaderBar headerbar {
-
-      // [start]
-      // MenuButton lang_combo {
-      //     label: _("Language");
-      //     tooltip-text: _("Select language to extract");
-      //     popover: $LanguagePopover language_popover {};
-      // }
 
       [start]
       Adw.SplitButton grab_btn {
@@ -38,6 +37,7 @@ template $ExtractedPage : Adw.NavigationPage {
           label: C_("Extracted screen", "Copy extracted text to clipboard");
         }
         icon-name: "edit-copy-symbolic";
+        styles ["anura-button"]
       }
 
       [start]
@@ -53,6 +53,7 @@ template $ExtractedPage : Adw.NavigationPage {
               label: C_("Extracted screen", "Listen to text");
             }
             icon-name: "audio-speakers-symbolic";
+            styles ["anura-button"]
           };
         }
 
@@ -60,11 +61,12 @@ template $ExtractedPage : Adw.NavigationPage {
           name: "cancel";
           child: Button listen_cancel_btn {
             action-name: "app.listen_cancel";
-            tooltip-text: C_("Extracted screen", "Cancel listening to text");
+            tooltip-text: C_("Extracted screen", "Stop listening (Ctrl+Shift+L)");
             accessibility {
-              label: C_("Extracted screen", "Cancel listening to text");
+              label: C_("Extracted screen", "Stop listening");
             }
             icon-name: "media-playback-stop-symbolic";
+            styles ["anura-button"]
           };
         }
 
@@ -73,6 +75,9 @@ template $ExtractedPage : Adw.NavigationPage {
           child: Gtk.Spinner listen_spinner {
             halign: center;
             valign: center;
+            accessibility {
+              label: _("Generating audio");
+            }
           };
         }
 
@@ -83,20 +88,22 @@ template $ExtractedPage : Adw.NavigationPage {
 
             Button listen_pause_btn {
               action-name: "app.listen_pause";
-              tooltip-text: C_("Extracted screen", "Pause/Resume listening");
+              tooltip-text: C_("Extracted screen", "Pause/Resume listening (Ctrl+Alt+L)");
               accessibility {
                 label: C_("Extracted screen", "Pause or resume listening");
               }
               icon-name: "media-playback-pause-symbolic";
+              styles ["anura-button"]
             }
 
             Button {
               action-name: "app.listen_cancel";
-              tooltip-text: C_("Extracted screen", "Stop listening");
+              tooltip-text: C_("Extracted screen", "Stop listening (Ctrl+Shift+L)");
               accessibility {
                 label: C_("Extracted screen", "Stop listening");
               }
               icon-name: "media-playback-stop-symbolic";
+              styles ["anura-button"]
             }
           };
         }
@@ -124,6 +131,9 @@ template $ExtractedPage : Adw.NavigationPage {
           styles ["menu"]
 
           child: ListBox share_list_box {
+            accessibility {
+              label: _("Share providers");
+            }
             margin-end: 4;
             margin-top: 4;
             margin-start: 4;
@@ -141,6 +151,9 @@ template $ExtractedPage : Adw.NavigationPage {
       width-request: 150; // Consente il rimpicciolimento fluido sotto la dimensione ideale del testo
 
       TextView text_view {
+        accessibility {
+          label: _("Extracted text");
+        }
         hexpand: true;
         vexpand: true;
         width-request: 100;
@@ -161,6 +174,15 @@ template $ExtractedPage : Adw.NavigationPage {
     [bottom]
     Box {
       styles ["footer"]
+
+      Label transformer_label {
+        halign: start;
+        hexpand: true;
+        margin-start: 12;
+        margin-top: 6;
+        margin-bottom: 6;
+        styles ["dim-label", "caption", "anura-fade-in"]
+      }
 
       Label stats_label {
         halign: end;

@@ -1,8 +1,8 @@
-# test_tts_initialization.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Copyright 2026 D3M-Sudo (Anura fork and modifications)
-#
-# Regression test for BUG-01: AttributeError when accessing TTSService.player before play()
+# SPDX-License-Identifier: MIT
 
 import pytest
 

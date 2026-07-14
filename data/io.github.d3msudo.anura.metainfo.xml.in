@@ -55,6 +55,20 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="0.1.5" type="stable" date="2026-05-25">
+      <description>
+        <p>Architectural milestone: modular core services, progressive loading feedback, and hardened resource security.</p>
+        <ul>
+          <li>Modular Core Architecture: restructured application into specialized boot, i18n, and resource services.</li>
+          <li>Progressive Loading: added granular status updates during OCR processing to eliminate Zombie UI.</li>
+          <li>Offline Rotary Logging: implemented a secure, zero-telemetry local logging system with rotation.</li>
+          <li>Resource Guards: added proactive memory monitoring to prevent OOM on high-resolution images.</li>
+          <li>Worker Isolation: hardened OCR process isolation with transactional temporary directory management.</li>
+          <li>Automated Cleanup: implemented native GObject destroy hooks for fail-safe resource management.</li>
+          <li>Performance: introduced immutable dataclasses with optimized memory slots.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.4.3" type="stable" date="2026-05-16">
       <description>
         <p>Enhanced OCR preprocessing, modern keyboard shortcuts overlay, and robust screenshot fallback system.</p>

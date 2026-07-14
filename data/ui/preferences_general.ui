@@ -12,12 +12,38 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
     <property name="icon-name">emblem-system-symbolic</property>
     <child>
       <object class="AdwPreferencesGroup">
+        <property name="title" translatable="true">Appearance</property>
+        <child>
+          <object class="AdwComboRow" id="color_scheme_combo">
+            <property name="title" translatable="true">Color Scheme</property>
+            <property name="subtitle" translatable="true">The preferred color scheme for the application.</property>
+            <property name="model">
+              <object class="GtkStringList">
+                <items>
+                  <item translatable="true" context="color-scheme">System</item>
+                  <item translatable="true" context="color-scheme">Light</item>
+                  <item translatable="true" context="color-scheme">Dark</item>
+                </items>
+              </object>
+            </property>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="AdwPreferencesGroup">
         <property name="title" translatable="true">Text Extraction</property>
         <child>
           <object class="AdwComboRow" id="extra_language_combo">
             <property name="title" translatable="true">_Secondary Language</property>
             <property name="use-underline">true</property>
             <property name="subtitle" translatable="true">Additional language used in text recognition</property>
+          </object>
+        </child>
+        <child>
+          <object class="AdwSwitchRow" id="magic_processor_switch">
+            <property name="title" translatable="true">Smart Text Parsing</property>
+            <property name="subtitle" translatable="true">Automatically reformat URLs, emails and paragraphs</property>
           </object>
         </child>
       </object>

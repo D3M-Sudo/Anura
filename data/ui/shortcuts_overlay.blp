@@ -1,3 +1,9 @@
+// This file is part of Anura.
+// Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+// Copyright (C) 2026 D3M-Sudo (Anura)
+//
+// SPDX-License-Identifier: MIT
+
 using Gtk 4.0;
 using Adw 1;
 
@@ -30,6 +36,9 @@ template $ShortcutsOverlay : Adw.Window {
 
       Gtk.SearchEntry search_entry {
         placeholder-text: _("Search shortcuts...");
+        accessibility {
+          label: _("Search shortcuts");
+        }
       }
 
       Gtk.Stack stack {
