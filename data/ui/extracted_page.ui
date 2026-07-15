@@ -194,7 +194,9 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                 <property name="pixels-above-lines">4</property>
                 <property name="pixels-below-lines">4</property>
                 <property name="buffer">
-                  <object class="GtkTextBuffer" id="buffer"></object>
+                  <object class="GtkTextBuffer" id="buffer">
+                    <property name="enable-undo">true</property>
+                  </object>
                 </property>
               </object>
             </child>
@@ -217,6 +219,9 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                   <class name="caption"/>
                   <class name="anura-fade-in"/>
                 </style>
+                <accessibility>
+                  <property name="label" translatable="true">Applied smart transformation</property>
+                </accessibility>
               </object>
             </child>
             <child>
@@ -229,6 +234,9 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                 <style>
                   <class name="dim-label"/>
                 </style>
+                <accessibility>
+                  <property name="label" translatable="true">Text statistics</property>
+                </accessibility>
               </object>
             </child>
           </object>

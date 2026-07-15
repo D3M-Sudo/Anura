@@ -76,6 +76,7 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
             _("Shows character and word count. If text is selected, shows selection stats.")
         )
 
+        self.buffer.set_enable_undo(True)
 
     def _on_buffer_changed(self, buffer: Gtk.TextBuffer) -> None:
         """Update action sensitivities when buffer changes."""
