@@ -6,15 +6,17 @@ msgstr ""
 "Project-Id-Version: anura 0.3.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-05-15 17:00+0000\n"
-"PO-Revision-Date: 2024-08-09 14:09+0000\n"
-"Last-Translator: Степан Наумов <st250492@yandex.ru>\n"
-"Language-Team: Russian <https://hosted.weblate.org/projects/anura/default/ru/>\n"
+"PO-Revision-Date: 2026-07-16 21:01+0000\n"
+"Last-Translator: DatVex <kinorealme241@gmail.com>\n"
+"Language-Team: Russian <https://hosted.weblate.org/projects/anura/anura/ru/>"
+"\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: Weblate 5.7-dev\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Generator: Weblate 2026.8.dev0\n"
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-KeywordsList: _\n"
 "X-Poedit-SearchPath-0: .\n"
@@ -79,7 +81,7 @@ msgstr "Болгарский"
 
 #: anura/language_manager.py:86
 msgid "Catalan"
-msgstr ""
+msgstr "Каталонский"
 
 #: anura/language_manager.py:87
 msgid "Cebuano"
@@ -123,7 +125,7 @@ msgstr "Дзонг-кэ"
 
 #: anura/language_manager.py:99
 msgid "Greek"
-msgstr ""
+msgstr "Греческий"
 
 #: anura/language_manager.py:101
 msgid "English, Middle"
@@ -151,7 +153,7 @@ msgstr "Персидский"
 
 #: anura/language_manager.py:110
 msgid "Filipino"
-msgstr ""
+msgstr "Филиппинский"
 
 #: anura/language_manager.py:111
 msgid "Finnish"
@@ -183,7 +185,7 @@ msgstr "Галисийский"
 
 #: anura/language_manager.py:121
 msgid "Greek, Ancient"
-msgstr ""
+msgstr "Древнегреческий"
 
 #: anura/language_manager.py:122
 msgid "Gujarati"
@@ -271,7 +273,7 @@ msgstr "Киргизский"
 
 #: anura/language_manager.py:143
 msgid "Kurmanji"
-msgstr ""
+msgstr "Курманджи"
 
 #: anura/language_manager.py:144
 msgid "Korean"
@@ -339,7 +341,7 @@ msgstr "Непальский"
 
 #: anura/language_manager.py:160
 msgid "Dutch"
-msgstr ""
+msgstr "Нидерландский"
 
 #: anura/language_manager.py:161
 msgid "Norwegian"
@@ -347,7 +349,7 @@ msgstr "Норвежский"
 
 #: anura/language_manager.py:162
 msgid "Occitan"
-msgstr ""
+msgstr "Окситанский"
 
 #: anura/language_manager.py:163
 msgid "Oriya"
@@ -387,7 +389,7 @@ msgstr "Санскрит"
 
 #: anura/language_manager.py:175
 msgid "Sinhala"
-msgstr ""
+msgstr "Сингальский"
 
 #: anura/language_manager.py:176
 msgid "Slovak"
@@ -507,35 +509,35 @@ msgstr "Извлечь в буфер обмена"
 
 #: anura/main.py:218
 msgid "Process image file for OCR"
-msgstr ""
+msgstr "Обработать файл изображения с помощью OCR"
 
 #: anura/main.py:227
 msgid "Run OCR without UI (copy result to clipboard)"
-msgstr ""
+msgstr "Запустить OCR без интерфейса (скопировать результат в буфер обмена)"
 
 #: anura/main.py:596
 msgid "Bug fixes and improvements."
-msgstr ""
+msgstr "Исправления ошибок и улучшения."
 
 #: anura/main.py:635
 msgid "Acknowledgements"
-msgstr ""
+msgstr "Благодарности"
 
 #: anura/main.py:640
 msgid "Changelog"
-msgstr ""
+msgstr "Список изменений"
 
 #: anura/main.py:683 anura/main.py:703
 msgid "Failed to Open Browser"
-msgstr ""
+msgstr "Не удалось открыть браузер"
 
 #: anura/main.py:684 anura/main.py:704
 msgid "No web browser could be launched. Please open the link manually."
-msgstr ""
+msgstr "Не удалось запустить веб-браузер. Откройте ссылку вручную."
 
 #: anura/main.py:685 anura/main.py:705
 msgid "OK"
-msgstr ""
+msgstr "ОК"
 
 #: anura/main.py:737 anura/window.py:284 anura/window.py:532
 msgid "Text copied to clipboard"
@@ -543,11 +545,11 @@ msgstr "Текст скопирован"
 
 #: anura/main.py:744
 msgid "No text available to copy"
-msgstr ""
+msgstr "Нет текста для копирования"
 
 #: anura/main.py:833 anura/main.py:847 anura/main.py:857 anura/main.py:874
 msgid "Anura OCR"
-msgstr ""
+msgstr "Anura OCR"
 
 #: anura/main.py:834
 msgid "No text found. Try to grab another region."
@@ -559,11 +561,11 @@ msgstr "Извлечь текст и скопировать его в буфер
 
 #: anura/main.py:858
 msgid "Text extracted successfully."
-msgstr ""
+msgstr "Текст успешно извлечён."
 
 #: anura/main.py:866
 msgid "Cancelled"
-msgstr ""
+msgstr "Отменено"
 
 #: anura/services/clipboard_service.py:170
 #: anura/services/clipboard_service.py:186
@@ -581,20 +583,20 @@ msgstr "В буфере нет изображения"
 #: anura/services/clipboard_service.py:633
 #: anura/services/clipboard_service.py:642
 msgid "No text in clipboard"
-msgstr ""
+msgstr "В буфере обмена нет текста"
 
 #: anura/services/clipboard_service.py:675
 msgid "Clipboard read operation timed out."
-msgstr ""
+msgstr "Время ожидания чтения буфера обмена истекло."
 
 #: anura/services/screenshot_service.py:131
 msgid "Failed to initiate screenshot capture."
-msgstr ""
+msgstr "Не удалось начать создание снимка экрана."
 
 #: anura/services/screenshot_service.py:186
 #, python-brace-format
 msgid "Screenshot failed: {reason}"
-msgstr ""
+msgstr "Не удалось сделать снимок экрана: {reason}"
 
 #: anura/services/screenshot_service.py:202
 #: anura/services/screenshot_service.py:225
@@ -605,24 +607,24 @@ msgstr "Не могу сделать скриншот."
 #: anura/services/screenshot_service.py:489
 #: anura/services/screenshot_service.py:656
 msgid "Invalid language code specified."
-msgstr ""
+msgstr "Указан недопустимый код языка."
 
 #: anura/services/screenshot_service.py:509 anura/window.py:428
 msgid "The selected image file is empty."
-msgstr ""
+msgstr "Выбранный файл изображения пуст."
 
 #: anura/services/screenshot_service.py:594
 msgid "Failed to read image file."
-msgstr ""
+msgstr "Не удалось прочитать файл изображения."
 
 #: anura/services/screenshot_service.py:597
 msgid "OCR engine failed to process image."
-msgstr ""
+msgstr "Модулю OCR не удалось обработать изображение."
 
 #: anura/services/screenshot_service.py:600
 #: anura/services/screenshot_service.py:606
 msgid "Failed to decode data."
-msgstr ""
+msgstr "Не удалось декодировать данные."
 
 #: anura/services/screenshot_service.py:636
 msgid "No text found."
@@ -630,33 +632,35 @@ msgstr "Ничего не найдено"
 
 #: anura/services/share_service.py:181
 msgid "Select Mastodon Instance"
-msgstr ""
+msgstr "Выберите экземпляр Mastodon"
 
 #: anura/services/share_service.py:182
 msgid "Choose your Mastodon instance to share the extracted text:"
-msgstr ""
+msgstr "Выберите экземпляр Mastodon для публикации извлечённого текста:"
 
 #: anura/services/share_service.py:188
 msgid "Cancel"
-msgstr ""
+msgstr "Отмена"
 
 #: anura/services/share_service.py:227
 msgid "Cannot show dialog without active window"
-msgstr ""
+msgstr "Невозможно показать диалоговое окно без активного окна"
 
 #: anura/services/share_service.py:345
 msgid "Extracted Text"
-msgstr ""
+msgstr "Извлечённый текст"
 
 #: anura/utils/portal_advice.py:85
 msgid "LXQt"
-msgstr ""
+msgstr "LXQt"
 
 #: anura/utils/portal_advice.py:86
 msgid ""
 "Screenshot portal is not configured for LXQt. See the README for the LXQt "
 "setup steps."
 msgstr ""
+"Портал снимков экрана не настроен для LXQt. Инструкции по настройке LXQt см. "
+"в файле README."
 
 #: anura/utils/portal_advice.py:88
 msgid ""
@@ -665,30 +669,41 @@ msgid ""
 "org.freedesktop.impl.portal.Screenshot=kde, and restart the portal "
 "(systemctl --user restart xdg-desktop-portal.service)."
 msgstr ""
+"В LXQt установите xdg-desktop-portal-kde, затем создайте файл ~/.config/xdg-"
+"desktop-portal/lxqt-portals.conf с содержимым [preferred] "
+"org.freedesktop.impl.portal.Screenshot=kde и перезапустите портал "
+"(systemctl --user restart xdg-desktop-portal.service)."
 
 #: anura/utils/portal_advice.py:99
 msgid "KDE Plasma"
-msgstr ""
+msgstr "KDE Plasma"
 
 #: anura/utils/portal_advice.py:100
 msgid ""
 "Screenshot portal unavailable. Install xdg-desktop-portal-kde and re-login."
 msgstr ""
+"Портал снимков экрана недоступен. Установите xdg-desktop-portal-kde и "
+"войдите в систему заново."
 
 #: anura/utils/portal_advice.py:102
 msgid ""
 "Screenshot failed. On KDE Plasma, install xdg-desktop-portal-kde (e.g. sudo "
 "apt install xdg-desktop-portal-kde) and log out and back in."
 msgstr ""
+"Не удалось сделать снимок экрана. В KDE Plasma установите xdg-desktop-portal-"
+"kde (например, sudo apt install xdg-desktop-portal-kde), затем выйдите из "
+"системы и войдите снова."
 
 #: anura/utils/portal_advice.py:111
 msgid "your wlroots compositor"
-msgstr ""
+msgstr "ваш композитор wlroots"
 
 #: anura/utils/portal_advice.py:112
 msgid ""
 "Screenshot portal unavailable. Install xdg-desktop-portal-wlr and re-login."
 msgstr ""
+"Портал снимков экрана недоступен. Установите xdg-desktop-portal-wlr и "
+"войдите в систему заново."
 
 #: anura/utils/portal_advice.py:114
 msgid ""
@@ -696,28 +711,39 @@ msgid ""
 "Niri, …), install xdg-desktop-portal-wlr (e.g. sudo apt install xdg-desktop-"
 "portal-wlr) and log out and back in."
 msgstr ""
+"Не удалось сделать снимок экрана. В композиторах на основе wlroots (Sway, "
+"Hyprland, river, Niri и других) установите xdg-desktop-portal-wlr (например, "
+"sudo apt install xdg-desktop-portal-wlr), затем выйдите из системы и войдите "
+"снова."
 
 #: anura/utils/portal_advice.py:125
 msgid "GNOME"
-msgstr ""
+msgstr "GNOME"
 
 #: anura/utils/portal_advice.py:126
 msgid ""
 "Screenshot portal unavailable. Install xdg-desktop-portal-gnome and re-"
 "login."
 msgstr ""
+"Портал снимков экрана недоступен. Установите xdg-desktop-portal-gnome и "
+"войдите в систему заново."
 
 #: anura/utils/portal_advice.py:128
 msgid ""
 "Screenshot failed. On GNOME / Ubuntu, install xdg-desktop-portal-gnome (e.g."
 " sudo apt install xdg-desktop-portal-gnome) and log out and back in."
 msgstr ""
+"Не удалось сделать снимок экрана. В GNOME или Ubuntu установите xdg-desktop-"
+"portal-gnome (например, sudo apt install xdg-desktop-portal-gnome), затем "
+"выйдите из системы и войдите снова."
 
 #: anura/utils/portal_advice.py:147
 msgid ""
 "Screenshot portal unavailable. Install xdg-desktop-portal-gnome (or -kde) "
 "and re-login."
 msgstr ""
+"Портал снимков экрана недоступен. Установите xdg-desktop-portal-gnome (или -"
+"kde) и войдите в систему заново."
 
 #: anura/utils/portal_advice.py:149
 #, python-brace-format
@@ -726,16 +752,22 @@ msgid ""
 "desktop-portal-kde) and log out and back in. On modern Ubuntu xdg-desktop-"
 "portal-gtk no longer provides the Screenshot interface."
 msgstr ""
+"Не удалось сделать снимок экрана. В системе {desktop} установите xdg-desktop-"
+"portal-gnome (или xdg-desktop-portal-kde), затем выйдите из системы и "
+"войдите снова. В современных версиях Ubuntu xdg-desktop-portal-gtk больше не "
+"предоставляет интерфейс снимков экрана."
 
 #: anura/utils/portal_advice.py:158
 msgid "your desktop"
-msgstr ""
+msgstr "ваша среда рабочего стола"
 
 #: anura/utils/portal_advice.py:159
 msgid ""
 "Screenshot portal unavailable. Install the xdg-desktop-portal backend "
 "matching your desktop."
 msgstr ""
+"Портал снимков экрана недоступен. Установите бэкенд xdg-desktop-portal, "
+"соответствующий вашей среде рабочего стола."
 
 #: anura/utils/portal_advice.py:161
 msgid ""
@@ -743,32 +775,36 @@ msgid ""
 "screenshot portal. Install the xdg-desktop-portal backend matching your "
 "desktop (e.g. xdg-desktop-portal-gnome, -kde, -wlr) and re-login."
 msgstr ""
+"Не удалось сделать снимок экрана. Похоже, сеанс вашей среды рабочего стола "
+"не предоставляет работающий портал снимков экрана. Установите бэкенд xdg-"
+"desktop-portal, соответствующий вашей среде (например, xdg-desktop-portal-"
+"gnome, -kde или -wlr), и войдите в систему заново."
 
 #: anura/widgets/extracted_page.py:101 anura/widgets/extracted_page.py:108
 #, python-format
 msgid "Words: %d | Characters: %d"
-msgstr ""
+msgstr "Слов: %d | Символов: %d"
 
 #: anura/widgets/extracted_page.py:299
 msgid "Request timed out. Please try again."
-msgstr ""
+msgstr "Время ожидания запроса истекло. Повторите попытку."
 
 #: anura/widgets/extracted_page.py:301
 msgid "Network error. Please check your internet connection."
-msgstr ""
+msgstr "Сетевая ошибка. Проверьте подключение к интернету."
 
 #: anura/widgets/extracted_page.py:303
 msgid "Text-to-speech failed. Please try again."
-msgstr ""
+msgstr "Не удалось озвучить текст. Повторите попытку."
 
 #: anura/widgets/preferences_general_page.py:117
 #, python-brace-format
 msgid "TTS playback volume level: {percentage:.0f}%"
-msgstr ""
+msgstr "Громкость воспроизведения TTS: {percentage:.0f}%"
 
 #: anura/widgets/preferences_general_page.py:132
 msgid "Auto (follow OCR language)"
-msgstr ""
+msgstr "Автоматически (язык OCR)"
 
 #: anura/widgets/preferences_languages_page.py:70
 msgid "OCR models unreachable. Please check your internet connection."
@@ -777,101 +813,102 @@ msgstr "Местоположение моделей недоступно. Про
 #: anura/widgets/preferences_languages_page.py:75
 msgid "Metered connection detected. Model downloads may incur data costs."
 msgstr ""
+"Обнаружено подключение с ограниченным трафиком. Загрузка моделей может "
+"привести к дополнительным расходам на передачу данных."
 
 #: anura/widgets/share_row.py:27
 #, python-brace-format
 msgid "Share via {name}"
-msgstr ""
+msgstr "Поделиться через {name}"
 
 #: anura/widgets/shortcuts_overlay.py:59
 msgid "Screenshot & OCR"
-msgstr ""
+msgstr "Снимок экрана и OCR"
 
 #: anura/widgets/shortcuts_overlay.py:61
 msgid "Take screenshot"
-msgstr ""
+msgstr "Сделать снимок экрана"
 
 #: anura/widgets/shortcuts_overlay.py:62
 msgid "Take screenshot and copy to clipboard"
-msgstr ""
+msgstr "Сделать снимок экрана и скопировать его в буфер обмена"
 
 #: anura/widgets/shortcuts_overlay.py:63
 msgid "Open image file"
-msgstr ""
+msgstr "Открыть файл изображения"
 
 #: anura/widgets/shortcuts_overlay.py:64
 msgid "Paste image from clipboard"
-msgstr ""
+msgstr "Вставить изображение из буфера обмена"
 
 #: anura/widgets/shortcuts_overlay.py:69
 msgid "Text Operations"
-msgstr ""
+msgstr "Операции с текстом"
 
 #: anura/widgets/shortcuts_overlay.py:71
 msgid "Copy text to clipboard"
-msgstr ""
+msgstr "Скопировать текст в буфер обмена"
 
 #: anura/widgets/shortcuts_overlay.py:72
 msgid "Listen to text (TTS)"
-msgstr ""
+msgstr "Прослушать текст (TTS)"
 
 #: anura/widgets/shortcuts_overlay.py:73
 msgid "Stop text-to-speech"
-msgstr ""
+msgstr "Остановить озвучивание текста"
 
 #: anura/widgets/shortcuts_overlay.py:78
 msgid "Application"
-msgstr ""
+msgstr "Приложение"
 
 #: anura/widgets/shortcuts_overlay.py:80
 msgid "Open preferences"
-msgstr ""
+msgstr "Открыть настройки"
 
 #: anura/widgets/shortcuts_overlay.py:81 anura/widgets/shortcuts_overlay.py:82
 #: anura/widgets/shortcuts_overlay.py:83
 msgid "Show keyboard shortcuts"
-msgstr ""
+msgstr "Показать сочетания клавиш"
 
 #: anura/widgets/shortcuts_overlay.py:84 anura/widgets/shortcuts_overlay.py:85
 msgid "Quit application"
-msgstr ""
+msgstr "Выйти из приложения"
 
 #: anura/widgets/shortcuts_overlay.py:90
 msgid "Navigation"
-msgstr ""
+msgstr "Навигация"
 
 #: anura/widgets/shortcuts_overlay.py:92
 msgid "Close dialog/go back"
-msgstr ""
+msgstr "Закрыть диалоговое окно или вернуться назад"
 
 #: anura/widgets/shortcuts_overlay.py:93
 msgid "Navigate between widgets"
-msgstr ""
+msgstr "Перемещаться между виджетами"
 
 #: anura/widgets/shortcuts_overlay.py:94
 msgid "Navigate backwards"
-msgstr ""
+msgstr "Перемещаться назад"
 
 #: anura/widgets/shortcuts_overlay.py:99
 msgid "Advanced"
-msgstr ""
+msgstr "Расширенные функции"
 
 #: anura/widgets/shortcuts_overlay.py:101
 msgid "Open image file (advanced)"
-msgstr ""
+msgstr "Открыть файл изображения (расширенная функция)"
 
 #: anura/widgets/shortcuts_overlay.py:102
 msgid "Show help"
-msgstr ""
+msgstr "Показать справку"
 
 #: anura/widgets/shortcuts_overlay.py:103
 msgid "Open application menu"
-msgstr ""
+msgstr "Открыть меню приложения"
 
 #: anura/widgets/welcome_page.py:100
-#, fuzzy
 msgid "Drop image to extract text"
-msgstr "Открыть изображение"
+msgstr "Перетащите изображение для извлечения текста"
 
 #: anura/widgets/welcome_page.py:112 anura/widgets/welcome_page.py:344
 msgid "Extract text from anywhere"
@@ -879,42 +916,42 @@ msgstr "Извлекайте текст отовсюду"
 
 #: anura/widgets/welcome_page.py:202
 msgid "No file data received from drop"
-msgstr ""
+msgstr "При перетаскивании не получены данные файла"
 
 #: anura/widgets/welcome_page.py:215
 msgid "No valid file found in drop"
-msgstr ""
+msgstr "При перетаскивании не найден допустимый файл"
 
 #: anura/widgets/welcome_page.py:224
 msgid "Only local files can be dropped"
-msgstr ""
+msgstr "Можно перетаскивать только локальные файлы"
 
 #: anura/widgets/welcome_page.py:306
 msgid "Only images can be processed that way."
-msgstr ""
+msgstr "Таким способом можно обрабатывать только изображения."
 
 #: anura/widgets/welcome_page.py:277 anura/widgets/welcome_page.py:312
 msgid "Failed to process dropped file"
-msgstr ""
+msgstr "Не удалось обработать перетащенный файл"
 
 #: anura/widgets/welcome_page.py:332
 msgid "Processing..."
-msgstr ""
+msgstr "Обработка..."
 
 #: anura/widgets/welcome_page.py:336
 msgid "Drop image file here"
-msgstr ""
+msgstr "Перетащите файл изображения сюда"
 
 #: anura/services/clipboard_service.py:521
 #: anura/services/screenshot_service.py:468 anura/window.py:145
 #: anura/window.py:437 anura/window.py:483
 #, python-brace-format
 msgid "Image too large: {size}MB (max {max}MB)"
-msgstr ""
+msgstr "Изображение слишком большое: {size} МБ (максимум {max} МБ)"
 
 #: anura/widgets/welcome_page.py:271 anura/widgets/welcome_page.py:289
 msgid "Failed to load dropped file"
-msgstr ""
+msgstr "Не удалось загрузить перетащенный файл"
 
 #: anura/window.py:201
 msgid "Failed to capture screenshot"
@@ -922,26 +959,27 @@ msgstr "Сделать снимок"
 
 #: anura/window.py:208
 msgid "Screenshot service did not respond."
-msgstr ""
+msgstr "Сервис снимков экрана не ответил."
 
 #: anura/window.py:252
 msgid "URL opened automatically"
-msgstr ""
+msgstr "URL открыт автоматически"
 
 #: anura/window.py:290
 #, python-brace-format
 msgid "{n} email found in text"
 msgid_plural "{n} emails found in text"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "В тексте найдено электронное письмо: {n}"
+msgstr[1] "В тексте найдено электронных письма: {n}"
+msgstr[2] "В тексте найдено электронных писем: {n}"
 
 #: anura/window.py:299
 #, python-brace-format
 msgid "{n} phone number found in text"
 msgid_plural "{n} phone numbers found in text"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "В тексте найден номер телефона: {n}"
+msgstr[1] "В тексте найдено номера телефона: {n}"
+msgstr[2] "В тексте найдено номеров телефона: {n}"
 
 #: anura/window.py:350
 msgid "Choose an image for extraction"
@@ -949,51 +987,51 @@ msgstr "Открыть изображение"
 
 #: anura/window.py:356
 msgid "All supported images"
-msgstr ""
+msgstr "Все поддерживаемые изображения"
 
 #: anura/window.py:370
 msgid "PNG images"
-msgstr ""
+msgstr "Изображения PNG"
 
 #: anura/window.py:374
 msgid "JPEG images"
-msgstr ""
+msgstr "Изображения JPEG"
 
 #: anura/window.py:446
 #, python-brace-format
 msgid "Unsupported file format: {path}"
-msgstr ""
+msgstr "Неподдерживаемый формат файла: {path}"
 
 #: anura/window.py:452
 #, python-brace-format
 msgid "File not found: {path}"
-msgstr ""
+msgstr "Файл не найден: {path}"
 
 #: anura/window.py:454
 #, python-brace-format
 msgid "Permission denied: {path}"
-msgstr ""
+msgstr "Доступ запрещён: {path}"
 
 #: anura/window.py:457
 #, python-brace-format
 msgid "Cannot access file: {path}"
-msgstr ""
+msgstr "Невозможно получить доступ к файлу: {path}"
 
 #: anura/window.py:501
 msgid "Corrupt or unsupported image file"
-msgstr ""
+msgstr "Повреждённый или неподдерживаемый файл изображения"
 
 #: anura/window.py:505
 msgid "Unsupported image format"
-msgstr ""
+msgstr "Неподдерживаемый формат изображения"
 
 #: anura/window.py:509 anura/window.py:514
 msgid "Failed to validate image file"
-msgstr ""
+msgstr "Не удалось проверить файл изображения"
 
 #: anura/window.py:521 anura/window.py:525
 msgid "Failed to load image file"
-msgstr ""
+msgstr "Не удалось загрузить файл изображения"
 
 #: anura/window.py:536
 msgid "No text to copy"
@@ -1001,78 +1039,80 @@ msgstr "Ничего не найдено"
 
 #: anura/window.py:688
 msgid "No text to share."
-msgstr ""
+msgstr "Нет текста для публикации."
 
 #: anura/main.py:800 anura/window.py:704
 msgid "Invalid URL blocked for security"
-msgstr ""
+msgstr "Недопустимый URL заблокирован в целях безопасности"
 
 #: anura/window.py:713
 msgid "Failed to open link"
-msgstr ""
+msgstr "Не удалось открыть ссылку"
 
 #: anura/main.py:641
 msgid "Report an Issue"
-msgstr ""
+msgstr "Сообщить о проблеме"
 
 #: anura/language_manager.py:90
 msgid "Chinese - Simplified (vertical)"
-msgstr ""
+msgstr "Китайский, упрощённый (вертикальный)"
 
 #: anura/language_manager.py:92
 msgid "Chinese - Traditional (vertical)"
-msgstr ""
+msgstr "Китайский, традиционный (вертикальный)"
 
 #: anura/main.py:638
 msgid ""
 "Built with Tesseract OCR, GTK4, Libadwaita, and other open source "
 "components."
 msgstr ""
+"Создано с использованием Tesseract OCR, GTK4, Libadwaita и других "
+"компонентов с открытым исходным кодом."
 
 #: anura/window.py:123
 msgid "Failed to load dropped file (invalid path)."
-msgstr ""
+msgstr "Не удалось загрузить перетащенный файл (недопустимый путь)."
 
 #: anura/window.py:159
 msgid "Failed to process the file."
-msgstr ""
+msgstr "Не удалось обработать файл."
 
 #: anura/window.py:261
 msgid "QR Code URL Detected"
-msgstr ""
+msgstr "Обнаружен URL в QR-коде"
 
 #: anura/window.py:275
 msgid "URL copied to clipboard"
-msgstr ""
+msgstr "URL скопирован в буфер обмена"
 
 #: anura/window.py:378
 msgid "WebP images"
-msgstr ""
+msgstr "Изображения WebP"
 
 #: anura/window.py:382
 msgid "AVIF images"
-msgstr ""
+msgstr "Изображения AVIF"
 
 #: anura/window.py:386
 msgid "TIFF images"
-msgstr ""
+msgstr "Изображения TIFF"
 
 #: anura/window.py:390
 msgid "BMP images"
-msgstr ""
+msgstr "Изображения BMP"
 
 #: anura/window.py:394
 msgid "GIF images"
-msgstr ""
+msgstr "Изображения GIF"
 
 #: anura/window.py:401
 msgid "All files (*)"
-msgstr ""
+msgstr "Все файлы (*)"
 
 #: anura/services/tts.py:373
 #, python-brace-format
 msgid "GStreamer playback error: {error}"
-msgstr ""
+msgstr "Ошибка воспроизведения GStreamer: {error}"
 
 #~ msgid "Math / Equation Detection"
 #~ msgstr "Математические выражения"
