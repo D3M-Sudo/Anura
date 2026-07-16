@@ -7,7 +7,6 @@
 import contextlib
 from itertools import count
 import time
-from typing import ClassVar
 
 import gi
 
@@ -17,6 +16,8 @@ gi.require_version("Notify", "0.7")
 gi.require_version("Xdp", "1.0")
 
 from loguru import logger  # noqa: E402
+
+from anura.utils.notification_helpers import NotificationHelpers  # noqa: E402
 
 try:
     from gi.repository import GLib
@@ -97,9 +98,6 @@ class NotificationService:
             self._cleanup_timeout_id = None
         self.cleanup_notifications()
 
-    # Valid priority levels according to XDG Portal specification
-    _VALID_PRIORITIES: ClassVar[set[str]] = {"low", "normal", "high", "urgent"}
-
     # Notification dismiss timeout in seconds (default: 8 seconds)
     _DISMISS_SECONDS = 8
 
@@ -137,15 +135,12 @@ class NotificationService:
             True if notification was shown successfully, False otherwise
         """
         # Validate priority parameter
-        if priority not in self._VALID_PRIORITIES:
-            logger.warning(f"NotificationService: Invalid priority '{priority}', using 'normal'")
-            priority = "normal"
+        priority = NotificationHelpers.validate_priority(priority)
 
         # Security: Escape Pango markup in title and body to prevent injection attacks
         # from OCR'd text (phishing, UI spoofing, etc).
-        if GLib:
-            title = GLib.markup_escape_text(title)
-            body = GLib.markup_escape_text(body)
+        title = NotificationHelpers.escape_markup(title)
+        body = NotificationHelpers.escape_markup(body)
 
         # Try portal first, then fallback to libnotify
         if HAS_PORTAL:
@@ -187,24 +182,17 @@ class NotificationService:
 
         # Security: Escape Pango markup in title and body to prevent injection attacks
         # from OCR'd text (phishing, UI spoofing, etc).
-        if GLib:
-            title = GLib.markup_escape_text(title) if title else ""
-            body = GLib.markup_escape_text(body) if body else ""
+        title = NotificationHelpers.escape_markup(title) if title else ""
+        body = NotificationHelpers.escape_markup(body) if body else ""
 
         notification = Gio.Notification.new(title)
         notification.set_body(body)
         notification.set_default_action_and_target(action_id, action_target)
 
         # Set priority if valid
-        if priority in self._VALID_PRIORITIES:
-            if priority == "high":
-                notification.set_priority(Gio.NotificationPriority.HIGH)
-            elif priority == "urgent":
-                notification.set_priority(Gio.NotificationPriority.URGENT)
-            elif priority == "low":
-                notification.set_priority(Gio.NotificationPriority.LOW)
-            else:
-                notification.set_priority(Gio.NotificationPriority.NORMAL)
+        gio_priority = NotificationHelpers.map_priority_to_gio(priority)
+        if gio_priority is not None:
+            notification.set_priority(gio_priority)
 
         # Get the application instance and send
         app = Gio.Application.get_default()

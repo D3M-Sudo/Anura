@@ -161,8 +161,8 @@ def test_window_blp_contains_adw_banner() -> None:
 
 
 def test_language_manager_remove_language_validates_code() -> None:
-    """LanguageManager.remove_language must validate the input code against
-    LANG_CODE_PATTERN to prevent path traversal."""
+    """LanguageManager.remove_language must validate the input code format
+    via LanguageValidator.is_valid_code_format() to prevent path traversal."""
     tree, _ = _load_module_source("services/language_manager.py")
     remove_fn = _find_method(tree, "LanguageManager", "remove_language")
 
@@ -171,18 +171,20 @@ def test_language_manager_remove_language_validates_code() -> None:
         if (
             isinstance(node, ast.Call)
             and isinstance(node.func, ast.Attribute)
-            and node.func.attr == "match"
-            and isinstance(node.func.value, ast.Name)
-            and node.func.value.id == "re"
+            and node.func.attr == "is_valid_code_format"
         ):
-            # Check if LANG_CODE_PATTERN is passed to re.match
-            for arg in node.args:
-                if isinstance(arg, ast.Name) and arg.id == "LANG_CODE_PATTERN":
-                    found_validation = True
-                    break
+            # Verify it's called on self._validator
+            if (
+                isinstance(node.func.value, ast.Attribute)
+                and node.func.value.attr == "_validator"
+                and isinstance(node.func.value.value, ast.Name)
+                and node.func.value.value.id == "self"
+            ):
+                found_validation = True
+                break
     assert found_validation, (
-        "LanguageManager.remove_language() must validate the code against "
-        "LANG_CODE_PATTERN to prevent path traversal attacks."
+        "LanguageManager.remove_language() must delegate validation to "
+        "self._validator.is_valid_code_format() to prevent path traversal attacks."
     )
 
 
