@@ -7,8 +7,8 @@
 from typing import ClassVar
 
 import gtts
-import requests
 from loguru import logger
+import requests
 
 
 class LanguageMapper:

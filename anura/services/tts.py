@@ -13,8 +13,8 @@ gi.require_version("GLib", "2.0")
 gi.require_version("GObject", "2.0")
 
 from gi.repository import GObject  # noqa: E402
-from loguru import logger  # noqa: E402
 import gtts  # noqa: E402
+from loguru import logger  # noqa: E402
 
 from anura.services.settings import settings  # noqa: E402
 from anura.services.tts import PipelineManager  # noqa: E402

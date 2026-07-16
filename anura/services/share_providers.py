@@ -4,9 +4,9 @@
 #
 # SPDX-License-Identifier: MIT
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from gettext import gettext as _
-from typing import Callable
 from urllib.parse import quote
 
 

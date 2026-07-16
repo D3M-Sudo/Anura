@@ -44,7 +44,7 @@ class SpeechGenerator:
 
     def generate(self, text: str, lang: str = "en", generation_id: int = 0) -> str:
         """Thread-safe MP3 generation with proper state management.
-        
+
         Args:
             text: Text to convert to speech
             lang: Language code for gTTS

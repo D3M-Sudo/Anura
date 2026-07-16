@@ -16,6 +16,7 @@ from gi.repository import Gio, GLib
 from loguru import logger
 
 from anura.utils.file_ready_retry import FileReadyRetry
+
 from .base import ScreenshotProvider
 
 # Flatpak bundles scrot at this fixed path (declared in the Flatpak manifest).

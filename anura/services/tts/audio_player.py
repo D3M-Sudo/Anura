@@ -7,6 +7,7 @@
 import contextlib
 import functools
 import threading
+from typing import ClassVar
 
 import gi
 
@@ -14,8 +15,8 @@ gi.require_version("GLib", "2.0")
 gi.require_version("GObject", "2.0")
 gi.require_version("Gst", "1.0")
 
-from gi.repository import GLib, GObject, Gst
-from loguru import logger
+from gi.repository import GLib, GObject, Gst  # noqa: E402
+from loguru import logger  # noqa: E402
 
 
 class AudioPlayer(GObject.GObject):
@@ -26,7 +27,7 @@ class AudioPlayer(GObject.GObject):
 
     __gtype_name__ = "AudioPlayer"
 
-    __gsignals__ = {
+    __gsignals__: ClassVar[dict[str, tuple]] = {
         "eos": (GObject.SignalFlags.RUN_LAST, None, (int,)),
         "error": (GObject.SignalFlags.RUN_LAST, None, (int, str)),
     }
@@ -49,7 +50,7 @@ class AudioPlayer(GObject.GObject):
 
     def play(self, filepath: str, volume: float = 1.0, generation_id: int = 0) -> None:
         """Play an audio file using GStreamer playbin3.
-        
+
         Args:
             filepath: Path to audio file
             volume: Volume level (0.0 to 1.0)
@@ -57,7 +58,7 @@ class AudioPlayer(GObject.GObject):
         """
         # Cleanup previous playback completely
         self.cleanup()
-        
+
         self.player = Gst.ElementFactory.make("playbin3", "player")
         if not self.player:
             logger.error("Anura AudioPlayer: Failed to create GStreamer playbin.")
@@ -78,17 +79,17 @@ class AudioPlayer(GObject.GObject):
         """Setup GStreamer bus signal watch with generation_id captured in closure."""
         if self._bus is None:
             return False
-            
+
         self._bus.add_signal_watch()
         self._bus_watch_active = True
-        
+
         # Register handlers with generation_id captured via functools.partial
         eos_callback = functools.partial(self._on_gst_eos, generation_id=generation_id)
         error_callback = functools.partial(self._on_gst_error, generation_id=generation_id)
-        
+
         self._eos_handler_id = self._bus.connect("message::eos", eos_callback)
         self._error_handler_id = self._bus.connect("message::error", error_callback)
-        
+
         logger.debug("Anura AudioPlayer: Bus watch setup completed")
         return True
 

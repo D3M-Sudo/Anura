@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: MIT
 
 import threading
+from typing import ClassVar
 
 from gi.repository import GLib, GObject
 from loguru import logger
@@ -23,7 +24,7 @@ class PipelineManager(GObject.GObject):
 
     __gtype_name__ = "PipelineManager"
 
-    __gsignals__ = {
+    __gsignals__: ClassVar[dict[str, tuple]] = {
         "speak": (GObject.SignalFlags.RUN_LAST, None, (str,)),
         "stop": (GObject.SignalFlags.RUN_LAST, None, (bool,)),
         "paused": (GObject.SignalFlags.RUN_LAST, None, (bool,)),

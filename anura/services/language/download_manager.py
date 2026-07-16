@@ -4,6 +4,7 @@
 #
 # SPDX-License-Identifier: MIT
 
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 import contextlib
 import os
@@ -13,7 +14,7 @@ import shutil
 import tempfile
 import threading
 import time
-from typing import Callable, ClassVar
+from typing import ClassVar
 
 import gi
 
@@ -21,11 +22,11 @@ gi.require_version("GLib", "2.0")
 gi.require_version("GObject", "2.0")
 gi.require_version("Gio", "2.0")
 
-from gi.repository import Gio, GLib, GObject
-from loguru import logger
-import requests
+from gi.repository import Gio, GLib, GObject  # noqa: E402
+from loguru import logger  # noqa: E402
+import requests  # noqa: E402
 
-from anura.config import (
+from anura.config import (  # noqa: E402
     LANG_CODE_PATTERN,
     MAX_MODEL_SIZE_BYTES,
     REQUEST_TIMEOUT,
@@ -35,8 +36,8 @@ from anura.config import (
     TESSDATA_URL,
     USER_AGENT,
 )
-from anura.models.download_state import DownloadState
-from anura.services.settings import settings
+from anura.models.download_state import DownloadState  # noqa: E402
+from anura.services.settings import settings  # noqa: E402
 
 
 class DownloadManager(GObject.GObject):

@@ -172,16 +172,14 @@ def test_language_manager_remove_language_validates_code() -> None:
             isinstance(node, ast.Call)
             and isinstance(node.func, ast.Attribute)
             and node.func.attr == "is_valid_code_format"
-        ):
             # Verify it's called on self._validator
-            if (
-                isinstance(node.func.value, ast.Attribute)
-                and node.func.value.attr == "_validator"
-                and isinstance(node.func.value.value, ast.Name)
-                and node.func.value.value.id == "self"
-            ):
-                found_validation = True
-                break
+            and isinstance(node.func.value, ast.Attribute)
+            and node.func.value.attr == "_validator"
+            and isinstance(node.func.value.value, ast.Name)
+            and node.func.value.value.id == "self"
+        ):
+            found_validation = True
+            break
     assert found_validation, (
         "LanguageManager.remove_language() must delegate validation to "
         "self._validator.is_valid_code_format() to prevent path traversal attacks."
