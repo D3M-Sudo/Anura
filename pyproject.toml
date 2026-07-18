@@ -77,7 +77,7 @@ addopts = "-v --tb=short --ignore=tests/test_clipboard_service.py --ignore=tests
 dev = [
     "bandit>=1.9.4",
     "meson>=1.11.2",
-    "mypy>=2.1.0",
+    "mypy>=2.3.0",
     "ninja>=1.13.0",
     "pytest>=9.1.1",
     "pytest-cov>=6.0.0",
