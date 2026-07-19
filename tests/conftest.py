@@ -353,4 +353,4 @@ def pytest_sessionfinish(session, exitstatus):
         pass
 
     # 4. Bypass Python's non-daemon-thread join (avoids 74-second CI hang).
-    os._exit(int(exitstatus))
+    # os._exit(int(exitstatus))
