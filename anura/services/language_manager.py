@@ -24,6 +24,7 @@ from loguru import logger  # noqa: E402
 
 from anura.config import (  # noqa: E402
     LANG_CODE_PATTERN,
+    TESSDATA_DIR,  # noqa: F401
     TESSDATA_POOL_DIR,
     TESSDATA_SYSTEM_DIR,
 )

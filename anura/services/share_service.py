@@ -49,6 +49,14 @@ class ShareService(GObject.GObject):
         """
         return get_provider_ids()
 
+    def __getattr__(self, name: str):
+        """Dynamic lookup for legacy get_link_* methods to maintain backward compatibility."""
+        if name.startswith("get_link_"):
+            provider = name[len("get_link_"):]
+            from anura.services.share_providers import generate_share_link
+            return lambda text: generate_share_link(provider, text)
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+
     # Maximum URL length for safe sharing (most browsers support ~2000, be conservative)
     MAX_URL_LENGTH = 2000
 

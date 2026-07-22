@@ -71,6 +71,18 @@ class TTSService(GObject.GObject):
         """Fetch available languages supported by gTTS."""
         return gtts.lang.tts_langs()
 
+    @staticmethod
+    def map_tesseract_to_gtts(tess_code: str) -> str | None:
+        """Map Tesseract language code to gTTS code."""
+        from anura.services.tts.language_mapper import LanguageMapper
+        return LanguageMapper.map_tesseract_to_gtts(tess_code)
+
+    @classmethod
+    def get_supported_gtts_languages(cls) -> dict:
+        """Get supported languages."""
+        from anura.services.tts.language_mapper import LanguageMapper
+        return LanguageMapper.get_supported_gtts_languages()
+
     def get_effective_language(self, ocr_lang: str) -> str | None:
         """Return TTS language: user preference or fallback to OCR language."""
         tts_lang = settings.get_string("tts-language")
