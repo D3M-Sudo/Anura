@@ -17,7 +17,7 @@ import gtts  # noqa: E402
 from loguru import logger  # noqa: E402
 
 from anura.services.settings import settings  # noqa: E402
-from anura.services.tts import PipelineManager  # noqa: E402
+from anura.services.tts.pipeline_manager import PipelineManager  # noqa: E402
 from anura.utils.singleton import get_instance  # noqa: E402
 
 
