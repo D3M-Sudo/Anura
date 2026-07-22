@@ -107,9 +107,12 @@ class TestExtractedPageEnterprise:
         widget.text_copy_btn.set_icon_name("edit-copy-symbolic")
         widget.show_copy_feedback()
         assert widget.text_copy_btn.get_icon_name() == "emblem-ok-symbolic"
+        assert widget.text_copy_btn.get_tooltip_text() == "Copied to clipboard!"
 
-        # We don't want to wait 2 seconds in a unit test, so we just verify it set the icon.
-        # The timeout logic is standard GLib.
+        # Manually reset copy icon to simulate timeout callback
+        widget._reset_copy_icon("edit-copy-symbolic")
+        assert widget.text_copy_btn.get_icon_name() == "edit-copy-symbolic"
+        assert "Copy Extracted Text to Clipboard" in widget.text_copy_btn.get_tooltip_text()
 
 
 class TestWelcomePageEnterprise:

@@ -124,18 +124,25 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
 
     def _update_action_tooltips(self, has_selection: bool) -> None:
         """Update tooltips and accessibility labels based on whether text is selected."""
+        if self.text_copy_btn and self.text_copy_btn.get_icon_name() == "emblem-ok-symbolic":
+            # Skip updating copy button tooltips while showing the copied feedback
+            pass
+        else:
+            if has_selection:
+                copy_tooltip = C_("Extracted screen", "Copy Selected Text to Clipboard (Ctrl+C)")
+            else:
+                copy_tooltip = C_("Extracted screen", "Copy Extracted Text to Clipboard (Ctrl+C)")
+
+            if self.text_copy_btn:
+                self.text_copy_btn.set_tooltip_text(copy_tooltip)
+                self.text_copy_btn.update_property([Gtk.AccessibleProperty.LABEL], [copy_tooltip])
+
         if has_selection:
-            copy_tooltip = C_("Extracted screen", "Copy Selected Text to Clipboard (Ctrl+C)")
             listen_tooltip = C_("Extracted screen", "Listen to Selected Text (Ctrl+L)")
             share_tooltip = C_("Extracted screen", "Share Selection To")
         else:
-            copy_tooltip = C_("Extracted screen", "Copy Extracted Text to Clipboard (Ctrl+C)")
             listen_tooltip = C_("Extracted screen", "Listen to Text (Ctrl+L)")
             share_tooltip = C_("Extracted screen", "Share To")
-
-        if self.text_copy_btn:
-            self.text_copy_btn.set_tooltip_text(copy_tooltip)
-            self.text_copy_btn.update_property([Gtk.AccessibleProperty.LABEL], [copy_tooltip])
 
         if self.listen_btn:
             self.listen_btn.set_tooltip_text(listen_tooltip)
@@ -158,14 +165,21 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
         original_icon = self.text_copy_btn.get_icon_name()
         self.text_copy_btn.set_icon_name("emblem-ok-symbolic")
 
+        # Update tooltip and accessible label for feedback
+        copied_text = _("Copied to clipboard!")
+        self.text_copy_btn.set_tooltip_text(copied_text)
+        self.text_copy_btn.update_property([Gtk.AccessibleProperty.LABEL], [copied_text])
+
         GLib.timeout_add_seconds(2, self._reset_copy_icon, original_icon)
 
     def _reset_copy_icon(self, icon_name: str) -> bool:
-        """Helper to reset copy button icon."""
+        """Helper to reset copy button icon and tooltip."""
         try:
             if self.text_copy_btn and self.text_copy_btn.get_icon_name() == "emblem-ok-symbolic":
                 # Only reset if it's still showing the checkmark (don't overwrite newer state)
                 self.text_copy_btn.set_icon_name(icon_name)
+                selection = self.buffer.get_selection_bounds()
+                self._update_action_tooltips(bool(selection))
         except (AttributeError, RuntimeError, TypeError) as e:
             logger.exception(f"Anura: Failed to reset copy icon: {e}")
         return GLib.SOURCE_REMOVE
