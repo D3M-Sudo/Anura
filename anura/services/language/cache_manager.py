@@ -8,16 +8,33 @@ import contextlib
 import os
 from pathlib import Path
 import shutil
+import sys
 import threading
 import time
 
 from loguru import logger
 
-from anura.config import (
-    TESSDATA_DIR,
-    TESSDATA_SYSTEM_DIR,
-)
 from anura.services.settings import settings
+
+
+def _get_tessdata_dir() -> str:
+    with contextlib.suppress(Exception):
+        if "anura.services.language_manager" in sys.modules:
+            lm = sys.modules["anura.services.language_manager"]
+            if hasattr(lm, "TESSDATA_DIR"):
+                return lm.TESSDATA_DIR
+    from anura.config import TESSDATA_DIR
+    return TESSDATA_DIR
+
+
+def _get_tessdata_system_dir() -> str:
+    with contextlib.suppress(Exception):
+        if "anura.services.language_manager" in sys.modules:
+            lm = sys.modules["anura.services.language_manager"]
+            if hasattr(lm, "TESSDATA_SYSTEM_DIR"):
+                return lm.TESSDATA_SYSTEM_DIR
+    from anura.config import TESSDATA_SYSTEM_DIR
+    return TESSDATA_SYSTEM_DIR
 
 
 class CacheManager:
@@ -36,7 +53,7 @@ class CacheManager:
         if quality is None:
             quality = settings.get_string("tessdata-model")
 
-        base_dir = Path(TESSDATA_DIR)
+        base_dir = Path(_get_tessdata_dir())
         if quality == "best":
             return base_dir / "tessdata_best"
         if quality == "standard":
@@ -58,7 +75,7 @@ class CacheManager:
 
         # Use lock to prevent race condition when multiple threads try to create directory
         with self._cache_lock:
-            tess_path = Path(TESSDATA_DIR)
+            tess_path = Path(_get_tessdata_dir())
             if not tess_path.exists():
                 logger.warning(
                     "Anura: tessdata directory not found. It will be created on first language download.",
@@ -74,7 +91,7 @@ class CacheManager:
 
         # Clean up orphaned temp files from crashed/interrupted downloads
         try:
-            tess_path = Path(TESSDATA_DIR)
+            tess_path = Path(_get_tessdata_dir())
             # Scan root and standard quality subdirectories
             scan_dirs = [tess_path, tess_path / "tessdata", tess_path / "tessdata_best"]
 
@@ -130,7 +147,7 @@ class CacheManager:
                 # Enhanced logging: Log paths being checked with directory status
                 tess_path = self._get_model_quality_dir(quality)
                 logger.debug(f"Anura CacheManager: Scanning user tessdata directory: {tess_path}")
-                logger.debug(f"Anura CacheManager: Scanning system tessdata directory: {TESSDATA_SYSTEM_DIR}")
+                logger.debug(f"Anura CacheManager: Scanning system tessdata directory: {_get_tessdata_system_dir()}")
 
                 # User-downloaded models
                 if tess_path.exists():
@@ -148,10 +165,10 @@ class CacheManager:
                     except OSError as e:
                         logger.exception(f"Anura CacheManager: Error reading user tessdata directory: {e}")
                 else:
-                    logger.debug(f"Anura CacheManager: User tessdata directory does not exist: {TESSDATA_DIR}")
+                    logger.debug(f"Anura CacheManager: User tessdata directory does not exist: {_get_tessdata_dir()}")
 
                 # Bundled system models
-                system_path = Path(TESSDATA_SYSTEM_DIR)
+                system_path = Path(_get_tessdata_system_dir())
                 if system_path.exists():
                     try:
                         system_files = [
@@ -168,7 +185,7 @@ class CacheManager:
                         logger.exception(f"Anura CacheManager: Error reading system tessdata directory: {e}")
                 else:
                     logger.debug(
-                        f"Anura CacheManager: System tessdata directory does not exist: {TESSDATA_SYSTEM_DIR}",
+                        f"Anura CacheManager: System tessdata directory does not exist: {_get_tessdata_system_dir()}",
                     )
 
                 total_models = len(codes)

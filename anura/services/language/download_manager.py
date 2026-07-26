@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import sys
 import tempfile
 import threading
 import time
@@ -31,13 +32,22 @@ from anura.config import (  # noqa: E402
     MAX_MODEL_SIZE_BYTES,
     REQUEST_TIMEOUT,
     TESSDATA_BEST_URL,
-    TESSDATA_DIR,
     TESSDATA_STANDARD_URL,
     TESSDATA_URL,
     USER_AGENT,
 )
 from anura.models.download_state import DownloadState  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
+
+
+def _get_tessdata_dir() -> str:
+    with contextlib.suppress(Exception):
+        if "anura.services.language_manager" in sys.modules:
+            lm = sys.modules["anura.services.language_manager"]
+            if hasattr(lm, "TESSDATA_DIR"):
+                return lm.TESSDATA_DIR
+    from anura.config import TESSDATA_DIR
+    return TESSDATA_DIR
 
 
 class DownloadManager(GObject.GObject):
@@ -83,7 +93,7 @@ class DownloadManager(GObject.GObject):
         if quality is None:
             quality = settings.get_string("tessdata-model")
 
-        base_dir = TESSDATA_DIR
+        base_dir = Path(_get_tessdata_dir())
         if quality == "best":
             return str(base_dir / "tessdata_best")
         if quality == "standard":
