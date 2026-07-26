@@ -50,6 +50,50 @@ class TTSService(GObject.GObject):
 
         logger.debug("Anura TTSService: TTS service initialization complete")
 
+    @classmethod
+    def get_supported_gtts_languages(cls) -> dict:
+        """Get supported gTTS languages (backward compatibility for tests)."""
+        from anura.services.tts.language_mapper import LanguageMapper
+
+        return LanguageMapper.get_supported_gtts_languages()
+
+    @classmethod
+    def map_tesseract_to_gtts(cls, tess_code: str) -> str | None:
+        """Map Tesseract code to gTTS code (backward compatibility for tests)."""
+        from anura.services.tts.language_mapper import LanguageMapper
+
+        return LanguageMapper.map_tesseract_to_gtts(tess_code)
+
+    @property
+    def player(self) -> object:
+        """Helper property for backward compatibility with tests."""
+        return self._pipeline._player.player
+
+    @player.setter
+    def player(self, value: object) -> None:
+        """Helper property setter for backward compatibility with tests."""
+        self._pipeline._player.player = value
+
+    @property
+    def _speech_dir(self) -> str:
+        """Helper property for backward compatibility with tests."""
+        from anura.services.tts.speech_generator import SpeechGenerator
+
+        return str(SpeechGenerator._speech_dir)
+
+    @property
+    def _current_speech_file(self) -> str | None:
+        """Helper property for backward compatibility with tests."""
+        return self._pipeline._generator.get_current_file()
+
+    @_current_speech_file.setter
+    def _current_speech_file(self, value: str | None) -> None:
+        """Helper property setter for backward compatibility with tests."""
+        if value is None:
+            self._pipeline._generator.clear_current_file()
+        else:
+            self._pipeline._generator._current_speech_file = value
+
     def _on_speak(self, _pipeline: PipelineManager, filepath: str) -> None:
         """Forward speak signal from PipelineManager."""
         self.emit("speak", filepath)

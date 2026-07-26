@@ -318,6 +318,13 @@ class ShareService(GObject.GObject):
 
             GLib.idle_add(_on_share_idle, False)
 
+    def __getattr__(self, name: str):
+        """Dynamic backward-compatibility handlers for get_link_* methods in tests."""
+        if name.startswith("get_link_"):
+            provider = name[len("get_link_") :]
+            if provider in self.providers():
+                return lambda text: generate_share_link(provider, text)
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
 
 
 # Thread-safe singleton instance for global app access
