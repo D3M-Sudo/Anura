@@ -1,0 +1,685 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-9.1.1, pluggy-1.6.0 -- /app/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /app
+configfile: pyproject.toml
+plugins: cov-7.1.0, anyio-4.13.0, timeout-2.4.0
+collecting ... collected 315 items / 4 errors
+
+<Dir app>
+  <Dir tests>
+    <Module test_audit_config_types.py>
+      <Class TestConfig>
+        <Function test_lang_code_pattern>
+        <Function test_get_tesseract_config_happy_path>
+        <Function test_get_tesseract_config_invalid_code>
+      <Class TestDownloadState>
+        <Function test_percentage_zero_total>
+        <Function test_percentage_happy_path>
+        <Function test_percentage_boundary>
+      <Class TestLanguageItem>
+        <Function test_language_item_init>
+        <Function test_language_item_repr>
+    <Module test_audit_foundational_utils.py>
+      <Class TestAtomicTaskManager>
+        Tests for AtomicTaskManager — verifies execute, callback, errorback, and task versioning.
+        <Function test_execute_success_callback>
+          execute() invokes callback with result on the main thread.
+        <Function test_execute_errorback_on_exception>
+          execute() invokes errorback with the exception when command raises.
+        <Function test_task_versioning_drops_obsolete_results>
+          When a second task is submitted before the first completes,
+          the first task's callback is silently dropped (stale UUID).
+        <Function test_singleton_identity>
+          get_atomic_manager() always returns the same instance.
+        <Function test_shutdown_does_not_raise>
+          shutdown() completes without error.
+      <Class TestSingleton>
+        <Function test_singleton_identity>
+        <Function test_singleton_reset>
+      <Class TestSignalManager>
+        <Function test_signal_manager_cleanup>
+      <Class TestUriValidator>
+        <Function test_uri_validator_basics>
+    <Module test_audit_ocr_preprocessing.py>
+      <Class TestTextPreprocessor>
+        <Function test_singleton>
+        <Function test_clean_extracted_text_whitespace>
+          Whitespace normalization is handled by sanitize_text in clean_extracted_text.
+        <Function test_fix_punctuation>
+        <Function test_fix_capitalization>
+        <Function test_remove_artifacts>
+        <Function test_extract_structured_data>
+        <Function test_enhance_image_basic>
+        <Function test_clean_extracted_text>
+    <Module test_audit_performance_benchmarks.py>
+      <Class TestPerformanceBenchmarks>
+        <Function test_image_enhancement_latency>
+        <Function test_text_cleaning_latency>
+        <Function test_memory_leak_check_repeated_enhancement>
+    <Module test_audit_security_injection.py>
+      <Class TestSecurityAudit>
+        <Function test_lang_code_injection_prevention>
+        <Function test_uri_validation_security>
+        <Function test_absolute_path_injection_in_language_manager>
+    <Module test_audit_ui_widgets.py>
+      <Class TestWidgets>
+        <Function test_language_popover_row>
+        <Function test_share_row>
+        <Function test_simple_widgets_init>
+    <Module test_bug_035_remediation.py>
+      <Class TestBug035Remediation>
+        Unit tests for BUG-035 remediation (dynamic URI scheme validation).
+        <Function test_validate_share_url_logic[tg://share?text=hello-True-True]>
+          _validate_share_url must pass the security gate then resolve via dynamic check or whitelist.
+        <Function test_validate_share_url_logic[slack://open-True-True]>
+          _validate_share_url must pass the security gate then resolve via dynamic check or whitelist.
+        <Function test_validate_share_url_logic[zoommtg://join-True-True]>
+          _validate_share_url must pass the security gate then resolve via dynamic check or whitelist.
+        <Function test_validate_share_url_logic[tg://share?text=hello-False-True]>
+          _validate_share_url must pass the security gate then resolve via dynamic check or whitelist.
+        <Function test_validate_share_url_logic[slack://open-False-True]>
+          _validate_share_url must pass the security gate then resolve via dynamic check or whitelist.
+        <Function test_validate_share_url_logic[zoommtg://join-False-False]>
+          _validate_share_url must pass the security gate then resolve via dynamic check or whitelist.
+        <Function test_validate_share_url_logic[mailto:test@example.com-False-True]>
+          _validate_share_url must pass the security gate then resolve via dynamic check or whitelist.
+        <Function test_validate_share_url_logic[web+mastodon://share-False-True]>
+          _validate_share_url must pass the security gate then resolve via dynamic check or whitelist.
+        <Function test_validate_share_url_logic[https://google.com-False-True]>
+          _validate_share_url must pass the security gate then resolve via dynamic check or whitelist.
+        <Function test_validate_share_url_logic[invalid-scheme://test-False-False]>
+          _validate_share_url must pass the security gate then resolve via dynamic check or whitelist.
+        <Function test_validate_share_url_gio_exception_falls_back_to_whitelist>
+          When Gio.AppInfo raises, validation falls back to the scheme whitelist.
+        <Function test_security_check_gates_before_dynamic_lookup>
+          is_safe_url_string returning False must block validation regardless of Gio.
+        <Function test_http_url_uses_uri_validator>
+          HTTP/HTTPS URLs must be validated by uri_validator, not Gio.
+    <Module test_bug_fixes_static.py>
+      <Function test_tts_controller_request_listen_does_not_call_self_get_language>
+      <Function test_tts_controller_request_listen_uses_tts_effective_language>
+        Resolve the gTTS code via TTSService.get_effective_language() so the
+        Tesseract→ISO 639-1 mapping (e.g. 'ita'→'it') and the user's tts-language
+        override are both honoured.
+      <Function test_get_release_notes_wraps_bare_text>
+      <Function test_screenshot_service_logs_full_diagnostic_context>
+      <Function test_screenshot_service_detects_generic_backend_failure>
+      <Function test_screenshot_service_declares_portal_backend_missing_signal>
+      <Function test_window_wires_portal_banner_and_signal_handler>
+      <Function test_window_blp_contains_adw_banner>
+      <Function test_language_manager_remove_language_validates_code>
+        LanguageManager.remove_language must validate the input code format
+        via LanguageValidator.is_valid_code_format() to prevent path traversal.
+      <Function test_metainfo_documents_portal_requirement>
+      <Function test_readme_documents_runtime_requirements>
+      <Function test_extracted_page_uses_signal_manager_mixin>
+        ExtractedPage must use SignalManagerMixin for automated cleanup.
+      <Function test_extracted_page_disconnects_share_service_signal>
+        ExtractedPage must manage share service signal via connect_tracked.
+      <Function test_extracted_page_tracks_share_handler_id>
+        ExtractedPage tracks share signals via SignalManagerMixin.
+      <Function test_window_disconnects_portal_banner_signal>
+        AnuraWindow.do_destroy must disconnect the portal_banner signal handler.
+      <Function test_window_tracks_portal_banner_handler_id>
+        OcrController must track the portal_banner handler ID for cleanup.
+      <Function test_window_process_file_uses_validate_image_resource>
+        AnuraWindow.process_file must use validate_image_resource() for size validation.
+      <Function test_modules_parse_cleanly[widgets/extracted_page.py]>
+        Sanity: each modified module must still be syntactically valid.
+      <Function test_modules_parse_cleanly[widgets/welcome_page.py]>
+        Sanity: each modified module must still be syntactically valid.
+      <Function test_modules_parse_cleanly[main.py]>
+        Sanity: each modified module must still be syntactically valid.
+      <Function test_modules_parse_cleanly[services/screenshot_service.py]>
+        Sanity: each modified module must still be syntactically valid.
+      <Function test_modules_parse_cleanly[window.py]>
+        Sanity: each modified module must still be syntactically valid.
+    <Module test_capability_audit.py>
+      <UnitTestCase TestCapabilityAudit>
+        A class whose instances are single test cases.
+
+        By default, the test code itself should be placed in a method named
+        'runTest'.
+
+        If the fixture may be used for many test cases, create as
+        many test methods as are needed. When instantiating such a TestCase
+        subclass, specify in the constructor arguments the name of the test method
+        that the instance is to execute.
+
+        Test authors should subclass TestCase for their own tests. Construction
+        and deconstruction of the test's environment ('fixture') can be
+        implemented by overriding the 'setUp' and 'tearDown' methods respectively.
+
+        If it is necessary to override the __init__ method, the base class
+        __init__ method must always be called. It is important that subclasses
+        should not change the signature of their __init__ method, since instances
+        of the classes are instantiated automatically by parts of the framework
+        in order to be run.
+
+        When subclassing TestCase, you can set these attributes:
+        * failureException: determines which exception will be raised when
+            the instance's assertion methods fail; test methods raising this
+            exception will be deemed to have 'failed' rather than 'errored'.
+        * longMessage: determines whether long messages (including repr of
+            objects used in assert methods) will be printed on failure in *addition*
+            to any explicit message passed.
+        * maxDiff: sets the maximum length of a diff in failure messages
+            by assert methods using difflib. It is looked up as an instance
+            attribute so can be configured by individual tests if required.
+        <TestCaseFunction test_perform_audit_full_capabilities>
+        <TestCaseFunction test_perform_audit_missing_dependencies>
+    <Module test_cleanup.py>
+      <Class TestCleanupEnterprise>
+        Enterprise-grade unit tests for cleanup utilities.
+        <Function test_cleanup_orphaned_resources_happy_path>
+          Test that old files are removed and new ones are kept.
+        <Function test_cleanup_handles_missing_dir>
+          Test cleanup doesn't crash when directories don't exist.
+        <Function test_get_cache_info>
+          Test cache info gathering.
+        <Function test_cleanup_permission_error>
+          Test that cleanup handles permission errors gracefully.
+    <Module test_config.py>
+      <Class TestLangCodePattern>
+        Tests for LANG_CODE_PATTERN — the security boundary before Tesseract.
+        <Function test_standard_3letter>
+        <Function test_composite_code>
+        <Function test_multi_language_code>
+        <Function test_2letter_minimum>
+        <Function test_8letter_maximum>
+        <Function test_uppercase_allowed>
+        <Function test_empty_string>
+        <Function test_single_char>
+        <Function test_too_long>
+        <Function test_shell_injection_semicolon>
+        <Function test_shell_injection_backtick>
+        <Function test_path_traversal>
+        <Function test_space_not_allowed>
+        <Function test_hyphen_not_allowed>
+        <Function test_dot_not_allowed>
+      <Class TestGetTesseractConfig>
+        Tests for get_tesseract_config() path resolution logic.
+        <Function test_user_model_takes_priority>
+          User tessdata directory has priority over system directory.
+        <Function test_fallback_to_system_dir>
+          Falls back to system tessdata when user model is missing.
+        <Function test_invalid_lang_code_defaults_to_eng>
+          Invalid lang_code is rejected and falls back to 'eng'.
+        <Function test_config_contains_psm_and_oem>
+          Config string always contains Tesseract mode flags.
+        <Function test_config_format>
+          Test Tesseract config string format (string construction).
+        <Function test_config_quoting>
+          Test Tesseract config properly quotes paths with spaces.
+        <Function test_config_valid_english>
+          Test Tesseract config generation for valid English.
+        <Function test_config_invalid_language>
+          Test Tesseract config generation for invalid language.
+      <Class TestLogLevel>
+        Tests for LOG_LEVEL resolution from ANURA_LOG_LEVEL environment variable.
+        <Function test_default_log_level_is_info>
+          Without ANURA_LOG_LEVEL, LOG_LEVEL defaults to INFO.
+        <Function test_debug_override>
+          ANURA_LOG_LEVEL=DEBUG sets LOG_LEVEL to DEBUG.
+        <Function test_invalid_fallback_to_info>
+          Invalid ANURA_LOG_LEVEL falls back to INFO.
+    <Module test_extracted_page_reflow.py>
+      <Function test_extracted_page_ui_reflow_properties>
+        Verifies that the generated extracted_page.ui contains the correct properties
+        to enable dynamic text reflow as specified in the resolution methodology.
+    <Module test_file_dialog_regressions.py>
+      <Function test_open_image_dialog_is_local>
+        Verify Gtk.FileDialog is a local variable to prevent filter duplication.
+      <Function test_open_image_set_default_filter>
+        Verify set_default_filter() is called to ensure cumulative filter is selected.
+      <Function test_open_image_filters_structure>
+        Verify filters use only add_pattern() with proper extension coverage.
+    <Module test_gi_atomic_task_manager_unit.py>
+      <Class TestAtomicTaskResult>
+        <Function test_result_stores_data>
+        <Function test_result_stores_error>
+      <Class TestAtomicTaskManagerUnit>
+        <Function test_singleton_returns_same_instance>
+        <Function test_init_state>
+        <Function test_execute_returns_task_id>
+        <Function test_execute_updates_current_task_id>
+        <Function test_second_execute_invalidates_first>
+          Submitting a second task updates _current_task_id, making first stale.
+        <Function test_state_lock_exists_and_is_lock>
+        <Function test_default_errorback_logs_without_raising>
+        <Function test_shutdown_completes>
+    <Module test_gi_bugs_audit_v2.py>
+      <Function test_new_01_deadlock_prevention>
+        Verify that execute_isolated does not deadlock by calling it.
+        This bug was caused by a non-reentrant lock being acquired twice.
+        Uses try/finally to ensure cleanup even on timeout/failure.
+      <Function test_new_02_interrupted_error_propagation_screenshot_service>
+        Verify that InterruptedError is correctly re-raised in _try_ocr_extraction.
+        We mock the entire module to avoid Xdp dependency.
+      <Function test_new_03_interrupted_error_propagation_filters>
+        Verify that InterruptedError is correctly re-raised in AdaptiveThresholdFilter.
+      <Function test_new_06_ipc_outside_lock_logic>
+        Mental/Logic check for NEW-06. Since we can't easily benchmark micro-stutters,
+        we verify that the state is consistent after execute_isolated.
+      <Function test_new_05_silent_reset_on_cancellation>
+        Verify that run_ocr_pipeline returns (False, None, None, None) on InterruptedError,
+        which triggers the silent reset in _on_isolated_complete.
+    <Module test_keyboard_shortcuts.py>
+      Test keyboard shortcuts functionality using pytest framework.
+      Tests action registration and accelerator mapping with proper GTK environment setup.
+      <Class TestKeyboardShortcuts>
+        Test keyboard shortcuts setup and action registration.
+        <Function test_shortcuts_action_setup_method_exists>
+          Test that _setup_options method exists for keyboard shortcuts.
+        <Function test_action_registry_class_exists>
+          Test that the ActionRegistry class exists and has setup_actions method.
+        <Function test_action_registry_registers_all_main_actions>
+          Test that ActionRegistry registers all expected main actions.
+        <Function test_paste_action_signature_uses_varargs>
+          Test that on_paste_from_clipboard has varargs signature.
+
+          BUG-FIX-2026-06-03: The signature was changed from (self, _variant) to
+          (self, *_) to accept any positional args from GAction activation
+          callbacks. The test was previously broken because it expected
+          exactly 2 parameters.
+        <Function test_shortcuts_overlay_exists>
+          Test that the new shortcuts overlay system exists.
+        <Function test_shortcuts_overlay_ui_exists>
+          Test that shortcuts overlay UI file exists.
+      <Class TestShortcutsIntegration>
+        Integration tests for keyboard shortcuts (require full environment).
+        <Function test_full_shortcuts_registration>
+          Test full shortcuts registration (requires GTK environment).
+    <Module test_magic_processor.py>
+      <Function test_magic_processor_single_line>
+      <Function test_magic_processor_url>
+      <Function test_magic_processor_email>
+      <Function test_magic_processor_multi_line>
+      <Function test_magic_processor_empty>
+    <Module test_ocr_result.py>
+      <UnitTestCase TestOcrDataModel>
+        A class whose instances are single test cases.
+
+        By default, the test code itself should be placed in a method named
+        'runTest'.
+
+        If the fixture may be used for many test cases, create as
+        many test methods as are needed. When instantiating such a TestCase
+        subclass, specify in the constructor arguments the name of the test method
+        that the instance is to execute.
+
+        Test authors should subclass TestCase for their own tests. Construction
+        and deconstruction of the test's environment ('fixture') can be
+        implemented by overriding the 'setUp' and 'tearDown' methods respectively.
+
+        If it is necessary to override the __init__ method, the base class
+        __init__ method must always be called. It is important that subclasses
+        should not change the signature of their __init__ method, since instances
+        of the classes are instantiated automatically by parts of the framework
+        in order to be run.
+
+        When subclassing TestCase, you can set these attributes:
+        * failureException: determines which exception will be raised when
+            the instance's assertion methods fail; test methods raising this
+            exception will be deemed to have 'failed' rather than 'errored'.
+        * longMessage: determines whether long messages (including repr of
+            objects used in assert methods) will be printed on failure in *addition*
+            to any explicit message passed.
+        * maxDiff: sets the maximum length of a diff in failure messages
+            by assert methods using difflib. It is looked up as an instance
+            attribute so can be configured by individual tests if required.
+        <TestCaseFunction test_confidence_filtering>
+        <TestCaseFunction test_from_tesseract_dict_parsing>
+        <TestCaseFunction test_geometric_helpers>
+        <TestCaseFunction test_immutability_frozen>
+        <TestCaseFunction test_slots_presence>
+    <Module test_performance_enterprise.py>
+      <Class TestPerformanceEnterprise>
+        Enterprise-grade performance and load tests.
+        <Function test_image_enhancement_latency[resolution0]>
+          Benchmark image enhancement latency for common resolutions.
+        <Function test_image_enhancement_latency[resolution1]>
+          Benchmark image enhancement latency for common resolutions.
+        <Function test_text_cleaning_load>
+          Test text cleaning performance with a large payload.
+        <Function test_memory_growth_simulated>
+          Check for memory growth over repeated operations.
+    <Module test_portal_advice.py>
+      <Function test_lxqt_recommends_kde_backend_with_portals_conf_step[LXQt]>
+      <Function test_lxqt_recommends_kde_backend_with_portals_conf_step[lxqt]>
+      <Function test_lxqt_recommends_kde_backend_with_portals_conf_step[ubuntu:LXQt]>
+      <Function test_lxqt_recommends_kde_backend_with_portals_conf_step[LXQt:Lubuntu]>
+      <Function test_kde_recommends_xdg_desktop_portal_kde[KDE]>
+      <Function test_kde_recommends_xdg_desktop_portal_kde[kde]>
+      <Function test_kde_recommends_xdg_desktop_portal_kde[KDE:Plasma]>
+      <Function test_kde_recommends_xdg_desktop_portal_kde[plasma]>
+      <Function test_gnome_family_recommends_gnome_backend[GNOME]>
+      <Function test_gnome_family_recommends_gnome_backend[gnome]>
+      <Function test_gnome_family_recommends_gnome_backend[ubuntu:GNOME]>
+      <Function test_gnome_family_recommends_gnome_backend[Unity:Unity7:ubuntu]>
+      <Function test_gnome_family_recommends_gnome_backend[Pantheon]>
+      <Function test_wlroots_compositors_recommend_wlr_backend[sway]>
+      <Function test_wlroots_compositors_recommend_wlr_backend[Hyprland]>
+      <Function test_wlroots_compositors_recommend_wlr_backend[wlroots:sway]>
+      <Function test_wlroots_compositors_recommend_wlr_backend[river]>
+      <Function test_wlroots_compositors_recommend_wlr_backend[Niri]>
+      <Function test_xfce_recommends_gnome_or_kde_backend_not_gtk>
+        On modern Ubuntu the gtk portal lost the Screenshot interface, so
+        the working install command is xdg-desktop-portal-gnome (or -kde),
+        not -gtk. Regression test against the old hard-coded advice.
+      <Function test_other_gtk_desktops_get_named_friendly[MATE-Mate]>
+      <Function test_other_gtk_desktops_get_named_friendly[Cinnamon-Cinnamon]>
+      <Function test_other_gtk_desktops_get_named_friendly[X-Cinnamon-Cinnamon]>
+      <Function test_other_gtk_desktops_get_named_friendly[Budgie-Budgie]>
+      <Function test_unknown_or_missing_desktop_falls_back_to_generic_message[None]>
+      <Function test_unknown_or_missing_desktop_falls_back_to_generic_message[]>
+      <Function test_unknown_or_missing_desktop_falls_back_to_generic_message[FantasyWM]>
+      <Function test_advice_dataclass_is_immutable>
+        PortalAdvice is frozen — guards against accidental mutation by
+        callers that might want to "tweak" the message in place.
+      <Function test_detect_uses_os_environ_when_env_omitted>
+        When called without an `env` argument, detect_portal_advice reads
+        the real `os.environ`. Verify by monkey-patching XDG_CURRENT_DESKTOP.
+      <Function test_lxqt_match_is_case_insensitive_and_token_aware>
+        A real-world LXQt session reports XDG_CURRENT_DESKTOP=LXQt. The
+        detector must be case-insensitive and tolerate colon-separated lists
+        where LXQt is not the first token.
+      <Function test_sway_in_wlroots_family>
+        Sway is a wlroots compositor and should get the -wlr advice.
+      <Function test_hyprland_in_wlroots_family>
+        Hyprland is a wlroots compositor and should get the -wlr advice.
+      <Function test_river_in_wlroots_family>
+        River is a wlroots compositor and should get the -wlr advice.
+      <Function test_niri_in_wlroots_family>
+        Niri is a wlroots compositor and should get the -wlr advice.
+      <Function test_unity_tracked_as_gnome>
+        Ubuntu Unity reports Unity tokens but works best with GNOME backend.
+      <Function test_pantheon_tracked_as_gnome>
+        elementary Pantheon reports Pantheon and works best with GNOME backend.
+      <Function test_mate_gets_named_friendly>
+        MATE should be recognized and named properly.
+      <Function test_cinnamon_gets_named_friendly>
+        Cinnamon should be recognized and named properly.
+      <Function test_x_cinnamon_normalized_to_cinnamon>
+        X-Cinnamon token should be normalized to just Cinnamon.
+      <Function test_budgie_gets_named_friendly>
+        Budgie should be recognized and named properly.
+      <Function test_empty_xdg_current_desktop_falls_back>
+        Empty string should trigger generic fallback.
+      <Function test_docs_url_always_present>
+        All advice variants should include a docs URL.
+      <Function test_short_message_never_empty>
+        short_message should always be a non-empty string.
+      <Function test_long_message_never_empty>
+        long_message should always be a non-empty string.
+      <Function test_xfce_short_message_format>
+        Xfce short_message should mention both -gnome and -kde options.
+      <Function test_lxqt_has_config_file_instructions>
+        LXQt advice should mention the portals.conf file.
+      <Function test_kde_has_re_login_instruction>
+        KDE advice should mention logging out and back in.
+      <Function test_wlroots_has_compositor_list>
+        wlroots advice should mention some compositor names.
+    <Module test_release_notes_generation.py>
+      <Function test_parse_changelog_finds_sections_with_subsections>
+        Section content containing '### Added' must be captured (regression test).
+      <Function test_parse_changelog_output_starts_with_xml_element>
+        Adw.AboutDialog requires markup that begins with an element. Bare text
+        triggers the libxml error 'The document must start with an element'.
+      <Function test_parse_changelog_includes_subsection_items>
+        Items under '### Added' must appear in the output.
+      <Function test_parse_real_changelog_has_current_version>
+        The real CHANGELOG.md must yield a non-empty entry for the project version.
+    <Module test_result_dispatcher.py>
+      <Class TestResultDispatcher>
+        <Function test_dispatch_empty_text>
+        <Function test_dispatch_regular_text>
+        <Function test_dispatch_primary_url>
+        <Function test_dispatch_text_with_structured_data>
+    <Module test_screenshot_providers.py>
+      <Class TestLegacyX11Provider>
+        <Function test_availability_no_display>
+        <Function test_availability_wayland>
+        <Function test_availability_x11_with_scrot>
+        <Function test_availability_x11_no_scrot>
+        <Function test_capture_spawns_process>
+      <Class TestScreenshotProviderFactory>
+        <Function test_get_provider_returns_portal>
+        <Function test_get_fallback_provider_available>
+        <Function test_get_fallback_provider_unavailable>
+    <Module test_security_hardening.py>
+      <Class TestSecurityHardeningLogic>
+        <Function test_is_safe_url_string_basic>
+        <Function test_is_safe_url_string_control_chars>
+        <Function test_is_safe_url_string_ascii>
+        <Function test_is_safe_url_string_punycode_homograph>
+        <Function test_uri_validator_integration>
+      <Function test_quote_safe_behavior>
+    <Module test_security_validators_sentinel.py>
+      <Function test_validate_image_resource_rejects_directory>
+        Security Test: Ensure that validate_image_resource rejects directory paths.
+        Using os.path.isfile() instead of os.path.exists() prevents processing
+        directories as image files, which could cause unexpected behavior.
+      <Function test_validate_image_resource_accepts_regular_file>
+        Verify that validate_image_resource still accepts regular files.
+    <Module test_sentinel_hardening_verification.py>
+      <Class TestSentinelHardeningVerification>
+        Verification tests for security hardening of URI and text sanitization.
+        <Function test_is_safe_url_string_blocks_additional_unsafe_chars[|]>
+          Verify that is_safe_url_string blocks characters that are generally
+          considered unsafe in URLs according to RFC 1738 and others.
+          Currently, some of these might PASS until the hardening is applied.
+        <Function test_is_safe_url_string_blocks_additional_unsafe_chars[^]>
+          Verify that is_safe_url_string blocks characters that are generally
+          considered unsafe in URLs according to RFC 1738 and others.
+          Currently, some of these might PASS until the hardening is applied.
+        <Function test_is_safe_url_string_blocks_additional_unsafe_chars[`]>
+          Verify that is_safe_url_string blocks characters that are generally
+          considered unsafe in URLs according to RFC 1738 and others.
+          Currently, some of these might PASS until the hardening is applied.
+        <Function test_is_safe_url_string_blocks_additional_unsafe_chars[{]>
+          Verify that is_safe_url_string blocks characters that are generally
+          considered unsafe in URLs according to RFC 1738 and others.
+          Currently, some of these might PASS until the hardening is applied.
+        <Function test_is_safe_url_string_blocks_additional_unsafe_chars[}]>
+          Verify that is_safe_url_string blocks characters that are generally
+          considered unsafe in URLs according to RFC 1738 and others.
+          Currently, some of these might PASS until the hardening is applied.
+        <Function test_sanitize_text_strips_carriage_return>
+          Verify that sanitize_text correctly strips carriage returns (
+          )
+          to prevent terminal UI spoofing, despite misleading comments in the code.
+        <Function test_sanitize_text_preserves_allowed_whitespace>
+                 Verify that
+          and     are preserved while
+           is stripped.
+                 Note: sanitize_text currently squashes   to a space via:
+                 text = re.sub(r"[       ]+", " ", text)
+
+        <Function test_sanitize_text_squashes_tabs>
+          Verify that tabs are squashed to spaces (existing behavior).
+    <Module test_sentinel_uri_hardening.py>
+      <Function test_backslash_rejection>
+        Verify that backslashes in URLs are rejected for security hardening.
+      <Function test_url_length_limit_hardening>
+        Verify that URL length limit is synchronized to 2000 characters.
+    <Module test_sentinel_uri_security.py>
+      <Class TestSentinelUriSecurity>
+        Security tests for URI validation hardening.
+        <Function test_control_characters_rejected[\x80]>
+        <Function test_control_characters_rejected[\x81]>
+        <Function test_control_characters_rejected[\x90]>
+        <Function test_control_characters_rejected[\x9f]>
+        <Function test_control_characters_rejected[\x00]>
+        <Function test_control_characters_rejected[\x1f]>
+        <Function test_control_characters_rejected[\x7f]>
+        <Function test_format_characters_rejected[\u200b]>
+        <Function test_format_characters_rejected[\u200c]>
+        <Function test_format_characters_rejected[\u200d]>
+        <Function test_format_characters_rejected[\u200e]>
+        <Function test_format_characters_rejected[\u200f]>
+        <Function test_format_characters_rejected[\xad]>
+        <Function test_valid_url_still_works>
+        <Function test_homograph_attack_rejected_via_ascii_check>
+        <Function test_idn_userinfo_spoofing_rejected>
+        <Function test_idn_with_userinfo_normalization>
+        <Function test_idn_with_encoded_userinfo>
+        <Function test_idn_with_empty_username>
+    <Module test_stability.py>
+      <Function test_resource_guard_activation>
+        Verify that RescaleFilter blocks on large images when memory is low.
+      <Function test_rescale_allowed_on_high_memory>
+        Verify that RescaleFilter proceeds on large images when memory is sufficient.
+      <Function test_lifecycle_teardown_loop>
+        Stress test window lifecycle to verify signal and controller cleanup.
+      <Function test_signal_manager_registry_logic>
+        Verify SignalManagerMixin registry and teardown without GTK.
+    <Module test_structural_reconstructor.py>
+      <Function test_structural_reconstructor_basic>
+      <Function test_structural_reconstructor_paragraphs>
+      <Function test_structural_reconstructor_horizontal_separation>
+      <Function test_structural_reconstructor_empty>
+    <Module test_text_preprocessor.py>
+      <Class TestTextPreprocessorEnterprise>
+        Enterprise-grade unit tests for TextPreprocessor.
+        <Function test_clean_extracted_text_sanitization>
+          Test that clean_extracted_text sanitizes text.
+        <Function test_fix_punctuation>
+          Test punctuation spacing and deduplication.
+        <Function test_fix_capitalization>
+          Test sentence capitalization and ALL CAPS word fixing.
+        <Function test_remove_artifacts>
+          Test removal of common OCR artifacts.
+        <Function test_extract_structured_data>
+          Test extraction of emails, URLs, phones, and dates.
+        <Function test_enhance_image_smoke>
+          Smoke test for image enhancement (verifies it doesn't crash).
+    <Module test_url_masking.py>
+      <Function test_mask_url_with_credentials>
+        Verify that credentials are redacted from various URL schemes.
+      <Function test_mask_url_no_credentials>
+        Verify that URLs without credentials remain unchanged.
+      <Function test_mask_url_empty_userinfo>
+        Verify that empty userinfo (e.g. :@) is correctly handled and masked.
+      <Function test_mask_url_malformed>
+        Verify that malformed URLs are handled gracefully.
+      <Function test_mask_url_edge_cases>
+        Verify edge cases like empty string or None.
+      <Function test_mask_url_schemeless_credentials>
+        Verify that credentials in schemeless URL-like strings are redacted.
+      <Function test_mask_url_schemeless_no_credentials>
+        Verify that schemeless strings without credentials remain unchanged.
+      <Function test_mask_url_path_with_at_no_redaction>
+        Verify that '@' in a file path (no credentials) is not over-redacted.
+      <Function test_mask_url_email_like_strings>
+        Verify how email-like strings are handled by mask_url.
+      <Function test_mask_url_regression_schemed_complex>
+        Verify complex schemed URL masking still works.
+    <Module test_validators.py>
+      <Class TestUriValidatorEnterprise>
+        Enterprise-grade unit tests for uri_validator.
+        <Function test_happy_path[https://google.com]>
+          Test normal, valid URLs.
+        <Function test_happy_path[http://example.org]>
+          Test normal, valid URLs.
+        <Function test_happy_path[https://sub.domain.tld/path?query=1#fragment]>
+          Test normal, valid URLs.
+        <Function test_happy_path[http://localhost:8080]>
+          Test normal, valid URLs.
+        <Function test_happy_path[https://127.0.0.1]>
+          Test normal, valid URLs.
+        <Function test_happy_path[https://[::1]]>
+          Test normal, valid URLs.
+        <Function test_happy_path[https://192.168.1.1/admin]>
+          Test normal, valid URLs.
+        <Function test_happy_path[http://my.local.server/api]>
+          Test normal, valid URLs.
+        <Function test_empty_or_null[]>
+          Test empty, null, or whitespace-only input.
+        <Function test_empty_or_null[   ]>
+          Test empty, null, or whitespace-only input.
+        <Function test_empty_or_null[None]>
+          Test empty, null, or whitespace-only input.
+        <Function test_invalid_chars_and_length[https://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://ahttps://a]>
+          Test boundary values for length and control characters.
+        <Function test_invalid_chars_and_length[https://google.com\x00]>
+          Test boundary values for length and control characters.
+        <Function test_invalid_chars_and_length[https://google.com\n]>
+          Test boundary values for length and control characters.
+        <Function test_invalid_chars_and_length[https://google.com\r]>
+          Test boundary values for length and control characters.
+        <Function test_invalid_chars_and_length[https://google.com\x1f]>
+          Test boundary values for length and control characters.
+        <Function test_invalid_chars_and_length[https://google.com\x7f]>
+          Test boundary values for length and control characters.
+        <Function test_non_ascii_and_homograph[https://googl\xe9.com-True]>
+          Test non-ASCII characters and potential homograph attacks.
+        <Function test_non_ascii_and_homograph[https://m\xfcnchen.de-True]>
+          Test non-ASCII characters and potential homograph attacks.
+        <Function test_non_ascii_and_homograph[https://\u0430\u043f\u0440.com-False]>
+          Test non-ASCII characters and potential homograph attacks.
+        <Function test_non_ascii_and_homograph[https://\u202e/moc.elgoog-False]>
+          Test non-ASCII characters and potential homograph attacks.
+        <Function test_sanitize_text_hardening[Normal text-Normal text]>
+          Test that sanitize_text strips dangerous Unicode categories and normalizes.
+        <Function test_sanitize_text_hardening[Text with \n newline-Text with \n newline]>
+          Test that sanitize_text strips dangerous Unicode categories and normalizes.
+        <Function test_sanitize_text_hardening[Text with \ue000 private use-Text with private use]>
+          Test that sanitize_text strips dangerous Unicode categories and normalizes.
+        <Function test_sanitize_text_hardening[Text with \ud800 surrogate-Text with surrogate]>
+          Test that sanitize_text strips dangerous Unicode categories and normalizes.
+        <Function test_sanitize_text_hardening[Text with \u202e RLO-Text with RLO]>
+          Test that sanitize_text strips dangerous Unicode categories and normalizes.
+        <Function test_sanitize_text_hardening[Mixed \ue000 and \n inside-Mixed and \n inside]>
+          Test that sanitize_text strips dangerous Unicode categories and normalizes.
+        <Function test_sanitize_text_hardening[Text with \u088f unassigned-Text with unassigned]>
+          Test that sanitize_text strips dangerous Unicode categories and normalizes.
+        <Function test_sanitize_text_hardening[e\u0301-\xe9]>
+          Test that sanitize_text strips dangerous Unicode categories and normalizes.
+        <Function test_sanitize_text_length_limit>
+          Test that sanitize_text enforces the MAX_TEXT_LENGTH limit.
+        <Function test_unsupported_schemes[ftp://example.com]>
+          Test unsupported or dangerous URI schemes.
+        <Function test_unsupported_schemes[file:///etc/passwd]>
+          Test unsupported or dangerous URI schemes.
+        <Function test_unsupported_schemes[javascript:alert(1)]>
+          Test unsupported or dangerous URI schemes.
+        <Function test_unsupported_schemes[data:text/html,<html>]>
+          Test unsupported or dangerous URI schemes.
+        <Function test_unsupported_schemes[ssh://root@server]>
+          Test unsupported or dangerous URI schemes.
+        <Function test_unsupported_schemes[gopher://classic.net]>
+          Test unsupported or dangerous URI schemes.
+        <Function test_userinfo_spoofing[https://user:pass@google.com]>
+          Test prevention of userinfo spoofing.
+        <Function test_userinfo_spoofing[http://admin@evil.com]>
+          Test prevention of userinfo spoofing.
+        <Function test_userinfo_spoofing[https://:password@github.com]>
+          Test prevention of userinfo spoofing.
+        <Function test_userinfo_spoofing[http://:@google.com]>
+          Test prevention of userinfo spoofing.
+        <Function test_userinfo_spoofing[http://@google.com]>
+          Test prevention of userinfo spoofing.
+        <Function test_invalid_ports[http://google.com:abc]>
+          Test rejection of malformed port numbers.
+        <Function test_invalid_ports[https://google.com:123a]>
+          Test rejection of malformed port numbers.
+        <Function test_single_word_hostnames[http://evil]>
+          Test rejection of single-word hostnames without dots (except localhost).
+        <Function test_single_word_hostnames[https://localhost-fake]>
+          Test rejection of single-word hostnames without dots (except localhost).
+        <Function test_single_word_hostnames[http://com]>
+          Test rejection of single-word hostnames without dots (except localhost).
+        <Function test_invalid_types[123]>
+          Test invalid input types.
+        <Function test_invalid_types[url1]>
+          Test invalid input types.
+        <Function test_invalid_types[url2]>
+          Test invalid input types.
+        <Function test_referential_transparency>
+          Test that the function is pure and returns the same result for the same input.
+
+Ensuring clean session teardown...
+Teardown complete.
+==================== 315 tests collected, 4 errors in 0.67s ====================
