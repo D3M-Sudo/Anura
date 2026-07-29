@@ -160,6 +160,35 @@ class LanguageManager(GObject.GObject):
         """
         return self._cache_manager._get_model_quality_dir(quality)
 
+    @property
+    def _need_update_cache(self) -> bool:
+        """Backward compatibility helper for tests."""
+        return self._cache_manager._need_update_cache
+
+    @_need_update_cache.setter
+    def _need_update_cache(self, value: bool) -> None:
+        """Backward compatibility helper for tests."""
+        self._cache_manager._need_update_cache = value
+
+    @property
+    def loading_languages(self) -> dict:
+        """Backward compatibility helper for tests."""
+        return self._download_manager.loading_languages
+
+    @property
+    def session(self) -> any:
+        """Backward compatibility helper for tests."""
+        return self._download_manager.session
+
+    @session.setter
+    def session(self, value: any) -> None:
+        """Backward compatibility helper for tests."""
+        self._download_manager.session = value
+
+    def download_begin(self, code: str, cancellable: Gio.Cancellable | None = None) -> str | None:
+        """Backward compatibility helper for tests."""
+        return self._download_manager.download_begin(code, cancellable)
+
 
 def get_tesseract_config(lang_code: str, task_id: str | None = None) -> str:
     """

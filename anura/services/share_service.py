@@ -318,6 +318,41 @@ class ShareService(GObject.GObject):
 
             GLib.idle_add(_on_share_idle, False)
 
+    def get_link_email(self, text: str) -> str:
+        """Backward compatibility helper for tests and sharing."""
+        return generate_share_link("email", text)
+
+    def get_link_mastodon(self, text: str) -> str:
+        """Backward compatibility helper for tests and sharing."""
+        return generate_share_link("mastodon", text)
+
+    def get_link_reddit(self, text: str) -> str:
+        """Backward compatibility helper for tests and sharing."""
+        return generate_share_link("reddit", text)
+
+    def get_link_telegram(self, text: str) -> str:
+        """Backward compatibility helper for tests and sharing."""
+        return generate_share_link("telegram", text)
+
+    def get_link_x(self, text: str) -> str:
+        """Backward compatibility helper for tests and sharing."""
+        return generate_share_link("x", text)
+
+    def get_link_bluesky(self, text: str) -> str:
+        """Backward compatibility helper for tests and sharing."""
+        return generate_share_link("bluesky", text)
+
+    def get_link_discord(self, text: str) -> str:
+        """Backward compatibility helper for tests and sharing."""
+        return generate_share_link("discord", text)
+
+    def get_link_linkedin(self, text: str) -> str:
+        """Backward compatibility helper for tests and sharing."""
+        return generate_share_link("linkedin", text)
+
+    def get_link_threads(self, text: str) -> str:
+        """Backward compatibility helper for tests and sharing."""
+        return generate_share_link("threads", text)
 
 
 # Thread-safe singleton instance for global app access

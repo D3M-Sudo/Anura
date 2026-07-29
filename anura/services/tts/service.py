@@ -112,6 +112,37 @@ class TTSService(GObject.GObject):
         """Complete cleanup for shutdown."""
         self._pipeline.cleanup()
 
+    @staticmethod
+    def map_tesseract_to_gtts(code: str) -> str | None:
+        """Backward compatibility staticmethod for tests."""
+        from anura.services.tts.language_mapper import LanguageMapper
+        return LanguageMapper().map_tesseract_to_gtts(code)
+
+    @staticmethod
+    def get_supported_gtts_languages() -> dict:
+        """Backward compatibility staticmethod for tests."""
+        return gtts.lang.tts_langs()
+
+    @property
+    def player(self) -> any:
+        """Backward compatibility property for tests."""
+        return self._pipeline._player.player
+
+    @player.setter
+    def player(self, val: any) -> None:
+        """Backward compatibility property for tests."""
+        self._pipeline._player.player = val
+
+    @property
+    def _current_speech_file(self) -> str | None:
+        """Backward compatibility property for tests."""
+        return self._pipeline._generator._current_speech_file
+
+    @_current_speech_file.setter
+    def _current_speech_file(self, val: str | None) -> None:
+        """Backward compatibility property for tests."""
+        self._pipeline._generator._current_speech_file = val
+
 
 # Thread-safe singleton instance for global app access
 def get_tts_service() -> TTSService:
