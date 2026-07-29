@@ -14,7 +14,7 @@ __all__ = [
     "AudioPlayer",
     "LanguageMapper",
     "PipelineManager",
+    "SpeechGenerator",
     "TTSService",
     "get_tts_service",
-    "SpeechGenerator",
 ]
