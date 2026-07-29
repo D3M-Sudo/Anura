@@ -158,14 +158,23 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
         original_icon = self.text_copy_btn.get_icon_name()
         self.text_copy_btn.set_icon_name("emblem-ok-symbolic")
 
+        # Sync tooltip and screen reader accessibility label with visual feedback
+        copied_feedback = _("Copied to clipboard!")
+        self.text_copy_btn.set_tooltip_text(copied_feedback)
+        self.text_copy_btn.update_property([Gtk.AccessibleProperty.LABEL], [copied_feedback])
+
         GLib.timeout_add_seconds(2, self._reset_copy_icon, original_icon)
 
     def _reset_copy_icon(self, icon_name: str) -> bool:
-        """Helper to reset copy button icon."""
+        """Helper to reset copy button icon and restore its accessibility properties."""
         try:
             if self.text_copy_btn and self.text_copy_btn.get_icon_name() == "emblem-ok-symbolic":
                 # Only reset if it's still showing the checkmark (don't overwrite newer state)
                 self.text_copy_btn.set_icon_name(icon_name)
+
+                # Gracefully restore accessibility properties and tooltips based on active selection state
+                has_selection = bool(self.buffer.get_selection_bounds())
+                self._update_action_tooltips(has_selection)
         except (AttributeError, RuntimeError, TypeError) as e:
             logger.exception(f"Anura: Failed to reset copy icon: {e}")
         return GLib.SOURCE_REMOVE
