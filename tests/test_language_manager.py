@@ -25,8 +25,13 @@ class TestLanguageManagerEnterprise:
     def manager(self, tmp_path):
         # Patch TESSDATA_DIR to a temporary directory for each test
         with (
-            patch("anura.services.language_manager.TESSDATA_DIR", str(tmp_path)),
-            patch("anura.services.language_manager.TESSDATA_SYSTEM_DIR", str(tmp_path / "system")),
+            patch("anura.config.TESSDATA_DIR", str(tmp_path)),
+            patch("anura.config.TESSDATA_SYSTEM_DIR", str(tmp_path / "system")),
+            patch("anura.services.language_manager.TESSDATA_DIR", str(tmp_path), create=True),
+            patch("anura.services.language_manager.TESSDATA_SYSTEM_DIR", str(tmp_path / "system"), create=True),
+            patch("anura.services.language.cache_manager.TESSDATA_DIR", str(tmp_path), create=True),
+            patch("anura.services.language.cache_manager.TESSDATA_SYSTEM_DIR", str(tmp_path / "system"), create=True),
+            patch("anura.services.language.download_manager.TESSDATA_DIR", str(tmp_path), create=True),
         ):
             os.makedirs(tmp_path / "system", exist_ok=True)
             yield LanguageManager()
@@ -71,7 +76,7 @@ class TestLanguageManagerEnterprise:
 
         manager.remove_language("ita")
         assert not lang_file.exists()
-        assert manager._need_update_cache is True
+        assert manager._cache_manager._need_update_cache is True
 
     @pytest.mark.parametrize(
         "invalid_code",
@@ -114,7 +119,7 @@ class TestLanguageManagerEnterprise:
         mock_get.return_value = mock_response
 
         with patch("shutil.which", return_value="/usr/bin/tesseract"):
-            result = manager.download_begin("fra")
+            result = manager._download_manager.download_begin("fra")
             assert result == "fra"
             assert (tmp_path / "fra.traineddata").exists()
 
@@ -126,7 +131,7 @@ class TestLanguageManagerEnterprise:
         mock_get.side_effect = requests.RequestException("Connection refused")
 
         with patch("shutil.which", return_value="/usr/bin/tesseract"):
-            result = manager.download_begin("fra")
+            result = manager._download_manager.download_begin("fra")
             assert result is None
 
     def test_download_duplicate_prevention(self, manager):

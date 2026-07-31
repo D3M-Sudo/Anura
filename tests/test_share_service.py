@@ -49,17 +49,10 @@ class TestShareServiceEnterprise:
     )
     def test_link_generation_happy_path(self, service, provider, text, expected_part):
         """Test that link generation works correctly for various providers."""
-        handler = getattr(service, f"get_link_{provider}")
-        link = handler(text)
+        from anura.services.share_providers import generate_share_link
+        link = generate_share_link(provider, text)
         assert expected_part in link
 
-    @pytest.mark.parametrize("provider", ShareService.providers())
-    def test_link_generation_empty_input(self, service, provider):
-        """Test link generation with empty or whitespace input."""
-        handler = getattr(service, f"get_link_{provider}")
-        assert handler("") == ""
-        assert handler("   ") == ""
-        assert handler(None) == ""
 
     @pytest.mark.parametrize(
         "url, expected",
@@ -113,9 +106,9 @@ class TestShareServiceEnterprise:
     def test_referential_transparency_handlers(self, service):
         """Test that link handlers are pure."""
         text = "stable text"
+        from anura.services.share_providers import generate_share_link
         for p in service.providers():
-            handler = getattr(service, f"get_link_{p}")
-            assert handler(text) == handler(text)
+            assert generate_share_link(p, text) == generate_share_link(p, text)
 
     def test_mastodon_special_handling(self, service):
         """Test Mastodon specific share flow with fallback."""

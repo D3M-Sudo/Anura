@@ -78,9 +78,10 @@ _GI_KEYS: tuple[str, ...] = (
 _GI_INJECTED: list[str] = []
 
 class PropertyStub:
-    def __init__(self, fget=None, fset=None):
+    def __init__(self, fget=None, fset=None, **kwargs):
         self.fget = fget
         self.fset = fset
+        self.default = kwargs.get("default", None)
 
     def setter(self, fset):
         self.fset = fset
@@ -89,11 +90,21 @@ class PropertyStub:
     def __get__(self, instance, owner):
         if instance is None:
             return self
-        return self.fget(instance) if self.fget else None
+        if self.fget:
+            return self.fget(instance)
+
+        # Simple GObject property storage
+        if not hasattr(instance, "_property_values"):
+            instance._property_values = {}
+        return instance._property_values.get(self, self.default)
 
     def __set__(self, instance, value):
         if self.fset:
             self.fset(instance, value)
+        else:
+            if not hasattr(instance, "_property_values"):
+                instance._property_values = {}
+            instance._property_values[self] = value
 
     def __call__(self, *args, **kwargs):
         if args and callable(args[0]):
@@ -104,8 +115,11 @@ class PropertyStub:
 
 class StubMetaclass(type):
     def __getattr__(cls, name):
+        if name == "get_default_for_uri_scheme":
+            # Return a function that returns None so we fall back to the safe whitelist
+            return lambda scheme: None
         if name == "Property":
-            return lambda *args, **kwargs: PropertyStub()
+            return lambda *args, **kwargs: PropertyStub(**kwargs)
         if name.startswith("_"):
             raise AttributeError(name)
         return MagicMock(name=name)
@@ -116,7 +130,9 @@ class UniversalStub(metaclass=StubMetaclass):
         pass
 
     def __getattr__(self, name):
-        if name.startswith("_"):
+        # Standard Python internals, private attributes, and non-existent link generators should raise AttributeError
+        # so that hasattr() and getattr() with defaults work correctly.
+        if name.startswith("_") or name.startswith("get_link_"):
             raise AttributeError(name)
         return MagicMock(name=name)
 
@@ -412,4 +428,5 @@ def pytest_sessionfinish(session, exitstatus):
         pass
 
     # 4. Bypass Python's non-daemon-thread join (avoids 74-second CI hang).
-    os._exit(int(exitstatus))
+    # os._exit(int(exitstatus))
+    pass

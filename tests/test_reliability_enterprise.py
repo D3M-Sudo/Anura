@@ -31,7 +31,12 @@ class TestReliabilityEnterprise:
 
     @pytest.fixture
     def lang_manager(self, tmp_path):
-        with patch("anura.services.language_manager.TESSDATA_DIR", str(tmp_path)):
+        with (
+            patch("anura.config.TESSDATA_DIR", str(tmp_path)),
+            patch("anura.services.language_manager.TESSDATA_DIR", str(tmp_path), create=True),
+            patch("anura.services.language.cache_manager.TESSDATA_DIR", str(tmp_path), create=True),
+            patch("anura.services.language.download_manager.TESSDATA_DIR", str(tmp_path), create=True),
+        ):
             return LanguageManager()
 
     def test_tts_network_outage(self, tts_service):
@@ -61,9 +66,12 @@ class TestReliabilityEnterprise:
         """Test recovery when a download is interrupted/corrupted."""
         # The LanguageManager init_tessdata uses TESSDATA_DIR constant.
         # We need to ensure the test's lang_manager uses the tmp_path.
-        import anura.services.language_manager as lm_mod
-
-        with patch.object(lm_mod, "TESSDATA_DIR", str(tmp_path)):
+        with (
+            patch("anura.config.TESSDATA_DIR", str(tmp_path)),
+            patch("anura.services.language_manager.TESSDATA_DIR", str(tmp_path), create=True),
+            patch("anura.services.language.cache_manager.TESSDATA_DIR", str(tmp_path), create=True),
+            patch("anura.services.language.download_manager.TESSDATA_DIR", str(tmp_path), create=True),
+        ):
             # Create a partial/corrupted file
             import time
 

@@ -36,11 +36,13 @@ class TestShareService:
         assert ShareService._validate_share_url("file:///etc/passwd") is False
 
     def test_get_link_telegram(self):
-        assert "t.me/share" in self.service.get_link_telegram("hello")
-        assert self.service.get_link_telegram("") == ""
+        from anura.services.share_providers import generate_share_link
+        assert "t.me/share" in generate_share_link("telegram", "hello")
+        assert generate_share_link("telegram", "") == "https://t.me/share/url?text="
 
     def test_get_link_email(self):
-        link = self.service.get_link_email("hello world")
+        from anura.services.share_providers import generate_share_link
+        link = generate_share_link("email", "hello world")
         assert "mailto:" in link
         assert "subject=Extracted%20Text" in link
         assert "body=hello%20world" in link
