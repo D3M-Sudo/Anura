@@ -29,7 +29,7 @@ if os.path.exists(resource_path):
     resource._register()
 else:
     import warnings
-    warnings.warn(f"GResource bundle not found at {resource_path}, widget templates may fail to load", UserWarning)
+    warnings.warn(f"GResource bundle not found at {resource_path}, widget templates may fail to load", UserWarning, stacklevel=2)
 
 from anura.models.language_item import LanguageItem  # noqa: E402
 from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
