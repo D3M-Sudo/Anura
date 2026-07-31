@@ -71,6 +71,11 @@ class LanguageManager(GObject.GObject):
         self._active_language = language
         self.notify("active-language")
 
+    @property
+    def loading_languages(self) -> dict:
+        """Get the dictionary of currently loading/downloading languages."""
+        return self._download_manager.loading_languages
+
     def _on_downloading(self, _manager: DownloadManager, code: str, progress: int) -> None:
         """Forward downloading signal from DownloadManager."""
         self.emit("downloading", code, progress)
