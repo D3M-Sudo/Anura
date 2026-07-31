@@ -97,152 +97,88 @@ class TestClipboardServiceEnterprise:
             assert mock_idle.called
 
     def test_fallback_texture_to_uri_list_success(self, service):
-        """Test texture read fails → URI-list read succeeds."""
+        """Test that _fallback_to_uri_list_read is called when texture read fails."""
         from unittest.mock import PropertyMock
 
         from gi.repository import Gio, GLib
 
         mock_clipboard = MagicMock()
         mock_texture_result = MagicMock()
-        mock_stream = MagicMock()
-        mock_gbytes = MagicMock()
 
         # Mock read_texture_finish to raise error (trigger fallback)
         error = GLib.Error.new_literal(Gio.io_error_quark(), "Texture read failed", Gio.IOErrorEnum.FAILED)
         service.clipboard.read_texture_finish.side_effect = error
 
-        # Mock read_finish to return valid stream (fallback succeeds)
-        service.clipboard.read_finish.return_value = (mock_stream, "text/uri-list")
-
-        # Mock stream read to return file URI
-        mock_gbytes.get_data.return_value = b"file:///tmp/test.png\r\n"
-        mock_stream.read_bytes_finish.return_value = mock_gbytes
-
-        # Mock GLib.filename_from_uri and file existence
         with (
             patch.object(ClipboardService, "clipboard", new_callable=PropertyMock) as mock_cb_prop,
-            patch("gi.repository.GLib.filename_from_uri", return_value=("/tmp/test.png", "")),
-            patch("pathlib.Path.exists", return_value=True),
-            patch("anura.services.clipboard_service.validate_image_resource", return_value=(True, 1024, None)),
-            patch("PIL.Image.open") as mock_image_open,
-            patch("gi.repository.Gdk.Texture.new_from_bytes") as mock_texture_new,
-            patch("gi.repository.GLib.Bytes.new"),
-            patch("gi.repository.GLib.idle_add") as mock_idle_add,
-        ):
-            mock_cb_prop.return_value = mock_clipboard
-            service._cancellable = MagicMock()
-            service._cancellable.is_cancelled.return_value = False
-
-            # Mock PIL image operations
-            mock_img = MagicMock()
-            mock_img.mode = "RGB"
-            mock_image_open.return_value.__enter__.return_value = mock_img
-
-            # Mock texture creation
-            mock_texture = MagicMock()
-            mock_texture_new.return_value = mock_texture
-
-            # Trigger the callback chain
-            service._on_read_texture(None, mock_texture_result)
-
-            # Verify fallback was attempted and texture was emitted
-            assert service._fallback_attempted is True
-            mock_idle_add.assert_called()
-
-    def test_fallback_guard_prevents_infinite_loop(self, service):
-        """Test full fallback cycle with guard preventing infinite loop."""
-        from unittest.mock import PropertyMock
-
-        from gi.repository import Gio, GLib
-
-        mock_clipboard = MagicMock()
-        mock_texture_result = MagicMock()
-
-        # Mock read_texture_finish to raise error (first attempt)
-        error = GLib.Error.new_literal(Gio.io_error_quark(), "Texture read failed", Gio.IOErrorEnum.FAILED)
-        service.clipboard.read_texture_finish.side_effect = error
-
-        # Mock read_finish to raise error (URI-list fails)
-        service.clipboard.read_finish.side_effect = error
-
-        with (
-            patch.object(ClipboardService, "clipboard", new_callable=PropertyMock) as mock_cb_prop,
-            patch("gi.repository.GLib.idle_add") as mock_idle_add,
-            patch("anura.services.clipboard_service._remove_source"),
+            patch.object(service, "_fallback_to_uri_list_read") as mock_fallback,
         ):
             mock_cb_prop.return_value = mock_clipboard
             service._cancellable = MagicMock()
             service._cancellable.is_cancelled.return_value = False
             service._fallback_attempted = False
 
-            # Trigger the callback chain
+            # Trigger the callback
             service._on_read_texture(None, mock_texture_result)
 
-            # Verify fallback was attempted and guard was set
+            # Verify fallback was attempted
             assert service._fallback_attempted is True
+            mock_fallback.assert_called_once()
 
-            # Now simulate second texture failure (should emit error, not loop)
-            service._fallback_attempted = True
-            service._on_read_texture(None, mock_texture_result)
-
-            # Verify error was emitted instead of looping
-            assert mock_idle_add.called
-
-    def test_uri_list_no_file_uri(self, service):
-        """Test URI-list read succeeds but has no file:// URI."""
+    def test_fallback_guard_prevents_infinite_loop(self, service):
+        """Test that _fallback_attempted guard prevents infinite fallback loops."""
         from unittest.mock import PropertyMock
 
-        mock_clipboard = MagicMock()
-        mock_stream_result = MagicMock()
-        mock_stream = MagicMock()
-        mock_gbytes = MagicMock()
+        from gi.repository import Gio, GLib
 
-        service.clipboard.read_finish.return_value = (mock_stream, "text/uri-list")
-        mock_gbytes.get_data.return_value = b"http://example.com/image.png\r\n"
-        mock_stream.read_bytes_finish.return_value = mock_gbytes
+        mock_clipboard = MagicMock()
+        mock_texture_result = MagicMock()
+
+        # Mock read_texture_finish to raise error
+        error = GLib.Error.new_literal(Gio.io_error_quark(), "Texture read failed", Gio.IOErrorEnum.FAILED)
+        service.clipboard.read_texture_finish.side_effect = error
 
         with (
             patch.object(ClipboardService, "clipboard", new_callable=PropertyMock) as mock_cb_prop,
-            patch("gi.repository.GLib.idle_add") as mock_idle_add,
+            patch.object(service, "_fallback_to_uri_list_read") as mock_fallback,
+            patch.object(service, "_emit_clipboard_error") as mock_error,
         ):
             mock_cb_prop.return_value = mock_clipboard
             service._cancellable = MagicMock()
             service._cancellable.is_cancelled.return_value = False
 
-            # Trigger the callback
-            service._on_read_uri_list(None, mock_stream_result)
+            # First call: fallback should be attempted
+            service._fallback_attempted = False
+            service._on_read_texture(None, mock_texture_result)
+            assert service._fallback_attempted is True
+            mock_fallback.assert_called_once()
 
+            # Second call with guard set: should emit error instead of looping
+            mock_fallback.reset_mock()
+            service._fallback_attempted = True
+            service._on_read_texture(None, mock_texture_result)
+            mock_fallback.assert_not_called()
+            mock_error.assert_called_once()
+
+    def test_uri_list_no_file_uri(self, service):
+        """Test _on_uri_list_bytes emits error when no file:// URI in list."""
+        with patch("gi.repository.GLib.idle_add") as mock_idle_add:
+            # Call with non-file URI data
+            service._on_uri_list_bytes(b"http://example.com/image.png\r\n")
             # Verify error was emitted
             assert mock_idle_add.called
 
     def test_uri_list_file_not_exists(self, service):
-        """Test URI-list succeeds but file doesn't exist."""
-        from unittest.mock import PropertyMock
-
-        mock_clipboard = MagicMock()
-        mock_stream_result = MagicMock()
-        mock_stream = MagicMock()
-        mock_gbytes = MagicMock()
-
-        service.clipboard.read_finish.return_value = (mock_stream, "text/uri-list")
-        mock_gbytes.get_data.return_value = b"file:///tmp/nonexistent.png\r\n"
-        mock_stream.read_bytes_finish.return_value = mock_gbytes
-
+        """Test _on_uri_list_bytes emits error when file doesn't exist."""
         with (
-            patch.object(ClipboardService, "clipboard", new_callable=PropertyMock) as mock_cb_prop,
             patch("gi.repository.GLib.filename_from_uri", return_value=("/tmp/nonexistent.png", "")),
             patch("pathlib.Path.exists", return_value=False),
-            patch("gi.repository.GLib.idle_add") as mock_idle_add,
+            patch.object(service, "_emit_clipboard_error") as mock_error,
         ):
-            mock_cb_prop.return_value = mock_clipboard
-            service._cancellable = MagicMock()
-            service._cancellable.is_cancelled.return_value = False
-
-            # Trigger the callback
-            service._on_read_uri_list(None, mock_stream_result)
-
-            # Verify error was emitted via _emit_clipboard_error
-            assert mock_idle_add.called
+            # Call with file URI data for non-existent file
+            service._on_uri_list_bytes(b"file:///tmp/nonexistent.png\r\n")
+            # Verify error was emitted
+            mock_error.assert_called_once()
 
     def test_emit_texture_from_file_success(self, service):
         """Test _emit_texture_from_file success path."""
