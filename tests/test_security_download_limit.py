@@ -22,8 +22,13 @@ class TestSecurityDownloadLimit:
 
         # Patch paths and settings to ensure headless safety and isolation
         with (
-            patch("anura.services.language_manager.TESSDATA_DIR", str(tmp_path)),
-            patch("anura.services.language_manager.TESSDATA_SYSTEM_DIR", str(tmp_path / "system")),
+            patch("anura.config.TESSDATA_DIR", str(tmp_path)),
+            patch("anura.config.TESSDATA_SYSTEM_DIR", str(tmp_path / "system")),
+            patch("anura.services.language_manager.TESSDATA_DIR", str(tmp_path), create=True),
+            patch("anura.services.language_manager.TESSDATA_SYSTEM_DIR", str(tmp_path / "system"), create=True),
+            patch("anura.services.language.cache_manager.TESSDATA_DIR", str(tmp_path), create=True),
+            patch("anura.services.language.cache_manager.TESSDATA_SYSTEM_DIR", str(tmp_path / "system"), create=True),
+            patch("anura.services.language.download_manager.TESSDATA_DIR", str(tmp_path), create=True),
             patch("anura.services.language_manager.settings") as mock_settings,
         ):
             os.makedirs(tmp_path / "system", exist_ok=True)
@@ -40,10 +45,10 @@ class TestSecurityDownloadLimit:
         # Set size slightly over the limit
         mock_response.headers = {"content-length": str(MAX_MODEL_SIZE_BYTES + 1)}
 
-        with patch.object(lm.session, "get", return_value=mock_response), \
+        with patch.object(lm._download_manager.session, "get", return_value=mock_response), \
              patch("shutil.which", return_value="/usr/bin/tesseract"):
 
-            result = lm.download_begin("fra")
+            result = lm._download_manager.download_begin("fra")
             assert result is None
 
     def test_download_begin_enforces_size_limit_via_streaming(self, manager):
@@ -63,7 +68,7 @@ class TestSecurityDownloadLimit:
 
         mock_response.iter_content = iter_content
 
-        with patch.object(lm.session, "get", return_value=mock_response), \
+        with patch.object(lm._download_manager.session, "get", return_value=mock_response), \
              patch("shutil.which", return_value="/usr/bin/tesseract"), \
              patch("tempfile.NamedTemporaryFile") as mock_tmp:
 
@@ -72,5 +77,5 @@ class TestSecurityDownloadLimit:
             mock_tmp.return_value.__enter__.return_value.name = "/tmp/fake.tmp"
             mock_tmp.return_value.__enter__.return_value.open.return_value.__enter__.return_value = mock_file
 
-            result = lm.download_begin("fra")
+            result = lm._download_manager.download_begin("fra")
             assert result is None

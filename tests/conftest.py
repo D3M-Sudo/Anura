@@ -77,24 +77,99 @@ _GI_KEYS: tuple[str, ...] = (
 
 _GI_INJECTED: list[str] = []
 
-def _make_module_mock(name: str) -> MagicMock:
-    """Return a MagicMock that pytest.importorskip will accept.
+class PropertyStub:
+    def __init__(self, fget=None, fset=None, **kwargs):
+        self.fget = fget
+        self.fset = fset
+        self.default = kwargs.get("default")
 
-    importorskip validates ``module.__spec__`` after retrieving the module from
-    sys.modules.  A plain MagicMock has ``__spec__`` set to the *spec* argument
-    of the MagicMock constructor (None by default), which makes importorskip
-    raise ``ValueError: <mock>.__spec__ is not set``.  Providing a real
-    ``importlib.machinery.ModuleSpec`` object satisfies the check.
-    """
-    import importlib.machinery
+    def setter(self, fset):
+        self.fset = fset
+        return self
 
-    m = MagicMock(name=name)
-    m.__name__ = name
-    m.__spec__ = importlib.machinery.ModuleSpec(name, loader=None)
-    m.__loader__ = None
-    m.__package__ = name.rsplit(".", 1)[0] if "." in name else name
-    m.__path__ = []
-    return m
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        if self.fget:
+            return self.fget(instance)
+
+        # Simple GObject property storage
+        if not hasattr(instance, "_property_values"):
+            instance._property_values = {}
+        return instance._property_values.get(self, self.default)
+
+    def __set__(self, instance, value):
+        if self.fset:
+            self.fset(instance, value)
+        else:
+            if not hasattr(instance, "_property_values"):
+                instance._property_values = {}
+            instance._property_values[self] = value
+
+    def __call__(self, *args, **kwargs):
+        if args and callable(args[0]):
+            self.fget = args[0]
+            return self
+        return self
+
+
+class StubMetaclass(type):
+    def __getattr__(cls, name):
+        if name == "get_default_for_uri_scheme":
+            # Return a function that returns None so we fall back to the safe whitelist
+            return lambda scheme: None
+        if name == "Property":
+            return lambda *args, **kwargs: PropertyStub(**kwargs)
+        if name.startswith("_"):
+            raise AttributeError(name)
+        return MagicMock(name=name)
+
+
+class UniversalStub(metaclass=StubMetaclass):
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __getattr__(self, name):
+        # Standard Python internals, private attributes, and non-existent link generators should raise AttributeError
+        # so that hasattr() and getattr() with defaults work correctly.
+        if name.startswith("_") or name.startswith("get_link_"):
+            raise AttributeError(name)
+        return MagicMock(name=name)
+
+    def __call__(self, *args, **kwargs):
+        if args and callable(args[0]):
+            return args[0]
+        return MagicMock()
+
+    @classmethod
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__()
+
+
+class MockModule(MagicMock):
+    def __init__(self, name: str, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__name__ = name
+        import importlib.machinery
+        self.__spec__ = importlib.machinery.ModuleSpec(name, loader=None)
+        self.__loader__ = None
+        self.__package__ = name.rsplit(".", 1)[0] if "." in name else name
+        self.__path__ = []
+
+    def __getattr__(self, name: str):
+        if name == "Property":
+            return lambda *args, **kwargs: PropertyStub()
+        if name.startswith("_") or name.startswith("mock") or name in (
+            "called", "call_count", "call_args", "call_args_list", "return_value", "side_effect"
+        ):
+            return super().__getattr__(name)
+        # Dynamically return a class that inherits from UniversalStub to prevent metaclass conflicts
+        return type(name, (UniversalStub,), {})
+
+
+def _make_module_mock(name: str) -> MockModule:
+    """Return a MockModule that pytest.importorskip will accept and satisfies GObject subclassing."""
+    return MockModule(name)
 
 
 if _CI_MODE:
@@ -349,6 +424,19 @@ def pytest_sessionfinish(session, exitstatus):
             tr.summary_stats()
         sys.stdout.flush()
         sys.stderr.flush()
+    except Exception:
+        pass
+
+    # 3b. Forcefully terminate all child processes to prevent GHA from hanging on open pipes.
+    try:
+        import psutil
+        current_process = psutil.Process()
+        children = current_process.children(recursive=True)
+        for child in children:
+            try:
+                child.kill()
+            except Exception:
+                pass
     except Exception:
         pass
 
