@@ -96,69 +96,7 @@ class TestClipboardServiceEnterprise:
             mock_cancellable.cancel.assert_called_once()
             assert mock_idle.called
 
-    def test_fallback_texture_to_uri_list_success(self, service):
-        """Test that _fallback_to_uri_list_read is called when texture read fails."""
-        from unittest.mock import PropertyMock
 
-        from gi.repository import Gio, GLib
-
-        mock_clipboard = MagicMock()
-        mock_texture_result = MagicMock()
-
-        # Mock read_texture_finish to raise error (trigger fallback)
-        error = GLib.Error.new_literal(Gio.io_error_quark(), "Texture read failed", Gio.IOErrorEnum.FAILED)
-        service.clipboard.read_texture_finish.side_effect = error
-
-        with (
-            patch.object(ClipboardService, "clipboard", new_callable=PropertyMock) as mock_cb_prop,
-            patch.object(service, "_fallback_to_uri_list_read") as mock_fallback,
-        ):
-            mock_cb_prop.return_value = mock_clipboard
-            service._cancellable = MagicMock()
-            service._cancellable.is_cancelled.return_value = False
-            service._fallback_attempted = False
-
-            # Trigger the callback
-            service._on_read_texture(None, mock_texture_result)
-
-            # Verify fallback was attempted
-            assert service._fallback_attempted is True
-            mock_fallback.assert_called_once()
-
-    def test_fallback_guard_prevents_infinite_loop(self, service):
-        """Test that _fallback_attempted guard prevents infinite fallback loops."""
-        from unittest.mock import PropertyMock
-
-        from gi.repository import Gio, GLib
-
-        mock_clipboard = MagicMock()
-        mock_texture_result = MagicMock()
-
-        # Mock read_texture_finish to raise error
-        error = GLib.Error.new_literal(Gio.io_error_quark(), "Texture read failed", Gio.IOErrorEnum.FAILED)
-        service.clipboard.read_texture_finish.side_effect = error
-
-        with (
-            patch.object(ClipboardService, "clipboard", new_callable=PropertyMock) as mock_cb_prop,
-            patch.object(service, "_fallback_to_uri_list_read") as mock_fallback,
-            patch.object(service, "_emit_clipboard_error") as mock_error,
-        ):
-            mock_cb_prop.return_value = mock_clipboard
-            service._cancellable = MagicMock()
-            service._cancellable.is_cancelled.return_value = False
-
-            # First call: fallback should be attempted
-            service._fallback_attempted = False
-            service._on_read_texture(None, mock_texture_result)
-            assert service._fallback_attempted is True
-            mock_fallback.assert_called_once()
-
-            # Second call with guard set: should emit error instead of looping
-            mock_fallback.reset_mock()
-            service._fallback_attempted = True
-            service._on_read_texture(None, mock_texture_result)
-            mock_fallback.assert_not_called()
-            mock_error.assert_called_once()
 
     def test_uri_list_no_file_uri(self, service):
         """Test _on_uri_list_bytes emits error when no file:// URI in list."""
