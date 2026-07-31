@@ -45,7 +45,7 @@ class TestReliabilityEnterprise:
             assert result == ""
             mock_log.assert_called()
             # Verify no partial file left behind
-            assert not any(f.endswith(".mp3") for f in os.listdir(tts_service._speech_dir))
+            assert not any(f.endswith(".mp3") for f in os.listdir(tts_service._pipeline._generator._speech_dir))
 
     def test_ocr_missing_binary(self):
         """Test ScreenshotService behavior when tesseract binary is missing."""

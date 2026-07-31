@@ -77,24 +77,83 @@ _GI_KEYS: tuple[str, ...] = (
 
 _GI_INJECTED: list[str] = []
 
-def _make_module_mock(name: str) -> MagicMock:
-    """Return a MagicMock that pytest.importorskip will accept.
+class PropertyStub:
+    def __init__(self, fget=None, fset=None):
+        self.fget = fget
+        self.fset = fset
 
-    importorskip validates ``module.__spec__`` after retrieving the module from
-    sys.modules.  A plain MagicMock has ``__spec__`` set to the *spec* argument
-    of the MagicMock constructor (None by default), which makes importorskip
-    raise ``ValueError: <mock>.__spec__ is not set``.  Providing a real
-    ``importlib.machinery.ModuleSpec`` object satisfies the check.
-    """
-    import importlib.machinery
+    def setter(self, fset):
+        self.fset = fset
+        return self
 
-    m = MagicMock(name=name)
-    m.__name__ = name
-    m.__spec__ = importlib.machinery.ModuleSpec(name, loader=None)
-    m.__loader__ = None
-    m.__package__ = name.rsplit(".", 1)[0] if "." in name else name
-    m.__path__ = []
-    return m
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        return self.fget(instance) if self.fget else None
+
+    def __set__(self, instance, value):
+        if self.fset:
+            self.fset(instance, value)
+
+    def __call__(self, *args, **kwargs):
+        if args and callable(args[0]):
+            self.fget = args[0]
+            return self
+        return self
+
+
+class StubMetaclass(type):
+    def __getattr__(cls, name):
+        if name == "Property":
+            return lambda *args, **kwargs: PropertyStub()
+        if name.startswith("_"):
+            raise AttributeError(name)
+        return MagicMock(name=name)
+
+
+class UniversalStub(metaclass=StubMetaclass):
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __getattr__(self, name):
+        if name.startswith("_"):
+            raise AttributeError(name)
+        return MagicMock(name=name)
+
+    def __call__(self, *args, **kwargs):
+        if args and callable(args[0]):
+            return args[0]
+        return MagicMock()
+
+    @classmethod
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__()
+
+
+class MockModule(MagicMock):
+    def __init__(self, name: str, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__name__ = name
+        import importlib.machinery
+        self.__spec__ = importlib.machinery.ModuleSpec(name, loader=None)
+        self.__loader__ = None
+        self.__package__ = name.rsplit(".", 1)[0] if "." in name else name
+        self.__path__ = []
+
+    def __getattr__(self, name: str):
+        if name == "Property":
+            return lambda *args, **kwargs: PropertyStub()
+        if name.startswith("_") or name.startswith("mock") or name in (
+            "called", "call_count", "call_args", "call_args_list", "return_value", "side_effect"
+        ):
+            return super().__getattr__(name)
+        # Dynamically return a class that inherits from UniversalStub to prevent metaclass conflicts
+        return type(name, (UniversalStub,), {})
+
+
+def _make_module_mock(name: str) -> MockModule:
+    """Return a MockModule that pytest.importorskip will accept and satisfies GObject subclassing."""
+    return MockModule(name)
 
 
 if _CI_MODE:

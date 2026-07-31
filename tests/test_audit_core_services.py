@@ -15,6 +15,7 @@ from anura.services.screenshot_service import ScreenshotService
 from anura.services.settings import Settings
 from anura.services.share_service import ShareService
 from anura.services.tts import TTSService
+from anura.services.tts.language_mapper import LanguageMapper
 
 
 class TestShareService:
@@ -48,20 +49,20 @@ class TestShareService:
 class TestTTSService:
     @pytest.mark.gtk
     def test_map_tesseract_to_gtts(self):
-        assert TTSService.map_tesseract_to_gtts("eng") == "en"
-        assert TTSService.map_tesseract_to_gtts("ita") == "it"
-        assert TTSService.map_tesseract_to_gtts("jpn_vert") == "ja"
+        assert LanguageMapper.map_tesseract_to_gtts("eng") == "en"
+        assert LanguageMapper.map_tesseract_to_gtts("ita") == "it"
+        assert LanguageMapper.map_tesseract_to_gtts("jpn_vert") == "ja"
         # Unknown codes now return None (no fallback to "en")
         # UI layer handles the None case explicitly
-        assert TTSService.map_tesseract_to_gtts("unknown") is None
+        assert LanguageMapper.map_tesseract_to_gtts("unknown") is None
 
     @pytest.mark.gtk
     def test_get_effective_language(self):
-        with patch("anura.services.tts.settings.get_string", return_value=""):
+        with patch("anura.services.settings.settings.get_string", return_value=""):
             service = TTSService()
             assert service.get_effective_language("eng") == "en"
 
-        with patch("anura.services.tts.settings.get_string", return_value="fr"):
+        with patch("anura.services.settings.settings.get_string", return_value="fr"):
             service = TTSService()
             assert service.get_effective_language("eng") == "fr"
 
