@@ -81,7 +81,7 @@ class PropertyStub:
     def __init__(self, fget=None, fset=None, **kwargs):
         self.fget = fget
         self.fset = fset
-        self.default = kwargs.get("default", None)
+        self.default = kwargs.get("default")
 
     def setter(self, fset):
         self.fset = fset
