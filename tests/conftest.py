@@ -427,6 +427,18 @@ def pytest_sessionfinish(session, exitstatus):
     except Exception:
         pass
 
+    # 3b. Forcefully terminate all child processes to prevent GHA from hanging on open pipes.
+    try:
+        import psutil
+        current_process = psutil.Process()
+        children = current_process.children(recursive=True)
+        for child in children:
+            try:
+                child.kill()
+            except Exception:
+                pass
+    except Exception:
+        pass
+
     # 4. Bypass Python's non-daemon-thread join (avoids 74-second CI hang).
-    # os._exit(int(exitstatus))
-    pass
+    os._exit(int(exitstatus))
