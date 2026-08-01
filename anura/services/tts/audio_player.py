@@ -95,12 +95,16 @@ class AudioPlayer(GObject.GObject):
 
     def _on_gst_eos(self, generation_id: int, _bus: Gst.Bus, _message: Gst.Message) -> None:
         """Handle EOS message with generation_id captured in closure."""
+        if not self.player:
+            return
         logger.info("Anura AudioPlayer: End of Stream")
         self.cleanup()
         GLib.idle_add(lambda: (self.emit("eos", generation_id), GLib.SOURCE_REMOVE)[1])
 
     def _on_gst_error(self, generation_id: int, _bus: Gst.Bus, message: Gst.Message) -> None:
         """Handle error message with generation_id captured in closure."""
+        if not self.player:
+            return
         err, _debug = message.parse_error()
         error_msg = f"{err}"
         logger.error(f"Anura AudioPlayer: GStreamer error: {error_msg}")
