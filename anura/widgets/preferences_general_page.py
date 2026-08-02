@@ -26,6 +26,8 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
     magic_processor_switch: Adw.SwitchRow = Gtk.Template.Child()
     autocopy_switch: Adw.SwitchRow = Gtk.Template.Child()
     autolinks_switch: Adw.SwitchRow = Gtk.Template.Child()
+    history_enabled_switch: Adw.SwitchRow = Gtk.Template.Child()
+    history_limit_row: Adw.SpinRow = Gtk.Template.Child()
     volume_row: Adw.SpinRow = Gtk.Template.Child()
     tts_language_combo: Adw.ComboRow = Gtk.Template.Child()
 
@@ -40,6 +42,8 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
         self.settings.bind(
             "magic-processor-enabled", self.magic_processor_switch, "active", Gio.SettingsBindFlags.DEFAULT
         )
+        self.settings.bind("history-enabled", self.history_enabled_switch, "active", Gio.SettingsBindFlags.DEFAULT)
+        self.settings.bind("history-limit", self.history_limit_row, "value", Gio.SettingsBindFlags.DEFAULT)
 
         self._setup_color_scheme()
         self._setup_extra_languages()
@@ -185,6 +189,28 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
             else:
                 logger.warning(f"Anura: TTS language index {idx} out of bounds, falling back to Auto")
                 self.settings.set_string("tts-language", "")
+
+    @Gtk.Template.Callback()
+    def _on_clear_history_clicked(self, *_) -> None:
+        """Clear capture history from the general preferences page."""
+        dialog = Adw.MessageDialog(
+            parent=self.get_root(),
+            heading=_("Clear History?"),
+            body=_("Are you sure you want to permanently clear your capture history?"),
+        )
+        dialog.add_response("cancel", _("Cancel"))
+        dialog.add_response("clear", _("Clear"))
+        dialog.set_response_appearance("clear", Adw.ResponseAppearance.DESTRUCTIVE)
+        dialog.set_default_response("cancel")
+
+        def _on_dialog_response(diag, response):
+            if response == "clear":
+                from anura.services.history_service import get_history_service
+                get_history_service().clear_history()
+            diag.close()
+
+        dialog.connect("response", _on_dialog_response)
+        dialog.present()
 
     def do_destroy(self) -> None:
         """Clean up all tracked signal handlers to prevent memory leaks."""

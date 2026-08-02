@@ -61,6 +61,7 @@ blueprint_files = [
   'ui/welcome_page.blp',
   'ui/extracted_page.blp',
   'ui/share_row.blp',
+  'ui/history_page.blp',
 ]
 
 # Generate each blueprint file individually since blueprint-compiler

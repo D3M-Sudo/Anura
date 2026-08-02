@@ -207,6 +207,11 @@ template $ExtractedPage : Adw.NavigationPage {
 menu primary_menu {
   section {
     item {
+      label: _("Recent Captures");
+      action: "app.show_history";
+      icon: "document-open-recent-symbolic";
+    }
+    item {
       label: _("Preferences");
       action: "app.preferences";
       icon: "preferences-system-symbolic";

@@ -61,6 +61,37 @@ template $PreferencesGeneralPage : Adw.PreferencesPage {
   }
 
   Adw.PreferencesGroup {
+    title: _("History");
+
+    Adw.SwitchRow history_enabled_switch {
+      title: _("Enable History");
+      subtitle: _("Keep a history of recent extractions");
+    }
+
+    Adw.SpinRow history_limit_row {
+      title: _("History Limit");
+      subtitle: _("Number of recent captures to preserve (1-200)");
+      adjustment: Adjustment {
+        lower: 1.0;
+        upper: 200.0;
+        step-increment: 1.0;
+      };
+    }
+
+    Adw.ActionRow {
+      title: _("Clear History");
+      subtitle: _("Permanently delete all captured sessions");
+
+      [suffix]
+      Button {
+        label: _("Clear…");
+        clicked => $_on_clear_history_clicked();
+        styles ["destructive-action"]
+      }
+    }
+  }
+
+  Adw.PreferencesGroup {
     title: _("Text-to-Speech");
 
     Adw.SpinRow volume_row {

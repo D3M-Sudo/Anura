@@ -46,6 +46,16 @@ template $WelcomePage : Adw.NavigationPage {
             label: _("Open menu");
           }
         }
+
+        [end]
+        Button {
+          action-name: "app.show_history";
+          icon-name: "document-open-recent-symbolic";
+          tooltip-text: _("Recent Captures (Ctrl+H)");
+          accessibility {
+            label: _("Recent captures");
+          }
+        }
       }
 
       Adw.StatusPage welcome {
@@ -162,6 +172,11 @@ template $WelcomePage : Adw.NavigationPage {
 
 menu primary_menu {
   section {
+    item {
+      label: _("Recent Captures");
+      action: "app.show_history";
+      icon: "document-open-recent-symbolic";
+    }
     item {
       label: _("Preferences");
       action: "app.preferences";

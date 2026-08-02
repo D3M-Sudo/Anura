@@ -35,6 +35,7 @@ from anura.services.share_service import get_share_service  # noqa: E402
 from anura.utils import validate_image_resource  # noqa: E402
 from anura.utils.signal_manager import SignalManagerMixin  # noqa: E402
 from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
+from anura.widgets.history_page import HistoryPage  # noqa: E402
 from anura.widgets.preferences_dialog import PreferencesDialog  # noqa: E402
 from anura.widgets.welcome_page import WelcomePage  # noqa: E402
 
@@ -50,6 +51,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     navigation_view: Adw.NavigationView = Gtk.Template.Child()
     welcome_page: WelcomePage = Gtk.Template.Child()
     extracted_page: ExtractedPage = Gtk.Template.Child()
+    history_page: HistoryPage = Gtk.Template.Child()
     portal_banner: Adw.Banner = Gtk.Template.Child()
 
     settings: Gio.Settings
