@@ -102,6 +102,11 @@ class OcrController(GObject.GObject, SignalManagerMixin):
             extraction_result = self._dispatcher.dispatch(text, ocr_result)
             self._handle_extraction_result(extraction_result, copy)
 
+            # Save to capture history
+            from anura.services.history_service import get_history_service
+            lang = self._window.get_language()
+            get_history_service().add_session(text, lang)
+
             if self._notification_service.is_available():
                 body = text[:80] + "…" if len(text) > 80 else text
                 self._notification_service.show(title=_("Text extracted"), body=body, priority="normal")

@@ -26,6 +26,9 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
     magic_processor_switch: Adw.SwitchRow = Gtk.Template.Child()
     autocopy_switch: Adw.SwitchRow = Gtk.Template.Child()
     autolinks_switch: Adw.SwitchRow = Gtk.Template.Child()
+    history_enabled_switch: Adw.SwitchRow = Gtk.Template.Child()
+    history_limit_row: Adw.SpinRow = Gtk.Template.Child()
+    clear_history_row: Adw.ActionRow = Gtk.Template.Child()
     volume_row: Adw.SpinRow = Gtk.Template.Child()
     tts_language_combo: Adw.ComboRow = Gtk.Template.Child()
 
@@ -37,6 +40,16 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
 
         self.settings.bind("autocopy", self.autocopy_switch, "active", Gio.SettingsBindFlags.DEFAULT)
         self.settings.bind("autolinks", self.autolinks_switch, "active", Gio.SettingsBindFlags.DEFAULT)
+        self.settings.bind("history-enabled", self.history_enabled_switch, "active", Gio.SettingsBindFlags.DEFAULT)
+        self.settings.bind("history-limit", self.history_limit_row, "value", Gio.SettingsBindFlags.DEFAULT)
+
+        # Register preferences clear action
+        action_group = Gio.SimpleActionGroup()
+        clear_action = Gio.SimpleAction.new("clear_history", None)
+        self.connect_tracked(clear_action, "activate", self._on_clear_history_clicked)
+        action_group.add_action(clear_action)
+        self.insert_action_group("preferences", action_group)
+
         self.settings.bind(
             "magic-processor-enabled", self.magic_processor_switch, "active", Gio.SettingsBindFlags.DEFAULT
         )
@@ -185,6 +198,28 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
             else:
                 logger.warning(f"Anura: TTS language index {idx} out of bounds, falling back to Auto")
                 self.settings.set_string("tts-language", "")
+
+    def _on_clear_history_clicked(self, _action, _param) -> None:
+        """Prompt to clear capture history."""
+        dialog = Adw.MessageDialog(
+            transient_for=self.get_root(),
+            heading=_("Clear History?"),
+            body=_("This will permanently delete all capture history. This action cannot be undone."),
+        )
+        dialog.add_response("cancel", _("Cancel"))
+        dialog.add_response("clear", _("Clear"))
+        dialog.set_response_appearance("clear", Adw.ResponseAppearance.DESTRUCTIVE)
+        dialog.set_default_response("cancel")
+        dialog.set_close_response("cancel")
+
+        def _on_response(_dialog, response_id):
+            if response_id == "clear":
+                from anura.services.history_service import get_history_service
+                get_history_service().clear_history()
+            _dialog.destroy()
+
+        self.connect_tracked(dialog, "response", _on_response)
+        dialog.present()
 
     def do_destroy(self) -> None:
         """Clean up all tracked signal handlers to prevent memory leaks."""

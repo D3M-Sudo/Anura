@@ -331,6 +331,11 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
     def on_preferences(self, *_) -> None:
         DialogManager.show_preferences(self.get_active_window())
 
+    def on_show_history(self, *_) -> None:
+        win = self.get_active_window()
+        if win and hasattr(win, "show_history"):
+            win.show_history()
+
     def on_about(self, *_) -> None:
         DialogManager.show_about(self.get_active_window(), self.version)
 
@@ -406,6 +411,11 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         if not result.text:
             self.notification_service.show_notification(title=_("Anura OCR"), body=_("No text found."))
             return
+
+        # Save to capture history
+        from anura.services.history_service import get_history_service
+        lang = self.settings.get_string("active-language")
+        get_history_service().add_session(result.text, lang)
 
         if self.settings.get_boolean("autocopy") or copy:
             get_clipboard_service().set(result.text)

@@ -225,6 +225,11 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
         <attribute name="action">app.preferences</attribute>
         <attribute name="icon">preferences-system-symbolic</attribute>
       </item>
+      <item>
+        <attribute name="label" translatable="true">Capture History</attribute>
+        <attribute name="action">app.show_history</attribute>
+        <attribute name="icon">document-open-recent-symbolic</attribute>
+      </item>
     </section>
     <section>
       <item>

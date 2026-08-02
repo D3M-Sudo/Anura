@@ -35,6 +35,7 @@ from anura.services.share_service import get_share_service  # noqa: E402
 from anura.utils import validate_image_resource  # noqa: E402
 from anura.utils.signal_manager import SignalManagerMixin  # noqa: E402
 from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
+from anura.widgets.history_page import HistoryPage  # noqa: E402
 from anura.widgets.preferences_dialog import PreferencesDialog  # noqa: E402
 from anura.widgets.welcome_page import WelcomePage  # noqa: E402
 
@@ -50,6 +51,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     navigation_view: Adw.NavigationView = Gtk.Template.Child()
     welcome_page: WelcomePage = Gtk.Template.Child()
     extracted_page: ExtractedPage = Gtk.Template.Child()
+    history_page: HistoryPage = Gtk.Template.Child()
     portal_banner: Adw.Banner = Gtk.Template.Child()
 
     settings: Gio.Settings
@@ -109,6 +111,8 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
             self.backend = backend
 
         self.connect_tracked(self.extracted_page, "go-back", self.show_welcome_page)  # type: ignore[arg-type]
+        self.connect_tracked(self.history_page, "go-back", self.show_welcome_page)  # type: ignore[arg-type]
+        self.connect_tracked(self.history_page, "session-selected", self._on_history_session_selected)
         self._clipboard_service = None
         try:
             self._clipboard_service = get_clipboard_service()
@@ -301,6 +305,17 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         """Show the welcome page and hide the extracted content."""
         self.navigation_view.pop_to_tag("welcome")
         self.tts_controller.stop()
+
+    def show_history(self) -> None:
+        """Show the capture history page."""
+        self.navigation_view.push_by_tag("history")
+
+    def _on_history_session_selected(self, _page: HistoryPage, text: str, lang: str) -> None:
+        """Handle history item selection."""
+        self.tts_controller.stop()
+        self.extracted_page.set_extracted_text(text, _("History ({lang})").format(lang=lang.upper()))
+        self.navigation_view.push_by_tag("extracted")
+        self.extracted_page.text_view.grab_focus()
 
     def _setup_controller_signals(self) -> None:
         """Connect to controller signals to mediate UI updates."""

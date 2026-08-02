@@ -33,6 +33,11 @@
                     <property name="tag">extracted</property>
                   </object>
                 </child>
+                <child>
+                  <object class="HistoryPage" id="history_page">
+                    <property name="tag">history</property>
+                  </object>
+                </child>
               </object>
             </child>
           </object>

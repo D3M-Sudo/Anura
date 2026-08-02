@@ -28,6 +28,7 @@ class ActionRegistry:
         self._create_action("shortcuts", self.app.on_shortcuts, ["<primary>F1", "<primary>K", "<primary>h"])
         self._create_action("quit", lambda *_: self.app.quit(), ["<primary>q", "<primary>w"])
         self._create_action("preferences", self.app.on_preferences, ["<primary>comma", "<primary>period"])
+        self._create_action("show_history", self.app.on_show_history, ["<primary>y"])
         self._create_action("about", self.app.on_about)
         self._create_action("github_star", self.app.on_github_star)
         self._create_action("report_issue", self.app.on_report_issue)

@@ -69,6 +69,46 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
     </child>
     <child>
       <object class="AdwPreferencesGroup">
+        <property name="title" translatable="true">Capture History</property>
+        <child>
+          <object class="AdwSwitchRow" id="history_enabled_switch">
+            <property name="title" translatable="true">Enable Capture History</property>
+            <property name="subtitle" translatable="true">Keep a navigable history of recent text extractions</property>
+          </object>
+        </child>
+        <child>
+          <object class="AdwSpinRow" id="history_limit_row">
+            <property name="title" translatable="true">History Limit</property>
+            <property name="subtitle" translatable="true">Maximum number of captures to retain in history</property>
+            <property name="adjustment">
+              <object class="GtkAdjustment">
+                <property name="lower">1</property>
+                <property name="upper">500</property>
+                <property name="step-increment">5</property>
+              </object>
+            </property>
+          </object>
+        </child>
+        <child>
+          <object class="AdwActionRow" id="clear_history_row">
+            <property name="title" translatable="true">Clear Capture History</property>
+            <property name="subtitle" translatable="true">Permanently delete all saved captures</property>
+            <child>
+              <object class="GtkButton">
+                <property name="label" translatable="true">Clear</property>
+                <style>
+                  <class name="destructive-action"/>
+                </style>
+                <property name="valign">center</property>
+                <property name="action-name">preferences.clear_history</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="AdwPreferencesGroup">
         <property name="title" translatable="true">Text-to-Speech</property>
         <child>
           <object class="AdwSpinRow" id="volume_row">

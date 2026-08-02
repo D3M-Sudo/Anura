@@ -61,6 +61,37 @@ template $PreferencesGeneralPage : Adw.PreferencesPage {
   }
 
   Adw.PreferencesGroup {
+    title: _("Capture History");
+
+    Adw.SwitchRow history_enabled_switch {
+      title: _("Enable Capture History");
+      subtitle: _("Keep a navigable history of recent text extractions");
+    }
+
+    Adw.SpinRow history_limit_row {
+      title: _("History Limit");
+      subtitle: _("Maximum number of captures to retain in history");
+      adjustment: Adjustment {
+        lower: 1.0;
+        upper: 500.0;
+        step-increment: 5.0;
+      };
+    }
+
+    Adw.ActionRow clear_history_row {
+      title: _("Clear Capture History");
+      subtitle: _("Permanently delete all saved captures");
+
+      child: Button {
+        label: _("Clear");
+        styles ["destructive-action"]
+        valign: center;
+        action-name: "preferences.clear_history";
+      };
+    }
+  }
+
+  Adw.PreferencesGroup {
     title: _("Text-to-Speech");
 
     Adw.SpinRow volume_row {

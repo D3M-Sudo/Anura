@@ -421,6 +421,18 @@ def pytest_sessionfinish(session, exitstatus):
     try:
         tr = session.config.pluginmanager.get_plugin("terminalreporter")
         if tr is not None:
+            if "failed" in tr.stats:
+                for rep in tr.stats["failed"]:
+                    print(f"\n--- FAILED: {rep.nodeid} ---")
+                    if hasattr(rep, "longreprtext"):
+                        print(rep.longreprtext)
+                    print("-" * 40)
+            if "error" in tr.stats:
+                for rep in tr.stats["error"]:
+                    print(f"\n--- ERROR: {rep.nodeid} ---")
+                    if hasattr(rep, "longreprtext"):
+                        print(rep.longreprtext)
+                    print("-" * 40)
             tr.summary_stats()
         sys.stdout.flush()
         sys.stderr.flush()
