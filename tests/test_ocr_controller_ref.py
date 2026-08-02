@@ -4,13 +4,15 @@
 # SPDX-License-Identifier: MIT
 
 from unittest.mock import MagicMock
+
 import pytest
 
 
 def test_ocr_controller_window_destroyed_safety(headless_gi_mocks):
     """Verify that OcrController handles window destruction gracefully in callbacks."""
-    from anura.controllers.ocr_controller import OcrController
     import gc
+
+    from anura.controllers.ocr_controller import OcrController
 
     class MockWindow:
         def __init__(self):
