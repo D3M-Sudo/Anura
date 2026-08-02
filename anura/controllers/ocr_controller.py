@@ -110,6 +110,8 @@ class OcrController(GObject.GObject, SignalManagerMixin):
             # backend.current_task_id is now a public GObject property.
             _current_id = self._window.backend.current_task_id
             GLib.idle_add(self._navigate_to_extracted_page, _current_id)
+        except ReferenceError:
+            logger.debug("OcrController: Window was already destroyed, skipping _on_shot_done processing.")
         except (AttributeError, TypeError, RuntimeError) as e:
             logger.error(f"OcrController: Error in _on_shot_done: {e}")
 
@@ -124,18 +126,21 @@ class OcrController(GObject.GObject, SignalManagerMixin):
         else:
             self.emit("text-extracted", result.text, copy_requested)
 
-            # Show toasts for other structured data found in text
-            if result.emails:
-                count = len(result.emails)
-                self._window.show_toast(
-                    ngettext("{n} email found in text", "{n} emails found in text", count).format(n=count)
-                )
+            try:
+                # Show toasts for other structured data found in text
+                if result.emails:
+                    count = len(result.emails)
+                    self._window.show_toast(
+                        ngettext("{n} email found in text", "{n} emails found in text", count).format(n=count)
+                    )
 
-            if result.phone_numbers:
-                count = len(result.phone_numbers)
-                self._window.show_toast(
-                    ngettext("{n} phone number found in text", "{n} phone numbers found in text", count).format(n=count)
-                )
+                if result.phone_numbers:
+                    count = len(result.phone_numbers)
+                    self._window.show_toast(
+                        ngettext("{n} phone number found in text", "{n} phone numbers found in text", count).format(n=count)
+                    )
+            except ReferenceError:
+                logger.debug("OcrController: Window was already destroyed, skipping toasts.")
 
     def _on_status_changed(self, _sender: GObject.GObject, status_msg: str) -> None:
         """Handle status updates from backend to prevent Zombie UI."""
@@ -158,7 +163,10 @@ class OcrController(GObject.GObject, SignalManagerMixin):
             logger.error(f"OcrController: Error handling portal backend missing: {e}")
 
     def _on_portal_banner_dismissed(self, _banner: Adw.Banner) -> None:
-        self._window.portal_banner.set_revealed(False)
+        try:
+            self._window.portal_banner.set_revealed(False)
+        except ReferenceError:
+            logger.debug("OcrController: Window was already destroyed, skipping portal banner dismissal.")
 
     def _navigate_to_extracted_page(self, task_id: str | None = None) -> int:
         # NEW-003: Validate task ID before navigation to prevent jumps during rapid captures
@@ -231,6 +239,8 @@ class OcrController(GObject.GObject, SignalManagerMixin):
                 file = dialog.open_finish(result)
                 if file:
                     self._window.process_file(file.get_path())
+            except ReferenceError:
+                logger.debug("OcrController: Window was already destroyed, skipping file processing.")
             except (GLib.Error, RuntimeError) as e:
                 logger.warning(f"Image selection failed or aborted: {e}")
 
