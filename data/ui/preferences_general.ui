@@ -17,15 +17,6 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
           <object class="AdwComboRow" id="color_scheme_combo">
             <property name="title" translatable="true">Color Scheme</property>
             <property name="subtitle" translatable="true">The preferred color scheme for the application.</property>
-            <property name="model">
-              <object class="GtkStringList">
-                <items>
-                  <item translatable="true" context="color-scheme">System</item>
-                  <item translatable="true" context="color-scheme">Light</item>
-                  <item translatable="true" context="color-scheme">Dark</item>
-                </items>
-              </object>
-            </property>
           </object>
         </child>
       </object>
@@ -69,6 +60,45 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
     </child>
     <child>
       <object class="AdwPreferencesGroup">
+        <property name="title" translatable="true">History</property>
+        <child>
+          <object class="AdwSwitchRow" id="history_enabled_switch">
+            <property name="title" translatable="true">Enable History</property>
+            <property name="subtitle" translatable="true">Keep a history of recent extractions</property>
+          </object>
+        </child>
+        <child>
+          <object class="AdwSpinRow" id="history_limit_row">
+            <property name="title" translatable="true">History Limit</property>
+            <property name="subtitle" translatable="true">Number of recent captures to preserve (1-200)</property>
+            <property name="adjustment">
+              <object class="GtkAdjustment">
+                <property name="lower">1</property>
+                <property name="upper">200</property>
+                <property name="step-increment">1</property>
+              </object>
+            </property>
+          </object>
+        </child>
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="true">Clear History</property>
+            <property name="subtitle" translatable="true">Permanently delete all captured sessions</property>
+            <child type="suffix">
+              <object class="GtkButton">
+                <property name="label" translatable="true">Clear…</property>
+                <signal name="clicked" handler="_on_clear_history_clicked"/>
+                <style>
+                  <class name="destructive-action"/>
+                </style>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="AdwPreferencesGroup">
         <property name="title" translatable="true">Text-to-Speech</property>
         <child>
           <object class="AdwSpinRow" id="volume_row">
@@ -87,9 +117,6 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
           <object class="AdwComboRow" id="tts_language_combo">
             <property name="title" translatable="true">TTS Language</property>
             <property name="subtitle" translatable="true">Language for speech synthesis. Uses OCR language if not set.</property>
-            <property name="model">
-              <object class="GtkStringList"></object>
-            </property>
           </object>
         </child>
       </object>

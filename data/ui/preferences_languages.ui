@@ -16,9 +16,6 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
           <object class="AdwComboRow" id="model_quality_combo">
             <property name="title" translatable="true">Model Quality</property>
             <property name="subtitle" translatable="true">Higher quality is slower but more accurate</property>
-            <property name="model">
-              <object class="GtkStringList"></object>
-            </property>
           </object>
         </child>
       </object>
@@ -75,11 +72,11 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                         </child>
                         <child>
                           <object class="GtkButton">
+                            <property name="icon-name">list-add-symbolic</property>
+                            <property name="tooltip-text" translatable="true">Add language</property>
                             <accessibility>
                               <property name="label" translatable="true">Add language</property>
                             </accessibility>
-                            <property name="icon-name">list-add-symbolic</property>
-                            <property name="tooltip-text" translatable="true">Add language</property>
                             <signal name="clicked" handler="_on_add_language"/>
                             <style>
                               <class name="flat"/>
