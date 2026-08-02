@@ -375,6 +375,13 @@ def pytest_sessionfinish(session, exitstatus):
     """
     print("\nEnsuring clean session teardown...")
 
+    # Shutdown HistoryService if active
+    try:
+        from anura.services.history_service import get_history_service
+        get_history_service().shutdown()
+    except (ImportError, AttributeError, RuntimeError, ValueError):
+        pass
+
     # 1a. Shutdown AtomicTaskManager
     try:
         from anura.core.atomic_task_manager import get_atomic_manager

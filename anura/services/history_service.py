@@ -115,9 +115,18 @@ class HistoryService(GObject.GObject):
             except OSError as e:
                 logger.error(f"HistoryService: Async write failed: {e}")
 
+        # Join previous write thread if it exists and is alive to serialize writes
+        if hasattr(self, "_write_thread") and self._write_thread and self._write_thread.is_alive():
+            self._write_thread.join(timeout=1.0)
+
         # Dispatch via GLib's ThreadPool / thread executor (we can use standard Python thread for disk I/O)
-        t = threading.Thread(target=save_in_thread, daemon=True)
-        t.start()
+        self._write_thread = threading.Thread(target=save_in_thread, daemon=True)
+        self._write_thread.start()
+
+    def shutdown(self) -> None:
+        """Wait for any pending async writes to complete."""
+        if hasattr(self, "_write_thread") and self._write_thread and self._write_thread.is_alive():
+            self._write_thread.join(timeout=2.0)
 
     def add_session(self, text: str, lang: str, thumbnail: str | None = None) -> None:
         """Add a new capture session if history-enabled is True."""

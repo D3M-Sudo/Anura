@@ -30,6 +30,7 @@ class TestHistoryService(unittest.TestCase):
             self.service = HistoryService()
 
     def tearDown(self):
+        self.service.shutdown()
         self.test_dir.cleanup()
 
     def test_initialization_empty(self):
