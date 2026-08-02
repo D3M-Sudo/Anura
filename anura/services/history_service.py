@@ -28,6 +28,7 @@ class HistoryService(GObject.GObject):
 
     def __init__(self) -> None:
         GObject.GObject.__init__(self)
+        self._lock = threading.Lock()
         self._sessions: list[CaptureSession] = []
         self._history_dir = self._get_history_directory()
         self._history_file = self._history_dir / "history.json"
@@ -47,36 +48,37 @@ class HistoryService(GObject.GObject):
 
     def _load_history(self) -> None:
         """Synchronously load history on startup, degrading gracefully if corrupted."""
-        if not self._history_file.exists():
-            self._sessions = []
-            return
+        with self._lock:
+            if not self._history_file.exists():
+                self._sessions = []
+                return
 
-        try:
-            with open(self._history_file, encoding="utf-8") as f:
-                data = json.load(f)
-                if not isinstance(data, list):
-                    raise ValueError("History data is not a list")
+            try:
+                with open(self._history_file, encoding="utf-8") as f:
+                    data = json.load(f)
+                    if not isinstance(data, list):
+                        raise ValueError("History data is not a list")
 
-                sessions = []
-                for item in data:
-                    try:
-                        session = CaptureSession(
-                            id=str(item["id"]),
-                            timestamp=float(item["timestamp"]),
-                            text=str(item["text"]),
-                            lang=str(item["lang"]),
-                            thumbnail=item.get("thumbnail"),
-                        )
-                        sessions.append(session)
-                    except (KeyError, ValueError, TypeError) as e:
-                        logger.warning(f"HistoryService: Skipping malformed item: {e}")
-                self._sessions = sorted(sessions, key=lambda s: s.timestamp, reverse=True)
-                logger.info(f"HistoryService: Loaded {len(self._sessions)} capture history entries")
-        except (json.JSONDecodeError, ValueError, OSError) as e:
-            logger.error(f"HistoryService: Failed to load history (file may be corrupt): {e}")
-            self._handle_corrupt_file()
+                    sessions = []
+                    for item in data:
+                        try:
+                            session = CaptureSession(
+                                id=str(item["id"]),
+                                timestamp=float(item["timestamp"]),
+                                text=str(item["text"]),
+                                lang=str(item["lang"]),
+                                thumbnail=item.get("thumbnail"),
+                            )
+                            sessions.append(session)
+                        except (KeyError, ValueError, TypeError) as e:
+                            logger.warning(f"HistoryService: Skipping malformed item: {e}")
+                    self._sessions = sorted(sessions, key=lambda s: s.timestamp, reverse=True)
+                    logger.info(f"HistoryService: Loaded {len(self._sessions)} capture history entries")
+            except (json.JSONDecodeError, ValueError, OSError) as e:
+                logger.error(f"HistoryService: Failed to load history (file may be corrupt): {e}")
+                self._handle_corrupt_file_unlocked()
 
-    def _handle_corrupt_file(self) -> None:
+    def _handle_corrupt_file_unlocked(self) -> None:
         """Safely isolate corrupted history and start with empty state."""
         self._sessions = []
         if self._history_file.exists():
@@ -92,28 +94,30 @@ class HistoryService(GObject.GObject):
         if not settings.get_boolean("history-enabled"):
             return
 
-        # Prepare serializable list
-        serializable = [
-            {
-                "id": s.id,
-                "timestamp": s.timestamp,
-                "text": s.text,
-                "lang": s.lang,
-                "thumbnail": s.thumbnail,
-            }
-            for s in self._sessions
-        ]
+        # Prepare serializable list under lock
+        with self._lock:
+            serializable = [
+                {
+                    "id": s.id,
+                    "timestamp": s.timestamp,
+                    "text": s.text,
+                    "lang": s.lang,
+                    "thumbnail": s.thumbnail,
+                }
+                for s in self._sessions
+            ]
 
         def save_in_thread():
-            try:
-                # Atomically write using a temporary file in the same directory
-                temp_file = self._history_file.with_suffix(".tmp")
-                with open(temp_file, "w", encoding="utf-8") as f:
-                    json.dump(serializable, f, indent=2, ensure_ascii=False)
-                temp_file.replace(self._history_file)
-                logger.debug("HistoryService: Successfully wrote history to disk asynchronously")
-            except OSError as e:
-                logger.error(f"HistoryService: Async write failed: {e}")
+            with self._lock:
+                try:
+                    # Atomically write using a temporary file in the same directory
+                    temp_file = self._history_file.with_suffix(".tmp")
+                    with open(temp_file, "w", encoding="utf-8") as f:
+                        json.dump(serializable, f, indent=2, ensure_ascii=False)
+                    temp_file.replace(self._history_file)
+                    logger.debug("HistoryService: Successfully wrote history to disk asynchronously")
+                except OSError as e:
+                    logger.error(f"HistoryService: Async write failed: {e}")
 
         # Join previous write thread if it exists and is alive to serialize writes
         if hasattr(self, "_write_thread") and self._write_thread and self._write_thread.is_alive():
@@ -147,24 +151,29 @@ class HistoryService(GObject.GObject):
             thumbnail=thumbnail,
         )
 
-        self._sessions.insert(0, session)
+        with self._lock:
+            self._sessions.insert(0, session)
 
-        # Enforce history limit
-        if len(self._sessions) > limit:
-            self._sessions = self._sessions[:limit]
+            # Enforce history limit
+            if len(self._sessions) > limit:
+                self._sessions = self._sessions[:limit]
 
         self._save_history_async()
         self.emit("history-changed")
 
     def get_sessions(self) -> list[CaptureSession]:
         """Return a copy of the capture history list."""
-        return list(self._sessions)
+        with self._lock:
+            return list(self._sessions)
 
     def delete_session(self, session_id: str) -> bool:
         """Delete a single session from history."""
-        original_len = len(self._sessions)
-        self._sessions = [s for s in self._sessions if s.id != session_id]
-        if len(self._sessions) != original_len:
+        with self._lock:
+            original_len = len(self._sessions)
+            self._sessions = [s for s in self._sessions if s.id != session_id]
+            changed = len(self._sessions) != original_len
+
+        if changed:
             self._save_history_async()
             self.emit("history-changed")
             return True
@@ -172,18 +181,24 @@ class HistoryService(GObject.GObject):
 
     def clear_history(self) -> None:
         """Clear all session history and delete the history file on disk."""
-        self._sessions = []
+        # Join any active write thread first to prevent race condition
+        if hasattr(self, "_write_thread") and self._write_thread and self._write_thread.is_alive():
+            self._write_thread.join(timeout=1.0)
+
+        with self._lock:
+            self._sessions = []
 
         def delete_file_in_thread():
-            try:
-                if self._history_file.exists():
-                    self._history_file.unlink()
-                logger.info("HistoryService: Deleted history file from disk")
-            except OSError as e:
-                logger.error(f"HistoryService: Failed to delete history file: {e}")
+            with self._lock:
+                try:
+                    if self._history_file.exists():
+                        self._history_file.unlink()
+                    logger.info("HistoryService: Deleted history file from disk")
+                except OSError as e:
+                    logger.error(f"HistoryService: Failed to delete history file: {e}")
 
-        t = threading.Thread(target=delete_file_in_thread, daemon=True)
-        t.start()
+        self._write_thread = threading.Thread(target=delete_file_in_thread, daemon=True)
+        self._write_thread.start()
 
         self.emit("history-changed")
 

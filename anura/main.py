@@ -134,6 +134,12 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         except (AttributeError, RuntimeError) as e:
             logger.debug(f"Failed to shutdown LanguageManager: {e}")
 
+        try:
+            from anura.services.history_service import get_history_service
+            get_history_service().shutdown()
+        except (AttributeError, RuntimeError) as e:
+            logger.debug(f"Failed to shutdown HistoryService: {e}")
+
         from anura.core.atomic_task_manager import get_atomic_manager
 
         get_atomic_manager().shutdown()
