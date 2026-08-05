@@ -104,13 +104,20 @@ class TestExtractedPageEnterprise:
 
     @pytest.mark.gtk
     def test_copy_feedback(self, widget):
-        """Test the visual feedback when clicking copy."""
+        """Test the visual, tooltip and accessibility feedback when clicking copy."""
         widget.text_copy_btn.set_icon_name("edit-copy-symbolic")
         widget.show_copy_feedback()
-        assert widget.text_copy_btn.get_icon_name() == "emblem-ok-symbolic"
 
-        # We don't want to wait 2 seconds in a unit test, so we just verify it set the icon.
-        # The timeout logic is standard GLib.
+        # Verify icon changed to checkmark
+        assert widget.text_copy_btn.get_icon_name() == "emblem-ok-symbolic"
+        # Verify tooltip changed to "Copied to clipboard!"
+        assert widget.text_copy_btn.get_tooltip_text() == "Copied to clipboard!"
+
+        # Explicitly trigger _reset_copy_icon to simulate timeout completion and verify restoration
+        widget._reset_copy_icon("edit-copy-symbolic")
+        assert widget.text_copy_btn.get_icon_name() == "edit-copy-symbolic"
+        # Since buffer is empty, tooltip should revert to non-selection state
+        assert "Copy Extracted Text" in widget.text_copy_btn.get_tooltip_text()
 
 
 class TestWelcomePageEnterprise:
