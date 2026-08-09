@@ -172,9 +172,12 @@ def _make_module_mock(name: str) -> MockModule:
     return MockModule(name)
 
 
-if _CI_MODE:
-    # Build a coherent mock hierarchy: gi.repository.X attributes should
-    # resolve off the gi.repository mock, not be independent stubs.
+def _inject_gi_mocks() -> list[str]:
+    """Build a coherent mock hierarchy and inject it into sys.modules.
+
+    gi.repository.X attributes will correctly resolve off the gi.repository mock.
+    """
+    injected: list[str] = []
     _mock_gi = _make_module_mock("gi")
     _mock_repo = _make_module_mock("gi.repository")
     _mock_gi.repository = _mock_repo
@@ -191,7 +194,12 @@ if _CI_MODE:
                 _leaf_mock = _make_module_mock(_key)
                 setattr(_mock_repo, _leaf, _leaf_mock)
                 sys.modules[_key] = _leaf_mock
-            _GI_INJECTED.append(_key)
+            injected.append(_key)
+    return injected
+
+
+if _CI_MODE:
+    _GI_INJECTED.extend(_inject_gi_mocks())
 
 
 # ---------------------------------------------------------------------------
@@ -318,10 +326,7 @@ def headless_gi_mocks():
     except ImportError:
         pass
 
-    for key in _GI_KEYS:
-        if key not in sys.modules:
-            sys.modules[key] = _make_module_mock(key)
-            inserted.append(key)
+    inserted = _inject_gi_mocks()
     yield
     for key in inserted:
         sys.modules.pop(key, None)
