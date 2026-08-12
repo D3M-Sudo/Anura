@@ -102,7 +102,7 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
                 self.drop_button.remove_css_class("suggested-action")
                 self.drop_button.set_tooltip_text(_("Drop image here"))
                 self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [False])
-        except (AttributeError, RuntimeError) as e:
+        except Exception as e:
             logger.exception(f"Anura: Failed to handle drop button click: {e}")
 
     def _on_dnd_enter(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float) -> Gdk.DragAction:
