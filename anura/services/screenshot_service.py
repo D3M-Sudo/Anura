@@ -44,7 +44,7 @@ def _is_flatpak_environment() -> bool:
     return Path("/.flatpak-info").exists() or "FLATPAK_ID" in os.environ
 
 
-def _pipeline_detect_barcodes(img, start_time: float) -> tuple[bool, str | None, str | None, OcrResult | None] | None:
+def _pipeline_detect_barcodes(img, start_time: float) -> tuple[bool, str | None, str | None, OcrResult | None, str] | None:
     """Stage 1: Barcode Detection"""
     from anura.utils.barcode_detector import detect_barcodes
 
