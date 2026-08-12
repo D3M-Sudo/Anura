@@ -147,21 +147,38 @@ class TestWelcomePageEnterprise:
     @pytest.mark.gtk
     def test_drop_button_toggle(self, widget):
         """Test that the drop area visibility is toggled by the button."""
+        import sys
         initial_revealed = widget.drop_revealer.get_reveal_child()
+        print(f"\n[DEBUG] initial_revealed = {initial_revealed}")
+        print(f"[DEBUG] initial tooltip = '{widget.drop_button.get_tooltip_text()}'")
+        sys.stdout.flush()
+
         # In GTK4, we use activate() or emit("clicked")
         widget.drop_button.emit("clicked")
+
+        tooltip_1 = widget.drop_button.get_tooltip_text() or ""
+        print(f"[DEBUG] after first click, revealed = {widget.drop_revealer.get_reveal_child()}")
+        print(f"[DEBUG] after first click, has suggested-action = {widget.drop_button.has_css_class('suggested-action')}")
+        print(f"[DEBUG] after first click, tooltip = '{tooltip_1}'")
+        sys.stdout.flush()
+
         assert widget.drop_revealer.get_reveal_child() == (not initial_revealed)
         assert widget.drop_button.has_css_class("suggested-action")
 
         # Robust assertion for tooltip text to support localized environments smoothly
-        tooltip_1 = widget.drop_button.get_tooltip_text() or ""
         assert "Hide" in tooltip_1 or tooltip_1 == _("Hide drop area")
 
         widget.drop_button.emit("clicked")
+
+        tooltip_2 = widget.drop_button.get_tooltip_text() or ""
+        print(f"[DEBUG] after second click, revealed = {widget.drop_revealer.get_reveal_child()}")
+        print(f"[DEBUG] after second click, has suggested-action = {widget.drop_button.has_css_class('suggested-action')}")
+        print(f"[DEBUG] after second click, tooltip = '{tooltip_2}'")
+        sys.stdout.flush()
+
         assert widget.drop_revealer.get_reveal_child() == initial_revealed
         assert not widget.drop_button.has_css_class("suggested-action")
 
-        tooltip_2 = widget.drop_button.get_tooltip_text() or ""
         assert "Drop" in tooltip_2 or "Trascina" in tooltip_2 or tooltip_2 == _("Drop image here")
 
     @pytest.mark.gtk
