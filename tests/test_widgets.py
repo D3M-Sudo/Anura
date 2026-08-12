@@ -8,6 +8,7 @@ import pytest
 
 pytest.importorskip("gi")
 
+from gettext import gettext as _
 from unittest.mock import MagicMock, patch
 
 import gi
@@ -151,12 +152,12 @@ class TestWelcomePageEnterprise:
         widget.drop_button.emit("clicked")
         assert widget.drop_revealer.get_reveal_child() == (not initial_revealed)
         assert widget.drop_button.has_css_class("suggested-action")
-        assert widget.drop_button.get_tooltip_text() == "Hide drop area"
+        assert widget.drop_button.get_tooltip_text() == _("Hide drop area")
 
         widget.drop_button.emit("clicked")
         assert widget.drop_revealer.get_reveal_child() == initial_revealed
         assert not widget.drop_button.has_css_class("suggested-action")
-        assert widget.drop_button.get_tooltip_text() == "Drop image here"
+        assert widget.drop_button.get_tooltip_text() == _("Drop image here")
 
     @pytest.mark.gtk
     def test_language_changed_signal(self, widget):
@@ -181,7 +182,7 @@ class TestWelcomePageEnterprise:
         assert widget.drop_revealer.get_reveal_child() is False
         assert widget.spinner.get_visible() is False
         assert not widget.drop_button.has_css_class("suggested-action")
-        assert widget.drop_button.get_tooltip_text() == "Drop image here"
+        assert widget.drop_button.get_tooltip_text() == _("Drop image here")
 
 
 class TestLanguagePopoverEnterprise:
