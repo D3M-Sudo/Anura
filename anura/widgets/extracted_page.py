@@ -245,6 +245,8 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
                 self.listen_stack.set_visible_child_name("spinner")
             if self.listen_spinner:
                 self.listen_spinner.start()
+            if self.listen_btn:
+                self.listen_btn.update_state([Gtk.AccessibleState.PRESSED], [False])
         elif state == "playing":
             self.swap_controls(True)
             if self.listen_stack:
@@ -253,18 +255,26 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
                 self.listen_spinner.stop()
             if self.listen_pause_btn:
                 self.listen_pause_btn.set_icon_name("media-playback-pause-symbolic")
+                self.listen_pause_btn.update_state([Gtk.AccessibleState.PRESSED], [True])
+                self.listen_pause_btn.set_tooltip_text(C_("Extracted screen", "Pause listening (Ctrl+Alt+L)"))
+                self.listen_pause_btn.update_property([Gtk.AccessibleProperty.LABEL], [C_("Extracted screen", "Pause listening")])
         elif state == "paused":
             self.swap_controls(True)
             if self.listen_stack:
                 self.listen_stack.set_visible_child_name("pause")
             if self.listen_pause_btn:
                 self.listen_pause_btn.set_icon_name("media-playback-start-symbolic")
+                self.listen_pause_btn.update_state([Gtk.AccessibleState.PRESSED], [False])
+                self.listen_pause_btn.set_tooltip_text(C_("Extracted screen", "Resume listening (Ctrl+Alt+L)"))
+                self.listen_pause_btn.update_property([Gtk.AccessibleProperty.LABEL], [C_("Extracted screen", "Resume listening")])
         else:  # idle
             self.swap_controls(False)
             if self.listen_stack:
                 self.listen_stack.set_visible_child_name("button")
             if self.listen_spinner:
                 self.listen_spinner.stop()
+            if self.listen_btn:
+                self.listen_btn.update_state([Gtk.AccessibleState.PRESSED], [False])
 
     def swap_controls(self, locked: bool) -> None:
         """Enable or disable interactive controls during TTS playback."""

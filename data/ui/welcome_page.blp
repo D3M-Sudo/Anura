@@ -24,7 +24,8 @@ template $WelcomePage : Adw.NavigationPage {
 
         [start]
         MenuButton lang_combo {
-          label: _("Language");
+          label: _("_Language");
+          use-underline: true;
           tooltip-text: _("Select language to extract");
           popover: $LanguagePopover language_popover {};
         }
@@ -144,6 +145,10 @@ template $WelcomePage : Adw.NavigationPage {
                 height-request: 80;
                 halign: fill;
                 valign: center;
+                focusable: true;
+                accessibility {
+                  label: _("Image drop zone");
+                }
                 Label drop_area_label {
                   label: _("Drop image file here");
                   halign: center;

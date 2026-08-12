@@ -98,6 +98,8 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
                 self.drop_button.add_css_class("suggested-action")
                 self.drop_button.set_tooltip_text(_("Hide drop area"))
                 self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [True])
+                # Shift focus directly to the revealed drop area for accessible navigation
+                self.drop_area.grab_focus()
             else:
                 self.drop_button.remove_css_class("suggested-action")
                 self.drop_button.set_tooltip_text(_("Drop image here"))
