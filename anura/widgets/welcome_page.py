@@ -53,6 +53,10 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         self.connect_tracked(self.drop_button, "clicked", self._on_drop_button_clicked)
         self._setup_drop_target()
 
+        # Initialize drop_button's accessibility expanded state to False
+        if self.drop_button:
+            self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [False])
+
     def _setup_drop_target(self) -> None:
         """Configure drop target with DropTargetAsync and explicit text/uri-list.
 
@@ -84,16 +88,21 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
 
         self.add_controller(self._drop_target)
 
-    def _on_drop_button_clicked(self, _: Gtk.Button) -> None:
+    def _on_drop_button_clicked(self, _button: Gtk.Button) -> None:
         """Toggle the visibility of the dedicated drop area."""
         try:
             is_revealed = self.drop_revealer.get_reveal_child()
-            self.drop_revealer.set_reveal_child(not is_revealed)
-            if not is_revealed:
+            new_revealed = not is_revealed
+            self.drop_revealer.set_reveal_child(new_revealed)
+            if new_revealed:
                 self.drop_button.add_css_class("suggested-action")
+                self.drop_button.set_tooltip_text(_("Hide drop area"))
+                self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [True])
             else:
                 self.drop_button.remove_css_class("suggested-action")
-        except (AttributeError, RuntimeError) as e:
+                self.drop_button.set_tooltip_text(_("Drop image here"))
+                self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [False])
+        except Exception as e:
             logger.exception(f"Anura: Failed to handle drop button click: {e}")
 
     def _on_dnd_enter(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float) -> Gdk.DragAction:
@@ -269,6 +278,8 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         self.hide_spinner()
         self.drop_revealer.set_reveal_child(False)
         self.drop_button.remove_css_class("suggested-action")
+        self.drop_button.set_tooltip_text(_("Drop image here"))
+        self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [False])
         self.welcome.set_description(_("Extract text from anywhere"))
 
     def set_status(self, status_msg: str) -> None:

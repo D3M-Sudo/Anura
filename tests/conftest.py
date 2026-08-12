@@ -426,6 +426,18 @@ def pytest_sessionfinish(session, exitstatus):
     try:
         tr = session.config.pluginmanager.get_plugin("terminalreporter")
         if tr is not None:
+            # Verbose printing of test failure tracebacks since os._exit() suppresses standard reporting
+            failed_reports = tr.stats.get('failed', [])
+            for rep in failed_reports:
+                print("\n" + "="*80)
+                print(f"FAILURE IN {rep.nodeid}:")
+                print("="*80)
+                print(rep.longrepr)
+                # Also print captured stdout/stderr
+                for secname, secdata in rep.sections:
+                    print(f"--- {secname} ---")
+                    print(secdata)
+                print("="*80 + "\n")
             tr.summary_stats()
         sys.stdout.flush()
         sys.stderr.flush()
