@@ -433,6 +433,10 @@ def pytest_sessionfinish(session, exitstatus):
                 print(f"FAILURE IN {rep.nodeid}:")
                 print("="*80)
                 print(rep.longrepr)
+                # Also print captured stdout/stderr
+                for secname, secdata in rep.sections:
+                    print(f"--- {secname} ---")
+                    print(secdata)
                 print("="*80 + "\n")
             tr.summary_stats()
         sys.stdout.flush()
