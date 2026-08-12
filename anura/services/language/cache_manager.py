@@ -4,6 +4,7 @@
 #
 # SPDX-License-Identifier: MIT
 
+from collections.abc import Callable
 import contextlib
 import os
 from pathlib import Path
@@ -177,7 +178,7 @@ class CacheManager:
                 self._need_update_cache = False
             return sorted(self._downloaded_codes)
 
-    def get_downloaded_languages(self, get_language_name: callable, force: bool = False) -> list[str]:
+    def get_downloaded_languages(self, get_language_name: Callable, force: bool = False) -> list[str]:
         """Returns the names of the installed languages.
 
         Args:

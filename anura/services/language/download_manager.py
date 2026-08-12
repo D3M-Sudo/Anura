@@ -83,7 +83,7 @@ class DownloadManager(GObject.GObject):
         if quality is None:
             quality = settings.get_string("tessdata-model")
 
-        base_dir = TESSDATA_DIR
+        base_dir = Path(TESSDATA_DIR)
         if quality == "best":
             return str(base_dir / "tessdata_best")
         if quality == "standard":
