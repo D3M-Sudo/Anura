@@ -88,7 +88,7 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
 
         self.add_controller(self._drop_target)
 
-    def _on_drop_button_clicked(self, _: Gtk.Button) -> None:
+    def _on_drop_button_clicked(self, _button: Gtk.Button) -> None:
         """Toggle the visibility of the dedicated drop area."""
         try:
             is_revealed = self.drop_revealer.get_reveal_child()
