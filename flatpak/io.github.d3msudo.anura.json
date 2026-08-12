@@ -182,7 +182,11 @@
                 {
                     "type": "file",
                     "url": "https://files.pythonhosted.org/packages/41/3d/463f75ff6f1346371883e7c51c0b9ac62b07e0c2f54366f79658cf49db52/scikit_build_core-1.0.1-py3-none-any.whl",
-                    "sha256": "1b3a660e819b6a99908f01d1df3fbcc75ef3aaa4c1bbf7d6c88de11d1ff21393"
+                    "sha256": "1b3a660e819b6a99908f01d1df3fbcc75ef3aaa4c1bbf7d6c88de11d1ff21393",
+                    "x-checker-data": {
+                        "type": "pypi",
+                        "name": "scikit-build-core"
+                    }
                 }
             ]
         },

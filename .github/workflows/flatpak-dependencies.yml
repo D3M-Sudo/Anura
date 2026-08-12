@@ -125,7 +125,7 @@ jobs:
         uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c8cb187a5e # v7.0.8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          base: development
+          base: testing
           commit-message: "chore(deps): update Flatpak dependencies via FEDC"
           title: "chore(deps): update Flatpak dependencies"
           body: |
