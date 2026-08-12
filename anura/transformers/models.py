@@ -39,17 +39,28 @@ class OcrResult:
         Calculate layout statistics in a single pass and cache the result.
         Reduces complexity from up to 6*O(N) down to 1*O(N) for Magic processing.
         """
-        blocks: set[tuple[Any, ...]] = set()
-        pars: set[tuple[Any, ...]] = set()
-        lines: set[tuple[Any, ...]] = set()
+        blocks: set[Any] = set()
+        pars: set[tuple[Any, Any]] = set()
+        lines: set[tuple[Any, Any, Any]] = set()
 
-        for w in self.words:
-            b = self._get_val(w, "block_num")
-            p = self._get_val(w, "par_num")
-            ln = self._get_val(w, "line_num")
-            blocks.add((b,))
-            pars.add((b, p))
-            lines.add((b, p, ln))
+        if self.words:
+            first = self.words[0]
+            if isinstance(first, dict):
+                for w in self.words:
+                    b = w.get("block_num")
+                    p = w.get("par_num")
+                    ln = w.get("line_num")
+                    blocks.add(b)
+                    pars.add((b, p))
+                    lines.add((b, p, ln))
+            else:
+                for w in self.words:
+                    b = getattr(w, "block_num", None)
+                    p = getattr(w, "par_num", None)
+                    ln = getattr(w, "line_num", None)
+                    blocks.add(b)
+                    pars.add((b, p))
+                    lines.add((b, p, ln))
 
         return {
             "block_num": len(blocks),
@@ -84,30 +95,59 @@ class OcrResult:
         last_line_num = None
         text_parts = []
 
-        for word in self.words:
-            # Skip empty entries often returned by Tesseract for layout markers
-            text = self._get_val(word, "text")
-            if not text or not text.strip():
-                continue
+        # Optimization: Check if the first word is a dictionary or an object
+        # to avoid dynamic _get_val calls within the hot loop.
+        first = self.words[0]
+        if isinstance(first, dict):
+            for word in self.words:
+                # Skip empty entries often returned by Tesseract for layout markers
+                text = word.get("text")
+                if not text or not text.strip():
+                    continue
 
-            block_num = self._get_val(word, "block_num")
-            par_num = self._get_val(word, "par_num")
-            line_num = self._get_val(word, "line_num")
+                block_num = word.get("block_num")
+                par_num = word.get("par_num")
+                line_num = word.get("line_num")
 
-            if last_block_num is not None and block_num != last_block_num:
-                text_parts.append(block_sep)
-            elif last_par_num is not None and par_num != last_par_num:
-                text_parts.append(par_sep)
-            elif last_line_num is not None and line_num != last_line_num:
-                text_parts.append(line_sep)
-            elif last_line_num is not None:
-                text_parts.append(word_sep)
+                if last_block_num is not None and block_num != last_block_num:
+                    text_parts.append(block_sep)
+                elif last_par_num is not None and par_num != last_par_num:
+                    text_parts.append(par_sep)
+                elif last_line_num is not None and line_num != last_line_num:
+                    text_parts.append(line_sep)
+                elif last_line_num is not None:
+                    text_parts.append(word_sep)
 
-            text_parts.append(text)
+                text_parts.append(text)
 
-            last_block_num = block_num
-            last_par_num = par_num
-            last_line_num = line_num
+                last_block_num = block_num
+                last_par_num = par_num
+                last_line_num = line_num
+        else:
+            for word in self.words:
+                # Skip empty entries often returned by Tesseract for layout markers
+                text = getattr(word, "text", None)
+                if not text or not text.strip():
+                    continue
+
+                block_num = getattr(word, "block_num", None)
+                par_num = getattr(word, "par_num", None)
+                line_num = getattr(word, "line_num", None)
+
+                if last_block_num is not None and block_num != last_block_num:
+                    text_parts.append(block_sep)
+                elif last_par_num is not None and par_num != last_par_num:
+                    text_parts.append(par_sep)
+                elif last_line_num is not None and line_num != last_line_num:
+                    text_parts.append(line_sep)
+                elif last_line_num is not None:
+                    text_parts.append(word_sep)
+
+                text_parts.append(text)
+
+                last_block_num = block_num
+                last_par_num = par_num
+                last_line_num = line_num
 
         return "".join(text_parts).strip()
 

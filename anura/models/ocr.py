@@ -124,12 +124,12 @@ class OcrResult:
         Calculate layout statistics in a single pass and cache the result.
         Reduces complexity from 3 * O(N) to 1 * O(N) for Magic/Structural analysis.
         """
-        blocks: set[tuple[int]] = set()
+        blocks: set[int] = set()
         pars: set[tuple[int, int]] = set()
         lines: set[tuple[int, int, int]] = set()
 
         for w in self.words:
-            blocks.add((w.block_num,))
+            blocks.add(w.block_num)
             pars.add((w.block_num, w.par_num))
             lines.add((w.block_num, w.par_num, w.line_num))
 

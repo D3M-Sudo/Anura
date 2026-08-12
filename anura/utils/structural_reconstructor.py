@@ -95,14 +95,31 @@ class StructuralReconstructor:
                 "width": 0,
             }
 
-        text = " ".join([w.text for w in words])
-        left = min([w.left for w in words])
-        top = min([w.top for w in words])
-        right = max([w.left + w.width for w in words])
-        bottom = max([w.top + w.height for w in words])
+        # Optimization: Perform a single-pass traversal to calculate minimum/maximum coordinates
+        # and gather text strings, reducing passes over words from 5 to 1.
+        first = words[0]
+        left = first.left
+        top = first.top
+        right = first.left + first.width
+        bottom = first.top + first.height
+        texts = [first.text]
+
+        for i in range(1, len(words)):
+            w = words[i]
+            texts.append(w.text)
+            if w.left < left:
+                left = w.left
+            if w.top < top:
+                top = w.top
+            r = w.left + w.width
+            if r > right:
+                right = r
+            b = w.top + w.height
+            if b > bottom:
+                bottom = b
 
         return {
-            "text": text,
+            "text": " ".join(texts),
             "left": left,
             "top": top,
             "right": right,
