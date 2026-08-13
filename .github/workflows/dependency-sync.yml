@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   sync:
-    if: github.event.pull_request.user.login == 'app/dependabot'
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.user.login == 'app/dependabot'
     runs-on: ubuntu-latest
     env:
       UV_VERSION: "0.8.14"
