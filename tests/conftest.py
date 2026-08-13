@@ -175,7 +175,9 @@ def _make_module_mock(name: str) -> MockModule:
 def _inject_gi_mocks() -> list[str]:
     """Build a coherent mock hierarchy and inject it into sys.modules.
 
-    gi.repository.X attributes will correctly resolve off the gi.repository mock.
+    Ensures that gi.repository.X attributes correctly resolve off the gi.repository mock,
+    preventing TypeError metaclass conflicts when defining widgets or controllers with multi-inheritance.
+    Standardized to be robust in both CI and local developer environments.
     """
     injected: list[str] = []
     _mock_gi = _make_module_mock("gi")

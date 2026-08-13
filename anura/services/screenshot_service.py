@@ -12,7 +12,7 @@ import re
 import shutil
 import threading
 import time
-from typing import ClassVar
+from typing import Any, ClassVar
 from urllib.request import url2pathname
 
 import gi
@@ -630,7 +630,14 @@ class ScreenshotService(GObject.GObject):
             logger.error(f"Anura OCR: Attempted to process 0-byte image file: {file}")
             return None, _("The selected image file is empty."), None, ""
 
-        with Image.open(file) as img:
+        import contextlib
+        img_context: Any
+        if isinstance(file, Image.Image):
+            img_context = contextlib.nullcontext(file)
+        else:
+            img_context = Image.open(file)  # type: ignore[arg-type]
+
+        with img_context as img:
             image_size = img.size
             logger.debug(f"Anura OCR: Processing image size: {image_size[0]}x{image_size[1]}")
 
@@ -641,7 +648,7 @@ class ScreenshotService(GObject.GObject):
                     raise InterruptedError(f"Task {task_id} was cancelled before OCR")
 
                 if img.mode != "L":
-                    img = img.convert("L")
+                    img = img.convert("L")  # type: ignore[assignment]
                 extracted, ocr_result, applied_name = self._try_ocr_extraction(
                     img, lang, start_time, task_id=task_id
                 )
@@ -814,8 +821,10 @@ class ScreenshotService(GObject.GObject):
         )
 
         if success:
+            assert extracted is not None
             self._emit_decoded(extracted, copy, ocr_result, applied_name)
         else:
+            assert error_message is not None
             self._emit_decode_error(error_message)
 
         return False
