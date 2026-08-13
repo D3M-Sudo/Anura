@@ -43,15 +43,28 @@ anura/
 │   │   └── dnd_controller.py   Asynchronous Drag-and-Drop coordination
 │   ├── services/
 │   │   ├── clipboard_service.py    Clipboard read/write (Gdk.Clipboard)
-│   │   ├── language_manager.py     Tessdata model download/management (singleton)
+│   │   ├── language_manager.py     Tessdata coordination (singleton)
+│   │   ├── language/               Specialized language managers
+│   │   │   ├── cache_manager.py    Tessdata caching logic
+│   │   │   ├── download_manager.py Tessdata download coordination
+│   │   │   └── language_validator.py Language code validation
 │   │   ├── notification_service.py Notifications: XDG Portal → libnotify fallback
 │   │   ├── result_dispatcher.py    Post-OCR coordination (Clipboard, URLs, Notifications)
 │   │   ├── screenshot/             Abstract Factory Screenshot providers
+│   │   │   ├── base.py              Base provider interface
+│   │   │   ├── factory.py           Provider factory
+│   │   │   ├── legacy_provider.py   X11 scrot fallback provider
+│   │   │   └── portal_provider.py   XDG Desktop Portal provider
 │   │   ├── screenshot_service.py   Screenshot capture orchestration
 │   │   ├── settings.py             GSettings singleton wrapper
 │   │   ├── share_service.py        Social sharing (9 providers)
-│   │   └── tts.py                  Text-to-speech via gTTS + GStreamer
-│   ├── types/
+│   │   ├── tts/                    Text-to-speech modular components
+│   │   │   ├── audio_player.py     GStreamer audio playback
+│   │   │   ├── language_mapper.py  Language code mapping for TTS
+│   │   │   ├── pipeline_manager.py TTS pipeline orchestration
+│   │   │   ├── service.py          TTSService facade
+│   │   │   └── speech_generator.py gTTS speech generation
+│   ├── models/
 │   │   ├── context.py              ApplicationContext capability audit
 │   │   ├── download_state.py       DownloadState enum
 │   │   ├── language_item.py        LanguageItem dataclass
@@ -65,7 +78,9 @@ anura/
 │   ├── utils/
 │   │   ├── barcode_detector.py    QR/Barcode detection via zxing-cpp
 │   │   ├── cleanup.py             Resource cleanup utilities
+│   │   ├── file_ready_retry.py    File readiness utility with retry logic
 │   │   ├── image_filters.py       Modular image enhancement filter chain
+│   │   ├── notification_helpers.py Notification formatting and validation helpers
 │   │   ├── portal_advice.py       Desktop-specific advice for missing portals
 │   │   ├── signal_manager.py      GLib signal management mixin
 │   │   ├── singleton.py           Thread-safe lazy singleton pattern
@@ -151,8 +166,9 @@ Anura uses `uv` for Python development and native dependencies via Flatpak.
 
 | Module | Version | Purpose |
 |--------|---------|---------|
-| tesseract | 5.5.0 | OCR engine |
-| zxing-cpp | 2.3.0 | High-performance Barcode/QR decoding |
+| tesseract | 5.3.4 | OCR engine |
+| zxing-cpp | 3.0.0 | High-performance Barcode/QR decoding |
+| leptonica | 1.87.0 | Image processing library |
 | libportal | 0.9.1 | XDG Desktop Portal API |
 | blueprint-compiler | 0.16.0 | UI compilation .blp → .ui |
 
@@ -178,7 +194,7 @@ Failure to do so results in latent GObject memory leaks where the Python instanc
 **Rule:** Never modify GTK widgets from secondary threads. Use `AtomicTaskManager` for all background tasks.
 
 ```python
-from anura.atomic_task_manager import get_atomic_manager
+from anura.core.atomic_task_manager import get_atomic_manager
 
 # Atomic execution with versioning (prevents race conditions)
 get_atomic_manager().execute(
@@ -223,7 +239,7 @@ Always use `validators.sanitize_text` to strip Unicode Control/Format characters
 
 ### Test Architecture
 
-- **Unit Tests** (`tests/test_gi_atomic_task_manager_unit.py`): Headless coverage for core logic.
+- **Unit Tests** (171 headless tests): Coverage for core logic without GTK dependencies.
 - **Security Tests** (`tests/test_security_hardening.py`): Verification of DoS prevention and URI validation.
 - **Integration Tests** (`tests/test_file_dialog_regressions.py`): Verification of GTK/Portal behavior.
 - **Enterprise Suite** (`tests/test_unit_*_enterprise.py`): Advanced exhaustive coverage for all core services and reliability.

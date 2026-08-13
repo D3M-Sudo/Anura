@@ -44,9 +44,13 @@ It also decodes **QR codes and Barcodes** in a single click using **zxing-cpp**,
 | 🔲 **QR & Barcode Decoding** | Robust recognition via `zxing-cpp` (QR, DataMatrix, UPC, etc.) |
 | 🌍 **Multi-language** | Supports 100+ Tesseract models with pooling for simultaneous multi-lang OCR |
 | 🔊 **Text-to-Speech** | Read extracted text aloud via gTTS + GStreamer `playbin3` |
+| 🎨 **Theme Selector** | Choose between System, Light, or Dark theme via Adw.StyleManager |
+| ✏️ **Selection-Aware Actions** | Text statistics and actions based on selection in OCR results |
+| ↩️ **Undo/Redo** | Full undo/redo support in ExtractedPage for text editing workflow |
 | 🔒 **Privacy-first** | All processing happens locally — no telemetry or tracking |
 | 🎨 **Native GTK4** | Designed for GNOME, built with Libadwaita and Blueprint |
 | 🚀 **Async D&D** | Smooth, non-blocking asynchronous drag-and-drop |
+| ♿ **Enhanced Accessibility** | Improved keyboard navigation, tooltips, and screen reader support |
 | ✨ **Smart OCR Cleanup** | Adaptive image enhancement and structural layout reconstruction |
 🛡️ **Architectural Security** | Transactional worker isolation and OOM prevention guards |
 📜 **Offline Rotary Logs** | Secure, zero-telemetry local logging system |
@@ -60,7 +64,7 @@ It also decodes **QR codes and Barcodes** in a single click using **zxing-cpp**,
 As of **v0.1.5**, Anura features an **Enterprise Clean Architecture** focused on event-driven decoupling and memory safety:
 
 - **Core Services (`anura/core/`)**: Pure infrastructure logic. Includes `boot` (capability audit), `logger` (rotary logging), `atomic_task_manager` (isolated worker pool), and `resources`.
-- **Business Services (`anura/services/`)**: High-level I/O and resource management. Includes `language_manager` (Tessdata pooling), `screenshot` (multi-provider capture factory), and `settings`.
+- **Business Services (`anura/services/`)**: High-level I/O and resource management. Includes `language_manager` (Tessdata coordination), specialized language managers (DownloadManager, CacheManager, LanguageValidator), `screenshot` (multi-provider capture factory), and `settings`.
 - **Event-Driven Controllers (`anura/controllers/`)**: Logic-only components that emit GLib signals. `OcrController` and `TtsController` are fully decoupled from UI side-effects, which are handled by the main application coordinator.
 - **Semantic Transformers (`anura/transformers/`)**: Implements the **Chain of Responsibility** pattern. The `MagicProcessor` dynamically selects the best `ITransformer` for structured data extraction.
 - **Memory Safety**: Uses `weakref.proxy` for View-Controller relationships and asynchronous native Gio APIs for non-blocking I/O.
@@ -118,8 +122,9 @@ Valid levels: `TRACE`, `DEBUG`, `INFO` (default), `WARNING`, `ERROR`, `CRITICAL`
 | Meson | ≥ 1.5.0 |
 | Python | ≥ 3.12 |
 | GTK4 + Libadwaita | latest |
-| Tesseract OCR | ≥ 5.0 |
-| zxing-cpp | ≥ 2.3.0 |
+| Tesseract OCR | 5.3.4 |
+| zxing-cpp | 3.0.0 |
+| Leptonica | 1.87.0 |
 | Blueprint Compiler | ≥ 0.16.0 |
 | uv | latest |
 
@@ -127,7 +132,8 @@ Valid levels: `TRACE`, `DEBUG`, `INFO` (default), `WARNING`, `ERROR`, `CRITICAL`
 
 ```bash
 sudo apt install meson python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 \
-    tesseract-ocr blueprint-compiler libxml2-utils
+    tesseract-ocr blueprint-compiler libxml2-utils \
+    leptonica-progs liblibleptonica-dev
 ```
 
 ---
@@ -164,7 +170,7 @@ export GSETTINGS_SCHEMA_DIR="builddir"
 uv run pytest tests/ -v
 ```
 
-The test suite covers unit tests (headless logic), integration tests (GTK/GLib environment), security/hardening tests (DoS prevention, URI validation, sanitization), and reliability/enterprise tests (performance benchmarks, concurrency, lifecycle).
+The test suite includes 171 headless unit tests (logic without GTK dependencies), integration tests (GTK/GLib environment), security/hardening tests (DoS prevention, URI validation, sanitization), and reliability/enterprise tests (performance benchmarks, concurrency, lifecycle).
 
 ---
 

@@ -47,9 +47,11 @@
 | ---- | ---- |
 | `anura/config.py` | `lang_code` validation — used as Tesseract argument |
 | `anura/utils/validators.py` | URI validation (`uri_validator`) and Text Sanitization (`sanitize_text`) |
-| `anura/atomic_task_manager.py` | Concurrency and task versioning logic |
+| `anura/core/atomic_task_manager.py` | Concurrency and task versioning logic |
 | `anura/services/screenshot_service.py` | Image size validation (DoS prevention) and Tesseract hand-off |
 | `anura/services/language_manager.py` | Tessdata model download and atomic writing |
+| `anura/services/share_service.py` | Dynamic URI scheme validation and Pango markup sanitization |
+| `anura/services/notification_service.py` | Pango markup injection prevention in notifications |
 | `anura/services/host_screenshot_fallback.py` | Command building for the bundled `scrot` fallback |
 
 ---
@@ -62,8 +64,11 @@
 | **Transactional Worker I/O** | All OCR worker artifacts are isolated in a `tempfile.TemporaryDirectory` with environment-level redirection (`TMPDIR`, `TEMP`, `TMP`) to prevent data leakage. |
 | **Text Sanitization** | `validators.sanitize_text` strips Unicode Control (Cc), Format (Cf), Private Use (Co), and Surrogate (Cs) categories to prevent terminal injection and RTL spoofing. |
 | **URI Validation** | `uri_validator()` blocks homograph attacks (mixed-script) and disallowed schemes before any browser launch. |
+| **Pango Markup Injection Prevention** | Hardened notifications against Pango markup injection attacks to prevent UI spoofing. |
+| **Local Storage Permission Hardening** | Enhanced directory permissions for sensitive data storage to prevent unauthorized access. |
 | **Config Layer Leakage Protection** | Prevents unintended exposure of internal configuration through lifecycle-scoped access controls. |
 | **Hierarchical ID Collision Prevention** | Guards against identifier conflicts that could lead to OCR pipeline instability and data cross-contamination. |
+| **Dynamic URI Scheme Validation** | ShareService implements dynamic URI scheme validation to prevent protocol injection attacks. |
 | **Atomic Task Management** | `AtomicTaskManager` prevents race conditions via single-slot execution and UUID versioning with `BrokenProcessPool` recovery. |
 | **Secure Logging** | Offline rotary logging system with strict rotation and retention policies; strictly zero-telemetry. |
 | **Automated Lifecycle** | Native GObject destruction hooks ensure complete signal disconnection and resource teardown. |
