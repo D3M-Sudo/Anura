@@ -57,6 +57,29 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         if self.drop_button:
             self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [False])
 
+        # Keyboard support: Add key controller to drop_area to collapse on Escape
+        self._drop_key_ctrl = Gtk.EventControllerKey()
+        self._drop_key_ctrl.connect("key-pressed", self._on_drop_area_key_pressed)
+        self.drop_area.add_controller(self._drop_key_ctrl)
+
+    def _on_drop_area_key_pressed(
+        self,
+        _controller: Gtk.EventControllerKey,
+        keyval: int,
+        _keycode: int,
+        _state: Gdk.ModifierType,
+    ) -> bool:
+        """Collapse the drop area when user presses Escape inside it."""
+        if keyval == Gdk.KEY_Escape and self.drop_revealer.get_reveal_child():
+            self.drop_revealer.set_reveal_child(False)
+            self.drop_button.remove_css_class("suggested-action")
+            self.drop_button.set_tooltip_text(_("Drop image here"))
+            self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [False])
+            self.drop_button.update_property([Gtk.AccessibleProperty.LABEL], [_("Drop image here")])
+            GLib.idle_add(lambda: (self.drop_button.grab_focus(), GLib.SOURCE_REMOVE)[1])
+            return True
+        return False
+
     def _setup_drop_target(self) -> None:
         """Configure drop target with DropTargetAsync and explicit text/uri-list.
 
@@ -98,12 +121,16 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
                 self.drop_button.add_css_class("suggested-action")
                 self.drop_button.set_tooltip_text(_("Hide drop area"))
                 self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [True])
-                # Shift focus directly to the revealed drop area for accessible navigation
-                self.drop_area.grab_focus()
+                self.drop_button.update_property([Gtk.AccessibleProperty.LABEL], [_("Hide drop area")])
+                # Shift focus directly to the revealed drop area for accessible navigation asynchronously
+                GLib.idle_add(lambda: (self.drop_area.grab_focus(), GLib.SOURCE_REMOVE)[1])
             else:
                 self.drop_button.remove_css_class("suggested-action")
                 self.drop_button.set_tooltip_text(_("Drop image here"))
                 self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [False])
+                self.drop_button.update_property([Gtk.AccessibleProperty.LABEL], [_("Drop image here")])
+                # Shift focus back to the toggle button asynchronously
+                GLib.idle_add(lambda: (self.drop_button.grab_focus(), GLib.SOURCE_REMOVE)[1])
         except Exception as e:
             logger.exception(f"Anura: Failed to handle drop button click: {e}")
 
@@ -269,10 +296,12 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
             self.drop_area.add_css_class("drag-processing")
             if self.drop_area_label:
                 self.drop_area_label.set_label(_("Processing..."))
+            self.drop_area.update_property([Gtk.AccessibleProperty.LABEL], [_("Image drop zone: Processing...")])
         else:
             self.drop_area.remove_css_class("drag-processing")
             if self.drop_area_label:
                 self.drop_area_label.set_label(_("Drop image file here"))
+            self.drop_area.update_property([Gtk.AccessibleProperty.LABEL], [_("Image drop zone")])
 
     def reset_drop_area_state(self) -> None:
         """Reset the drop area to its initial state (called after OCR completes)."""
@@ -282,6 +311,7 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         self.drop_button.remove_css_class("suggested-action")
         self.drop_button.set_tooltip_text(_("Drop image here"))
         self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [False])
+        self.drop_button.update_property([Gtk.AccessibleProperty.LABEL], [_("Drop image here")])
         self.welcome.set_description(_("Extract text from anywhere"))
 
     def set_status(self, status_msg: str) -> None:
@@ -313,6 +343,11 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         if drop_cancellable:
             drop_cancellable.cancel()
             self._drop_cancellable = None
+
+        # Remove key controller
+        if hasattr(self, "_drop_key_ctrl") and self._drop_key_ctrl:
+            self.drop_area.remove_controller(self._drop_key_ctrl)
+            self._drop_key_ctrl = None
 
         # Remove drop target controller
         if hasattr(self, "_drop_target") and self._drop_target:

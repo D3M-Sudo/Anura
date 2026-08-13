@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: MIT
 
 import contextlib
+from gettext import gettext as _
 
 from gi.repository import GLib, GObject, Gtk
 
@@ -52,6 +53,16 @@ class LanguageRow(Gtk.Overlay, SignalManagerMixin):
     def item(self, item: LanguageItem) -> None:
         self._item = item
         self.label.set_label(self._item.title)
+
+        # Context-aware accessibility enhancement (WCAG 2.4 compliant)
+        install_tooltip = _("Install {language}").format(language=self._item.title)
+        remove_tooltip = _("Remove {language}").format(language=self._item.title)
+
+        self.install_btn.set_tooltip_text(install_tooltip)
+        self.install_btn.update_property([Gtk.AccessibleProperty.LABEL], [install_tooltip])
+
+        self.remove_btn.set_tooltip_text(remove_tooltip)
+        self.remove_btn.update_property([Gtk.AccessibleProperty.LABEL], [remove_tooltip])
 
     def _idle_update_ui(self) -> bool:
         """One-shot idle callback: runs update_ui and prunes itself from tracking."""

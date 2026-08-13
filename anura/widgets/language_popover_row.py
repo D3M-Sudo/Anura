@@ -39,3 +39,17 @@ class LanguagePopoverRow(Gtk.ListBoxRow):
             "reveal-child",
             GObject.BindingFlags.SYNC_CREATE,
         )
+
+        # ARIA: Keep the SELECTED state in sync with model property
+        self._selected_handler_id = self.lang.connect("notify::selected", self._on_selected_changed)
+        self.update_state([Gtk.AccessibleState.SELECTED], [self.lang.selected])
+
+    def _on_selected_changed(self, _obj: GObject.GObject, _pspec: GObject.ParamSpec) -> None:
+        self.update_state([Gtk.AccessibleState.SELECTED], [self.lang.selected])
+
+    def do_dispose(self) -> None:
+        """Disconnect notification signals during dispose to prevent memory leaks."""
+        if hasattr(self, "_selected_handler_id") and self._selected_handler_id and self.lang:
+            self.lang.disconnect(self._selected_handler_id)
+            self._selected_handler_id = 0
+        super().do_dispose()

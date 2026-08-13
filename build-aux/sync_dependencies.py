@@ -21,13 +21,13 @@ from __future__ import annotations
 
 import argparse
 import json
+from pathlib import Path
 import re
 import sys
 import tomllib
+from typing import Any
 import urllib.error
 import urllib.request
-from pathlib import Path
-from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 MANIFESTS = [
