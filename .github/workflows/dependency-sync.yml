@@ -19,7 +19,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: dependency-sync-${{ github.event.pull_request.number }}
+  group: ${{ github.event_name == 'pull_request' && format('dependency-sync-{0}', github.event.pull_request.number) || 'dependency-sync-manual' }}
   cancel-in-progress: true
 
 jobs:
