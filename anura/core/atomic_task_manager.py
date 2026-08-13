@@ -5,6 +5,7 @@
 
 from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from typing import Any
 from concurrent.futures.process import BrokenProcessPool
 import multiprocessing
 import multiprocessing.managers
@@ -72,7 +73,7 @@ class AtomicTaskManager:
         self._executor: ThreadPoolExecutor | None = None
         self._process_executor: ProcessPoolExecutor | None = None
         self._process_manager: multiprocessing.managers.SyncManager | None = None
-        self._isolated_cancellation_map = None
+        self._isolated_cancellation_map: Any | None = None
         self._state_lock = threading.Lock()
         logger.debug("AtomicTaskManager: Initialized (lazy executors)")
 
