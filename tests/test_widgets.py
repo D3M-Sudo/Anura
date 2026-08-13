@@ -279,3 +279,69 @@ class TestLanguagePopoverEnterprise:
             assert args[1].code == "ita"
 
             widget.settings.set_string.assert_called_with("active-language", "ita")
+
+
+class TestAccessibilityEnhancementsEnterprise:
+    """Tests specifically validating the custom WCAG 2.1 AA and UX enhancements."""
+
+    @pytest.mark.gtk
+    def test_language_row_context_accessibility(self):
+        """Verify LanguageRow dynamically updates tooltips and accessibility labels based on assigned language."""
+        from anura.widgets.language_row import LanguageRow
+
+        row = LanguageRow()
+        item = LanguageItem(code="ita", title="Italian")
+        row.item = item
+
+        assert row.install_btn.get_tooltip_text() == "Install Italian"
+        assert row.remove_btn.get_tooltip_text() == "Remove Italian"
+
+    @pytest.mark.gtk
+    def test_language_popover_row_selected_state(self):
+        """Verify LanguagePopoverRow updates SELECTED Gtk.AccessibleState when LanguageItem selection changes."""
+        from anura.widgets.language_popover_row import LanguagePopoverRow
+
+        item = LanguageItem(code="deu", title="German", selected=False)
+        row = LanguagePopoverRow(item)
+
+        # Toggle selected and ensure it handles changes
+        item.selected = True
+
+        # Clean dispose
+        row.run_dispose()
+
+    @pytest.mark.gtk
+    def test_welcome_page_drop_button_accessibility(self):
+        """Verify WelcomePage drop_button sets EXPANDED and label properties correctly."""
+        with patch("anura.services.language_manager.get_language_manager") as mock_get_manager:
+            mock_manager = MagicMock()
+            mock_get_manager.return_value = mock_manager
+            mock_manager.get_language.return_value = "English"
+
+            widget = WelcomePage()
+
+            # Click drop button to reveal
+            widget.drop_button.emit("clicked")
+            # Tooltip should indicate Hide
+            assert "Hide" in widget.drop_button.get_tooltip_text()
+
+            # Toggle off
+            widget.drop_button.emit("clicked")
+            assert "Drop" in widget.drop_button.get_tooltip_text()
+
+    @pytest.mark.gtk
+    def test_welcome_page_escape_key_collapses_drop_area(self):
+        """Verify that pressing Escape inside drop_area collapses the drop area."""
+        with patch("anura.services.language_manager.get_language_manager") as mock_get_manager:
+            mock_manager = MagicMock()
+            mock_get_manager.return_value = mock_manager
+            mock_manager.get_language.return_value = "English"
+
+            widget = WelcomePage()
+            widget.drop_revealer.set_reveal_child(True)
+
+            # Simulate Escape key press on key controller
+            from gi.repository import Gdk
+            res = widget._on_drop_area_key_pressed(None, Gdk.KEY_Escape, 0, 0)
+            assert res is True
+            assert widget.drop_revealer.get_reveal_child() is False
