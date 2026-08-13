@@ -5,12 +5,12 @@
 
 from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
-from typing import Any
 from concurrent.futures.process import BrokenProcessPool
 import multiprocessing
 import multiprocessing.managers
 import threading
 import traceback
+from typing import Any
 import uuid
 
 import gi
