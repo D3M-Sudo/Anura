@@ -33,7 +33,7 @@ jobs:
         # We deliberately checkout the pull request HEAD (not the merge ref)
         # so any commits we push land on the Dependabot branch itself and are
         # included in the PR.
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # For pull_request events, checkout the PR head so commits land on the
           # Dependabot branch. For workflow_dispatch, github.event.pull_request
