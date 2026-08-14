@@ -35,7 +35,10 @@ jobs:
         # included in the PR.
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          ref: refs/pull/${{ github.event.pull_request.number }}/head
+          # For pull_request events, checkout the PR head so commits land on the
+          # Dependabot branch. For workflow_dispatch, github.event.pull_request
+          # is empty, so fall back to the branch selected at dispatch time.
+          ref: ${{ github.event_name == 'pull_request' && format('refs/pull/{0}/head', github.event.pull_request.number) || github.ref }}
           fetch-depth: 0
           persist-credentials: true
 
@@ -67,7 +70,11 @@ jobs:
           if ! git diff --quiet; then
             git add uv.lock flatpak/io.github.d3msudo.anura.json flatpak/io.github.d3msudo.anura.local.json
             git commit -m "chore(deps): sync uv.lock and flatpak manifests"
-            git push origin HEAD:${{ github.event.pull_request.head.ref }}
+            if [ "${{ github.event_name }}" = "pull_request" ]; then
+              git push origin HEAD:${{ github.event.pull_request.head.ref }}
+            else
+              git push origin HEAD:${GITHUB_REF_NAME}
+            fi
           else
             echo "No sync changes needed (already up to date)."
           fi
