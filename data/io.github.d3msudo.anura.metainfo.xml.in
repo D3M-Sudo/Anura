@@ -16,6 +16,10 @@
       <li>High-accuracy OCR powered by Tesseract.</li>
       <li>Built-in QR code decoding and link following.</li>
       <li>Support for multiple languages with on-demand model download.</li>
+      <li>Theme selector: System, Light, and Dark mode support.</li>
+      <li>Selection-aware text statistics and actions.</li>
+      <li>Undo/Redo support for text editing workflow.</li>
+      <li>Enhanced accessibility with keyboard navigation and screen reader support.</li>
       <li>Privacy-focused: no telemetry and no anonymous data collection.</li>
       <li>Modern GTK4 / Libadwaita interface following GNOME Human Interface Guidelines.</li>
     </ul>

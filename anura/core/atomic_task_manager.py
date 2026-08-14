@@ -10,6 +10,7 @@ import multiprocessing
 import multiprocessing.managers
 import threading
 import traceback
+from typing import Any
 import uuid
 
 import gi
@@ -72,7 +73,7 @@ class AtomicTaskManager:
         self._executor: ThreadPoolExecutor | None = None
         self._process_executor: ProcessPoolExecutor | None = None
         self._process_manager: multiprocessing.managers.SyncManager | None = None
-        self._isolated_cancellation_map = None
+        self._isolated_cancellation_map: Any | None = None
         self._state_lock = threading.Lock()
         logger.debug("AtomicTaskManager: Initialized (lazy executors)")
 

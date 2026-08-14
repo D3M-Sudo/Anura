@@ -103,7 +103,9 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
         if not self.is_search_mode:
             self.deactivate_filter()
             self.search_bar.set_search_mode(True)
-            self.language_search_entry.grab_focus()
+            # Use safe idle wrapper to ensure grab_focus succeeds after layout/mapping
+            # Wrapped with lambda returning False (GLib.SOURCE_REMOVE) to prevent infinite reschedule loop if grab_focus returns True.
+            GLib.idle_add(lambda: (self.language_search_entry.grab_focus(), GLib.SOURCE_REMOVE)[1])
         else:
             self.activate_filter()
             self.search_bar.set_search_mode(False)

@@ -87,7 +87,7 @@ When the user asks to "find dead code", "find unused code", "audit dead code", "
 - `dead_callback()` in `anura/widgets/extracted_page.py:123-125`
 
 ### Unused Classes (X found)
-- `UnusedClass` in `anura/types/dead_type.py:10-15`
+- `UnusedClass` in `anura/models/dead_type.py:10-15`
 
 ### GTK4 Specific (X found)
 - Unused signal handler `on_dead_signal` in `anura/window.py:200`

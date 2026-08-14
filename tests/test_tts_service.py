@@ -8,10 +8,10 @@ import pytest
 
 pytest.importorskip("gi")
 
-
 from unittest.mock import MagicMock, patch
 
 from anura.services.tts import TTSService
+from anura.services.tts.language_mapper import LanguageMapper
 
 
 class TestTTSServiceEnterprise:
@@ -26,20 +26,20 @@ class TestTTSServiceEnterprise:
 
     def test_map_tesseract_to_gtts_happy_path(self):
         """Test mapping of Tesseract codes to gTTS codes."""
-        assert TTSService.map_tesseract_to_gtts("eng") == "en"
-        assert TTSService.map_tesseract_to_gtts("ita") == "it"
-        assert TTSService.map_tesseract_to_gtts("jpn_vert") == "ja"
-        assert TTSService.map_tesseract_to_gtts("chi_sim") == "zh-CN"
+        assert LanguageMapper.map_tesseract_to_gtts("eng") == "en"
+        assert LanguageMapper.map_tesseract_to_gtts("ita") == "it"
+        assert LanguageMapper.map_tesseract_to_gtts("jpn_vert") == "ja"
+        assert LanguageMapper.map_tesseract_to_gtts("chi_sim") == "zh-CN"
 
     def test_map_tesseract_to_gtts_fallbacks(self):
         """Test fallback behavior for unknown or invalid codes."""
-        assert TTSService.map_tesseract_to_gtts(None) == "en"
+        assert LanguageMapper.map_tesseract_to_gtts(None) == "en"
         # Unknown codes now return None (no fallback to "en")
-        assert TTSService.map_tesseract_to_gtts("unknown") is None
+        assert LanguageMapper.map_tesseract_to_gtts("unknown") is None
 
         # Test 2-char prefix matching
-        with patch.object(TTSService, "get_supported_gtts_languages", return_value={"fr": "French"}):
-            assert TTSService.map_tesseract_to_gtts("fra-new") == "fr"
+        with patch.object(LanguageMapper, "get_supported_gtts_languages", return_value={"fr": "French"}):
+            assert LanguageMapper.map_tesseract_to_gtts("fra-new") == "fr"
 
     def test_generate_empty_text(self, service):
         """Test generate with empty or whitespace text."""
@@ -62,39 +62,36 @@ class TestTTSServiceEnterprise:
     def test_get_effective_language(self, service):
         """Test determination of the effective TTS language."""
         # Case 1: User has set a specific TTS language
-        with patch("anura.services.tts.settings.get_string", return_value="de"):
+        with patch("anura.services.settings.settings.get_string", return_value="de"):
             assert service.get_effective_language("eng") == "de"
 
         # Case 2: No user preference, fallback to OCR mapping
-        with patch("anura.services.tts.settings.get_string", return_value=""):
+        with patch("anura.services.settings.settings.get_string", return_value=""):
             assert service.get_effective_language("ita") == "it"
 
     def test_is_playing_states(self, service):
         """Test is_playing reporting based on GStreamer state."""
         assert service.is_playing() is False
 
-        service.player = MagicMock()
-        from gi.repository import Gst
+        service._pipeline._player = MagicMock()
 
-        # Mock State.PLAYING
-        service.player.get_state.return_value = (None, Gst.State.PLAYING, None)
+        # Mock is_playing on the player
+        service._pipeline._player.is_playing.return_value = True
         assert service.is_playing() is True
 
-        # Mock State.NULL
-        service.player.get_state.return_value = (None, Gst.State.NULL, None)
+        service._pipeline._player.is_playing.return_value = False
         assert service.is_playing() is False
 
     def test_stop_speaking_cleanup(self, service):
         """Test that stop_speaking cleans up resources and files."""
-        service.player = MagicMock()
-        service._current_speech_file = "/tmp/test.mp3"
+        service._pipeline._player = MagicMock()
+        service._pipeline._generator = MagicMock()
 
-        with patch("pathlib.Path.exists", return_value=True):
-            service.stop_speaking()
-            assert service.player is None
-            assert service._current_speech_file is None
+        service.stop_speaking()
+        service._pipeline._player.stop.assert_called_once()
+        service._pipeline._generator.clear_current_file.assert_called_once()
 
     def test_referential_transparency_mapping(self):
         """Test that language mapping is pure."""
         code = "eng"
-        assert TTSService.map_tesseract_to_gtts(code) == TTSService.map_tesseract_to_gtts(code)
+        assert LanguageMapper.map_tesseract_to_gtts(code) == LanguageMapper.map_tesseract_to_gtts(code)

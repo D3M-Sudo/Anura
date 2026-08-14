@@ -48,7 +48,12 @@ class TestSecurityAudit:
         tessdata = tmp_path / "tessdata"
         tessdata.mkdir()
 
-        with patch("anura.services.language_manager.TESSDATA_DIR", str(tessdata)):
+        with (
+            patch("anura.config.TESSDATA_DIR", str(tessdata)),
+            patch("anura.services.language_manager.TESSDATA_DIR", str(tessdata), create=True),
+            patch("anura.services.language.cache_manager.TESSDATA_DIR", str(tessdata), create=True),
+            patch("anura.services.language.download_manager.TESSDATA_DIR", str(tessdata), create=True),
+        ):
             lm = LanguageManager()
 
             # Try to remove a file outside the directory

@@ -77,29 +77,109 @@ _GI_KEYS: tuple[str, ...] = (
 
 _GI_INJECTED: list[str] = []
 
-def _make_module_mock(name: str) -> MagicMock:
-    """Return a MagicMock that pytest.importorskip will accept.
+class PropertyStub:
+    def __init__(self, fget=None, fset=None, **kwargs):
+        self.fget = fget
+        self.fset = fset
+        self.default = kwargs.get("default")
 
-    importorskip validates ``module.__spec__`` after retrieving the module from
-    sys.modules.  A plain MagicMock has ``__spec__`` set to the *spec* argument
-    of the MagicMock constructor (None by default), which makes importorskip
-    raise ``ValueError: <mock>.__spec__ is not set``.  Providing a real
-    ``importlib.machinery.ModuleSpec`` object satisfies the check.
+    def setter(self, fset):
+        self.fset = fset
+        return self
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        if self.fget:
+            return self.fget(instance)
+
+        # Simple GObject property storage
+        if not hasattr(instance, "_property_values"):
+            instance._property_values = {}
+        return instance._property_values.get(self, self.default)
+
+    def __set__(self, instance, value):
+        if self.fset:
+            self.fset(instance, value)
+        else:
+            if not hasattr(instance, "_property_values"):
+                instance._property_values = {}
+            instance._property_values[self] = value
+
+    def __call__(self, *args, **kwargs):
+        if args and callable(args[0]):
+            self.fget = args[0]
+            return self
+        return self
+
+
+class StubMetaclass(type):
+    def __getattr__(cls, name):
+        if name == "get_default_for_uri_scheme":
+            # Return a function that returns None so we fall back to the safe whitelist
+            return lambda scheme: None
+        if name == "Property":
+            return lambda *args, **kwargs: PropertyStub(**kwargs)
+        if name.startswith("_"):
+            raise AttributeError(name)
+        return MagicMock(name=name)
+
+
+class UniversalStub(metaclass=StubMetaclass):
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __getattr__(self, name):
+        # Standard Python internals, private attributes, and non-existent link generators should raise AttributeError
+        # so that hasattr() and getattr() with defaults work correctly.
+        if name.startswith("_") or name.startswith("get_link_"):
+            raise AttributeError(name)
+        return MagicMock(name=name)
+
+    def __call__(self, *args, **kwargs):
+        if args and callable(args[0]):
+            return args[0]
+        return MagicMock()
+
+    @classmethod
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__()
+
+
+class MockModule(MagicMock):
+    def __init__(self, name: str, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__name__ = name
+        import importlib.machinery
+        self.__spec__ = importlib.machinery.ModuleSpec(name, loader=None)
+        self.__loader__ = None
+        self.__package__ = name.rsplit(".", 1)[0] if "." in name else name
+        self.__path__ = []
+
+    def __getattr__(self, name: str):
+        if name == "Property":
+            return lambda *args, **kwargs: PropertyStub()
+        if name.startswith("_") or name.startswith("mock") or name in (
+            "called", "call_count", "call_args", "call_args_list", "return_value", "side_effect"
+        ):
+            return super().__getattr__(name)
+        # Dynamically return a class that inherits from UniversalStub to prevent metaclass conflicts
+        return type(name, (UniversalStub,), {})
+
+
+def _make_module_mock(name: str) -> MockModule:
+    """Return a MockModule that pytest.importorskip will accept and satisfies GObject subclassing."""
+    return MockModule(name)
+
+
+def _inject_gi_mocks() -> list[str]:
+    """Build a coherent mock hierarchy and inject it into sys.modules.
+
+    Ensures that gi.repository.X attributes correctly resolve off the gi.repository mock,
+    preventing TypeError metaclass conflicts when defining widgets or controllers with multi-inheritance.
+    Standardized to be robust in both CI and local developer environments.
     """
-    import importlib.machinery
-
-    m = MagicMock(name=name)
-    m.__name__ = name
-    m.__spec__ = importlib.machinery.ModuleSpec(name, loader=None)
-    m.__loader__ = None
-    m.__package__ = name.rsplit(".", 1)[0] if "." in name else name
-    m.__path__ = []
-    return m
-
-
-if _CI_MODE:
-    # Build a coherent mock hierarchy: gi.repository.X attributes should
-    # resolve off the gi.repository mock, not be independent stubs.
+    injected: list[str] = []
     _mock_gi = _make_module_mock("gi")
     _mock_repo = _make_module_mock("gi.repository")
     _mock_gi.repository = _mock_repo
@@ -116,7 +196,12 @@ if _CI_MODE:
                 _leaf_mock = _make_module_mock(_key)
                 setattr(_mock_repo, _leaf, _leaf_mock)
                 sys.modules[_key] = _leaf_mock
-            _GI_INJECTED.append(_key)
+            injected.append(_key)
+    return injected
+
+
+if _CI_MODE:
+    _GI_INJECTED.extend(_inject_gi_mocks())
 
 
 # ---------------------------------------------------------------------------
@@ -243,10 +328,7 @@ def headless_gi_mocks():
     except ImportError:
         pass
 
-    for key in _GI_KEYS:
-        if key not in sys.modules:
-            sys.modules[key] = _make_module_mock(key)
-            inserted.append(key)
+    inserted = _inject_gi_mocks()
     yield
     for key in inserted:
         sys.modules.pop(key, None)
@@ -346,9 +428,34 @@ def pytest_sessionfinish(session, exitstatus):
     try:
         tr = session.config.pluginmanager.get_plugin("terminalreporter")
         if tr is not None:
+            # Verbose printing of test failure tracebacks since os._exit() suppresses standard reporting
+            failed_reports = tr.stats.get('failed', [])
+            for rep in failed_reports:
+                print("\n" + "="*80)
+                print(f"FAILURE IN {rep.nodeid}:")
+                print("="*80)
+                print(rep.longrepr)
+                # Also print captured stdout/stderr
+                for secname, secdata in rep.sections:
+                    print(f"--- {secname} ---")
+                    print(secdata)
+                print("="*80 + "\n")
             tr.summary_stats()
         sys.stdout.flush()
         sys.stderr.flush()
+    except Exception:
+        pass
+
+    # 3b. Forcefully terminate all child processes to prevent GHA from hanging on open pipes.
+    try:
+        import psutil
+        current_process = psutil.Process()
+        children = current_process.children(recursive=True)
+        for child in children:
+            try:
+                child.kill()
+            except Exception:
+                pass
     except Exception:
         pass
 

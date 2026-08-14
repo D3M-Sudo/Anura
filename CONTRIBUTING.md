@@ -32,15 +32,15 @@ GSETTINGS_SCHEMA_DIR=builddir/data python3 -m anura.main
 
 Anura has two main categories of tests:
 
-1. **Unit & Security Tests** - Logic without GTK dependencies (393 tests)
-2. **Integration Tests** - Require GTK/GLib environment (44 tests)
+1. **Unit & Security Tests** - Logic without GTK dependencies (171 headless tests)
+2. **Integration Tests** - Require GTK/GLib environment
 
 ### 🚀 QUICK START - Daily Development
 
 ```bash
 # Run unit tests (ALWAYS use this for daily development)
 uv run pytest tests/ -m "not gtk" -v
-# Expected: 393 passed, 44 deselected ✅
+# Expected: 171 passed, 17 deselected, 20 skipped ✅
 ```
 
 ### 📋 COMPLETE TEST COMMANDS
@@ -100,6 +100,7 @@ uv run ruff format anura/
 - [ ] **DoS Prevention**: Image size validated with `MAX_IMAGE_SIZE_BYTES`.
 - [ ] **Text Sanitization**: OCR output passed through `validators.sanitize_text`.
 - [ ] **URI Validation**: URLs checked with `uri_validator()` before launch.
+- [ ] **Pango Markup Prevention**: User input in notifications sanitized against markup injection.
 - [ ] **Thread Safety**: No UI modifications from secondary threads; use `AtomicTaskManager`.
 - [ ] **Signal Lifecycle**: Use `SignalManagerMixin` for automated cleanup.
 - [ ] **No Telemetry**: Absolute privacy maintained.

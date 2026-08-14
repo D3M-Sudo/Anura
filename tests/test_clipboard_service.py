@@ -95,3 +95,84 @@ class TestClipboardServiceEnterprise:
             assert res is False
             mock_cancellable.cancel.assert_called_once()
             assert mock_idle.called
+
+
+
+    def test_uri_list_no_file_uri(self, service):
+        """Test _on_uri_list_bytes emits error when no file:// URI in list."""
+        with patch("gi.repository.GLib.idle_add") as mock_idle_add:
+            # Call with non-file URI data
+            service._on_uri_list_bytes(b"http://example.com/image.png\r\n")
+            # Verify error was emitted
+            assert mock_idle_add.called
+
+    def test_uri_list_file_not_exists(self, service):
+        """Test _on_uri_list_bytes emits error when file doesn't exist."""
+        with (
+            patch("gi.repository.GLib.filename_from_uri", return_value=("/tmp/nonexistent.png", "")),
+            patch("pathlib.Path.exists", return_value=False),
+            patch.object(service, "_emit_clipboard_error") as mock_error,
+        ):
+            # Call with file URI data for non-existent file
+            service._on_uri_list_bytes(b"file:///tmp/nonexistent.png\r\n")
+            # Verify error was emitted
+            mock_error.assert_called_once()
+
+    def test_emit_texture_from_file_success(self, service):
+        """Test _emit_texture_from_file success path."""
+        mock_texture = MagicMock()
+
+        with (
+            patch("anura.services.clipboard_service.validate_image_resource", return_value=(True, 1024, None)),
+            patch("PIL.Image.open") as mock_image_open,
+            patch("gi.repository.Gdk.Texture.new_from_bytes", return_value=mock_texture),
+            patch("gi.repository.GLib.Bytes.new"),
+            patch("gi.repository.GLib.idle_add") as mock_idle_add,
+        ):
+            # Mock PIL image operations
+            mock_img = MagicMock()
+            mock_img.mode = "RGB"
+            mock_image_open.return_value.__enter__.return_value = mock_img
+
+            # Trigger the method
+            service._emit_texture_from_file("/tmp/test.png")
+
+            # Verify success signal was emitted
+            assert mock_idle_add.called
+
+    def test_emit_texture_from_file_pil_failure(self, service):
+        """Test _emit_texture_from_file PIL decode failure."""
+        from PIL import Image
+
+        with (
+            patch("anura.services.clipboard_service.validate_image_resource", return_value=(True, 1024, None)),
+            patch("PIL.Image.open", side_effect=Image.UnidentifiedImageError("Cannot identify image file")),
+            patch("gi.repository.GLib.idle_add") as mock_idle_add,
+        ):
+            # Trigger the method
+            service._emit_texture_from_file("/tmp/test.png")
+
+            # Verify error signal was emitted
+            assert mock_idle_add.called
+
+    def test_emit_texture_from_file_gdk_failure(self, service):
+        """Test _emit_texture_from_file Gdk.Texture failure."""
+        from gi.repository import Gio, GLib
+
+        with (
+            patch("anura.services.clipboard_service.validate_image_resource", return_value=(True, 1024, None)),
+            patch("PIL.Image.open") as mock_image_open,
+            patch("gi.repository.Gdk.Texture.new_from_bytes", side_effect=GLib.Error.new_literal(Gio.io_error_quark(), "Texture creation failed", Gio.IOErrorEnum.FAILED)),
+            patch("gi.repository.GLib.Bytes.new"),
+            patch("gi.repository.GLib.idle_add") as mock_idle_add,
+        ):
+            # Mock PIL image operations
+            mock_img = MagicMock()
+            mock_img.mode = "RGB"
+            mock_image_open.return_value.__enter__.return_value = mock_img
+
+            # Trigger the method
+            service._emit_texture_from_file("/tmp/test.png")
+
+            # Verify error signal was emitted
+            assert mock_idle_add.called

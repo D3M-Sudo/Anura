@@ -8,8 +8,9 @@
 - **Build**: Meson ≥ 1.5.0
 - **Distribuzione**: Flatpak (`io.github.d3msudo.anura`)
 - **UI**: GTK4 + Libadwaita + Blueprint Compiler 0.16.0
-- **OCR**: pytesseract + Tesseract 5.5.0
-- **QR/Barcode**: zxing-cpp 2.3.0 (replaces pyzbar)
+- **OCR**: pytesseract + Tesseract 5.3.4
+- **QR/Barcode**: zxing-cpp 3.0.0 (replaces pyzbar)
+- **Image Processing**: Leptonica 1.87.0
 - **TTS**: gTTS + GStreamer playbin3
 - **Screenshots**: Xdp.Portal (libportal) + fallback **scrot** (X11)
 - **Settings**: GSettings singleton → `anura/services/settings.py`
@@ -34,7 +35,8 @@ anura/
 ├── core/                ← atomic_task_manager, boot, logger, i18n, resources, dialogs, silent_runner
 ├── controllers/         ← ocr_controller, tts_controller, dnd_controller
 ├── services/            ← clipboard, screenshot, notification, tts, share, settings, language_manager
-├── types/               ← context, download_state, language_item, ocr (immutable dataclasses)
+├── services/language/   ← cache_manager, download_manager, language_validator (specialized managers)
+├── models/              ← context, download_state, language_item, ocr (immutable dataclasses)
 ├── transformers/        ← magic_processor, base_transformers, email_transformer, url_transformer
 ├── utils/               ← barcode_detector, image_filters, structural_reconstructor, validators
 └── widgets/             ← extracted_page, welcome_page, preferences, shortcuts_overlay

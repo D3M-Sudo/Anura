@@ -152,7 +152,7 @@ template $ExtractedPage : Adw.NavigationPage {
 
       TextView text_view {
         accessibility {
-          label: _("Extracted text");
+          label: _("Extracted text editing buffer");
         }
         hexpand: true;
         vexpand: true;
@@ -167,7 +167,9 @@ template $ExtractedPage : Adw.NavigationPage {
         pixels-above-lines: 4;
         pixels-below-lines: 4;
 
-        buffer: TextBuffer buffer {};
+        buffer: TextBuffer buffer {
+          enable-undo: true;
+        };
       }
     }
 
@@ -182,6 +184,9 @@ template $ExtractedPage : Adw.NavigationPage {
         margin-top: 6;
         margin-bottom: 6;
         styles ["dim-label", "caption", "anura-fade-in"]
+        accessibility {
+          label: _("Applied smart transformation");
+        }
       }
 
       Label stats_label {
@@ -191,6 +196,9 @@ template $ExtractedPage : Adw.NavigationPage {
         margin-top: 6;
         margin-bottom: 6;
         styles ["dim-label"]
+        accessibility {
+          label: _("Text statistics");
+        }
       }
     }
   }

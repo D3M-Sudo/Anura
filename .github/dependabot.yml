@@ -1,16 +1,54 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
-# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+# Dependabot configuration for Anura
+# Browser flow: feature → testing → development → main
+# Dependabot PRs target the `testing` branch (our integration branch).
 
 version: 2
 updates:
+  # ────────────────────────────────────────────────────────────────────────────
+  # Python dependencies (pyproject.toml / uv.lock)
+  # ────────────────────────────────────────────────────────────────────────────
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
+    target-branch: "testing"
+    versioning-strategy: increase-if-necessary
+    open-pull-requests-limit: 10
+    groups:
+      # Runtime dependencies of the application itself
+      runtime-deps:
+        patterns:
+          - "gtts"
+          - "loguru"
+          - "pillow"
+          - "psutil"
+          - "pytesseract"
+          - "requests"
+          - "zxing-cpp"
+      # Development-only dependencies
+      dev-deps:
+        patterns:
+          - "bandit"
+          - "meson"
+          - "mypy"
+          - "ninja"
+          - "pytest"
+          - "pytest-cov"
+          - "pytest-timeout"
+          - "ruff"
+          - "safety"
+          - "vulture"
 
+  # ────────────────────────────────────────────────────────────────────────────
+  # GitHub Actions
+  # ────────────────────────────────────────────────────────────────────────────
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    target-branch: "testing"
+    open-pull-requests-limit: 5
+    groups:
+      actions-all:
+        patterns:
+          - "*"

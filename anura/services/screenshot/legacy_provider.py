@@ -11,23 +11,17 @@ from pathlib import Path
 import shutil
 import tempfile
 import threading
-import time
 
 from gi.repository import Gio, GLib
 from loguru import logger
+
+from anura.utils.file_ready_retry import FileReadyRetry
 
 from .base import ScreenshotProvider
 
 # Flatpak bundles scrot at this fixed path (declared in the Flatpak manifest).
 # On a plain host install scrot lives somewhere in PATH — shutil.which() handles that.
 _FLATPAK_SCROT_BIN = "/app/bin/scrot"
-
-# Retry parameters for waiting for scrot to flush its output file to disk.
-# scrot exits before the filesystem has necessarily flushed the PNG, so we
-# poll rather than assuming the file is ready immediately.
-# NEW-016: Increase retries to 50 (5 seconds total) to handle slow filesystems.
-_FILE_READY_RETRIES = 50
-_FILE_READY_DELAY_S = 0.1  # 100 ms between retries
 
 
 def _resolve_scrot_binary() -> str | None:
@@ -57,6 +51,7 @@ class LegacyX11Provider(ScreenshotProvider):
         self._proc: Gio.Subprocess | None = None
         self._cancellable: Gio.Cancellable | None = None
         self._lock = threading.Lock()
+        self._file_retry = FileReadyRetry(retries=50, delay=0.1)
 
     def is_available(self) -> bool:
         """Available only on X11 (not Wayland) and only when scrot is reachable."""
@@ -187,24 +182,9 @@ class LegacyX11Provider(ScreenshotProvider):
                 callback(False, None, None)
                 return
 
-            # --- 3. Retry loop: wait for filesystem to flush the PNG ---
+            # --- 3. Wait for filesystem to flush the PNG ---
             # scrot may exit before the OS has written all bytes to disk.
-            file_ready = False
-            path = Path(output_path)
-            for attempt in range(_FILE_READY_RETRIES):
-                if path.exists() and path.stat().st_size > 0:
-                    file_ready = True
-                    break
-                if attempt < _FILE_READY_RETRIES - 1:
-                    time.sleep(_FILE_READY_DELAY_S)
-
-            if not file_ready:
-                # NEW-016: Log diagnostic info on failure to help triage disk/sandbox issues.
-                logger.error(
-                    f"LegacyX11Provider: scrot (X11) exited successfully but output file "
-                    f"is missing or empty after 5s polling. (path={output_path}, "
-                    f"exists={path.exists()}, size={path.stat().st_size if path.exists() else 'N/A'})"
-                )
+            if not self._file_retry.wait_for_file(output_path):
                 self._cleanup_file(output_path)
                 callback(False, None, _("Screenshot tool produced no output."))
                 return

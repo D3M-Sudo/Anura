@@ -76,6 +76,7 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
             _("Shows character and word count. If text is selected, shows selection stats.")
         )
 
+        self.buffer.set_enable_undo(True)
 
     def _on_buffer_changed(self, buffer: Gtk.TextBuffer) -> None:
         """Update action sensitivities when buffer changes."""
@@ -146,7 +147,7 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
             self.share_button.update_property([Gtk.AccessibleProperty.LABEL], [share_tooltip])
 
     def show_copy_feedback(self) -> None:
-        """Temporarily change the copy button icon to a checkmark for UX feedback."""
+        """Temporarily change the copy button icon, tooltip and accessible label for UX feedback."""
         if not self.text_copy_btn:
             return
 
@@ -158,14 +159,22 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
         original_icon = self.text_copy_btn.get_icon_name()
         self.text_copy_btn.set_icon_name("emblem-ok-symbolic")
 
+        # Temporarily update tooltip and screen reader accessible label
+        copied_text = C_("Extracted screen", "Copied to clipboard!")
+        self.text_copy_btn.set_tooltip_text(copied_text)
+        self.text_copy_btn.update_property([Gtk.AccessibleProperty.LABEL], [copied_text])
+
         GLib.timeout_add_seconds(2, self._reset_copy_icon, original_icon)
 
     def _reset_copy_icon(self, icon_name: str) -> bool:
-        """Helper to reset copy button icon."""
+        """Helper to reset copy button icon, tooltip and accessible label."""
         try:
             if self.text_copy_btn and self.text_copy_btn.get_icon_name() == "emblem-ok-symbolic":
                 # Only reset if it's still showing the checkmark (don't overwrite newer state)
                 self.text_copy_btn.set_icon_name(icon_name)
+                # Restore original tooltip and accessibility label based on the active selection state
+                has_selection = bool(self.buffer.get_selection_bounds()) if self.buffer else False
+                self._update_action_tooltips(has_selection)
         except (AttributeError, RuntimeError, TypeError) as e:
             logger.exception(f"Anura: Failed to reset copy icon: {e}")
         return GLib.SOURCE_REMOVE
@@ -236,6 +245,8 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
                 self.listen_stack.set_visible_child_name("spinner")
             if self.listen_spinner:
                 self.listen_spinner.start()
+            if self.listen_btn:
+                self.listen_btn.update_state([Gtk.AccessibleState.PRESSED], [False])
         elif state == "playing":
             self.swap_controls(True)
             if self.listen_stack:
@@ -244,18 +255,26 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
                 self.listen_spinner.stop()
             if self.listen_pause_btn:
                 self.listen_pause_btn.set_icon_name("media-playback-pause-symbolic")
+                self.listen_pause_btn.update_state([Gtk.AccessibleState.PRESSED], [True])
+                self.listen_pause_btn.set_tooltip_text(C_("Extracted screen", "Pause listening (Ctrl+Alt+L)"))
+                self.listen_pause_btn.update_property([Gtk.AccessibleProperty.LABEL], [C_("Extracted screen", "Pause listening")])
         elif state == "paused":
             self.swap_controls(True)
             if self.listen_stack:
                 self.listen_stack.set_visible_child_name("pause")
             if self.listen_pause_btn:
                 self.listen_pause_btn.set_icon_name("media-playback-start-symbolic")
+                self.listen_pause_btn.update_state([Gtk.AccessibleState.PRESSED], [False])
+                self.listen_pause_btn.set_tooltip_text(C_("Extracted screen", "Resume listening (Ctrl+Alt+L)"))
+                self.listen_pause_btn.update_property([Gtk.AccessibleProperty.LABEL], [C_("Extracted screen", "Resume listening")])
         else:  # idle
             self.swap_controls(False)
             if self.listen_stack:
                 self.listen_stack.set_visible_child_name("button")
             if self.listen_spinner:
                 self.listen_spinner.stop()
+            if self.listen_btn:
+                self.listen_btn.update_state([Gtk.AccessibleState.PRESSED], [False])
 
     def swap_controls(self, locked: bool) -> None:
         """Enable or disable interactive controls during TTS playback."""

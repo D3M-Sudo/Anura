@@ -20,6 +20,10 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Adw, Gio, GLib, GObject, Gtk  # noqa: E402
 from loguru import logger  # noqa: E402
 
+from anura.services.share_providers import (  # noqa: E402
+    generate_share_link,
+    get_provider_ids,
+)
 from anura.utils import is_safe_url_string, mask_url, uri_validator  # noqa: E402
 from anura.utils.singleton import get_instance  # noqa: E402
 
@@ -43,18 +47,7 @@ class ShareService(GObject.GObject):
         """
         Returns a list of supported share providers.
         """
-        return [
-            "email",
-            "mastodon",
-            "reddit",
-            "telegram",
-            "x",
-            "bluesky",
-            "discord",
-            "linkedin",
-            "threads",
-            # NOTE: "instagram" removed — no URL prefill API available
-        ]
+        return get_provider_ids()
 
     # Maximum URL length for safe sharing (most browsers support ~2000, be conservative)
     MAX_URL_LENGTH = 2000
@@ -110,35 +103,33 @@ class ShareService(GObject.GObject):
         if not text:
             logger.warning("Anura Share: Attempted to share empty text.")
             return
-        handler = getattr(self, f"get_link_{provider}", None)
 
-        if handler is None:
+        if provider not in self.providers():
             logger.warning(f"Anura Share: Unknown provider '{provider}' - no handler found")
             return
 
-        if handler:
-            try:
-                # Each get_link_* handler URL-encodes the text itself, so pass raw text through.
-                if provider == "mastodon":
-                    return self._share_mastodon_with_fallback(text)
+        try:
+            # Each get_link_* handler URL-encodes the text itself, so pass raw text through.
+            if provider == "mastodon":
+                return self._share_mastodon_with_fallback(text)
 
-                share_link: str = handler(text)
+            share_link: str = generate_share_link(provider, text)
 
-                # Validate URL length before attempting to launch
-                if len(share_link) > self.MAX_URL_LENGTH:
-                    logger.warning(f"Anura Share: URL too long ({len(share_link)} chars, max {self.MAX_URL_LENGTH})")
-                    return
+            # Validate URL length before attempting to launch
+            if len(share_link) > self.MAX_URL_LENGTH:
+                logger.warning(f"Anura Share: URL too long ({len(share_link)} chars, max {self.MAX_URL_LENGTH})")
+                return
 
-                # Security: validate URL before launching (defense in depth)
-                # Use static method to avoid circular imports and instance creation
-                if not ShareService._validate_share_url(share_link):
-                    logger.warning(f"Anura Share: Blocked invalid URL: {mask_url(share_link)}")
-                    return
+            # Security: validate URL before launching (defense in depth)
+            # Use static method to avoid circular imports and instance creation
+            if not ShareService._validate_share_url(share_link):
+                logger.warning(f"Anura Share: Blocked invalid URL: {mask_url(share_link)}")
+                return
 
-                self.launcher.set_uri(share_link)
-                self.launcher.launch(parent=None, cancellable=None, callback=self._on_share)
-            except (ValueError, TypeError, AttributeError) as e:
-                logger.error(f"Anura Share Error: Failed to share via {provider}. Reason: {e}")
+            self.launcher.set_uri(share_link)
+            self.launcher.launch(parent=None, cancellable=None, callback=self._on_share)
+        except (ValueError, TypeError, AttributeError) as e:
+            logger.error(f"Anura Share Error: Failed to share via {provider}. Reason: {e}")
 
     def _share_mastodon_with_fallback(self, text: str) -> None:
         """Share to Mastodon with official scheme and fallback to instance selection."""
@@ -325,87 +316,6 @@ class ShareService(GObject.GObject):
 
             GLib.idle_add(_on_share_idle, False)
 
-    @staticmethod
-    def get_link_telegram(text: str) -> str:
-        if not text or not text.strip():
-            return ""
-        # Security: use safe="" to ensure special chars like '/' are encoded in params
-        encoded_text = quote(text.strip(), safe="")
-        return f"https://t.me/share/url?text={encoded_text}"
-
-    @staticmethod
-    def get_link_reddit(text: str) -> str:
-        if not text or not text.strip():
-            return ""
-        text = text.strip()
-        # For short texts (< 100 char): use title + body for better visibility
-        if len(text) < 100:
-            encoded_title = quote(text, safe="")
-            encoded_text = quote(text, safe="")
-            return f"https://www.reddit.com/submit?title={encoded_title}&selftext={encoded_text}"
-        else:
-            # For long texts: use only body to avoid title truncation
-            encoded_text = quote(text, safe="")
-            return f"https://www.reddit.com/submit?selftext={encoded_text}"
-
-    @staticmethod
-    def get_link_mastodon(text: str) -> str:
-        # Official web+mastodon:// scheme - primary method
-        if not text or not text.strip():
-            return ""
-        encoded_text = quote(text.strip(), safe="")
-        return f"web+mastodon://share?text={encoded_text}"
-
-    @staticmethod
-    def get_link_x(text: str) -> str:
-        """
-        Twitter provider rebranded to X.com.
-        """
-        if not text or not text.strip():
-            return ""
-        encoded_text = quote(text.strip(), safe="")
-        return f"https://x.com/intent/tweet?text={encoded_text}"
-
-    @staticmethod
-    def get_link_email(text: str) -> str:
-        if not text or not text.strip():
-            return ""
-        subject = quote(_("Extracted Text"), safe="")
-        body = quote(text.strip(), safe="")  # Properly encode body to prevent malformed mailto links
-        return f"mailto:?subject={subject}&body={body}"
-
-    @staticmethod
-    def get_link_bluesky(text: str) -> str:
-        """Share to Bluesky with their web interface."""
-        if not text or not text.strip():
-            return ""
-        encoded_text = quote(text.strip(), safe="")
-        return f"https://bsky.app/intent/compose?text={encoded_text}"
-
-    @staticmethod
-    def get_link_discord(text: str) -> str:
-        """Share to Discord (opens status update dialog)."""
-        if not text or not text.strip():
-            return ""
-        encoded_text = quote(text.strip(), safe="")
-        return f"https://discord.com/channels/@me?content={encoded_text}"
-
-    @staticmethod
-    def get_link_linkedin(text: str) -> str:
-        """Share to LinkedIn with proper URL encoding."""
-        if not text or not text.strip():
-            return ""
-        encoded_text = quote(text.strip(), safe="")
-        encoded_url = quote("https://github.com/D3M-Sudo/Anura", safe="")
-        return f"https://www.linkedin.com/sharing/share-offsite/?url={encoded_url}&summary={encoded_text}"
-
-    @staticmethod
-    def get_link_threads(text: str) -> str:
-        """Share to Threads (Instagram's text-based platform)."""
-        if not text or not text.strip():
-            return ""
-        encoded_text = quote(text.strip(), safe="")
-        return f"https://www.threads.net/intent/post?text={encoded_text}"
 
 
 # Thread-safe singleton instance for global app access

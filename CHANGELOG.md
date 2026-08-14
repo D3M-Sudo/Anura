@@ -7,54 +7,89 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
-- Implemented a UI theme selector with three explicit states (System, Light, Dark) using `Adw.StyleManager`.
-- Added `color-scheme` GSettings key for persistent theme preference.
-- Added selection-aware text statistics and actions on the OCR results page (Palette).
-- Implemented UX, performance, and pipeline enhancements for the OCR engine.
+- Implemented UI theme selector with System, Light, and Dark options using `Adw.StyleManager`
+- Added `color-scheme` GSettings key for persistent theme preference storage
+- Implemented selection-aware text statistics and actions on OCR results page (Palette)
+- Added Undo/Redo functionality to ExtractedPage for improved text editing workflow
+- Enhanced accessibility with keyboard navigation improvements and better drop button tooltips
+- Implemented NormCap-inspired UX improvements for better user experience
+- Added comprehensive accessibility enhancements to WelcomePage and LanguagePopover
+- Implemented dynamic copy button tooltip and accessibility feedback in Palette
+- Added manual workflow execution capability for dependency sync in CI/CD
+- Configured Dependabot for automated dependency updates on testing branch
+- Added comprehensive docstrings, type hints, and integration tests for ClipboardService fallback paths
+- Implemented six-pillar CI hardening framework for improved test reliability
+- Added enhanced diagnostic logging for host screenshot operations
 
 ### Fixed
-- Resolved 4 bugs from debug session 2026-05-25.
-- Fixed TTS play/pause/stop state desync in `extracted_page` (5 bugs).
-- Fixed 7 bugs identified by automated Kimi analysis (2026-05-26).
-- Added `BrokenProcessPool` recovery to `AtomicTaskManager` (CRIT-01).
-- Reset fallback flag in clipboard service and enhanced portal error logging.
-- Fixed X11 screenshot fallback in testing branch.
-- Resolved `AtomicTaskManager` deadlock and hang in child processes.
-- Remediated GTK integration test failures and GTK4 regressions.
-- Fixed CI GTK test suite hanging (multi-step: `atexit`, `os._exit()`, Weston cleanup, signal sourcing).
-- Fixed Python-quality CI failures.
-- Fixed ruff linting violations (F841 unused variable, I001 import sorting).
-- Fixed test assertion to use GTK4 `set_content()` instead of removed `set_text()`.
-- Fixed path mocking (`Path.exists` instead of `os.path.exists`) in tests.
-- Caught `PermissionError` from `Path.exists()` for inaccessible parent directories.
-- Released `_state_lock` before `ProcessPoolExecutor.shutdown()` to prevent deadlock.
-- Fixed undefined HTML variable and unused import in CI workflow.
-- Resolved workflow SHA resolution errors and image pull failures.
+- Resolved `AtomicTaskManager` deadlock and child process hang issues
+- Fixed GTK integration test suite hanging with comprehensive multi-step fix (atexit, os._exit(), Weston cleanup, signal sourcing)
+- Eliminated clipboard infinite fallback loop and stale source_remove warnings
+- Fixed TTS play/pause/stop state desynchronization in extracted_page (5 bugs)
+- Resolved X11 screenshot fallback issues in testing branch
+- Added `BrokenProcessPool` recovery to `AtomicTaskManager` for enhanced error handling (CRIT-01)
+- Fixed OcrController weak references against ReferenceError during window destruction
+- Fixed static type-checking and path concatenation issues
+- Fixed flatpak pybind11 cmake path resolution during zxing build
+- Resolved clipboard spinner stuck and source_remove warnings (BUG-PASTE + BUG-032)
+- Fixed path mocking in tests (Path.exists instead of os.path.exists)
+- Caught PermissionError from Path.exists() for inaccessible parent directories
+- Released _state_lock before ProcessPoolExecutor.shutdown() to prevent deadlock
+- Fixed test assertion to use GTK4 set_content() instead of removed set_text()
+- Resolved GObject metaclass conflicts and TESSDATA_DIR patching in tests
+- Fixed ruff linting violations (F841 unused variable, I001 import sorting, B028, SIM910)
+- Fixed CI workflow SHA resolution errors and image pull failures
+- Fixed undefined HTML variable and unused import in CI workflow
+- Hardened CI/CD workflows with immutable action pinning and credential protection
+- Resolved 4 bugs from debug session 2026-05-25
+- Fixed 7 bugs identified by automated Kimi analysis (2026-05-26)
+- Reset fallback flag in clipboard service and enhanced portal error logging
+- Remediated GTK integration test failures and GTK4 regressions
+- Fixed Python-quality CI failures
+- Removed complex async callback tests that fail in CI
+- Fixed failing integration tests by simplifying test logic
+- Terminated child processes to prevent GHA limbo hangs
+- Resolved structural test mismatches and cleaned TTS debt
+- Restored missing TTSService facade export
+- Fixed DialogManager import in AnuraWindow
+- Fixed ruff style checks and import ordering across services
 
 ### Changed
-- Hardened CI/CD workflows with immutable action pinning, credential protection, and ruff-action resolution.
-- Restructured and modernized CI/CD pipeline with comprehensive fix for GTK integration test hangs.
-- Audit-driven stability hardening and build fixes.
-- Optimized image mean calculation in `ContrastEnhancementFilter` (Bolt optimization).
-- Performed systematic bug hunting and modernization sweep across the codebase.
-- Technical remediation for Flatpak, Pathlib, and Safety patterns.
-- Rewrote AI-generated comments for clarity and professionalism.
-- Translated project documentation from Italian to English.
-- Updated `flatpak-dependencies.yml` workflow.
-- Moved audit-related files (`bugs-observed.json`, `bugs-summary.md`) into dedicated `docs/audit/` directory.
+- Decomposed LanguageManager into specialized managers (DownloadManager, CacheManager, LanguageValidator) in anura/services/language/
+- Optimized OCR layout parsing and structural reconstruction (Bolt optimization)
+- Optimized image mean calculation in ContrastEnhancementFilter
+- Restructured and modernized CI/CD pipeline with comprehensive GTK integration test fixes
+- Performed systematic bug hunting and modernization sweep across the codebase
+- Technical remediation for Flatpak, Pathlib, and Safety patterns
+- Rewrote AI-generated comments for clarity and professionalism
+- Translated project documentation from Italian to English
+- Updated flatpak-dependencies.yml workflow
+- Moved audit-related files (bugs-observed.json, bugs-summary.md) into dedicated docs/audit/ directory
+- Exposed loading_languages and finalized test suite alignment
+- Style fixes: import ordering and typing annotations across services
+- Audit-driven stability hardening and build fixes
+- Updated Flatpak dependencies: Leptonica 1.87.0, imlib2 1.12.6
+- Updated dependency versions: ruff ≥0.15.21, meson ≥1.11.2, pytest ≥9.1.1, pillow ≥12.3.0
+- Enhanced error handling and logging throughout the application
+- Improved portal environment diagnostics and user guidance
+- Unified GI mock injection to resolve metaclass conflict in non-CI mode
+- Synced CI ignore lists and added ANURA_CI_TEST_MODE to python-quality job
 
 ### Security
-- Hardened `is_safe_url_string` to reject mixed-script homograph attacks.
-- Hardened image resource validation for DoS prevention (`MAX_IMAGE_SIZE_BYTES` enforcement).
-- Hardened `sanitize_text` by stripping Private Use (Co) and Surrogate (Cs) Unicode categories.
-- **HIGH**: Fixed Config Layer Leakage and enhanced lifecycle safety.
-- **HIGH**: Fixed hierarchical ID collision and OCR pipeline instability.
-- Remediated architectural resource leaks across core services (v2/v3).
-- Completed Phase 2 forensics and remediated logic flaws across the codebase.
-- Installed Claude Bug Bounty toolkit and required security scanners for ongoing auditing.
+- **HIGH**: Fixed Pango markup injection in notifications (hardened against markup attacks)
+- **HIGH**: Fixed hierarchical ID collision and OCR pipeline instability
+- **HIGH**: Fixed Config Layer Leakage and enhanced lifecycle safety
+- Hardened local data storage permissions for sensitive data
+- Hardened sanitize_text by stripping Private Use (Co) and Surrogate (Cs) Unicode categories
+- Hardened is_safe_url_string to reject mixed-script homograph attacks
+- Hardened image resource validation for DoS prevention (MAX_IMAGE_SIZE_BYTES enforcement)
+- Remediated architectural resource leaks across core services (v2/v3)
+- Completed Phase 2 forensics and remediated logic flaws across the codebase
+- Installed Claude Bug Bounty toolkit and required security scanners for ongoing auditing
+- Implemented dynamic URI scheme validation in ShareService (BUG-035 remediation)
 
 ### Removed
-- Deleted `CHANGELOG_REMEDIATION.md`.
+- Deleted CHANGELOG_REMEDIATION.md
 
 ## [0.1.5] - 2026-05-25 {version-0.1.5-architectural-milestone}
 
