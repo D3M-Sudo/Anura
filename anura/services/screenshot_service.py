@@ -821,11 +821,15 @@ class ScreenshotService(GObject.GObject):
         )
 
         if success:
-            assert extracted is not None
-            self._emit_decoded(extracted, copy, ocr_result, applied_name)
+            if extracted is not None:
+                self._emit_decoded(extracted, copy, ocr_result, applied_name)
+            else:
+                self._emit_decode_error(_("No text found."))
         else:
-            assert error_message is not None
-            self._emit_decode_error(error_message)
+            if error_message is not None:
+                self._emit_decode_error(error_message)
+            else:
+                self._emit_decode_error(_("Failed to decode image."))
 
         return False
 
