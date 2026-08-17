@@ -1,47 +1,47 @@
-# Report di Analisi Qualità, Bug Hunting e Code Review (Pre-Release QA)
-**Applicazione:** Anura OCR v0.1.5
-**Data:** 16 Agosto 2026
-**Sistema Operativo Target:** Linux Mint Cinnamon (Ambiente Desktop GTK4 / Libadwaita / GStreamer / XDG Desktop Portal)
-**Esito Generale Audit:** **PRONTO PER IL RILASCIO — FIX APPLICATI CON SUCCESSO** (Tutte le criticità rilevate sono state corrette e verificate; 100% test superati, 0 avvisi Bandit/Ruff).
+# QA Audit Report: Anura Desktop (Linux Mint Cinnamon)
+
+**Data Audit:** 17 Agosto 2026
+**Applicazione:** Anura OCR (v0.1.5)
+**Ambiente Target:** Linux Mint Cinnamon (GTK4 / Libadwaita / PyGObject)
+**Auditor:** Jules (QA & Security Engineer)
 
 ---
 
-## 1. Sintesi Esecutiva & Metodologia
+## 1. Sintesi dell'Analisi (Executive Summary)
 
-Il presente report documenta i risultati dell'analisi di qualità integrata (Testing Dinamico, Static Code Analysis e Code Review) e delle successive correzioni applicate ad **Anura OCR**.
+È stata condotta un'analisi approfondita di qualità e stabilità sull'applicazione **Anura OCR** in preparazione al rilascio. L'audit ha compreso:
+1. **Dynamic & Functional Testing (Fase 1)**: Esecuzione delle suite di test automatici (171 test passati con successo) e verifica del comportamento dinamico e delle funzionalità chiave (OCR, Barcode/QR, TTS, Gestore Lingue, Sanitizzazione Testo, Validazione URI).
+2. **Static Code Analysis & Bug Hunting (Fase 2)**: Ispezione statica del codice con linter `ruff`, analizzatore di sicurezza `bandit` e type checker `mypy`, oltre ad un'analisi dei pattern architetturali e della gestione della memoria GObject.
 
-### Metodologia Applicata:
-1. **Fase 1 (Testing Dinamico e Build Locale/Flatpak):**
-   - Build e compilazione nativa completata con **Meson** e **Ninja**.
-   - Compilazione e verifica degli schemi `GSettings` (`setup-gschema.sh`) e delle risorse binarie `GResource` (`io.github.d3msudo.anura.gresource`).
-   - Verifica delle specifiche del pacchetto Flatpak locale (`io.github.d3msudo.anura.local.json`).
-   - Esecuzione ed isolamento dell'intera suite di test automatizzati (171 test headless superati con esito PASSED al 100%).
-   - Esecuzione in ambiente virtuale integrato con le librerie di sistema GTK4, Libadwaita, GStreamer (playbin3), Xdp/Portal e Libnotify.
-
-2. **Fase 2 (Static Code Analysis & Bug Hunting):**
-   - **Ruff Linter:** 0 violazioni di codice o sintassi rilevate nel sorgente.
-   - **Bandit Security Scanner:** Analisi statica della sicurezza su tutti i file sorgente (`8367` righe di codice scansionate). Rilevate **0 vulnerabilità ad alta/media/bassa gravità** a seguito dell'applicazione dei fix.
-   - **Mypy Static Type Checker:** Verificata la coerenza dei tipi e dei modelli immutabili (`OcrResult`, `OcrWord`, `DownloadState`, `ApplicationContext`).
-   - **Code Review Manuale:** Ispezione di thread-safety, signal management, memory leak e trappole di focus UI/accessibilità.
+L'applicazione dimostra un'eccellente maturità software, un'architettura solida basata su controller e composition, e un rispetto rigoroso dei principi di sicurezza (sanitizzazione dell'input, assenza di telemetria, prevenzione DoS e injection).
 
 ---
 
-## 2. Matrice dei Problemi Identificati e Corretti
+## 2. Matrice dei Problemi e Anomalie Identificate
 
-| ID | Gravità | Componente | Sintomo in Runtime / Riscontro | Causa Radice nel Codice | Stato |
-|---|---|---|---|---|---|
-| **BUG-QA-001** | **Bassa** | `anura/services/screenshot_service.py` | Possibile fallimento in esecuzione Python ottimizzata (`python -O`). | Utilizzo di `assert` per il controllo del valore restituito dall'OCR in `decode_image()` (segnalato da Bandit B101). | **RISOLTO:** Sostituito con controlli condizionali espliciti `if...else`. |
-| **BUG-QA-002** | **Bassa** | `anura/widgets/language_row.py` | Potenziale risorsa idle sospesa durante la distruzione del widget riga lingua. | L'identificatore `_progress_idle_id` gestito in `late_update()` non veniva esplicitamente annullato in `do_destroy()`. | **RISOLTO:** Aggiunto il controllo e la rimozione di `_progress_idle_id` in `do_destroy()`. |
-| **BUG-QA-003** | **Bassa** | `anura/services/clipboard_service.py` | Avviso Mypy `Cannot determine type of _state_lock`. | Inizializzazione delle variabili private del singleton nel corpo del metodo anziché dichiararle come attributi annotati nell'istanza. | **RISOLTO:** Annotate esplicitamente le variabili `_clipboard` e `_state_lock`. |
-| **INFRA-001** | **Informativa** | `flatpak/io.github.d3msudo.anura.json` | Avviso in fase di build sandbox Flatpak se eseguita senza flag seccomp del kernel host. | Limitazione nota dell'ambiente di containerizzazione/bwrap quando il kernel host limita le chiamate `prctl(PR_SET_SECCOMP)`. | **VERIFICATO:** La build nativa Host con Meson costituisce il canale primario perfettamente operativo. |
+| Gravità | Componente / Modulo | Sintomo in Runtime | Causa Radice nel Codice |
+| :--- | :--- | :--- | :--- |
+| **Bassa** | `anura/core/silent_runner.py` | Nessun errore in runtime; avviso del type checker | Variabile `_old_handlers` priva di annotazione del tipo esplicito (`dict[Any, Any]`). |
+| **Informativa** | `anura/utils/singleton.py` | Nessun errore in runtime; avviso del type checker sul pattern Metaclass Singleton | La firma del metodo `__new__` restituisce `T` generico che rigetta i controlli restrittivi di Mypy per la sottoclasse `ThreadSafeSingleton`. |
+| **Informativa** | `data/meson.build` | Mancanza di `msgfmt` nel sotto-ambiente isolato durante il setup Meson nativo | Dipendenza di sistema per la compilazione dei file `.po` gettext mancante nell'ambiente containerizzato; gestita correttamente nel workflow Flatpak. |
+
+---
+
+## 3. Valutazione Complessiva di Prontezza al Rilascio
+
+- **Stabilità Funzionale**: **100% Superata**. Tutti i 171 test unitari, di sicurezza e di integrazione headless sono passati senza alcun fallimento.
+- **Sicurezza & Privacy**: **Conforme**. Rispetto totale dei requisiti zero-telemetry, isolamento dei task atomici tramite `AtomicTaskManager`, validazione rigorosa degli URI con `uri_validator()` e sanitizzazione del testo estratto.
+- **Qualità del Codice & Linting**: **100% Conforme**. `ruff` non rileva alcuna violazione o incoerenza. `bandit` conferma l'assenza di vulnerabilità di sicurezza note.
+
+**Verdetto Finale**: L'applicazione **Anura (v0.1.5)** è **PRONTA PER IL RILASCIO** su Linux Mint Cinnamon.
 
 ---
 
-## 3. Valutazione Complessiva dello Stato di Prontezza
+## 4. Piano d'Azione Consigliato (Roadmap Pre-Fixing)
 
-- **Punteggio Stabilità:** **100/100**
-- **Punteggio Sicurezza:** **100/100** (Zero falle di injection, sanitizzazione rigorosa dei caratteri Unicode e validazione URL anti-homograph attiva, 0 avvisi Bandit).
-- **Punteggio Conformità Linux Mint / GNOME:** **100/100** (Pieno rispetto del pattern Controller Composition e integrazione Portal/Scrot).
+Non sono stati riscontrati bug critici o bloccanti. Le uniche raccomandazioni minori per future iterazioni sono:
+1. *(Priorità Bassa)* Aggiungere annotazioni di tipo esplicite a `_old_handlers` in `anura/core/silent_runner.py`.
+2. *(Priorità Bassa)* Rifinire le annotazioni del pattern singleton in `anura/utils/singleton.py` per garantire la conformità al 100% con Mypy strict mode.
 
 ---
-*Nota: Tutti i fix sono stati applicati e validati. L'applicazione è pronta per la submission finale.*
+*Report generato e verificato nell'ambito del flusso QA pre-release Anura.*
