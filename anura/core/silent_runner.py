@@ -3,10 +3,11 @@
 #
 # SPDX-License-Identifier: MIT
 
+from collections.abc import Callable
 import signal as sig
 import threading
 from types import FrameType
-from typing import Any, Callable
+from typing import Any
 
 from gi.repository import GLib
 from loguru import logger
