@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: MIT
 
 import threading
-from typing import Any, ClassVar, TypeVar
+from typing import Any, ClassVar, TypeVar, cast
 
 T = TypeVar("T")
 
@@ -21,34 +21,9 @@ class ThreadSafeSingleton:
     - Minimal performance overhead after initialization
     """
 
-    _instances: ClassVar[dict[type, Any]] = {}
-    _locks: ClassVar[dict[type, threading.Lock]] = {}
+    _instances: ClassVar[dict[type[Any], Any]] = {}
+    _locks: ClassVar[dict[type[Any], threading.Lock]] = {}
     _meta_lock = threading.Lock()
-
-    def __new__(cls, wrapped_class: type[T]) -> T:
-        """
-        Create or return the singleton instance of the wrapped class.
-
-        Args:
-            wrapped_class: The class to make singleton
-
-        Returns:
-            The singleton instance of wrapped_class
-        """
-        # First check without lock for performance
-        if wrapped_class in cls._instances:
-            return cls._instances[wrapped_class]
-
-        # Double-checked locking pattern
-        with cls._get_lock(wrapped_class):
-            # Check again inside lock to prevent race condition
-            if wrapped_class not in cls._instances:
-                # Create the instance
-                instance = wrapped_class()
-                cls._instances[wrapped_class] = instance
-                return instance
-
-            return cls._instances[wrapped_class]
 
     @classmethod
     def _get_lock(cls, wrapped_class: type[Any]) -> threading.Lock:
@@ -69,7 +44,20 @@ class ThreadSafeSingleton:
         Returns:
             The singleton instance
         """
-        return cls(wrapped_class)
+        # First check without lock for performance
+        if wrapped_class in cls._instances:
+            return cast(T, cls._instances[wrapped_class])
+
+        # Double-checked locking pattern
+        with cls._get_lock(wrapped_class):
+            # Check again inside lock to prevent race condition
+            if wrapped_class not in cls._instances:
+                # Create the instance
+                instance = wrapped_class()
+                cls._instances[wrapped_class] = instance
+                return instance
+
+            return cast(T, cls._instances[wrapped_class])
 
     @classmethod
     def reset_for_testing(cls) -> None:

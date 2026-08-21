@@ -126,12 +126,13 @@ Valid levels: `TRACE`, `DEBUG`, `INFO` (default), `WARNING`, `ERROR`, `CRITICAL`
 | zxing-cpp | 3.0.0 |
 | Leptonica | 1.87.0 |
 | Blueprint Compiler | ≥ 0.16.0 |
+| gettext | latest |
 | uv | latest |
 
 **Ubuntu / Linux Mint / Debian:**
 
 ```bash
-sudo apt install meson python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 \
+sudo apt install meson gettext python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 \
     tesseract-ocr blueprint-compiler libxml2-utils \
     leptonica-progs liblibleptonica-dev
 ```
