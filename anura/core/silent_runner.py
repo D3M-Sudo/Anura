@@ -3,13 +3,18 @@
 #
 # SPDX-License-Identifier: MIT
 
+from collections.abc import Callable
 import signal as sig
 import threading
+from types import FrameType
+from typing import Any
 
 from gi.repository import GLib
 from loguru import logger
 
 from anura.services.clipboard_service import get_clipboard_service
+
+_SignalHandler = sig.Handlers | Callable[[int, FrameType | None], Any] | int | None
 
 
 class SilentRunner:
@@ -19,7 +24,7 @@ class SilentRunner:
         self.app = app
         self.file_path = file_path
         self.interrupted = threading.Event()
-        self._old_handlers = {}
+        self._old_handlers: dict[str, _SignalHandler] = {}
 
     def run(self) -> int:
         """Execute OCR in silent mode and return exit code."""

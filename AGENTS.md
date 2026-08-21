@@ -131,7 +131,7 @@ anura/
 
 ```bash
 # System dependencies (Ubuntu/Debian)
-sudo apt install python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 \
+sudo apt install gettext python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 \
     blueprint-compiler libportal-gtk4-dev \
     tesseract-ocr python3-pil python3-pip \
     gstreamer1.0-plugins-good gstreamer1.0-pulseaudio \
