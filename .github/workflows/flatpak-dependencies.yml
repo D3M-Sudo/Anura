@@ -20,23 +20,25 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install flatpak-external-data-checker
-        run: |
-          curl -LO https://github.com/flathub/flatpak-external-data-checker/releases/latest/download/flatpak-external-data-checker
-          chmod +x flatpak-external-data-checker
-          sudo mv flatpak-external-data-checker /usr/local/bin/
-
       - name: Check for available updates
         id: check
         run: |
+          # Writable HOME/cache for the FEDC container so it never tries to
+          # create an inaccessible "/.cache" as a non-root user.
+          FEDC_HOME="$RUNNER_TEMP/fedc-home"
+          mkdir -p "$FEDC_HOME"
+
           for manifest in flatpak/io.github.d3msudo.anura.json flatpak/io.github.d3msudo.anura.local.json; do
             if [ -f "$manifest" ]; then
               docker run --rm \
                 --user $(id -u):$(id -g) \
+                -e HOME=/tmp/fedc-home \
+                -v "$FEDC_HOME:/tmp/fedc-home" \
                 -v "${{ github.workspace }}:/github/workspace" \
-                ghcr.io/flathub/flatpak-external-data-checker:latest \
+                -w /github/workspace \
+                ghcr.io/flathub-infra/flatpak-external-data-checker:latest \
                 --update --edit-only \
-                "/github/workspace/$manifest" || true
+                "/github/workspace/$manifest"
             fi
           done
 
@@ -103,13 +105,24 @@ jobs:
 
       - name: Auto-update certifi only
         run: |
+          # Writable HOME/cache for the FEDC container.
+          FEDC_HOME="$RUNNER_TEMP/fedc-home"
+          mkdir -p "$FEDC_HOME"
+
           # Apply only certifi updates automatically (security-critical, stable API)
-          # FEDC exits with code 1 when it applies updates, 0 when no updates needed
+          # FEDC exits with code 1 when it applies updates, 0 when no updates needed.
+          # docker run propagates the container's exit code.
           set +e
-          flatpak-external-data-checker \
+          docker run --rm \
+            --user $(id -u):$(id -g) \
+            -e HOME=/tmp/fedc-home \
+            -v "$FEDC_HOME:/tmp/fedc-home" \
+            -v "${{ github.workspace }}:/github/workspace" \
+            -w /github/workspace \
+            ghcr.io/flathub-infra/flatpak-external-data-checker:latest \
             --update \
             --filter python3-certifi \
-            flatpak/io.github.d3msudo.anura.json
+            "/github/workspace/flatpak/io.github.d3msudo.anura.json"
           FEDC_EXIT_CODE=$?
           set -e
 
