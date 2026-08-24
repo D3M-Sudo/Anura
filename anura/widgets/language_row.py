@@ -28,6 +28,7 @@ class LanguageRow(Gtk.Overlay, SignalManagerMixin):
     _item: LanguageItem | None = None
     _downloading_handler_id: int | None = None
     _downloaded_handler_id: int | None = None
+    _progress_idle_id: int = 0
 
     def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
@@ -165,6 +166,11 @@ class LanguageRow(Gtk.Overlay, SignalManagerMixin):
 
     def do_destroy(self) -> None:
         """Clean up signal handlers and pending idle_add callbacks to prevent memory leaks."""
+        if hasattr(self, "_progress_idle_id") and self._progress_idle_id:
+            with contextlib.suppress(TypeError, RuntimeError):
+                GLib.source_remove(self._progress_idle_id)
+            self._progress_idle_id = 0
+
         for idle_id in self._idle_ids:
             with contextlib.suppress(TypeError, RuntimeError):
                 GLib.source_remove(idle_id)

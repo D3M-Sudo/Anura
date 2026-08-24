@@ -52,6 +52,9 @@ class ClipboardService(GObject.GObject):
     # Timeout for clipboard read operations (seconds)
     CLIPBOARD_TIMEOUT_SECONDS = 10
 
+    _clipboard: Gdk.Clipboard | None = None
+    _state_lock: threading.Lock
+
     @property
     def clipboard(self) -> Gdk.Clipboard:
         """Thread-safe lazy initialization of clipboard to avoid crash on headless/CI."""
