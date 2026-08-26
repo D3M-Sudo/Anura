@@ -285,6 +285,15 @@ class TestAccessibilityEnhancementsEnterprise:
     """Tests specifically validating the custom WCAG 2.1 AA and UX enhancements."""
 
     @pytest.mark.gtk
+    def test_share_row_accessibility(self):
+        """Verify ShareRow sets tooltip and accessible label directly on the ListBoxRow widget."""
+        from anura.widgets.share_row import ShareRow
+
+        row = ShareRow(provider_name="email")
+        assert row.get_tooltip_text() == "Share via Email"
+        assert row.provider_name == "email"
+
+    @pytest.mark.gtk
     def test_language_row_context_accessibility(self):
         """Verify LanguageRow dynamically updates tooltips and accessibility labels based on assigned language."""
         from anura.widgets.language_row import LanguageRow
