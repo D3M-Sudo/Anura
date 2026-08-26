@@ -105,47 +105,104 @@ jobs:
 
       - name: Auto-update certifi only
         run: |
-          # Writable HOME/cache for the FEDC container.
+          # FEDC has no supported filter-by-source-name option. Isolate certifi
+          # in a temporary manifest so --update can only modify that source.
           FEDC_HOME="$RUNNER_TEMP/fedc-home"
-          mkdir -p "$FEDC_HOME"
+          TMP_DIR="$RUNNER_TEMP/fedc-certifi"
+          mkdir -p "$FEDC_HOME" "$TMP_DIR"
 
-          # Apply only certifi updates automatically (security-critical, stable API)
-          # FEDC exits with code 1 when it applies updates, 0 when no updates needed.
-          # docker run propagates the container's exit code.
-          set +e
+          MANIFEST="flatpak/io.github.d3msudo.anura.json"
+          CERTIFI_MANIFEST="$TMP_DIR/io.github.d3msudo.anura.certifi.json"
+
+          python3 - "$MANIFEST" "$CERTIFI_MANIFEST" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          source_manifest = Path(sys.argv[1])
+          certifi_manifest = Path(sys.argv[2])
+          data = json.loads(source_manifest.read_text())
+
+          matches = []
+          for module in data.get("modules", []):
+              for source in module.get("sources", []):
+                  checker = source.get("x-checker-data")
+                  if checker and checker.get("type") == "pypi" and checker.get("name") == "certifi":
+                      matches.append((module, source))
+
+          if len(matches) != 1:
+              raise SystemExit(f"Expected exactly one certifi source, found {len(matches)}")
+
+          module, source = matches[0]
+          isolated = {
+              "app-id": data.get("app-id", "io.github.d3msudo.anura"),
+              "modules": [{"name": module.get("name", "python3-certifi"), "sources": [source]}],
+          }
+          certifi_manifest.write_text(json.dumps(isolated, indent=4) + "\n")
+          PY
+
           docker run --rm \
             --user $(id -u):$(id -g) \
             -e HOME=/tmp/fedc-home \
             -v "$FEDC_HOME:/tmp/fedc-home" \
             -v "${{ github.workspace }}:/github/workspace" \
+            -v "$TMP_DIR:/tmp/fedc-certifi" \
             -w /github/workspace \
             ghcr.io/flathub-infra/flatpak-external-data-checker:latest \
             --update \
-            --filter python3-certifi \
-            "/github/workspace/flatpak/io.github.d3msudo.anura.json"
-          FEDC_EXIT_CODE=$?
-          set -e
+            "/tmp/fedc-certifi/io.github.d3msudo.anura.certifi.json"
 
-          # Exit code 1 means updates were applied (expected), 0 means no updates needed
-          if [ $FEDC_EXIT_CODE -ne 0 ] && [ $FEDC_EXIT_CODE -ne 1 ]; then
-            echo "Error: flatpak-external-data-checker failed with exit code $FEDC_EXIT_CODE"
-            exit 1
-          fi
+          python3 - "$MANIFEST" "$CERTIFI_MANIFEST" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
 
-          echo "Certifi check completed (exit code: $FEDC_EXIT_CODE)"
+          real_path = Path(sys.argv[1])
+          updated_path = Path(sys.argv[2])
+          real = json.loads(real_path.read_text())
+          updated = json.loads(updated_path.read_text())
+
+          updated_sources = []
+          for module in updated.get("modules", []):
+              for source in module.get("sources", []):
+                  checker = source.get("x-checker-data")
+                  if checker and checker.get("type") == "pypi" and checker.get("name") == "certifi":
+                      updated_sources.append(source)
+
+          if len(updated_sources) != 1:
+              raise SystemExit(f"Expected exactly one updated certifi source, found {len(updated_sources)}")
+
+          replaced = 0
+          for module in real.get("modules", []):
+              for index, source in enumerate(module.get("sources", [])):
+                  checker = source.get("x-checker-data")
+                  if checker and checker.get("type") == "pypi" and checker.get("name") == "certifi":
+                      module["sources"][index] = updated_sources[0]
+                      replaced += 1
+
+          if replaced != 1:
+              raise SystemExit(f"Expected exactly one certifi source in real manifest, replaced {replaced}")
+
+          real_path.write_text(json.dumps(real, indent=4) + "\n")
+          PY
+
+          echo "Certifi-only update completed. Resulting diff:"
+          git diff --check
+          git diff -- flatpak/io.github.d3msudo.anura.json
 
       - name: Create PR for certifi updates
         uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           base: testing
-          commit-message: "chore(deps): update Flatpak dependencies via FEDC"
-          title: "chore(deps): update Flatpak dependencies"
+          commit-message: "chore(deps): update certifi via FEDC"
+          title: "chore(deps): update certifi via FEDC"
           body: |
-            Automated update of Flatpak dependencies via flatpak-external-data-checker.
+            Automated certifi update via flatpak-external-data-checker.
 
-            Only sources with `x-checker-data` in the manifest are updated.
+            The FEDC invocation uses a temporary manifest containing only the certifi source because the current FEDC CLI does not support filtering by source name.
+
             Please review and test before merging.
-          branch: update-flatpak-deps
+          branch: update-certifi
           delete-branch: true
           labels: dependencies
