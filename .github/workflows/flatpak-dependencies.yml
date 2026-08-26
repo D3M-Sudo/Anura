@@ -105,6 +105,11 @@ jobs:
 
       - name: Auto-update certifi only
         run: |
+          # The general FEDC pass intentionally reports all available updates,
+          # but those updates require manual review. Restore the checkout before
+          # the automatic certifi pass so its PR cannot contain other updates.
+          git restore -- flatpak/io.github.d3msudo.anura.json flatpak/io.github.d3msudo.anura.local.json
+
           # FEDC has no supported filter-by-source-name option. Isolate certifi
           # in a temporary manifest so --update can only modify that source.
           FEDC_HOME="$RUNNER_TEMP/fedc-home"
