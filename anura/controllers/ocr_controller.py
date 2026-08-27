@@ -99,6 +99,21 @@ class OcrController(GObject.GObject, SignalManagerMixin):
 
         try:
             self.emit("extraction-completed", text, applied_name)
+
+            # Save to history service
+            try:
+                from anura.services.history_service import get_history_service
+                thumbnail_b64 = getattr(ocr_result, "thumbnail_base64", "")
+                lang = self._window.get_language()
+                get_history_service().add_session(
+                    text=text,
+                    language=lang,
+                    transformer_name=applied_name,
+                    thumbnail_base64=thumbnail_b64
+                )
+            except Exception as e:
+                logger.error(f"OcrController: Failed to save capture to history: {e}")
+
             extraction_result = self._dispatcher.dispatch(text, ocr_result)
             self._handle_extraction_result(extraction_result, copy)
 

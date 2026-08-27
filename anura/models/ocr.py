@@ -44,6 +44,7 @@ class OcrResult:
     words: tuple[OcrWord, ...]
     raw_text: str = ""
     avg_confidence: float = 0.0
+    thumbnail_base64: str = ""
 
     @classmethod
     def from_tesseract_dict(cls, ocr_data: dict[str, list[Any]]) -> "OcrResult":

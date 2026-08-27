@@ -45,6 +45,16 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                 </accessibility>
               </object>
             </child>
+            <child type="end">
+              <object class="GtkButton">
+                <property name="action-name">app.show_history</property>
+                <property name="icon-name">document-open-recent-symbolic</property>
+                <property name="tooltip-text" translatable="true">Recent Captures (Ctrl+H)</property>
+                <accessibility>
+                  <property name="label" translatable="true">Recent captures</property>
+                </accessibility>
+              </object>
+            </child>
           </object>
         </child>
         <child>
@@ -220,6 +230,11 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
   </template>
   <menu id="primary_menu">
     <section>
+      <item>
+        <attribute name="label" translatable="true">Recent Captures</attribute>
+        <attribute name="action">app.show_history</attribute>
+        <attribute name="icon">document-open-recent-symbolic</attribute>
+      </item>
       <item>
         <attribute name="label" translatable="true">Preferences</attribute>
         <attribute name="action">app.preferences</attribute>

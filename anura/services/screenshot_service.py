@@ -182,10 +182,25 @@ def run_ocr_pipeline(
                     os.environ[k] = tmp_dir
 
                 with Image.open(file_path) as img:  # type: ignore[assignment]
+                    # Generate base64 thumbnail
+                    thumb_base64 = ""
+                    try:
+                        thumb_img = img.copy()
+                        thumb_img.thumbnail((160, 160))
+                        import base64
+                        from io import BytesIO
+                        buf = BytesIO()
+                        thumb_img.save(buf, format="PNG")
+                        thumb_base64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+                    except Exception as e:
+                        logger.error(f"Failed to generate thumbnail: {e}")
+
                     # 1. Barcode Detection
                     barcode_result = _pipeline_detect_barcodes(img, start_time)
                     if barcode_result:
-                        return barcode_result
+                        success, ext_text, err, _ocr, app = barcode_result
+                        ocr_res = OcrResult(words=(), raw_text=ext_text or "", avg_confidence=0.0, thumbnail_base64=thumb_base64)
+                        return success, ext_text, err, ocr_res, app
 
                     # 2. Pre-processing
                     enhanced_img = _pipeline_enhance_image(
@@ -194,6 +209,9 @@ def run_ocr_pipeline(
 
                     # 3. Tesseract OCR
                     ocr_result = _pipeline_run_tesseract(enhanced_img, lang, task_id, status_callback)
+                    if ocr_result:
+                        import dataclasses
+                        ocr_result = dataclasses.replace(ocr_result, thumbnail_base64=thumb_base64)
 
                     # 4. Reconstruction
                     spatially_reconstructed, recon_conf = _pipeline_reconstruct(
@@ -641,9 +659,24 @@ class ScreenshotService(GObject.GObject):
             image_size = img.size
             logger.debug(f"Anura OCR: Processing image size: {image_size[0]}x{image_size[1]}")
 
+            # Generate base64 thumbnail
+            thumb_base64 = ""
+            try:
+                thumb_img = img.copy()
+                thumb_img.thumbnail((160, 160))
+                import base64
+                from io import BytesIO
+                buf = BytesIO()
+                thumb_img.save(buf, format="PNG")
+                thumb_base64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+            except Exception as e:
+                logger.error(f"Failed to generate thumbnail: {e}")
+
             extracted = self._try_barcode_detection(img, start_time)
 
-            if extracted is None:
+            if extracted is not None:
+                ocr_result = OcrResult(words=(), raw_text=extracted, avg_confidence=0.0, thumbnail_base64=thumb_base64)
+            else:
                 if task_id and get_atomic_manager().is_cancelled(task_id):
                     raise InterruptedError(f"Task {task_id} was cancelled before OCR")
 
@@ -652,6 +685,9 @@ class ScreenshotService(GObject.GObject):
                 extracted, ocr_result, applied_name = self._try_ocr_extraction(
                     img, lang, start_time, task_id=task_id
                 )
+                if ocr_result:
+                    import dataclasses
+                    ocr_result = dataclasses.replace(ocr_result, thumbnail_base64=thumb_base64)
 
         return extracted, error_message, ocr_result, applied_name
 

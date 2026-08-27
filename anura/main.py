@@ -134,6 +134,12 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         except (AttributeError, RuntimeError) as e:
             logger.debug(f"Failed to shutdown LanguageManager: {e}")
 
+        try:
+            from anura.services.history_service import get_history_service
+            get_history_service().shutdown()
+        except (AttributeError, RuntimeError) as e:
+            logger.debug(f"Failed to shutdown HistoryService: {e}")
+
         from anura.core.atomic_task_manager import get_atomic_manager
 
         get_atomic_manager().shutdown()
@@ -327,6 +333,14 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
             # Bare text — wrap so libxml accepts it as a valid document
             notes = f"<p>{html.escape(notes)}</p>"
         return notes
+
+    def on_show_history(self, *_) -> None:
+        win = self.get_active_window()
+        if win and hasattr(win, "navigation_view"):
+            # Stop any active TTS
+            if hasattr(win, "tts_controller"):
+                win.tts_controller.stop()
+            win.navigation_view.push_by_tag("history")
 
     def on_preferences(self, *_) -> None:
         DialogManager.show_preferences(self.get_active_window())

@@ -22,6 +22,18 @@
       <description>The preferred color scheme for the application.</description>
     </key>
 
+    <key name="history-enabled" type="b">
+      <default>true</default>
+      <summary>Enable capture history</summary>
+      <description>If true, successful OCR extractions will be saved locally.</description>
+    </key>
+    <key name="history-limit" type="i">
+      <default>50</default>
+      <range min="1" max="200"/>
+      <summary>Capture history limit</summary>
+      <description>The maximum number of recent captures to keep in history.</description>
+    </key>
+
     <key name="extra-language" type="s">
       <default>""</default>
       <summary>Secondary OCR language</summary>
