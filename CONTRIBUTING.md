@@ -60,7 +60,7 @@ uv run pytest tests/test_uri_validator.py -v
 
 ```bash
 # 1. Setup GSettings schema and resources
-./setup-gschema.sh
+./build-aux/setup-gschema.sh
 ./tests/setup_resources.sh
 
 # 2. Run GTK service tests

@@ -49,6 +49,7 @@ jobs:
             --ignore=tests/test_widgets.py \
             --ignore=tests/test_audit_app_logic.py \
             --ignore=tests/test_integration_cli_enterprise.py \
+            --ignore=tests/test_extracted_page_reflow.py \
             --cov=anura --cov-report=xml --cov-report=term-missing
 
       - name: Upload coverage report
@@ -83,6 +84,7 @@ jobs:
             gir1.2-xdp-1.0 libportal1 \
             gir1.2-gstreamer-1.0 gir1.2-gst-plugins-base-1.0 python3-gst-1.0 \
             libxml2-utils \
+            blueprint-compiler \
             tesseract-ocr tesseract-ocr-eng \
             weston xwayland
 
@@ -96,6 +98,15 @@ jobs:
           pip install uv
           uv venv --system-site-packages .venv
           uv sync --dev
+
+      - name: Compile Blueprint UI files
+        # .ui files are build artifacts from .blp sources and are no longer
+        # tracked in git. Regenerate them before compiling the GResource bundle.
+        run: |
+          for blp in data/ui/*.blp; do
+            blueprint-compiler compile "$blp" --output "${blp%.blp}.ui"
+          done
+          echo "Compiled $(find data/ui -maxdepth 1 -name '*.ui' | wc -l) .ui file(s)"
 
       - name: Compile GResources
         # Bug fixed: previously compiled to `anura.gresource` in the repo

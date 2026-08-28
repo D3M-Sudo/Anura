@@ -110,8 +110,10 @@ anura/
 ├── flatpak/
 │   └── io.github.d3msudo.anura.json   Flatpak manifest with all dependencies
 ├── build-aux/
-│   ├── generate_release_notes.py   CHANGELOG.md parser → _release_notes.py
-│   └── meson/postinstall.py
+│   ├── release.sh              Release script (pin tessdata SHA, bump version)
+│   ├── generate_release_notes.py CHANGELOG.md parser → _release_notes.py
+│   ├── setup-gschema.sh        GSettings schema compilation for testing
+│   └── meson/postinstall.py    Post-install script
 ├── bin/
 │   └── anura.in                Entry point script (installed as `anura`)
 ├── po/                         Gettext translations (25+ languages)
@@ -122,7 +124,10 @@ anura/
 │   └── dependabot.yml                  Automatic pip and Actions updates
 ├── meson.build                 Main build (also generates _release_notes.py)
 ├── CHANGELOG.md                Versioned changelog (source for release notes)
-└── release.sh                  Release script (pin tessdata SHA, bump version)
+└── build-aux/
+    ├── release.sh              Release script (pin tessdata SHA, bump version)
+    ├── generate_release_notes.py CHANGELOG.md parser → _release_notes.py
+    └── meson/postinstall.py    Post-install script
 ```
 
 ## Development Commands
@@ -251,7 +256,7 @@ Always use `validators.sanitize_text` to strip Unicode Control/Format characters
 uv run pytest tests/ -v -m "not gtk"
 
 # Full suite (requires GTK environment)
-./setup-gschema.sh
+./build-aux/setup-gschema.sh
 ./tests/setup_resources.sh
 export GSETTINGS_SCHEMA_DIR="builddir"
 uv run pytest tests/ -v
