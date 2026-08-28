@@ -112,9 +112,12 @@ jobs:
 
           # FEDC has no supported filter-by-source-name option. Isolate certifi
           # in a temporary manifest so --update can only modify that source.
+          # The temporary manifest MUST remain inside the Git checkout because
+          # FEDC resolves the manifest's Git checkout before completing --update.
           FEDC_HOME="$RUNNER_TEMP/fedc-home"
-          TMP_DIR="$RUNNER_TEMP/fedc-certifi"
+          TMP_DIR="${{ github.workspace }}/.fedc-certifi-tmp"
           mkdir -p "$FEDC_HOME" "$TMP_DIR"
+          trap 'rm -rf "$TMP_DIR"' EXIT
 
           MANIFEST="flatpak/io.github.d3msudo.anura.json"
           CERTIFI_MANIFEST="$TMP_DIR/io.github.d3msudo.anura.certifi.json"
@@ -126,11 +129,10 @@ jobs:
             -e HOME=/tmp/fedc-home \
             -v "$FEDC_HOME:/tmp/fedc-home" \
             -v "${{ github.workspace }}:/github/workspace" \
-            -v "$TMP_DIR:/tmp/fedc-certifi" \
             -w /github/workspace \
             ghcr.io/flathub-infra/flatpak-external-data-checker:latest \
             --update \
-            "/tmp/fedc-certifi/io.github.d3msudo.anura.certifi.json"
+            "/github/workspace/.fedc-certifi-tmp/io.github.d3msudo.anura.certifi.json"
 
           python3 .github/scripts/fedc_certifi.py replace "$MANIFEST" "$CERTIFI_MANIFEST"
 
