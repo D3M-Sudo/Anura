@@ -5,9 +5,10 @@
 # SPDX-License-Identifier: MIT
 
 from pathlib import Path
-import xml.etree.ElementTree as ET
 import subprocess
 import tempfile
+import xml.etree.ElementTree as ET
+
 import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -17,13 +18,13 @@ def test_extracted_page_ui_reflow_properties() -> None:
     """
     Verifies that the generated extracted_page.ui contains the correct properties
     to enable dynamic text reflow as specified in the resolution methodology.
-    
+
     This test compiles the .blp file to .ui on-the-fly since .ui files are
     no longer tracked in git (they are build artifacts from blueprint-compiler).
     """
     blp_file = PROJECT_ROOT / "data" / "ui" / "extracted_page.blp"
     assert blp_file.exists(), "extracted_page.blp must exist"
-    
+
     # Check if blueprint-compiler is available
     try:
         subprocess.run(
@@ -34,18 +35,18 @@ def test_extracted_page_ui_reflow_properties() -> None:
         )
     except (subprocess.CalledProcessError, FileNotFoundError):
         pytest.skip("blueprint-compiler not available, skipping .ui compilation test")
-    
+
     # Compile .blp to .ui in a temporary directory
     with tempfile.TemporaryDirectory() as tmpdir:
         ui_file = Path(tmpdir) / "extracted_page.ui"
-        
+
         subprocess.run(
-            ["blueprint-compiler", "compile", str(blp_file), str(ui_file)],
+            ["blueprint-compiler", "compile", str(blp_file), "--output", str(ui_file)],
             check=True,
             capture_output=True,
             text=True
         )
-        
+
         assert ui_file.exists(), "extracted_page.ui must be generated from blueprint-compiler"
 
         tree = ET.parse(ui_file)
