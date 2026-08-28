@@ -11,6 +11,10 @@ permissions:
   issues: write
   pull-requests: write
 
+# Ownership boundary: this workflow owns upstream version discovery in the
+# Flatpak manifests. dependency-sync.yml owns pyproject.toml -> uv.lock /
+# Flatpak synchronization for Dependabot PRs; it is not a downstream step.
+
 jobs:
   check-flatpak-deps:
     runs-on: ubuntu-latest
@@ -53,6 +57,8 @@ jobs:
             fi
           done
 
+          echo "check_completed=true" >> "$GITHUB_OUTPUT"
+
           if [ ! -s "$UPDATES_FILE" ]; then
             echo "has_updates=false" >> "$GITHUB_OUTPUT"
             echo "No dependency updates found."
@@ -68,7 +74,7 @@ jobs:
           fi
 
       - name: Report general dependency updates
-        if: always()
+        if: always() && steps.check.outputs.check_completed == 'true'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
