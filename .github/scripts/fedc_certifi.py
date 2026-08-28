@@ -25,11 +25,12 @@ Subcommands:
   verify <manifest>            Verify only certifi was modified (security).
   count <manifest>             Count certifi sources (for testing/debugging).
 """
+
 import json
 import os
+from pathlib import Path
 import subprocess
 import sys
-from pathlib import Path
 from typing import Any
 
 
@@ -49,9 +50,7 @@ def is_certifi_source(source: dict[str, Any]) -> bool:
     # Require both the certifi- filename prefix and a Python artifact
     # extension, so unrelated URLs (e.g. git repos named "certifi-mirror.git")
     # can never produce a false positive.
-    return filename.startswith("certifi-") and filename.endswith(
-        (".whl", ".tar.gz", ".zip")
-    )
+    return filename.startswith("certifi-") and filename.endswith((".whl", ".tar.gz", ".zip"))
 
 
 def find_certifi_sources(manifest: dict[str, Any]) -> list[tuple[str, dict[str, Any]]]:
@@ -75,9 +74,7 @@ def find_certifi_sources(manifest: dict[str, Any]) -> list[tuple[str, dict[str, 
                 matches.append((module_name, source))
 
     if len(matches) != 1:
-        raise SystemExit(
-            f"Expected exactly one certifi source, found {len(matches)}"
-        )
+        raise SystemExit(f"Expected exactly one certifi source, found {len(matches)}")
 
     return matches
 
@@ -124,13 +121,11 @@ def replace_certifi_source(real_manifest_path: str, updated_manifest_path: str) 
     real_manifest = json.loads(Path(real_manifest_path).read_text())
     updated_manifest = json.loads(Path(updated_manifest_path).read_text())
 
-    real_matches = find_certifi_sources(real_manifest)
+    find_certifi_sources(real_manifest)  # enforces exactly one certifi source
     updated_matches = find_certifi_sources(updated_manifest)
 
     if len(updated_matches) != 1:
-        raise SystemExit(
-            f"Expected exactly one updated certifi source, found {len(updated_matches)}"
-        )
+        raise SystemExit(f"Expected exactly one updated certifi source, found {len(updated_matches)}")
 
     module_name, certifi_source = updated_matches[0]
 
@@ -194,27 +189,19 @@ def main() -> None:
     try:
         if command == "isolate":
             if len(sys.argv) != 4:
-                raise SystemExit(
-                    "Usage: python fedc_certifi.py isolate <manifest> <output>"
-                )
+                raise SystemExit("Usage: python fedc_certifi.py isolate <manifest> <output>")
             create_isolated_manifest(sys.argv[2], sys.argv[3])
         elif command == "replace":
             if len(sys.argv) != 4:
-                raise SystemExit(
-                    "Usage: python fedc_certifi.py replace <real> <updated>"
-                )
+                raise SystemExit("Usage: python fedc_certifi.py replace <real> <updated>")
             replace_certifi_source(sys.argv[2], sys.argv[3])
         elif command == "verify":
             if len(sys.argv) != 3:
-                raise SystemExit(
-                    "Usage: python fedc_certifi.py verify <manifest>"
-                )
+                raise SystemExit("Usage: python fedc_certifi.py verify <manifest>")
             verify_certifi_only_change(sys.argv[2])
         elif command == "count":
             if len(sys.argv) != 3:
-                raise SystemExit(
-                    "Usage: python fedc_certifi.py count <manifest>"
-                )
+                raise SystemExit("Usage: python fedc_certifi.py count <manifest>")
             count_certifi_sources(sys.argv[2])
         else:
             raise SystemExit(f"Unknown command: {command}")

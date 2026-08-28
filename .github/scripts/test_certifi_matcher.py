@@ -7,10 +7,11 @@ fragments, including the FEDC-updated form and negative cases.
 
 Run:  python3 test_certifi_matcher.py
 """
+
 import json
+from pathlib import Path
 import sys
 import tempfile
-from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -48,9 +49,7 @@ def _real_manifest():
         "modules": [
             {
                 "name": "python3-pillow",
-                "sources": [
-                    {"url": "https://files.pythonhosted.org/packages/xx/pillow-11.0.0.tar.gz"}
-                ],
+                "sources": [{"url": "https://files.pythonhosted.org/packages/xx/pillow-11.0.0.tar.gz"}],
             },
             {
                 "name": "python3-certifi",
