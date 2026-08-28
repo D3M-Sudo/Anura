@@ -28,7 +28,7 @@ class ShareRow(Gtk.ListBoxRow):
         display_name = provider_name.capitalize()
         tooltip = _("Share via {name}").format(name=display_name)
 
-        self.box.set_tooltip_text(tooltip)
+        self.set_tooltip_text(tooltip)
         self.update_property([Gtk.AccessibleProperty.LABEL], [tooltip])
 
         self.label.set_label(display_name)
