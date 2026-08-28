@@ -30,9 +30,6 @@ jobs:
 
           for manifest in flatpak/io.github.d3msudo.anura.json flatpak/io.github.d3msudo.anura.local.json; do
             if [ -f "$manifest" ]; then
-              BEFORE="$RUNNER_TEMP/$(basename "$manifest").before"
-              cp "$manifest" "$BEFORE"
-
               docker run --rm \
                 --user $(id -u):$(id -g) \
                 -e HOME=/tmp/fedc-home \
@@ -45,7 +42,7 @@ jobs:
 
               if ! git diff --quiet -- "$manifest"; then
                 {
-                  echo "### \`$manifest\`"
+                  echo "### $manifest"
                   echo
                   echo '```diff'
                   git diff --no-ext-diff -- "$manifest"
@@ -76,20 +73,23 @@ jobs:
         with:
           script: |
             const title = '📦 Flatpak Python dependencies need manual update';
-            const body = `## Available Updates
-
-            The following Flatpak dependency updates were detected by FEDC:
-
-            ${{ steps.check.outputs.updates }}
-
-            ### Action Required
-            These dependencies require manual testing before update.
-
-            ### Files to update
-            - \`flatpak/io.github.d3msudo.anura.json\`
-            - \`flatpak/io.github.d3msudo.anura.local.json\` (when applicable)
-
-            _This issue was automatically created by the Flatpak dependency checker._`;
+            const updates = process.env.UPDATES;
+            const body = [
+              '## Available Updates',
+              '',
+              'The following Flatpak dependency updates were detected by FEDC:',
+              '',
+              updates,
+              '',
+              '### Action Required',
+              'These dependencies require manual testing before update.',
+              '',
+              '### Files to update',
+              '- `flatpak/io.github.d3msudo.anura.json`',
+              '- `flatpak/io.github.d3msudo.anura.local.json` (when applicable)',
+              '',
+              '_This issue was automatically created by the Flatpak dependency checker._'
+            ].join('\\n');
 
             const issues = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
@@ -117,6 +117,8 @@ jobs:
                 body: body
               });
             }
+        env:
+          UPDATES: ${{ steps.check.outputs.updates }}
 
       - name: Auto-update certifi only
         run: |
