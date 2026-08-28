@@ -165,7 +165,7 @@ Anura uses **Ruff** for linting and **pytest** for testing, managed via **uv**.
 uv run pytest tests/ -m "not gtk" -v
 
 # Run full suite (requires GTK environment)
-./setup-gschema.sh
+./build-aux/setup-gschema.sh
 ./tests/setup_resources.sh
 export GSETTINGS_SCHEMA_DIR="builddir"
 uv run pytest tests/ -v
