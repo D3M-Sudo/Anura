@@ -23,13 +23,16 @@ jobs:
       - name: Check for available updates
         id: check
         run: |
-          # Writable HOME/cache for the FEDC container so it never tries to
-          # create an inaccessible "/.cache" as a non-root user.
           FEDC_HOME="$RUNNER_TEMP/fedc-home"
           mkdir -p "$FEDC_HOME"
+          UPDATES_FILE="$RUNNER_TEMP/fedc-updates.md"
+          : > "$UPDATES_FILE"
 
           for manifest in flatpak/io.github.d3msudo.anura.json flatpak/io.github.d3msudo.anura.local.json; do
             if [ -f "$manifest" ]; then
+              BEFORE="$RUNNER_TEMP/$(basename "$manifest").before"
+              cp "$manifest" "$BEFORE"
+
               docker run --rm \
                 --user $(id -u):$(id -g) \
                 -e HOME=/tmp/fedc-home \
@@ -39,15 +42,32 @@ jobs:
                 ghcr.io/flathub-infra/flatpak-external-data-checker:latest \
                 --update --edit-only \
                 "/github/workspace/$manifest"
+
+              if ! git diff --quiet -- "$manifest"; then
+                {
+                  echo "### \`$manifest\`"
+                  echo
+                  echo '```diff'
+                  git diff --no-ext-diff -- "$manifest"
+                  echo '```'
+                  echo
+                } >> "$UPDATES_FILE"
+              fi
             fi
           done
 
-          if git diff --quiet flatpak/io.github.d3msudo.anura.json flatpak/io.github.d3msudo.anura.local.json; then
-            echo "has_updates=false" >> $GITHUB_OUTPUT
+          if [ ! -s "$UPDATES_FILE" ]; then
+            echo "has_updates=false" >> "$GITHUB_OUTPUT"
+            echo "No dependency updates found."
           else
-            echo "has_updates=true" >> $GITHUB_OUTPUT
+            echo "has_updates=true" >> "$GITHUB_OUTPUT"
+            {
+              echo 'updates<<EOF'
+              cat "$UPDATES_FILE"
+              echo 'EOF'
+            } >> "$GITHUB_OUTPUT"
             echo "Updates found:"
-            git diff flatpak/io.github.d3msudo.anura.json flatpak/io.github.d3msudo.anura.local.json
+            cat "$UPDATES_FILE"
           fi
 
       - name: Create PR for dependency updates
@@ -58,31 +78,19 @@ jobs:
             const title = '📦 Flatpak Python dependencies need manual update';
             const body = `## Available Updates
 
-            The following Python dependencies in the Flatpak manifest have updates available:
+            The following Flatpak dependency updates were detected by FEDC:
 
-            \`\`\`
             ${{ steps.check.outputs.updates }}
-            \`\`\`
 
             ### Action Required
-            These dependencies require manual testing before update:
-            - gTTS - API may change
-            - Pillow - Breaking changes possible
-            - pytesseract - Check compatibility with tesseract version
-            - Others - Verify runtime compatibility
+            These dependencies require manual testing before update.
 
             ### Files to update
             - \`flatpak/io.github.d3msudo.anura.json\`
-
-            Run locally:
-            \`\`\`bash
-            flatpak-external-data-checker --update flatpak/io.github.d3msudo.anura.json
-            flatpak-builder builddir flatpak/io.github.d3msudo.anura.json --force-clean
-            \`\`\`
+            - \`flatpak/io.github.d3msudo.anura.local.json\` (when applicable)
 
             _This issue was automatically created by the Flatpak dependency checker._`;
 
-            // Check if an open issue already exists
             const issues = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -101,19 +109,19 @@ jobs:
                 body: body,
                 labels: ['dependencies']
               });
+            } else {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                body: body
+              });
             }
 
       - name: Auto-update certifi only
         run: |
-          # The general FEDC pass intentionally reports all available updates,
-          # but those updates require manual review. Restore the checkout before
-          # the automatic certifi pass so its PR cannot contain other updates.
           git restore -- flatpak/io.github.d3msudo.anura.json flatpak/io.github.d3msudo.anura.local.json
 
-          # FEDC has no supported filter-by-source-name option. Isolate certifi
-          # in a temporary manifest so --update can only modify that source.
-          # The temporary manifest MUST remain inside the Git checkout because
-          # FEDC resolves the manifest's Git checkout before completing --update.
           FEDC_HOME="$RUNNER_TEMP/fedc-home"
           TMP_DIR="${{ github.workspace }}/.fedc-certifi-tmp"
           mkdir -p "$FEDC_HOME" "$TMP_DIR"
