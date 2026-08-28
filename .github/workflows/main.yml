@@ -57,6 +57,11 @@ jobs:
           files: coverage.xml
           fail_ci_if_error: false
 
+      - name: Check Flatpak manifest dependency consistency
+        # Ensure anura.json and anura.local.json stay in sync.
+        # Catches drift from manual edits or workflow bugs.
+        run: python3 build-aux/check_manifest_consistency.py
+
   gtk-tests:
     name: GTK Integration Tests
     runs-on: ubuntu-latest
