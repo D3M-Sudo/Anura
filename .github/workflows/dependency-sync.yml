@@ -1,0 +1,89 @@
+name: Dependency Sync
+
+# Ownership boundary: this workflow owns the synchronization path for
+# Dependabot PRs that change pyproject.toml. It updates uv.lock and the
+# Python modules in the Flatpak manifests so they remain aligned.
+#
+# flatpak-dependencies.yml has a separate responsibility: it checks upstream
+# versions already referenced by the Flatpak manifests with FEDC. It does not
+# consume the issue created by that workflow, and it is not a downstream step
+# of this workflow.
+#
+# Automatically keep uv.lock and the Flatpak manifests in sync whenever a
+# Dependabot PR updates pyproject.toml.
+#
+# Dependabot (package-ecosystem: pip) only updates pyproject.toml. Without this
+# workflow the uv.lock file and the Python modules hardcoded in
+# flatpak/*.json would silently drift away from the declared dependencies.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize]
+    branches: [testing, development]
+    paths:
+      - "pyproject.toml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('dependency-sync-{0}', github.event.pull_request.number) || 'dependency-sync-manual' }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.user.login == 'app/dependabot'
+    runs-on: ubuntu-latest
+    env:
+      UV_VERSION: "0.8.14"
+    steps:
+      - name: Checkout PR branch
+        # We deliberately checkout the pull request HEAD (not the merge ref)
+        # so any commits we push land on the Dependabot branch itself and are
+        # included in the PR.
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # For pull_request events, checkout the PR head so commits land on the
+          # Dependabot branch. For workflow_dispatch, github.event.pull_request
+          # is empty, so fall back to the branch selected at dispatch time.
+          ref: ${{ github.event_name == 'pull_request' && format('refs/pull/{0}/head', github.event.pull_request.number) || github.ref }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/${{ env.UV_VERSION }}/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Regenerate uv.lock
+        # Re-resolves the dependency tree so uv.lock matches the new
+        # pyproject.toml constraints proposed by Dependabot.
+        run: uv lock
+
+      - name: Sync Flatpak Python modules
+        # Reads uv.lock and updates URL + sha256 of the Python modules in
+        # flatpak/*.json. Exits non-zero if the manifests are out of sync
+        # (in which case the commit step below is skipped and the job fails).
+        run: |
+          python3 build-aux/sync_dependencies.py --update
+          python3 build-aux/sync_dependencies.py --check
+
+      - name: Commit and push sync changes
+        run: |
+          if ! git diff --quiet; then
+            git add uv.lock flatpak/io.github.d3msudo.anura.json flatpak/io.github.d3msudo.anura.local.json
+            git commit -m "chore(deps): sync uv.lock and flatpak manifests"
+            if [ "${{ github.event_name }}" = "pull_request" ]; then
+              git push origin HEAD:${{ github.event.pull_request.head.ref }}
+            else
+              git push origin HEAD:${GITHUB_REF_NAME}
+            fi
+          else
+            echo "No sync changes needed (already up to date)."
+          fi

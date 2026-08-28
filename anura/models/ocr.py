@@ -1,0 +1,152 @@
+# This file is part of Anura.
+# Copyright (C) 2026 D3M-Sudo (Anura)
+#
+# SPDX-License-Identifier: MIT
+
+from dataclasses import dataclass
+from functools import cached_property
+from typing import Any
+
+
+@dataclass(frozen=True, slots=True)
+class OcrWord:
+    """Immutable representation of a single recognized word."""
+
+    text: str
+    left: int
+    top: int
+    width: int
+    height: int
+    conf: float
+    line_num: int
+    par_num: int
+    block_num: int
+
+
+@dataclass(frozen=True, slots=True)
+class ExtractionResult:
+    """Immutable encapsulation of processed extraction results for UI consumption."""
+
+    text: str
+    raw_text: str
+    urls: tuple[str, ...]
+    emails: tuple[str, ...]
+    phone_numbers: tuple[str, ...]
+    avg_confidence: float
+    bounding_box: tuple[int, int, int, int] = (0, 0, 0, 0)
+    is_primary_url: bool = False
+
+
+@dataclass(frozen=True)
+class OcrResult:
+    """Immutable encapsulation of recognized text and layout information."""
+
+    words: tuple[OcrWord, ...]
+    raw_text: str = ""
+    avg_confidence: float = 0.0
+
+    @classmethod
+    def from_tesseract_dict(cls, ocr_data: dict[str, list[Any]]) -> "OcrResult":
+        """
+        Factory method to parse Tesseract image_to_data dictionary into OcrResult.
+        Performs a single $O(N)$ pass over the raw data.
+        """
+        words = []
+        n_boxes = len(ocr_data.get("text", []))
+        total_conf = 0.0
+        conf_count = 0
+
+        for i in range(n_boxes):
+            text = ocr_data["text"][i]
+            # Skip layout markers (empty text)
+            if not text or not text.strip():
+                continue
+
+            conf = float(ocr_data["conf"][i])
+            word = OcrWord(
+                text=text,
+                left=int(ocr_data["left"][i]),
+                top=int(ocr_data["top"][i]),
+                width=int(ocr_data["width"][i]),
+                height=int(ocr_data["height"][i]),
+                conf=conf,
+                line_num=int(ocr_data["line_num"][i]),
+                par_num=int(ocr_data["par_num"][i]),
+                block_num=int(ocr_data["block_num"][i]),
+            )
+            words.append(word)
+
+            if conf >= 0:
+                total_conf += conf
+                conf_count += 1
+
+        avg_conf = total_conf / conf_count if conf_count > 0 else 0.0
+        raw_text = " ".join([w.text for w in words])
+
+        return cls(words=tuple(words), raw_text=raw_text, avg_confidence=avg_conf)
+
+    def filter_by_confidence(self, min_confidence: float) -> list[OcrWord]:
+        """Return words with confidence greater than or equal to the threshold."""
+        return [w for w in self.words if w.conf >= min_confidence]
+
+    def get_bounding_box(self) -> tuple[int, int, int, int]:
+        """Return the overall bounding box of all recognized words (left, top, width, height)."""
+        if not self.words:
+            return 0, 0, 0, 0
+
+        # Optimization: Single-pass traversal to find min/max coordinates.
+        # Reduces complexity from 4 * O(N) to 1 * O(N), which is significantly
+        # faster for results containing thousands of words.
+        first_word = self.words[0]
+        min_x = first_word.left
+        min_y = first_word.top
+        max_x = first_word.left + first_word.width
+        max_y = first_word.top + first_word.height
+
+        for i in range(1, len(self.words)):
+            w = self.words[i]
+            if w.left < min_x:
+                min_x = w.left
+            if w.top < min_y:
+                min_y = w.top
+            r = w.left + w.width
+            if r > max_x:
+                max_x = r
+            b = w.top + w.height
+            if b > max_y:
+                max_y = b
+
+        return min_x, min_y, max_x - min_x, max_y - min_y
+
+    @cached_property
+    def _layout_stats(self) -> dict[str, int]:
+        """
+        Calculate layout statistics in a single pass and cache the result.
+        Reduces complexity from 3 * O(N) to 1 * O(N) for Magic/Structural analysis.
+        """
+        blocks: set[int] = set()
+        pars: set[tuple[int, int]] = set()
+        lines: set[tuple[int, int, int]] = set()
+
+        for w in self.words:
+            blocks.add(w.block_num)
+            pars.add((w.block_num, w.par_num))
+            lines.add((w.block_num, w.par_num, w.line_num))
+
+        return {
+            "block_num": len(blocks),
+            "par_num": len(pars),
+            "line_num": len(lines),
+        }
+
+    @property
+    def num_lines(self) -> int:
+        return self._layout_stats["line_num"]
+
+    @property
+    def num_pars(self) -> int:
+        return self._layout_stats["par_num"]
+
+    @property
+    def num_blocks(self) -> int:
+        return self._layout_stats["block_num"]

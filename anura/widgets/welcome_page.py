@@ -1,33 +1,37 @@
-# welcome_page.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Copyright 2021-2025 Andrey Maksimov
-# Copyright 2026 D3M-Sudo (Anura fork and modifications)
+# SPDX-License-Identifier: MIT
 
-import contextlib
 from gettext import gettext as _
 from mimetypes import guess_type
-import os
+from pathlib import Path
 
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk
 from loguru import logger
 
 from anura.config import RESOURCE_PREFIX
-from anura.language_manager import language_manager
+from anura.models.language_item import LanguageItem
+from anura.services.language_manager import get_language_manager
 from anura.services.settings import settings
-from anura.types.language_item import LanguageItem
+from anura.utils import mask_url
+from anura.utils.signal_manager import SignalManagerMixin
 from anura.widgets.language_popover import LanguagePopover
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/welcome_page.ui")
-class WelcomePage(Adw.NavigationPage):
+class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
     __gtype_name__ = "WelcomePage"
 
     spinner: Gtk.Spinner = Gtk.Template.Child()
     welcome: Adw.StatusPage = Gtk.Template.Child()
+    screenshot_button: Gtk.Button = Gtk.Template.Child()
     lang_combo: Gtk.MenuButton = Gtk.Template.Child()
     language_popover: LanguagePopover = Gtk.Template.Child()
     drop_button: Gtk.Button = Gtk.Template.Child()
     drop_area: Gtk.Box = Gtk.Template.Child()
+    drop_revealer: Gtk.Revealer = Gtk.Template.Child()
     drop_area_label: Gtk.Label = Gtk.Template.Child()
 
     _language_changed_handler_id: int | None = None
@@ -35,18 +39,46 @@ class WelcomePage(Adw.NavigationPage):
 
     def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
+        SignalManagerMixin.__init__(self)
 
         self.settings = settings
 
-        self._language_changed_handler_id = self.language_popover.connect("language-changed", self._on_language_changed)
+        self.connect_tracked(self.language_popover, "language-changed", self._on_language_changed)
 
         current_lang_code = self.settings.get_string("active-language")
         self.lang_combo.set_label(
-            language_manager.get_language(current_lang_code),
+            get_language_manager().get_language(current_lang_code),
         )
 
-        self._drop_button_handler_id = self.drop_button.connect("clicked", self._on_drop_button_clicked)
+        self.connect_tracked(self.drop_button, "clicked", self._on_drop_button_clicked)
         self._setup_drop_target()
+
+        # Initialize drop_button's accessibility expanded state to False
+        if self.drop_button:
+            self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [False])
+
+        # Keyboard support: Add key controller to drop_area to collapse on Escape
+        self._drop_key_ctrl = Gtk.EventControllerKey()
+        self._drop_key_ctrl.connect("key-pressed", self._on_drop_area_key_pressed)
+        self.drop_area.add_controller(self._drop_key_ctrl)
+
+    def _on_drop_area_key_pressed(
+        self,
+        _controller: Gtk.EventControllerKey,
+        keyval: int,
+        _keycode: int,
+        _state: Gdk.ModifierType,
+    ) -> bool:
+        """Collapse the drop area when user presses Escape inside it."""
+        if keyval == Gdk.KEY_Escape and self.drop_revealer.get_reveal_child():
+            self.drop_revealer.set_reveal_child(False)
+            self.drop_button.remove_css_class("suggested-action")
+            self.drop_button.set_tooltip_text(_("Drop image here"))
+            self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [False])
+            self.drop_button.update_property([Gtk.AccessibleProperty.LABEL], [_("Drop image here")])
+            GLib.idle_add(lambda: (self.drop_button.grab_focus(), GLib.SOURCE_REMOVE)[1])
+            return True
+        return False
 
     def _setup_drop_target(self) -> None:
         """Configure drop target with DropTargetAsync and explicit text/uri-list.
@@ -73,44 +105,55 @@ class WelcomePage(Adw.NavigationPage):
         )
         self._drop_cancellable: Gio.Cancellable | None = None
 
-        self._dnd_drop_handler_id = self._drop_target.connect("drop", self._on_dnd_drop)
-        self._dnd_enter_handler_id = self._drop_target.connect("drag-enter", self._on_dnd_enter)
-        self._dnd_leave_handler_id = self._drop_target.connect("drag-leave", self._on_dnd_leave)
+        self.connect_tracked(self._drop_target, "drop", self._on_dnd_drop)
+        self.connect_tracked(self._drop_target, "drag-enter", self._on_dnd_enter)
+        self.connect_tracked(self._drop_target, "drag-leave", self._on_dnd_leave)
 
         self.add_controller(self._drop_target)
 
-    def _on_drop_button_clicked(self, _: Gtk.Button) -> None:
+    def _on_drop_button_clicked(self, _button: Gtk.Button) -> None:
         """Toggle the visibility of the dedicated drop area."""
         try:
-            is_visible = self.drop_area.get_visible()
-            self.drop_area.set_visible(not is_visible)
-            if not is_visible:
+            is_revealed = self.drop_revealer.get_reveal_child()
+            new_revealed = not is_revealed
+            self.drop_revealer.set_reveal_child(new_revealed)
+            if new_revealed:
                 self.drop_button.add_css_class("suggested-action")
+                self.drop_button.set_tooltip_text(_("Hide drop area"))
+                self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [True])
+                self.drop_button.update_property([Gtk.AccessibleProperty.LABEL], [_("Hide drop area")])
+                # Shift focus directly to the revealed drop area for accessible navigation asynchronously
+                GLib.idle_add(lambda: (self.drop_area.grab_focus(), GLib.SOURCE_REMOVE)[1])
             else:
                 self.drop_button.remove_css_class("suggested-action")
-        except Exception:
-            logger.exception("Anura: Failed to handle drop button click")
+                self.drop_button.set_tooltip_text(_("Drop image here"))
+                self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [False])
+                self.drop_button.update_property([Gtk.AccessibleProperty.LABEL], [_("Drop image here")])
+                # Shift focus back to the toggle button asynchronously
+                GLib.idle_add(lambda: (self.drop_button.grab_focus(), GLib.SOURCE_REMOVE)[1])
+        except Exception as e:
+            logger.exception(f"Anura: Failed to handle drop button click: {e}")
 
     def _on_dnd_enter(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float) -> Gdk.DragAction:
         """Visual feedback when drag enters the drop area."""
         try:
-            self.drop_area.set_visible(True)
+            self.drop_revealer.set_reveal_child(True)
             self.drop_area.add_css_class("drag-hover")
             self.welcome.set_description(_("Drop image to extract text"))
-        except Exception:
-            logger.exception("Anura: Failed to handle DnD enter")
+        except (AttributeError, RuntimeError) as e:
+            logger.exception(f"Anura: Failed to handle DnD enter: {e}")
         return Gdk.DragAction.COPY
 
     def _on_dnd_leave(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop) -> None:
         """Remove visual feedback when drag leaves the drop area."""
         try:
             self.drop_area.remove_css_class("drag-hover")
-            # Only hide if it wasn't already visible (user clicked button)
+            # Only hide if it wasn't already revealed (user clicked button)
             if not self.drop_button.has_css_class("suggested-action"):
-                self.drop_area.set_visible(False)
+                self.drop_revealer.set_reveal_child(False)
             self.welcome.set_description(_("Extract text from anywhere"))
-        except Exception:
-            logger.exception("Anura: Failed to handle DnD leave")
+        except (AttributeError, RuntimeError) as e:
+            logger.exception(f"Anura: Failed to handle DnD leave: {e}")
 
     def _on_dnd_drop(self, target: Gtk.DropTargetAsync, drop: Gdk.Drop, x: float, y: float) -> bool:
         """Handle drop signal. Initiates a fully async stream read of text/uri-list.
@@ -209,7 +252,7 @@ class WelcomePage(Adw.NavigationPage):
         local_path = gfile.get_path()
 
         if not local_path:
-            logger.error(f"DnD: URI has no local path: {uris[0]}")
+            logger.error(f"DnD: URI has no local path: {mask_url(uris[0])}")
             self._show_error_toast(_("Only local files can be dropped"))
             return
 
@@ -217,7 +260,7 @@ class WelcomePage(Adw.NavigationPage):
 
     def _process_dropped_path(self, local_path: str) -> None:
         """Common logic for processing a verified local path from any DnD format."""
-        if not os.path.exists(local_path):
+        if not Path(local_path).exists():
             logger.error(f"DnD: File not accessible: {local_path}")
             self._show_error_toast(_("File not accessible. Ensure Anura has permission to access this location."))
             return
@@ -230,14 +273,14 @@ class WelcomePage(Adw.NavigationPage):
             return
 
         window = self.get_root()
-        if not window or not hasattr(window, "process_dnd_file_sync"):
+        if not window or not hasattr(window, "dnd_controller"):
             logger.error("DnD: Root window missing process_dnd_file_sync")
             self._show_error_toast(_("Failed to process dropped file"))
             return
 
         self._set_drop_area_processing_state(True)
         self.show_spinner()
-        window.process_dnd_file_sync(local_path)
+        window.dnd_controller.process_dnd_file_sync(local_path)
 
     def _show_error_toast(self, message: str) -> None:
         """Show error toast to user."""
@@ -253,18 +296,28 @@ class WelcomePage(Adw.NavigationPage):
             self.drop_area.add_css_class("drag-processing")
             if self.drop_area_label:
                 self.drop_area_label.set_label(_("Processing..."))
+            self.drop_area.update_property([Gtk.AccessibleProperty.LABEL], [_("Image drop zone: Processing...")])
         else:
             self.drop_area.remove_css_class("drag-processing")
             if self.drop_area_label:
                 self.drop_area_label.set_label(_("Drop image file here"))
+            self.drop_area.update_property([Gtk.AccessibleProperty.LABEL], [_("Image drop zone")])
 
     def reset_drop_area_state(self) -> None:
         """Reset the drop area to its initial state (called after OCR completes)."""
         self._set_drop_area_processing_state(False)
         self.hide_spinner()
-        self.drop_area.set_visible(False)
+        self.drop_revealer.set_reveal_child(False)
         self.drop_button.remove_css_class("suggested-action")
+        self.drop_button.set_tooltip_text(_("Drop image here"))
+        self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [False])
+        self.drop_button.update_property([Gtk.AccessibleProperty.LABEL], [_("Drop image here")])
         self.welcome.set_description(_("Extract text from anywhere"))
+
+    def set_status(self, status_msg: str) -> None:
+        """Update the status label during processing."""
+        if self.drop_area_label:
+            self.drop_area_label.set_label(status_msg)
 
     def hide_spinner(self) -> None:
         """Stop and hide the spinner."""
@@ -282,17 +335,8 @@ class WelcomePage(Adw.NavigationPage):
 
     def do_destroy(self) -> None:
         """Clean up signal handlers to prevent memory leaks."""
-        if self._language_changed_handler_id is not None:
-            with contextlib.suppress(Exception):
-                self.language_popover.disconnect(self._language_changed_handler_id)
-            self._language_changed_handler_id = None
-
-        if self._drop_button_handler_id is not None:
-            with contextlib.suppress(Exception):
-                self.drop_button.disconnect(self._drop_button_handler_id)
-            self._drop_button_handler_id = None
-
-        # Disconnect any other signals that might have been connected manually
+        # BUG-041: Automated signal teardown via SignalManagerMixin
+        self.teardown_all()
 
         # Cancel any in-flight drop operation
         drop_cancellable = getattr(self, "_drop_cancellable", None)
@@ -300,16 +344,13 @@ class WelcomePage(Adw.NavigationPage):
             drop_cancellable.cancel()
             self._drop_cancellable = None
 
-        # Remove drop target controller and disconnect its internal handlers
-        if hasattr(self, "_drop_target") and self._drop_target:
-            with contextlib.suppress(Exception):
-                if hasattr(self, "_dnd_drop_handler_id") and self._dnd_drop_handler_id:
-                    self._drop_target.disconnect(self._dnd_drop_handler_id)
-                if hasattr(self, "_dnd_enter_handler_id") and self._dnd_enter_handler_id:
-                    self._drop_target.disconnect(self._dnd_enter_handler_id)
-                if hasattr(self, "_dnd_leave_handler_id") and self._dnd_leave_handler_id:
-                    self._drop_target.disconnect(self._dnd_leave_handler_id)
+        # Remove key controller
+        if hasattr(self, "_drop_key_ctrl") and self._drop_key_ctrl:
+            self.drop_area.remove_controller(self._drop_key_ctrl)
+            self._drop_key_ctrl = None
 
+        # Remove drop target controller
+        if hasattr(self, "_drop_target") and self._drop_target:
             self.remove_controller(self._drop_target)
             self._drop_target = None
 

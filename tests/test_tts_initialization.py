@@ -1,8 +1,8 @@
-# test_tts_initialization.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Copyright 2026 D3M-Sudo (Anura fork and modifications)
-#
-# Regression test for BUG-01: AttributeError when accessing TTSService.player before play()
+# SPDX-License-Identifier: MIT
 
 import pytest
 
@@ -10,108 +10,108 @@ pytest.importorskip("gi")
 
 from unittest.mock import patch
 
-from anura.services.tts import TTSService
+from anura.services.tts.audio_player import AudioPlayer
 
 
 class TestTTSServiceInitialization:
-    """Test TTSService initialization and safe method access before play()."""
+    """Test AudioPlayer initialization and safe method access before play()."""
 
-    @patch("anura.services.tts.Gst")
-    @patch("anura.services.tts.logger")
+    @patch("anura.services.tts.audio_player.Gst")
+    @patch("anura.services.tts.audio_player.logger")
     def test_player_slot_initialized(self, mock_logger, mock_gst):
         """Test that self.player is properly initialized to None in __init__."""
         # Mock GStreamer to avoid actual initialization
         mock_gst.is_initialized.return_value = True
 
-        # Create TTSService instance
-        tts_service = TTSService()
+        # Create AudioPlayer instance
+        player = AudioPlayer()
 
         # Verify player slot is initialized to None
-        assert tts_service.player is None
+        assert player.player is None
 
-    @patch("anura.services.tts.Gst")
-    @patch("anura.services.tts.logger")
+    @patch("anura.services.tts.audio_player.Gst")
+    @patch("anura.services.tts.audio_player.logger")
     def test_stop_speaking_before_play(self, mock_logger, mock_gst):
-        """Test that stop_speaking() can be called before play() without AttributeError."""
+        """Test that stop() can be called before play() without AttributeError."""
         # Mock GStreamer to avoid actual initialization
         mock_gst.is_initialized.return_value = True
 
-        # Create TTSService instance
-        tts_service = TTSService()
+        # Create AudioPlayer instance
+        player = AudioPlayer()
 
         # This should not raise AttributeError
-        tts_service.stop_speaking()
+        player.stop()
 
         # Verify cleanup was attempted (player was None, so no cleanup occurred)
-        assert tts_service.player is None
+        assert player.player is None
 
-    @patch("anura.services.tts.Gst")
-    @patch("anura.services.tts.logger")
+    @patch("anura.services.tts.audio_player.Gst")
+    @patch("anura.services.tts.audio_player.logger")
     def test_cleanup_before_play(self, mock_logger, mock_gst):
         """Test that cleanup() can be called before play() without AttributeError."""
         # Mock GStreamer to avoid actual initialization
         mock_gst.is_initialized.return_value = True
 
-        # Create TTSService instance
-        tts_service = TTSService()
+        # Create AudioPlayer instance
+        player = AudioPlayer()
 
         # This should not raise AttributeError
-        tts_service.cleanup()
+        player.cleanup()
 
         # Verify cleanup was attempted (player was None, so no cleanup occurred)
-        assert tts_service.player is None
+        assert player.player is None
 
-    @patch("anura.services.tts.Gst")
-    @patch("anura.services.tts.logger")
+    @patch("anura.services.tts.audio_player.Gst")
+    @patch("anura.services.tts.audio_player.logger")
     def test_multiple_stop_calls_before_play(self, mock_logger, mock_gst):
-        """Test that multiple stop_speaking() calls before play() are safe."""
+        """Test that multiple stop() calls before play() are safe."""
         # Mock GStreamer to avoid actual initialization
         mock_gst.is_initialized.return_value = True
 
-        # Create TTSService instance
-        tts_service = TTSService()
+        # Create AudioPlayer instance
+        player = AudioPlayer()
 
         # Multiple calls should not raise AttributeError
-        tts_service.stop_speaking()
-        tts_service.stop_speaking()
-        tts_service.stop_speaking()
+        player.stop()
+        player.stop()
+        player.stop()
 
         # Verify player remains None
-        assert tts_service.player is None
+        assert player.player is None
 
-    @patch("anura.services.tts.Gst")
-    @patch("anura.services.tts.logger")
+    @patch("anura.services.tts.audio_player.Gst")
+    @patch("anura.services.tts.audio_player.logger")
     def test_multiple_cleanup_calls_before_play(self, mock_logger, mock_gst):
         """Test that multiple cleanup() calls before play() are safe."""
         # Mock GStreamer to avoid actual initialization
         mock_gst.is_initialized.return_value = True
 
-        # Create TTSService instance
-        tts_service = TTSService()
+        # Create AudioPlayer instance
+        player = AudioPlayer()
 
         # Multiple calls should not raise AttributeError
-        tts_service.cleanup()
-        tts_service.cleanup()
-        tts_service.cleanup()
+        player.cleanup()
+        player.cleanup()
+        player.cleanup()
 
         # Verify player remains None
-        assert tts_service.player is None
+        assert player.player is None
 
-    @patch("anura.services.tts.Gst")
-    @patch("anura.services.tts.logger")
+    @patch("anura.services.tts.audio_player.Gst")
+    @patch("anura.services.tts.audio_player.logger")
     def test_mixed_calls_before_play(self, mock_logger, mock_gst):
-        """Test that mixed stop_speaking() and cleanup() calls before play() are safe."""
+        """Test that mixed stop() and cleanup() calls before play() are safe."""
         # Mock GStreamer to avoid actual initialization
         mock_gst.is_initialized.return_value = True
 
-        # Create TTSService instance
-        tts_service = TTSService()
+        # Create AudioPlayer instance
+        player = AudioPlayer()
 
         # Mixed calls should not raise AttributeError
-        tts_service.stop_speaking()
-        tts_service.cleanup()
-        tts_service.stop_speaking()
-        tts_service.cleanup()
+        player.stop()
+        player.cleanup()
+        player.stop()
+        player.cleanup()
 
         # Verify player remains None
-        assert tts_service.player is None
+        assert player.player is None

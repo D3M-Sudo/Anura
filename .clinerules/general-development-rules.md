@@ -20,9 +20,9 @@ Make active use of MCP (Model Context Protocol) in postfix notation for all veri
 - **[priority=high, scope=universal, trigger=experimentation]** :: !!! Experimental Thinking !!! :: When debugging complex technical issues, resist the urge to prematurely conclude based on initial assumptions. Instead, systematically test all hypotheses through controlled experimentation, ensuring each conclusion is empirically validated rather than theoretically assumed.
 
 ## Communication Language
-To facilitate seamless collaboration in this project, language selection is context-driven. Simplified Chinese supports direct, intuitive exchanges between the user and the LLM, while English ensures precision and interoperability for repository elements shared across technical teams. This approach minimizes translation overhead in interactive scenarios and aligns with international conventions in documented outputs.
+Language selection is context-driven and follows the maintainer's lead in each
+conversation. English is the default for repository artifacts.
 
-- Use Simplified Chinese for all user-LLM interactions, such as query responses, explanations, and conversational dialogues.
 - Use English for repository-related artifacts, including:
   - Git commit messages (e.g., adhering to Conventional Commits format).
   - Git-tracked text files (e.g., README.md or configuration files).

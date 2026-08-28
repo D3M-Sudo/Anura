@@ -1,3 +1,9 @@
+// This file is part of Anura.
+// Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+// Copyright (C) 2026 D3M-Sudo (Anura)
+//
+// SPDX-License-Identifier: MIT
+
 using Gtk 4.0;
 using Adw 1;
 
@@ -23,15 +29,17 @@ template $AnuraWindow : Adw.ApplicationWindow {
         revealed: false;
       }
 
-      Adw.NavigationSplitView split_view {
+      Adw.NavigationView navigation_view {
+        hexpand: true;
         vexpand: true;
-        collapsed: true;
 
-        [sidebar]
-        $WelcomePage welcome_page {}
+        $WelcomePage welcome_page {
+          tag: "welcome";
+        }
 
-        [content]
-        $ExtractedPage extracted_page {}
+        $ExtractedPage extracted_page {
+          tag: "extracted";
+        }
       }
     }
   }

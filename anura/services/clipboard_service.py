@@ -1,12 +1,13 @@
-# clipboard_service.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Copyright 2021-2025 Andrey Maksimov
-# Copyright 2026 D3M-Sudo (Anura fork and modifications)
+# SPDX-License-Identifier: MIT
 
 from collections.abc import Callable
 from gettext import gettext as _
 from io import BytesIO
-import os
+from pathlib import Path
 import threading
 from typing import ClassVar
 
@@ -22,7 +23,7 @@ from gi.repository import Gdk, Gio, GLib, GObject  # noqa: E402
 from loguru import logger  # noqa: E402
 from PIL import Image  # noqa: E402
 
-from anura.config import MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB  # noqa: E402
+from anura.utils import mask_url, validate_image_resource  # noqa: E402
 from anura.utils.singleton import get_instance  # noqa: E402
 
 # When the clipboard advertises a file URI list (e.g. user copied a PNG from
@@ -50,6 +51,9 @@ class ClipboardService(GObject.GObject):
 
     # Timeout for clipboard read operations (seconds)
     CLIPBOARD_TIMEOUT_SECONDS = 10
+
+    _clipboard: Gdk.Clipboard | None = None
+    _state_lock: threading.Lock
 
     @property
     def clipboard(self) -> Gdk.Clipboard:
@@ -84,65 +88,75 @@ class ClipboardService(GObject.GObject):
         with self._state_lock:
             if self._clipboard is None:
                 display = Gdk.Display.get_default()
-                if display is not None:
-                    self._clipboard = display.get_clipboard()
-                    logger.debug("Anura Clipboard: Initialized on main thread.")
+                if display is None:
+                    logger.warning("Anura Clipboard: No GDK display available during init.")
+                    return
+                self._clipboard = display.get_clipboard()
+                logger.debug("Anura Clipboard: Initialized on main thread.")
 
     def set(self, value: str) -> None:
         """
-        Sets text to the system clipboard.
+        Sets text to the system clipboard with robust timeout handling.
         """
-        if value:
-            self.clipboard.set(value)
-            logger.debug("Anura Clipboard: Text successfully copied.")
-        else:
+        if not value:
             logger.warning("Anura Clipboard: Attempted to copy empty string.")
+            return
+
+        # Capture IDs under lock, then cancel/remove outside to avoid deadlock
+        # with GLib's internal main-loop lock (see _clear_active_timeout).
+        # For set() operations, which are synchronous/one-shot, we can safely
+        # cancel any pending read.
+        self._clear_active_timeout()
+
+        # Gdk.Clipboard.set_text() was removed in GTK4.
+        # The correct GTK4 API is set_content() with a ContentProvider wrapping
+        # a GLib.Variant string, which is supported across all GTK4 backends
+        # (X11, Wayland, Broadway).
+        content = Gdk.ContentProvider.new_for_value(GLib.Variant("s", value))
+        # Gdk.Clipboard.set_content() returns True if the content was set.
+        # We don't need a watchdog for a one-shot synchronous set operation
+        # that doesn't involve any async callback or stream read.
+        # Removing the leaked timeout (BUG-NEW-CS-001).
+        self.clipboard.set_content(content)
+
+        logger.debug(f"Anura Clipboard: Text successfully copied: {value[:50]}...")
 
     def copy_text(self, text: str) -> None:
-        """
-        Copy text to clipboard with timeout handling.
-        """
-        with self._state_lock:
-            # Cancel any previous timeout to prevent accumulation
-            if self._clipboard_timeout_id and self._clipboard_timeout_id > 0:
-                GLib.source_remove(self._clipboard_timeout_id)
-                self._clipboard_timeout_id = None
-
-            # Cancel any previous pending operation to prevent race conditions
-            if self._cancellable is not None:
-                self._cancellable.cancel()
-                self._cancellable = None
-
-        # Set the text directly
-        self.clipboard.set_text(text)
-
-        # Set timeout as expected by tests
-        with self._state_lock:
-            self._clipboard_timeout_id = GLib.timeout_add_seconds(
-                self.CLIPBOARD_TIMEOUT_SECONDS,
-                self._on_clipboard_timeout,
-                None,
-            )
-
-        logger.debug(f"Anura Clipboard: Text copied: {text[:50]}...")
+        """Legacy alias for set(text)."""
+        self.set(text)
 
     def _on_read_texture(self, _sender: GObject.GObject, result: Gio.AsyncResult) -> None:
         """
-        Thread-safe callback for texture reading from clipboard.
+        Primary callback for texture reading from clipboard.
 
-        If the direct texture read fails (e.g. GDK cannot decode the advertised
-        MIME type), falls back to reading the clipboard as a ``text/uri-list``
-        and loading the image file via PIL.  Some clipboard managers update their
-        MIME type list between the initial ``_available_clipboard_mimes()`` check
-        and the actual read, so this fallback increases robustness.
+        Triggered by clipboard.read_texture_async() initiated from read_texture()
+        or _fallback_to_texture_read(). Handles successful texture reads and
+        coordinates fallback to URI-list reading on failure.
+
+        State reads:
+            - _state_lock: Guards access to _fallback_attempted and _cancellable
+            - _cancellable: Shared cancellable for the async operation
+            - _fallback_attempted: Guard flag preventing infinite fallback loops
+
+        State mutates:
+            - Sets _fallback_attempted = True on first failure before delegating
+            - Clears _cancellable in finally block regardless of outcome
+
+        Hand-off:
+            - Calls _fallback_to_uri_list_read() on texture read failure
+            - Emits "paste_from_clipboard" signal on success
+            - Emits "error" signal when fallback already attempted
+
+        References:
+            - BUG-043: Timeout handling (uses _stop_timeout(), not _clear_active_timeout())
+            - BUG-H-005: Cancellable race condition protection via _state_lock
         """
-        # Atomically cancel timeout and clear state under lock
-        with self._state_lock:
-            timeout_id = self._clipboard_timeout_id
-            self._clipboard_timeout_id = None
-            # Remove timeout source atomically within lock
-            if timeout_id and timeout_id > 0:
-                GLib.source_remove(timeout_id)
+        # Capture timeout ID under lock, remove the source outside the lock.
+        # BUG-043: We must NOT call _clear_active_timeout() here because it
+        # also cancels the cancellable. Since this callback is part of the
+        # async operation, cancelling it now would prevent read_texture_finish()
+        # from succeeding. We only stop the watchdog timer.
+        self._stop_timeout()
 
         try:
             # Marshal GTK operations to main thread
@@ -196,11 +210,11 @@ class ClipboardService(GObject.GObject):
 
             GLib.idle_add(process_result)
 
-        except Exception as e:
+        except (AttributeError, RuntimeError, TypeError) as e:
             # Handle unexpected errors in the callback setup itself
             logger.error(f"Anura Clipboard: Unexpected error in callback setup: {e}")
 
-            def _on_error_idle():
+            def _on_error_idle() -> bool:
                 self.emit("error", _("No image in clipboard"))
                 return GLib.SOURCE_REMOVE
 
@@ -222,27 +236,25 @@ class ClipboardService(GObject.GObject):
         with self._state_lock:
             # Reset fallback flag for this fresh read attempt
             self._fallback_attempted = False
-
-            # Cancel any previous timeout to prevent accumulation
-            if self._clipboard_timeout_id and self._clipboard_timeout_id > 0:
-                GLib.source_remove(self._clipboard_timeout_id)
-                self._clipboard_timeout_id = None
-
-            # Cancel any previous pending operation to prevent race conditions
+            # Capture old timeout ID and cancellable to release outside the lock
+            old_timeout_id = self._clipboard_timeout_id
+            self._clipboard_timeout_id = None
             if self._cancellable is not None:
                 self._cancellable.cancel()
                 self._cancellable = None
-
             # Create new cancellable for this operation
             self._cancellable = Gio.Cancellable()
             cancellable = self._cancellable
-
-            # Set timeout atomically
+            # Register the new timeout inside the lock so _clipboard_timeout_id
+            # is always consistent with the active cancellable.
             self._clipboard_timeout_id = GLib.timeout_add_seconds(
                 self.CLIPBOARD_TIMEOUT_SECONDS,
                 self._on_clipboard_timeout,
                 cancellable,
             )
+        # Remove the old source outside the lock to avoid potential deadlock
+        # with GLib's internal main-loop lock (see _clear_active_timeout).
+        self._remove_source(old_timeout_id)
 
         mimes = self._available_clipboard_mimes()
 
@@ -272,37 +284,94 @@ class ClipboardService(GObject.GObject):
         """Return MIME types currently advertised by the clipboard (best effort)."""
         try:
             formats = self.clipboard.get_formats()
-        except Exception as e:
+        except (AttributeError, RuntimeError, TypeError, GLib.Error) as e:
             logger.debug(f"Anura Clipboard: get_formats() failed: {e}")
             return []
         if formats is None:
             return []
         try:
             return list(formats.get_mime_types() or [])
-        except Exception as e:
+        except (AttributeError, RuntimeError, TypeError, GLib.Error) as e:
             logger.debug(f"Anura Clipboard: get_mime_types() failed: {e}")
             return []
 
     def _emit_clipboard_error(self, message: str) -> None:
         """Emit the ``error`` signal from the main thread via idle_add."""
 
-        def _on_error_idle():
+        def _on_error_idle() -> bool:
             self.emit("error", message)
             return GLib.SOURCE_REMOVE
 
         GLib.idle_add(_on_error_idle)
 
-    def _clear_active_timeout(self) -> None:
-        """Atomically remove the in-flight read timeout, if any."""
+    def _stop_timeout(self) -> None:
+        """Stop the watchdog timer without cancelling the underlying operation."""
         with self._state_lock:
             timeout_id = self._clipboard_timeout_id
             self._clipboard_timeout_id = None
-            if timeout_id and timeout_id > 0:
-                GLib.source_remove(timeout_id)
+
+        self._remove_source(timeout_id)
+
+    def _remove_source(self, timeout_id: int | None) -> None:
+        """Safely remove a GLib source ID if it still exists."""
+        if timeout_id is not None and timeout_id > 0:
+            # BUG-032: Check if source exists before removing to prevent C-level warnings
+            # on stderr when a one-shot source has already fired and auto-removed.
+            ctx = GLib.MainContext.default()
+            if ctx and ctx.find_source_by_id(timeout_id):
+                try:
+                    GLib.source_remove(timeout_id)
+                except (AttributeError, RuntimeError, TypeError, GLib.Error):
+                    # Source might have fired between check and removal.
+                    pass
+
+    def _clear_active_timeout(self) -> None:
+        """Atomically remove the in-flight read timeout and cancel the operation.
+
+        GLib.source_remove() must be called OUTSIDE threading.Lock because it
+        may need to acquire GLib's internal main-loop lock.  If the GTK main
+        thread is simultaneously executing a timeout callback that tries to
+        acquire self._state_lock, both threads would deadlock waiting for each
+        other's lock.  The safe pattern: capture + clear the ID under the
+        Python lock, then call source_remove after releasing it.
+        """
+        with self._state_lock:
+            timeout_id = self._clipboard_timeout_id
+            self._clipboard_timeout_id = None
+            if self._cancellable is not None:
+                self._cancellable.cancel()
+                self._cancellable = None
+
+        # source_remove called outside the lock to prevent deadlock.
+        self._remove_source(timeout_id)
 
     def _on_read_uri_list(self, _sender: GObject.GObject, result: Gio.AsyncResult) -> None:
-        """Callback for ``text/uri-list`` clipboard reads (file paths)."""
-        self._clear_active_timeout()
+        """
+        Fallback callback for text/uri-list clipboard reads.
+
+        Triggered by clipboard.read_async() initiated from _fallback_to_uri_list_read()
+        when direct texture reading fails. Handles file URI extraction and delegates
+        to texture loading from file.
+
+        State reads:
+            - _state_lock: Guards cancellable snapshot (BUG-H-005)
+            - _cancellable: Snapshotted under lock to prevent race with cancel_pending_operations()
+
+        State mutates:
+            - Stops the watchdog timer via _stop_timeout()
+            - Cancellable is read-only, snapshotted under lock only
+
+        Hand-off:
+            - Calls _fallback_to_texture_read() on URI-list read failure
+            - Calls _read_stream_to_bytes() on successful stream read
+            - Eventually calls _emit_texture_from_file() via _on_uri_list_bytes()
+
+        References:
+            - BUG-043: Timeout handling (uses _stop_timeout(), not _clear_active_timeout())
+            - BUG-H-005: Cancellable race condition protection via _state_lock snapshot
+        """
+        # BUG-043: Stop the timer but DON'T cancel the operation we're currently finishing.
+        self._stop_timeout()
 
         try:
             stream, _mime = self.clipboard.read_finish(result)
@@ -322,7 +391,12 @@ class ClipboardService(GObject.GObject):
             self._fallback_to_texture_read()
             return
 
-        cancellable = self._cancellable
+        # FIX BUG-H-005: capture _cancellable under _state_lock so a concurrent call to
+        # cancel_pending_operations() (which holds _state_lock and sets _cancellable=None)
+        # cannot race with this read.  _stop_timeout() above deliberately does NOT cancel
+        # _cancellable (BUG-043), so the lock just guards the snapshot.
+        with self._state_lock:
+            cancellable = self._cancellable
         self._read_stream_to_bytes(
             stream,
             cancellable,
@@ -330,11 +404,53 @@ class ClipboardService(GObject.GObject):
         )
 
     def _fallback_to_texture_read(self) -> None:
-        """Rearm the read state and ask GDK for a texture directly."""
+        """
+        Rearm read state and retry texture read when URI-list path fails.
+
+        Called from _on_read_uri_list when the URI-list fallback also fails.
+        Reuses the existing cancellable if still valid, otherwise creates a new one,
+        and initiates a second texture read attempt. Does NOT reset _fallback_attempted:
+        that flag was set True by the original texture-read failure and must remain
+        True so that if this second texture attempt also fails, _on_read_texture will
+        stop the cycle and emit an error instead of looping again.
+
+        State reads:
+            - _state_lock: Guards access to _fallback_attempted, _cancellable, _clipboard_timeout_id
+            - _fallback_attempted: Guard flag preventing infinite fallback loops
+            - _cancellable: Reused if valid, otherwise recreated
+            - _clipboard_timeout_id: Previous timeout cleared before creating new one
+
+        State mutates:
+            - Reuses existing _cancellable if not cancelled, otherwise creates new Gio.Cancellable()
+            - Sets new _clipboard_timeout_id via GLib.timeout_add_seconds()
+            - Does NOT modify _fallback_attempted (preserves guard state)
+
+        Hand-off:
+            - Calls clipboard.read_texture_async() with _on_read_texture callback
+            - If this second texture attempt fails, _on_read_texture checks _fallback_attempted
+              and emits "error" instead of looping again
+
+        References:
+            - BUG-032: Timeout leak prevention (uses _clear_active_timeout())
+        """
+        # BUG-032: Clear previous timeout before assigning new one to avoid leaks.
+        # Here we use _clear_active_timeout() because we ARE starting a fresh attempt.
+        self._clear_active_timeout()
+
         with self._state_lock:
+            # Both fallback paths have now been tried — bail out if so.
+            if self._fallback_attempted:
+                logger.warning(
+                    "Anura Clipboard: Both texture and URI-list reads failed; giving up.",
+                )
             if self._cancellable is None or self._cancellable.is_cancelled():
                 self._cancellable = Gio.Cancellable()
             cancellable = self._cancellable
+            # NOTE: _fallback_attempted intentionally NOT reset here.
+            # Resetting it would allow read_texture_async → fail →
+            # _fallback_to_uri_list_read → fail → _fallback_to_texture_read
+            # to loop infinitely.  The guard stays True so the next
+            # texture failure terminates the chain with an error signal.
             self._clipboard_timeout_id = GLib.timeout_add_seconds(
                 self.CLIPBOARD_TIMEOUT_SECONDS,
                 self._on_clipboard_timeout,
@@ -343,7 +459,34 @@ class ClipboardService(GObject.GObject):
         self.clipboard.read_texture_async(cancellable=cancellable, callback=self._on_read_texture)
 
     def _fallback_to_uri_list_read(self) -> None:
-        """Rearm the read state and read the clipboard as a ``text/uri-list``."""
+        """
+        Rearm read state and attempt URI-list read when texture path fails.
+
+        Called from _on_read_texture when direct texture reading fails. Creates a new
+        cancellable if needed, sets up a fresh timeout, and initiates a text/uri-list
+        read to handle file manager copies (e.g., user copied a PNG in Nautilus).
+
+        State reads:
+            - _state_lock: Guards access to _cancellable and _clipboard_timeout_id
+            - _cancellable: Reused if valid, otherwise recreated
+            - _clipboard_timeout_id: Previous timeout cleared before creating new one
+
+        State mutates:
+            - Creates new Gio.Cancellable() if existing one is None or cancelled
+            - Sets new _clipboard_timeout_id via GLib.timeout_add_seconds()
+            - Sets _fallback_attempted = True in _on_read_texture before calling this method
+
+        Hand-off:
+            - Calls clipboard.read_async() with _on_read_uri_list callback
+            - If URI-list read fails, _on_read_uri_list calls _fallback_to_texture_read()
+
+        References:
+            - BUG-032: Timeout leak prevention (uses _clear_active_timeout())
+        """
+        # BUG-032: Clear previous timeout before assigning new one to avoid leaks.
+        # Here we use _clear_active_timeout() because we ARE starting a fresh attempt.
+        self._clear_active_timeout()
+
         with self._state_lock:
             if self._cancellable is None or self._cancellable.is_cancelled():
                 self._cancellable = Gio.Cancellable()
@@ -378,7 +521,7 @@ class ClipboardService(GObject.GObject):
                     return
                 logger.error(f"Anura Clipboard: stream read failed: {e.message}")
 
-                def _on_error_idle():
+                def _on_error_idle() -> bool:
                     self.emit("error", _("No image in clipboard"))
                     return GLib.SOURCE_REMOVE
 
@@ -408,7 +551,7 @@ class ClipboardService(GObject.GObject):
         if not data:
             logger.debug("Anura Clipboard: URI list payload is empty.")
 
-            def _on_error_idle():
+            def _on_error_idle() -> bool:
                 self.emit("error", _("No image in clipboard"))
                 return GLib.SOURCE_REMOVE
 
@@ -420,9 +563,11 @@ class ClipboardService(GObject.GObject):
         uris = [line.strip() for line in text.splitlines() if line.strip() and not line.lstrip().startswith("#")]
         file_uri = next((u for u in uris if u.startswith("file://")), None)
         if not file_uri:
-            logger.debug(f"Anura Clipboard: no file:// URI in list (entries={uris[:3]!r}).")
+            # Mask entries for safety
+            masked_entries = [mask_url(u) for u in uris[:3]]
+            logger.debug(f"Anura Clipboard: no file:// URI in list (entries={masked_entries!r}).")
 
-            def _on_error_idle():
+            def _on_error_idle() -> bool:
                 self.emit("error", _("No image in clipboard"))
                 return GLib.SOURCE_REMOVE
 
@@ -432,16 +577,16 @@ class ClipboardService(GObject.GObject):
         try:
             path, _hostname = GLib.filename_from_uri(file_uri)
         except GLib.Error as e:
-            logger.warning(f"Anura Clipboard: bad file URI {file_uri!r}: {e.message}")
+            logger.warning(f"Anura Clipboard: bad file URI {mask_url(file_uri)}: {e.message}")
 
-            def _on_error_idle():
+            def _on_error_idle() -> bool:
                 self.emit("error", _("No image in clipboard"))
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_error_idle)
             return
 
-        if not path or not os.path.exists(path):
+        if not path or not Path(path).exists():
             logger.warning(f"Anura Clipboard: file does not exist or inaccessible: {path!r}")
             self._emit_clipboard_error(_("No image in clipboard"))
             return
@@ -451,20 +596,10 @@ class ClipboardService(GObject.GObject):
     def _emit_texture_from_file(self, path: str) -> None:
         """Decode an image file with PIL → re-encode to PNG → Gdk.Texture."""
         # Security Hardening: Validate file size before opening (DoS prevention)
-        try:
-            file_size = os.path.getsize(path)
-            if file_size > MAX_IMAGE_SIZE_BYTES:
-                logger.error(f"Anura Clipboard: Image too large ({file_size} bytes)")
-                self._emit_clipboard_error(
-                    _("Image too large: {size}MB (max {max}MB)").format(
-                        size=round(file_size / (1024 * 1024), 1),
-                        max=MAX_IMAGE_SIZE_MB,
-                    )
-                )
-                return
-        except OSError as e:
-            logger.warning(f"Anura Clipboard: Failed to check file size for {path!r}: {e}")
-            self._emit_clipboard_error(_("No image in clipboard"))
+        is_valid, _size, error = validate_image_resource(path)
+        if not is_valid:
+            logger.error(f"Anura Clipboard: {error}")
+            self._emit_clipboard_error(_(error) if error else _("No image in clipboard"))
             return
 
         try:
@@ -477,7 +612,7 @@ class ClipboardService(GObject.GObject):
         except (OSError, ValueError, Image.UnidentifiedImageError) as e:
             logger.warning(f"Anura Clipboard: PIL failed to decode {path!r}: {e}")
 
-            def _on_error_idle():
+            def _on_error_idle() -> bool:
                 self.emit("error", _("No image in clipboard"))
                 return GLib.SOURCE_REMOVE
 
@@ -489,7 +624,7 @@ class ClipboardService(GObject.GObject):
         except GLib.Error as e:
             logger.warning(f"Anura Clipboard: Gdk.Texture.new_from_bytes failed: {e.message}")
 
-            def _on_error_idle():
+            def _on_error_idle() -> bool:
                 self.emit("error", _("No image in clipboard"))
                 return GLib.SOURCE_REMOVE
 
@@ -498,93 +633,17 @@ class ClipboardService(GObject.GObject):
 
         logger.debug(f"Anura Clipboard: loaded image from clipboard file URI ({path}).")
 
-        def _on_success_idle(tex):
+        def _on_success_idle(tex: Gdk.Texture) -> bool:
             self.emit("paste_from_clipboard", tex)
             return GLib.SOURCE_REMOVE
 
         GLib.idle_add(_on_success_idle, texture)
 
-    def read_text(self) -> None:
-        """
-        Thread-safe asynchronous text reading with 10-second timeout.
-        """
-        with self._state_lock:
-            # Cancel any previous timeout to prevent accumulation
-            if self._clipboard_timeout_id and self._clipboard_timeout_id > 0:
-                GLib.source_remove(self._clipboard_timeout_id)
-                self._clipboard_timeout_id = None
-
-            # Cancel any previous pending operation to prevent race conditions
-            if self._cancellable is not None:
-                self._cancellable.cancel()
-                self._cancellable = None
-
-            # Create new cancellable for this operation
-            self._cancellable = Gio.Cancellable()
-            cancellable = self._cancellable
-
-            # Set timeout atomically
-            self._clipboard_timeout_id = GLib.timeout_add_seconds(
-                self.CLIPBOARD_TIMEOUT_SECONDS,
-                self._on_clipboard_timeout,
-                cancellable,
-            )
-
-        self.clipboard.read_text_async(cancellable=cancellable, callback=self._on_text_read)
-
-    def _on_text_read(self, _sender: GObject.GObject, result: Gio.AsyncResult) -> None:
-        """
-        Thread-safe callback for text reading from clipboard.
-        """
-        # Atomically cancel timeout and clear state under lock
-        with self._state_lock:
-            timeout_id = self._clipboard_timeout_id
-            self._clipboard_timeout_id = None
-            # Remove timeout source atomically within lock
-            if timeout_id and timeout_id > 0:
-                GLib.source_remove(timeout_id)
-
-        try:
-            text = self.clipboard.read_text_finish(result)
-            if not text:
-                raise ValueError("No valid text found in result.")
-
-            logger.info("Anura Clipboard: Text retrieved from clipboard.")
-
-            # For text reading, we might emit a different signal or handle differently
-            # For now, just log the success
-            def _on_success_idle(t):
-                logger.debug(f"Clipboard text read: {t[:50]}...")
-                return GLib.SOURCE_REMOVE
-
-            GLib.idle_add(_on_success_idle, text)
-
-        except GLib.Error as e:
-            # Check if operation was cancelled
-            if e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED):
-                logger.debug("Anura Clipboard: Text read operation cancelled.")
-                return
-            # Other errors - log and emit error signal
-            logger.error(f"Anura Clipboard Error: {e}")
-
-            def _on_error_idle():
-                self.emit("error", _("No text in clipboard"))
-                return GLib.SOURCE_REMOVE
-
-            GLib.idle_add(_on_error_idle)
-        except (ValueError, RuntimeError) as e:
-            # Technical rigor: log error for X11/Wayland clipboard synchronization issues
-            logger.error(f"Anura Clipboard Error: {e}")
-
-            def _on_error_idle():
-                self.emit("error", _("No text in clipboard"))
-                return GLib.SOURCE_REMOVE
-
-            GLib.idle_add(_on_error_idle)
-        finally:
-            # Clean up cancellable regardless of outcome
-            with self._state_lock:
-                self._cancellable = None
+    # Note: read_text() and _on_text_read() have been removed as they were dead code.
+    # The method read clipboard text but never emitted a signal or called a callback,
+    # making it a no-op for consumers. If text reading from clipboard is needed in
+    # the future, implement it following the pattern used by paste_from_clipboard()
+    # which correctly emits the "paste_from_clipboard" signal.
 
     def _on_clipboard_timeout(self, cancellable: Gio.Cancellable) -> bool:
         """Thread-safe timeout handler with atomic state management."""
@@ -604,12 +663,12 @@ class ClipboardService(GObject.GObject):
             active_cancellable = self._cancellable
             self._clipboard_timeout_id = None
 
-        if not active_cancellable.is_cancelled():
+        if active_cancellable and not active_cancellable.is_cancelled():
             logger.warning("Anura Clipboard: Read operation timed out after 10s, cancelling.")
             active_cancellable.cancel()
 
             # Emit error signal so UI can show user feedback
-            def _on_error_idle():
+            def _on_error_idle() -> bool:
                 self.emit("error", _("Clipboard read operation timed out."))
                 return GLib.SOURCE_REMOVE
 
@@ -619,20 +678,7 @@ class ClipboardService(GObject.GObject):
 
     def cancel_pending_operations(self) -> None:
         """Thread-safe cancellation of pending clipboard read operations."""
-        with self._state_lock:
-            # Add defensive check for partially initialized instances
-            if not hasattr(self, "_clipboard_timeout_id") or self._clipboard_timeout_id is None:
-                logger.debug("Clipboard service not fully initialized, skipping cleanup")
-                return
-
-            if self._cancellable is not None and not self._cancellable.is_cancelled():
-                logger.debug("Anura Clipboard: Cancelling pending clipboard operation.")
-                self._cancellable.cancel()
-                self._cancellable = None
-
-            if self._clipboard_timeout_id > 0:
-                GLib.source_remove(self._clipboard_timeout_id)
-                self._clipboard_timeout_id = None
+        self._clear_active_timeout()
 
     def cleanup(self) -> None:
         """Clean up resources and cancel pending operations."""

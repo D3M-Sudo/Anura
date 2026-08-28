@@ -1,3 +1,9 @@
+// This file is part of Anura.
+// Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+// Copyright (C) 2026 D3M-Sudo (Anura)
+//
+// SPDX-License-Identifier: MIT
+
 using Gtk 4.0;
 
 translation-domain 'io.github.d3msudo.anura';
@@ -31,7 +37,7 @@ template $LanguagePopover : Popover {
     // Separator {}
 
     Stack views {
-      vexpand: false;
+      vexpand: true;
       transition-type: crossfade;
 
       StackPage {
@@ -39,8 +45,13 @@ template $LanguagePopover : Popover {
 
         child: ScrolledWindow {
           vexpand: true;
+          max-content-height: 300;
+          propagate-natural-height: true;
 
           ListBox list_view {
+            accessibility {
+              label: _("Language list");
+            }
             selection-mode: single;
             row-activated => $_on_language_activate();
           }
@@ -74,15 +85,27 @@ template $LanguagePopover : Popover {
               styles ["heading"]
             }
 
-            Button {
-              margin-top: 8;
-              hexpand: true;
-              label: _("Add Language");
-              clicked => $_on_add_clicked();
+            Label {
+              label: _("Try a different search term");
+              styles ["dim-label"]
             }
           }
         };
       }
+    }
+
+    Separator {}
+
+    Button {
+      margin-top: 6;
+      margin-bottom: 6;
+      margin-start: 6;
+      margin-end: 6;
+      label: _("_Manage Languages…");
+      use-underline: true;
+      tooltip-text: _("Open preferences to download more languages (Ctrl+,)");
+      clicked => $_on_add_clicked();
+      styles ["flat"]
     }
   }
 }

@@ -1,10 +1,8 @@
-# test_bug_fixes_static.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Static (AST / source-text) regression checks for the bug fixes that follow
-# PR #25. These tests do NOT import GTK / Xdp / GStreamer (which are unavailable
-# on the host CI runner outside the Flatpak sandbox). Instead they parse the
-# source files and verify the structural invariants that prevent each bug from
-# regressing.
+# SPDX-License-Identifier: MIT
 
 import ast
 from pathlib import Path
@@ -37,29 +35,29 @@ def _find_method(tree: ast.Module, class_name: str, method_name: str) -> ast.Fun
     raise AssertionError(f"{class_name}.{method_name} not found")
 
 
-def test_extracted_page_listen_does_not_call_self_get_language() -> None:
-    tree, _ = _load_module_source("widgets/extracted_page.py")
-    listen_fn = _find_method(tree, "ExtractedPage", "listen")
+def test_tts_controller_request_listen_does_not_call_self_get_language() -> None:
+    tree, _ = _load_module_source("controllers/tts_controller.py")
+    listen_fn = _find_method(tree, "TtsController", "request_listen")
     for node in ast.walk(listen_fn):
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
             is_self = isinstance(node.func.value, ast.Name) and node.func.value.id == "self"
             if is_self and node.func.attr == "get_language":
                 raise AssertionError(
-                    "ExtractedPage.listen() must not call self.get_language() — "
-                    "that method only exists on AnuraWindow.",
+                    "TtsController.request_listen() must not call self.get_language() — "
+                    "it should use settings or language manager directly.",
                 )
 
 
-def test_extracted_page_listen_uses_tts_effective_language() -> None:
+def test_tts_controller_request_listen_uses_tts_effective_language() -> None:
     """Resolve the gTTS code via TTSService.get_effective_language() so the
     Tesseract→ISO 639-1 mapping (e.g. 'ita'→'it') and the user's tts-language
     override are both honoured."""
-    _tree, text = _load_module_source("widgets/extracted_page.py")
+    _tree, text = _load_module_source("controllers/tts_controller.py")
     assert "get_effective_language(" in text, (
-        "ExtractedPage.listen() must call get_effective_language() to resolve "
+        "TtsController.request_listen() must call get_effective_language() to resolve "
         "the TTS language code from the OCR setting."
     )
-    assert "active-language" in text, "ExtractedPage.listen() must read the OCR language from GSettings."
+    assert "active-language" in text, "TtsController.request_listen() must read the OCR language from GSettings."
 
 
 # ---------------------------------------------------------------------------
@@ -87,7 +85,7 @@ def test_get_release_notes_wraps_bare_text() -> None:
 
 
 def test_screenshot_service_logs_full_diagnostic_context() -> None:
-    _tree, text = _load_module_source("services/screenshot_service.py")
+    _tree, text = _load_module_source("services/screenshot/portal_provider.py")
     assert "domain={e.domain}" in text and "code={e.code}" in text, (
         "logger.error in take_screenshot_finish must include {e.domain} and "
         "{e.code} so the user/log analysis can identify the failing portal layer.",
@@ -95,7 +93,7 @@ def test_screenshot_service_logs_full_diagnostic_context() -> None:
 
 
 def test_screenshot_service_detects_generic_backend_failure() -> None:
-    _tree, text = _load_module_source("services/screenshot_service.py")
+    _tree, text = _load_module_source("services/screenshot/portal_provider.py")
     assert "Gio.IOErrorEnum.FAILED" in text, (
         "ScreenshotService must explicitly match Gio.IOErrorEnum.FAILED to "
         "detect the libportal generic-failure pattern."
@@ -124,7 +122,7 @@ def test_screenshot_service_declares_portal_backend_missing_signal() -> None:
         "signal so consumers can react to a missing host portal backend."
     )
     # And the signal must be emitted in the generic-backend-failure branch.
-    assert 'self.emit, "portal-backend-missing"' in text, (
+    assert 'self.emit("portal-backend-missing")' in text, (
         "ScreenshotService must emit 'portal-backend-missing' (via GLib.idle_add) "
         "when it detects the libportal generic-failure pattern."
     )
@@ -132,17 +130,17 @@ def test_screenshot_service_declares_portal_backend_missing_signal() -> None:
 
 def test_window_wires_portal_banner_and_signal_handler() -> None:
     text = (PROJECT_ROOT / "anura" / "window.py").read_text()
-    ocr_text = (PROJECT_ROOT / "anura" / "window_mixins" / "ocr_mixin.py").read_text()
+    ocr_text = (PROJECT_ROOT / "anura" / "controllers" / "ocr_controller.py").read_text()
     combined_text = text + ocr_text
 
     assert "portal_banner: Adw.Banner = Gtk.Template.Child()" in text, (
         "AnuraWindow must declare portal_banner as a Gtk.Template.Child mapping to the Adw.Banner in window.blp."
     )
     assert '"portal-backend-missing"' in combined_text, (
-        "AnuraWindow (or its OCR mixin) must connect to the new ScreenshotService signal."
+        "OcrController must connect to the new ScreenshotService signal."
     )
     assert "set_revealed(True)" in combined_text and "set_revealed(False)" in combined_text, (
-        "AnuraWindow (or its OCR mixin) must reveal the banner on the signal and hide it when the user dismisses it."
+        "OcrController must reveal the banner on the signal and hide it when the user dismisses it."
     )
 
 
@@ -163,9 +161,9 @@ def test_window_blp_contains_adw_banner() -> None:
 
 
 def test_language_manager_remove_language_validates_code() -> None:
-    """LanguageManager.remove_language must validate the input code against
-    LANG_CODE_PATTERN to prevent path traversal."""
-    tree, _ = _load_module_source("language_manager.py")
+    """LanguageManager.remove_language must validate the input code format
+    via LanguageValidator.is_valid_code_format() to prevent path traversal."""
+    tree, _ = _load_module_source("services/language_manager.py")
     remove_fn = _find_method(tree, "LanguageManager", "remove_language")
 
     found_validation = False
@@ -173,18 +171,18 @@ def test_language_manager_remove_language_validates_code() -> None:
         if (
             isinstance(node, ast.Call)
             and isinstance(node.func, ast.Attribute)
-            and node.func.attr == "match"
-            and isinstance(node.func.value, ast.Name)
-            and node.func.value.id == "re"
+            and node.func.attr == "is_valid_code_format"
+            # Verify it's called on self._validator
+            and isinstance(node.func.value, ast.Attribute)
+            and node.func.value.attr == "_validator"
+            and isinstance(node.func.value.value, ast.Name)
+            and node.func.value.value.id == "self"
         ):
-            # Check if LANG_CODE_PATTERN is passed to re.match
-            for arg in node.args:
-                if isinstance(arg, ast.Name) and arg.id == "LANG_CODE_PATTERN":
-                    found_validation = True
-                    break
+            found_validation = True
+            break
     assert found_validation, (
-        "LanguageManager.remove_language() must validate the code against "
-        "LANG_CODE_PATTERN to prevent path traversal attacks."
+        "LanguageManager.remove_language() must delegate validation to "
+        "self._validator.is_valid_code_format() to prevent path traversal attacks."
     )
 
 
@@ -209,25 +207,26 @@ def test_readme_documents_runtime_requirements() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_extracted_page_disconnects_share_service_signal() -> None:
-    """ExtractedPage.do_dispose must disconnect the share service signal handler."""
+def test_extracted_page_uses_signal_manager_mixin() -> None:
+    """ExtractedPage must use SignalManagerMixin for automated cleanup."""
     text = (ANURA_PKG / "widgets" / "extracted_page.py").read_text()
-    # Check that do_dispose contains disconnect for share service
-    assert "self._share_service.disconnect(self._share_handler_id)" in text, (
-        "ExtractedPage.do_dispose must disconnect the share service signal handler "
-        "(_share_handler_id) to prevent memory leaks."
-    )
+    assert "class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):" in text
+    assert "SignalManagerMixin.__init__(self)" in text
+    assert "self.connect_tracked(" in text
+
+
+def test_extracted_page_disconnects_share_service_signal() -> None:
+    """ExtractedPage must manage share service signal via connect_tracked."""
+    text = (ANURA_PKG / "widgets" / "extracted_page.py").read_text()
+    # Check that share signal is connected via mixin
+    assert "self.connect_tracked(self._share_service, \"share\"" in text
 
 
 def test_extracted_page_tracks_share_handler_id() -> None:
-    """ExtractedPage must track the share service handler ID for cleanup."""
-    text = (ANURA_PKG / "widgets" / "extracted_page.py").read_text()
-    assert "_share_handler_id" in text, (
-        "ExtractedPage must track the share service signal handler ID (_share_handler_id) for cleanup in do_dispose."
-    )
-    assert "_share_handler_id = self._share_service.connect" in text, (
-        "ExtractedPage must store the share service connect() return value in _share_handler_id."
-    )
+    """ExtractedPage tracks share signals via SignalManagerMixin."""
+    # This test is now covered by the mixin usage check.
+    # Manual ID tracking is no longer required as mixin does it.
+    pass
 
 
 # ---------------------------------------------------------------------------
@@ -240,26 +239,24 @@ def test_window_disconnects_portal_banner_signal() -> None:
     """AnuraWindow.do_destroy must disconnect the portal_banner signal handler."""
     text = (ANURA_PKG / "window.py").read_text()
     # Check that do_destroy contains disconnect for portal_banner
-    # Since Issue 4 refactor, do_destroy remains in window.py but uses getattr to be safe with mixins
-    assert "self.portal_banner.disconnect(handler_id)" in text or (
-        "self.portal_banner.disconnect(self._handler_portal_banner)"
-    ) in text, (
-        "AnuraWindow.do_destroy must disconnect the portal_banner signal handler "
-        "(_handler_portal_banner) to prevent memory leaks."
-    )
+    # Since Issue 4 refactor, we use SignalManagerMixin for automated cleanup.
+    assert (
+        "self.portal_banner.disconnect(handler_id)" in text
+        or "self.portal_banner.disconnect(self._handler_portal_banner)" in text
+        or "self.disconnect_all_signals()" in text
+        or "self.teardown_all()" in text
+    ), "AnuraWindow.do_destroy must disconnect signals to prevent memory leaks."
 
 
 def test_window_tracks_portal_banner_handler_id() -> None:
-    """AnuraWindow must track the portal_banner handler ID for cleanup."""
+    """OcrController must track the portal_banner handler ID for cleanup."""
     text = (ANURA_PKG / "window.py").read_text()
-    ocr_text = (PROJECT_ROOT / "anura" / "window_mixins" / "ocr_mixin.py").read_text()
+    ocr_text = (PROJECT_ROOT / "anura" / "controllers" / "ocr_controller.py").read_text()
     combined_text = text + ocr_text
 
-    assert "_handler_portal_banner" in combined_text, (
-        "AnuraWindow must track the portal_banner signal handler ID (_handler_portal_banner) for cleanup in do_destroy."
-    )
-    assert "_handler_portal_banner = self.portal_banner.connect" in combined_text, (
-        "AnuraWindow (or its OCR mixin) must store the portal_banner connect() return value in _handler_portal_banner."
+    # Accept either manual tracking or SignalManagerMixin's connect_tracked
+    assert "_handler_portal_banner" in combined_text or "connect_tracked" in ocr_text, (
+        "OcrController must track the portal_banner signal handler for cleanup."
     )
 
 
@@ -270,27 +267,19 @@ def test_window_tracks_portal_banner_handler_id() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_window_process_file_uses_getsize() -> None:
-    """AnuraWindow.process_file must use os.path.getsize() for size validation."""
+def test_window_process_file_uses_validate_image_resource() -> None:
+    """AnuraWindow.process_file must use validate_image_resource() for size validation."""
     tree, _ = _load_module_source("window.py")
     process_file_fn = _find_method(tree, "AnuraWindow", "process_file")
 
-    found_getsize = False
+    found_validation = False
     for node in ast.walk(process_file_fn):
-        if (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Attribute)
-            and node.func.attr == "getsize"
-            and isinstance(node.func.value, ast.Attribute)
-            and node.func.value.attr == "path"
-            and isinstance(node.func.value.value, ast.Name)
-            and node.func.value.value.id == "os"
-        ):
-            found_getsize = True
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "validate_image_resource":
+            found_validation = True
             break
-    assert found_getsize, (
-        "AnuraWindow.process_file() must use os.path.getsize() instead of os.lstat() "
-        "to correctly validate the actual file size when symbolic links are used."
+    assert found_validation, (
+        "AnuraWindow.process_file() must use validate_image_resource() "
+        "to correctly validate the actual file size and properties."
     )
 
 

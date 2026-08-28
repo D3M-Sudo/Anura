@@ -1,14 +1,12 @@
-# notification_service.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Copyright 2026 D3M-Sudo (Anura improvements)
-#
-# Notification service with XDG Portal and libnotify fallback
-# Provides maximum compatibility across desktop environments
+# SPDX-License-Identifier: MIT
 
 import contextlib
 from itertools import count
 import time
-from typing import ClassVar
 
 import gi
 
@@ -18,6 +16,8 @@ gi.require_version("Notify", "0.7")
 gi.require_version("Xdp", "1.0")
 
 from loguru import logger  # noqa: E402
+
+from anura.utils.notification_helpers import NotificationHelpers  # noqa: E402
 
 try:
     from gi.repository import GLib
@@ -58,8 +58,10 @@ class NotificationService:
     Gio.Notification: Used for action-capable notifications (Flatpak-safe)
     """
 
-    def __init__(self, app_id: str) -> None:
-        self.app_id = app_id
+    def __init__(self, app_id: str | None = None) -> None:
+        from anura.config import APP_ID as _APP_ID
+
+        self.app_id = app_id if app_id is not None else _APP_ID
         self.libnotify_initialized = False
         self._portal = None
         self._notification_id_counter = count()  # Monotonic counter for unique IDs
@@ -90,14 +92,11 @@ class NotificationService:
 
     def cleanup(self) -> None:
         """Clean up the periodic timer to prevent resource leaks."""
-        if hasattr(self, "_cleanup_timeout_id") and self._cleanup_timeout_id:
+        if hasattr(self, "_cleanup_timeout_id") and self._cleanup_timeout_id is not None:
             with contextlib.suppress(GLib.Error):
                 GLib.source_remove(self._cleanup_timeout_id)
             self._cleanup_timeout_id = None
         self.cleanup_notifications()
-
-    # Valid priority levels according to XDG Portal specification
-    _VALID_PRIORITIES: ClassVar[set[str]] = {"low", "normal", "high", "urgent"}
 
     # Notification dismiss timeout in seconds (default: 8 seconds)
     _DISMISS_SECONDS = 8
@@ -136,9 +135,12 @@ class NotificationService:
             True if notification was shown successfully, False otherwise
         """
         # Validate priority parameter
-        if priority not in self._VALID_PRIORITIES:
-            logger.warning(f"NotificationService: Invalid priority '{priority}', using 'normal'")
-            priority = "normal"
+        priority = NotificationHelpers.validate_priority(priority)
+
+        # Security: Escape Pango markup in title and body to prevent injection attacks
+        # from OCR'd text (phishing, UI spoofing, etc).
+        title = NotificationHelpers.escape_markup(title)
+        body = NotificationHelpers.escape_markup(body)
 
         # Try portal first, then fallback to libnotify
         if HAS_PORTAL:
@@ -178,20 +180,19 @@ class NotificationService:
             logger.warning("NotificationService: Gio not available for action notification")
             return
 
+        # Security: Escape Pango markup in title and body to prevent injection attacks
+        # from OCR'd text (phishing, UI spoofing, etc).
+        title = NotificationHelpers.escape_markup(title) if title else ""
+        body = NotificationHelpers.escape_markup(body) if body else ""
+
         notification = Gio.Notification.new(title)
         notification.set_body(body)
         notification.set_default_action_and_target(action_id, action_target)
 
         # Set priority if valid
-        if priority in self._VALID_PRIORITIES:
-            if priority == "high":
-                notification.set_priority(Gio.NotificationPriority.HIGH)
-            elif priority == "urgent":
-                notification.set_priority(Gio.NotificationPriority.URGENT)
-            elif priority == "low":
-                notification.set_priority(Gio.NotificationPriority.LOW)
-            else:
-                notification.set_priority(Gio.NotificationPriority.NORMAL)
+        gio_priority = NotificationHelpers.map_priority_to_gio(priority)
+        if gio_priority is not None:
+            notification.set_priority(gio_priority)
 
         # Get the application instance and send
         app = Gio.Application.get_default()
@@ -243,7 +244,7 @@ class NotificationService:
             logger.debug(f"NotificationService: Portal notification sent: {title}, dismiss in {self._DISMISS_SECONDS}s")
             return True
 
-        except Exception as e:
+        except (AttributeError, RuntimeError, TypeError, GLib.Error) as e:
             logger.warning(f"NotificationService: Portal notification failed: {e}")
             return False
 
@@ -251,9 +252,9 @@ class NotificationService:
         """Auto-dismiss a portal notification by removing it via the portal API."""
         try:
             if self._portal is not None:
-                self._portal.remove_notification(notification_id, None, None, None)
+                self._portal.remove_notification(notification_id)
                 logger.debug(f"NotificationService: Dismissed portal notification: {notification_id}")
-        except Exception as e:
+        except (AttributeError, RuntimeError, TypeError, GLib.Error) as e:
             logger.debug(f"NotificationService: Failed to dismiss portal notification: {e}")
         # Remove from tracking set regardless
         self._active_notifications.discard(notification_id)
@@ -267,7 +268,7 @@ class NotificationService:
             notification.show()
             logger.debug(f"NotificationService: libnotify notification sent: {title}")
             return True
-        except Exception as e:
+        except (AttributeError, RuntimeError, TypeError, GLib.Error) as e:
             logger.warning(f"NotificationService: libnotify notification failed: {e}")
             return False
 
@@ -278,9 +279,24 @@ class NotificationService:
     def cleanup_notifications(self) -> None:
         """Clean up tracking of active notifications.
 
-        Called periodically (every 60s) as a safety net and by
-        _dismiss_portal_notification after the auto-dismiss timer.
+        Called periodically (every 60s) as a safety net, on app shutdown,
+        and by _dismiss_portal_notification after the auto-dismiss timer.
+        Actively withdraws any still-live portal notifications so they do not
+        persist on the desktop after the application exits.
         """
         if self._active_notifications:
             logger.debug(f"NotificationService: Cleaning up {len(self._active_notifications)} tracked notifications")
+            if self._portal is not None:
+                for notification_id in list(self._active_notifications):
+                    try:
+                        self._portal.remove_notification(notification_id)
+                    except (AttributeError, RuntimeError, TypeError, GLib.Error) as e:
+                        logger.debug(f"NotificationService: Could not remove notification {notification_id}: {e}")
             self._active_notifications.clear()
+
+
+def get_notification_service() -> NotificationService:
+    """Get the thread-safe NotificationService singleton."""
+    from anura.utils.singleton import get_instance
+
+    return get_instance(NotificationService)

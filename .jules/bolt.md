@@ -35,3 +35,19 @@
 ## 2026-05-20 - Combined Image Enhancement LUT Optimization
 **Learning:** Consolidating multiple sequential image processing steps (Brightness, Contrast, Autocontrast, Thresholding) into single-pass Look-Up Tables (LUTs) significantly reduces total pixel traversals. Combining Brightness and Contrast into one linear formula and simulating Autocontrast via histogram bounds for Thresholding yields a measurable speedup (~28% on 4K-like images).
 **Action:** When performing sequential linear or threshold-based image transformations, derive a single mathematical mapping and apply it via `image.point(lut)` to minimize processing overhead.
+
+## 2026-05-28 - Histogram-based Statistics Optimization
+**Learning:** Calculating image statistics (like the mean) directly from a pre-computed histogram is significantly faster (~2x on 4K images) than using `ImageStat.Stat(image)`. `ImageStat.Stat` often triggers its own full-image traversal if the internal cache is cold or invalidated, whereas a histogram summation is O(bins) rather than O(pixels).
+**Action:** If a histogram is already available or required for other logic (like thresholding or adaptive enhancements), derive dependent statistics (mean, median, dark/light pixel ratios) directly from the histogram to avoid redundant pixel passes.
+
+## 2026-05-29 - Single-Pass Layout Statistics Optimization
+**Learning:** Consolidating multiple layout property accesses (num_lines, num_pars, num_blocks) into a single-pass cached property using `@cached_property` significantly reduces redundant O(N) traversals. In Magic processing where multiple transformers score the same OcrResult, this reduces the cost from up to 6*O(N) to 1*O(N) for the initial pass and O(1) thereafter.
+**Action:** Use `@cached_property` to store multiple related statistics computed during a single traversal of a collection, especially for immutable data objects used in multi-stage pipelines.
+
+## 2026-06-18 - cached_property on Slotted Classes
+**Learning:** In Python, `functools.cached_property` requires the instance to have a `__dict__`. Applying it to a dataclass or class with `slots=True` will raise a `TypeError` at runtime unless `"__dict__"` is explicitly added to the slots. For high-level container objects like `OcrResult`, removing `slots=True` is a valid trade-point to enable caching of expensive layout calculations.
+**Action:** When using `cached_property` for performance gains, ensure the target class supports `__dict__`. Verify that child objects (like `OcrWord`) maintain their slots if they are high-cardinality to preserve memory efficiency.
+
+## 2026-08-15 - Fast-Path Object Type Dispatching in Hot Loops and Single-Pass Geometry
+**Learning:** Bypassing a dynamic helper function (like `_get_val`) that checks `isinstance(obj, dict)` inside hot loops in Python can yield an over 5x performance improvement. Checking the type of the collection's first element outside the loop and branching into specialized direct attribute or key-lookup loop paths is a highly effective way to eliminate dynamic dispatch overhead. Additionally, avoiding 1-element tuple allocations for set inclusion reduces garbage collection pressure, and transitioning multiple coordinate traversals of a word collection to a single-pass loop gives a ~45% speedup.
+**Action:** When traversing large collections of uniform objects/dicts in hot loops, perform type checks once before the loop and use specialized, direct-access loops. Always prefer single-pass loops over multiple separate list-comprehension coordinates traversals.

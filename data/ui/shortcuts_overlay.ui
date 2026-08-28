@@ -34,6 +34,9 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
             <child>
               <object class="GtkSearchEntry" id="search_entry">
                 <property name="placeholder-text" translatable="true">Search shortcuts...</property>
+                <accessibility>
+                  <property name="label" translatable="true">Search shortcuts</property>
+                </accessibility>
               </object>
             </child>
             <child>

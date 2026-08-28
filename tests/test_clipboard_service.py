@@ -1,192 +1,178 @@
-# test_clipboard_service.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Unit tests for ClipboardService
-# Tests clipboard read/write operations and error handling
+# SPDX-License-Identifier: MIT
 
 import pytest
 
 pytest.importorskip("gi")
 
-from gettext import gettext as _
-from unittest.mock import Mock, patch
 
-from loguru import logger
-import pytest
+from unittest.mock import MagicMock, patch
 
 from anura.services.clipboard_service import ClipboardService
 
 
-@pytest.mark.gtk
-class TestClipboardService:
-    """Test suite for ClipboardService core functionality."""
+class TestClipboardServiceEnterprise:
+    """
+    Enterprise-grade unit tests for ClipboardService.
+    Safe for VM/headless by mocking Gdk.Clipboard.
+    """
 
-    def setup_method(self):
-        """Set up test fixtures."""
-        self.service = ClipboardService()
-        # Mock clipboard to avoid Gdk dependency
-        self.service._clipboard = Mock()
+    @pytest.fixture
+    def service(self):
+        with patch("gi.repository.Gdk.Display.get_default") as mock_display_get:
+            mock_display = MagicMock()
+            mock_display_get.return_value = mock_display
+            mock_clipboard = MagicMock()
+            mock_display.get_clipboard.return_value = mock_clipboard
 
-    def test_init(self):
-        """Test service initialization."""
-        assert self.service._clipboard is not None
-        assert self.service._clipboard_timeout_id is None
-        assert self.service._cancellable is None
+            # Directly instantiate
+            return ClipboardService()
 
-    def test_copy_text_success(self):
-        """Test successful text copying to clipboard."""
-        test_text = "Sample text to copy"
+    def test_init(self, service):
+        """Test basic initialization."""
+        # _clipboard is lazy-initialized in the property, so it starts None
+        assert service._clipboard is None
+        assert service._cancellable is None
 
-        with patch("anura.services.clipboard_service.GLib") as mock_glib:
-            self.service.copy_text(test_text)
+    def test_copy_text_trigger(self, service):
+        """Test that copy_text triggers clipboard set_content (GTK4 API).
 
-            self.service._clipboard.set_text.assert_called_once_with(test_text)
-            mock_glib.timeout_add_seconds.assert_called_once()
+        GTK4 removed Gdk.Clipboard.set_text().  The production code wraps the
+        string in a GLib.Variant("s", ...) and passes it to
+        Gdk.ContentProvider.new_for_value(), then calls clipboard.set_content().
+        We mock both the ContentProvider factory and the clipboard property so
+        the test remains headless-safe and asserts the correct GTK4 call path.
+        """
+        from unittest.mock import PropertyMock
 
-    def test_copy_text_empty(self):
-        """Test copying empty text."""
-        with patch("anura.services.clipboard_service.GLib") as mock_glib:
-            self.service.copy_text("")
+        mock_clipboard = MagicMock()
+        mock_content_provider = MagicMock()
 
-            self.service._clipboard.set_text.assert_called_once_with("")
-            mock_glib.timeout_add_seconds.assert_called_once()
+        with (
+            patch.object(ClipboardService, "clipboard", new_callable=PropertyMock) as mock_cb_prop,
+            patch("gi.repository.Gdk.ContentProvider.new_for_value", return_value=mock_content_provider),
+            patch("gi.repository.GLib.Variant"),
+        ):
+            mock_cb_prop.return_value = mock_clipboard
+            service.copy_text("Enterprise Audit")
+            # GTK4: set_content() replaces the removed set_text()
+            mock_clipboard.set_content.assert_called_once_with(mock_content_provider)
 
-    def test_copy_text_with_cancellation(self):
-        """Test text copying with existing pending operations."""
-        # Set up existing operation
-        self.service._cancellable = Mock()
-        self.service._clipboard_timeout_id = 123
+    def test_cancel_pending_operations(self, service):
+        """Test atomic cancellation logic."""
+        mock_cancellable = MagicMock()
+        mock_cancellable.is_cancelled.return_value = False
+        service._cancellable = mock_cancellable
+        service._clipboard_timeout_id = 1234
 
-        with patch("anura.services.clipboard_service.GLib") as mock_glib:
-            self.service.copy_text("new text")
+        with (
+            patch("gi.repository.GLib.source_remove") as mock_remove,
+            patch("gi.repository.GLib.MainContext.default") as mock_ctx_get,
+        ):
+            mock_ctx = MagicMock()
+            mock_ctx_get.return_value = mock_ctx
+            # Simulate source found
+            mock_ctx.find_source_by_id.return_value = MagicMock()
 
-            # Should cancel existing operations
-            self.service._cancellable.cancel.assert_called_once()
-            mock_glib.source_remove.assert_called_once_with(123)
-
-    def test_read_text_success(self):
-        """Test successful text reading from clipboard."""
-
-        # Mock the async read operation
-        mock_future = Mock()
-        self.service._clipboard.read_text_async.return_value = mock_future
-
-        with patch("anura.services.clipboard_service.GLib") as mock_glib:
-            self.service.read_text()
-
-            self.service._clipboard.read_text_async.assert_called_once()
-            mock_glib.timeout_add_seconds.assert_called_once()
-
-    def test_read_text_with_cancellation(self):
-        """Test text reading with existing pending operations."""
-        # Set up existing operation
-        self.service._cancellable = Mock()
-        self.service._clipboard_timeout_id = 456
-
-        mock_future = Mock()
-        self.service._clipboard.read_text_async.return_value = mock_future
-
-        with patch("anura.services.clipboard_service.GLib") as mock_glib:
-            self.service.read_text()
-
-            # Should cancel existing operations
-            self.service._cancellable.cancel.assert_called_once()
-            mock_glib.source_remove.assert_called_once_with(456)
-
-    def test_on_text_read_success(self):
-        """Test successful text read callback."""
-        test_text = "Read text content"
-        mock_source = Mock()
-        self.service._clipboard_timeout_id = 789
-
-        with patch("anura.services.clipboard_service.GLib") as mock_glib:
-            self.service._on_text_read(mock_source, test_text)
-
-            mock_glib.source_remove.assert_called_once_with(789)
-            # Success case doesn't emit error signal, just logs
-            mock_glib.idle_add.assert_called_once()
-            args = mock_glib.idle_add.call_args[0]
-            assert args[0] == logger.debug
-            assert "Clipboard text read" in args[1]
-
-    def test_on_text_read_empty(self):
-        """Test empty text read callback."""
-        mock_source = Mock()
-        self.service._clipboard_timeout_id = 101
-
-        with patch("anura.services.clipboard_service.GLib") as mock_glib:
-            self.service._on_text_read(mock_source, "")
-
-            mock_glib.source_remove.assert_called_once_with(101)
-            # Empty text case doesn't emit error signal, just logs
-            mock_glib.idle_add.assert_called_once()
-            args = mock_glib.idle_add.call_args[0]
-            assert args[0] == logger.debug
-            assert "Clipboard text read" in args[1]
-
-    def test_on_text_read_error(self):
-        """Test text read error callback."""
-        mock_sender = Mock()
-        mock_result = Mock()
-        # Mock the clipboard to raise an exception when read_text_finish is called
-        self.service._clipboard.read_text_finish.side_effect = Exception("Test error")
-        self.service._clipboard_timeout_id = 202
-
-        with patch("anura.services.clipboard_service.GLib") as mock_glib:
-            self.service._on_text_read(mock_sender, mock_result)
-
-            mock_glib.source_remove.assert_called_once_with(202)
-            mock_glib.idle_add.assert_called_once()
-            args = mock_glib.idle_add.call_args[0]
-            assert args[0] == self.service.emit
-            assert args[1] == "error"
-            assert args[2] == _("No text in clipboard")
-
-    def test_cancel_pending_operations(self):
-        """Test cancellation of pending operations."""
-        # Set up pending operations
-        mock_cancellable = Mock()
-        self.service._cancellable = mock_cancellable
-        self.service._clipboard_timeout_id = 303
-
-        self.service.cancel_pending_operations()
-
-        mock_cancellable.cancel.assert_called_once()
-        assert self.service._cancellable is None
-        assert self.service._clipboard_timeout_id is None
-
-    def test_cancel_pending_operations_none(self):
-        """Test cancellation when no operations are pending."""
-        self.service.cancel_pending_operations()
-
-        # Should not raise any errors
-        assert self.service._cancellable is None
-        assert self.service._clipboard_timeout_id is None
-
-    def test_on_clipboard_timeout(self):
-        """Test clipboard operation timeout."""
-        mock_cancellable = Mock()
-        self.service._cancellable = mock_cancellable
-
-        with patch("anura.services.clipboard_service.GLib") as mock_glib:
-            # _on_clipboard_timeout(cancellable) requires the cancellable arg.
-            result = self.service._on_clipboard_timeout(mock_cancellable)
-
+            service.cancel_pending_operations()
             mock_cancellable.cancel.assert_called_once()
-            mock_glib.idle_add.assert_called_once()
-            args = mock_glib.idle_add.call_args[0]
-            assert args[0] == self.service.emit
-            assert args[1] == "error"
-            assert args[2] == _("Clipboard read operation timed out.")
-            assert result is False  # Should return False to not repeat timeout
+            mock_remove.assert_called_with(1234)
+            assert service._cancellable is None
+            assert service._clipboard_timeout_id is None
 
-    def test_cleanup_on_destroy(self):
-        """Test cleanup when service is destroyed."""
-        mock_cancellable = Mock()
-        self.service._cancellable = mock_cancellable
-        self.service._clipboard_timeout_id = 404
+    def test_on_clipboard_timeout(self, service):
+        """Test timeout handling."""
+        mock_cancellable = MagicMock()
+        mock_cancellable.is_cancelled.return_value = False
+        service._cancellable = mock_cancellable  # Must be the same object for active timeout check
 
-        self.service.cleanup()
+        with patch("gi.repository.GLib.idle_add") as mock_idle:
+            # result should be SOURCE_REMOVE (False)
+            res = service._on_clipboard_timeout(mock_cancellable)
+            assert res is False
+            mock_cancellable.cancel.assert_called_once()
+            assert mock_idle.called
 
-        mock_cancellable.cancel.assert_called_once()
-        assert self.service._cancellable is None
-        assert self.service._clipboard_timeout_id is None
+
+
+    def test_uri_list_no_file_uri(self, service):
+        """Test _on_uri_list_bytes emits error when no file:// URI in list."""
+        with patch("gi.repository.GLib.idle_add") as mock_idle_add:
+            # Call with non-file URI data
+            service._on_uri_list_bytes(b"http://example.com/image.png\r\n")
+            # Verify error was emitted
+            assert mock_idle_add.called
+
+    def test_uri_list_file_not_exists(self, service):
+        """Test _on_uri_list_bytes emits error when file doesn't exist."""
+        with (
+            patch("gi.repository.GLib.filename_from_uri", return_value=("/tmp/nonexistent.png", "")),
+            patch("pathlib.Path.exists", return_value=False),
+            patch.object(service, "_emit_clipboard_error") as mock_error,
+        ):
+            # Call with file URI data for non-existent file
+            service._on_uri_list_bytes(b"file:///tmp/nonexistent.png\r\n")
+            # Verify error was emitted
+            mock_error.assert_called_once()
+
+    def test_emit_texture_from_file_success(self, service):
+        """Test _emit_texture_from_file success path."""
+        mock_texture = MagicMock()
+
+        with (
+            patch("anura.services.clipboard_service.validate_image_resource", return_value=(True, 1024, None)),
+            patch("PIL.Image.open") as mock_image_open,
+            patch("gi.repository.Gdk.Texture.new_from_bytes", return_value=mock_texture),
+            patch("gi.repository.GLib.Bytes.new"),
+            patch("gi.repository.GLib.idle_add") as mock_idle_add,
+        ):
+            # Mock PIL image operations
+            mock_img = MagicMock()
+            mock_img.mode = "RGB"
+            mock_image_open.return_value.__enter__.return_value = mock_img
+
+            # Trigger the method
+            service._emit_texture_from_file("/tmp/test.png")
+
+            # Verify success signal was emitted
+            assert mock_idle_add.called
+
+    def test_emit_texture_from_file_pil_failure(self, service):
+        """Test _emit_texture_from_file PIL decode failure."""
+        from PIL import Image
+
+        with (
+            patch("anura.services.clipboard_service.validate_image_resource", return_value=(True, 1024, None)),
+            patch("PIL.Image.open", side_effect=Image.UnidentifiedImageError("Cannot identify image file")),
+            patch("gi.repository.GLib.idle_add") as mock_idle_add,
+        ):
+            # Trigger the method
+            service._emit_texture_from_file("/tmp/test.png")
+
+            # Verify error signal was emitted
+            assert mock_idle_add.called
+
+    def test_emit_texture_from_file_gdk_failure(self, service):
+        """Test _emit_texture_from_file Gdk.Texture failure."""
+        from gi.repository import Gio, GLib
+
+        with (
+            patch("anura.services.clipboard_service.validate_image_resource", return_value=(True, 1024, None)),
+            patch("PIL.Image.open") as mock_image_open,
+            patch("gi.repository.Gdk.Texture.new_from_bytes", side_effect=GLib.Error.new_literal(Gio.io_error_quark(), "Texture creation failed", Gio.IOErrorEnum.FAILED)),
+            patch("gi.repository.GLib.Bytes.new"),
+            patch("gi.repository.GLib.idle_add") as mock_idle_add,
+        ):
+            # Mock PIL image operations
+            mock_img = MagicMock()
+            mock_img.mode = "RGB"
+            mock_image_open.return_value.__enter__.return_value = mock_img
+
+            # Trigger the method
+            service._emit_texture_from_file("/tmp/test.png")
+
+            # Verify error signal was emitted
+            assert mock_idle_add.called

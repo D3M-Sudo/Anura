@@ -1,14 +1,15 @@
-# language_popover_row.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Copyright 2021-2025 Andrey Maksimov
-# Copyright 2026 D3M-Sudo (Anura fork and modifications)
-#
-# MIT License
+# SPDX-License-Identifier: MIT
+
+from gettext import gettext as _
 
 from gi.repository import GObject, Gtk
 
 from anura.config import RESOURCE_PREFIX
-from anura.types.language_item import LanguageItem
+from anura.models.language_item import LanguageItem
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/language_popover_row.ui")
@@ -20,15 +21,35 @@ class LanguagePopoverRow(Gtk.ListBoxRow):
     # Widgets
     title: Gtk.Label = Gtk.Template.Child()
     selection: Gtk.Image = Gtk.Template.Child()
+    selection_revealer: Gtk.Revealer = Gtk.Template.Child()
 
     def __init__(self, lang: LanguageItem) -> None:
         super().__init__()
         self.lang = lang
         self.title.set_label(self.lang.title)
 
+        # Accessibility: set tooltip and label for screen readers
+        tooltip = _("Select {language}").format(language=self.lang.title)
+        self.set_tooltip_text(tooltip)
+        self.update_property([Gtk.AccessibleProperty.LABEL], [tooltip])
+
         self.lang.bind_property(
             "selected",
-            self.selection,
-            "visible",
+            self.selection_revealer,
+            "reveal-child",
             GObject.BindingFlags.SYNC_CREATE,
         )
+
+        # ARIA: Keep the SELECTED state in sync with model property
+        self._selected_handler_id = self.lang.connect("notify::selected", self._on_selected_changed)
+        self.update_state([Gtk.AccessibleState.SELECTED], [self.lang.selected])
+
+    def _on_selected_changed(self, _obj: GObject.GObject, _pspec: GObject.ParamSpec) -> None:
+        self.update_state([Gtk.AccessibleState.SELECTED], [self.lang.selected])
+
+    def do_dispose(self) -> None:
+        """Disconnect notification signals during dispose to prevent memory leaks."""
+        if hasattr(self, "_selected_handler_id") and self._selected_handler_id and self.lang:
+            self.lang.disconnect(self._selected_handler_id)
+            self._selected_handler_id = 0
+        super().do_dispose()

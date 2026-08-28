@@ -37,7 +37,7 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
         </child>
         <child>
           <object class="GtkStack" id="views">
-            <property name="vexpand">false</property>
+            <property name="vexpand">true</property>
             <property name="transition-type">1</property>
             <child>
               <object class="GtkStackPage">
@@ -45,8 +45,13 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                 <property name="child">
                   <object class="GtkScrolledWindow">
                     <property name="vexpand">true</property>
+                    <property name="max-content-height">300</property>
+                    <property name="propagate-natural-height">true</property>
                     <child>
                       <object class="GtkListBox" id="list_view">
+                        <accessibility>
+                          <property name="label" translatable="true">Language list</property>
+                        </accessibility>
                         <property name="selection-mode">1</property>
                         <signal name="row-activated" handler="_on_language_activate"/>
                       </object>
@@ -87,11 +92,11 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                           </object>
                         </child>
                         <child>
-                          <object class="GtkButton">
-                            <property name="margin-top">8</property>
-                            <property name="hexpand">true</property>
-                            <property name="label" translatable="true">Add Language</property>
-                            <signal name="clicked" handler="_on_add_clicked"/>
+                          <object class="GtkLabel">
+                            <property name="label" translatable="true">Try a different search term</property>
+                            <style>
+                              <class name="dim-label"/>
+                            </style>
                           </object>
                         </child>
                       </object>
@@ -100,6 +105,24 @@ corresponding .blp file and regenerate this file with blueprint-compiler.
                 </property>
               </object>
             </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkSeparator"></object>
+        </child>
+        <child>
+          <object class="GtkButton">
+            <property name="margin-bottom">6</property>
+            <property name="margin-end">6</property>
+            <property name="margin-start">6</property>
+            <property name="margin-top">6</property>
+            <property name="label" translatable="true">_Manage Languages…</property>
+            <property name="use-underline">true</property>
+            <property name="tooltip-text" translatable="true">Open preferences to download more languages (Ctrl+,)</property>
+            <signal name="clicked" handler="_on_add_clicked"/>
+            <style>
+              <class name="flat"/>
+            </style>
           </object>
         </child>
       </object>

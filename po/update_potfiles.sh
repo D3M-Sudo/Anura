@@ -28,10 +28,10 @@ echo "Anura: Starting string extraction for version $version..."
 
 # 3. Extraction Phase
 # Python Source Files
-find ../$APPNAME -iname "*.py" | xargs xgettext --package-name=$APPNAME --package-version=$version --from-code=UTF-8 --output=$APPNAME-python.pot --keyword=_ --keyword=C_:1c,2
+find ../$APPNAME -iname "*.py" | xargs xgettext --package-name=$APPNAME --package-version=$version --from-code=UTF-8 --output=$APPNAME-python.pot --keyword=_ --keyword=C_:1c,2 --keyword=pgettext:1c,2 --keyword=ngettext:1,2
 
 # Blueprint UI Files (Treated as Python for string extraction compatibility)
-find ../data/ui -iname "*.blp" | xargs xgettext --package-name=$APPNAME --package-version=$version --from-code=UTF-8 --output=$APPNAME-blueprint.pot -L Python --keyword=_ --keyword=C_:1c,2
+find ../data/ui -iname "*.blp" | xargs xgettext --package-name=$APPNAME --package-version=$version --from-code=UTF-8 --output=$APPNAME-blueprint.pot -L Python --keyword=_ --keyword=C_:1c,2 --keyword=pgettext:1c,2 --keyword=ngettext:1,2
 
 # Desktop Entry Files
 find ../data/ -iname "*.desktop.in" | xargs xgettext --package-name=$APPNAME --package-version=$version --from-code=UTF-8 --output=$APPNAME-desktop.pot -L Desktop

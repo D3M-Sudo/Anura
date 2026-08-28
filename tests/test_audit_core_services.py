@@ -1,4 +1,9 @@
-# tests/test_phase2_d.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
+#
+# SPDX-License-Identifier: MIT
+
 import pytest
 
 pytest.importorskip("gi")
@@ -10,6 +15,7 @@ from anura.services.screenshot_service import ScreenshotService
 from anura.services.settings import Settings
 from anura.services.share_service import ShareService
 from anura.services.tts import TTSService
+from anura.services.tts.language_mapper import LanguageMapper
 
 
 class TestShareService:
@@ -30,11 +36,13 @@ class TestShareService:
         assert ShareService._validate_share_url("file:///etc/passwd") is False
 
     def test_get_link_telegram(self):
-        assert "t.me/share" in self.service.get_link_telegram("hello")
-        assert self.service.get_link_telegram("") == ""
+        from anura.services.share_providers import generate_share_link
+        assert "t.me/share" in generate_share_link("telegram", "hello")
+        assert generate_share_link("telegram", "") == "https://t.me/share/url?text="
 
     def test_get_link_email(self):
-        link = self.service.get_link_email("hello world")
+        from anura.services.share_providers import generate_share_link
+        link = generate_share_link("email", "hello world")
         assert "mailto:" in link
         assert "subject=Extracted%20Text" in link
         assert "body=hello%20world" in link
@@ -43,18 +51,20 @@ class TestShareService:
 class TestTTSService:
     @pytest.mark.gtk
     def test_map_tesseract_to_gtts(self):
-        assert TTSService.map_tesseract_to_gtts("eng") == "en"
-        assert TTSService.map_tesseract_to_gtts("ita") == "it"
-        assert TTSService.map_tesseract_to_gtts("jpn_vert") == "ja"
-        assert TTSService.map_tesseract_to_gtts("unknown") == "en"
+        assert LanguageMapper.map_tesseract_to_gtts("eng") == "en"
+        assert LanguageMapper.map_tesseract_to_gtts("ita") == "it"
+        assert LanguageMapper.map_tesseract_to_gtts("jpn_vert") == "ja"
+        # Unknown codes now return None (no fallback to "en")
+        # UI layer handles the None case explicitly
+        assert LanguageMapper.map_tesseract_to_gtts("unknown") is None
 
     @pytest.mark.gtk
     def test_get_effective_language(self):
-        with patch("anura.services.tts.settings.get_string", return_value=""):
+        with patch("anura.services.settings.settings.get_string", return_value=""):
             service = TTSService()
             assert service.get_effective_language("eng") == "en"
 
-        with patch("anura.services.tts.settings.get_string", return_value="fr"):
+        with patch("anura.services.settings.settings.get_string", return_value="fr"):
             service = TTSService()
             assert service.get_effective_language("eng") == "fr"
 
@@ -79,24 +89,24 @@ class TestScreenshotService:
     @pytest.mark.gtk
     def test_validate_decode_inputs(self):
         service = ScreenshotService()
-        valid, _, _ = service._validate_decode_inputs("eng")
+        valid, _, _, _, _ = service._validate_decode_inputs("eng")
         assert valid is True
 
-        invalid, _, _ = service._validate_decode_inputs("invalid!")
+        invalid, _, _, _, _ = service._validate_decode_inputs("invalid!")
         assert invalid is False
 
     @pytest.mark.gtk
     def test_format_decode_result(self):
         service = ScreenshotService()
-        success, text, err = service._format_decode_result("Extracted", None)
+        success, text, err, _ocr, _aname = service._format_decode_result("Extracted", None)
         assert success is True
         assert text == "Extracted"
 
-        success, text, err = service._format_decode_result(None, "Error")
+        success, text, err, _ocr, _aname = service._format_decode_result(None, "Error")
         assert success is False
         assert err == "Error"
 
-        success, text, err = service._format_decode_result(None, None)
+        success, text, err, _ocr, _aname = service._format_decode_result(None, None)
         assert success is False
         assert "No text found" in err
 

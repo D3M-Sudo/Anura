@@ -1,3 +1,9 @@
+// This file is part of Anura.
+// Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+// Copyright (C) 2026 D3M-Sudo (Anura)
+//
+// SPDX-License-Identifier: MIT
+
 using Gtk 4.0;
 using Adw 1;
 
@@ -9,12 +15,26 @@ template $PreferencesGeneralPage : Adw.PreferencesPage {
   icon-name: "emblem-system-symbolic";
 
   Adw.PreferencesGroup {
+    title: _("Appearance");
+
+    Adw.ComboRow color_scheme_combo {
+      title: _("Color Scheme");
+      subtitle: _("The preferred color scheme for the application.");
+    }
+  }
+
+  Adw.PreferencesGroup {
     title: _("Text Extraction");
 
     Adw.ComboRow extra_language_combo {
       title: _("_Secondary Language");
       use-underline: true;
       subtitle: _("Additional language used in text recognition");
+    }
+
+    Adw.SwitchRow magic_processor_switch {
+      title: _("Smart Text Parsing");
+      subtitle: _("Automatically reformat URLs, emails and paragraphs");
     }
   }
 
@@ -56,7 +76,6 @@ template $PreferencesGeneralPage : Adw.PreferencesPage {
     Adw.ComboRow tts_language_combo {
       title: _("TTS Language");
       subtitle: _("Language for speech synthesis. Uses OCR language if not set.");
-      model: StringList {};
     }
   }
 }

@@ -1,7 +1,8 @@
-# preferences_general_page.py
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
 #
-# Copyright 2021-2025 Andrey Maksimov
-# Copyright 2026 D3M-Sudo (Anura fork and modifications)
+# SPDX-License-Identifier: MIT
 
 import contextlib
 from gettext import gettext as _
@@ -10,9 +11,9 @@ from gi.repository import Adw, Gio, Gtk
 from loguru import logger
 
 from anura.config import RESOURCE_PREFIX
-from anura.language_manager import language_manager
+from anura.services.language_manager import get_language_manager
 from anura.services.settings import settings
-from anura.services.tts import ttsservice
+from anura.services.tts import get_tts_service
 from anura.utils.signal_manager import SignalManagerMixin
 
 
@@ -20,15 +21,13 @@ from anura.utils.signal_manager import SignalManagerMixin
 class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
     __gtype_name__ = "PreferencesGeneralPage"
 
+    color_scheme_combo: Adw.ComboRow = Gtk.Template.Child()
     extra_language_combo: Adw.ComboRow = Gtk.Template.Child()
+    magic_processor_switch: Adw.SwitchRow = Gtk.Template.Child()
     autocopy_switch: Adw.SwitchRow = Gtk.Template.Child()
     autolinks_switch: Adw.SwitchRow = Gtk.Template.Child()
     volume_row: Adw.SpinRow = Gtk.Template.Child()
     tts_language_combo: Adw.ComboRow = Gtk.Template.Child()
-    # FIX: telemetry_switch removed — it was declared as Template.Child() but the
-    # widget no longer exists in preferences_general.blp (telemetry is fully
-    # disabled in Anura). Keeping a Template.Child() for a non-existent widget
-    # causes a Gtk.BuilderError at runtime.
 
     def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
@@ -38,18 +37,45 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
 
         self.settings.bind("autocopy", self.autocopy_switch, "active", Gio.SettingsBindFlags.DEFAULT)
         self.settings.bind("autolinks", self.autolinks_switch, "active", Gio.SettingsBindFlags.DEFAULT)
+        self.settings.bind(
+            "magic-processor-enabled", self.magic_processor_switch, "active", Gio.SettingsBindFlags.DEFAULT
+        )
 
+        self._setup_color_scheme()
         self._setup_extra_languages()
 
-        # Update combo when languages are installed or removed (tracked for cleanup)
-        self.connect_tracked(language_manager, "downloaded", self._on_language_changed)
-        self.connect_tracked(language_manager, "removed", self._on_language_changed)
+        self.connect_tracked(get_language_manager(), "downloaded", self._on_language_changed)
+        self.connect_tracked(get_language_manager(), "removed", self._on_language_changed)
 
         self._setup_tts_volume()
         self._setup_tts_language()
 
+    def _setup_color_scheme(self) -> None:
+        """Initialize color scheme selector from settings."""
+        from gettext import pgettext
+        qualities = [
+            pgettext("color-scheme", "System"),
+            pgettext("color-scheme", "Light"),
+            pgettext("color-scheme", "Dark"),
+        ]
+        self.color_scheme_combo.set_model(Gtk.StringList.new(qualities))
+
+        scheme = self.settings.get_string("color-scheme")
+        mapping = {"default": 0, "force-light": 1, "force-dark": 2}
+        idx = mapping.get(scheme, 0)
+        self.color_scheme_combo.set_selected(idx)
+
+        self.connect_tracked(self.color_scheme_combo, "notify::selected", self._on_color_scheme_changed)
+
+    def _on_color_scheme_changed(self, combo: Adw.ComboRow, _param: object) -> None:
+        idx = combo.get_selected()
+        mapping = {0: "default", 1: "force-light", 2: "force-dark"}
+        scheme = mapping.get(idx, "default")
+        logger.debug(f"Anura: Color scheme preference changed to {scheme}")
+        self.settings.set_string("color-scheme", scheme)
+
     def _setup_extra_languages(self) -> None:
-        downloaded_langs = language_manager.get_downloaded_languages()
+        downloaded_langs = get_language_manager().get_downloaded_languages()
         self.extra_language_combo.set_model(Gtk.StringList.new(downloaded_langs))
 
         if not downloaded_langs:
@@ -65,7 +91,7 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
             # No extra language configured - leave combo at default (index 0)
             return
 
-        current_name = language_manager.get_language(current_extra)
+        current_name = get_language_manager().get_language(current_extra)
 
         try:
             index = downloaded_langs.index(current_name)
@@ -78,7 +104,7 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
         if not selected_item:
             return
         lang_name = selected_item.get_string()
-        lang_code = language_manager.get_language_code(lang_name)
+        lang_code = get_language_manager().get_language_code(lang_name)
         logger.debug(f"Anura: Extra language set to {lang_name} ({lang_code})")
         self.settings.set_string("extra-language", lang_code)
 
@@ -102,7 +128,6 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
 
     def _setup_tts_volume(self) -> None:
         """Setup TTS volume spin row with percentage display (0-100)."""
-        # Load initial value from settings (0.0-1.0) and convert to percentage
         volume_normalized = self.settings.get_double("tts-volume")
         self.volume_row.set_value(volume_normalized * 100)
 
@@ -126,7 +151,7 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
 
     def _setup_tts_language(self) -> None:
         """Populate TTS language combo with gTTS supported languages."""
-        supported = ttsservice.get_supported_gtts_languages()
+        supported = get_tts_service().get_supported_gtts_languages()
 
         # Create list: "Auto (follow OCR)" + all supported languages
         lang_names = [_("Auto (follow OCR language)"), *list(supported.values())]
@@ -150,7 +175,7 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
         if idx == 0:
             self.settings.set_string("tts-language", "")  # Auto
         else:
-            supported = ttsservice.get_supported_gtts_languages()
+            supported = get_tts_service().get_supported_gtts_languages()
             supported_keys = list(supported.keys())
             # Bounds check to prevent IndexError
             if idx - 1 < len(supported_keys):
@@ -163,5 +188,5 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
 
     def do_destroy(self) -> None:
         """Clean up all tracked signal handlers to prevent memory leaks."""
-        self.disconnect_all_signals()
+        self.teardown_all()
         super().do_destroy()

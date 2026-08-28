@@ -6,6 +6,150 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- Implemented UI theme selector with System, Light, and Dark options using `Adw.StyleManager`
+- Added `color-scheme` GSettings key for persistent theme preference storage
+- Implemented selection-aware text statistics and actions on OCR results page (Palette)
+- Added Undo/Redo functionality to ExtractedPage for improved text editing workflow
+- Enhanced accessibility with keyboard navigation improvements and better drop button tooltips
+- Implemented NormCap-inspired UX improvements for better user experience
+- Added comprehensive accessibility enhancements to WelcomePage and LanguagePopover
+- Implemented dynamic copy button tooltip and accessibility feedback in Palette
+- Added manual workflow execution capability for dependency sync in CI/CD
+- Configured Dependabot for automated dependency updates on testing branch
+- Added comprehensive docstrings, type hints, and integration tests for ClipboardService fallback paths
+- Implemented six-pillar CI hardening framework for improved test reliability
+- Added enhanced diagnostic logging for host screenshot operations
+
+### Fixed
+- Resolved `AtomicTaskManager` deadlock and child process hang issues
+- Fixed GTK integration test suite hanging with comprehensive multi-step fix (atexit, os._exit(), Weston cleanup, signal sourcing)
+- Eliminated clipboard infinite fallback loop and stale source_remove warnings
+- Fixed TTS play/pause/stop state desynchronization in extracted_page (5 bugs)
+- Resolved X11 screenshot fallback issues in testing branch
+- Added `BrokenProcessPool` recovery to `AtomicTaskManager` for enhanced error handling (CRIT-01)
+- Fixed OcrController weak references against ReferenceError during window destruction
+- Fixed static type-checking and path concatenation issues
+- Fixed flatpak pybind11 cmake path resolution during zxing build
+- Resolved clipboard spinner stuck and source_remove warnings (BUG-PASTE + BUG-032)
+- Fixed path mocking in tests (Path.exists instead of os.path.exists)
+- Caught PermissionError from Path.exists() for inaccessible parent directories
+- Released _state_lock before ProcessPoolExecutor.shutdown() to prevent deadlock
+- Fixed test assertion to use GTK4 set_content() instead of removed set_text()
+- Resolved GObject metaclass conflicts and TESSDATA_DIR patching in tests
+- Fixed ruff linting violations (F841 unused variable, I001 import sorting, B028, SIM910)
+- Fixed CI workflow SHA resolution errors and image pull failures
+- Fixed undefined HTML variable and unused import in CI workflow
+- Hardened CI/CD workflows with immutable action pinning and credential protection
+- Resolved 4 bugs from debug session 2026-05-25
+- Fixed 7 bugs identified by automated Kimi analysis (2026-05-26)
+- Reset fallback flag in clipboard service and enhanced portal error logging
+- Remediated GTK integration test failures and GTK4 regressions
+- Fixed Python-quality CI failures
+- Removed complex async callback tests that fail in CI
+- Fixed failing integration tests by simplifying test logic
+- Terminated child processes to prevent GHA limbo hangs
+- Resolved structural test mismatches and cleaned TTS debt
+- Restored missing TTSService facade export
+- Fixed DialogManager import in AnuraWindow
+- Fixed ruff style checks and import ordering across services
+
+### Changed
+- Decomposed LanguageManager into specialized managers (DownloadManager, CacheManager, LanguageValidator) in anura/services/language/
+- Optimized OCR layout parsing and structural reconstruction (Bolt optimization)
+- Optimized image mean calculation in ContrastEnhancementFilter
+- Restructured and modernized CI/CD pipeline with comprehensive GTK integration test fixes
+- Performed systematic bug hunting and modernization sweep across the codebase
+- Technical remediation for Flatpak, Pathlib, and Safety patterns
+- Rewrote AI-generated comments for clarity and professionalism
+- Translated project documentation from Italian to English
+- Updated flatpak-dependencies.yml workflow
+- Moved audit-related files (bugs-observed.json, bugs-summary.md) into dedicated docs/audit/ directory
+- Exposed loading_languages and finalized test suite alignment
+- Style fixes: import ordering and typing annotations across services
+- Audit-driven stability hardening and build fixes
+- Updated Flatpak dependencies: Leptonica 1.87.0, imlib2 1.12.6
+- Updated dependency versions: ruff ≥0.15.21, meson ≥1.11.2, pytest ≥9.1.1, pillow ≥12.3.0
+- Enhanced error handling and logging throughout the application
+- Improved portal environment diagnostics and user guidance
+- Unified GI mock injection to resolve metaclass conflict in non-CI mode
+- Synced CI ignore lists and added ANURA_CI_TEST_MODE to python-quality job
+
+### Security
+- **HIGH**: Fixed Pango markup injection in notifications (hardened against markup attacks)
+- **HIGH**: Fixed hierarchical ID collision and OCR pipeline instability
+- **HIGH**: Fixed Config Layer Leakage and enhanced lifecycle safety
+- Hardened local data storage permissions for sensitive data
+- Hardened sanitize_text by stripping Private Use (Co) and Surrogate (Cs) Unicode categories
+- Hardened is_safe_url_string to reject mixed-script homograph attacks
+- Hardened image resource validation for DoS prevention (MAX_IMAGE_SIZE_BYTES enforcement)
+- Remediated architectural resource leaks across core services (v2/v3)
+- Completed Phase 2 forensics and remediated logic flaws across the codebase
+- Installed Claude Bug Bounty toolkit and required security scanners for ongoing auditing
+- Implemented dynamic URI scheme validation in ShareService (BUG-035 remediation)
+
+### Removed
+- Deleted CHANGELOG_REMEDIATION.md
+
+## [0.1.5] - 2026-05-25 {version-0.1.5-architectural-milestone}
+
+### Added
+- Implemented "Modular Core Architecture" by decomposing AnuraApplication into isolated services (boot, i18n, resources, dialogs).
+- Implemented "SilentRunner" to isolate the headless/CLI engine from the GTK main loop.
+- Zero-telemetry "Offline Rotary Logging" system in $XDG_STATE_HOME/anura/logs/.
+- Asynchronous "Progressive Loading" to prevent the Zombie UI effect during Magic Processing.
+- Implemented **Controller-based Composition Architecture**; dismantled legacy mixins for OCR, TTS, and DnD
+- Introduced immutable **OcrResult** and **OcrWord** dataclasses with `slots=True` for optimized memory and performance
+- Added boot-time **Capability Audit** (`ApplicationContext`) to detect system dependencies (Tesseract, ZXing, GStreamer)
+- Implemented proactive **UI Sensitivity Binding** to prevent runtime failures on unsupported environments
+- Implemented **Deep Codebase Audit & Reliability Hardening** (v0.1.5 architecture)
+- Replaced legacy `GObjectWorker` with `AtomicTaskManager` for single-slot task execution with UUID-based result validation
+- Migrated `AnuraWindow` to a modular architecture using **Naked Mixins** (`WindowOCRMixin`, `WindowTTSMixin`, `WindowDnDMixin`)
+- Implemented automated signal lifecycle management via `SignalManagerMixin` across all core widgets and services
+- Added modular **Image Filter Chain** (`anura/utils/image_filters.py`) for extensible OCR preprocessing
+- Integrated `StructuralReconstructor` for spatial layout analysis and paragraph merging
+- Replaced `pyzbar` with `zxing-cpp` for more robust and reliable barcode and QR code detection
+- Expanded the test suite to **437 tests**, including 393 unit tests (Non-GTK) and 44 integration tests (GTK)
+- Added comprehensive security-focused tests for DoS prevention and structural UI verification
+- Added support for Tesseract multi-language pooling in `~/.cache/anura/tessdata_pool/`
+- Added keyboard shortcut hints and empty search state in the language selector
+- Added 'All files (*)' filter to the image selection dialog
+- Improved pluralization and internationalization support for text statistics
+
+### Fixed
+- Fixed **GStreamer Bus Memory Safety** using `weakref` closures to prevent reference cycles in `TTSService`
+- Fixed silent scanning failures by implementing explicit **Dependency Fail-Fast** propagation
+- Fixed critical race conditions in OCR processing by invalidating stale tasks in `AtomicTaskManager`
+- Resolved memory leaks by ensuring automated signal disconnection via `connect_tracked()`
+- Fixed `Gtk.FileFilter` regression to prevent duplicate entries on portal backends like LXQt and GNOME
+- Corrected `Gio.File.query_info_async` implementation by providing exact positional arguments
+- Resolved layout reflow issues where `Gtk.TextView` content was clipped in GTK4
+- Fixed `__slots__` conflict and potential `AttributeError` in `ClipboardService`
+- Improved error handling for missing Tesseract languages with `Adw.Toast` feedback
+- Fixed keyboard shortcuts to use universal key names (F1, K) for cross-layout compatibility
+- Resolved navigation focus race conditions and spinner animation states
+
+### Security
+- Implemented "Resource Guards" (OOM prevention) to block processing of images >20MP with less than 15% free RAM or 500MB.
+- Transactional I/O isolation for the OCR worker via tempfile.TemporaryDirectory within the isolated process.
+- Implemented **Resource-based DoS Protection** by validating image file sizes (`MAX_IMAGE_SIZE_BYTES`) before processing
+- Hardened text extraction with `validators.sanitize_text`, stripping Unicode Control (Cc) and Format (Cf) characters
+- Hardened URL validation and encoding in `ShareService` against injection and RTL spoofing attacks
+
+### Changed
+- Refactored SignalManagerMixin for native binding and automatic teardown of controllers on the destroy event.
+- Optimized OCR pipeline by unifying Tesseract parsing into a single $O(N)$ pass
+- Standardized file headers across the entire repository for project-wide consistency
+- Updated Tesseract language identifier for German Fraktur to the correct `deu_latf` code
+- Optimized multi-monitor support with improved DPI scaling (`notify::scale-factor`)
+- Standardized UI placeholders and messages with Unicode ellipses (…) following GNOME HIG
+- Renamed application ID from com.github.d3msudo.anura to io.github.d3msudo.anura
+- Updated GitHub Actions to major versions (checkout@v6, upload-artifact@v7) for CI reliability
+
+### Removed
+- Removed legacy `gobject_worker.py` and all direct `GLib.idle_add` emissions for task results
+- Deleted the legacy `po/com.github.d3msudo.anura.pot` file
+
 ## [0.1.4.3] - 2026-05-16 {version-0.1.4.3}
 
 ### Added
