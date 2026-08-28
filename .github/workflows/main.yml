@@ -62,6 +62,11 @@ jobs:
         # Catches drift from manual edits or workflow bugs.
         run: python3 build-aux/check_manifest_consistency.py
 
+      - name: Check tessdata commit SHA consistency
+        # Ensure tessdata SHAs match between config.py and both manifests.
+        # Catches drift from manual edits or incomplete updates.
+        run: python3 build-aux/check_tessdata_consistency.py
+
   gtk-tests:
     name: GTK Integration Tests
     runs-on: ubuntu-latest
