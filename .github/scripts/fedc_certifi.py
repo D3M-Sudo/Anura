@@ -1,31 +1,13 @@
 #!/usr/bin/env python3
 # .github/scripts/fedc_certifi.py
-"""
-Centralized certifi source matcher and manifest manipulator for the FEDC
-(Flatpak External Data Checker) workflow.
+"""Helpers for isolating the certifi source for FEDC updates.
 
-This script provides a single, deterministic function for identifying the
-certifi source in Flatpak manifests. It replaces the three inline Python
-heredocs that previously existed in the workflow, eliminating duplicated
-matching logic.
-
-The matcher identifies certifi by checking if the source URL's filename
-starts with 'certifi-', which is the standard PyPI naming convention for
-the certifi package wheel. This criterion is robust because:
-
-  - The certifi source in this project's manifest has NO x-checker-data
-    field, so x-checker-data matching (the old approach) fails with 0 matches.
-  - URL filenames are deterministic and unique per package.
-  - No hardcoded array indices are required.
-  - Works identically for the original, FEDC-updated, and real manifests.
-
-Subcommands:
-  isolate <manifest> <output>  Create temp manifest with only certifi source.
-  replace <real> <updated>     Replace certifi source in real manifest.
-  verify <manifest>            Verify only certifi was modified (security).
-  count <manifest>             Count certifi sources (for testing/debugging).
+The real manifest intentionally does not need x-checker-data. The temporary
+manifest does: FEDC needs explicit PyPI checker metadata in order to inspect
+the isolated certifi source.
 """
 
+import copy
 import json
 import os
 from pathlib import Path
@@ -35,37 +17,18 @@ from typing import Any
 
 
 def is_certifi_source(source: dict[str, Any]) -> bool:
-    """
-    Determine if a source dict represents the certifi package.
-
-    Uses URL filename matching: extracts the filename from the source URL
-    and checks if it starts with 'certifi-'. This is the standard PyPI
-    naming convention for the certifi wheel (e.g.,
-    'certifi-2026.4.22-py3-none-any.whl').
-    """
+    """Return True when a source is a certifi Python artifact."""
     url = source.get("url", "")
     if not url:
         return False
     filename = os.path.basename(url)
-    # Require both the certifi- filename prefix and a Python artifact
-    # extension, so unrelated URLs (e.g. git repos named "certifi-mirror.git")
-    # can never produce a false positive.
-    return filename.startswith("certifi-") and filename.endswith((".whl", ".tar.gz", ".zip"))
+    return filename.startswith("certifi-") and filename.endswith(
+        (".whl", ".tar.gz", ".zip")
+    )
 
 
 def find_certifi_sources(manifest: dict[str, Any]) -> list[tuple[str, dict[str, Any]]]:
-    """Find all certifi sources in a Flatpak manifest.
-
-    Returns a list of (module_name, source) tuples for all sources that are
-    certifi packages. If no certifi sources are found, raises a SystemExit
-    with an informative message.
-
-    Args:
-        manifest: The parsed JSON manifest.
-
-    Returns:
-        List of (module_name, source) tuples for certifi sources.
-    """
+    """Find exactly one certifi source in a Flatpak manifest."""
     matches = []
     for module in manifest.get("modules", []):
         module_name = module.get("name", "")
@@ -80,26 +43,28 @@ def find_certifi_sources(manifest: dict[str, Any]) -> list[tuple[str, dict[str, 
 
 
 def create_isolated_manifest(real_manifest_path: str, output_path: str) -> None:
-    """Create an isolated manifest containing ONLY the certifi source.
+    """Create a temporary manifest containing only certifi.
 
-    Reads the real manifest, finds the certifi source, and writes a new
-    manifest containing only that source. This is used for the FEDC
-    isolation step.
-
-    Args:
-        real_manifest_path: Path to the original manifest file.
-        output_path: Path where the isolated manifest will be written.
+    FEDC requires x-checker-data to select its PyPI checker. This metadata is
+    deliberately added only to the temporary manifest and is stripped again
+    by replace_certifi_source(), so the production Flatpak manifest remains
+    unchanged except for the URL/checksum update.
     """
     real_manifest = json.loads(Path(real_manifest_path).read_text())
-    matches = find_certifi_sources(real_manifest)
+    module_name, certifi_source = find_certifi_sources(real_manifest)[0]
 
-    module_name, certifi_source = matches[0]
+    isolated_source = copy.deepcopy(certifi_source)
+    isolated_source["x-checker-data"] = {
+        "type": "pypi",
+        "name": "certifi",
+    }
+
     isolated = {
         "app-id": real_manifest.get("app-id", "io.github.d3msudo.anura"),
         "modules": [
             {
                 "name": module_name,
-                "sources": [certifi_source],
+                "sources": [isolated_source],
             }
         ],
     }
@@ -108,47 +73,42 @@ def create_isolated_manifest(real_manifest_path: str, output_path: str) -> None:
 
 
 def replace_certifi_source(real_manifest_path: str, updated_manifest_path: str) -> None:
-    """Replace the certifi source in a real manifest with an updated one.
+    """Replace the real certifi source with the FEDC-updated source.
 
-    Reads the original manifest and an updated manifest (containing only
-    certifi), and replaces the certifi source in the original with the
-    updated one. This is used for the FEDC update step.
-
-    Args:
-        real_manifest_path: Path to the original manifest file.
-        updated_manifest_path: Path to the updated manifest file.
+    x-checker-data is temporary FEDC metadata and must never be copied into
+    the real manifest.
     """
     real_manifest = json.loads(Path(real_manifest_path).read_text())
     updated_manifest = json.loads(Path(updated_manifest_path).read_text())
 
-    find_certifi_sources(real_manifest)  # enforces exactly one certifi source
-    updated_matches = find_certifi_sources(updated_manifest)
+    module_name, _ = find_certifi_sources(real_manifest)[0]
+    updated_module_name, updated_source = find_certifi_sources(updated_manifest)[0]
+    if module_name != updated_module_name:
+        raise SystemExit(
+            f"Certifi module mismatch: real={module_name!r}, updated={updated_module_name!r}"
+        )
 
-    if len(updated_matches) != 1:
-        raise SystemExit(f"Expected exactly one updated certifi source, found {len(updated_matches)}")
+    source_to_insert = copy.deepcopy(updated_source)
+    source_to_insert.pop("x-checker-data", None)
 
-    module_name, certifi_source = updated_matches[0]
-
+    replaced = False
     for module in real_manifest.get("modules", []):
-        if module.get("name") == module_name:
-            for i, source in enumerate(module.get("sources", [])):
-                if is_certifi_source(source):
-                    module["sources"][i] = certifi_source
-                    break
+        if module.get("name") != module_name:
+            continue
+        for i, source in enumerate(module.get("sources", [])):
+            if is_certifi_source(source):
+                module["sources"][i] = source_to_insert
+                replaced = True
+                break
+
+    if not replaced:
+        raise SystemExit("Failed to replace certifi source in real manifest")
 
     Path(real_manifest_path).write_text(json.dumps(real_manifest, indent=4) + "\n")
 
 
 def verify_certifi_only_change(manifest_path: str) -> None:
-    """Verify that only the certifi source has been modified in a manifest.
-
-    This is used to ensure that the FEDC update only modified the certifi
-    source and did not modify any other sources.
-
-    Args:
-        manifest_path: Path to the manifest to verify.
-    """
-    # Run git diff to see what changed
+    """Run git diff --check for the target manifest."""
     result = subprocess.run(
         ["git", "diff", "--check", manifest_path],
         capture_output=True,
@@ -157,57 +117,35 @@ def verify_certifi_only_change(manifest_path: str) -> None:
     if result.returncode != 0:
         print("Error: git diff --check failed with the following diff:")
         subprocess.run(["git", "diff", manifest_path])
-        raise SystemExit("Manifest contains changes beyond certifi only.")
+        raise SystemExit("Manifest contains invalid changes.")
 
 
 def count_certifi_sources(manifest_path: str) -> None:
-    """Count the number of certifi sources in a manifest.
-
-    Used for debugging and testing purposes.
-
-    Args:
-        manifest_path: Path to the manifest file.
-    """
+    """Print the number of certifi sources in a manifest."""
     manifest = json.loads(Path(manifest_path).read_text())
-    matches = find_certifi_sources(manifest)
-    print(len(matches))
+    print(len(find_certifi_sources(manifest)))
 
 
 def main() -> None:
-    """Entry point for the script. Handles command-line arguments."""
     if len(sys.argv) < 2:
         print("Usage: python fedc_certifi.py <command> [args]")
-        print("Commands:")
-        print("  isolate <manifest> <output>")
-        print("  replace <real> <updated>")
-        print("  verify <manifest>")
-        print("  count <manifest>")
+        print("Commands: isolate, replace, verify, count")
         sys.exit(1)
 
     command = sys.argv[1]
-
     try:
-        if command == "isolate":
-            if len(sys.argv) != 4:
-                raise SystemExit("Usage: python fedc_certifi.py isolate <manifest> <output>")
+        if command == "isolate" and len(sys.argv) == 4:
             create_isolated_manifest(sys.argv[2], sys.argv[3])
-        elif command == "replace":
-            if len(sys.argv) != 4:
-                raise SystemExit("Usage: python fedc_certifi.py replace <real> <updated>")
+        elif command == "replace" and len(sys.argv) == 4:
             replace_certifi_source(sys.argv[2], sys.argv[3])
-        elif command == "verify":
-            if len(sys.argv) != 3:
-                raise SystemExit("Usage: python fedc_certifi.py verify <manifest>")
+        elif command == "verify" and len(sys.argv) == 3:
             verify_certifi_only_change(sys.argv[2])
-        elif command == "count":
-            if len(sys.argv) != 3:
-                raise SystemExit("Usage: python fedc_certifi.py count <manifest>")
+        elif command == "count" and len(sys.argv) == 3:
             count_certifi_sources(sys.argv[2])
         else:
-            raise SystemExit(f"Unknown command: {command}")
-
-    except SystemExit as e:
-        print(f"Error: {e}")
+            raise SystemExit(f"Invalid arguments for command: {command}")
+    except SystemExit as exc:
+        print(f"Error: {exc}")
         sys.exit(1)
 
 
