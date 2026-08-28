@@ -24,7 +24,7 @@ msgstr ""
 
 #: ../anura/controllers/dnd_controller.py:38
 msgid "Failed to load dropped file (invalid path)."
-msgstr ""
+msgstr "Incorrecto al cargar el archivo arrastrado (ruta no válida)."
 
 #: ../anura/controllers/dnd_controller.py:46
 #: ../anura/services/screenshot_service.py:412 ../anura/window.py:219
@@ -34,7 +34,7 @@ msgstr "Error al cargar archivo de imagen"
 
 #: ../anura/controllers/dnd_controller.py:60
 msgid "Failed to process the file."
-msgstr ""
+msgstr "Incorrecto al procesar el archivo."
 
 #: ../anura/controllers/ocr_controller.py:92
 msgid "No text found. Try to grab another region."
@@ -48,15 +48,15 @@ msgstr ""
 #, python-brace-format
 msgid "{n} email found in text"
 msgid_plural "{n} emails found in text"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{n} correo-e encontrado en el texto"
+msgstr[1] "{n} correos-e encontrados en el texto"
 
 #: ../anura/controllers/ocr_controller.py:138
 #, python-brace-format
 msgid "{n} phone number found in text"
 msgid_plural "{n} phone numbers found in text"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{n} número de teléfono encontrado en el texto"
+msgstr[1] "{n} números de teléfono encontrados en el texto"
 
 #: ../anura/controllers/ocr_controller.py:193
 #, fuzzy
@@ -65,7 +65,7 @@ msgstr "Abrir imagen para extraer texto"
 
 #: ../anura/controllers/ocr_controller.py:196
 msgid "All supported images"
-msgstr ""
+msgstr "Todas las imágenes proporcionadas"
 
 #: ../anura/controllers/ocr_controller.py:228
 msgid "PNG images (*.png)"
@@ -97,7 +97,7 @@ msgstr ""
 
 #: ../anura/controllers/ocr_controller.py:237
 msgid "All files (*)"
-msgstr ""
+msgstr "Todos los archivos (*)"
 
 #: ../anura/main.py:81
 msgid "Extract directly into the clipboard"
@@ -127,7 +127,7 @@ msgstr "Texto extraído y copiado al portapapeles."
 
 #: ../anura/main.py:211
 msgid "Text extracted successfully."
-msgstr ""
+msgstr "Texto extraído correctamente."
 
 #: ../anura/main.py:220
 msgid "URL opened automatically"
@@ -135,7 +135,7 @@ msgstr "URL abierto automáticamente"
 
 #: ../anura/main.py:225
 msgid "QR Code URL Detected"
-msgstr ""
+msgstr "Detectado URL del Código QR"
 
 #: ../anura/main.py:236
 #, fuzzy
@@ -154,7 +154,7 @@ msgstr ""
 
 #: ../anura/main.py:316
 msgid "Bug fixes and improvements."
-msgstr ""
+msgstr "Fallos solucionados y mejoras."
 
 #: ../anura/main.py:400 ../anura/services/screenshot_service.py:594
 #, fuzzy
@@ -189,17 +189,17 @@ msgstr "No hay imágenes en el portapapeles"
 
 #: ../anura/services/clipboard_service.py:586
 msgid "Clipboard read operation timed out."
-msgstr ""
+msgstr "Portapapeles lee operación vencida."
 
 #: ../anura/services/tts.py:454
 #, python-brace-format
 msgid "GStreamer playback error: {error}"
-msgstr ""
+msgstr "Error de reproducción de GStreamer: {error}"
 
 #: ../anura/services/screenshot_service.py:74
 #: ../anura/services/screenshot_service.py:454
 msgid "The selected image file is empty."
-msgstr ""
+msgstr "El archivo de la imagen seleccionada está vacío."
 
 #: ../anura/services/screenshot_service.py:114
 msgid "Enhancing image..."
@@ -224,11 +224,11 @@ msgstr ""
 #: ../anura/services/screenshot_service.py:291
 #, python-brace-format
 msgid "Screenshot failed: {reason}"
-msgstr ""
+msgstr "Pantallazo incorrecto: {reason}"
 
 #: ../anura/services/screenshot_service.py:301
 msgid "Failed to initiate screenshot capture."
-msgstr ""
+msgstr "Incorrecto al iniciar captura de pantallazo."
 
 #: ../anura/services/screenshot_service.py:312
 #: ../anura/services/screenshot_service.py:322
@@ -283,7 +283,7 @@ msgstr "Cancelar"
 
 #: ../anura/services/share_service.py:254
 msgid "Cannot show dialog without active window"
-msgstr ""
+msgstr "No se puede mostrar diálogo sin ventana activa"
 
 #: ../anura/services/share_service.py:373
 msgid "Extracted Text"
@@ -361,7 +361,7 @@ msgstr "Chino - Simplificado"
 
 #: ../anura/services/language_manager.py:114
 msgid "Chinese - Simplified (vertical)"
-msgstr ""
+msgstr "Chino simplificado (vertical)"
 
 #: ../anura/services/language_manager.py:115
 msgid "Chinese - Traditional"
@@ -369,7 +369,7 @@ msgstr "Chino - Tradicional"
 
 #: ../anura/services/language_manager.py:116
 msgid "Chinese - Traditional (vertical)"
-msgstr ""
+msgstr "Chino - Tradicional (vertical)"
 
 #: ../anura/services/language_manager.py:117
 msgid "Cherokee"
@@ -789,13 +789,15 @@ msgstr "Yoruba"
 
 #: ../anura/utils/portal_advice.py:86
 msgid "LXQt"
-msgstr ""
+msgstr "LXQt"
 
 #: ../anura/utils/portal_advice.py:87
 msgid ""
 "Screenshot portal is not configured for LXQt. See the README for the LXQt "
 "setup steps."
 msgstr ""
+"Portal del pantallazo no está configurado para LXQt. Consulte el README para "
+"los pasos de configuración de LXQt."
 
 #: ../anura/utils/portal_advice.py:89
 msgid ""
@@ -807,27 +809,34 @@ msgstr ""
 
 #: ../anura/utils/portal_advice.py:100
 msgid "KDE Plasma"
-msgstr ""
+msgstr "KDE Plasma"
 
 #: ../anura/utils/portal_advice.py:101
 msgid ""
 "Screenshot portal unavailable. Install xdg-desktop-portal-kde and re-login."
 msgstr ""
+"Captura de Pantalla portal no disponible. Instala xdg-desktop-portal-kde y "
+"vuelva a iniciar sesión."
 
 #: ../anura/utils/portal_advice.py:103
 msgid ""
 "Screenshot failed. On KDE Plasma, install xdg-desktop-portal-kde (e.g. sudo "
 "apt install xdg-desktop-portal-kde) and log out and back in."
 msgstr ""
+"Pantallazo incorrecto. En KDE Plasma, instale xdg-desktop-portal-kde (p.ej. "
+"sudo apt install xdg-desktop-portal-kde) y salga de la sesión y vuelva a "
+"entrar."
 
 #: ../anura/utils/portal_advice.py:112
 msgid "your wlroots compositor"
-msgstr ""
+msgstr "tu compositor wlroots"
 
 #: ../anura/utils/portal_advice.py:113
 msgid ""
 "Screenshot portal unavailable. Install xdg-desktop-portal-wlr and re-login."
 msgstr ""
+"Captura de portal no disponible. Instala xdg-desktop-portal-wlr y vuelva a "
+"iniciar sesión."
 
 #: ../anura/utils/portal_advice.py:115
 msgid ""
@@ -835,10 +844,13 @@ msgid ""
 "Niri, …), install xdg-desktop-portal-wlr (e.g. sudo apt install xdg-desktop-"
 "portal-wlr) and log out and back in."
 msgstr ""
+"Captura de pantalla incorrecta. En los compositores basados en wlroots "
+"(Sway, Hyprland, river, Niri, ...), instalar xdg-desktop-portal-wlr (p.ej., "
+"sudo apt install xdg-desktop-portal-wlr) y salir y vuelva a iniciar sesión."
 
 #: ../anura/utils/portal_advice.py:126
 msgid "GNOME"
-msgstr ""
+msgstr "GNOME"
 
 #: ../anura/utils/portal_advice.py:127
 msgid ""
@@ -856,6 +868,8 @@ msgid ""
 "Screenshot portal unavailable. Install xdg-desktop-portal-gnome (or -kde) "
 "and re-login."
 msgstr ""
+"Captura de pantalla del portal no disponible. Instale xdg-desktop-portal-"
+"gnome (o -kde) y vuelva a iniciar sesión."
 
 #: ../anura/utils/portal_advice.py:150
 #, python-brace-format
@@ -864,16 +878,22 @@ msgid ""
 "desktop-portal-kde) and log out and back in. On modern Ubuntu xdg-desktop-"
 "portal-gtk no longer provides the Screenshot interface."
 msgstr ""
+"Captura de Pantalla incorrecta. En {desktop}, instala xdg-desktop-portal-"
+"gnome (o xdg-desktop-portal-kde) y cierra y abra la sesión. En el xdg-"
+"desktop-portal-gtk más moderno de Ubuntu ya no proporciona la interfaz de "
+"Captura de Pantalla."
 
 #: ../anura/utils/portal_advice.py:159
 msgid "your desktop"
-msgstr ""
+msgstr "tu escritorio"
 
 #: ../anura/utils/portal_advice.py:160
 msgid ""
 "Screenshot portal unavailable. Install the xdg-desktop-portal backend "
 "matching your desktop."
 msgstr ""
+"Portal de pantallazo indisponible. Instala el backend xdg-desktop-portal "
+"coincidente con su escritorio."
 
 #: ../anura/utils/portal_advice.py:162
 msgid ""
@@ -881,18 +901,22 @@ msgid ""
 "screenshot portal. Install the xdg-desktop-portal backend matching your "
 "desktop (e.g. xdg-desktop-portal-gnome, -kde, -wlr) and re-login."
 msgstr ""
+"Captura de pantalla incorrecta. Tu sesión de escritorio no parece exponer un "
+"portal de capturas de pantalla que funcione. Instala el backend de xdg‐"
+"desktop‐portal compatible con tu entorno de escritorio (p.ej., xdg-desktop-"
+"portal-gnome, -kde, -wlr) y vuelve a iniciar sesión."
 
 #: ../anura/utils/validators.py:310
 msgid "Invalid URL blocked for security"
-msgstr ""
+msgstr "URL no válida bloqueada por motivos de seguridad"
 
 #: ../anura/utils/validators.py:324
 msgid "Failed to open link"
-msgstr ""
+msgstr "Incorrecto al abrir enlace"
 
 #: ../anura/core/dialogs.py:39
 msgid "Acknowledgements"
-msgstr ""
+msgstr "Reconocimientos"
 
 #: ../anura/core/dialogs.py:42
 msgid ""
@@ -901,11 +925,11 @@ msgstr ""
 
 #: ../anura/core/dialogs.py:44
 msgid "Changelog"
-msgstr ""
+msgstr "Bitácoras"
 
 #: ../anura/core/dialogs.py:45
 msgid "Report an Issue"
-msgstr ""
+msgstr "Informar una Incidencia"
 
 #: ../anura/core/dialogs.py:80
 msgid "OK"
@@ -1013,7 +1037,7 @@ msgstr "Error de red. Por favor, compruebe su conexión a Internet."
 
 #: ../anura/widgets/extracted_page.py:375
 msgid "Text-to-speech failed. Please try again."
-msgstr ""
+msgstr "Texto a habla incorrecta. Inténtelo de nuevo."
 
 #: ../anura/widgets/preferences_languages_page.py:76
 msgid "OCR models unreachable. Please check your internet connection."
@@ -1040,7 +1064,7 @@ msgstr ""
 #: ../anura/widgets/share_row.py:29
 #, python-brace-format
 msgid "Share via {name}"
-msgstr ""
+msgstr "Compartir por medio de {name}"
 
 #: ../anura/widgets/welcome_page.py:102
 #, fuzzy
@@ -1053,15 +1077,15 @@ msgstr "Extraer texto de cualquier lugar"
 
 #: ../anura/widgets/welcome_page.py:194
 msgid "No file data received from drop"
-msgstr ""
+msgstr "No se recibieron datos de archivo desde abandono"
 
 #: ../anura/widgets/welcome_page.py:207
 msgid "No valid file found in drop"
-msgstr ""
+msgstr "Ningún archivo válido encontrado al abandonar"
 
 #: ../anura/widgets/welcome_page.py:216
 msgid "Only local files can be dropped"
-msgstr ""
+msgstr "Solo los archivos locales pueden ser abandonados"
 
 #: ../anura/widgets/welcome_page.py:225
 msgid ""
@@ -1070,43 +1094,43 @@ msgstr ""
 
 #: ../anura/widgets/welcome_page.py:232
 msgid "Only images can be processed that way."
-msgstr ""
+msgstr "Solo las imágenes pueden ser procesadas de esa manera."
 
 #: ../anura/widgets/welcome_page.py:238
 msgid "Failed to process dropped file"
-msgstr ""
+msgstr "Incorrecto al procesar archivo arrastrado"
 
 #: ../anura/widgets/welcome_page.py:258
 msgid "Processing..."
-msgstr ""
+msgstr "Procesando…"
 
 #: ../anura/widgets/welcome_page.py:262
 msgid "Drop image file here"
-msgstr ""
+msgstr "Arrastre el archivo de imagen aquí"
 
 #: ../anura/widgets/shortcuts_overlay.py:62
 msgid "Screenshot & OCR"
-msgstr ""
+msgstr "Pantallazo y OCR"
 
 #: ../anura/widgets/shortcuts_overlay.py:64
 msgid "Take screenshot"
-msgstr ""
+msgstr "Tomar pantallazo"
 
 #: ../anura/widgets/shortcuts_overlay.py:65
 msgid "Take screenshot and copy to clipboard"
-msgstr ""
+msgstr "Tomar pantallazo y copiar al portapapeles"
 
 #: ../anura/widgets/shortcuts_overlay.py:66
 msgid "Open image file"
-msgstr ""
+msgstr "Abre el archivo de imagen"
 
 #: ../anura/widgets/shortcuts_overlay.py:67
 msgid "Paste image from clipboard"
-msgstr ""
+msgstr "Pega imagen desde portapapeles"
 
 #: ../anura/widgets/shortcuts_overlay.py:72
 msgid "Text Operations"
-msgstr ""
+msgstr "Operaciones Textuales"
 
 #: ../anura/widgets/shortcuts_overlay.py:74
 msgid "Select all text"
@@ -1114,66 +1138,66 @@ msgstr ""
 
 #: ../anura/widgets/shortcuts_overlay.py:75
 msgid "Copy text to clipboard"
-msgstr ""
+msgstr "Copia texto al portapapeles"
 
 #: ../anura/widgets/shortcuts_overlay.py:76
 msgid "Listen to text (TTS)"
-msgstr ""
+msgstr "Escuchar texto (TTS)"
 
 #: ../anura/widgets/shortcuts_overlay.py:77
 msgid "Stop text-to-speech"
-msgstr ""
+msgstr "Detener la conversión de texto a voz"
 
 #: ../anura/widgets/shortcuts_overlay.py:82
 msgid "Application"
-msgstr ""
+msgstr "Aplicación"
 
 #: ../anura/widgets/shortcuts_overlay.py:84
 msgid "Open preferences"
-msgstr ""
+msgstr "Abre preferencias"
 
 #: ../anura/widgets/shortcuts_overlay.py:85
 #: ../anura/widgets/shortcuts_overlay.py:86
 #: ../anura/widgets/shortcuts_overlay.py:87
 msgid "Show keyboard shortcuts"
-msgstr ""
+msgstr "Mostrar atajos de teclado"
 
 #: ../anura/widgets/shortcuts_overlay.py:88
 #: ../anura/widgets/shortcuts_overlay.py:89
 msgid "Quit application"
-msgstr ""
+msgstr "Salir de aplicación"
 
 #: ../anura/widgets/shortcuts_overlay.py:94
 msgid "Navigation"
-msgstr ""
+msgstr "Navegación"
 
 #: ../anura/widgets/shortcuts_overlay.py:96
 msgid "Close dialog/go back"
-msgstr ""
+msgstr "Cerrar diálogo/volver"
 
 #: ../anura/widgets/shortcuts_overlay.py:97
 msgid "Navigate between widgets"
-msgstr ""
+msgstr "Navegar entre los widget"
 
 #: ../anura/widgets/shortcuts_overlay.py:98
 msgid "Navigate backwards"
-msgstr ""
+msgstr "Retroceder navegación"
 
 #: ../anura/widgets/shortcuts_overlay.py:103
 msgid "Advanced"
-msgstr ""
+msgstr "Avanzado"
 
 #: ../anura/widgets/shortcuts_overlay.py:105
 msgid "Open image file (advanced)"
-msgstr ""
+msgstr "Abre archivo de imagen (avanzado)"
 
 #: ../anura/widgets/shortcuts_overlay.py:106
 msgid "Show help"
-msgstr ""
+msgstr "Mostrar ayuda"
 
 #: ../anura/widgets/shortcuts_overlay.py:107
 msgid "Open application menu"
-msgstr ""
+msgstr "Abre el menú de aplicación"
 
 #: ../anura/window.py:142
 msgid "Tesseract OCR not found on system"

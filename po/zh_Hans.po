@@ -62,7 +62,7 @@ msgstr "打开图像以提取文本"
 
 #: ../anura/controllers/ocr_controller.py:196
 msgid "All supported images"
-msgstr ""
+msgstr "所有支持的图像"
 
 #: ../anura/controllers/ocr_controller.py:228
 msgid "PNG images (*.png)"
@@ -94,7 +94,7 @@ msgstr ""
 
 #: ../anura/controllers/ocr_controller.py:237
 msgid "All files (*)"
-msgstr ""
+msgstr "所有文件 (*)"
 
 #: ../anura/main.py:81
 msgid "Extract directly into the clipboard"
@@ -116,7 +116,7 @@ msgstr "文本已复制到剪贴板"
 #: ../anura/main.py:400 ../anura/main.py:405 ../anura/main.py:407
 #: ../anura/main.py:413
 msgid "Anura OCR"
-msgstr ""
+msgstr "Anura OCR"
 
 #: ../anura/main.py:206
 msgid "Text extracted and copied to clipboard."
@@ -242,7 +242,7 @@ msgstr ""
 
 #: ../anura/services/screenshot_service.py:556
 msgid "OCR engine failed to process image."
-msgstr ""
+msgstr "OCR引擎未能处理图像。"
 
 #: ../anura/services/screenshot_service.py:559
 #: ../anura/services/screenshot_service.py:564
@@ -275,7 +275,7 @@ msgstr ""
 
 #: ../anura/services/share_service.py:215
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: ../anura/services/share_service.py:254
 msgid "Cannot show dialog without active window"
@@ -340,7 +340,7 @@ msgstr "保加利亚语"
 
 #: ../anura/services/language_manager.py:110
 msgid "Catalan"
-msgstr ""
+msgstr "加泰罗尼亚语"
 
 #: ../anura/services/language_manager.py:111
 msgid "Cebuano"
@@ -356,7 +356,7 @@ msgstr "中文 - 简体"
 
 #: ../anura/services/language_manager.py:114
 msgid "Chinese - Simplified (vertical)"
-msgstr ""
+msgstr "中文 - 简体（竖直）"
 
 #: ../anura/services/language_manager.py:115
 msgid "Chinese - Traditional"
@@ -396,7 +396,7 @@ msgstr "宗喀语"
 
 #: ../anura/services/language_manager.py:124
 msgid "Greek"
-msgstr ""
+msgstr "希腊语"
 
 #: ../anura/services/language_manager.py:126
 msgid "English, Middle"
@@ -424,7 +424,7 @@ msgstr "波斯语"
 
 #: ../anura/services/language_manager.py:135
 msgid "Filipino"
-msgstr ""
+msgstr "菲律宾语"
 
 #: ../anura/services/language_manager.py:136
 msgid "Finnish"
@@ -456,7 +456,7 @@ msgstr "加利西亚语"
 
 #: ../anura/services/language_manager.py:143
 msgid "Greek, Ancient"
-msgstr ""
+msgstr "古希腊语"
 
 #: ../anura/services/language_manager.py:144
 msgid "Gujarati"
@@ -620,7 +620,7 @@ msgstr "挪威语"
 
 #: ../anura/services/language_manager.py:184
 msgid "Occitan"
-msgstr ""
+msgstr "欧西坦语"
 
 #: ../anura/services/language_manager.py:185
 msgid "Oriya"
@@ -825,7 +825,7 @@ msgstr ""
 
 #: ../anura/utils/portal_advice.py:126
 msgid "GNOME"
-msgstr ""
+msgstr "GNOME"
 
 #: ../anura/utils/portal_advice.py:127
 msgid ""
@@ -888,7 +888,7 @@ msgstr ""
 
 #: ../anura/core/dialogs.py:44
 msgid "Changelog"
-msgstr ""
+msgstr "更新日志"
 
 #: ../anura/core/dialogs.py:45
 msgid "Report an Issue"
@@ -1072,11 +1072,11 @@ msgstr ""
 
 #: ../anura/widgets/shortcuts_overlay.py:64
 msgid "Take screenshot"
-msgstr ""
+msgstr "截取屏幕截图"
 
 #: ../anura/widgets/shortcuts_overlay.py:65
 msgid "Take screenshot and copy to clipboard"
-msgstr ""
+msgstr "截取屏幕截图并复制至剪贴板"
 
 #: ../anura/widgets/shortcuts_overlay.py:66
 msgid "Open image file"
@@ -1143,7 +1143,7 @@ msgstr ""
 
 #: ../anura/widgets/shortcuts_overlay.py:103
 msgid "Advanced"
-msgstr ""
+msgstr "高级设置"
 
 #: ../anura/widgets/shortcuts_overlay.py:105
 msgid "Open image file (advanced)"
