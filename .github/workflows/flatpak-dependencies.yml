@@ -119,32 +119,7 @@ jobs:
           MANIFEST="flatpak/io.github.d3msudo.anura.json"
           CERTIFI_MANIFEST="$TMP_DIR/io.github.d3msudo.anura.certifi.json"
 
-          python3 - "$MANIFEST" "$CERTIFI_MANIFEST" <<'PY'
-          import json
-          import sys
-          from pathlib import Path
-
-          source_manifest = Path(sys.argv[1])
-          certifi_manifest = Path(sys.argv[2])
-          data = json.loads(source_manifest.read_text())
-
-          matches = []
-          for module in data.get("modules", []):
-              for source in module.get("sources", []):
-                  checker = source.get("x-checker-data")
-                  if checker and checker.get("type") == "pypi" and checker.get("name") == "certifi":
-                      matches.append((module, source))
-
-          if len(matches) != 1:
-              raise SystemExit(f"Expected exactly one certifi source, found {len(matches)}")
-
-          module, source = matches[0]
-          isolated = {
-              "app-id": data.get("app-id", "io.github.d3msudo.anura"),
-              "modules": [{"name": module.get("name", "python3-certifi"), "sources": [source]}],
-          }
-          certifi_manifest.write_text(json.dumps(isolated, indent=4) + "\n")
-          PY
+          python3 .github/scripts/fedc_certifi.py isolate "$MANIFEST" "$CERTIFI_MANIFEST"
 
           docker run --rm \
             --user $(id -u):$(id -g) \
@@ -157,39 +132,7 @@ jobs:
             --update \
             "/tmp/fedc-certifi/io.github.d3msudo.anura.certifi.json"
 
-          python3 - "$MANIFEST" "$CERTIFI_MANIFEST" <<'PY'
-          import json
-          import sys
-          from pathlib import Path
-
-          real_path = Path(sys.argv[1])
-          updated_path = Path(sys.argv[2])
-          real = json.loads(real_path.read_text())
-          updated = json.loads(updated_path.read_text())
-
-          updated_sources = []
-          for module in updated.get("modules", []):
-              for source in module.get("sources", []):
-                  checker = source.get("x-checker-data")
-                  if checker and checker.get("type") == "pypi" and checker.get("name") == "certifi":
-                      updated_sources.append(source)
-
-          if len(updated_sources) != 1:
-              raise SystemExit(f"Expected exactly one updated certifi source, found {len(updated_sources)}")
-
-          replaced = 0
-          for module in real.get("modules", []):
-              for index, source in enumerate(module.get("sources", [])):
-                  checker = source.get("x-checker-data")
-                  if checker and checker.get("type") == "pypi" and checker.get("name") == "certifi":
-                      module["sources"][index] = updated_sources[0]
-                      replaced += 1
-
-          if replaced != 1:
-              raise SystemExit(f"Expected exactly one certifi source in real manifest, replaced {replaced}")
-
-          real_path.write_text(json.dumps(real, indent=4) + "\n")
-          PY
+          python3 .github/scripts/fedc_certifi.py replace "$MANIFEST" "$CERTIFI_MANIFEST"
 
           echo "Certifi-only update completed. Resulting diff:"
           git diff --check
