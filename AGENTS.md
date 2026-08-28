@@ -177,6 +177,30 @@ Anura uses `uv` for Python development and native dependencies via Flatpak.
 | libportal | 0.9.1 | XDG Desktop Portal API |
 | blueprint-compiler | 0.16.0 | UI compilation .blp → .ui |
 
+### Build Dependencies (Flatpak)
+
+These dependencies are required only at build time and are managed by FEDC
+via `x-checker-data` metadata. They are NOT runtime dependencies and are NOT
+present in `uv.lock`:
+
+| Module | Purpose |
+|--------|---------|
+| pybind11 | Python bindings for zxing-cpp (build-time only) |
+| scikit-build-core | Build system for zxing-cpp (build-time only) |
+
+### Special Dependency Ownership
+
+**certifi**: This package is a transitive dependency of `requests` and appears in
+`uv.lock`. However, its Flatpak version is **NOT** managed by `sync_dependencies.py`.
+Instead, it is owned exclusively by FEDC (flatpak-external-data-checker) via
+`.github/workflows/flatpak-dependencies.yml`.
+
+This means:
+- `uv.lock` certifi version may differ from Flatpak manifest certifi version
+- `sync_dependencies.py` intentionally excludes certifi from its mapping
+- FEDC updates certifi in **both** Flatpak manifests simultaneously
+- This divergence is intentional and not a drift issue
+
 ## Code Patterns & Conventions
 
 ### Controller Pattern (Composition)
