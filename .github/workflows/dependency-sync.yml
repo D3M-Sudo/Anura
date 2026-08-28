@@ -1,5 +1,14 @@
 name: Dependency Sync
 
+# Ownership boundary: this workflow owns the synchronization path for
+# Dependabot PRs that change pyproject.toml. It updates uv.lock and the
+# Python modules in the Flatpak manifests so they remain aligned.
+#
+# flatpak-dependencies.yml has a separate responsibility: it checks upstream
+# versions already referenced by the Flatpak manifests with FEDC. It does not
+# consume the issue created by that workflow, and it is not a downstream step
+# of this workflow.
+#
 # Automatically keep uv.lock and the Flatpak manifests in sync whenever a
 # Dependabot PR updates pyproject.toml.
 #
