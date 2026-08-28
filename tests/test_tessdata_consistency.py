@@ -11,15 +11,14 @@ Verifies that the tessdata consistency checker correctly detects:
 """
 
 import json
-import sys
 from pathlib import Path
+import sys
 
 import pytest
 
 # Import the checker module
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "build-aux"))
 import check_tessdata_consistency as checker
-
 
 # Valid test commit SHAs (40 hex chars)
 VALID_SHA = "923915d4ced2a7235221788285785a29c4a42d4a"

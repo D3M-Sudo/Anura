@@ -12,9 +12,9 @@ with a specific commit SHA that must match TESSDATA_BEST_URL in config.py.
 """
 
 import json
+from pathlib import Path
 import re
 import sys
-from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CONFIG_PY = REPO_ROOT / "anura" / "config.py"
@@ -85,7 +85,7 @@ def main() -> int:
 
     # Check consistency
     if unique_main != unique_local:
-        errors.append(f"Main vs Local manifest tessdata SHA mismatch:")
+        errors.append("Main vs Local manifest tessdata SHA mismatch:")
         errors.append(f"  main:  {unique_main}")
         errors.append(f"  local: {unique_local}")
 
