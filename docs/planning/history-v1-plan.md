@@ -1,9 +1,18 @@
 # Anura — History V1
-## Piano di implementazione aggiornato — stato repository 27 agosto 2026
+## Piano di implementazione aggiornato — baseline repository 28 agosto 2026 (`testing @ a52f4563`)
 
 **Repository:** `D3M-Sudo/Anura`  
 **Baseline:** `testing`  
-**Baseline HEAD verificato:** `a7e6c02f59303a12d24218a6a114bf2bdec0af70`  
+**Baseline HEAD verificato:** `a52f4563bf0ff0e0d9078d440df877bcfc74045a`  
+**Verifica baseline (28 agosto 2026):**
+
+```text
+Baseline verificata:
+testing @ a52f4563
+
+Include:
+PR #381 — FEDC workflow fix (merge PR #381: fix flatpak-fedc-workflow, nessun impatto sui moduli applicativi)
+```  
 **Branch History V1:** NON presente attualmente  
 **Reference branch:** `jules-7542566854136298361-5b384f6c`  
 **Reference PR:** #343  
@@ -28,7 +37,7 @@ La situazione attuale è importante:
 La strategia definitiva è quindi:
 
 ```text
-testing @ a7e6c02
+testing @ a52f4563
        |
        +-- nuova branch feature-history-v1
                   |
@@ -68,13 +77,14 @@ Pertanto il branch History V1 deve essere creato ex novo da `testing`.
 `testing`:
 
 ```text
-a7e6c02f59303a12d24218a6a114bf2bdec0af70
+a52f4563bf0ff0e0d9078d440df877bcfc74045a
 ```
 
-Commit più recente:
+Commit più recente al momento della verifica:
 
 ```text
-docs: rewrite bugs-observed.json with focused audit findings and fixes
+Merge pull request #381 from D3M-Sudo/feature/fix-flatpak-fedc-workflow
+ci: fix ruff lint errors in fedc certifi scripts (FEDC workflow fix)
 ```
 
 Il branch `testing` non è protetto da branch protection GitHub al momento del controllo. Questo NON modifica la regola di progetto: le feature devono comunque essere sviluppate su branch dedicati.
@@ -1608,7 +1618,7 @@ DROP
 Il prossimo lavoro deve quindi partire da:
 
 ```text
-testing @ a7e6c02
+testing @ a52f4563
         ↓
 feature-history-v1
         ↓
