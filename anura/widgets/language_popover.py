@@ -6,7 +6,7 @@
 
 from typing import ClassVar
 
-from gi.repository import Gio, GLib, GObject, Gtk
+from gi.repository import Gdk, Gio, GLib, GObject, Gtk
 from loguru import logger
 
 from anura.config import RESOURCE_PREFIX
@@ -47,6 +47,11 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
 
         self.bind_model()
 
+        # Keyboard navigation: Allow Down arrow in search entry to focus the language list
+        self._key_controller = Gtk.EventControllerKey()
+        self._key_controller.connect("key-pressed", self._on_entry_key_pressed)
+        self.entry.add_controller(self._key_controller)
+
     def bind_model(self) -> None:
         """Bind the language model to the filter."""
         self.filter = Gtk.CustomFilter()
@@ -62,6 +67,21 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
     @active_language.setter  # type: ignore[no-redef]
     def active_language(self, lang_code: str) -> None:
         self._active_language = lang_code
+
+    def _on_entry_key_pressed(
+        self,
+        _controller: Gtk.EventControllerKey,
+        keyval: int,
+        _keycode: int,
+        _state: Gdk.ModifierType,
+    ) -> bool:
+        """Handle Down arrow key in search entry to navigate into the language list."""
+        if keyval in (Gdk.KEY_Down, Gdk.KEY_KP_Down) and self.filter_list.get_n_items() > 0:
+            first_row = self.list_view.get_row_at_index(0)
+            if first_row:
+                first_row.grab_focus()
+                return True
+        return False
 
     def _on_language_filter(self, proposal: LanguageItem, text: str | None = None) -> bool:
         if not text:
@@ -160,5 +180,8 @@ class LanguagePopover(Gtk.Popover, SignalManagerMixin):
 
     def do_destroy(self) -> None:
         """Clean up all tracked signal handlers to prevent memory leaks."""
+        if hasattr(self, "_key_controller") and self._key_controller:
+            self.entry.remove_controller(self._key_controller)
+            self._key_controller = None
         self.teardown_all()
         super().do_destroy()
