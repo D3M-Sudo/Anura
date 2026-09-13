@@ -48,12 +48,16 @@ data/
 ├── screenshots/         Screenshots for Flathub/metainfo
 └── *.xml                GResource, GSchema, desktop, metainfo files
 build-aux/
-├── release.sh           Release script (pin tessdata SHA, bump version)
+├── release.sh           Release script: bump version, pin tessdata ref,
+│                         generate the Flathub manifest from .local.json
 ├── generate_release_notes.py CHANGELOG.md parser → _release_notes.py
 ├── setup-gschema.sh     GSettings schema compilation for testing
 └── meson/postinstall.py Post-install script
 flatpak/
-└── io.github.d3msudo.anura.json Flatpak manifest with all dependencies
+├── io.github.d3msudo.anura.json       Flathub/release manifest — GENERATED,
+│                                       never edit by hand (docs/dependencies.md)
+└── io.github.d3msudo.anura.local.json The manifest to edit — used by CI and
+                                        all dependency tooling
 po/                     Gettext translations (25+ languages)
 tests/                  Unit, integration, security, and enterprise tests
 ```
