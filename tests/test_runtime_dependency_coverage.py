@@ -12,6 +12,7 @@ Covered scenarios:
 - Test 4 : certifi (FEDC-owned) with a differing version -> PASS
 - Test 5 : build-only modules are never required as runtime -> PASS
 - Test 6 : a dependency missing from BOTH manifests is still detected -> FAIL
+- Test 7 : --manifest mode selection (local vs both) picks the right tuple
 """
 
 import json
@@ -293,3 +294,12 @@ def test_6b_missing_from_single_manifest_detected(tmp_path: Path) -> None:
     click_errors = [e for e in result.errors if "click" in e]
     assert len(click_errors) == 1
     assert "MISSING in main.json" in click_errors[0]
+
+
+def test_7_manifest_mode_selection() -> None:
+    """--manifest local checks only the local manifest; 'both' (the default)
+    checks both. Regression guard for the CLI mode added so CI can check
+    the local manifest alone between releases (the release manifest is only
+    guaranteed to match it right after build-aux/release.sh regenerates it)."""
+    assert checker._manifests_for_mode("local") == (checker.MANIFEST_LOCAL,)
+    assert checker._manifests_for_mode("both") == (checker.MANIFEST_MAIN, checker.MANIFEST_LOCAL)

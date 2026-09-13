@@ -54,6 +54,7 @@ Exit code: 0 when coverage is complete, 1 when a runtime dependency is missing.
 
 from __future__ import annotations
 
+import argparse
 import ast
 from collections import deque
 from collections.abc import Iterable
@@ -324,15 +325,42 @@ def check_runtime_coverage(
     return result
 
 
+def _manifests_for_mode(mode: str) -> tuple:
+    """Return which manifest path(s) to check for a given ``--manifest`` mode.
+
+    ``local`` checks only the hand/bot-maintained manifest and is what CI runs
+    on every push/PR (the release manifest is only guaranteed to match it
+    right after a release). ``both`` (the default) checks both manifests and
+    is used by build-aux/release.sh as a post-generation self-check, where
+    coverage of both is guaranteed by construction.
+    """
+    if mode == "local":
+        return (MANIFEST_LOCAL,)
+    return (MANIFEST_MAIN, MANIFEST_LOCAL)
+
+
 def main() -> int:
+    parser = argparse.ArgumentParser(description="F-005 runtime dependency coverage check")
+    parser.add_argument(
+        "--manifest",
+        choices=("local", "both"),
+        default="both",
+        help="Check only the local manifest ('local'), or both manifests "
+        "('both', default). CI paths that run between releases (main.yml's "
+        "python-quality job, dependency-sync.yml) should pass 'local', since "
+        "the release manifest only inherits new dependencies at release time.",
+    )
+    args = parser.parse_args()
+
     for path, label in ((PYPROJECT_TOML, "pyproject.toml"), (UV_LOCK, "uv.lock")):
         if not os.path.exists(path):
             print(f"ERROR: {label} not found at {path}", file=sys.stderr)
             return 2
 
-    result = check_runtime_coverage(PYPROJECT_TOML, UV_LOCK, (MANIFEST_MAIN, MANIFEST_LOCAL))
+    manifests = _manifests_for_mode(args.manifest)
+    result = check_runtime_coverage(PYPROJECT_TOML, UV_LOCK, manifests)
 
-    print("=== F-005 runtime dependency coverage ===")
+    print(f"=== F-005 runtime dependency coverage ({args.manifest}) ===")
     if result.good:
         print("Good:")
         for entry in sorted(result.good):
