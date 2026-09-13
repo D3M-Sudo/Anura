@@ -9,8 +9,15 @@ documentation lives in the root (`README.md`, `AGENTS.md`, `CONTRIBUTING.md`,
 | Document | Status | Purpose |
 | --- | --- | --- |
 | [history-v1.md](history-v1.md) | **Current / normative** | Extraction History V1: behaviour, storage, settings, UI, limits |
-| [dependencies.md](dependencies.md) | **Current / normative** | Python/Flatpak dependency workflow: uv.lock, sync, FEDC/certifi ownership |
-| [planning/history-v1-plan.md](planning/history-v1-plan.md) | **Historical** | Pre-implementation History V1 plan (baseline `testing @ a52f4563`); superseded by the merged History V1 integration |
+| [dependencies.md](dependencies.md) | **Current / normative** | Python/Flatpak dependency workflow: uv.lock, sync, FEDC/certifi ownership, headless GTK testing |
+| [audit/legacy/reports/history-v1-plan.md](audit/legacy/reports/history-v1-plan.md) | **Historical** | Pre-implementation History V1 plan (baseline `testing @ a52f4563`); superseded by the merged History V1 integration |
+
+Other normative references outside `docs/`:
+
+| Document | Purpose |
+| --- | --- |
+| [../flatpak/README.md](../flatpak/README.md) | Flatpak manifests: local (edit) vs release (generated) |
+| [../data/io.github.d3msudo.anura.metainfo.xml.in](../data/io.github.d3msudo.anura.metainfo.xml.in) | Flathub user-facing description and release notes |
 
 ## Structure
 
@@ -19,22 +26,23 @@ docs/
 ├── README.md              ← this index
 ├── history-v1.md          ← current History V1 reference (normative)
 ├── dependencies.md        ← current dependency/CI workflow reference (normative)
-├── planning/
-│   └── history-v1-plan.md Implementation plan for History V1 (HISTORICAL —
-│                            baseline: testing @ a52f4563; superseded by
-│                            the merged History V1 work on testing)
 └── audit/
     └── legacy/        Historical QA/security audit reports and raw
-                       tool outputs (bug hunts, bandit/mypy/ruff/vulture).
-                       Kept for historical traceability — do not treat
-                       findings as open issues.
+                       tool outputs (append-only, see audit/legacy/README.md).
+                       ├── reports/   Human-readable reports (bug hunts, QA
+                       │              summaries) + superseded implementation plans
+                       └── raw/       Unprocessed tool outputs
+                                      (bandit/mypy/ruff/vulture .txt/.json)
 ```
 
 ## Conventions
 
 - Filenames use `kebab-case-lowercase.md`.
 - Current/normative feature references live directly under `docs/`.
-- Pre-implementation plans belong in `planning/` and are marked historical once implemented.
-- Historical audit material belongs in `audit/legacy/` (append-only).
-- Agent tooling rules (`.clinerules/`, `CLAUDE.md`) are NOT
+- Active (not yet implemented) plans belong in a top-level `planning/`
+  directory, recreated when needed; once implemented they move to
+  `audit/legacy/reports/` and are marked historical.
+- Historical audit material belongs in `audit/legacy/` (append-only:
+  add dated reports, never rewrite or delete).
+- Agent tooling rules (`CLAUDE.md` is a thin pointer to `AGENTS.md`) are NOT
   documentation and are not indexed here.

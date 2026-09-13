@@ -13,9 +13,9 @@ git clone https://github.com/d3msudo/anura && cd anura
 uv sync --dev
 
 # 3. Install system dependencies (Ubuntu/Debian)
-sudo apt install python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 \
-    blueprint-compiler libportal-gtk4-dev \
-    tesseract-ocr libxml2-utils scrot \
+sudo apt install python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-gtksource-5 \
+    libgtksourceview-5-dev blueprint-compiler libportal-gtk4-dev \
+    tesseract-ocr libxml2-utils \
     gstreamer1.0-plugins-good gstreamer1.0-pulseaudio
 
 # 4. Build with Meson
@@ -30,8 +30,13 @@ GSETTINGS_SCHEMA_DIR=builddir/data python3 -m anura.main
 
 History V1 behaviour is covered by `tests/test_history_storage.py`,
 `tests/test_history_controller_integration.py`, `tests/test_history_ui.py`,
-and `tests/test_history_settings.py` (GTK-marked). See
-[docs/history-v1.md](docs/history-v1.md) for the current History V1 reference.
+`tests/test_history_settings.py` (GTK-marked) and
+`tests/test_preferences_page_resilience.py` (history/TTS wiring regression).
+Shortcuts overlay consistency is guarded by
+`tests/test_shortcuts_consistency.py`. See
+[docs/history-v1.md](docs/history-v1.md) for the current History V1 reference
+and [docs/dependencies.md](docs/dependencies.md) for the headless GTK testing
+approach (system `python3-gi` via `PYTHONPATH`, no venv PyGObject).
 
 ### Test Categories
 
@@ -63,16 +68,17 @@ uv run pytest tests/test_history_storage.py -v
 #### **GTK Tests (Requires display/sandbox)**
 
 ```bash
-# 1. Setup GSettings schema and resources
+# 1. Compile GSettings schemas and GResource bundle
 ./build-aux/setup-gschema.sh
 ./tests/setup_resources.sh
 
-# 2. Run GTK service tests
-export GSETTINGS_SCHEMA_DIR="builddir"
-uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" \
+# 2. Run GTK tests with the system python3-gi (PyGObject ships no wheels,
+#    so it is NOT installed in the venv — see docs/dependencies.md)
+SP=$(ls -d .venv/lib/python3.*/site-packages)
+PYTHONPATH=".:$SP" \
   GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" \
-  GSETTINGS_SCHEMA_DIR="builddir" \
-  pytest tests/ -v
+  GSETTINGS_SCHEMA_DIR="builddir/data" \
+  /usr/bin/python3 -m pytest tests/ -v
 ```
 
 ### ⚠️ IMPORTANT - WHAT NOT TO DO
@@ -109,4 +115,4 @@ uv run ruff format anura/
 - [ ] **Thread Safety**: No UI modifications from secondary threads; use `AtomicTaskManager`.
 - [ ] **Signal Lifecycle**: Use `SignalManagerMixin` for automated cleanup.
 - [ ] **No Telemetry**: Absolute privacy maintained.
-- [ ] **Fallback Security**: `scrot` fallback only active on X11; Wayland relies on Portals.
+- [ ] **Fallback Security**: bundled `scrot` fallback only active on X11 (never on Wayland); no host screenshot tools required.

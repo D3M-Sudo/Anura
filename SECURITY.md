@@ -52,6 +52,8 @@
 | `anura/services/language_manager.py` | Tessdata model download and atomic writing |
 | `anura/services/share_service.py` | Dynamic URI scheme validation and Pango markup sanitization |
 | `anura/services/notification_service.py` | Pango markup injection prevention in notifications |
+| `anura/widgets/extracted_page.py` + `Gtk.FileLauncher` | External editor handoff — `external-editor` GSettings key (default `xed`) launches a desktop app with exported OCR text; validate the executable/app id before launch |
+| `anura/services/history_service.py` + `$XDG_DATA_HOME/anura/history/history.json` | Local extraction history — opt-in newest-first JSON store (`history-enabled`, `history-limit` keys); atomic writes, corruption quarantine, no image retention |
 | `anura/services/screenshot/legacy_provider.py` | Command building for the bundled `scrot` fallback |
 
 ---
@@ -72,7 +74,9 @@
 | **Atomic Task Management** | `AtomicTaskManager` prevents race conditions via single-slot execution and UUID versioning with `BrokenProcessPool` recovery. |
 | **Secure Logging** | Offline rotary logging system with strict rotation and retention policies; strictly zero-telemetry. |
 | **Automated Lifecycle** | Native GObject destruction hooks ensure complete signal disconnection and resource teardown. |
-| **X11 Fallback Security** | Bundled `scrot` fallback used only when Portals fail on X11; Wayland strictly enforces Portal security. |
+| **X11 Fallback Security** | Bundled `scrot` fallback used only when Portals fail on X11 (never on Wayland); self-contained in the sandbox, no host tools required. |
+| **External Editor Handoff** | `Gtk.FileLauncher` opens exported text in the configured external editor (`external-editor` key); editor preferences (line numbers, highlight, wrap mode) stored in GSettings. |
+| **Local History Storage** | Opt-in extraction history in `$XDG_DATA_HOME/anura/history/` with atomic writes + `fsync`, corruption quarantine (`history.json.corrupt-*`), and bounded entry limit. |
 | **Atomic tessdata writes** | `tempfile` + `shutil.move` prevents partial file corruption. |
 | **Flatpak sandbox** | Filesystem isolation with restricted XDG directory access. |
 | **Privacy by design** | No telemetry, tracking, or analytics of any kind. |

@@ -134,8 +134,8 @@ Valid levels: `TRACE`, `DEBUG`, `INFO` (default), `WARNING`, `ERROR`, `CRITICAL`
 **Ubuntu / Linux Mint / Debian:**
 
 ```bash
-sudo apt install meson gettext python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 \
-    tesseract-ocr blueprint-compiler libxml2-utils \
+sudo apt install meson gettext python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-gtksource-5 \
+    libgtksourceview-5-dev tesseract-ocr blueprint-compiler libportal-gtk4-dev libxml2-utils \
     leptonica-progs liblibleptonica-dev
 ```
 
@@ -166,14 +166,17 @@ Anura uses **Ruff** for linting and **pytest** for testing, managed via **uv**.
 # Run headless unit/security tests
 uv run pytest tests/ -m "not gtk" -v
 
-# Run full suite (requires GTK environment)
+# Run GTK integration tests (requires GTK typelibs + compiled schemas/resources).
+# PyGObject is NOT installed in the venv (no wheels on PyPI): use system python3-gi
+# via PYTHONPATH, as documented in docs/dependencies.md.
 ./build-aux/setup-gschema.sh
 ./tests/setup_resources.sh
-export GSETTINGS_SCHEMA_DIR="builddir"
-uv run pytest tests/ -v
+SP=$(ls -d .venv/lib/python3.*/site-packages)
+PYTHONPATH=".:$SP" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" \
+  GSETTINGS_SCHEMA_DIR="builddir/data" /usr/bin/python3 -m pytest tests/ -v
 ```
 
-The test suite includes headless unit tests (logic without GTK dependencies), integration tests (GTK/GLib environment), security/hardening tests (DoS prevention, URI validation, sanitization), and reliability/enterprise tests (performance benchmarks, concurrency, lifecycle). History V1 behaviour is covered by `tests/test_history_storage.py`, `tests/test_history_controller_integration.py`, `tests/test_history_ui.py`, and `tests/test_history_settings.py` (GTK-marked).
+The test suite includes headless unit tests (logic without GTK dependencies), integration tests (GTK/GLib environment), security/hardening tests (DoS prevention, URI validation, sanitization), and reliability/enterprise tests (performance benchmarks, concurrency, lifecycle). History V1 behaviour is covered by `tests/test_history_storage.py`, `tests/test_history_controller_integration.py`, `tests/test_history_ui.py`, `tests/test_history_settings.py` (GTK-marked) and `tests/test_preferences_page_resilience.py` (history/TTS wiring regression). Shortcuts overlay consistency is guarded by `tests/test_shortcuts_consistency.py` — see [docs/dependencies.md](docs/dependencies.md) for the headless GTK testing approach.
 
 ---
 
@@ -182,7 +185,7 @@ The test suite includes headless unit tests (logic without GTK dependencies), in
 - [docs/README.md](docs/README.md) — documentation index
 - [docs/history-v1.md](docs/history-v1.md) — Extraction History V1 (current behaviour)
 - [docs/dependencies.md](docs/dependencies.md) — Python/Flatpak dependency workflow (uv.lock, sync, FEDC/certifi)
-- [AGENTS.md](AGENTS.md) — canonical AI-assistant and architecture guide
+- [AGENTS.md](AGENTS.md) — canonical AI-assistant and architecture guide (`CLAUDE.md` is a thin pointer to it)
 - [CONTRIBUTING.md](CONTRIBUTING.md) — contributor and development workflow
 
 ---
