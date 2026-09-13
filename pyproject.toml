@@ -78,6 +78,7 @@ dev = [
     "bandit>=1.9.4",
     "meson>=1.11.2",
     "mypy>=2.1.0",
+    "nltk>=3.10.3",
     "ninja>=1.13.0",
     "pytest>=9.1.1",
     "pytest-cov>=6.0.0",
