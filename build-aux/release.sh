@@ -31,6 +31,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 MANIFEST_FILE="$PROJECT_ROOT/flatpak/io.github.d3msudo.anura.json"
+MANIFEST_LOCAL="$PROJECT_ROOT/flatpak/io.github.d3msudo.anura.local.json"
 METAINFO_FILE="$PROJECT_ROOT/data/io.github.d3msudo.anura.metainfo.xml.in"
 MESON_BUILD_FILE="$PROJECT_ROOT/meson.build"
 DATE=$(date +%Y-%m-%d)
@@ -58,12 +59,15 @@ fi
 
 echo ""
 
-# Update manifest with pinned tessdata ref
-echo "Updating $MANIFEST_FILE with pinned tessdata ref..."
-sed -i "s|tessdata_fast/raw/[^/]*/|tessdata_fast/raw/${TESSDATA_REF}/|g" "$MANIFEST_FILE"
+# Update the local manifest with the pinned tessdata ref. The release
+# manifest is generated from this one further below and must never be
+# hand-pinned here directly, or the generation step would silently discard
+# this update.
+echo "Updating $MANIFEST_LOCAL with pinned tessdata ref..."
+sed -i "s|tessdata_fast/raw/[^/]*/|tessdata_fast/raw/${TESSDATA_REF}/|g" "$MANIFEST_LOCAL"
 
 # Verify the change was made
-if grep -q "tessdata_fast/raw/${TESSDATA_REF}/" "$MANIFEST_FILE"; then
+if grep -q "tessdata_fast/raw/${TESSDATA_REF}/" "$MANIFEST_LOCAL"; then
     echo "✓ Manifest updated successfully"
 else
     echo "✗ Failed to update manifest"
@@ -92,25 +96,66 @@ else
     exit 1
 fi
 
+# Generate the release (Flathub) manifest from the local manifest.
+# $MANIFEST_FILE is never hand-edited: every module is copied verbatim from
+# $MANIFEST_LOCAL except the `anura` module's source (dir -> git+tag), and the
+# local-only top-level `branch` / `separate-locales` keys are dropped.
+echo ""
+echo "Generating $MANIFEST_FILE from $MANIFEST_LOCAL..."
+GENERATED_MANIFEST="${MANIFEST_FILE}.tmp"
+jq --indent 4 --arg VERSION "$VERSION" \
+  'del(.branch, ."separate-locales")
+   | .modules |= map(
+       if .name == "anura"
+       then .sources = [{"type": "git", "url": "https://github.com/D3M-Sudo/Anura.git", "tag": ("v" + $VERSION)}]
+       else . end)' \
+  "$MANIFEST_LOCAL" > "$GENERATED_MANIFEST"
+
+# Validate before replacing the real file.
+if ! jq empty "$GENERATED_MANIFEST" >/dev/null 2>&1; then
+    echo "✗ Generated manifest is not valid JSON"
+    rm -f "$GENERATED_MANIFEST"
+    exit 1
+fi
+if grep -q '"type": "dir"' "$GENERATED_MANIFEST"; then
+    echo "✗ Generated manifest still contains a \"dir\" source (anura module was not rewritten)"
+    rm -f "$GENERATED_MANIFEST"
+    exit 1
+fi
+
+mv "$GENERATED_MANIFEST" "$MANIFEST_FILE"
+echo "✓ $MANIFEST_FILE generated successfully"
+
+# Self-check: the two manifests must now be consistent by construction, since
+# the release manifest was just derived from the local one.
+echo ""
+echo "Running post-generation self-checks..."
+python3 "$SCRIPT_DIR/check_manifest_consistency.py"
+python3 "$SCRIPT_DIR/check_tessdata_consistency.py"
+python3 "$SCRIPT_DIR/check_runtime_dependency_coverage.py" --manifest both
+echo "✓ Self-checks passed"
+
 # Show summary
 echo ""
 echo "=== Summary of changes ==="
 echo "Files modified:"
 echo "  - $MESON_BUILD_FILE (version bumped to $VERSION)"
-echo "  - $MANIFEST_FILE (tessdata pinned to ref $TESSDATA_REF)"
+echo "  - $MANIFEST_LOCAL (tessdata pinned to ref $TESSDATA_REF)"
 echo "  - $METAINFO_FILE (release $VERSION added)"
+echo "  - $MANIFEST_FILE (regenerated from $MANIFEST_LOCAL)"
 echo ""
 
 # Git operations
 echo "=== Git operations ==="
 echo "Adding files to git..."
-git add "$MANIFEST_FILE" "$METAINFO_FILE"
+git add "$MANIFEST_FILE" "$MANIFEST_LOCAL" "$METAINFO_FILE"
 
 echo "Creating commit..."
 git commit -m "Release v$VERSION
 
 - Bump version to $VERSION in meson.build
-- Pin tessdata to ref $TESSDATA_REF
+- Pin tessdata to ref $TESSDATA_REF in the local Flatpak manifest
+- Regenerate the release Flatpak manifest from the local one
 - Update metainfo for v$VERSION release"
 
 echo "Creating tag v$VERSION..."
