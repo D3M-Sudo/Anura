@@ -88,8 +88,18 @@ RELEASE_ENTRY="    <release version=\"$VERSION\" type=\"stable\" date=\"$DATE\">
 
 # Insert after the <releases> opening tag
 if grep -q '<releases>' "$METAINFO_FILE"; then
-    # Use sed to insert after <releases>
-    sed -i "/<releases>/a\\$RELEASE_ENTRY" "$METAINFO_FILE"
+    # sed's a\ (append) command does not reliably handle a multi-line
+    # replacement passed via a shell variable under GNU sed: every embedded
+    # newline after the first gets parsed as a new sed script line instead
+    # of literal appended text, which fails outright as soon as one of those
+    # lines starts with a character sed doesn't recognize as a command (e.g.
+    # the "<" of "<description>"). Write the entry to a temp file and use
+    # sed's r (read-file) command instead, which inserts the file's content
+    # verbatim after the matched line and preserves $METAINFO_FILE's mode.
+    RELEASE_ENTRY_FILE=$(mktemp)
+    printf '%s\n' "$RELEASE_ENTRY" > "$RELEASE_ENTRY_FILE"
+    sed -i "/<releases>/r $RELEASE_ENTRY_FILE" "$METAINFO_FILE"
+    rm -f "$RELEASE_ENTRY_FILE"
     echo "✓ Metainfo updated successfully"
 else
     echo "✗ Could not find <releases> tag in metainfo file"
