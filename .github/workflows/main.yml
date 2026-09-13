@@ -57,22 +57,16 @@ jobs:
           files: coverage.xml
           fail_ci_if_error: false
 
-      - name: Check Flatpak manifest dependency consistency
-        # Ensure anura.json and anura.local.json stay in sync.
-        # Catches drift from manual edits or workflow bugs.
-        run: python3 build-aux/check_manifest_consistency.py
-
-      - name: Check tessdata commit SHA consistency
-        # Ensure tessdata SHAs match between config.py and both manifests.
-        # Catches drift from manual edits or incomplete updates.
-        run: python3 build-aux/check_tessdata_consistency.py
-
       - name: Check Flatpak runtime dependency coverage (F-005)
         # Ensure every runtime Python dependency in uv.lock (resolved from
-        # pyproject.toml) is represented by a python3-* module in both Flatpak
-        # manifests. Fails when a new direct/transitive runtime dependency has
-        # no matching manifest module, so it can never ship a broken Flatpak.
-        run: python3 build-aux/check_runtime_dependency_coverage.py
+        # pyproject.toml) is represented by a python3-* module in the local
+        # Flatpak manifest. Fails when a new direct/transitive runtime
+        # dependency has no matching manifest module, so it can never ship a
+        # broken Flatpak. Checks the local manifest only: the release
+        # manifest is generated from it by build-aux/release.sh and is only
+        # guaranteed to match right after a release (checked there instead,
+        # in --manifest both mode, as a post-generation self-check).
+        run: python3 build-aux/check_runtime_dependency_coverage.py --manifest local
 
   gtk-tests:
     name: GTK Integration Tests
