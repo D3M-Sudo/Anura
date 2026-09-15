@@ -17,6 +17,7 @@ Run with the system python3 + venv site-packages pattern documented in
 ``docs/dependencies.md`` (the tests need PyGObject and compiled schemas).
 """
 
+import hashlib
 from pathlib import Path
 import tempfile
 from unittest.mock import MagicMock, patch
@@ -25,7 +26,9 @@ import pytest
 
 pytest.importorskip("gi")
 
+from anura.config import TESSDATA_URL
 from anura.services.language.download_manager import DownloadManager
+from anura.utils.tessdata_integrity import ref_from_url, repo_key_from_url
 
 
 def _response(payloads, headers=None):
@@ -35,6 +38,32 @@ def _response(payloads, headers=None):
     response.iter_content = lambda chunk_size=8192: iter(payloads)
     response.raise_for_status = MagicMock()
     return response
+
+
+def _git_blob_sha1(data: bytes) -> str:
+    """Mirror GitBlobHasher: SHA-1 over git's ``blob <size>`` framing."""
+    return hashlib.sha1(f"blob {len(data)}\x00".encode() + data, usedforsecurity=False).hexdigest()
+
+
+@pytest.fixture
+def stub_integrity(monkeypatch):
+    """Pin a test payload in a synthetic integrity manifest.
+
+    The committed manifest pins the genuine upstream models; tests substitute
+    their own entry so no network access (and no multi-megabyte download) is
+    needed, while still exercising the real verification path.
+    """
+
+    def _install(base_url: str, filename: str, payload: bytes) -> None:
+        repository = {
+            "url": base_url,
+            "tag": ref_from_url(base_url),
+            "files": {filename: {"size": len(payload), "sha1": _git_blob_sha1(payload)}},
+        }
+        repo = repo_key_from_url(base_url)
+        monkeypatch.setattr("anura.utils.tessdata_integrity.load_checksums", lambda: {repo: repository})
+
+    return _install
 
 
 @pytest.mark.gtk
@@ -53,10 +82,11 @@ class TestAtomicInstall:
             mock_settings.get_string.return_value = "fast"
             yield DownloadManager(), tessdata_dir
 
-    def test_successful_download_installs_model_atomically(self, manager) -> None:
+    def test_successful_download_installs_model_atomically(self, manager, stub_integrity) -> None:
         """A successful download ends up at final_path with no leftovers."""
         dm, tessdata_dir = manager
         payload = b"MODEL-DATA" * 64
+        stub_integrity(TESSDATA_URL, "fra.traineddata", payload)
         response = _response([payload], {"content-length": str(len(payload))})
 
         final_path = tessdata_dir / "fra.traineddata"
@@ -81,9 +111,10 @@ class TestAtomicInstall:
         assert final_path.read_bytes() == payload
         assert list(tessdata_dir.glob("*.tmp")) == []
 
-    def test_interrupted_download_keeps_existing_model_untouched(self, manager) -> None:
+    def test_interrupted_download_keeps_existing_model_untouched(self, manager, stub_integrity) -> None:
         """A failure mid-stream must not corrupt the previously installed model."""
         dm, tessdata_dir = manager
+        stub_integrity(TESSDATA_URL, "fra.traineddata", b"GENUINE-MODEL")
         final_path = tessdata_dir / "fra.traineddata"
         final_path.write_bytes(b"PREVIOUS-VALID-MODEL")
 
@@ -104,7 +135,7 @@ class TestAtomicInstall:
         assert final_path.read_bytes() == b"PREVIOUS-VALID-MODEL"
         assert list(tessdata_dir.glob("*.tmp")) == []
 
-    def test_temp_file_lives_next_to_target(self, manager) -> None:
+    def test_temp_file_lives_next_to_target(self, manager, stub_integrity) -> None:
         """The staging file must be created in the target directory (same FS).
 
         This is what makes the rename atomic; if the staging file were created on
@@ -112,6 +143,7 @@ class TestAtomicInstall:
         """
         dm, tessdata_dir = manager
         payload = b"MODEL"
+        stub_integrity(TESSDATA_URL, "fra.traineddata", payload)
         response = _response([payload], {"content-length": str(len(payload))})
         staged_dirs: list[Path] = []
         real_named_temporary_file = tempfile.NamedTemporaryFile
@@ -132,3 +164,85 @@ class TestAtomicInstall:
 
         assert result == "fra"
         assert staged_dirs == [tessdata_dir]
+
+
+@pytest.mark.gtk
+class TestIntegrityVerification:
+    """NEW-F1 — a model is only installed when it matches the pinned digest."""
+
+    @pytest.fixture
+    def manager(self, tmp_path: Path):
+        tessdata_dir = tmp_path / "tessdata"
+        tessdata_dir.mkdir()
+        with (
+            patch("anura.services.language.download_manager.TESSDATA_DIR", str(tessdata_dir)),
+            patch("anura.services.language.download_manager.settings") as mock_settings,
+        ):
+            mock_settings.get_string.return_value = "fast"
+            yield DownloadManager(), tessdata_dir
+
+    def test_unpinned_model_is_refused_before_any_request(self, manager) -> None:
+        """A model with no pin in the committed manifest never hits the network."""
+        dm, tessdata_dir = manager
+
+        with (
+            patch.object(dm.session, "get") as mock_get,
+            patch("anura.services.language.download_manager.shutil.which", return_value="/usr/bin/tesseract"),
+        ):
+            # "zzz" is a syntactically valid language code that upstream does not
+            # publish, so it cannot be pinned in the manifest.
+            result = dm.download_begin("zzz")
+
+        assert result is None
+        mock_get.assert_not_called()
+        assert list(tessdata_dir.iterdir()) == []
+
+    def test_tampered_model_is_rejected(self, manager, stub_integrity) -> None:
+        """A payload whose digest differs from the pin is never installed."""
+        dm, tessdata_dir = manager
+        pinned = b"GENUINE-MODEL"
+        stub_integrity(TESSDATA_URL, "fra.traineddata", pinned)
+        response = _response([b"TAMPERED-MODEL"], {"content-length": str(len(pinned))})
+
+        with (
+            patch.object(dm.session, "get", return_value=response),
+            patch("anura.services.language.download_manager.shutil.which", return_value="/usr/bin/tesseract"),
+        ):
+            result = dm.download_begin("fra")
+
+        assert result is None
+        assert not (tessdata_dir / "fra.traineddata").exists()
+        assert list(tessdata_dir.glob("*.tmp")) == []
+
+    def test_truncated_stream_is_rejected(self, manager, stub_integrity) -> None:
+        """A short stream must not install a partial model."""
+        dm, tessdata_dir = manager
+        stub_integrity(TESSDATA_URL, "fra.traineddata", b"GENUINE-MODEL")
+        response = _response([b"GENUINE"], {})
+
+        with (
+            patch.object(dm.session, "get", return_value=response),
+            patch("anura.services.language.download_manager.shutil.which", return_value="/usr/bin/tesseract"),
+        ):
+            result = dm.download_begin("fra")
+
+        assert result is None
+        assert not (tessdata_dir / "fra.traineddata").exists()
+        assert list(tessdata_dir.glob("*.tmp")) == []
+
+    def test_announced_size_mismatch_is_rejected(self, manager, stub_integrity) -> None:
+        """A Content-Length that disagrees with the pin is refused early."""
+        dm, tessdata_dir = manager
+        pinned = b"GENUINE-MODEL"
+        stub_integrity(TESSDATA_URL, "fra.traineddata", pinned)
+        response = _response([pinned], {"content-length": str(len(pinned) + 1)})
+
+        with (
+            patch.object(dm.session, "get", return_value=response),
+            patch("anura.services.language.download_manager.shutil.which", return_value="/usr/bin/tesseract"),
+        ):
+            result = dm.download_begin("fra")
+
+        assert result is None
+        assert not (tessdata_dir / "fra.traineddata").exists()
+        assert list(tessdata_dir.glob("*.tmp")) == []

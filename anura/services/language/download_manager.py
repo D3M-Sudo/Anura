@@ -38,6 +38,7 @@ from anura.config import (  # noqa: E402
 )
 from anura.models.download_state import DownloadState  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
+from anura.utils.tessdata_integrity import GitBlobHasher, get_expected_checksum  # noqa: E402
 
 
 class DownloadManager(GObject.GObject):
@@ -162,6 +163,11 @@ class DownloadManager(GObject.GObject):
     def download_begin(self, code: str, cancellable: Gio.Cancellable | None = None) -> str | None:
         """Performs the physical download of the .traineddata file atomically.
 
+        The model is verified against the pinned integrity manifest
+        (``anura/data/tessdata_checksums.json``) while it is streamed and only
+        installed with an atomic rename once the digest matches. Models without
+        a pinned checksum are refused (fail closed).
+
         Args:
             code: Language code to download
             cancellable: Optional Gio.Cancellable for cancellation
@@ -202,6 +208,16 @@ class DownloadManager(GObject.GObject):
         tmp_path = None
 
         url_base = self._get_model_quality_url(quality)
+
+        # Security (NEW-F1): a model is only ever installed when its identity is
+        # pinned in anura/data/tessdata_checksums.json. Fails closed, so a model
+        # that upstream changed under a moved tag — or that was altered in
+        # transit — never reaches Tesseract.
+        expected = get_expected_checksum(url_base, tessfile)
+        if expected is None:
+            logger.error(f"Anura: Refusing to download '{tessfile}' without a pinned checksum.")
+            return None
+
         try:
             url = url_base + tessfile
             with tempfile.NamedTemporaryFile(
@@ -229,7 +245,18 @@ class DownloadManager(GObject.GObject):
                         )
                         return None
 
+                    # Security (NEW-F1): the announced size must agree with the
+                    # pinned manifest, otherwise no amount of streamed bytes can
+                    # produce a model we trust.
+                    if total_size and total_size != expected.size:
+                        logger.error(
+                            f"Anura: Announced size for '{tessfile}' ({total_size} bytes) does not match "
+                            f"the pinned size ({expected.size} bytes)."
+                        )
+                        return None
+
                     downloaded = 0
+                    hasher = GitBlobHasher(expected.size)
 
                     # Throttle progress updates to prevent main loop saturation
                     last_progress_time = time.monotonic()
@@ -242,6 +269,7 @@ class DownloadManager(GObject.GObject):
                                 return None
                             if chunk:
                                 f.write(chunk)
+                                hasher.update(chunk)
                                 downloaded += len(chunk)
 
                                 # Security: Monitor cumulative downloaded bytes
@@ -297,6 +325,15 @@ class DownloadManager(GObject.GObject):
                         with contextlib.suppress(OSError):
                             f.flush()
                             os.fsync(f.fileno())
+
+                    # Security (NEW-F1): compare the streamed model with the
+                    # pinned git blob digest before it is installed.
+                    if not hasher.matches(expected):
+                        logger.error(
+                            f"Anura: Integrity check failed for '{tessfile}': received {hasher.received} "
+                            f"bytes, expected {expected.size} bytes with SHA-1 {expected.sha1}."
+                        )
+                        return None
 
                     # Atomic install: tmp_path lives inside quality_dir, i.e. on
                     # the same filesystem as final_path, so os.replace() swaps the
