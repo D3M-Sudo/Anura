@@ -10,6 +10,7 @@ documentation lives in the root (`README.md`, `AGENTS.md`, `CONTRIBUTING.md`,
 | --- | --- | --- |
 | [history-v1.md](history-v1.md) | **Current / normative** | Extraction History V1: behaviour, storage, settings, UI, limits |
 | [dependencies.md](dependencies.md) | **Current / normative** | Python/Flatpak dependency workflow: uv.lock, sync, FEDC/certifi ownership, headless GTK testing |
+| [tessdata-integrity.md](tessdata-integrity.md) | **Current / normative** | Tessdata model integrity: checksum manifest, fail-closed verification, atomic install, anti-drift |
 | [audit/legacy/reports/history-v1-plan.md](audit/legacy/reports/history-v1-plan.md) | **Historical** | Pre-implementation History V1 plan (baseline `testing @ a52f4563`); superseded by the merged History V1 integration |
 
 Other normative references outside `docs/`:

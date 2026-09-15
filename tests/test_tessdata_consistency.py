@@ -63,6 +63,31 @@ def temp_manifest(tmp_path: Path) -> Path:
     return manifest
 
 
+@pytest.fixture
+def temp_checksums_manifest(tmp_path: Path):
+    """Build an integrity manifest whose pinned URL uses ``ref``."""
+
+    def _build(ref: str) -> Path:
+        manifest = tmp_path / f"tessdata_checksums_{ref}.json"
+        manifest.write_text(
+            json.dumps(
+                {
+                    "version": 1,
+                    "repositories": {
+                        "tessdata_best": {
+                            "url": f"https://github.com/tesseract-ocr/tessdata_best/raw/{ref}/",
+                            "tag": ref,
+                            "files": {},
+                        }
+                    },
+                }
+            )
+        )
+        return manifest
+
+    return _build
+
+
 class TestExtractShaFromConfig:
     """Tests for extract_sha_from_config function."""
 
@@ -131,12 +156,14 @@ class TestConsistencyScenarios:
         self,
         temp_config: Path,
         temp_manifest: Path,
+        temp_checksums_manifest,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Case A: All references consistent -> PASS."""
         monkeypatch.setattr(checker, "CONFIG_PY", temp_config)
         monkeypatch.setattr(checker, "MANIFEST_MAIN", temp_manifest)
         monkeypatch.setattr(checker, "MANIFEST_LOCAL", temp_manifest)
+        monkeypatch.setattr(checker, "CHECKSUMS_MANIFEST", temp_checksums_manifest(VALID_SHA))
 
         result = checker.main()
         assert result == 0
@@ -145,6 +172,7 @@ class TestConsistencyScenarios:
         self,
         tmp_path: Path,
         temp_manifest: Path,
+        temp_checksums_manifest,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Case B: config.py has different SHA -> FAIL."""
@@ -155,6 +183,7 @@ class TestConsistencyScenarios:
         monkeypatch.setattr(checker, "CONFIG_PY", config)
         monkeypatch.setattr(checker, "MANIFEST_MAIN", temp_manifest)
         monkeypatch.setattr(checker, "MANIFEST_LOCAL", temp_manifest)
+        monkeypatch.setattr(checker, "CHECKSUMS_MANIFEST", temp_checksums_manifest(DIFFERENT_SHA))
 
         result = checker.main()
         assert result == 1
@@ -164,6 +193,7 @@ class TestConsistencyScenarios:
         tmp_path: Path,
         temp_config: Path,
         temp_manifest: Path,
+        temp_checksums_manifest,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Case C: Main manifest has different SHA -> FAIL."""
@@ -185,6 +215,7 @@ class TestConsistencyScenarios:
         monkeypatch.setattr(checker, "CONFIG_PY", temp_config)
         monkeypatch.setattr(checker, "MANIFEST_MAIN", different_manifest)
         monkeypatch.setattr(checker, "MANIFEST_LOCAL", temp_manifest)
+        monkeypatch.setattr(checker, "CHECKSUMS_MANIFEST", temp_checksums_manifest(VALID_SHA))
 
         result = checker.main()
         assert result == 1
@@ -194,6 +225,7 @@ class TestConsistencyScenarios:
         tmp_path: Path,
         temp_config: Path,
         temp_manifest: Path,
+        temp_checksums_manifest,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Case D: Local manifest has different SHA -> FAIL."""
@@ -215,6 +247,7 @@ class TestConsistencyScenarios:
         monkeypatch.setattr(checker, "CONFIG_PY", temp_config)
         monkeypatch.setattr(checker, "MANIFEST_MAIN", temp_manifest)
         monkeypatch.setattr(checker, "MANIFEST_LOCAL", different_manifest)
+        monkeypatch.setattr(checker, "CHECKSUMS_MANIFEST", temp_checksums_manifest(VALID_SHA))
 
         result = checker.main()
         assert result == 1
@@ -224,6 +257,7 @@ class TestConsistencyScenarios:
         tmp_path: Path,
         temp_config: Path,
         temp_manifest: Path,
+        temp_checksums_manifest,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Case E: Unrelated structural differences -> PASS.
@@ -260,6 +294,45 @@ class TestConsistencyScenarios:
         monkeypatch.setattr(checker, "CONFIG_PY", temp_config)
         monkeypatch.setattr(checker, "MANIFEST_MAIN", modified_manifest)
         monkeypatch.setattr(checker, "MANIFEST_LOCAL", temp_manifest)
+        monkeypatch.setattr(checker, "CHECKSUMS_MANIFEST", temp_checksums_manifest(VALID_SHA))
 
         result = checker.main()
         assert result == 0
+
+    def test_stale_checksums_manifest_fails(
+        self,
+        tmp_path: Path,
+        temp_config: Path,
+        temp_manifest: Path,
+        temp_checksums_manifest,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """A re-pinned config.py without regenerating the integrity manifest -> FAIL.
+
+        This is the anti-drift guard added with the F1 integrity verification:
+        every runtime download would fail closed if the manifest were stale.
+        """
+        monkeypatch.setattr(checker, "CONFIG_PY", temp_config)
+        monkeypatch.setattr(checker, "MANIFEST_MAIN", temp_manifest)
+        monkeypatch.setattr(checker, "MANIFEST_LOCAL", temp_manifest)
+        # Manifest pinned to a stale ref while config.py points at VALID_SHA
+        monkeypatch.setattr(checker, "CHECKSUMS_MANIFEST", temp_checksums_manifest(DIFFERENT_SHA))
+
+        result = checker.main()
+        assert result == 1
+
+    def test_missing_checksums_manifest_fails(
+        self,
+        tmp_path: Path,
+        temp_config: Path,
+        temp_manifest: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """A deleted integrity manifest -> FAIL (fail closed)."""
+        monkeypatch.setattr(checker, "CONFIG_PY", temp_config)
+        monkeypatch.setattr(checker, "MANIFEST_MAIN", temp_manifest)
+        monkeypatch.setattr(checker, "MANIFEST_LOCAL", temp_manifest)
+        monkeypatch.setattr(checker, "CHECKSUMS_MANIFEST", tmp_path / "nonexistent.json")
+
+        result = checker.main()
+        assert result == 1

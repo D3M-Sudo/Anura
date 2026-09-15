@@ -7,8 +7,6 @@
 import contextlib
 from gettext import gettext as _
 from io import BytesIO
-import os
-from pathlib import Path
 from typing import Any
 
 import gi
@@ -36,6 +34,7 @@ from anura.services.language_manager import get_language_manager  # noqa: E402
 from anura.services.screenshot_service import ScreenshotService, get_screenshot_service  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
 from anura.utils import validate_image_resource  # noqa: E402
+from anura.utils.export_files import write_export_file  # noqa: E402
 from anura.utils.signal_manager import SignalManagerMixin  # noqa: E402
 from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
 from anura.widgets.history_page import HistoryPage  # noqa: E402
@@ -321,18 +320,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
             return
 
         try:
-            runtime_dir = os.environ.get("XDG_RUNTIME_DIR")
-            import tempfile
-
-            base_dir = (
-                Path(runtime_dir) / "anura" / "exports"
-                if runtime_dir
-                else Path(tempfile.gettempdir()) / "anura_exports"
-            )
-            base_dir.mkdir(parents=True, exist_ok=True)
-
-            temp_file = base_dir / f"extracted_{GLib.get_monotonic_time()}.txt"
-            temp_file.write_text(text, encoding="utf-8")
+            temp_file = write_export_file(text)
 
             gfile = Gio.File.new_for_path(str(temp_file))
             launcher = Gtk.FileLauncher.new(gfile)
