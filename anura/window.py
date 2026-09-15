@@ -378,6 +378,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         self.connect_tracked(self.ocr_controller, "extraction-completed", self._on_extraction_completed)
         self.connect_tracked(self.ocr_controller, "error-occurred", self._on_ocr_error)
         self.connect_tracked(self.ocr_controller, "status-changed", self._on_ocr_status_changed)
+        self.connect_tracked(self.ocr_controller, "capture-finished", self._on_capture_finished)
         self.connect_tracked(self.ocr_controller, "capture-portal-missing", self._on_portal_missing)
         self.connect_tracked(self.ocr_controller, "navigation-requested", self._on_navigation_requested)
 
@@ -420,6 +421,10 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     def _on_ocr_status_changed(self, _controller: OcrController, status_msg: str) -> None:
         """Update UI status during OCR."""
         self.welcome_page.set_status(status_msg)
+
+    def _on_capture_finished(self, _controller: OcrController, _success: bool) -> None:
+        """Restore the window as soon as capture settles (OCR still running)."""
+        self._cleanup_screenshot_state()
 
     def _on_portal_missing(self, _controller: OcrController, message: str) -> None:
         """Show the portal missing banner."""
