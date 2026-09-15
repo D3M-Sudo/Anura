@@ -372,10 +372,11 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
         # which silently disabled next/prev navigation. Call the real
         # methods, which return (found, match_start, match_end).
         self.search_settings.set_wrap_around(wrap)
+        # PyGObject returns a 4-tuple: (found, match_start, match_end, has_wrapped).
         if forward:
-            found, match_start, match_end = self.search_context.forward(start_iter)
+            found, match_start, match_end, _has_wrapped = self.search_context.forward(start_iter)
         else:
-            found, match_start, match_end = self.search_context.backward(start_iter)
+            found, match_start, match_end, _has_wrapped = self.search_context.backward(start_iter)
 
         if found and match_start and match_end:
             self.buffer.select_range(match_start, match_end)
