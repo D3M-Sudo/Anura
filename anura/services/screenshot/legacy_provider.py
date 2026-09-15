@@ -9,6 +9,7 @@ from gettext import gettext as _
 import os
 from pathlib import Path
 import shutil
+import stat
 import tempfile
 import threading
 
@@ -24,6 +25,27 @@ from .base import ScreenshotProvider
 _FLATPAK_SCROT_BIN = "/app/bin/scrot"
 
 
+def _is_safe_executable(path: Path) -> bool:
+    """Check that *path* is an executable file not writable by group/others.
+
+    A scrot binary that is group- or world-writable could be replaced by any
+    local user of the machine and would then be executed with the privileges
+    of the current user (taking screenshots of the full screen).
+    """
+    try:
+        mode = path.stat().st_mode
+    except OSError:
+        return False
+    if not mode & stat.S_IXUSR:
+        return False
+    if mode & (stat.S_IWGRP | stat.S_IWOTH):
+        logger.warning(
+            f"Screenshot: rejecting unsafe scrot binary {path}: writable by group/others."
+        )
+        return False
+    return True
+
+
 def _resolve_scrot_binary() -> str | None:
     """Return the absolute path to the scrot binary, or None if not found.
 
@@ -31,11 +53,17 @@ def _resolve_scrot_binary() -> str | None:
     1. Flatpak bundled path (/app/bin/scrot) — always preferred inside the sandbox
        because it is the version pinned in the manifest and guaranteed to be there.
     2. System PATH — for host/development installs where scrot is installed globally.
+
+    In both cases the candidate must be an executable file that is not
+    writable by group/others (see :func:`_is_safe_executable`).
     """
     path = Path(_FLATPAK_SCROT_BIN)
-    if path.is_file() and os.access(path, os.X_OK):
+    if path.is_file() and os.access(path, os.X_OK) and _is_safe_executable(path):
         return _FLATPAK_SCROT_BIN
-    return shutil.which("scrot")
+    system_scrot = shutil.which("scrot")
+    if system_scrot is not None and _is_safe_executable(Path(system_scrot)):
+        return system_scrot
+    return None
 
 
 class LegacyX11Provider(ScreenshotProvider):

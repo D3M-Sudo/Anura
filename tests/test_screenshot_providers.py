@@ -36,6 +36,7 @@ except ImportError:
     gi.repository.Xdp = mock_xdp
 
 from anura.services.screenshot.factory import ScreenshotProviderFactory
+import anura.services.screenshot.legacy_provider
 from anura.services.screenshot.legacy_provider import LegacyX11Provider
 from anura.services.screenshot.portal_provider import PortalProvider
 
@@ -142,6 +143,55 @@ class TestLegacyX11Provider:
         victim.touch()
         LegacyX11Provider._discard_failed_output(str(victim))
         assert not victim.exists()
+
+
+class TestScrotBinarySafety:
+    """F5: reject group/world-writable scrot binaries."""
+
+    @staticmethod
+    def _make_scrot(tmp_path, mode: int) -> tuple[str, str]:
+        binary = tmp_path / "scrot"
+        binary.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+        binary.chmod(mode)
+        return str(binary), str(tmp_path)
+
+    def test_rejects_world_writable(self, tmp_path, monkeypatch):
+        _scrot, scrot_dir = self._make_scrot(tmp_path, 0o757)
+        monkeypatch.setattr("anura.services.screenshot.legacy_provider._FLATPAK_SCROT_BIN", str(tmp_path / "none"))
+        monkeypatch.setenv("PATH", scrot_dir)
+        assert anura.services.screenshot.legacy_provider._resolve_scrot_binary() is None
+
+    def test_rejects_group_writable(self, tmp_path, monkeypatch):
+        _scrot, scrot_dir = self._make_scrot(tmp_path, 0o775)
+        monkeypatch.setattr("anura.services.screenshot.legacy_provider._FLATPAK_SCROT_BIN", str(tmp_path / "none"))
+        monkeypatch.setenv("PATH", scrot_dir)
+        assert anura.services.screenshot.legacy_provider._resolve_scrot_binary() is None
+
+    def test_accepts_owner_only_executable(self, tmp_path, monkeypatch):
+        scrot, scrot_dir = self._make_scrot(tmp_path, 0o755)
+        monkeypatch.setattr("anura.services.screenshot.legacy_provider._FLATPAK_SCROT_BIN", str(tmp_path / "none"))
+        monkeypatch.setenv("PATH", scrot_dir)
+        result = anura.services.screenshot.legacy_provider._resolve_scrot_binary()
+        assert result == scrot
+
+    def test_rejects_flatpak_path_writable(self, tmp_path, monkeypatch):
+        binary = tmp_path / "scrot"
+        binary.write_text("#!/bin/sh\n", encoding="utf-8")
+        binary.chmod(0o757)
+        monkeypatch.setattr("anura.services.screenshot.legacy_provider._FLATPAK_SCROT_BIN", str(binary))
+        monkeypatch.setenv("PATH", str(tmp_path / "empty"))
+        assert anura.services.screenshot.legacy_provider._resolve_scrot_binary() is None
+
+    def test_non_executable_rejected(self, tmp_path, monkeypatch):
+        _scrot, scrot_dir = self._make_scrot(tmp_path, 0o644)
+        monkeypatch.setattr("anura.services.screenshot.legacy_provider._FLATPAK_SCROT_BIN", str(tmp_path / "none"))
+        monkeypatch.setenv("PATH", scrot_dir)
+        assert anura.services.screenshot.legacy_provider._resolve_scrot_binary() is None
+
+    def test_helper_tolerates_missing_file(self, tmp_path):
+        from anura.services.screenshot.legacy_provider import _is_safe_executable
+
+        assert _is_safe_executable(tmp_path / "missing") is False
 
 
 class TestScreenshotProviderFactory:
