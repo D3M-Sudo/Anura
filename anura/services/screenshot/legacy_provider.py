@@ -67,6 +67,22 @@ class LegacyX11Provider(ScreenshotProvider):
                 logger.debug("LegacyX11Provider: Cancelled in-flight scrot capture.")
             self._cancellable = None
 
+    @staticmethod
+    def _discard_failed_output(output_path: str) -> None:
+        """Remove the pre-created temp file when scrot could not be spawned.
+
+        The file is created by mkstemp() before launch, so a failed spawn
+        would otherwise leak a stale empty screenshot file in the
+        system temporary directory.
+        """
+        try:
+            os.unlink(output_path)
+            logger.debug(f"LegacyX11Provider: Removed unused temp file {output_path}")
+        except FileNotFoundError:
+            pass
+        except OSError as e:
+            logger.warning(f"LegacyX11Provider: Could not remove temp file {output_path}: {e}")
+
     def capture(self, lang: str, copy: bool, callback: Callable) -> None:
         """Spawn scrot interactively and call callback(success, uri, error)."""
         scrot_bin = _resolve_scrot_binary()
@@ -127,12 +143,14 @@ class LegacyX11Provider(ScreenshotProvider):
             logger.error(f"LegacyX11Provider: Failed to spawn scrot: {e.message}")
             with self._lock:
                 self._cancellable = None
+            self._discard_failed_output(output_path)
             callback(False, None, e.message)
             return
         except (AttributeError, RuntimeError, TypeError) as e:
             logger.error(f"LegacyX11Provider: Failed to spawn scrot: {e}")
             with self._lock:
                 self._cancellable = None
+            self._discard_failed_output(output_path)
             callback(False, None, str(e))
             return
 

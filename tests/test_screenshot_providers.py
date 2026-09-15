@@ -22,7 +22,7 @@ except ImportError:
     gi.repository.Gio = mock_gio
 
 try:
-    from gi.repository import GLib  # noqa: F401
+    from gi.repository import GLib
 except ImportError:
     mock_glib = MagicMock()
     sys.modules["gi.repository.GLib"] = mock_glib
@@ -84,6 +84,64 @@ class TestLegacyX11Provider:
         args = mock_launcher.spawnv.call_args[0][0]
         assert args[0] == "/usr/bin/scrot"
         assert "-s" in args
+
+    @patch("anura.services.screenshot.legacy_provider.Gio")
+    @patch("anura.services.screenshot.legacy_provider._resolve_scrot_binary")
+    def test_capture_spawn_failure_removes_temp_file(self, mock_resolve, mock_gio, provider, tmp_path):
+        """F4: a failed spawn must not leak the pre-created temp file."""
+        mock_resolve.return_value = "/usr/bin/scrot"
+        leaked_path = tmp_path / "anura-shot-x.png"
+
+        def failing_mkstemp(*_a, **_k):
+            fd = os.open(str(leaked_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            return fd, str(leaked_path)
+
+        with patch(
+            "anura.services.screenshot.legacy_provider.tempfile.mkstemp",
+            side_effect=failing_mkstemp,
+        ):
+            mock_gio.SubprocessLauncher.new.side_effect = GLib.Error("spawn failed")  # type: ignore[attr-defined]
+
+            callback = MagicMock()
+            provider.capture("eng", False, callback)
+
+        assert callback.called
+        assert callback.call_args[0][0] is False
+        assert not leaked_path.exists(), "temp file leaked after failed spawn"
+
+    @patch("anura.services.screenshot.legacy_provider.Gio")
+    @patch("anura.services.screenshot.legacy_provider._resolve_scrot_binary")
+    def test_capture_runtime_spawn_error_removes_temp_file(self, mock_resolve, mock_gio, provider, tmp_path):
+        """F4: RuntimeError path must also clean up the temp file."""
+        mock_resolve.return_value = "/usr/bin/scrot"
+        leaked_path = tmp_path / "anura-shot-y.png"
+
+        def failing_mkstemp(*_a, **_k):
+            fd = os.open(str(leaked_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            return fd, str(leaked_path)
+
+        with patch(
+            "anura.services.screenshot.legacy_provider.tempfile.mkstemp",
+            side_effect=failing_mkstemp,
+        ):
+            mock_gio.SubprocessLauncher.new.side_effect = RuntimeError("no launcher")
+
+            callback = MagicMock()
+            provider.capture("eng", False, callback)
+
+        assert callback.called
+        assert callback.call_args[0][0] is False
+        assert not leaked_path.exists(), "temp file leaked after RuntimeError"
+
+    def test_discard_failed_output_is_tolerant(self, tmp_path):
+        """The helper must not raise for missing files or unreadable paths."""
+        missing = str(tmp_path / "never-created.png")
+        LegacyX11Provider._discard_failed_output(missing)  # no raise
+
+        victim = tmp_path / "victim.png"
+        victim.touch()
+        LegacyX11Provider._discard_failed_output(str(victim))
+        assert not victim.exists()
 
 
 class TestScreenshotProviderFactory:
