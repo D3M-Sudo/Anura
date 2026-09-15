@@ -69,6 +69,10 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
         SignalManagerMixin.__init__(self)
 
         self.search_settings = GtkSource.SearchSettings.new()
+        # F7: SearchSettings defaults to wrap_around=FALSE in GtkSourceView,
+        # which silently breaks next/prev once the first/last match is
+        # reached. Enable wrap-around so navigation behaves as users expect.
+        self.search_settings.set_wrap_around(True)
         self.search_context = GtkSource.SearchContext.new(self.buffer, self.search_settings)
 
         if self.search_bar and self.search_entry:
@@ -362,18 +366,17 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
         else:
             start_iter = self.buffer.get_iter_at_mark(self.buffer.get_insert())
 
-        found = False
-        match_start = None
-        match_end = None
-
-        if hasattr(self.search_context, "forward2") and forward:
-            res = self.search_context.forward2(start_iter)
-            if res and res[0]:
-                found, match_start, match_end = res[0], res[1], res[2]
-        elif hasattr(self.search_context, "backward2") and not forward:
-            res = self.search_context.backward2(start_iter)
-            if res and res[0]:
-                found, match_start, match_end = res[0], res[1], res[2]
+        # F6: PyGObject exposes the *2() C functions as forward()/backward()
+        # (the names were normalized upstream in 2016); the "forward2"/
+        # "backward2" names used previously do not exist on this binding,
+        # which silently disabled next/prev navigation. Call the real
+        # methods, which return (found, match_start, match_end).
+        self.search_settings.set_wrap_around(wrap)
+        # PyGObject returns a 4-tuple: (found, match_start, match_end, has_wrapped).
+        if forward:
+            found, match_start, match_end, _has_wrapped = self.search_context.forward(start_iter)
+        else:
+            found, match_start, match_end, _has_wrapped = self.search_context.backward(start_iter)
 
         if found and match_start and match_end:
             self.buffer.select_range(match_start, match_end)

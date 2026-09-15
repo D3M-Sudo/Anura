@@ -9,10 +9,12 @@ import pytest
 pytest.importorskip("gi")
 
 
+import hashlib
 import os
 from unittest.mock import MagicMock, patch
 
 from anura.models.download_state import DownloadState
+from anura.models.tessdata_checksum import TessdataChecksum
 from anura.services.language_manager import LanguageManager
 
 
@@ -111,14 +113,34 @@ class TestLanguageManagerEnterprise:
 
     @patch("requests.Session.get")
     def test_download_begin_success(self, mock_get, manager, tmp_path):
-        """Test successful download path."""
+        """Test successful download path.
+
+        The download manager verifies both the announced Content-Length and
+        the streamed git-blob SHA-1 against the pinned manifest before
+        installing (NEW-F1/F2, fail-closed). The mock body cannot match the
+        real pinned ``fra.traineddata`` identity (14 MB upstream), so this
+        test derives a synthetic pinned checksum from the mock body itself —
+        exercising the full verification pipeline with a self-consistent
+        identity. Real-manifest correctness is covered by
+        tests/test_tessdata_checksums.py.
+        """
+        body = b"anura-test-model\n" * 8
+        blob_sha1 = hashlib.sha1(b"blob %d\x00" % len(body) + body).hexdigest()
+        synthetic = TessdataChecksum(filename="fra.traineddata", size=len(body), sha1=blob_sha1)
+
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.headers = {"content-length": "100"}
-        mock_response.iter_content.return_value = [b"data"]
+        mock_response.headers = {"content-length": str(len(body))}
+        mock_response.iter_content.return_value = [body]
         mock_get.return_value = mock_response
 
-        with patch("shutil.which", return_value="/usr/bin/tesseract"):
+        with (
+            patch("shutil.which", return_value="/usr/bin/tesseract"),
+            patch(
+                "anura.services.language.download_manager.get_expected_checksum",
+                return_value=synthetic,
+            ),
+        ):
             result = manager._download_manager.download_begin("fra")
             assert result == "fra"
             assert (tmp_path / "fra.traineddata").exists()
