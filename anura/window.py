@@ -387,6 +387,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
 
         # TTS Controller signals
         self.connect_tracked(self.tts_controller, "state-changed", self._on_tts_state_changed)
+        self.connect_tracked(self.tts_controller, "still-waiting", self._on_tts_still_waiting)
         self.connect_tracked(self.tts_controller, "error-occurred", self._on_tts_error)
 
     def _on_extraction_completed(self, _controller: OcrController, text: str, applied_name: str) -> None:
@@ -446,6 +447,10 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     def _on_tts_state_changed(self, _controller: TtsController, state: str) -> None:
         """Mediate TTS state to the UI."""
         self.extracted_page.update_tts_state(state)
+
+    def _on_tts_still_waiting(self, _controller: TtsController) -> None:
+        """Surface a one-shot notice that generation is still pending."""
+        self.show_toast(_("Text-to-speech is still working…"))
 
     def _on_tts_error(self, _controller: TtsController, message: str) -> None:
         """Handle TTS error signal."""
