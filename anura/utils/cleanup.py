@@ -13,6 +13,7 @@ import time
 from loguru import logger
 
 from anura.config import TESSDATA_DIR, TESSDATA_POOL_DIR
+from anura.utils.export_files import cleanup_stale_export_files
 
 
 def cleanup_orphaned_resources(active_lang_code: str = "eng") -> None:
@@ -23,6 +24,7 @@ def cleanup_orphaned_resources(active_lang_code: str = "eng") -> None:
     - TTS cache directory (~/.cache/anura/*.mp3)
     - Tessdata directory (~/.local/share/anura/tessdata/*.tmp)
     - Tessdata pool directory (~/.cache/anura/tessdata_pool/*.traineddata)
+    - OCR export directory ($XDG_RUNTIME_DIR/anura/exports or ~/.cache/anura/exports)
 
     Only files older than 1 hour are removed for general temp files.
     The pool is cleaned based on currently needed models.
@@ -38,6 +40,14 @@ def cleanup_orphaned_resources(active_lang_code: str = "eng") -> None:
 
     # Clean up stale models from the pool
     _cleanup_tessdata_pool(active_lang_code)
+
+    # Clean up stale OCR export files (external editor handoff)
+    try:
+        removed = cleanup_stale_export_files(one_hour_ago)
+        if removed > 0:
+            logger.info(f"Anura Cleanup: Removed {removed} stale export files")
+    except OSError as e:
+        logger.error(f"Anura Cleanup: Error cleaning export directory: {e}")
 
 
 def _cleanup_tts_cache(cutoff_time: float) -> None:
