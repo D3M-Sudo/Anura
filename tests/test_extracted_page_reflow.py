@@ -90,11 +90,11 @@ def test_extracted_page_ui_reflow_properties() -> None:
         # Check TextView (text_view)
         textview = None
         for obj in root.iter("object"):
-            if obj.get("id") == "text_view" and obj.get("class") == "GtkTextView":
+            if obj.get("id") == "text_view" and obj.get("class") == "GtkSourceView":
                 textview = obj
                 break
 
-        assert textview is not None, "GtkTextView with id 'text_view' not found"
+        assert textview is not None, "GtkSourceView with id 'text_view' not found"
 
         wrap_mode = None
         left_margin = None
