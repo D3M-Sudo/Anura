@@ -465,8 +465,8 @@ def pytest_sessionfinish(session, exitstatus):
         if tr is not None:
             _print_failure_reports(tr)
             tr.summary_stats()
-        sys.stdout.flush()
-        sys.stderr.flush()
+            sys.stdout.flush()
+            sys.stderr.flush()
     except Exception:
         pass
 
