@@ -156,12 +156,15 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
 
     def _on_undo(self, *_args: object) -> None:
         """Undo the last user edit in the buffer."""
-        if self.buffer and self.buffer.can_undo():
+        # can-undo/can-redo are GObject properties; PyGObject exposes them via
+        # the get_can_undo()/get_can_redo() getters (there is no can_undo()
+        # method — calling it raises AttributeError).
+        if self.buffer and self.buffer.get_can_undo():
             self.buffer.undo()
 
     def _on_redo(self, *_args: object) -> None:
         """Redo the last undone edit in the buffer."""
-        if self.buffer and self.buffer.can_redo():
+        if self.buffer and self.buffer.get_can_redo():
             self.buffer.redo()
 
     def _on_buffer_changed(self, buffer: GtkSource.Buffer) -> None:
