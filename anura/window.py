@@ -335,8 +335,28 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
             if success:
                 self.show_toast(_("Opened in external editor"))
         except (GLib.Error, RuntimeError) as e:
-            logger.warning(f"External editor launch cancelled or failed: {e}")
-            self.show_toast(_("Could not launch external editor"))
+            # User dismissed the portal's "choose an application" dialog: not
+            # an error, stay quiet.
+            if isinstance(e, GLib.Error) and e.matches(
+                Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED
+            ):
+                logger.debug("External editor launch cancelled by user.")
+                return
+            # Gtk.FileLauncher goes through the org.freedesktop.portal.OpenURI
+            # D-Bus interface; a failure here is usually environment-side
+            # (missing/misconfigured xdg-desktop-portal backend) rather than an
+            # Anura bug. Surface the portal context and raw error so the next
+            # report is diagnosable without log-diving (VM-testing bug #6).
+            logger.warning(f"External editor launch failed: {e}")
+            detail = e.message if isinstance(e, GLib.Error) and e.message else str(e)
+            self.show_toast(
+                _(
+                    "Could not open external editor: the desktop portal "
+                    "(org.freedesktop.portal.OpenURI) refused the launch ({detail}). "
+                    "Check that a portal backend (xdg-desktop-portal-gtk/gnome/kde) "
+                    "is installed and a default app is set for text files."
+                ).format(detail=detail)
+            )
 
     def show_welcome_page(self, *_args: object) -> None:
         """Show the welcome page and hide the extracted content."""
