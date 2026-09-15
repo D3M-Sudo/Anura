@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Migrated the OCR result text editor to **GtkSourceView 5** (`GtkSource.View`/`GtkSource.Buffer`) with native search bar (`<Primary>f`), editor preferences (line numbers, current line highlight, wrapping), and an "Open in External Editor" action (`<Primary><Shift>E`) with safe `Gtk.FileLauncher` handoff
 
 ### Fixed
+- Fixed conftest.py: pytest collection/setup errors (reported under the 'error' key in terminalreporter.stats) are now printed alongside test failures ('failed' key) before os._exit() in pytest_sessionfinish, instead of being silently invisible in CI output
 - Fixed screenshot fallback (BUG-004): trigger the bundled scrot fallback on any non-None portal error on X11 sessions
 - Made tessdata downloads fully atomic (defensive audit F2): models are downloaded to `*.tmp` files and installed via `os.replace()`, so a crash mid-install can never leave a truncated `*.traineddata` in place
 - Hardened OCR external-editor export files (defensive audit F3): exports now go to `$XDG_RUNTIME_DIR/anura/exports` (per-user, per-session) instead of the shared `/tmp/anura_exports`, created via `tempfile.mkstemp()` with mode `0600` and random names; stale export files are cleaned on boot
