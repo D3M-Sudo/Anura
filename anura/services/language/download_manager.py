@@ -290,11 +290,22 @@ class DownloadManager(GObject.GObject):
                                         GLib.idle_add(_on_progress_idle, code, -1, priority=GLib.PRIORITY_DEFAULT)
                                     last_progress_time = now
 
-                    # Use copy+delete for cross-filesystem compatibility
+                        # Durability: force the written bytes to stable storage
+                        # before the rename. Best-effort by design — some
+                        # filesystems do not support fsync, and the atomic rename
+                        # below is what actually guarantees consistency.
+                        with contextlib.suppress(OSError):
+                            f.flush()
+                            os.fsync(f.fileno())
+
+                    # Atomic install: tmp_path lives inside quality_dir, i.e. on
+                    # the same filesystem as final_path, so os.replace() swaps the
+                    # directory entry with a single rename(2). A partially written
+                    # or truncated model can never be observed at final_path.
                     try:
-                        shutil.copy2(tmp_path, final_path)
+                        os.replace(tmp_path, final_path)
                         return code
-                    except (OSError, shutil.Error) as e:
+                    except OSError as e:
                         logger.error(f"Anura: Failed to install language file: {e}")
                         return None
 
