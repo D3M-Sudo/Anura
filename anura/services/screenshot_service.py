@@ -297,6 +297,12 @@ class ScreenshotService(GObject.GObject):
         # typically use this to reveal a persistent install hint banner;
         # the user-facing toast is still emitted via "error".
         "portal-backend-missing": (GObject.SignalFlags.RUN_FIRST, None, ()),
+        # Emitted as soon as the screenshot capture phase settles — i.e. a
+        # URI is handed to the OCR pipeline (success=True) or capture is
+        # over (user cancel, no fallback left, or fallback also failed).
+        # NOT emitted when a fallback attempt is about to start, so the
+        # window is not restored while a second capture UI is still needed.
+        "capture-finished": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
         # Emitted during various stages of OCR processing to provide user feedback.
         "status-changed": (GObject.SignalFlags.RUN_LAST, None, (str,)),
     }
@@ -355,6 +361,10 @@ class ScreenshotService(GObject.GObject):
             # This is cleared when the capture finishes or fails.
             self._current_task_id = None
             if success and uri:
+                # The capture phase is over: a URI was handed to the OCR
+                # pipeline. Notify consumers (e.g. the window can restore
+                # itself) well before the OCR result arrives.
+                self._emit_capture_finished(True)
                 # Move URI parsing and file existence check to background thread
                 task_id = get_atomic_manager().execute(
                     self._handle_portal_uri_background, (lang, uri, copy), pass_task_id=True
@@ -386,11 +396,13 @@ class ScreenshotService(GObject.GObject):
                     except (GLib.Error, RuntimeError, AttributeError) as e:
                         self._is_capturing = False
                         logger.error(f"Anura Screenshot: Fallback provider raised: {e}")
+                        self._emit_capture_finished(False)
                         self._emit_decode_error(
                             _("Screenshot failed: {reason}").format(reason=str(e))
                         )
                 else:
                     self._is_capturing = False
+                    self._emit_capture_finished(False)
                     if not self.fallback_provider:
                         # True portal-missing case: keep the environment diagnostic dump
                         # and the desktop-specific advice banner/error message.
@@ -403,12 +415,14 @@ class ScreenshotService(GObject.GObject):
             else:
                 # Cancelled by user (providers signal this with error=None)
                 self._is_capturing = False
+                self._emit_capture_finished(False)
 
         try:
             self.provider.capture(lang, copy, _on_capture_result)
         except (GLib.Error, RuntimeError) as e:
             self._is_capturing = False
             logger.error(f"Anura Screenshot: Provider capture call failed: {e}")
+            self._emit_capture_finished(False)
             self._emit_decode_error(_("Failed to initiate screenshot capture."))
 
     def _handle_portal_uri_background(self, lang: str, uri: str, copy: bool, task_id: str | None = None) -> bool:
@@ -434,6 +448,18 @@ class ScreenshotService(GObject.GObject):
             return False
 
         return self.decode_image(lang, filename, copy, remove_source=True, task_id=task_id)
+
+    def _emit_capture_finished(self, success: bool) -> None:
+        """Helper to emit capture-finished signal on the main thread."""
+
+        def _on_capture_finished_idle():
+            try:
+                self.emit("capture-finished", success)
+            except (RuntimeError, TypeError) as e:
+                logger.debug(f"Failed to emit capture-finished: {e}")
+            return GLib.SOURCE_REMOVE
+
+        GLib.idle_add(_on_capture_finished_idle)
 
     def _emit_decode_error(self, message: str) -> None:
         """Helper to emit error signal on the main thread."""

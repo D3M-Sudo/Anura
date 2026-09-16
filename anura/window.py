@@ -335,8 +335,28 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
             if success:
                 self.show_toast(_("Opened in external editor"))
         except (GLib.Error, RuntimeError) as e:
-            logger.warning(f"External editor launch cancelled or failed: {e}")
-            self.show_toast(_("Could not launch external editor"))
+            # User dismissed the portal's "choose an application" dialog: not
+            # an error, stay quiet.
+            if isinstance(e, GLib.Error) and e.matches(
+                Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED
+            ):
+                logger.debug("External editor launch cancelled by user.")
+                return
+            # Gtk.FileLauncher goes through the org.freedesktop.portal.OpenURI
+            # D-Bus interface; a failure here is usually environment-side
+            # (missing/misconfigured xdg-desktop-portal backend) rather than an
+            # Anura bug. Surface the portal context and raw error so the next
+            # report is diagnosable without log-diving (VM-testing bug #6).
+            logger.warning(f"External editor launch failed: {e}")
+            detail = e.message if isinstance(e, GLib.Error) and e.message else str(e)
+            self.show_toast(
+                _(
+                    "Could not open external editor: the desktop portal "
+                    "(org.freedesktop.portal.OpenURI) refused the launch ({detail}). "
+                    "Check that a portal backend (xdg-desktop-portal-gtk/gnome/kde) "
+                    "is installed and a default app is set for text files."
+                ).format(detail=detail)
+            )
 
     def show_welcome_page(self, *_args: object) -> None:
         """Show the welcome page and hide the extracted content."""
@@ -358,6 +378,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         self.connect_tracked(self.ocr_controller, "extraction-completed", self._on_extraction_completed)
         self.connect_tracked(self.ocr_controller, "error-occurred", self._on_ocr_error)
         self.connect_tracked(self.ocr_controller, "status-changed", self._on_ocr_status_changed)
+        self.connect_tracked(self.ocr_controller, "capture-finished", self._on_capture_finished)
         self.connect_tracked(self.ocr_controller, "capture-portal-missing", self._on_portal_missing)
         self.connect_tracked(self.ocr_controller, "navigation-requested", self._on_navigation_requested)
 
@@ -366,6 +387,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
 
         # TTS Controller signals
         self.connect_tracked(self.tts_controller, "state-changed", self._on_tts_state_changed)
+        self.connect_tracked(self.tts_controller, "still-waiting", self._on_tts_still_waiting)
         self.connect_tracked(self.tts_controller, "error-occurred", self._on_tts_error)
 
     def _on_extraction_completed(self, _controller: OcrController, text: str, applied_name: str) -> None:
@@ -401,6 +423,10 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         """Update UI status during OCR."""
         self.welcome_page.set_status(status_msg)
 
+    def _on_capture_finished(self, _controller: OcrController, _success: bool) -> None:
+        """Restore the window as soon as capture settles (OCR still running)."""
+        self._cleanup_screenshot_state()
+
     def _on_portal_missing(self, _controller: OcrController, message: str) -> None:
         """Show the portal missing banner."""
         self.portal_banner.set_title(message)
@@ -421,6 +447,10 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     def _on_tts_state_changed(self, _controller: TtsController, state: str) -> None:
         """Mediate TTS state to the UI."""
         self.extracted_page.update_tts_state(state)
+
+    def _on_tts_still_waiting(self, _controller: TtsController) -> None:
+        """Surface a one-shot notice that generation is still pending."""
+        self.show_toast(_("Text-to-speech is still working…"))
 
     def _on_tts_error(self, _controller: TtsController, message: str) -> None:
         """Handle TTS error signal."""
