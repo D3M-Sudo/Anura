@@ -75,6 +75,7 @@ class TestScreenshotServiceEnterprise:
             s.fallback_provider = MagicMock()
             s._is_capturing = False
             s._current_task_id = None
+            s._emit_capture_finished = MagicMock()
             s._emit_decode_error = MagicMock()
             s._log_portal_environment = MagicMock()
             s._emit_portal_failure = MagicMock()
@@ -105,6 +106,7 @@ class TestScreenshotServiceEnterprise:
         ScreenshotService.capture(service, "eng", False)
 
         service.fallback_provider.capture.assert_called_once()
+        service._emit_capture_finished.assert_not_called()
 
     def test_screenshot_fallback_logic_exact_screenshot_failed(self, service):
         """The historical exact string 'screenshot failed' still triggers the fallback."""
@@ -116,6 +118,7 @@ class TestScreenshotServiceEnterprise:
         ScreenshotService.capture(service, "eng", False)
 
         service.fallback_provider.capture.assert_called_once()
+        service._emit_capture_finished.assert_not_called()
 
     def test_screenshot_fallback_user_cancellation_does_not_trigger(self, service):
         """BUG-004: error=None (user cancellation) must NOT trigger the fallback."""
@@ -127,6 +130,7 @@ class TestScreenshotServiceEnterprise:
         ScreenshotService.capture(service, "eng", False)
 
         service.fallback_provider.capture.assert_not_called()
+        service._emit_capture_finished.assert_called_once_with(False)
         assert service._is_capturing is False
 
     def test_screenshot_fallback_unavailable_emits_portal_failure(self, service):
@@ -148,6 +152,7 @@ class TestScreenshotServiceEnterprise:
 
         service._log_portal_environment.assert_called_once()
         service._emit_portal_failure.assert_called_once()
+        service._emit_capture_finished.assert_called_once_with(False)
         service._emit_decode_error.assert_not_called()
         assert service._is_capturing is False
 
@@ -169,6 +174,7 @@ class TestScreenshotServiceEnterprise:
 
         assert service.provider.capture.call_count == 1
         assert service.fallback_provider.capture.call_count == 1
+        service._emit_capture_finished.assert_called_once_with(False)
         service._emit_decode_error.assert_called_once()
         assert service._is_capturing is False
 
