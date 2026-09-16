@@ -103,6 +103,31 @@ def test_long_text_does_not_break_page(headless_gi_mocks, tmp_path):
     page.history_stack.set_visible_child_name.assert_called_with("entries")
     assert page.history_list.append.call_count == 1
 
+
+def test_copy_callback_sets_clipboard_and_shows_feedback(headless_gi_mocks, monkeypatch):
+    page = _make_page(headless_gi_mocks)
+    mock_cb_service = MagicMock()
+    monkeypatch.setattr("anura.widgets.history_page.get_clipboard_service", lambda: mock_cb_service)
+
+    button = MagicMock()
+    button.get_icon_name.return_value = "edit-copy-symbolic"
+
+    cb = page._make_copy_callback("copied text", button)
+    cb()
+
+    mock_cb_service.set.assert_called_once_with("copied text")
+    button.set_icon_name.assert_called_with("emblem-ok-symbolic")
+
+
+def test_reset_row_copy_button_restores_state(headless_gi_mocks):
+    page = _make_page(headless_gi_mocks)
+    button = MagicMock()
+    button.get_icon_name.return_value = "emblem-ok-symbolic"
+
+    result = page._reset_row_copy_button(button, "edit-copy-symbolic")
+    assert result is False or getattr(result, "__name__", "") == "SOURCE_REMOVE"
+    button.set_icon_name.assert_called_with("edit-copy-symbolic")
+
 # ---------------------------------------------------------------------- #
 # Malformed entry / defensive formatting
 # ---------------------------------------------------------------------- #

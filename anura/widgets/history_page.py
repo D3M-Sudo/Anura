@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: MIT
 
+from collections.abc import Callable
 import contextlib
 from datetime import datetime
 from gettext import gettext as _
@@ -16,10 +17,11 @@ gi.require_version("GLib", "2.0")
 gi.require_version("GObject", "2.0")
 gi.require_version("Gtk", "4.0")
 
-from gi.repository import Adw, Gtk  # noqa: E402
+from gi.repository import Adw, GLib, Gtk  # noqa: E402
 from loguru import logger  # noqa: E402
 
 from anura.config import RESOURCE_PREFIX  # noqa: E402
+from anura.services.clipboard_service import get_clipboard_service  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
 from anura.utils.signal_manager import SignalManagerMixin  # noqa: E402
 
@@ -116,9 +118,53 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
             row = Adw.ActionRow(
                 title=format_entry_title(entry.text),
                 subtitle=format_entry_subtitle(entry),
+                activatable=True,
             )
+            copy_btn = Gtk.Button(
+                icon_name="edit-copy-symbolic",
+                valign=Gtk.Align.CENTER,
+                tooltip_text=_("Copy text to clipboard"),
+            )
+            copy_btn.add_css_class("flat")
+            copy_btn.update_property([Gtk.AccessibleProperty.LABEL], [_("Copy text to clipboard")])
+            copy_cb = self._make_copy_callback(entry.text, copy_btn)
+            self.connect_tracked(copy_btn, "clicked", copy_cb)
+            self.connect_tracked(row, "activated", copy_cb)
+            row.add_suffix(copy_btn)
             self.history_list.append(row)
             self._rows.append(row)
+
+    def _make_copy_callback(self, text: str, button: Gtk.Button) -> Callable[[object], None]:
+        def _on_copy_clicked(*_args: object) -> None:
+            try:
+                get_clipboard_service().set(text)
+                self._show_row_copy_feedback(button)
+            except Exception as e:
+                logger.exception(f"HistoryPage: Failed to copy entry to clipboard: {e}")
+
+        return _on_copy_clicked
+
+    def _show_row_copy_feedback(self, button: Gtk.Button) -> None:
+        if button.get_icon_name() == "emblem-ok-symbolic":
+            return
+        original_icon = button.get_icon_name()
+        button.set_icon_name("emblem-ok-symbolic")
+        copied_text = _("Copied to clipboard!")
+        button.set_tooltip_text(copied_text)
+        button.update_property([Gtk.AccessibleProperty.LABEL], [copied_text])
+
+        GLib.timeout_add_seconds(2, self._reset_row_copy_button, button, original_icon)
+
+    def _reset_row_copy_button(self, button: Gtk.Button, original_icon: str) -> bool:
+        try:
+            if button and button.get_icon_name() == "emblem-ok-symbolic":
+                button.set_icon_name(original_icon)
+                copy_text = _("Copy text to clipboard")
+                button.set_tooltip_text(copy_text)
+                button.update_property([Gtk.AccessibleProperty.LABEL], [copy_text])
+        except (AttributeError, RuntimeError, TypeError) as e:
+            logger.exception(f"HistoryPage: Failed to reset row copy button: {e}")
+        return GLib.SOURCE_REMOVE
 
     def _clear_rows(self) -> None:
         """Remove previously displayed rows (tracked in Python, mock-safe)."""
