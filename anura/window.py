@@ -423,8 +423,12 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         """Update UI status during OCR."""
         self.welcome_page.set_status(status_msg)
 
-    def _on_capture_finished(self, _controller: OcrController, _success: bool) -> None:
+    def _on_capture_finished(self, _controller: OcrController, success: bool) -> None:
         """Restore the window as soon as capture settles (OCR still running)."""
+        if success:
+            # The window is visible again while OCR runs, so mirror the
+            # file/clipboard entry points and spin during the wait (VM bug #3).
+            self.welcome_page.show_spinner()
         self._cleanup_screenshot_state()
 
     def _on_portal_missing(self, _controller: OcrController, message: str) -> None:
