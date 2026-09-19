@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: anura 1.4.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-12 19:27+0200\n"
-"PO-Revision-Date: 2026-09-19 17:51+0000\n"
+"PO-Revision-Date: 2026-09-19 17:53+0000\n"
 "Last-Translator: Daniel Nylander <yeagersthlm@gmail.com>\n"
 "Language-Team: Swedish <https://hosted.weblate.org/projects/anura/anura/sv/>"
 "\n"
@@ -95,7 +95,7 @@ msgstr "Alla filer (*)"
 
 #: anura/controllers/tts_controller.py:73
 msgid "Text-to-speech is not available for this language"
-msgstr ""
+msgstr "Text-till-tal är inte tillgängligt för det här språket"
 
 #: anura/controllers/tts_controller.py:106
 msgid "Request timed out. Please try again."
@@ -984,59 +984,61 @@ msgstr "Kunde inte öppna länken"
 msgid ""
 "Shows character and word count. If text is selected, shows selection stats."
 msgstr ""
+"Visar antal tecken och ord. Om text är markerad visas statistik för "
+"markeringen."
 
 #: anura/widgets/extracted_page.py:191
 msgid "Selection: "
-msgstr ""
+msgstr "Markering: "
 
 #: anura/widgets/extracted_page.py:199
 #, python-brace-format
 msgid "{n} word"
 msgid_plural "{n} words"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{n} ord"
+msgstr[1] "{n} ord"
 
 #: anura/widgets/extracted_page.py:200
 #, python-brace-format
 msgid "{n} character"
 msgid_plural "{n} characters"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{n} tecken"
+msgstr[1] "{n} tecken"
 
 #: anura/widgets/extracted_page.py:203
 #, python-brace-format
 msgid "{words} | {chars}"
-msgstr ""
+msgstr "{words} | {chars}"
 
 #: anura/widgets/extracted_page.py:211
 msgctxt "Extracted screen"
 msgid "Copy Selected Text to Clipboard (Ctrl+C)"
-msgstr ""
+msgstr "Kopiera markerad text till urklipp (Ctrl+C)"
 
 #: anura/widgets/extracted_page.py:212
 msgctxt "Extracted screen"
 msgid "Listen to Selected Text (Ctrl+L)"
-msgstr ""
+msgstr "Lyssna på markerad text (Ctrl+L)"
 
 #: anura/widgets/extracted_page.py:213
 msgctxt "Extracted screen"
 msgid "Share Selection To"
-msgstr ""
+msgstr "Dela markeringen via"
 
 #: anura/widgets/extracted_page.py:215 data/ui/extracted_page.blp:36
 msgctxt "Extracted screen"
 msgid "Copy Extracted Text to Clipboard (Ctrl+C)"
-msgstr ""
+msgstr "Kopiera extraherad text till urklipp (Ctrl+C)"
 
 #: anura/widgets/extracted_page.py:216 data/ui/extracted_page.blp:82
 msgctxt "Extracted screen"
 msgid "Listen to Text (Ctrl+L)"
-msgstr ""
+msgstr "Lyssna på text (Ctrl+L)"
 
 #: anura/widgets/extracted_page.py:217 data/ui/extracted_page.blp:156
 msgctxt "Extracted screen"
 msgid "Share To"
-msgstr ""
+msgstr "Dela via"
 
 #: anura/widgets/extracted_page.py:245
 msgctxt "Extracted screen"
@@ -1046,7 +1048,7 @@ msgstr ""
 #: anura/widgets/extracted_page.py:300
 #, python-brace-format
 msgid "Smart Parse: {name}"
-msgstr ""
+msgstr "Smart tolkning: {name}"
 
 #: anura/widgets/extracted_page.py:343
 msgid "Searching…"
@@ -1153,15 +1155,15 @@ msgstr ""
 
 #: anura/widgets/preferences_languages_page.py:186
 msgid "Fast"
-msgstr ""
+msgstr "Snabb"
 
 #: anura/widgets/preferences_languages_page.py:186
 msgid "Standard"
-msgstr ""
+msgstr "Standard"
 
 #: anura/widgets/preferences_languages_page.py:186
 msgid "Best"
-msgstr ""
+msgstr "Bäst"
 
 #: anura/widgets/share_row.py:29
 #, python-brace-format
@@ -1218,7 +1220,7 @@ msgstr ""
 
 #: anura/widgets/shortcuts_overlay.py:84 data/ui/preferences_general.blp:102
 msgid "Text-to-Speech"
-msgstr ""
+msgstr "Text-till-tal"
 
 #: anura/widgets/shortcuts_overlay.py:86
 msgid "Listen to text"
@@ -1291,6 +1293,8 @@ msgstr "Endast lokala filer kan släppas"
 msgid ""
 "File not accessible. Ensure Anura has permission to access this location."
 msgstr ""
+"Filen är inte åtkomlig. Kontrollera att Anura har behörighet till den här "
+"platsen."
 
 #: anura/widgets/welcome_page.py:272
 msgid "Only images can be processed that way."
@@ -1318,19 +1322,19 @@ msgstr ""
 
 #: anura/window.py:161
 msgid "Tesseract OCR not found on system"
-msgstr ""
+msgstr "Tesseract OCR hittades inte i systemet"
 
 #: anura/window.py:167
 msgid "TTS dependencies (gTTS/GStreamer) missing"
-msgstr ""
+msgstr "Beroenden för text-till-tal (gTTS/GStreamer) saknas"
 
 #: anura/window.py:188
 msgid "Screenshot timed out. Please try again."
-msgstr ""
+msgstr "Tidsgränsen för skärmbild överskreds. Försök igen."
 
 #: anura/window.py:200
 msgid "Capture already in progress"
-msgstr ""
+msgstr "Fångst pågår redan"
 
 #: anura/window.py:221
 msgid "Failed to capture screenshot"
@@ -1342,11 +1346,11 @@ msgstr "Kunde inte läsa in bildfilen"
 
 #: anura/window.py:248
 msgid "Error loading file"
-msgstr ""
+msgstr "Fel vid inläsning av fil"
 
 #: anura/window.py:258
 msgid "Selection copied to clipboard"
-msgstr ""
+msgstr "Markeringen kopierades till urklipp"
 
 #: anura/window.py:263
 msgid "No text to copy"
@@ -1374,20 +1378,20 @@ msgstr "Ingen text att dela."
 
 #: data/ui/extracted_page.blp:14
 msgid "Extracted"
-msgstr ""
+msgstr "Extraherat"
 
 #: data/ui/extracted_page.blp:25
 msgid "Take a Screenshot (Ctrl+G)"
-msgstr ""
+msgstr "Ta en skärmbild (Ctrl+G)"
 
 #: data/ui/extracted_page.blp:27
 msgid "Take a screenshot"
-msgstr ""
+msgstr "Ta en skärmbild"
 
 #: data/ui/extracted_page.blp:38
 msgctxt "Extracted screen"
 msgid "Copy extracted text to clipboard"
-msgstr ""
+msgstr "Kopiera extraherad text till urklipp"
 
 #: data/ui/extracted_page.blp:46
 msgctxt "Extracted screen"
@@ -1422,17 +1426,17 @@ msgstr ""
 #: data/ui/extracted_page.blp:84
 msgctxt "Extracted screen"
 msgid "Listen to text"
-msgstr ""
+msgstr "Lyssna på text"
 
 #: data/ui/extracted_page.blp:95 data/ui/extracted_page.blp:132
 msgctxt "Extracted screen"
 msgid "Stop listening (Ctrl+Shift+L)"
-msgstr ""
+msgstr "Sluta lyssna (Ctrl+Skift+L)"
 
 #: data/ui/extracted_page.blp:97 data/ui/extracted_page.blp:134
 msgctxt "Extracted screen"
 msgid "Stop listening"
-msgstr ""
+msgstr "Sluta lyssna"
 
 #: data/ui/extracted_page.blp:110
 msgid "Generating audio"
@@ -1441,22 +1445,22 @@ msgstr ""
 #: data/ui/extracted_page.blp:122
 msgctxt "Extracted screen"
 msgid "Pause/Resume listening (Ctrl+Alt+L)"
-msgstr ""
+msgstr "Pausa/återuppta lyssning (Ctrl+Alt+L)"
 
 #: data/ui/extracted_page.blp:124
 msgctxt "Extracted screen"
 msgid "Pause or resume listening"
-msgstr ""
+msgstr "Pausa eller återuppta lyssning"
 
 #: data/ui/extracted_page.blp:146 data/ui/extracted_page.blp:148
 msgctxt "Extracted screen"
 msgid "Open menu"
-msgstr ""
+msgstr "Öppna meny"
 
 #: data/ui/extracted_page.blp:158
 msgctxt "Extracted screen"
 msgid "Share text to other applications"
-msgstr ""
+msgstr "Dela text med andra program"
 
 #: data/ui/extracted_page.blp:166
 msgid "Share providers"
@@ -1509,24 +1513,24 @@ msgstr ""
 #: data/ui/extracted_page.blp:298 data/ui/preferences_dialog.blp:13
 #: data/ui/welcome_page.blp:177
 msgid "Preferences"
-msgstr ""
+msgstr "Inställningar"
 
 #: data/ui/extracted_page.blp:306 data/ui/shortcuts_overlay.blp:13
 #: data/ui/shortcuts_overlay.blp:25 data/ui/welcome_page.blp:185
 msgid "Keyboard Shortcuts"
-msgstr ""
+msgstr "Tangentbordsgenvägar"
 
 #: data/ui/extracted_page.blp:312 data/ui/welcome_page.blp:191
 msgid "About Anura"
-msgstr ""
+msgstr "Om Anura"
 
 #: data/ui/extracted_page.blp:327
 msgid "Open image"
-msgstr ""
+msgstr "Öppna bild"
 
 #: data/ui/extracted_page.blp:328
 msgid "Paste from clipboard"
-msgstr ""
+msgstr "Klistra in från urklipp"
 
 #: data/ui/history_page.blp:12 data/ui/preferences_general.blp:64
 #: data/ui/welcome_page.blp:171
@@ -1559,20 +1563,20 @@ msgstr ""
 
 #: data/ui/language_popover.blp:27 data/ui/preferences_languages.blp:34
 msgid "Search Languages"
-msgstr ""
+msgstr "Sök språk"
 
 #: data/ui/language_popover.blp:30 data/ui/preferences_languages.blp:38
 msgid "Search Languages…"
-msgstr ""
+msgstr "Sök språk…"
 
 #: data/ui/language_popover.blp:84 data/ui/preferences_languages.blp:125
 msgid "No Results Found"
-msgstr ""
+msgstr "Inga resultat hittades"
 
 #: data/ui/language_popover.blp:89 data/ui/preferences_languages.blp:126
 #: data/ui/shortcuts_overlay.blp:65
 msgid "Try a different search term"
-msgstr ""
+msgstr "Prova en annan sökterm"
 
 #: data/ui/language_popover.blp:104
 msgid "_Manage Languages…"
@@ -1585,70 +1589,72 @@ msgstr ""
 #: data/ui/language_row.blp:29 data/ui/language_row.blp:31
 msgctxt "Preferences Language Row"
 msgid "Install language"
-msgstr ""
+msgstr "Installera språk"
 
 #: data/ui/language_row.blp:41 data/ui/language_row.blp:43
 msgctxt "Preferences Language Row"
 msgid "Remove language"
-msgstr ""
+msgstr "Ta bort språk"
 
 #: data/ui/preferences_general.blp:13
 msgid "_General"
-msgstr ""
+msgstr "_Allmänt"
 
 #: data/ui/preferences_general.blp:18
 msgid "Appearance"
-msgstr ""
+msgstr "Utseende"
 
 #: data/ui/preferences_general.blp:21
 msgid "Color Scheme"
-msgstr ""
+msgstr "Färgschema"
 
 #: data/ui/preferences_general.blp:22
 msgid "The preferred color scheme for the application."
-msgstr ""
+msgstr "Önskat färgschema för programmet."
 
 #: data/ui/preferences_general.blp:27
 msgid "Text Extraction"
-msgstr ""
+msgstr "Textextrahering"
 
 #: data/ui/preferences_general.blp:30
 msgid "_Secondary Language"
-msgstr ""
+msgstr "_Andraspråk"
 
 #: data/ui/preferences_general.blp:32
 msgid "Additional language used in text recognition"
-msgstr ""
+msgstr "Ytterligare språk som används vid textigenkänning"
 
 #: data/ui/preferences_general.blp:36
 msgid "Smart Text Parsing"
-msgstr ""
+msgstr "Smart texttolkning"
 
 #: data/ui/preferences_general.blp:37
 msgid "Automatically reformat URLs, emails and paragraphs"
-msgstr ""
+msgstr "Formatera automatiskt om URL:er, e-postadresser och stycken"
 
 #: data/ui/preferences_general.blp:42
 msgid "Behavior"
-msgstr ""
+msgstr "Beteende"
 
 #: data/ui/preferences_general.blp:45
 msgid "_Copy to Clipboard"
-msgstr ""
+msgstr "_Kopiera till urklipp"
 
 #: data/ui/preferences_general.blp:47
 msgid "Automatically copy the extracted text after detection"
-msgstr ""
+msgstr "Kopiera automatiskt den extraherade texten efter identifiering"
 
 #: data/ui/preferences_general.blp:51
 msgid "_Open QR-code Links"
-msgstr ""
+msgstr "_Öppna QR-kodlänkar"
 
 #: data/ui/preferences_general.blp:53
 msgid ""
 "Open QR code URLs directly in browser. Otherwise, a clickable notification "
 "is shown."
 msgstr ""
+"Öppna URL:er från QR-koder direkt i webbläsaren. Annars visas en klickbar "
+"avisering."
 
 #: data/ui/preferences_general.blp:67
 msgid "Save Extraction History"
@@ -1692,59 +1698,59 @@ msgstr ""
 
 #: data/ui/preferences_general.blp:105
 msgid "Volume"
-msgstr ""
+msgstr "Volym"
 
 #: data/ui/preferences_general.blp:106
 msgid "TTS playback volume level (0-100%)"
-msgstr ""
+msgstr "Volym för TTS-uppspelning (0–100 %)"
 
 #: data/ui/preferences_general.blp:115
 msgid "TTS Language"
-msgstr ""
+msgstr "TTS-språk"
 
 #: data/ui/preferences_general.blp:116
 msgid "Language for speech synthesis. Uses OCR language if not set."
-msgstr ""
+msgstr "Språk för talsyntes. Använder OCR-språket om inget anges."
 
 #: data/ui/preferences_languages.blp:14
 msgid "_Languages"
-msgstr ""
+msgstr "_Språk"
 
 #: data/ui/preferences_languages.blp:20
 msgid "Model Quality"
-msgstr ""
+msgstr "Modellkvalitet"
 
 #: data/ui/preferences_languages.blp:21
 msgid "Higher quality is slower but more accurate"
-msgstr ""
+msgstr "Högre kvalitet är långsammare men mer exakt"
 
 #: data/ui/preferences_languages.blp:45
 msgid "Retry"
-msgstr ""
+msgstr "Försök igen"
 
 #: data/ui/preferences_languages.blp:61
 msgid "Installed Languages"
-msgstr ""
+msgstr "Installerade språk"
 
 #: data/ui/preferences_languages.blp:70 data/ui/preferences_languages.blp:72
 msgid "Add language"
-msgstr ""
+msgstr "Lägg till språk"
 
 #: data/ui/shortcuts_overlay.blp:38
 msgid "Search shortcuts..."
-msgstr ""
+msgstr "Sök genvägar…"
 
 #: data/ui/shortcuts_overlay.blp:40
 msgid "Search shortcuts"
-msgstr ""
+msgstr "Sök genvägar"
 
 #: data/ui/shortcuts_overlay.blp:64
 msgid "No results found"
-msgstr ""
+msgstr "Inga resultat hittades"
 
 #: data/ui/welcome_page.blp:13
 msgid "Welcome"
-msgstr ""
+msgstr "Välkommen"
 
 #: data/ui/welcome_page.blp:22 data/ui/welcome_page.blp:53
 #: data/io.github.d3msudo.anura.desktop.in:3
@@ -1757,7 +1763,7 @@ msgstr ""
 
 #: data/ui/welcome_page.blp:29
 msgid "Select language to extract"
-msgstr ""
+msgstr "Välj språk för extrahering"
 
 #: data/ui/welcome_page.blp:37
 msgid "Extracting text"
@@ -1765,85 +1771,87 @@ msgstr ""
 
 #: data/ui/welcome_page.blp:45 data/ui/welcome_page.blp:47
 msgid "Open menu"
-msgstr ""
+msgstr "Öppna meny"
 
 #: data/ui/welcome_page.blp:65
 msgctxt "Welcome screen"
 msgid "Take a Screenshot (Ctrl+G)"
-msgstr ""
+msgstr "Ta en skärmbild (Ctrl+G)"
 
 #: data/ui/welcome_page.blp:67
 msgctxt "Welcome screen"
 msgid "Take a Screenshot"
-msgstr ""
+msgstr "Ta en skärmbild"
 
 #: data/ui/welcome_page.blp:76
 msgid "_Take a Screenshot"
-msgstr ""
+msgstr "_Ta en skärmbild"
 
 #: data/ui/welcome_page.blp:84
 msgctxt "Welcome screen"
 msgid "Open Image (Ctrl+O)"
-msgstr ""
+msgstr "Öppna bild (Ctrl+O)"
 
 #: data/ui/welcome_page.blp:86
 msgctxt "Welcome screen"
 msgid "Open Image"
-msgstr ""
+msgstr "Öppna bild"
 
 #: data/ui/welcome_page.blp:95
 msgid "_Open Image"
-msgstr ""
+msgstr "_Öppna bild"
 
 #: data/ui/welcome_page.blp:103
 msgctxt "Welcome screen"
 msgid "Paste Image from Clipboard (Ctrl+V)"
-msgstr ""
+msgstr "Klistra in bild från urklipp (Ctrl+V)"
 
 #: data/ui/welcome_page.blp:105
 msgctxt "Welcome screen"
 msgid "Paste Image"
-msgstr ""
+msgstr "Klistra in bild"
 
 #: data/ui/welcome_page.blp:114
 msgid "_Paste Image"
-msgstr ""
+msgstr "_Klistra in bild"
 
 #: data/ui/welcome_page.blp:121 data/ui/welcome_page.blp:123
 msgctxt "Welcome screen"
 msgid "Drop image here"
-msgstr ""
+msgstr "Släpp bild här"
 
 #: data/ui/welcome_page.blp:132
 msgid "_Drop Image"
-msgstr ""
+msgstr "_Släpp bild"
 
 #: data/ui/welcome_page.blp:205
 msgid "⭐ Star on GitHub"
-msgstr ""
+msgstr "⭐ Stjärnmärk på GitHub"
 
 #: data/ui/window.blp:27
 msgid ""
 "Screenshot portal unavailable. Install xdg-desktop-portal-gtk (or the "
 "backend matching your desktop) and re-login."
 msgstr ""
+"Skärmbildsportalen är inte tillgänglig. Installera xdg-desktop-portal-gtk "
+"(eller den bakände som passar din skrivbordsmiljö) och logga in igen."
 
 #: data/ui/window.blp:28
 msgid "Dismiss"
-msgstr ""
+msgstr "Avfärda"
 
 #: data/io.github.d3msudo.anura.desktop.in:4
 msgid "OCR Tool"
-msgstr ""
+msgstr "OCR-verktyg"
 
 #: data/io.github.d3msudo.anura.desktop.in:5
 msgid "Extract text from any image, video, or web page"
-msgstr ""
+msgstr "Extrahera text från valfri bild, video eller webbsida"
 
 #: data/io.github.d3msudo.anura.desktop.in:11
 msgid "OCR;Text;Extraction;Reader;QR;Scanner;"
-msgstr ""
+msgstr "OCR;Text;Extrahering;Läsare;QR;Skanner;"
 
 #: data/io.github.d3msudo.anura.desktop.in:17
 msgid "Extract Text to Clipboard"
-msgstr ""
+msgstr "Extrahera text till urklipp"
