@@ -296,3 +296,26 @@ def test_window_process_file_uses_validate_image_resource() -> None:
 def test_modules_parse_cleanly(rel_path: str) -> None:
     """Sanity: each modified module must still be syntactically valid."""
     ast.parse((ANURA_PKG / rel_path).read_text())
+
+
+# ---------------------------------------------------------------------------
+# Bug: the "Match Case" toggle pointed at "format-text-capitalize-symbolic",
+# an icon that does not exist in the Adwaita icon theme, so GTK rendered a
+# broken placeholder. Adwaita has no standard match-case icon, so the button
+# falls back to a plain "Aa" text label.
+# ---------------------------------------------------------------------------
+
+
+def test_search_case_toggle_uses_aa_label_not_missing_icon() -> None:
+    """ExtractedPage's match-case toggle must not reference a nonexistent icon."""
+    blp = (PROJECT_ROOT / "data" / "ui" / "extracted_page.blp").read_text()
+
+    assert "format-text-capitalize-symbolic" not in blp, (
+        "search_case_btn must not use format-text-capitalize-symbolic: that icon "
+        "does not exist in the Adwaita icon theme."
+    )
+
+    button_start = blp.index("ToggleButton search_case_btn")
+    button_end = blp.index("Button search_prev_btn", button_start)
+    button_block = blp[button_start:button_end]
+    assert 'label: "Aa"' in button_block, "search_case_btn must use the 'Aa' text label to represent match case."
