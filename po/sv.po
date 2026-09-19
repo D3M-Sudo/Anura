@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: anura 1.4.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-12 19:27+0200\n"
-"PO-Revision-Date: 2026-09-19 17:47+0000\n"
+"PO-Revision-Date: 2026-09-19 17:48+0000\n"
 "Last-Translator: Daniel Nylander <yeagersthlm@gmail.com>\n"
 "Language-Team: Swedish <https://hosted.weblate.org/projects/anura/anura/sv/>"
 "\n"
@@ -1712,7 +1712,7 @@ msgstr ""
 #: data/ui/welcome_page.blp:22 data/ui/welcome_page.blp:53
 #: data/io.github.d3msudo.anura.desktop.in:3
 msgid "Anura"
-msgstr "anura"
+msgstr "Anura"
 
 #: data/ui/welcome_page.blp:27
 msgid "_Language"
