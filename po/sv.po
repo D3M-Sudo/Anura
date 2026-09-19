@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: anura 1.4.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-12 19:27+0200\n"
-"PO-Revision-Date: 2026-09-19 17:49+0000\n"
+"PO-Revision-Date: 2026-09-19 17:51+0000\n"
 "Last-Translator: Daniel Nylander <yeagersthlm@gmail.com>\n"
 "Language-Team: Swedish <https://hosted.weblate.org/projects/anura/anura/sv/>"
 "\n"
@@ -20,16 +20,16 @@ msgstr ""
 
 #: anura/controllers/dnd_controller.py:45
 msgid "Failed to load dropped file (invalid path)."
-msgstr ""
+msgstr "Kunde inte läsa in den släppta filen (ogiltig sökväg)."
 
 #: anura/controllers/dnd_controller.py:52
 #: anura/services/screenshot_service.py:581 anura/window.py:238
 msgid "Invalid image file"
-msgstr ""
+msgstr "Ogiltig bildfil"
 
 #: anura/controllers/dnd_controller.py:65
 msgid "Failed to process the file."
-msgstr ""
+msgstr "Kunde inte bearbeta filen."
 
 #: anura/controllers/ocr_controller.py:105
 msgid "No text found. Try to grab another region."
@@ -37,7 +37,7 @@ msgstr "Ingen text hittades. Prova att markera ett annat område."
 
 #: anura/controllers/ocr_controller.py:120
 msgid "Text extracted"
-msgstr ""
+msgstr "Text extraherad"
 
 #: anura/controllers/ocr_controller.py:175
 #, python-brace-format
@@ -63,35 +63,35 @@ msgstr "Alla bildformat som stöds"
 
 #: anura/controllers/ocr_controller.py:262
 msgid "PNG images (*.png)"
-msgstr ""
+msgstr "PNG-bilder (*.png)"
 
 #: anura/controllers/ocr_controller.py:263
 msgid "JPEG images (*.jpg)"
-msgstr ""
+msgstr "JPEG-bilder (*.jpg)"
 
 #: anura/controllers/ocr_controller.py:264
 msgid "WebP images (*.webp)"
-msgstr ""
+msgstr "WebP-bilder (*.webp)"
 
 #: anura/controllers/ocr_controller.py:265
 msgid "AVIF images (*.avif)"
-msgstr ""
+msgstr "AVIF-bilder (*.avif)"
 
 #: anura/controllers/ocr_controller.py:266
 msgid "TIFF images (*.tif)"
-msgstr ""
+msgstr "TIFF-bilder (*.tif)"
 
 #: anura/controllers/ocr_controller.py:267
 msgid "BMP images (*.bmp)"
-msgstr ""
+msgstr "BMP-bilder (*.bmp)"
 
 #: anura/controllers/ocr_controller.py:268
 msgid "GIF images (*.gif)"
-msgstr ""
+msgstr "GIF-bilder (*.gif)"
 
 #: anura/controllers/ocr_controller.py:271
 msgid "All files (*)"
-msgstr ""
+msgstr "Alla filer (*)"
 
 #: anura/controllers/tts_controller.py:73
 msgid "Text-to-speech is not available for this language"
@@ -117,6 +117,8 @@ msgstr "Tack"
 msgid ""
 "Built with Tesseract OCR, GTK4, Libadwaita, and other open source components."
 msgstr ""
+"Byggd med Tesseract OCR, GTK4, Libadwaita och andra komponenter med öppen "
+"källkod."
 
 #: anura/core/dialogs.py:44
 msgid "Changelog"
@@ -125,7 +127,7 @@ msgstr "Ändringslogg"
 #: anura/core/dialogs.py:45 data/ui/extracted_page.blp:318
 #: data/ui/welcome_page.blp:197
 msgid "Report an Issue"
-msgstr ""
+msgstr "Rapportera ett problem"
 
 #: anura/core/dialogs.py:80
 msgid "OK"
@@ -150,7 +152,7 @@ msgstr "Texten kopierades till urklipp"
 #: anura/main.py:213 anura/main.py:218 anura/main.py:258 anura/main.py:417
 #: anura/main.py:422 anura/main.py:424 anura/main.py:438
 msgid "Anura OCR"
-msgstr ""
+msgstr "Anura OCR"
 
 #: anura/main.py:213
 msgid "Text extracted and copied to clipboard."
@@ -166,21 +168,23 @@ msgstr "URL:en öppnades automatiskt"
 
 #: anura/main.py:232
 msgid "QR Code URL Detected"
-msgstr ""
+msgstr "URL från QR-kod upptäcktes"
 
 #: anura/main.py:243
 msgid "URL copied to clipboard"
-msgstr ""
+msgstr "URL:en kopierades till urklipp"
 
 #: anura/main.py:251 anura/window.py:407
 msgid ""
 "Anura could not capture a screenshot because no suitable portal backend or "
 "fallback tool was found."
 msgstr ""
+"Anura kunde inte ta en skärmbild eftersom ingen lämplig portalbakände eller "
+"reservfunktion hittades."
 
 #: anura/main.py:254 anura/window.py:410
 msgid "Capture Failed"
-msgstr ""
+msgstr "Fångst misslyckades"
 
 #: anura/main.py:323
 msgid "Bug fixes and improvements."
@@ -193,11 +197,11 @@ msgstr "Ingen text hittades."
 
 #: anura/main.py:422
 msgid "Text copied to clipboard."
-msgstr ""
+msgstr "Texten kopierades till urklipp."
 
 #: anura/main.py:424
 msgid "Text extracted."
-msgstr ""
+msgstr "Text extraherades."
 
 #: anura/main.py:435
 msgid "Cancelled"
@@ -292,7 +296,7 @@ msgstr "Kinesiska – förenklad"
 
 #: anura/services/language/validator.py:39
 msgid "Chinese - Simplified (vertical)"
-msgstr ""
+msgstr "Kinesiska – förenklad (vertikal)"
 
 #: anura/services/language/validator.py:40
 msgid "Chinese - Traditional"
@@ -300,7 +304,7 @@ msgstr "Kinesiska – traditionell"
 
 #: anura/services/language/validator.py:41
 msgid "Chinese - Traditional (vertical)"
-msgstr ""
+msgstr "Kinesiska – traditionell (vertikal)"
 
 #: anura/services/language/validator.py:42
 msgid "Cherokee"
@@ -712,46 +716,46 @@ msgstr "Yoruba"
 
 #: anura/services/screenshot/legacy_provider.py:86
 msgid "Failed to create temporary file."
-msgstr ""
+msgstr "Kunde inte skapa temporär fil."
 
 #: anura/services/screenshot/legacy_provider.py:189
 msgid "Screenshot tool produced no output."
-msgstr ""
+msgstr "Skärmbildsverktyget gav ingen utdata."
 
 #: anura/services/screenshot_service.py:67
 msgid "Enhancing image..."
-msgstr ""
+msgstr "Förbättrar bilden…"
 
 #: anura/services/screenshot_service.py:81
 msgid "Running Tesseract OCR..."
-msgstr ""
+msgstr "Kör Tesseract OCR…"
 
 #: anura/services/screenshot_service.py:95
 msgid "Reconstructing structure..."
-msgstr ""
+msgstr "Återskapar strukturen…"
 
 #: anura/services/screenshot_service.py:106
 msgid "Magic processing..."
-msgstr ""
+msgstr "Magisk bearbetning…"
 
 #: anura/services/screenshot_service.py:161
 #: anura/services/screenshot_service.py:631
 msgid "The selected image file is empty."
-msgstr ""
+msgstr "Den valda bildfilen är tom."
 
 #: anura/services/screenshot_service.py:254
 msgid "Failed to process image in isolated process."
-msgstr ""
+msgstr "Kunde inte bearbeta bilden i en isolerad process."
 
 #: anura/services/screenshot_service.py:381
 #: anura/services/screenshot_service.py:389
 #, python-brace-format
 msgid "Screenshot failed: {reason}"
-msgstr ""
+msgstr "Det gick inte att ta skärmbild: {reason}"
 
 #: anura/services/screenshot_service.py:399
 msgid "Failed to initiate screenshot capture."
-msgstr ""
+msgstr "Kunde inte starta skärmbildsfångst."
 
 #: anura/services/screenshot_service.py:410
 #: anura/services/screenshot_service.py:420
@@ -760,11 +764,11 @@ msgstr "Det går inte att ta en skärmbild."
 
 #: anura/services/screenshot_service.py:470
 msgid "Extracting text..."
-msgstr ""
+msgstr "Extraherar text…"
 
 #: anura/services/screenshot_service.py:490
 msgid "OCR processing failed. Please try again."
-msgstr ""
+msgstr "OCR-bearbetningen misslyckades. Försök igen."
 
 #: anura/services/screenshot_service.py:605
 #: anura/services/screenshot_service.py:811
@@ -838,17 +842,19 @@ msgstr "Avbryt"
 
 #: anura/services/share_service.py:245
 msgid "Cannot show dialog without active window"
-msgstr ""
+msgstr "Det går inte att visa dialogrutan utan ett aktivt fönster"
 
 #: anura/utils/portal_advice.py:86
 msgid "LXQt"
-msgstr ""
+msgstr "LXQt"
 
 #: anura/utils/portal_advice.py:87
 msgid ""
 "Screenshot portal is not configured for LXQt. See the README for the LXQt "
 "setup steps."
 msgstr ""
+"Skärmbildsportalen är inte konfigurerad för LXQt. Se README för "
+"installationsstegen för LXQt."
 
 #: anura/utils/portal_advice.py:89
 msgid ""
@@ -857,30 +863,41 @@ msgid ""
 "Screenshot=kde, and restart the portal (systemctl --user restart xdg-desktop-"
 "portal.service)."
 msgstr ""
+"I LXQt installerar du xdg-desktop-portal-kde, skapar sedan ~/.config/xdg-"
+"desktop-portal/lxqt-portals.conf med [preferred] "
+"org.freedesktop.impl.portal.Screenshot=kde och startar om portalen "
+"(systemctl --user restart xdg-desktop-portal.service)."
 
 #: anura/utils/portal_advice.py:100
 msgid "KDE Plasma"
-msgstr ""
+msgstr "KDE Plasma"
 
 #: anura/utils/portal_advice.py:101
 msgid ""
 "Screenshot portal unavailable. Install xdg-desktop-portal-kde and re-login."
 msgstr ""
+"Skärmbildsportalen är inte tillgänglig. Installera xdg-desktop-portal-kde "
+"och logga in igen."
 
 #: anura/utils/portal_advice.py:103
 msgid ""
 "Screenshot failed. On KDE Plasma, install xdg-desktop-portal-kde (e.g. sudo "
 "apt install xdg-desktop-portal-kde) and log out and back in."
 msgstr ""
+"Det gick inte att ta skärmbild. Installera xdg-desktop-portal-kde i KDE "
+"Plasma (t.ex. sudo apt install xdg-desktop-portal-kde) och logga ut och in "
+"igen."
 
 #: anura/utils/portal_advice.py:112
 msgid "your wlroots compositor"
-msgstr ""
+msgstr "din wlroots-kompositor"
 
 #: anura/utils/portal_advice.py:113
 msgid ""
 "Screenshot portal unavailable. Install xdg-desktop-portal-wlr and re-login."
 msgstr ""
+"Skärmbildsportalen är inte tillgänglig. Installera xdg-desktop-portal-wlr "
+"och logga in igen."
 
 #: anura/utils/portal_advice.py:115
 msgid ""
@@ -888,27 +905,37 @@ msgid ""
 "Niri, …), install xdg-desktop-portal-wlr (e.g. sudo apt install xdg-desktop-"
 "portal-wlr) and log out and back in."
 msgstr ""
+"Det gick inte att ta skärmbild. Installera xdg-desktop-portal-wlr i wlroots-"
+"baserade kompositorer (Sway, Hyprland, river, Niri, …), t.ex. med sudo apt "
+"install xdg-desktop-portal-wlr, och logga ut och in igen."
 
 #: anura/utils/portal_advice.py:126
 msgid "GNOME"
-msgstr ""
+msgstr "GNOME"
 
 #: anura/utils/portal_advice.py:127
 msgid ""
 "Screenshot portal unavailable. Install xdg-desktop-portal-gnome and re-login."
 msgstr ""
+"Skärmbildsportalen är inte tillgänglig. Installera xdg-desktop-portal-gnome "
+"och logga in igen."
 
 #: anura/utils/portal_advice.py:129
 msgid ""
 "Screenshot failed. On GNOME / Ubuntu, install xdg-desktop-portal-gnome (e.g. "
 "sudo apt install xdg-desktop-portal-gnome) and log out and back in."
 msgstr ""
+"Det gick inte att ta skärmbild. Installera xdg-desktop-portal-gnome i GNOME "
+"eller Ubuntu (t.ex. sudo apt install xdg-desktop-portal-gnome) och logga ut "
+"och in igen."
 
 #: anura/utils/portal_advice.py:148
 msgid ""
 "Screenshot portal unavailable. Install xdg-desktop-portal-gnome (or -kde) "
 "and re-login."
 msgstr ""
+"Skärmbildsportalen är inte tillgänglig. Installera xdg-desktop-portal-gnome "
+"(eller -kde) och logga in igen."
 
 #: anura/utils/portal_advice.py:150
 #, python-brace-format
@@ -917,16 +944,22 @@ msgid ""
 "desktop-portal-kde) and log out and back in. On modern Ubuntu xdg-desktop-"
 "portal-gtk no longer provides the Screenshot interface."
 msgstr ""
+"Det gick inte att ta skärmbild. Installera xdg-desktop-portal-gnome (eller "
+"xdg-desktop-portal-kde) för {desktop} och logga ut och in igen. I moderna "
+"Ubuntu tillhandahåller xdg-desktop-portal-gtk inte längre "
+"skärmbildsgränssnittet."
 
 #: anura/utils/portal_advice.py:159
 msgid "your desktop"
-msgstr ""
+msgstr "din skrivbordsmiljö"
 
 #: anura/utils/portal_advice.py:160
 msgid ""
 "Screenshot portal unavailable. Install the xdg-desktop-portal backend "
 "matching your desktop."
 msgstr ""
+"Skärmbildsportalen är inte tillgänglig. Installera den xdg-desktop-portal-"
+"bakände som passar din skrivbordsmiljö."
 
 #: anura/utils/portal_advice.py:162
 msgid ""
@@ -934,6 +967,10 @@ msgid ""
 "screenshot portal. Install the xdg-desktop-portal backend matching your "
 "desktop (e.g. xdg-desktop-portal-gnome, -kde, -wlr) and re-login."
 msgstr ""
+"Det gick inte att ta skärmbild. Din skrivbordssession verkar inte ha någon "
+"fungerande skärmbildsportal. Installera den xdg-desktop-portal-bakände som "
+"passar din skrivbordsmiljö (t.ex. xdg-desktop-portal-gnome, -kde eller -wlr) "
+"och logga in igen."
 
 #: anura/utils/validators.py:476
 msgid "Invalid URL blocked for security"
@@ -1231,7 +1268,7 @@ msgstr ""
 
 #: anura/widgets/welcome_page.py:142
 msgid "Drop image to extract text"
-msgstr ""
+msgstr "Släpp en bild för att extrahera text"
 
 #: anura/widgets/welcome_page.py:154 anura/widgets/welcome_page.py:315
 #: data/ui/welcome_page.blp:54
