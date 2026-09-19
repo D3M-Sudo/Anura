@@ -198,6 +198,7 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
         model = mapping.get(idx, "fast")
         self.settings.set_string("tessdata-model", model)
         logger.debug(f"Anura: Tesseract model quality set to {model}")
+        get_language_manager().invalidate_cache()
         self.load_languages()
 
     def do_destroy(self) -> None:
