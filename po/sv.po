@@ -1646,7 +1646,7 @@ msgstr "Kopiera automatiskt den extraherade texten efter identifiering"
 
 #: data/ui/preferences_general.blp:51
 msgid "_Open QR-code Links"
-msgstr "_Öppna QR-kodlänkar"
+msgstr "Ö_ppna QR-kodlänkar"
 
 #: data/ui/preferences_general.blp:53
 msgid ""
@@ -1799,7 +1799,7 @@ msgstr "Öppna bild"
 
 #: data/ui/welcome_page.blp:95
 msgid "_Open Image"
-msgstr "_Öppna bild"
+msgstr "Ö_ppna bild"
 
 #: data/ui/welcome_page.blp:103
 msgctxt "Welcome screen"
