@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: anura 1.4.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-12 19:27+0200\n"
-"PO-Revision-Date: 2026-09-19 17:48+0000\n"
+"PO-Revision-Date: 2026-09-19 17:49+0000\n"
 "Last-Translator: Daniel Nylander <yeagersthlm@gmail.com>\n"
 "Language-Team: Swedish <https://hosted.weblate.org/projects/anura/anura/sv/>"
 "\n"
@@ -43,15 +43,15 @@ msgstr ""
 #, python-brace-format
 msgid "{n} email found in text"
 msgid_plural "{n} emails found in text"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{n} e-postadress hittades i texten"
+msgstr[1] "{n} e-postadresser hittades i texten"
 
 #: anura/controllers/ocr_controller.py:181
 #, python-brace-format
 msgid "{n} phone number found in text"
 msgid_plural "{n} phone numbers found in text"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{n} telefonnummer hittades i texten"
+msgstr[1] "{n} telefonnummer hittades i texten"
 
 #: anura/controllers/ocr_controller.py:227
 msgid "Choose an image for extraction"
@@ -59,7 +59,7 @@ msgstr "Välj en bild för extrahering"
 
 #: anura/controllers/ocr_controller.py:230
 msgid "All supported images"
-msgstr ""
+msgstr "Alla bildformat som stöds"
 
 #: anura/controllers/ocr_controller.py:262
 msgid "PNG images (*.png)"
@@ -99,19 +99,19 @@ msgstr ""
 
 #: anura/controllers/tts_controller.py:106
 msgid "Request timed out. Please try again."
-msgstr ""
+msgstr "Begäran tog för lång tid. Försök igen."
 
 #: anura/controllers/tts_controller.py:108
 msgid "Network error. Please check your internet connection."
-msgstr ""
+msgstr "Nätverksfel. Kontrollera internetanslutningen."
 
 #: anura/controllers/tts_controller.py:110
 msgid "Text-to-speech failed. Please try again."
-msgstr ""
+msgstr "Text-till-tal misslyckades. Försök igen."
 
 #: anura/core/dialogs.py:39
 msgid "Acknowledgements"
-msgstr ""
+msgstr "Tack"
 
 #: anura/core/dialogs.py:42
 msgid ""
@@ -120,7 +120,7 @@ msgstr ""
 
 #: anura/core/dialogs.py:44
 msgid "Changelog"
-msgstr ""
+msgstr "Ändringslogg"
 
 #: anura/core/dialogs.py:45 data/ui/extracted_page.blp:318
 #: data/ui/welcome_page.blp:197
@@ -129,7 +129,7 @@ msgstr ""
 
 #: anura/core/dialogs.py:80
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: anura/main.py:81
 msgid "Extract directly into the clipboard"
@@ -137,11 +137,11 @@ msgstr "Extrahera direkt till urklipp"
 
 #: anura/main.py:89
 msgid "Process image file for OCR"
-msgstr ""
+msgstr "Bearbeta bildfil för OCR"
 
 #: anura/main.py:97
 msgid "Run OCR without UI (copy result to clipboard)"
-msgstr ""
+msgstr "Kör OCR utan gränssnitt (kopiera resultatet till urklipp)"
 
 #: anura/main.py:210 anura/main.py:356 anura/window.py:260
 msgid "Text copied to clipboard"
@@ -158,7 +158,7 @@ msgstr "Texten extraherades och kopierades till urklipp."
 
 #: anura/main.py:218
 msgid "Text extracted successfully."
-msgstr ""
+msgstr "Texten extraherades."
 
 #: anura/main.py:227
 msgid "URL opened automatically"
@@ -184,7 +184,7 @@ msgstr ""
 
 #: anura/main.py:323
 msgid "Bug fixes and improvements."
-msgstr ""
+msgstr "Felrättningar och förbättringar."
 
 #: anura/main.py:417 anura/services/screenshot_service.py:794
 #: anura/services/screenshot_service.py:827
@@ -219,7 +219,7 @@ msgstr "Ingen bild i urklipp"
 
 #: anura/services/clipboard_service.py:672
 msgid "Clipboard read operation timed out."
-msgstr ""
+msgstr "Tidsgränsen för läsning från urklipp överskreds."
 
 #: anura/services/language_manager.py:52
 #: anura/services/language/validator.py:50 anura/window.py:89
@@ -769,15 +769,15 @@ msgstr ""
 #: anura/services/screenshot_service.py:605
 #: anura/services/screenshot_service.py:811
 msgid "Invalid language code specified."
-msgstr ""
+msgstr "Ogiltig språkkod angavs."
 
 #: anura/services/screenshot_service.py:752
 msgid "Failed to read image file."
-msgstr ""
+msgstr "Kunde inte läsa bildfilen."
 
 #: anura/services/screenshot_service.py:755
 msgid "OCR engine failed to process image."
-msgstr ""
+msgstr "OCR-motorn kunde inte bearbeta bilden."
 
 #: anura/services/screenshot_service.py:758
 #: anura/services/screenshot_service.py:763
@@ -826,15 +826,15 @@ msgstr ""
 
 #: anura/services/share_service.py:199
 msgid "Select Mastodon Instance"
-msgstr ""
+msgstr "Välj Mastodon-instans"
 
 #: anura/services/share_service.py:200
 msgid "Choose your Mastodon instance to share the extracted text:"
-msgstr ""
+msgstr "Välj din Mastodon-instans för att dela den extraherade texten:"
 
 #: anura/services/share_service.py:206 anura/widgets/history_page.py:140
 msgid "Cancel"
-msgstr ""
+msgstr "Avbryt"
 
 #: anura/services/share_service.py:245
 msgid "Cannot show dialog without active window"
@@ -937,11 +937,11 @@ msgstr ""
 
 #: anura/utils/validators.py:476
 msgid "Invalid URL blocked for security"
-msgstr ""
+msgstr "Ogiltig URL blockerades av säkerhetsskäl"
 
 #: anura/utils/validators.py:490
 msgid "Failed to open link"
-msgstr ""
+msgstr "Kunde inte öppna länken"
 
 #: anura/widgets/extracted_page.py:123
 msgid ""
@@ -1097,11 +1097,11 @@ msgstr ""
 #: anura/widgets/preferences_general_page.py:197
 #, python-brace-format
 msgid "TTS playback volume level: {percentage:.0f}%"
-msgstr ""
+msgstr "Volym för TTS-uppspelning: {percentage:.0f} %"
 
 #: anura/widgets/preferences_general_page.py:212
 msgid "Auto (follow OCR language)"
-msgstr ""
+msgstr "Automatiskt (följ OCR-språk)"
 
 #: anura/widgets/preferences_languages_page.py:76
 #: data/ui/preferences_languages.blp:43
@@ -1129,27 +1129,27 @@ msgstr ""
 #: anura/widgets/share_row.py:29
 #, python-brace-format
 msgid "Share via {name}"
-msgstr ""
+msgstr "Dela via {name}"
 
 #: anura/widgets/shortcuts_overlay.py:62
 msgid "Screenshot & OCR"
-msgstr ""
+msgstr "Skärmbild och OCR"
 
 #: anura/widgets/shortcuts_overlay.py:64
 msgid "Take screenshot"
-msgstr ""
+msgstr "Ta skärmbild"
 
 #: anura/widgets/shortcuts_overlay.py:65
 msgid "Take screenshot and copy to clipboard"
-msgstr ""
+msgstr "Ta en skärmbild och kopiera till urklipp"
 
 #: anura/widgets/shortcuts_overlay.py:66
 msgid "Open image file"
-msgstr ""
+msgstr "Öppna bildfil"
 
 #: anura/widgets/shortcuts_overlay.py:67
 msgid "Paste image from clipboard"
-msgstr ""
+msgstr "Klistra in bild från urklipp"
 
 #: anura/widgets/shortcuts_overlay.py:72 data/ui/preferences_general.blp:83
 msgid "Editor"
@@ -1161,7 +1161,7 @@ msgstr ""
 
 #: anura/widgets/shortcuts_overlay.py:75
 msgid "Copy text to clipboard"
-msgstr ""
+msgstr "Kopiera text till urklipp"
 
 #: anura/widgets/shortcuts_overlay.py:76
 msgid "Undo (in editor)"
@@ -1197,23 +1197,23 @@ msgstr ""
 
 #: anura/widgets/shortcuts_overlay.py:93
 msgid "Application"
-msgstr ""
+msgstr "Program"
 
 #: anura/widgets/shortcuts_overlay.py:95
 msgid "Open preferences"
-msgstr ""
+msgstr "Öppna inställningar"
 
 #: anura/widgets/shortcuts_overlay.py:96
 msgid "Show keyboard shortcuts"
-msgstr ""
+msgstr "Visa tangentbordsgenvägar"
 
 #: anura/widgets/shortcuts_overlay.py:97
 msgid "Quit application"
-msgstr ""
+msgstr "Avsluta programmet"
 
 #: anura/widgets/shortcuts_overlay.py:102
 msgid "Navigation"
-msgstr ""
+msgstr "Navigering"
 
 #: anura/widgets/shortcuts_overlay.py:104
 msgid "Clear search / go back"
@@ -1240,15 +1240,15 @@ msgstr "Extrahera text var som helst"
 
 #: anura/widgets/welcome_page.py:234
 msgid "No file data received from drop"
-msgstr ""
+msgstr "Inga fildata togs emot från släppet"
 
 #: anura/widgets/welcome_page.py:247
 msgid "No valid file found in drop"
-msgstr ""
+msgstr "Ingen giltig fil hittades i släppet"
 
 #: anura/widgets/welcome_page.py:256
 msgid "Only local files can be dropped"
-msgstr ""
+msgstr "Endast lokala filer kan släppas"
 
 #: anura/widgets/welcome_page.py:265
 msgid ""
@@ -1257,15 +1257,15 @@ msgstr ""
 
 #: anura/widgets/welcome_page.py:272
 msgid "Only images can be processed that way."
-msgstr ""
+msgstr "Endast bilder kan bearbetas på det sättet."
 
 #: anura/widgets/welcome_page.py:278
 msgid "Failed to process dropped file"
-msgstr ""
+msgstr "Kunde inte bearbeta den släppta filen"
 
 #: anura/widgets/welcome_page.py:298
 msgid "Processing..."
-msgstr ""
+msgstr "Bearbetar…"
 
 #: anura/widgets/welcome_page.py:299
 msgid "Image drop zone: Processing..."
@@ -1273,7 +1273,7 @@ msgstr ""
 
 #: anura/widgets/welcome_page.py:303 data/ui/welcome_page.blp:153
 msgid "Drop image file here"
-msgstr ""
+msgstr "Släpp bildfilen här"
 
 #: anura/widgets/welcome_page.py:304 data/ui/welcome_page.blp:150
 msgid "Image drop zone"
@@ -1297,11 +1297,11 @@ msgstr ""
 
 #: anura/window.py:221
 msgid "Failed to capture screenshot"
-msgstr ""
+msgstr "Kunde inte ta skärmbild"
 
 #: anura/window.py:244
 msgid "Failed to load image file"
-msgstr ""
+msgstr "Kunde inte läsa in bildfilen"
 
 #: anura/window.py:248
 msgid "Error loading file"
@@ -1313,7 +1313,7 @@ msgstr ""
 
 #: anura/window.py:263
 msgid "No text to copy"
-msgstr ""
+msgstr "Ingen text att kopiera"
 
 #: anura/window.py:323
 msgid "No text to open in external editor"
@@ -1333,7 +1333,7 @@ msgstr ""
 
 #: anura/window.py:456
 msgid "No text to share."
-msgstr ""
+msgstr "Ingen text att dela."
 
 #: data/ui/extracted_page.blp:14
 msgid "Extracted"
