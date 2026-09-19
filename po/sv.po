@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: anura 1.4.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-12 19:27+0200\n"
-"PO-Revision-Date: 2026-09-19 17:46+0000\n"
+"PO-Revision-Date: 2026-09-19 17:47+0000\n"
 "Last-Translator: Daniel Nylander <yeagersthlm@gmail.com>\n"
 "Language-Team: Swedish <https://hosted.weblate.org/projects/anura/anura/sv/>"
 "\n"
@@ -33,7 +33,7 @@ msgstr ""
 
 #: anura/controllers/ocr_controller.py:105
 msgid "No text found. Try to grab another region."
-msgstr ""
+msgstr "Ingen text hittades. Prova att markera ett annat område."
 
 #: anura/controllers/ocr_controller.py:120
 msgid "Text extracted"
@@ -55,7 +55,7 @@ msgstr[1] ""
 
 #: anura/controllers/ocr_controller.py:227
 msgid "Choose an image for extraction"
-msgstr ""
+msgstr "Välj en bild för extrahering"
 
 #: anura/controllers/ocr_controller.py:230
 msgid "All supported images"
@@ -133,7 +133,7 @@ msgstr ""
 
 #: anura/main.py:81
 msgid "Extract directly into the clipboard"
-msgstr ""
+msgstr "Extrahera direkt till urklipp"
 
 #: anura/main.py:89
 msgid "Process image file for OCR"
@@ -145,7 +145,7 @@ msgstr ""
 
 #: anura/main.py:210 anura/main.py:356 anura/window.py:260
 msgid "Text copied to clipboard"
-msgstr ""
+msgstr "Texten kopierades till urklipp"
 
 #: anura/main.py:213 anura/main.py:218 anura/main.py:258 anura/main.py:417
 #: anura/main.py:422 anura/main.py:424 anura/main.py:438
@@ -154,7 +154,7 @@ msgstr ""
 
 #: anura/main.py:213
 msgid "Text extracted and copied to clipboard."
-msgstr ""
+msgstr "Texten extraherades och kopierades till urklipp."
 
 #: anura/main.py:218
 msgid "Text extracted successfully."
@@ -162,7 +162,7 @@ msgstr ""
 
 #: anura/main.py:227
 msgid "URL opened automatically"
-msgstr ""
+msgstr "URL:en öppnades automatiskt"
 
 #: anura/main.py:232
 msgid "QR Code URL Detected"
@@ -189,7 +189,7 @@ msgstr ""
 #: anura/main.py:417 anura/services/screenshot_service.py:794
 #: anura/services/screenshot_service.py:827
 msgid "No text found."
-msgstr ""
+msgstr "Ingen text hittades."
 
 #: anura/main.py:422
 msgid "Text copied to clipboard."
@@ -201,7 +201,7 @@ msgstr ""
 
 #: anura/main.py:435
 msgid "Cancelled"
-msgstr ""
+msgstr "Avbruten"
 
 #: anura/services/clipboard_service.py:184
 #: anura/services/clipboard_service.py:200
@@ -215,7 +215,7 @@ msgstr ""
 #: anura/services/clipboard_service.py:616
 #: anura/services/clipboard_service.py:628
 msgid "No image in clipboard"
-msgstr ""
+msgstr "Ingen bild i urklipp"
 
 #: anura/services/clipboard_service.py:672
 msgid "Clipboard read operation timed out."
@@ -316,11 +316,11 @@ msgstr "Walesiska"
 
 #: anura/services/language/validator.py:45
 msgid "Danish"
-msgstr ""
+msgstr "Danska"
 
 #: anura/services/language/validator.py:46
 msgid "German"
-msgstr ""
+msgstr "Tyska"
 
 #: anura/services/language/validator.py:47
 msgid "German - Fraktur"
@@ -328,7 +328,7 @@ msgstr ""
 
 #: anura/services/language/validator.py:48
 msgid "Dzongkha"
-msgstr ""
+msgstr "Dzongkha"
 
 #: anura/services/language/validator.py:49
 msgid "Greek"
@@ -340,23 +340,23 @@ msgstr ""
 
 #: anura/services/language/validator.py:52
 msgid "Esperanto"
-msgstr ""
+msgstr "Esperanto"
 
 #: anura/services/language/validator.py:53
 msgid "Estonian"
-msgstr ""
+msgstr "Estniska"
 
 #: anura/services/language/validator.py:54
 msgid "Basque"
-msgstr ""
+msgstr "Baskiska"
 
 #: anura/services/language/validator.py:55
 msgid "Faroese"
-msgstr ""
+msgstr "Färöiska"
 
 #: anura/services/language/validator.py:56
 msgid "Persian"
-msgstr ""
+msgstr "Persiska"
 
 #: anura/services/language/validator.py:57
 msgid "Filipino"
@@ -364,11 +364,11 @@ msgstr ""
 
 #: anura/services/language/validator.py:58
 msgid "Finnish"
-msgstr ""
+msgstr "Finska"
 
 #: anura/services/language/validator.py:59
 msgid "French"
-msgstr ""
+msgstr "Franska"
 
 #: anura/services/language/validator.py:60
 msgid "French, Middle"
@@ -376,19 +376,19 @@ msgstr ""
 
 #: anura/services/language/validator.py:61
 msgid "Western Frisian"
-msgstr ""
+msgstr "Västfrisiska"
 
 #: anura/services/language/validator.py:62
 msgid "Scottish Gaelic"
-msgstr ""
+msgstr "Skotsk gaeliska"
 
 #: anura/services/language/validator.py:63
 msgid "Irish"
-msgstr ""
+msgstr "Irländska"
 
 #: anura/services/language/validator.py:64
 msgid "Galician"
-msgstr ""
+msgstr "Galiciska"
 
 #: anura/services/language/validator.py:65
 msgid "Greek, Ancient"
@@ -396,7 +396,7 @@ msgstr ""
 
 #: anura/services/language/validator.py:66
 msgid "Gujarati"
-msgstr ""
+msgstr "Gujarati"
 
 #: anura/services/language/validator.py:67
 msgid "Haitian"
@@ -404,75 +404,75 @@ msgstr ""
 
 #: anura/services/language/validator.py:68
 msgid "Hebrew"
-msgstr ""
+msgstr "Hebreiska"
 
 #: anura/services/language/validator.py:69
 msgid "Hindi"
-msgstr ""
+msgstr "Hindi"
 
 #: anura/services/language/validator.py:70
 msgid "Croatian"
-msgstr ""
+msgstr "Kroatiska"
 
 #: anura/services/language/validator.py:71
 msgid "Hungarian"
-msgstr ""
+msgstr "Ungerska"
 
 #: anura/services/language/validator.py:72
 msgid "Armenian"
-msgstr ""
+msgstr "Armeniska"
 
 #: anura/services/language/validator.py:73
 msgid "Inuktitut"
-msgstr ""
+msgstr "Inuktitut"
 
 #: anura/services/language/validator.py:74
 msgid "Indonesian"
-msgstr ""
+msgstr "Indonesiska"
 
 #: anura/services/language/validator.py:75
 msgid "Icelandic"
-msgstr ""
+msgstr "Isländska"
 
 #: anura/services/language/validator.py:76
 msgid "Italian"
-msgstr ""
+msgstr "Italienska"
 
 #: anura/services/language/validator.py:77
 msgid "Italian - Old"
-msgstr ""
+msgstr "Fornitalienska"
 
 #: anura/services/language/validator.py:78
 msgid "Javanese"
-msgstr ""
+msgstr "Javanesiska"
 
 #: anura/services/language/validator.py:79
 msgid "Japanese"
-msgstr ""
+msgstr "Japanska"
 
 #: anura/services/language/validator.py:80
 msgid "Japanese (vertical)"
-msgstr ""
+msgstr "Japanska (vertikal)"
 
 #: anura/services/language/validator.py:81
 msgid "Kannada"
-msgstr ""
+msgstr "Kannada"
 
 #: anura/services/language/validator.py:82
 msgid "Georgian"
-msgstr ""
+msgstr "Georgiska"
 
 #: anura/services/language/validator.py:83
 msgid "Georgian - Old"
-msgstr ""
+msgstr "Forngeorgiska"
 
 #: anura/services/language/validator.py:84
 msgid "Kazakh"
-msgstr ""
+msgstr "Kazakiska"
 
 #: anura/services/language/validator.py:85
 msgid "Central Khmer"
-msgstr ""
+msgstr "Central khmer"
 
 #: anura/services/language/validator.py:86
 msgid "Kirghiz"
@@ -484,67 +484,67 @@ msgstr ""
 
 #: anura/services/language/validator.py:88
 msgid "Korean"
-msgstr ""
+msgstr "Koreanska"
 
 #: anura/services/language/validator.py:89
 msgid "Korean (vertical)"
-msgstr ""
+msgstr "Koreanska (vertikal)"
 
 #: anura/services/language/validator.py:90
 msgid "Lao"
-msgstr ""
+msgstr "Lao"
 
 #: anura/services/language/validator.py:91
 msgid "Latin"
-msgstr ""
+msgstr "Latin"
 
 #: anura/services/language/validator.py:92
 msgid "Latvian"
-msgstr ""
+msgstr "Lettiska"
 
 #: anura/services/language/validator.py:93
 msgid "Lithuanian"
-msgstr ""
+msgstr "Litauiska"
 
 #: anura/services/language/validator.py:94
 msgid "Luxembourgish"
-msgstr ""
+msgstr "Luxemburgiska"
 
 #: anura/services/language/validator.py:95
 msgid "Malayalam"
-msgstr ""
+msgstr "Malayalam"
 
 #: anura/services/language/validator.py:96
 msgid "Marathi"
-msgstr ""
+msgstr "Marathi"
 
 #: anura/services/language/validator.py:97
 msgid "Macedonian"
-msgstr ""
+msgstr "Makedonska"
 
 #: anura/services/language/validator.py:98
 msgid "Maltese"
-msgstr ""
+msgstr "Maltesiska"
 
 #: anura/services/language/validator.py:99
 msgid "Mongolian"
-msgstr ""
+msgstr "Mongoliska"
 
 #: anura/services/language/validator.py:100
 msgid "Maori"
-msgstr ""
+msgstr "Maori"
 
 #: anura/services/language/validator.py:101
 msgid "Malay"
-msgstr ""
+msgstr "Malajiska"
 
 #: anura/services/language/validator.py:102
 msgid "Burmese"
-msgstr ""
+msgstr "Burmesiska"
 
 #: anura/services/language/validator.py:103
 msgid "Nepali"
-msgstr ""
+msgstr "Nepalesiska"
 
 #: anura/services/language/validator.py:104
 msgid "Dutch"
@@ -552,7 +552,7 @@ msgstr ""
 
 #: anura/services/language/validator.py:105
 msgid "Norwegian"
-msgstr ""
+msgstr "Norska"
 
 #: anura/services/language/validator.py:106
 msgid "Occitan"
@@ -560,7 +560,7 @@ msgstr ""
 
 #: anura/services/language/validator.py:107
 msgid "Oriya"
-msgstr ""
+msgstr "Oriya"
 
 #: anura/services/language/validator.py:108
 msgid "Panjabi"
@@ -568,11 +568,11 @@ msgstr ""
 
 #: anura/services/language/validator.py:109
 msgid "Polish"
-msgstr ""
+msgstr "Polska"
 
 #: anura/services/language/validator.py:110
 msgid "Portuguese"
-msgstr ""
+msgstr "Portugisiska"
 
 #: anura/services/language/validator.py:111
 msgid "Pushto"
@@ -580,7 +580,7 @@ msgstr ""
 
 #: anura/services/language/validator.py:112
 msgid "Quechua"
-msgstr ""
+msgstr "Quechua"
 
 #: anura/services/language/validator.py:113
 msgid "Romanian"
@@ -588,11 +588,11 @@ msgstr ""
 
 #: anura/services/language/validator.py:114
 msgid "Russian"
-msgstr ""
+msgstr "Ryska"
 
 #: anura/services/language/validator.py:115
 msgid "Sanskrit"
-msgstr ""
+msgstr "Sanskrit"
 
 #: anura/services/language/validator.py:116
 msgid "Sinhala"
@@ -600,15 +600,15 @@ msgstr ""
 
 #: anura/services/language/validator.py:117
 msgid "Slovak"
-msgstr ""
+msgstr "Slovakiska"
 
 #: anura/services/language/validator.py:118
 msgid "Slovenian"
-msgstr ""
+msgstr "Slovenska"
 
 #: anura/services/language/validator.py:119
 msgid "Sindhi"
-msgstr ""
+msgstr "Sindhi"
 
 #: anura/services/language/validator.py:120
 msgid "Spanish"
@@ -620,63 +620,63 @@ msgstr ""
 
 #: anura/services/language/validator.py:122
 msgid "Albanian"
-msgstr ""
+msgstr "Albanska"
 
 #: anura/services/language/validator.py:123
 msgid "Serbian"
-msgstr ""
+msgstr "Serbiska"
 
 #: anura/services/language/validator.py:124
 msgid "Serbian - Latin"
-msgstr ""
+msgstr "Serbiska – latinsk"
 
 #: anura/services/language/validator.py:125
 msgid "Sundanese"
-msgstr ""
+msgstr "Sundanesiska"
 
 #: anura/services/language/validator.py:126
 msgid "Swahili"
-msgstr ""
+msgstr "Swahili"
 
 #: anura/services/language/validator.py:127
 msgid "Swedish"
-msgstr ""
+msgstr "Svenska"
 
 #: anura/services/language/validator.py:128
 msgid "Syriac"
-msgstr ""
+msgstr "Syriska"
 
 #: anura/services/language/validator.py:129
 msgid "Tamil"
-msgstr ""
+msgstr "Tamil"
 
 #: anura/services/language/validator.py:130
 msgid "Tatar"
-msgstr ""
+msgstr "Tatariska"
 
 #: anura/services/language/validator.py:131
 msgid "Telugu"
-msgstr ""
+msgstr "Telugu"
 
 #: anura/services/language/validator.py:132
 msgid "Tajik"
-msgstr ""
+msgstr "Tadzjikiska"
 
 #: anura/services/language/validator.py:133
 msgid "Thai"
-msgstr ""
+msgstr "Thailändska"
 
 #: anura/services/language/validator.py:134
 msgid "Tigrinya"
-msgstr ""
+msgstr "Tigrinja"
 
 #: anura/services/language/validator.py:135
 msgid "Tonga"
-msgstr ""
+msgstr "Tonganska"
 
 #: anura/services/language/validator.py:136
 msgid "Turkish"
-msgstr ""
+msgstr "Turkiska"
 
 #: anura/services/language/validator.py:137
 msgid "Uighur"
@@ -684,15 +684,15 @@ msgstr ""
 
 #: anura/services/language/validator.py:138
 msgid "Ukrainian"
-msgstr ""
+msgstr "Ukrainska"
 
 #: anura/services/language/validator.py:139
 msgid "Urdu"
-msgstr ""
+msgstr "Urdu"
 
 #: anura/services/language/validator.py:140
 msgid "Uzbek"
-msgstr ""
+msgstr "Uzbekiska"
 
 #: anura/services/language/validator.py:141
 msgid "Uzbek - Cyrillic"
@@ -700,15 +700,15 @@ msgstr ""
 
 #: anura/services/language/validator.py:142
 msgid "Vietnamese"
-msgstr ""
+msgstr "Vietnamesiska"
 
 #: anura/services/language/validator.py:143
 msgid "Yiddish"
-msgstr ""
+msgstr "Jiddisch"
 
 #: anura/services/language/validator.py:144
 msgid "Yoruba"
-msgstr ""
+msgstr "Yoruba"
 
 #: anura/services/screenshot/legacy_provider.py:86
 msgid "Failed to create temporary file."
@@ -756,7 +756,7 @@ msgstr ""
 #: anura/services/screenshot_service.py:410
 #: anura/services/screenshot_service.py:420
 msgid "Can't take a screenshot."
-msgstr ""
+msgstr "Det går inte att ta en skärmbild."
 
 #: anura/services/screenshot_service.py:470
 msgid "Extracting text..."
@@ -782,7 +782,7 @@ msgstr ""
 #: anura/services/screenshot_service.py:758
 #: anura/services/screenshot_service.py:763
 msgid "Failed to decode data."
-msgstr ""
+msgstr "Kunde inte avkoda data."
 
 #: anura/services/screenshot_service.py:832
 msgid "Failed to decode image."
@@ -1106,11 +1106,13 @@ msgstr ""
 #: anura/widgets/preferences_languages_page.py:76
 #: data/ui/preferences_languages.blp:43
 msgid "OCR models unreachable. Please check your internet connection."
-msgstr ""
+msgstr "Det går inte att nå OCR-modellerna. Kontrollera internetanslutningen."
 
 #: anura/widgets/preferences_languages_page.py:81
 msgid "Metered connection detected. Model downloads may incur data costs."
 msgstr ""
+"Anslutning med datatrafik upptäcktes. Hämtning av modeller kan medföra "
+"datakostnader."
 
 #: anura/widgets/preferences_languages_page.py:186
 msgid "Fast"
