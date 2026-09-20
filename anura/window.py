@@ -32,6 +32,7 @@ from anura.services.clipboard_service import get_clipboard_service  # noqa: E402
 from anura.services.history_service import HistoryService  # noqa: E402
 from anura.services.language_manager import get_language_manager  # noqa: E402
 from anura.services.screenshot_service import ScreenshotService, get_screenshot_service  # noqa: E402
+from anura.services.settings import settings  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
 from anura.utils import validate_image_resource  # noqa: E402
 from anura.utils.export_files import write_export_file  # noqa: E402
@@ -70,7 +71,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         app = Gtk.Application.get_default()
         if app is None:
             raise RuntimeError("Cannot get default application")
-        self.settings = app.settings
+        self.settings = getattr(app, "settings", settings)
 
         # Defensive: validate language from settings, fallback to English if corrupted
         lang_code: str = self.settings.get_string("active-language")

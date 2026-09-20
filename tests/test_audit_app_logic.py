@@ -67,15 +67,10 @@ class TestAnuraWindow:
     @pytest.mark.gtk
     def test_window_init(self):
         # Window needs compiled resources and UI files
-        try:
-            from gi.repository import Adw
+        from anura.services.screenshot_service import ScreenshotService
+        from anura.window import AnuraWindow
 
-            from anura.services.screenshot_service import ScreenshotService
-            from anura.window import AnuraWindow
-
-            app = Adw.Application()
-            backend = ScreenshotService()
-            win = AnuraWindow(backend=backend, application=app)
-            assert win is not None
-        except Exception as e:
-            pytest.skip(f"Could not init window: {e}")
+        app = AnuraApplication()
+        backend = ScreenshotService()
+        win = AnuraWindow(backend=backend, application=app)
+        assert win is not None
