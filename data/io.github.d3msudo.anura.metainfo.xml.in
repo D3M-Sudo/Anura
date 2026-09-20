@@ -79,7 +79,7 @@
         </ul>
       </description>
     </release>
-    <release version="0.1.5" type="stable" date="2026-11-09">
+    <release version="0.1.5" type="stable" date="2026-09-11">
       <description>
         <p>Extraction History V1, controller composition architecture, and comprehensive security hardening.</p>
         <ul>

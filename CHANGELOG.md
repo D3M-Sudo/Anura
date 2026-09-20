@@ -39,7 +39,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Reorganized the `docs/` tree: normative references moved to `docs/reference/`, the active plan kept in `docs/planning/`, and resolved audit reports archived under `docs/audit/legacy/reports/` with consistent kebab-case names; added `docs/audit/README.md` and updated all cross-references
 - Removed the stale `docs/audit/legacy/raw/` tool outputs (clean/empty bandit+ruff runs, environmental mypy noise, outdated vulture listings)
 
-## [0.1.5] - 2026-11-09
+## [0.1.5] - 2026-09-11
 
 ### Added
 - Implemented Extraction History V1 (opt-in local history of recent OCR extractions, newest-first JSON persistence with atomic writes and corruption recovery, HistoryPage with clear action, `history-enabled`/`history-limit` GSettings keys, `win.show-history` navigation) — see `docs/history-v1.md`
