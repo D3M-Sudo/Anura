@@ -99,8 +99,5 @@ class TestWidgets:
         # Test widgets that don't have complex dependencies
         from anura.widgets.preferences_dialog import PreferencesDialog
 
-        try:
-            dialog = PreferencesDialog(transient_for=None)
-            assert dialog is not None
-        except Exception as e:
-            pytest.skip(f"Could not init PreferencesDialog: {e}")
+        dialog = PreferencesDialog()
+        assert dialog is not None
