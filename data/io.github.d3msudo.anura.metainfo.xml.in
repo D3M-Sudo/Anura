@@ -67,6 +67,18 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="0.2.0" type="stable" date="2026-09-21">
+      <description>
+        <p>GtkSourceView 5 editor migration, tessdata integrity verification, and defensive-audit hardening.</p>
+        <ul>
+          <li>GtkSourceView 5 Editor: native search bar, editor preferences, and "Open in External Editor" handoff.</li>
+          <li>Tessdata Integrity: pinned checksum manifest with fail-closed verification and fully atomic model installs.</li>
+          <li>Export Hardening: per-session export files with restrictive permissions, replacing the shared /tmp directory.</li>
+          <li>Shortcuts Sync: keyboard shortcuts overlay synchronized with registered actions, with anti-drift test.</li>
+          <li>Defensive Audit: screenshot fallback fixes, safe search navigation with wrap-around, and scrot binary validation.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.5" type="stable" date="2026-11-09">
       <description>
         <p>Extraction History V1, controller composition architecture, and comprehensive security hardening.</p>
