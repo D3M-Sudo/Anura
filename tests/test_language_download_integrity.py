@@ -14,7 +14,7 @@ Covers two audit findings on ``DownloadManager.download_begin()``:
   manifest before it is installed.
 
 Run with the system python3 + venv site-packages pattern documented in
-``docs/dependencies.md`` (the tests need PyGObject and compiled schemas).
+``docs/reference/dependencies.md`` (the tests need PyGObject and compiled schemas).
 """
 
 import hashlib

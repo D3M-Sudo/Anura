@@ -13,7 +13,7 @@ accelerators actually registered via ActionRegistry must stay in sync.
 - Entries backed by native widget behaviour (no GAction) are whitelisted.
 
 Headless-safe: uses the system gi binding pattern documented in
-docs/dependencies.md ("GTK (PyGObject) and the development venv").
+docs/reference/dependencies.md ("GTK (PyGObject) and the development venv").
 """
 
 import os

@@ -34,5 +34,5 @@ that defeats the point of generating it. `build-aux/release.sh` runs
 after generating it, so a bad generation fails the release rather than
 shipping silently.
 
-See `docs/dependencies.md` for the full dependency pipeline and the
+See `docs/reference/dependencies.md` for the full dependency pipeline and the
 release-time vs continuous-CI split of the checks above.

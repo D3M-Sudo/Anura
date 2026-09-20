@@ -34,8 +34,8 @@ History V1 behaviour is covered by `tests/test_history_storage.py`,
 `tests/test_preferences_page_resilience.py` (history/TTS wiring regression).
 Shortcuts overlay consistency is guarded by
 `tests/test_shortcuts_consistency.py`. See
-[docs/history-v1.md](docs/history-v1.md) for the current History V1 reference
-and [docs/dependencies.md](docs/dependencies.md) for the headless GTK testing
+[docs/reference/history-v1.md](docs/reference/history-v1.md) for the current History V1 reference
+and [docs/reference/dependencies.md](docs/reference/dependencies.md) for the headless GTK testing
 approach (system `python3-gi` via `PYTHONPATH`, no venv PyGObject).
 
 ### Test Categories
@@ -73,7 +73,7 @@ uv run pytest tests/test_history_storage.py -v
 ./tests/setup_resources.sh
 
 # 2. Run GTK tests with the system python3-gi (PyGObject ships no wheels,
-#    so it is NOT installed in the venv — see docs/dependencies.md)
+#    so it is NOT installed in the venv — see docs/reference/dependencies.md)
 SP=$(ls -d .venv/lib/python3.*/site-packages)
 PYTHONPATH=".:$SP" \
   GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" \
@@ -102,7 +102,7 @@ uv run ruff format anura/
 ## Branch & Commit Conventions
 
 - **Branch names**: `feature/short-description`, `fix/short-description`
-- **Base branch for integration work**: `testing` (Dependabot and FEDC automation target `testing`; see [docs/dependencies.md](docs/dependencies.md))
+- **Base branch for integration work**: `testing` (Dependabot and FEDC automation target `testing`; see [docs/reference/dependencies.md](docs/reference/dependencies.md))
 - **Commit messages**: Use [Conventional Commits](https://www.conventionalcommits.org/).
 - Every change should be documented in `CHANGELOG.md` under `[Unreleased]`.
 

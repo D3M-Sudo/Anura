@@ -25,7 +25,7 @@ def monitor_resources():
     app = AnuraApplication(version="audit-test")
 
     # We use a sample image from the repo
-    sample_image = "data/screenshots/anura-window-dark.png"
+    sample_image = "data/screenshots/anura-extracted-page.png"
 
     if not os.path.exists(sample_image):
         print(f"Error: {sample_image} not found")

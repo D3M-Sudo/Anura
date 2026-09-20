@@ -50,12 +50,20 @@
   </description>
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/main/data/screenshots/anura-window-dark.png</image>
-      <caption>Main interface showing the text extraction screen (dark theme)</caption>
+      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/main/data/screenshots/anura-extracted-page.png</image>
+      <caption>Extracted text in the built-in editor with smart parsing and selection statistics</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/main/data/screenshots/anura-window-decoded.png</image>
-      <caption>Extracted text displayed after OCR recognition</caption>
+      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/main/data/screenshots/anura-welcome-page.png</image>
+      <caption>Welcome screen with screenshot, open, paste and drag-and-drop actions</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/main/data/screenshots/anura-history-page.png</image>
+      <caption>Opt-in local extraction history of recent extractions</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/main/data/screenshots/anura-preferences-page.png</image>
+      <caption>Preferences for appearance, OCR extraction and behaviour</caption>
     </screenshot>
   </screenshots>
   <releases>

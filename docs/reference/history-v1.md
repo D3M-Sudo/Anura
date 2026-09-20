@@ -2,7 +2,7 @@
 
 This document is the **normative** reference for the completed History V1
 integration. The pre-implementation plan is preserved as historical material in
-[audit/legacy/reports/history-v1-plan.md](audit/legacy/reports/history-v1-plan.md) and must not be
+[../audit/legacy/reports/history-v1-plan.md](../audit/legacy/reports/history-v1-plan.md) and must not be
 treated as current guidance.
 
 ## What History V1 provides

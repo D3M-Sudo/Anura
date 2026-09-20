@@ -2,7 +2,7 @@
 
 **Status:** Active planning — not yet implemented.  
 **Target:** next major/minor release after History V1 stabilisation.  
-**Owning documents:** this file, `docs/history-v1.md`, `docs/README.md`.
+**Owning documents:** this file, `docs/reference/history-v1.md`, `docs/README.md`.
 
 ## Motivation
 

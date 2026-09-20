@@ -165,10 +165,10 @@ Collectable gtk-marked tests:
 
 | Claim (source) | Re-check command | Result at this commit | Status |
 |----------------|------------------|-----------------------|--------|
-| 1. Model quality change invalidates cache (`docs/audit/anura_followup_diagnosis_20260917.md`) | `grep -n -C 5 "invalidate_cache" anura/widgets/preferences_languages_page.py` | Line 201 calls `get_language_manager().invalidate_cache()` in `_on_model_quality_changed` | **RESOLVED-AT-HEAD** |
-| 2. Screenshot spinner restored (`docs/audit/anura_followup_diagnosis_20260917.md`) | `grep -n -C 5 "_on_capture_finished" anura/window.py` | Line 431 calls `self.welcome_page.show_spinner()` in `_on_capture_finished` | **RESOLVED-AT-HEAD** |
-| 3. Match Case toggle button icon (`docs/audit/anura_followup_diagnosis_20260917.md`) | `grep -n "search_case_btn" data/ui/extracted_page.blp -A 5` | Lines 202-204 use `label: "Aa";` (nonexistent icon name removed) | **RESOLVED-AT-HEAD** |
-| 4. External Editor OpenURI failure (`docs/audit/anura_followup_diagnosis_20260917.md`) | `grep -n -C 10 "External editor launch failed" anura/window.py` | Lines 345-355 catch GLib.Error and display descriptive toast | **CONFIRMED** / **NOT-REPRODUCIBLE-HERE** |
+| 1. Model quality change invalidates cache (`docs/audit/legacy/reports/diagnosis-vm-followup-2026-09-17.md`) | `grep -n -C 5 "invalidate_cache" anura/widgets/preferences_languages_page.py` | Line 201 calls `get_language_manager().invalidate_cache()` in `_on_model_quality_changed` | **RESOLVED-AT-HEAD** |
+| 2. Screenshot spinner restored (`docs/audit/legacy/reports/diagnosis-vm-followup-2026-09-17.md`) | `grep -n -C 5 "_on_capture_finished" anura/window.py` | Line 431 calls `self.welcome_page.show_spinner()` in `_on_capture_finished` | **RESOLVED-AT-HEAD** |
+| 3. Match Case toggle button icon (`docs/audit/legacy/reports/diagnosis-vm-followup-2026-09-17.md`) | `grep -n "search_case_btn" data/ui/extracted_page.blp -A 5` | Lines 202-204 use `label: "Aa";` (nonexistent icon name removed) | **RESOLVED-AT-HEAD** |
+| 4. External Editor OpenURI failure (`docs/audit/legacy/reports/diagnosis-vm-followup-2026-09-17.md`) | `grep -n -C 10 "External editor launch failed" anura/window.py` | Lines 345-355 catch GLib.Error and display descriptive toast | **CONFIRMED** / **NOT-REPRODUCIBLE-HERE** |
 | 5. TTS AudioPlayer state lifecycle | `uv run pytest tests/test_tts_service.py -v` | All 12 TTS tests pass cleanly with zero warnings | **RESOLVED-AT-HEAD** |
 
 ---
