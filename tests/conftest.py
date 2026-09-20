@@ -68,6 +68,7 @@ _GI_KEYS: tuple[str, ...] = (
     "gi.repository.Xdp",
     "gi.repository.Adw",
     "gi.repository.Gtk",
+    "gi.repository.GtkSource",
     "gi.repository.Gst",
     "gi.repository.Notify",
     "gi.repository.GdkPixbuf",
@@ -363,6 +364,40 @@ def isolate_env(monkeypatch, tmp_path):
 # Session teardown + os._exit() with Pillar 6 safe flush
 # ---------------------------------------------------------------------------
 
+
+def _print_failure_reports(tr):
+    """Force-print failure and error reports before os._exit() suppresses them.
+
+    pytest collects two categories of problems under 'failed' and 'error' respectively:
+      - 'failed': test cases that ran but failed assertions.
+      - 'error':   collection errors (e.g. import failures during collection) and
+                   setup/teardown errors (e.g. fixture errors).
+
+    Because os._exit() bypasses pytest's own end-of-session reporting, both
+    categories must be printed here. Before this fix, only 'failed' was printed,
+    making 'error' entries completely invisible in CI output — only the bare
+    count showed up with zero detail.
+    """
+    # (label, stats_key) pairs — order determines print order.
+    _categories: list[tuple[str, str]] = [
+        ("ERROR IN", "error"),    # collection/fixture errors first
+        ("FAILURE IN", "failed"), # assertion failures second
+    ]
+
+    for label, key in _categories:
+        reports = tr.stats.get(key, [])
+        for rep in reports:
+            print("\n" + "=" * 80)
+            print(f"{label} {rep.nodeid}:")
+            print("=" * 80)
+            print(rep.longrepr)
+            # Also print captured stdout/stderr
+            for secname, secdata in rep.sections:
+                print(f"--- {secname} ---")
+                print(secdata)
+            print("=" * 80 + "\n")
+
+
 def pytest_sessionfinish(session, exitstatus):
     """Coordinated session teardown with guaranteed loguru flush before exit.
 
@@ -424,25 +459,14 @@ def pytest_sessionfinish(session, exitstatus):
         except Exception:
             pass
 
-    # 3. Force-print the summary line before os._exit() suppresses it.
+    # 3. Force-print failure and error reports before os._exit() suppresses them.
     try:
         tr = session.config.pluginmanager.get_plugin("terminalreporter")
         if tr is not None:
-            # Verbose printing of test failure tracebacks since os._exit() suppresses standard reporting
-            failed_reports = tr.stats.get('failed', [])
-            for rep in failed_reports:
-                print("\n" + "="*80)
-                print(f"FAILURE IN {rep.nodeid}:")
-                print("="*80)
-                print(rep.longrepr)
-                # Also print captured stdout/stderr
-                for secname, secdata in rep.sections:
-                    print(f"--- {secname} ---")
-                    print(secdata)
-                print("="*80 + "\n")
+            _print_failure_reports(tr)
             tr.summary_stats()
-        sys.stdout.flush()
-        sys.stderr.flush()
+            sys.stdout.flush()
+            sys.stderr.flush()
     except Exception:
         pass
 

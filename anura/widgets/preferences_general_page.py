@@ -30,6 +30,9 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
     tts_language_combo: Adw.ComboRow = Gtk.Template.Child()
     history_switch: Adw.SwitchRow = Gtk.Template.Child()
     history_limit_row: Adw.SpinRow = Gtk.Template.Child()
+    editor_line_numbers_switch: Adw.SwitchRow = Gtk.Template.Child()
+    editor_highlight_line_switch: Adw.SwitchRow = Gtk.Template.Child()
+    editor_wrap_mode_combo: Adw.ComboRow = Gtk.Template.Child()
 
     def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
@@ -42,15 +45,29 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
         self.settings.bind(
             "magic-processor-enabled", self.magic_processor_switch, "active", Gio.SettingsBindFlags.DEFAULT
         )
+        self.settings.bind(
+            "editor-show-line-numbers", self.editor_line_numbers_switch, "active", Gio.SettingsBindFlags.DEFAULT
+        )
+        self.settings.bind(
+            "editor-highlight-current-line",
+            self.editor_highlight_line_switch,
+            "active",
+            Gio.SettingsBindFlags.DEFAULT,
+        )
 
         self._setup_color_scheme()
+        self._setup_editor_wrap_mode()
         self._setup_extra_languages()
 
         self.connect_tracked(get_language_manager(), "downloaded", self._on_language_changed)
         self.connect_tracked(get_language_manager(), "removed", self._on_language_changed)
 
         self._setup_tts_volume()
-        self._setup_tts_language()
+        # TTS language setup depends on the (possibly network-backed) TTS
+        # service; a failure there must not abort __init__ or any later
+        # settings binding (e.g. history-enabled would never be bound).
+        with contextlib.suppress(Exception):
+            self._setup_tts_language()
         self._setup_history()
 
     def _setup_history(self) -> None:
@@ -66,6 +83,27 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
         value = int(spin_row.get_value())
         self.settings.set_int("history-limit", value)
         logger.debug(f"Anura: History size limit set to {value}")
+
+    def _setup_editor_wrap_mode(self) -> None:
+        from gettext import pgettext
+
+        modes = [
+            pgettext("wrap-mode", "Words"),
+            pgettext("wrap-mode", "Characters"),
+            pgettext("wrap-mode", "Disabled"),
+        ]
+        self.editor_wrap_mode_combo.set_model(Gtk.StringList.new(modes))
+        mode = self.settings.get_string("editor-wrap-mode")
+        mapping = {"word": 0, "char": 1, "none": 2}
+        idx = mapping.get(mode, 0)
+        self.editor_wrap_mode_combo.set_selected(idx)
+        self.connect_tracked(self.editor_wrap_mode_combo, "notify::selected", self._on_editor_wrap_mode_changed)
+
+    def _on_editor_wrap_mode_changed(self, combo: Adw.ComboRow, _param: object) -> None:
+        idx = combo.get_selected()
+        mapping = {0: "word", 1: "char", 2: "none"}
+        mode = mapping.get(idx, "word")
+        self.settings.set_string("editor-wrap-mode", mode)
 
     def _setup_color_scheme(self) -> None:
         """Initialize color scheme selector from settings."""
@@ -168,7 +206,7 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
 
     def _setup_tts_language(self) -> None:
         """Populate TTS language combo with gTTS supported languages."""
-        supported = get_tts_service().get_supported_gtts_languages()
+        supported = get_tts_service().get_supported_languages()
 
         # Create list: "Auto (follow OCR)" + all supported languages
         lang_names = [_("Auto (follow OCR language)"), *list(supported.values())]
@@ -192,7 +230,7 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
         if idx == 0:
             self.settings.set_string("tts-language", "")  # Auto
         else:
-            supported = get_tts_service().get_supported_gtts_languages()
+            supported = get_tts_service().get_supported_languages()
             supported_keys = list(supported.keys())
             # Bounds check to prevent IndexError
             if idx - 1 < len(supported_keys):

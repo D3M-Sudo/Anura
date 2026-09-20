@@ -8,7 +8,8 @@ from anura.utils.validators import is_safe_url_string, uri_validator
 
 def test_backslash_rejection():
     """Verify that backslashes in URLs are rejected for security hardening."""
-    # These currently pass in v0.1.5 but should be rejected
+    # Inputs accepted before URL hardening; these must always be rejected
+    # (regression guard against backslash-based hostname spoofing).
     assert is_safe_url_string("https://google.com\\evil.com") is False
     assert uri_validator("https://google.com\\evil.com") is False
 

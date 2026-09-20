@@ -2,7 +2,7 @@
 
 This document is the **normative** reference for the completed History V1
 integration. The pre-implementation plan is preserved as historical material in
-[planning/history-v1-plan.md](planning/history-v1-plan.md) and must not be
+[../audit/legacy/reports/history-v1-plan.md](../audit/legacy/reports/history-v1-plan.md) and must not be
 treated as current guidance.
 
 ## What History V1 provides
@@ -98,6 +98,7 @@ Notes:
 | `tests/test_history_controller_integration.py` | Enabled/disabled recording, field wiring, failure isolation, window wiring |
 | `tests/test_history_ui.py` | Page states, entry display order, defensive formatting, clear action |
 | `tests/test_history_settings.py` (`@pytest.mark.gtk`) | GSettings defaults, ranges, read/write |
+| `tests/test_preferences_page_resilience.py` | Regression: TTS init failure must not break history switch binding |
 
 ## Limitations
 

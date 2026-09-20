@@ -191,3 +191,110 @@ def test_window_wires_history_page_and_navigation():
 
     welcome_blp = (Path(__file__).resolve().parents[1] / "data" / "ui" / "welcome_page.blp").read_text()
     assert '"win.show-history"' in welcome_blp
+
+
+# ---------------------------------------------------------------------- #
+# Clear confirmation dialog (regression: TypeError on present(parent))
+# ---------------------------------------------------------------------- #
+
+
+class _FakeAlertDialog:
+    """Minimal stand-in recording the dialog wiring and presentation."""
+
+    instances: list = []  # noqa: RUF012
+
+    def __init__(self, **kwargs: object) -> None:
+        self.kwargs = kwargs
+        self.responses: list[tuple[str, str]] = []
+        self.appearances: dict[str, object] = {}
+        self.default_response: str | None = None
+        self.close_response: str | None = None
+        self.handlers: list[tuple[str, object]] = []
+        self.presented_with: object = "<never-presented>"
+        type(self).instances.append(self)
+
+    def add_response(self, response: str, label: str) -> None:
+        self.responses.append((response, label))
+
+    def set_response_appearance(self, response: str, appearance: object) -> None:
+        self.appearances[response] = appearance
+
+    def set_default_response(self, response: str) -> None:
+        self.default_response = response
+
+    def set_close_response(self, response: str) -> None:
+        self.close_response = response
+
+    def connect(self, signal: str, callback: object) -> None:
+        self.handlers.append((signal, callback))
+
+    def force_close(self) -> None:
+        pass
+
+    def present(self, parent: object) -> None:
+        self.presented_with = parent
+
+
+def test_clear_clicked_uses_alert_dialog_and_presents_with_parent(
+    headless_gi_mocks, monkeypatch, tmp_path
+):
+    """Regression: Adw.MessageDialog.present(parent) raised TypeError.
+
+    The clear-confirmation dialog must be an Adw.AlertDialog presented with
+    the parent window (dialog.present(parent) is valid on Adw.AlertDialog).
+    """
+    import anura.widgets.history_page as history_page_module
+
+    _FakeAlertDialog.instances.clear()
+    monkeypatch.setattr(history_page_module.Adw, "AlertDialog", _FakeAlertDialog)
+
+    service = HistoryService(base_dir=tmp_path)
+    page = _make_page(headless_gi_mocks, service)
+    parent = object()
+    page.get_ancestor = lambda _cls: parent  # isolate from any widget tree
+
+    page._on_clear_clicked(MagicMock())
+
+    assert len(_FakeAlertDialog.instances) == 1
+    dialog = _FakeAlertDialog.instances[0]
+    assert dialog.kwargs.get("heading") is not None
+    assert ("clear", "Clear") in dialog.responses
+    assert dialog.default_response == "cancel"
+    assert dialog.close_response == "cancel"
+    assert dialog.appearances.get("clear") is not None
+    assert dialog.presented_with is parent
+
+
+def test_clear_dialog_response_wiring_survives_migration(
+    headless_gi_mocks, monkeypatch, tmp_path
+):
+    """The 'clear' response must still trigger service.clear(); 'cancel' must not."""
+    import anura.widgets.history_page as history_page_module
+
+    _FakeAlertDialog.instances.clear()
+    monkeypatch.setattr(history_page_module.Adw, "AlertDialog", _FakeAlertDialog)
+
+    service = HistoryService(base_dir=tmp_path)
+    service.record("entry", "eng")
+    page = _make_page(headless_gi_mocks, service)
+    page.get_ancestor = lambda _cls: None
+
+    page._on_clear_clicked(MagicMock())
+    dialog = _FakeAlertDialog.instances[0]
+    assert dialog.handlers and dialog.handlers[0][0] == "response"
+
+    handler = dialog.handlers[0][1]
+    handler(dialog, "cancel")
+    assert len(service.get_entries()) == 1  # cancel keeps history
+
+    handler(dialog, "clear")
+    assert service.get_entries() == []  # clear wipes history
+
+
+def test_history_page_no_longer_references_messagedialog():
+    """Static guard: the deprecated crash-prone class must not come back."""
+    from pathlib import Path
+
+    source = (Path(__file__).resolve().parents[1] / "anura" / "widgets" / "history_page.py").read_text()
+    assert "MessageDialog" not in source
+    assert "Adw.AlertDialog" in source

@@ -242,21 +242,6 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
             if win and not self.settings.get_boolean("autolinks"):
                 win.show_toast(_("URL copied to clipboard"))
 
-    def _on_error_occurred(self, _controller, message: str) -> None:
-        win = self.get_active_window()
-        if win:
-            # Check for total capture failure (no primary, no fallback)
-            if "Screenshot failed" in message.lower() and not getattr(self.backend, "fallback_provider", None):
-                error_body = _(
-                    "Anura could not capture a screenshot because no suitable "
-                    "portal backend or fallback tool was found."
-                )
-                DialogManager.show_fatal_error(win, _("Capture Failed"), error_body)
-            else:
-                win.show_toast(message)
-        else:
-            self.notification_service.show_notification(title=_("Anura OCR"), body=message)
-
     def do_command_line(self, command_line: Gio.ApplicationCommandLine) -> int:
         options = command_line.get_options_dict().end().unpack()
 
@@ -356,6 +341,16 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
             win.show_toast(_("Text copied to clipboard"))
         elif hasattr(win, "_do_copy_to_clipboard"):
             win._do_copy_to_clipboard()
+
+    def on_find(self, *_) -> None:
+        win = self.get_active_window()
+        if win and hasattr(win, "show_search"):
+            win.show_search()
+
+    def on_open_external_editor(self, *_) -> None:
+        win = self.get_active_window()
+        if win and hasattr(win, "open_in_external_editor"):
+            win.open_in_external_editor()
 
     def get_screenshot(self, *_) -> None:
         win = self.get_active_window()

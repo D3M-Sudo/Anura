@@ -9,9 +9,28 @@
   OCR · QR/Barcode Decoding · Privacy-first · Native GTK4
 </p>
 
-<p align="center">
-  <img src="data/screenshots/anura-window-dark.png" alt="Anura Screenshot" width="800" />
-</p>
+<table align="center">
+  <tr>
+    <td align="center">
+      <img src="data/screenshots/anura-welcome-page.png" alt="Anura welcome page" width="380" /><br>
+      <sub>Capture, open, paste or drag an image</sub>
+    </td>
+    <td align="center">
+      <img src="data/screenshots/anura-extracted-page.png" alt="Anura extracted text page" width="380" /><br>
+      <sub>OCR results in the built-in editor with smart parsing</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="data/screenshots/anura-history-page.png" alt="Anura history page" width="380" /><br>
+      <sub>Opt-in local extraction history</sub>
+    </td>
+    <td align="center">
+      <img src="data/screenshots/anura-preferences-page.png" alt="Anura preferences page" width="380" /><br>
+      <sub>Appearance, OCR and behaviour preferences</sub>
+    </td>
+  </tr>
+</table>
 
 <p align="center">
   <a href="https://github.com/D3M-Sudo/Anura/releases/latest">
@@ -47,8 +66,9 @@ It also decodes **QR codes and Barcodes** in a single click using **zxing-cpp**,
 | 🎨 **Theme Selector** | Choose between System, Light, or Dark theme via Adw.StyleManager |
 | ✏️ **Selection-Aware Actions** | Text statistics and actions based on selection in OCR results |
 | ↩️ **Undo/Redo** | Full undo/redo support in ExtractedPage for text editing workflow |
+| ✏️ **GtkSourceView Editor** | Native search bar, editor preferences, and "Open in External Editor" handoff in OCR results |
 | 🔒 **Privacy-first** | All processing happens locally — no telemetry or tracking |
-| 🎨 **Native GTK4** | Designed for GNOME, built with Libadwaita and Blueprint |
+| 🎨 **Native GTK4** | Designed for GNOME, built with Libadwaita, GtkSourceView and Blueprint |
 | 🚀 **Async D&D** | Smooth, non-blocking asynchronous drag-and-drop |
 | ♿ **Enhanced Accessibility** | Improved keyboard navigation, tooltips, and screen reader support |
 | ✨ **Smart OCR Cleanup** | Adaptive image enhancement and structural layout reconstruction |
@@ -56,16 +76,16 @@ It also decodes **QR codes and Barcodes** in a single click using **zxing-cpp**,
 | 📜 **Offline Rotary Logs** | Secure, zero-telemetry local logging system |
 | ⌨️ **Keyboard Shortcuts** | Modern shortcut overlay with categorized searchable cheat sheet |
 | 🔗 **Share Anywhere** | Share to Telegram, Reddit, Mastodon, X, Email, Bluesky, Discord, LinkedIn, Threads |
-| 🕘 **Extraction History** | Opt-in local history of recent extractions (JSON, newest-first, with clear action) — see [docs/history-v1.md](docs/history-v1.md) |
+| 🕘 **Extraction History** | Opt-in local history of recent extractions (JSON, newest-first, with clear action) — see [docs/reference/history-v1.md](docs/reference/history-v1.md) |
 
 ---
 
 ## Architecture
 
-As of **v0.1.5**, Anura features an **Enterprise Clean Architecture** focused on event-driven decoupling and memory safety:
+As of **v0.2.0**, Anura features an **Enterprise Clean Architecture** focused on event-driven decoupling and memory safety:
 
 - **Core Services (`anura/core/`)**: Pure infrastructure logic. Includes `boot` (capability audit), `logger` (rotary logging), `atomic_task_manager` (isolated worker pool), and `resources`.
-- **Business Services (`anura/services/`)**: High-level I/O and resource management. Includes `language_manager` (Tessdata coordination), specialized language managers (DownloadManager, CacheManager, LanguageValidator), `screenshot` (multi-provider capture factory), `history_service` (opt-in local JSON history, see [docs/history-v1.md](docs/history-v1.md)), and `settings`.
+- **Business Services (`anura/services/`)**: High-level I/O and resource management. Includes `language_manager` (Tessdata coordination), specialized language managers (DownloadManager, CacheManager, LanguageValidator), `screenshot` (multi-provider capture factory), `history_service` (opt-in local JSON history, see [docs/reference/history-v1.md](docs/reference/history-v1.md)), and `settings`.
 - **Event-Driven Controllers (`anura/controllers/`)**: Logic-only components that emit GLib signals. `OcrController` (OCR + history recording gate), `TtsController`, and `DndController` are fully decoupled from UI side-effects, which are handled by the main application coordinator.
 - **Semantic Transformers (`anura/transformers/`)**: Implements the **Chain of Responsibility** pattern. The `MagicProcessor` dynamically selects the best `ITransformer` for structured data extraction.
 - **Memory Safety**: Uses `weakref.proxy` for View-Controller relationships and asynchronous native Gio APIs for non-blocking I/O.
@@ -133,8 +153,8 @@ Valid levels: `TRACE`, `DEBUG`, `INFO` (default), `WARNING`, `ERROR`, `CRITICAL`
 **Ubuntu / Linux Mint / Debian:**
 
 ```bash
-sudo apt install meson gettext python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 \
-    tesseract-ocr blueprint-compiler libxml2-utils \
+sudo apt install meson gettext python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-gtksource-5 \
+    libgtksourceview-5-dev tesseract-ocr blueprint-compiler libportal-gtk4-dev libxml2-utils \
     leptonica-progs liblibleptonica-dev
 ```
 
@@ -165,23 +185,27 @@ Anura uses **Ruff** for linting and **pytest** for testing, managed via **uv**.
 # Run headless unit/security tests
 uv run pytest tests/ -m "not gtk" -v
 
-# Run full suite (requires GTK environment)
+# Run GTK integration tests (requires GTK typelibs + compiled schemas/resources).
+# PyGObject is NOT installed in the venv (no wheels on PyPI): use system python3-gi
+# via PYTHONPATH, as documented in docs/reference/dependencies.md.
 ./build-aux/setup-gschema.sh
 ./tests/setup_resources.sh
-export GSETTINGS_SCHEMA_DIR="builddir"
-uv run pytest tests/ -v
+SP=$(ls -d .venv/lib/python3.*/site-packages)
+PYTHONPATH=".:$SP" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" \
+  GSETTINGS_SCHEMA_DIR="builddir/data" /usr/bin/python3 -m pytest tests/ -v
 ```
 
-The test suite includes headless unit tests (logic without GTK dependencies), integration tests (GTK/GLib environment), security/hardening tests (DoS prevention, URI validation, sanitization), and reliability/enterprise tests (performance benchmarks, concurrency, lifecycle). History V1 behaviour is covered by `tests/test_history_storage.py`, `tests/test_history_controller_integration.py`, `tests/test_history_ui.py`, and `tests/test_history_settings.py` (GTK-marked).
+The test suite includes headless unit tests (logic without GTK dependencies), integration tests (GTK/GLib environment), security/hardening tests (DoS prevention, URI validation, sanitization), and reliability/enterprise tests (performance benchmarks, concurrency, lifecycle). History V1 behaviour is covered by `tests/test_history_storage.py`, `tests/test_history_controller_integration.py`, `tests/test_history_ui.py`, `tests/test_history_settings.py` (GTK-marked) and `tests/test_preferences_page_resilience.py` (history/TTS wiring regression). Shortcuts overlay consistency is guarded by `tests/test_shortcuts_consistency.py` — see [docs/reference/dependencies.md](docs/reference/dependencies.md) for the headless GTK testing approach.
 
 ---
 
 ## Documentation
 
 - [docs/README.md](docs/README.md) — documentation index
-- [docs/history-v1.md](docs/history-v1.md) — Extraction History V1 (current behaviour)
-- [docs/dependencies.md](docs/dependencies.md) — Python/Flatpak dependency workflow (uv.lock, sync, FEDC/certifi)
-- [AGENTS.md](AGENTS.md) — canonical AI-assistant and architecture guide
+- [docs/reference/history-v1.md](docs/reference/history-v1.md) — Extraction History V1 (current behaviour)
+- [docs/reference/dependencies.md](docs/reference/dependencies.md) — Python/Flatpak dependency workflow (uv.lock, sync, FEDC/certifi)
+- [docs/reference/tessdata-integrity.md](docs/reference/tessdata-integrity.md) — tessdata model integrity (checksum manifest, fail-closed verification)
+- [AGENTS.md](AGENTS.md) — canonical AI-assistant and architecture guide (`CLAUDE.md` is a thin pointer to it)
 - [CONTRIBUTING.md](CONTRIBUTING.md) — contributor and development workflow
 
 ---

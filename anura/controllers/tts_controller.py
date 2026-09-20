@@ -3,10 +3,11 @@
 #
 # SPDX-License-Identifier: MIT
 
+import contextlib
 from typing import ClassVar
 import weakref
 
-from gi.repository import GObject, Gst
+from gi.repository import GLib, GObject
 from loguru import logger
 import requests
 
@@ -14,6 +15,15 @@ from anura.core.atomic_task_manager import get_atomic_manager
 from anura.services.settings import settings
 from anura.services.tts import get_tts_service
 from anura.utils.signal_manager import SignalManagerMixin
+
+# UX ceiling for TTS generation (independent of the underlying network cause).
+# After _TTS_STILL_WAITING_DELAY_S the user gets a one-shot 'still waiting'
+# toast so the spinner is never mute; after _TTS_GENERATION_TIMEOUT_S
+# generation is treated as failed and the UI returns to idle even if the
+# worker thread is still blocked. Superseded by real completion via a
+# monotonic request id.
+_TTS_STILL_WAITING_DELAY_S = 8
+_TTS_GENERATION_TIMEOUT_S = 35
 
 
 class TtsController(GObject.GObject, SignalManagerMixin):
@@ -23,8 +33,12 @@ class TtsController(GObject.GObject, SignalManagerMixin):
     """
 
     __gsignals__: ClassVar[dict[str, tuple]] = {
-        "state-changed": (GObject.SignalFlags.RUN_LAST, None, (str,)),  # 'idle', 'generating', 'playing', 'paused'
+        # 'idle', 'generating', 'playing', 'paused'
+        "state-changed": (GObject.SignalFlags.RUN_LAST, None, (str,)),
         "error-occurred": (GObject.SignalFlags.RUN_LAST, None, (str,)),
+        # One-shot notice fired while generation is still pending; carries
+        # no payload. The window surfaces it as a toast — never as a state.
+        "still-waiting": (GObject.SignalFlags.RUN_LAST, None, ()),
     }
 
     def __init__(self, window):
@@ -34,6 +48,12 @@ class TtsController(GObject.GObject, SignalManagerMixin):
         self._window = weakref.proxy(window)
         self._tts_service = get_tts_service()
         self._current_text: str | None = None
+        # Monotonic generation request id: only the newest request may drive
+        # UI state; late completions from superseded requests are ignored.
+        self._generation_seq = 0
+        self._active_generation_seq: int | None = None
+        self._waiting_source: int | None = None
+        self._timeout_source: int | None = None
 
         # Register for automatic teardown
         if hasattr(window, "register_controller"):
@@ -57,12 +77,10 @@ class TtsController(GObject.GObject, SignalManagerMixin):
         # If the player is PAUSED and the text matches what we're currently playing,
         # resume. If the text has changed, we MUST generate a new speech file
         # regardless of the player's current state.
-        if self._tts_service.player:
-            _, state, _ = self._tts_service.player.get_state(0)
-            if state == Gst.State.PAUSED and text == self._current_text:
-                logger.debug("TtsController: Resuming paused playback for identical text")
-                self.toggle_pause()
-                return
+        if self._tts_service.is_paused() and text == self._current_text:
+            logger.debug("TtsController: Resuming paused playback for identical text")
+            self.toggle_pause()
+            return
 
         self._current_text = text
         self.emit("state-changed", "generating")
@@ -77,6 +95,24 @@ class TtsController(GObject.GObject, SignalManagerMixin):
             return
 
         try:
+            self._generation_seq += 1
+            seq = self._generation_seq
+            self._active_generation_seq = seq
+            self._cancel_generation_timers()
+            try:
+                self._waiting_source = GLib.timeout_add_seconds(
+                    _TTS_STILL_WAITING_DELAY_S, self._on_still_waiting, seq
+                )
+            except (GLib.Error, RuntimeError, TypeError) as e:
+                logger.debug(f"TtsController: cannot schedule still-waiting timer: {e}")
+                self._waiting_source = None
+            try:
+                self._timeout_source = GLib.timeout_add_seconds(
+                    _TTS_GENERATION_TIMEOUT_S, self._on_generation_timeout, seq
+                )
+            except (GLib.Error, RuntimeError, TypeError) as e:
+                logger.debug(f"TtsController: cannot schedule generation-timeout timer: {e}")
+                self._timeout_source = None
             get_atomic_manager().execute(
                 self._tts_service.generate,
                 (text, tts_lang),
@@ -85,24 +121,73 @@ class TtsController(GObject.GObject, SignalManagerMixin):
             )
         except (AttributeError, RuntimeError, TypeError) as e:
             logger.exception(f"TtsController: Failed to initiate speech generation: {e}")
+            self._cancel_generation_timers()
+            self._active_generation_seq = None
             self.emit("state-changed", "idle")
 
     def stop(self):
         """Stop TTS playback."""
+        self._cancel_generation_timers()
+        self._active_generation_seq = None
         self._tts_service.stop_speaking()
 
     def toggle_pause(self):
         """Toggle pause/resume."""
         self._tts_service.toggle_pause()
 
+    def _on_still_waiting(self, seq: int) -> bool:
+        """Inform the UI once that generation is taking longer than usual."""
+        self._waiting_source = None
+        if seq == self._active_generation_seq:
+            logger.debug(f"TtsController: generation still pending after {_TTS_STILL_WAITING_DELAY_S}s")
+            self.emit("still-waiting")
+        return False
+
+    def _on_generation_timeout(self, seq: int) -> bool:
+        """Treat a hung generation as failed so the UI never wedges on the spinner."""
+        from gettext import gettext as _
+
+        self._timeout_source = None
+        if seq != self._active_generation_seq:
+            return False
+        logger.warning(f"TtsController: generation timed out after {_TTS_GENERATION_TIMEOUT_S}s")
+        self._cancel_generation_timers()
+        self._active_generation_seq = None
+        self.emit("error-occurred", _("Text-to-speech is taking too long. Please try again."))
+        self.emit("state-changed", "idle")
+        return False
+
+    def _cancel_generation_timers(self) -> None:
+        for attr in ("_waiting_source", "_timeout_source"):
+            source = getattr(self, attr, None)
+            if source is not None:
+                with contextlib.suppress(GLib.Error, RuntimeError):
+                    GLib.source_remove(source)
+                setattr(self, attr, None)
+
+    def _settle_generation(self) -> bool:
+        """Drop timers for the active request; True only if it is still current."""
+        if self._active_generation_seq is None:
+            return False
+        self._cancel_generation_timers()
+        self._active_generation_seq = None
+        return True
+
     def _on_generated(self, filepath: str | None):
         """Callback when generation succeeds."""
+        if not self._settle_generation():
+            return
         if not filepath:
             self.emit("state-changed", "idle")
             return
+        logger.debug(f"TtsController: Generated {filepath} — queuing playback")
+        self._tts_service.play(filepath)
+        self.emit("state-changed", "playing")
 
     def _on_generate_error(self, error: Exception, traceback_str: str | None = None):
         """Callback when generation fails."""
+        if not self._settle_generation():
+            return
         from gettext import gettext as _
         if isinstance(error, TimeoutError):
             msg = _("Request timed out. Please try again.")
@@ -140,6 +225,8 @@ class TtsController(GObject.GObject, SignalManagerMixin):
 
     def cleanup(self):
         """Explicit cleanup to prevent memory leaks."""
+        self._cancel_generation_timers()
+        self._active_generation_seq = None
         try:
             self.disconnect_all_signals()
         except (TypeError, RuntimeError) as e:

@@ -19,6 +19,8 @@
       <li>Theme selector: System, Light, and Dark mode support.</li>
       <li>Selection-aware text statistics and actions.</li>
       <li>Undo/Redo support for text editing workflow.</li>
+      <li>GtkSourceView editor with native search, editor preferences, and Open in External Editor handoff.</li>
+      <li>Opt-in local Extraction History (newest-first JSON store with clear action).</li>
       <li>Enhanced accessibility with keyboard navigation and screen reader support.</li>
       <li>Privacy-focused: no telemetry and no anonymous data collection.</li>
       <li>Modern GTK4 / Libadwaita interface following GNOME Human Interface Guidelines.</li>
@@ -40,26 +42,44 @@
       "Take a screenshot" action will fail.
     </p>
     <p>
-      When the portal backend is unavailable or fails, Anura automatically
-      falls back to host-side screenshot tools via flatpak-spawn. To enable
-      this fallback, install at least one screenshot tool on the host system:
-      gnome-screenshot (recommended), xfce4-screenshooter, spectacle, scrot,
-      maim, or ImageMagick import. Anura tries them in order and uses the
-      first available tool.
+      On X11 sessions, if the portal Screenshot interface is unavailable or
+      fails, Anura falls back to the bundled scrot utility inside the sandbox
+      (no host tools required). The fallback is X11-only and never used on
+      Wayland, which strictly relies on the portal for security.
     </p>
   </description>
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/main/data/screenshots/anura-window-dark.png</image>
-      <caption>Main interface showing the text extraction screen (dark theme)</caption>
+      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/main/data/screenshots/anura-extracted-page.png</image>
+      <caption>Extracted text in the built-in editor with smart parsing and selection statistics</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/main/data/screenshots/anura-window-decoded.png</image>
-      <caption>Extracted text displayed after OCR recognition</caption>
+      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/main/data/screenshots/anura-welcome-page.png</image>
+      <caption>Welcome screen with screenshot, open, paste and drag-and-drop actions</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/main/data/screenshots/anura-history-page.png</image>
+      <caption>Opt-in local extraction history of recent extractions</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/main/data/screenshots/anura-preferences-page.png</image>
+      <caption>Preferences for appearance, OCR extraction and behaviour</caption>
     </screenshot>
   </screenshots>
   <releases>
-    <release version="0.1.5" type="stable" date="2026-11-09">
+    <release version="0.2.0" type="stable" date="2026-09-21">
+      <description>
+        <p>GtkSourceView 5 editor migration, tessdata integrity verification, and defensive-audit hardening.</p>
+        <ul>
+          <li>GtkSourceView 5 Editor: native search bar, editor preferences, and "Open in External Editor" handoff.</li>
+          <li>Tessdata Integrity: pinned checksum manifest with fail-closed verification and fully atomic model installs.</li>
+          <li>Export Hardening: per-session export files with restrictive permissions, replacing the shared /tmp directory.</li>
+          <li>Shortcuts Sync: keyboard shortcuts overlay synchronized with registered actions, with anti-drift test.</li>
+          <li>Defensive Audit: screenshot fallback fixes, safe search navigation with wrap-around, and scrot binary validation.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.5" type="stable" date="2026-09-11">
       <description>
         <p>Extraction History V1, controller composition architecture, and comprehensive security hardening.</p>
         <ul>

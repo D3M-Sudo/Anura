@@ -36,6 +36,10 @@ class OcrController(GObject.GObject, SignalManagerMixin):
         "error-occurred": (GObject.SignalFlags.RUN_LAST, None, (str,)),
         "extraction-completed": (GObject.SignalFlags.RUN_LAST, None, (str, str)),  # text, applied_name
         "status-changed": (GObject.SignalFlags.RUN_LAST, None, (str,)),
+        # Emitted as soon as the screenshot capture phase settles, before
+        # OCR runs. Lets the window restore itself while OCR continues
+        # in the background (window stays hidden only during capture).
+        "capture-finished": (GObject.SignalFlags.RUN_LAST, None, (bool,)),
         "capture-portal-missing": (GObject.SignalFlags.RUN_LAST, None, (str,)),
         "navigation-requested": (GObject.SignalFlags.RUN_LAST, None, (str,)),
     }
@@ -83,6 +87,7 @@ class OcrController(GObject.GObject, SignalManagerMixin):
         self.connect_tracked(backend, "error", self._on_shot_error)
         self.connect_tracked(backend, "status-changed", self._on_status_changed)
         self.connect_tracked(backend, "portal-backend-missing", self._on_portal_backend_missing)
+        self.connect_tracked(backend, "capture-finished", self._on_capture_finished)
 
         self.connect_tracked(self._window.portal_banner, "button-clicked", self._on_portal_banner_dismissed)
 
@@ -186,6 +191,10 @@ class OcrController(GObject.GObject, SignalManagerMixin):
     def _on_status_changed(self, _sender: GObject.GObject, status_msg: str) -> None:
         """Handle status updates from backend to prevent Zombie UI."""
         self.emit("status-changed", status_msg)
+
+    def _on_capture_finished(self, _sender: GObject.GObject, _success: bool) -> None:
+        """Forward capture completion so the window can restore itself early."""
+        self.emit("capture-finished", _success)
 
     def _on_shot_error(self, _sender: GObject.GObject, message: str) -> None:
         """Handle screenshot capture errors."""
@@ -294,7 +303,3 @@ class OcrController(GObject.GObject, SignalManagerMixin):
             return
 
         dialog.open(_win, None, _on_open_image_result)
-
-    def cleanup(self) -> None:
-        """Explicit cleanup for backwards compatibility. Use teardown() instead."""
-        self.teardown()

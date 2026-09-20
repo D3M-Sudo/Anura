@@ -10,6 +10,7 @@ Anura OCR is a GTK4/Libadwaita desktop application for GNOME that extracts text 
 
 - Python 3.12+ required
 - GTK4 + Libadwaita + Blueprint Compiler for declarative UI
+- Text editor: GtkSourceView 5 (`GtkSource.View`/`GtkSource.Buffer`) with native search and external-editor handoff
 - OCR via `pytesseract` (Tesseract 5.x wrapper)
 - Barcode/QR code via `zxing-cpp` (replaces legacy `pyzbar`)
 - TTS via `gTTS` + GStreamer `playbin3`
@@ -56,7 +57,7 @@ anura/
 │   │   │   ├── legacy_provider.py   X11 scrot fallback provider
 │   │   │   └── portal_provider.py   XDG Desktop Portal provider
 │   │   ├── screenshot_service.py   Screenshot capture orchestration
-│   │   ├── history_service.py      Opt-in local JSON history (History V1, see docs/history-v1.md)
+│   │   ├── history_service.py      Opt-in local JSON history (History V1, see docs/reference/history-v1.md)
 │   │   ├── settings.py             GSettings singleton wrapper
 │   │   ├── share_service.py        Social sharing (9 providers)
 │   │   ├── tts/                    Text-to-speech modular components
@@ -80,6 +81,7 @@ anura/
 │   ├── utils/
 │   │   ├── barcode_detector.py    QR/Barcode detection via zxing-cpp
 │   │   ├── cleanup.py             Resource cleanup utilities
+│   │   ├── export_files.py        Hardened export files for external-editor handoff (F3)
 │   │   ├── file_ready_retry.py    File readiness utility with retry logic
 │   │   ├── image_filters.py       Modular image enhancement filter chain
 │   │   ├── notification_helpers.py Notification formatting and validation helpers
@@ -87,46 +89,53 @@ anura/
 │   │   ├── signal_manager.py      GLib signal management mixin
 │   │   ├── singleton.py           Thread-safe lazy singleton pattern
 │   │   ├── structural_reconstructor.py Paragraph/Layout spatial analysis
+│   │   ├── tessdata_integrity.py  Git-blob SHA-1 verification of tessdata models (F1)
 │   │   ├── text_preprocessor.py   Image enhancement & text cleanup factory
 │   │   └── validators.py          URI validation, security & text sanitization
-│   └── widgets/
-│       ├── extracted_page.py       OCR result page with share/TTS actions
-│       ├── history_page.py         History V1 page (read-only list, clear action)
-│       ├── language_popover.py     Language selector with search
-│       ├── language_popover_row.py Language row in popover
-│       ├── language_row.py         Language row in preferences page
-│       ├── preferences_dialog.py   Preferences dialog (Adw.PreferencesDialog)
-│       ├── preferences_general_page.py   General preferences page
-│       ├── preferences_languages_page.py Language management/download page
-│       ├── share_row.py            Share provider row
-│       ├── shortcuts_overlay.py    Keyboard shortcuts cheat sheet widget
-│       └── welcome_page.py         Welcome page
+│   ├── widgets/
+│   │   ├── extracted_page.py       OCR result page: GtkSourceView 5 editor (native search, external editor handoff) + share/TTS actions
+│   │   ├── history_page.py         History V1 page (read-only list, clear action)
+│   │   ├── language_popover.py     Language selector with search
+│   │   ├── language_popover_row.py Language row in popover
+│   │   ├── language_row.py         Language row in preferences page
+│   │   ├── preferences_dialog.py   Preferences dialog (Adw.PreferencesDialog)
+│   │   ├── preferences_general_page.py   General preferences page
+│   │   ├── preferences_languages_page.py Language management/download page
+│   │   ├── share_row.py            Share provider row
+│   │   ├── shortcuts_overlay.py    Keyboard shortcuts cheat sheet widget
+│   │   └── welcome_page.py         Welcome page
+│   └── data/
+│       └── tessdata_checksums.json Pinned git-blob SHA-1 manifest for runtime model integrity (see docs/reference/tessdata-integrity.md)
 ├── data/
 │   ├── ui/                     Blueprint files (.blp) → compiled to .ui (incl. history_page.blp)
 │   ├── icons/                  Scalable SVG icons + symbolic variants
 │   ├── screenshots/            Screenshots for Flathub/metainfo
 │   ├── io.github.d3msudo.anura.desktop.in
 │   ├── io.github.d3msudo.anura.gresource.xml
-│   ├── io.github.d3msudo.anura.gschema.xml   (incl. history-enabled, history-limit keys)
+│   ├── io.github.d3msudo.anura.gschema.xml   (incl. history-enabled/limit, editor-*, external-editor keys)
 │   ├── io.github.d3msudo.anura.metainfo.xml.in
 │   └── style.css
 ├── docs/
-│   ├── README.md               Documentation index (normative vs historical)
-│   ├── history-v1.md           Extraction History V1 reference (current/normative)
-│   ├── dependencies.md         Python/Flatpak dependency workflow (uv.lock, sync, FEDC/certifi)
-│   ├── planning/history-v1-plan.md  Pre-implementation History V1 plan (historical)
-│   └── audit/legacy/           Historical QA/security audit reports (append-only)
+│   ├── README.md               Documentation index (normative / planning / audit)
+│   ├── reference/              Current (normative) references:
+│   │                            history-v1.md, dependencies.md, tessdata-integrity.md
+│   ├── planning/               Active (not yet implemented) plans (recreated when needed)
+│   └── audit/                  QA/security audit material:
+│                                README.md (root = active audits) + legacy/ (append-only: reports/)
 ├── flatpak/
-│   ├── io.github.d3msudo.anura.json         Release manifest (anura module: git source)
-│   └── io.github.d3msudo.anura.local.json   Local manifest (anura module: dir source)
+│   ├── io.github.d3msudo.anura.json         Release manifest — GENERATED by
+│   │                                         release.sh from .local.json, never hand-edited
+│   └── io.github.d3msudo.anura.local.json   Local manifest — the one to edit (anura module: dir source)
 ├── build-aux/
-│   ├── release.sh              Release script (pin tessdata SHA, bump version)
+│   ├── release.sh              Release script (bump version, pin tessdata ref,
+│   │                            generate release manifest from .local.json)
 │   ├── generate_release_notes.py CHANGELOG.md parser → _release_notes.py
+│   ├── generate_tessdata_checksums.py Tessdata integrity manifest (git-blob SHA-1) generator
 │   ├── setup-gschema.sh        GSettings schema compilation for testing
-│   ├── sync_dependencies.py    uv.lock → Flatpak python3-* modules sync (excl. certifi)
-│   ├── check_manifest_consistency.py        Drift check: release vs local manifest
-│   ├── check_runtime_dependency_coverage.py F-005: uv.lock runtime closure → manifest coverage
-│   ├── check_tessdata_consistency.py        Tessdata SHA: config.py vs both manifests
+│   ├── sync_dependencies.py    uv.lock → local Flatpak manifest python3-* sync (excl. certifi)
+│   ├── check_manifest_consistency.py        Drift check: release vs local manifest (release-time self-check, see docs/reference/dependencies.md)
+│   ├── check_runtime_dependency_coverage.py F-005: uv.lock runtime closure → manifest coverage (--manifest local in CI, --manifest both at release)
+│   ├── check_tessdata_consistency.py        Tessdata ref: config.py vs both manifests (release-time self-check)
 │   └── meson/postinstall.py    Post-install script
 ├── bin/
 │   └── anura.in                Entry point script (installed as `anura`)
@@ -141,7 +150,7 @@ anura/
 │   └── dependabot.yml                  Automatic pip and Actions updates (target: testing)
 ├── meson.build                 Main build (also generates _release_notes.py)
 ├── CHANGELOG.md                Versioned changelog (source for release notes)
-├── docs/                       Normative docs (history-v1, dependencies) + historical planning/audit
+├── docs/                       Documentation index + reference/ (normative) + planning/ (active) + audit/ (historical)
 ```
 
 ## Development Commands
@@ -151,7 +160,7 @@ anura/
 ```bash
 # System dependencies (Ubuntu/Debian)
 sudo apt install gettext python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 \
-    blueprint-compiler libportal-gtk4-dev \
+    gir1.2-gtksource-5 blueprint-compiler libportal-gtk4-dev \
     tesseract-ocr python3-pil python3-pip \
     gstreamer1.0-plugins-good gstreamer1.0-pulseaudio \
     libxml2-utils # Required for GResource compilation
@@ -171,10 +180,10 @@ GSETTINGS_SCHEMA_DIR=builddir/data python3 -m anura.main
 
 ```bash
 # Full build
-flatpak-builder --force-clean builddir flatpak/io.github.d3msudo.anura.json
+flatpak-builder --force-clean builddir flatpak/io.github.d3msudo.anura.local.json
 
 # Run the build
-flatpak-builder --run builddir flatpak/io.github.d3msudo.anura.json anura
+flatpak-builder --run builddir flatpak/io.github.d3msudo.anura.local.json anura
 ```
 
 ## Dependency Management
@@ -212,8 +221,39 @@ Instead, it is owned exclusively by FEDC (flatpak-external-data-checker) via
 This means:
 - `uv.lock` certifi version may differ from Flatpak manifest certifi version
 - `sync_dependencies.py` intentionally excludes certifi from its mapping
-- FEDC updates certifi in **both** Flatpak manifests simultaneously
+- FEDC updates certifi in `io.github.d3msudo.anura.local.json` only — the
+  release manifest inherits it automatically the next time `release.sh` runs
 - This divergence is intentional and not a drift issue
+
+## Agent Rules — ABSOLUTE
+
+These rules are binding for every AI coding agent working on this repo
+(Claude Code, Cline, Cursor, Aider, Continue, Zed). They were consolidated
+here from `CLAUDE.md`, which is now a thin pointer to this file.
+
+### Protected Files — NEVER MODIFY
+
+- `po/*.po`
+- `anura/_release_notes.py`
+- `data/ui/*.ui` (generated from `.blp` files)
+- `builddir/` (build artifacts)
+- `CHANGELOG.md` (maintained via Keep a Changelog — add entries under `[Unreleased]`, never rewrite history)
+
+### Lint & Dependencies
+
+- **Linter**: **ruff** only — never flake8, pylint or black.
+- **`uv` exclusive**: `uv add`, `uv sync`. Never `pip` or `poetry`.
+
+### Internationalization (i18n)
+
+- `_("text {var}").format(var=value)` — NEVER `_(f"...")`.
+- `ngettext()` for plurals.
+- After new UI strings → `cd po && ./update_potfiles.sh`.
+
+### Error Handling — Early Return Pattern
+
+- Guards and validations at the beginning. Happy path at the end.
+- No generic `except Exception` that silences bugs.
 
 ## Code Patterns & Conventions
 
@@ -289,20 +329,32 @@ Always use `validators.sanitize_text` to strip Unicode Control/Format characters
 
 ### Running Tests
 
+Headless tests run with `uv run pytest tests/ -v -m "not gtk"`. GTK tests
+need the system `python3-gi` via `PYTHONPATH` (PyGObject ships no wheels, so
+it is NOT in the venv) — see `docs/reference/dependencies.md` "GTK (PyGObject) and the
+development venv" section for the full pattern.
+
 ```bash
 # Headless/Security tests
 uv run pytest tests/ -v -m "not gtk"
 
-# Full suite (requires GTK environment)
+# GTK integration tests (compiled schemas + GResource + system gi)
 ./build-aux/setup-gschema.sh
 ./tests/setup_resources.sh
-export GSETTINGS_SCHEMA_DIR="builddir"
-uv run pytest tests/ -v
+SP=$(ls -d .venv/lib/python3.*/site-packages)
+PYTHONPATH=".:$SP" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" \
+  GSETTINGS_SCHEMA_DIR="builddir/data" /usr/bin/python3 -m pytest tests/ -v
 ```
 
 History V1 tests: `tests/test_history_storage.py`,
 `tests/test_history_controller_integration.py`, `tests/test_history_ui.py`
-(headless) and `tests/test_history_settings.py` (GTK-marked).
+(headless), `tests/test_history_settings.py` (GTK-marked) and
+`tests/test_preferences_page_resilience.py` (history/TTS wiring regression).
+Shortcuts overlay consistency: `tests/test_shortcuts_consistency.py`.
+Tessdata integrity: `tests/test_tessdata_checksums.py` (manifest lookup and
+fail-closed semantics, headless) and `tests/test_tessdata_consistency.py`
+(anti-drift checker, headless); download atomicity and digest verification:
+`tests/test_language_download_integrity.py`.
 
 ## Security Guidelines
 

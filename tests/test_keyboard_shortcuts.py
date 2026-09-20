@@ -223,9 +223,26 @@ class TestKeyboardShortcuts:
 class TestShortcutsIntegration:
     """Integration tests for keyboard shortcuts (require full environment)."""
 
-    def test_full_shortcuts_registration(self):
+    def test_full_shortcuts_registration(self, setup_gtk_environment):
         """Test full shortcuts registration (requires GTK environment)."""
-        # This would require full GTK environment with display and GResources.
-        # Marked as GTK-only — only run in environments with display server.
-        pytest.skip("Full GTK test requires display and GResources")
+        from anura.core.action_registry import ActionRegistry
+
+        accels_map = {}
+
+        class MockApp:
+            def __getattr__(self, name):
+                return lambda *_: None
+
+            def add_action(self, action):
+                pass
+
+            def set_accels_for_action(self, action_name, accels):
+                accels_map[action_name] = accels
+
+        app = MockApp()
+        registry = ActionRegistry(app)
+        registry.setup_actions()
+
+        assert "app.get_screenshot" in accels_map
+        assert "<primary>g" in accels_map["app.get_screenshot"]
 

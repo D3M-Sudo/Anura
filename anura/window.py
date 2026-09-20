@@ -7,7 +7,7 @@
 import contextlib
 from gettext import gettext as _
 from io import BytesIO
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import gi
 
@@ -32,16 +32,15 @@ from anura.services.clipboard_service import get_clipboard_service  # noqa: E402
 from anura.services.history_service import HistoryService  # noqa: E402
 from anura.services.language_manager import get_language_manager  # noqa: E402
 from anura.services.screenshot_service import ScreenshotService, get_screenshot_service  # noqa: E402
+from anura.services.settings import settings  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
 from anura.utils import validate_image_resource  # noqa: E402
+from anura.utils.export_files import write_export_file  # noqa: E402
 from anura.utils.signal_manager import SignalManagerMixin  # noqa: E402
 from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
 from anura.widgets.history_page import HistoryPage  # noqa: E402
 from anura.widgets.preferences_dialog import PreferencesDialog  # noqa: E402
 from anura.widgets.welcome_page import WelcomePage  # noqa: E402
-
-if TYPE_CHECKING:
-    pass
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/window.ui")
@@ -72,7 +71,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         app = Gtk.Application.get_default()
         if app is None:
             raise RuntimeError("Cannot get default application")
-        self.settings = app.settings
+        self.settings = getattr(app, "settings", settings)
 
         # Defensive: validate language from settings, fallback to English if corrupted
         lang_code: str = self.settings.get_string("active-language")
@@ -309,6 +308,57 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         except (ImportError, RuntimeError) as e:
             logger.error(f"Failed to show shortcuts overlay: {e}")
 
+    def show_search(self) -> None:
+        """Toggle search bar on the extracted page."""
+        self.navigation_view.push_by_tag("extracted")
+        self.extracted_page.toggle_search()
+
+    def open_in_external_editor(self) -> None:
+        """Export current extracted text to temporary file and launch external editor."""
+        text = self.extracted_page.get_active_text()
+        if not text:
+            self.show_toast(_("No text to open in external editor"))
+            return
+
+        try:
+            temp_file = write_export_file(text)
+
+            gfile = Gio.File.new_for_path(str(temp_file))
+            launcher = Gtk.FileLauncher.new(gfile)
+            launcher.launch(self, None, self._on_external_editor_launched)
+        except (OSError, RuntimeError, GLib.Error) as e:
+            logger.error(f"Failed to export or launch external editor: {e}")
+            self.show_toast(_("Failed to open external editor"))
+
+    def _on_external_editor_launched(self, launcher: Gtk.FileLauncher, result: Gio.AsyncResult) -> None:
+        try:
+            success = launcher.launch_finish(result)
+            if success:
+                self.show_toast(_("Opened in external editor"))
+        except (GLib.Error, RuntimeError) as e:
+            # User dismissed the portal's "choose an application" dialog: not
+            # an error, stay quiet.
+            if isinstance(e, GLib.Error) and e.matches(
+                Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED
+            ):
+                logger.debug("External editor launch cancelled by user.")
+                return
+            # Gtk.FileLauncher goes through the org.freedesktop.portal.OpenURI
+            # D-Bus interface; a failure here is usually environment-side
+            # (missing/misconfigured xdg-desktop-portal backend) rather than an
+            # Anura bug. Surface the portal context and raw error so the next
+            # report is diagnosable without log-diving (VM-testing bug #6).
+            logger.warning(f"External editor launch failed: {e}")
+            detail = e.message if isinstance(e, GLib.Error) and e.message else str(e)
+            self.show_toast(
+                _(
+                    "Could not open external editor: the desktop portal "
+                    "(org.freedesktop.portal.OpenURI) refused the launch ({detail}). "
+                    "Check that a portal backend (xdg-desktop-portal-gtk/gnome/kde) "
+                    "is installed and a default app is set for text files."
+                ).format(detail=detail)
+            )
+
     def show_welcome_page(self, *_args: object) -> None:
         """Show the welcome page and hide the extracted content."""
         self.navigation_view.pop_to_tag("welcome")
@@ -329,6 +379,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         self.connect_tracked(self.ocr_controller, "extraction-completed", self._on_extraction_completed)
         self.connect_tracked(self.ocr_controller, "error-occurred", self._on_ocr_error)
         self.connect_tracked(self.ocr_controller, "status-changed", self._on_ocr_status_changed)
+        self.connect_tracked(self.ocr_controller, "capture-finished", self._on_capture_finished)
         self.connect_tracked(self.ocr_controller, "capture-portal-missing", self._on_portal_missing)
         self.connect_tracked(self.ocr_controller, "navigation-requested", self._on_navigation_requested)
 
@@ -337,6 +388,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
 
         # TTS Controller signals
         self.connect_tracked(self.tts_controller, "state-changed", self._on_tts_state_changed)
+        self.connect_tracked(self.tts_controller, "still-waiting", self._on_tts_still_waiting)
         self.connect_tracked(self.tts_controller, "error-occurred", self._on_tts_error)
 
     def _on_extraction_completed(self, _controller: OcrController, text: str, applied_name: str) -> None:
@@ -352,9 +404,10 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         if not message:
             return
         # For total capture failure with no fallback available, show a fatal
-        # error dialog instead of a toast (previously handled in
-        # AnuraApplication._on_error_occurred; moved here to avoid the double
-        # notification burst caused by connecting error-occurred twice).
+        # error dialog instead of a toast. This lives here (rather than in
+        # AnuraApplication) so the fatal dialog runs in the window where the
+        # window context is always available, avoiding the double-notification
+        # burst caused by connecting error-occurred twice.
         from anura.services.screenshot_service import get_screenshot_service
         backend = get_screenshot_service()
         if "screenshot failed" in message.lower() and not getattr(backend, "fallback_provider", None):
@@ -370,6 +423,14 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     def _on_ocr_status_changed(self, _controller: OcrController, status_msg: str) -> None:
         """Update UI status during OCR."""
         self.welcome_page.set_status(status_msg)
+
+    def _on_capture_finished(self, _controller: OcrController, success: bool) -> None:
+        """Restore the window as soon as capture settles (OCR still running)."""
+        if success:
+            # The window is visible again while OCR runs, so mirror the
+            # file/clipboard entry points and spin during the wait (VM bug #3).
+            self.welcome_page.show_spinner()
+        self._cleanup_screenshot_state()
 
     def _on_portal_missing(self, _controller: OcrController, message: str) -> None:
         """Show the portal missing banner."""
@@ -391,6 +452,10 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     def _on_tts_state_changed(self, _controller: TtsController, state: str) -> None:
         """Mediate TTS state to the UI."""
         self.extracted_page.update_tts_state(state)
+
+    def _on_tts_still_waiting(self, _controller: TtsController) -> None:
+        """Surface a one-shot notice that generation is still pending."""
+        self.show_toast(_("Text-to-speech is still working…"))
 
     def _on_tts_error(self, _controller: TtsController, message: str) -> None:
         """Handle TTS error signal."""
@@ -416,12 +481,6 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     def show_toast(self, title: str, priority: Adw.ToastPriority = Adw.ToastPriority.NORMAL) -> None:
         """Show a toast notification to the user."""
         self.toast_overlay.add_toast(Adw.Toast(title=title, priority=priority))
-
-    def _launch_uri(self, url: str) -> None:
-        """Open a URI in the default system browser."""
-        from anura.utils.validators import launch_uri
-
-        launch_uri(url, window=self, error_callback=lambda msg: self.show_toast(msg))
 
     def on_listen(self) -> None:
         """Trigger TTS playback."""

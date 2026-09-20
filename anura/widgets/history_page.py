@@ -133,7 +133,10 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
             return
 
         parent = self.get_ancestor(Gtk.Window)
-        dialog = Adw.MessageDialog(
+        # Adw.AlertDialog's .present(parent) accepts an optional parent window;
+        # the deprecated message-dialog class inherits present() from Gtk.Window
+        # (no arguments), so calling it with one used to raise a TypeError.
+        dialog = Adw.AlertDialog(
             heading=_("Clear History?"),
             body=_("All stored extraction history will be removed. This cannot be undone."),
         )
@@ -143,12 +146,9 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
         dialog.set_default_response("cancel")
         dialog.set_close_response("cancel")
         dialog.connect("response", self._on_clear_response)
-        if parent is not None:
-            dialog.present(parent)
-        else:
-            dialog.present()
+        dialog.present(parent)
 
-    def _on_clear_response(self, dialog: Adw.MessageDialog, response: str) -> None:
+    def _on_clear_response(self, dialog: Adw.AlertDialog, response: str) -> None:
         dialog.force_close()
         if response != "clear":
             return

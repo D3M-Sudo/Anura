@@ -86,7 +86,7 @@ class TestDownloadState:
 
 
 class TestLanguageItem:
-    @pytest.mark.skip(reason="Needs real GObject")
+    @pytest.mark.gtk
     def test_language_item_init(self):
         from anura.models.language_item import LanguageItem
 
@@ -95,7 +95,7 @@ class TestLanguageItem:
         assert li.title == "French"
         assert li.selected is True
 
-    @pytest.mark.skip(reason="Needs real GObject")
+    @pytest.mark.gtk
     def test_language_item_repr(self):
         from anura.models.language_item import LanguageItem
 

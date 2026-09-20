@@ -69,64 +69,6 @@
             ]
         },
         {
-            "name": "tesseract",
-            "buildsystem": "autotools",
-            "cleanup": [
-                "/include",
-                "/lib/pkgconfig"
-            ],
-            "sources": [
-                {
-                    "type": "archive",
-                    "url": "https://github.com/tesseract-ocr/tesseract/archive/refs/tags/5.3.4.tar.gz",
-                    "sha256": "141afc12b34a14bb691a939b4b122db0d51bd38feda7f41696822bacea7710c7"
-                }
-            ],
-            "config-opts": [
-                "--disable-graphics",
-                "--disable-legacy",
-                "--disable-training"
-            ],
-            "post-install": [
-                "install -Dm0644 LICENSE $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/tesseract/LICENSE"
-            ]
-        },
-        {
-            "name": "tessdata",
-            "buildsystem": "simple",
-            "build-commands": [
-                "install -Dm0644 eng.traineddata $FLATPAK_DEST/share/tessdata/eng.traineddata",
-                "install -Dm0644 ita.traineddata $FLATPAK_DEST/share/tessdata/ita.traineddata"
-            ],
-            "sources": [
-                {
-                    "type": "file",
-                    "url": "https://github.com/tesseract-ocr/tessdata_fast/raw/923915d4ced2a7235221788285785a29c4a42d4a/eng.traineddata",
-                    "sha256": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2"
-                },
-                {
-                    "type": "file",
-                    "url": "https://github.com/tesseract-ocr/tessdata_fast/raw/923915d4ced2a7235221788285785a29c4a42d4a/ita.traineddata",
-                    "sha256": "b8f89e1e785118dac4d51ae042c029a64edb5c3ee42ef73027a6d412748d8827"
-                }
-            ]
-        },
-        {
-            "name": "python3-pillow",
-            "buildsystem": "simple",
-            "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app .",
-                "install -Dm0644 LICENSE $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/pillow/LICENSE"
-            ],
-            "sources": [
-                {
-                    "type": "archive",
-                    "url": "https://files.pythonhosted.org/packages/1c/3d/bb7fca845737cf9d7dbde16ed1843984665ff2e0a518f5db43e77ec540b9/pillow-12.3.0.tar.gz",
-                    "sha256": "3b8182a766685eaa002637e28b4ec8d6b18819a0c71f579bf0dbaa5830297cce"
-                }
-            ]
-        },
-        {
             "name": "python3-psutil",
             "buildsystem": "simple",
             "build-commands": [
@@ -137,7 +79,11 @@
                 {
                     "type": "archive",
                     "url": "https://files.pythonhosted.org/packages/aa/c6/d1ddf4abb55e93cebc4f2ed8b5d6dbad109ecb8d63748dd2b20ab5e57ebe/psutil-7.2.2.tar.gz",
-                    "sha256": "0746f5f8d406af344fd547f1c8daa5f5c33dbc293bb8d6a16d80b4bb88f59372"
+                    "sha256": "0746f5f8d406af344fd547f1c8daa5f5c33dbc293bb8d6a16d80b4bb88f59372",
+                    "x-checker-data": {
+                        "type": "pypi",
+                        "name": "psutil"
+                    }
                 }
             ]
         },
@@ -224,6 +170,68 @@
                     "x-checker-data": {
                         "type": "pypi",
                         "name": "zxing-cpp"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "tesseract",
+            "buildsystem": "autotools",
+            "cleanup": [
+                "/include",
+                "/lib/pkgconfig"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://github.com/tesseract-ocr/tesseract/archive/refs/tags/5.3.4.tar.gz",
+                    "sha256": "141afc12b34a14bb691a939b4b122db0d51bd38feda7f41696822bacea7710c7"
+                }
+            ],
+            "config-opts": [
+                "--disable-graphics",
+                "--disable-legacy",
+                "--disable-training"
+            ],
+            "post-install": [
+                "install -Dm0644 LICENSE $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/tesseract/LICENSE"
+            ]
+        },
+        {
+            "name": "tessdata",
+            "buildsystem": "simple",
+            "build-commands": [
+                "install -Dm0644 eng.traineddata $FLATPAK_DEST/share/tessdata/eng.traineddata",
+                "install -Dm0644 ita.traineddata $FLATPAK_DEST/share/tessdata/ita.traineddata"
+            ],
+            "sources": [
+                {
+                    "type": "file",
+                    "url": "https://github.com/tesseract-ocr/tessdata_fast/raw/4.1.0/eng.traineddata",
+                    "sha256": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2"
+                },
+                {
+                    "type": "file",
+                    "url": "https://github.com/tesseract-ocr/tessdata_fast/raw/4.1.0/ita.traineddata",
+                    "sha256": "b8f89e1e785118dac4d51ae042c029a64edb5c3ee42ef73027a6d412748d8827"
+                }
+            ]
+        },
+        {
+            "name": "python3-pillow",
+            "buildsystem": "simple",
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app .",
+                "install -Dm0644 LICENSE $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/pillow/LICENSE"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://files.pythonhosted.org/packages/1c/3d/bb7fca845737cf9d7dbde16ed1843984665ff2e0a518f5db43e77ec540b9/pillow-12.3.0.tar.gz",
+                    "sha256": "3b8182a766685eaa002637e28b4ec8d6b18819a0c71f579bf0dbaa5830297cce",
+                    "x-checker-data": {
+                        "type": "pypi",
+                        "name": "Pillow"
                     }
                 }
             ]
@@ -329,7 +337,11 @@
                 {
                     "type": "archive",
                     "url": "https://files.pythonhosted.org/packages/e7/a1/67fe25fac3c7642725500a3f6cfe5821ad557c3abb11c9d20d12c7008d3e/charset_normalizer-3.4.7.tar.gz",
-                    "sha256": "ae89db9e5f98a11a4bf50407d4363e7b09b31e55bc117b4f7d80aab97ba009e5"
+                    "sha256": "ae89db9e5f98a11a4bf50407d4363e7b09b31e55bc117b4f7d80aab97ba009e5",
+                    "x-checker-data": {
+                        "type": "pypi",
+                        "name": "charset-normalizer"
+                    }
                 }
             ]
         },
@@ -443,7 +455,7 @@
                 {
                     "type": "git",
                     "url": "https://github.com/D3M-Sudo/Anura.git",
-                    "tag": "v0.1.5"
+                    "tag": "v0.2.0"
                 }
             ]
         }

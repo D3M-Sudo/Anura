@@ -74,12 +74,14 @@ jobs:
           python3 build-aux/sync_dependencies.py --update
           python3 build-aux/sync_dependencies.py --check
           # F-005: fail if the sync left a new runtime dependency unrepresented.
-          python3 build-aux/check_runtime_dependency_coverage.py
+          # Local manifest only: the release manifest is generated at release
+          # time by build-aux/release.sh, not synced here.
+          python3 build-aux/check_runtime_dependency_coverage.py --manifest local
 
       - name: Commit and push sync changes
         run: |
           if ! git diff --quiet; then
-            git add uv.lock flatpak/io.github.d3msudo.anura.json flatpak/io.github.d3msudo.anura.local.json
+            git add uv.lock flatpak/io.github.d3msudo.anura.local.json
             git commit -m "chore(deps): sync uv.lock and flatpak manifests"
             if [ "${{ github.event_name }}" = "pull_request" ]; then
               git push origin HEAD:${{ github.event.pull_request.head.ref }}

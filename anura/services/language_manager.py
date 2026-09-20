@@ -105,6 +105,10 @@ class LanguageManager(GObject.GObject):
         """Returns codes of all installed language models (user + system bundled)."""
         return self._cache_manager.get_downloaded_codes(force)
 
+    def invalidate_cache(self) -> None:
+        """Invalidate the language model cache to force a fresh scan."""
+        self._cache_manager.invalidate_cache()
+
     def get_downloaded_languages(self, force: bool = False) -> list[str]:
         """Returns the names of the installed languages."""
         return self._cache_manager.get_downloaded_languages(self.get_language, force)
