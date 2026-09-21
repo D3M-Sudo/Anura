@@ -1,5 +1,6 @@
 # Python sources
 anura/controllers/dnd_controller.py
+anura/controllers/history_controller.py
 anura/controllers/ocr_controller.py
 anura/controllers/tts_controller.py
 

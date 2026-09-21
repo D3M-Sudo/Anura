@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- History: each row of the History page now has a copy button that copies the stored text to the clipboard, with icon and toast feedback (History V2, minimal cut). Row activation is intentionally not bound to any action yet. The action logic lives in the new `HistoryController`, which reports outcomes through signals, so `HistoryPage` stays a UI shell
+
 ## [0.2.0] - 2026-09-21
 
 ### Added

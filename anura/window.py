@@ -24,6 +24,7 @@ from loguru import logger  # noqa: E402
 
 from anura.config import APP_ID, RESOURCE_PREFIX  # noqa: E402
 from anura.controllers.dnd_controller import DndController  # noqa: E402
+from anura.controllers.history_controller import HistoryController  # noqa: E402
 from anura.controllers.ocr_controller import OcrController  # noqa: E402
 from anura.controllers.tts_controller import TtsController  # noqa: E402
 from anura.core.atomic_task_manager import get_atomic_manager  # noqa: E402
@@ -59,6 +60,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     backend: ScreenshotService
     ocr_controller: OcrController
     tts_controller: TtsController
+    history_controller: HistoryController
     dnd_controller: DndController
     history_service: HistoryService
     _clipboard_service: Any | None
@@ -103,7 +105,8 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         # History V1: one HistoryService wired once with the configured limit;
         # recording itself is gated by the history-enabled setting at OCR time.
         self.history_service = HistoryService(limit=self.settings.get_int("history-limit"))
-        self.history_page.setup(self.history_service)
+        self.history_controller = HistoryController(self)
+        self.history_page.setup(self.history_service, self.history_controller)
         self.ocr_controller = OcrController(self, history_service=self.history_service)
 
         show_history_action = Gio.SimpleAction.new("show-history", None)
@@ -391,6 +394,10 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         self.connect_tracked(self.tts_controller, "still-waiting", self._on_tts_still_waiting)
         self.connect_tracked(self.tts_controller, "error-occurred", self._on_tts_error)
 
+        # History Controller signals
+        self.connect_tracked(self.history_controller, "copied", self._on_history_copied)
+        self.connect_tracked(self.history_controller, "error-occurred", self._on_history_error)
+
     def _on_extraction_completed(self, _controller: OcrController, text: str, applied_name: str) -> None:
         """Mediate OCR result to the UI."""
         self._cleanup_screenshot_state()
@@ -459,6 +466,15 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
 
     def _on_tts_error(self, _controller: TtsController, message: str) -> None:
         """Handle TTS error signal."""
+        if message:
+            self.show_toast(message)
+
+    def _on_history_copied(self, _controller: HistoryController) -> None:
+        """Confirm that a history entry was copied to the clipboard."""
+        self.show_toast(_("Text copied to clipboard"))
+
+    def _on_history_error(self, _controller: HistoryController, message: str) -> None:
+        """Surface a failed history action to the user."""
         if message:
             self.show_toast(message)
 
