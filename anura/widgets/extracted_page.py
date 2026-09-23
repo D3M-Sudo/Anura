@@ -338,6 +338,8 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
             self.search_context.set_highlight(False)
             if self.search_count_label:
                 self.search_count_label.set_text("")
+            if self.search_entry:
+                self.search_entry.update_property([Gtk.AccessibleProperty.LABEL], [_("Search extracted text")])
 
     def _on_case_sensitivity_changed(self, btn: Gtk.ToggleButton, _param: object) -> None:
         self.search_settings.set_case_sensitive(btn.get_active())
@@ -347,11 +349,16 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
             return
         count = search_context.get_occurrences_count()
         if count == -1:
-            self.search_count_label.set_text(_("Searching…"))
+            match_text = _("Searching…")
         elif count == 0:
-            self.search_count_label.set_text(_("No matches"))
+            match_text = _("No matches")
         else:
-            self.search_count_label.set_text(ngettext("{n} match", "{n} matches", count).format(n=count))
+            match_text = ngettext("{n} match", "{n} matches", count).format(n=count)
+
+        self.search_count_label.set_text(match_text)
+        if self.search_entry:
+            accessible_label = _("Search extracted text ({matches})").format(matches=match_text)
+            self.search_entry.update_property([Gtk.AccessibleProperty.LABEL], [accessible_label])
 
     def _on_search_next(self, *_args: object) -> None:
         self._navigate_search(forward=True, wrap=True)

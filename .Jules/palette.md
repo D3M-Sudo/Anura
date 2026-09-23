@@ -1,0 +1,3 @@
+## 2026-09-21 - Synchronize SearchEntry Accessible Label with Match Occurrences Count
+**Learning:** Screen readers cannot always detect changes in external search result count labels automatically without focus shifts or live regions. Dynamically updating the `Gtk.AccessibleProperty.LABEL` on the focused `Gtk.SearchEntry` widget itself whenever search occurrences change ensures screen readers announce search progress and match counts immediately as the user types or navigates matches.
+**Action:** Always synchronize `Gtk.AccessibleProperty.LABEL` directly on search entries when search match counts update, and reset it to the default entry label when text is cleared.
