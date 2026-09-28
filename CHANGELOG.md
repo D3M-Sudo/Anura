@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - History: each row of the History page now has a copy button that copies the stored text to the clipboard, with icon and toast feedback (History V2, minimal cut). Row activation is intentionally not bound to any action yet. The action logic lives in the new `HistoryController`, which reports outcomes through signals, so `HistoryPage` stays a UI shell
+- Tests: `tests/test_pot_template.py` validates the gettext template with the checks that apply to a template (it parses, no duplicate msgids, the History strings are extracted). `msgfmt -c` is not one of them: it rejects the placeholder header xgettext writes, and is meant for the translated `.po` files
 
 ## [0.2.0] - 2026-09-21
 
