@@ -148,9 +148,12 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
 
     def _append_row(self, entry: "HistoryEntry") -> None:
         """Build one history row with its copy button and register it."""
+        # OCR text is arbitrary: with markup parsing on (the AdwActionRow default) a
+        # title such as "a < b & c" fails to parse and the row is shown blank.
         row = Adw.ActionRow(
             title=format_entry_title(entry.text),
             subtitle=format_entry_subtitle(entry),
+            use_markup=False,
         )
         copy_label = _("Copy text to clipboard")
         copy_btn = Gtk.Button(

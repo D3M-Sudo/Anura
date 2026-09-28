@@ -153,6 +153,24 @@ def test_rows_are_not_activatable_and_only_copy_button_is_wired(headless_gi_mock
     assert [c.args[2] for c in connect_calls] == ["second", "first"]
 
 
+def test_row_text_is_not_parsed_as_pango_markup(headless_gi_mocks, monkeypatch, tmp_path):
+    """Regression: OCR text like "a < b & c" must not be parsed as markup.
+
+    AdwActionRow parses title and subtitle as Pango markup by default; text with
+    `&` or `<` then fails to parse and the row shows an empty title (or drops
+    tags such as `<b>`).
+    """
+    fake_adw, _fake_gtk, _fake_glib = _patch_ui(monkeypatch)
+    service = HistoryService(base_dir=tmp_path)
+    service.record("a < b & c", "eng")
+    service.record("<b>bold</b> R&D", "eng")
+    _make_page(headless_gi_mocks, service)
+
+    assert fake_adw.ActionRow.call_count == 2
+    for call in fake_adw.ActionRow.call_args_list:
+        assert call.kwargs.get("use_markup") is False
+
+
 def test_copy_click_delegates_to_controller_and_shows_feedback(headless_gi_mocks, monkeypatch, tmp_path):
     _adw, _gtk, fake_glib = _patch_ui(monkeypatch)
     page, controller = _make_wired_page(headless_gi_mocks, tmp_path)
