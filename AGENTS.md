@@ -41,6 +41,7 @@ anura/
 │   ├── controllers/            Business Logic Controllers
 │   │   ├── ocr_controller.py   OCR coordination and signal handling
 │   │   ├── tts_controller.py   TTS lifecycle and UI state management
+│   │   ├── history_controller.py   History entry actions (copy) reported through signals
 │   │   └── dnd_controller.py   Asynchronous Drag-and-Drop coordination
 │   ├── services/
 │   │   ├── clipboard_service.py    Clipboard read/write (Gdk.Clipboard)
