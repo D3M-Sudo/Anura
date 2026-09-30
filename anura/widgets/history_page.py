@@ -16,7 +16,7 @@ gi.require_version("GLib", "2.0")
 gi.require_version("GObject", "2.0")
 gi.require_version("Gtk", "4.0")
 
-from gi.repository import Adw, Gtk  # noqa: E402
+from gi.repository import Adw, Gdk, GLib, Gtk  # noqa: E402
 from loguru import logger  # noqa: E402
 
 from anura.config import RESOURCE_PREFIX  # noqa: E402
@@ -116,9 +116,61 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
             row = Adw.ActionRow(
                 title=format_entry_title(entry.text),
                 subtitle=format_entry_subtitle(entry),
+                activatable=True,
             )
+            copy_btn = Gtk.Button(
+                icon_name="edit-copy-symbolic",
+                tooltip_text=_("Copy text to clipboard"),
+                valign=Gtk.Align.CENTER,
+            )
+            copy_btn.add_css_class("flat")
+            copy_btn.update_property([Gtk.AccessibleProperty.LABEL], [_("Copy text to clipboard")])
+
+            text_to_copy = entry.text
+            self.connect_tracked(row, "activated", lambda _r, t=text_to_copy, b=copy_btn: self._copy_entry_text(t, b))
+            self.connect_tracked(copy_btn, "clicked", lambda _b, t=text_to_copy, b=copy_btn: self._copy_entry_text(t, b))
+
+            row.add_suffix(copy_btn)
             self.history_list.append(row)
             self._rows.append(row)
+
+    def _copy_entry_text(self, text: str, copy_btn: Gtk.Button) -> None:
+        """Copy history entry text to the default clipboard and show temporary feedback."""
+        if not text:
+            return
+        try:
+            display = Gdk.Display.get_default()
+            if display:
+                clipboard = display.get_clipboard()
+                content = Gdk.ContentProvider.new_for_value(GLib.Variant("s", text))
+                clipboard.set_content(content)
+        except Exception:
+            logger.exception("HistoryPage: Failed to copy entry text to clipboard")
+        self._show_copy_feedback(copy_btn)
+
+    def _show_copy_feedback(self, copy_btn: Gtk.Button) -> None:
+        """Temporarily change the copy button icon, tooltip and accessible label for UX feedback."""
+        if not copy_btn or copy_btn.get_icon_name() == "emblem-ok-symbolic":
+            return
+
+        copy_btn.set_icon_name("emblem-ok-symbolic")
+        copied_text = _("Copied to clipboard!")
+        copy_btn.set_tooltip_text(copied_text)
+        copy_btn.update_property([Gtk.AccessibleProperty.LABEL], [copied_text])
+
+        GLib.timeout_add_seconds(2, self._reset_copy_icon, copy_btn)
+
+    def _reset_copy_icon(self, copy_btn: Gtk.Button) -> bool:
+        """Reset copy button icon, tooltip, and accessible label back to default."""
+        try:
+            if copy_btn and copy_btn.get_icon_name() == "emblem-ok-symbolic":
+                copy_btn.set_icon_name("edit-copy-symbolic")
+                default_text = _("Copy text to clipboard")
+                copy_btn.set_tooltip_text(default_text)
+                copy_btn.update_property([Gtk.AccessibleProperty.LABEL], [default_text])
+        except (AttributeError, RuntimeError, TypeError) as e:
+            logger.exception(f"HistoryPage: Failed to reset copy icon: {e}")
+        return GLib.SOURCE_REMOVE
 
     def _clear_rows(self) -> None:
         """Remove previously displayed rows (tracked in Python, mock-safe)."""

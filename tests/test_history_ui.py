@@ -103,6 +103,33 @@ def test_long_text_does_not_break_page(headless_gi_mocks, tmp_path):
     page.history_stack.set_visible_child_name.assert_called_with("entries")
     assert page.history_list.append.call_count == 1
 
+
+# ---------------------------------------------------------------------- #
+# Copy action & visual/accessible feedback
+# ---------------------------------------------------------------------- #
+
+
+def test_history_row_has_copy_action_and_feedback(headless_gi_mocks, tmp_path):
+    service = HistoryService(base_dir=tmp_path)
+    service.record("sample extracted text", "eng")
+    page = _make_page(headless_gi_mocks, service)
+
+    button = MagicMock()
+    button.get_icon_name.return_value = "edit-copy-symbolic"
+
+    page._show_copy_feedback(button)
+
+    button.set_icon_name.assert_called_with("emblem-ok-symbolic")
+    button.set_tooltip_text.assert_called_with("Copied to clipboard!")
+    button.update_property.assert_called_once()
+
+    button.get_icon_name.return_value = "emblem-ok-symbolic"
+    page._reset_copy_icon(button)
+
+    button.set_icon_name.assert_called_with("edit-copy-symbolic")
+    button.set_tooltip_text.assert_called_with("Copy text to clipboard")
+
+
 # ---------------------------------------------------------------------- #
 # Malformed entry / defensive formatting
 # ---------------------------------------------------------------------- #
