@@ -298,3 +298,25 @@ def test_history_page_no_longer_references_messagedialog():
     source = (Path(__file__).resolve().parents[1] / "anura" / "widgets" / "history_page.py").read_text()
     assert "MessageDialog" not in source
     assert "Adw.AlertDialog" in source
+
+
+# ---------------------------------------------------------------------- #
+# Row copy action & feedback
+# ---------------------------------------------------------------------- #
+
+
+def test_row_copy_action_sets_clipboard_text(headless_gi_mocks, tmp_path, monkeypatch):
+    """Clicking copy on a row copies its text to clipboard service."""
+    service = HistoryService(base_dir=tmp_path)
+    service.record("extracted content to copy", "eng")
+    page = _make_page(headless_gi_mocks, service)
+
+    mock_clipboard = MagicMock()
+    import anura.widgets.history_page as history_page_module
+    monkeypatch.setattr(history_page_module, "get_clipboard_service", lambda: mock_clipboard)
+
+    fake_button = MagicMock()
+    page._on_copy_row_text(fake_button, "extracted content to copy")
+
+    mock_clipboard.set.assert_called_once_with("extracted content to copy")
+    fake_button.set_icon_name.assert_called_with("emblem-ok-symbolic")

@@ -16,10 +16,11 @@ gi.require_version("GLib", "2.0")
 gi.require_version("GObject", "2.0")
 gi.require_version("Gtk", "4.0")
 
-from gi.repository import Adw, Gtk  # noqa: E402
+from gi.repository import Adw, GLib, Gtk  # noqa: E402
 from loguru import logger  # noqa: E402
 
 from anura.config import RESOURCE_PREFIX  # noqa: E402
+from anura.services.clipboard_service import get_clipboard_service  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
 from anura.utils.signal_manager import SignalManagerMixin  # noqa: E402
 
@@ -116,9 +117,58 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
             row = Adw.ActionRow(
                 title=format_entry_title(entry.text),
                 subtitle=format_entry_subtitle(entry),
+                activatable=True,
             )
+            copy_button = Gtk.Button(
+                icon_name="edit-copy-symbolic",
+                valign=Gtk.Align.CENTER,
+            )
+            copy_button.add_css_class("flat")
+            copy_label = _("Copy text to clipboard")
+            copy_button.set_tooltip_text(copy_label)
+            copy_button.update_property([Gtk.AccessibleProperty.LABEL], [copy_label])
+
+            self.connect_tracked(
+                copy_button,
+                "clicked",
+                lambda _btn, text=entry.text, btn=copy_button: self._on_copy_row_text(btn, text),
+            )
+            self.connect_tracked(
+                row,
+                "activated",
+                lambda _row, text=entry.text, btn=copy_button: self._on_copy_row_text(btn, text),
+            )
+            row.add_suffix(copy_button)
+
             self.history_list.append(row)
             self._rows.append(row)
+
+    def _on_copy_row_text(self, button: Gtk.Button, text: str) -> None:
+        """Copy entry text to clipboard and show feedback on the button."""
+        get_clipboard_service().set(text)
+        self._show_row_copy_feedback(button)
+
+    def _show_row_copy_feedback(self, button: Gtk.Button) -> None:
+        """Show checkmark icon and feedback tooltip on the copy button."""
+        with contextlib.suppress(AttributeError, RuntimeError):
+            if button.get_icon_name() == "emblem-ok-symbolic":
+                return
+            original_icon = button.get_icon_name()
+            button.set_icon_name("emblem-ok-symbolic")
+            copied_label = _("Copied to clipboard!")
+            button.set_tooltip_text(copied_label)
+            button.update_property([Gtk.AccessibleProperty.LABEL], [copied_label])
+            GLib.timeout_add_seconds(2, self._reset_row_copy_button, button, original_icon)
+
+    def _reset_row_copy_button(self, button: Gtk.Button, original_icon: str) -> bool:
+        """Reset copy button icon, tooltip, and accessible label."""
+        with contextlib.suppress(AttributeError, RuntimeError):
+            if button and button.get_icon_name() == "emblem-ok-symbolic":
+                button.set_icon_name(original_icon)
+                copy_label = _("Copy text to clipboard")
+                button.set_tooltip_text(copy_label)
+                button.update_property([Gtk.AccessibleProperty.LABEL], [copy_label])
+        return GLib.SOURCE_REMOVE
 
     def _clear_rows(self) -> None:
         """Remove previously displayed rows (tracked in Python, mock-safe)."""
