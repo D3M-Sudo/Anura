@@ -7,7 +7,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-12 19:27+0200\n"
 "PO-Revision-Date: 2026-10-09 13:32+0000\n"
-"Last-Translator: vityatii <vitya.molodets.000@gmail.com>\n"
+"Last-Translator: LibreTranslate <noreply-mt-libretranslate@weblate.org>\n"
 "Language-Team: Russian <https://hosted.weblate.org/projects/anura/anura/ru/>"
 "\n"
 "Language: ru\n"
@@ -1271,9 +1271,8 @@ msgid "Navigation"
 msgstr "Навигация"
 
 #: anura/widgets/shortcuts_overlay.py:104
-#, fuzzy
 msgid "Clear search / go back"
-msgstr "Закрыть диалоговое окно или вернуться назад"
+msgstr "Очистить поиск / вернуться"
 
 #: anura/widgets/welcome_page.py:76 anura/widgets/welcome_page.py:78
 #: anura/widgets/welcome_page.py:129 anura/widgets/welcome_page.py:131
@@ -1378,9 +1377,8 @@ msgid "No text to open in external editor"
 msgstr "Нет текста для открытия во внешнем редакторе"
 
 #: anura/window.py:345
-#, fuzzy
 msgid "Failed to open external editor"
-msgstr "Не удалось открыть ссылку"
+msgstr "Не удалось открыть внешний редактор"
 
 #: anura/window.py:351
 msgid "Opened in external editor"
@@ -1485,14 +1483,12 @@ msgid "Share providers"
 msgstr "Провайдеры для \"Поделиться\""
 
 #: data/ui/extracted_page.blp:190
-#, fuzzy
 msgid "Search text…"
-msgstr "Найти язык…"
+msgstr "Поиск текста.."
 
 #: data/ui/extracted_page.blp:192
-#, fuzzy
 msgid "Search extracted text"
-msgstr "Извлечённый текст"
+msgstr "Поиск извлеченного текста"
 
 #: data/ui/extracted_page.blp:204 data/ui/extracted_page.blp:206
 msgid "Match Case"
@@ -1862,15 +1858,15 @@ msgstr ""
 
 #: data/ui/window.blp:28
 msgid "Dismiss"
-msgstr ""
+msgstr "Отмена"
 
 #: data/io.github.d3msudo.anura.desktop.in:4
 msgid "OCR Tool"
-msgstr ""
+msgstr "OCR Инструмент"
 
 #: data/io.github.d3msudo.anura.desktop.in:5
 msgid "Extract text from any image, video, or web page"
-msgstr ""
+msgstr "Извлечение текста из любого изображения, видео или веб-страницы"
 
 #: data/io.github.d3msudo.anura.desktop.in:11
 msgid "OCR;Text;Extraction;Reader;QR;Scanner;"
