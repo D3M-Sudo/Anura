@@ -1524,7 +1524,7 @@ msgstr "Операции с текстом"
 
 #: data/ui/extracted_page.blp:292
 msgid "Open in External Editor"
-msgstr ""
+msgstr "Открытый во внешнем редакторе"
 
 #: data/ui/extracted_page.blp:298 data/ui/preferences_dialog.blp:13
 #: data/ui/welcome_page.blp:177
