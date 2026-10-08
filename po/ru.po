@@ -1675,6 +1675,8 @@ msgid ""
 "Open QR code URLs directly in browser. Otherwise, a clickable notification "
 "is shown."
 msgstr ""
+"Открыть URL-адреса QR-кода непосредственно в браузере. В противном случае "
+"отображается нажатое уведомление."
 
 #: data/ui/preferences_general.blp:67
 #, fuzzy
