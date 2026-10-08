@@ -1332,7 +1332,7 @@ msgstr ""
 
 #: anura/window.py:161
 msgid "Tesseract OCR not found on system"
-msgstr ""
+msgstr "Tesseract OCR не найден в системе"
 
 #: anura/window.py:167
 msgid "TTS dependencies (gTTS/GStreamer) missing"
@@ -1356,7 +1356,7 @@ msgstr "Не удалось загрузить файл изображения"
 
 #: anura/window.py:248
 msgid "Error loading file"
-msgstr ""
+msgstr "Ошибка загрузки файла"
 
 #: anura/window.py:258
 msgid "Selection copied to clipboard"
@@ -1377,7 +1377,7 @@ msgstr "Не удалось открыть ссылку"
 
 #: anura/window.py:351
 msgid "Opened in external editor"
-msgstr ""
+msgstr "Открыт во внешнем редакторе"
 
 #: anura/window.py:354
 msgid "Could not launch external editor"
