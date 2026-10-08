@@ -804,39 +804,39 @@ msgstr "Не удалось декодировать данные."
 
 #: anura/services/share_providers.py:27
 msgid "Email"
-msgstr ""
+msgstr "Email"
 
 #: anura/services/share_providers.py:32
 msgid "Mastodon"
-msgstr ""
+msgstr "Mastodon"
 
 #: anura/services/share_providers.py:37
 msgid "Reddit"
-msgstr ""
+msgstr "Reddit"
 
 #: anura/services/share_providers.py:46
 msgid "Telegram"
-msgstr ""
+msgstr "Telegram"
 
 #: anura/services/share_providers.py:51
 msgid "X"
-msgstr ""
+msgstr "X"
 
 #: anura/services/share_providers.py:56
 msgid "Bluesky"
-msgstr ""
+msgstr "Bluesky"
 
 #: anura/services/share_providers.py:61
 msgid "Discord"
-msgstr ""
+msgstr "Discord"
 
 #: anura/services/share_providers.py:66
 msgid "LinkedIn"
-msgstr ""
+msgstr "LinkedIn"
 
 #: anura/services/share_providers.py:71
 msgid "Threads"
-msgstr ""
+msgstr "Threads"
 
 #: anura/services/share_service.py:199
 msgid "Select Mastodon Instance"
@@ -1010,17 +1010,17 @@ msgstr[2] ""
 #: anura/widgets/extracted_page.py:203
 #, python-brace-format
 msgid "{words} | {chars}"
-msgstr ""
+msgstr "{words} | {chars}"
 
 #: anura/widgets/extracted_page.py:211
 msgctxt "Extracted screen"
 msgid "Copy Selected Text to Clipboard (Ctrl+C)"
-msgstr ""
+msgstr "Копировать выделенный текст в буфер обмена (Ctrl+C)"
 
 #: anura/widgets/extracted_page.py:212
 msgctxt "Extracted screen"
 msgid "Listen to Selected Text (Ctrl+L)"
-msgstr ""
+msgstr "Слушать выделенный текст (Ctrl+L)"
 
 #: anura/widgets/extracted_page.py:213
 msgctxt "Extracted screen"
@@ -1035,12 +1035,12 @@ msgstr ""
 #: anura/widgets/extracted_page.py:216 data/ui/extracted_page.blp:82
 msgctxt "Extracted screen"
 msgid "Listen to Text (Ctrl+L)"
-msgstr ""
+msgstr "Слушать текст (Ctrl+L)"
 
 #: anura/widgets/extracted_page.py:217 data/ui/extracted_page.blp:156
 msgctxt "Extracted screen"
 msgid "Share To"
-msgstr ""
+msgstr "Поделиться"
 
 #: anura/widgets/extracted_page.py:245
 #, fuzzy
@@ -1162,11 +1162,11 @@ msgstr ""
 
 #: anura/widgets/preferences_languages_page.py:186
 msgid "Fast"
-msgstr ""
+msgstr "Быстро"
 
 #: anura/widgets/preferences_languages_page.py:186
 msgid "Standard"
-msgstr ""
+msgstr "Стандарт"
 
 #: anura/widgets/preferences_languages_page.py:186
 msgid "Best"
@@ -1199,11 +1199,11 @@ msgstr "Вставить изображение из буфера обмена"
 
 #: anura/widgets/shortcuts_overlay.py:72 data/ui/preferences_general.blp:83
 msgid "Editor"
-msgstr ""
+msgstr "Редактор"
 
 #: anura/widgets/shortcuts_overlay.py:74
 msgid "Select all text (in editor)"
-msgstr ""
+msgstr "Выберите весь текст (в редакторе)"
 
 #: anura/widgets/shortcuts_overlay.py:75
 msgid "Copy text to clipboard"
