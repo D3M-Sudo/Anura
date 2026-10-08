@@ -1551,21 +1551,23 @@ msgstr "Вставить из буфера"
 #: data/ui/history_page.blp:12 data/ui/preferences_general.blp:64
 #: data/ui/welcome_page.blp:171
 msgid "History"
-msgstr ""
+msgstr "История"
 
 #: data/ui/history_page.blp:20 data/ui/history_page.blp:22
 msgid "Clear all history"
-msgstr ""
+msgstr "Очистить всю историю"
 
 #: data/ui/history_page.blp:50
 msgid "No History"
-msgstr ""
+msgstr "Нет истории"
 
 #: data/ui/history_page.blp:51
 msgid ""
 "Extracted texts will appear here once you enable history in Preferences and "
 "extract some text."
 msgstr ""
+"Вычтенные тексты появятся здесь, как только вы включите историю в "
+"Предпочтениях и изучите какой-нибудь текст."
 
 #: data/ui/history_page.blp:58
 msgid "History Disabled"
