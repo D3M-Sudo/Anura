@@ -1403,7 +1403,7 @@ msgstr "Сделать снимок"
 #: data/ui/extracted_page.blp:38
 msgctxt "Extracted screen"
 msgid "Copy extracted text to clipboard"
-msgstr ""
+msgstr "Копировать извлеченный текст в буфер обмена"
 
 #: data/ui/extracted_page.blp:46
 msgctxt "Extracted screen"
@@ -1472,7 +1472,7 @@ msgstr ""
 #: data/ui/extracted_page.blp:158
 msgctxt "Extracted screen"
 msgid "Share text to other applications"
-msgstr ""
+msgstr "Поделить текст другим приложениям"
 
 #: data/ui/extracted_page.blp:166
 msgid "Share providers"
