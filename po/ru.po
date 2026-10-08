@@ -1611,12 +1611,12 @@ msgstr "Открытые предпочтения для загрузки бол
 #: data/ui/language_row.blp:29 data/ui/language_row.blp:31
 msgctxt "Preferences Language Row"
 msgid "Install language"
-msgstr ""
+msgstr "Установить язык"
 
 #: data/ui/language_row.blp:41 data/ui/language_row.blp:43
 msgctxt "Preferences Language Row"
 msgid "Remove language"
-msgstr ""
+msgstr "Удалить язык"
 
 #: data/ui/preferences_general.blp:13
 msgid "_General"
@@ -1624,15 +1624,15 @@ msgstr "_Общее"
 
 #: data/ui/preferences_general.blp:18
 msgid "Appearance"
-msgstr ""
+msgstr "Внешний вид"
 
 #: data/ui/preferences_general.blp:21
 msgid "Color Scheme"
-msgstr ""
+msgstr "Цветовая схема"
 
 #: data/ui/preferences_general.blp:22
 msgid "The preferred color scheme for the application."
-msgstr ""
+msgstr "Предпочтительная цветовая схема для приложения."
 
 #: data/ui/preferences_general.blp:27
 msgid "Text Extraction"
@@ -1652,7 +1652,7 @@ msgstr ""
 
 #: data/ui/preferences_general.blp:37
 msgid "Automatically reformat URLs, emails and paragraphs"
-msgstr ""
+msgstr "Автоматически переформатировать URL-адреса, электронные письма и пункты"
 
 #: data/ui/preferences_general.blp:42
 msgid "Behavior"
