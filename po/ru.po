@@ -1823,7 +1823,7 @@ msgstr "_Открыть Изображение"
 #: data/ui/welcome_page.blp:86
 msgctxt "Welcome screen"
 msgid "Open Image"
-msgstr ""
+msgstr "Открытое изображение"
 
 #: data/ui/welcome_page.blp:95
 msgid "_Open Image"
