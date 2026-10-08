@@ -1701,7 +1701,7 @@ msgstr "Показать номера линий"
 
 #: data/ui/preferences_general.blp:87
 msgid "Display line numbers along the edge of the editor"
-msgstr ""
+msgstr "Показать номера строк вдоль края редактора"
 
 #: data/ui/preferences_general.blp:91
 msgid "Highlight Current Line"
@@ -1725,7 +1725,7 @@ msgstr ""
 
 #: data/ui/preferences_general.blp:106
 msgid "TTS playback volume level (0-100%)"
-msgstr ""
+msgstr "Уровень воспроизведения TTS (0-100%)"
 
 #: data/ui/preferences_general.blp:115
 msgid "TTS Language"
