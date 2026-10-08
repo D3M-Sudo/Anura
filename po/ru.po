@@ -1685,19 +1685,19 @@ msgstr "Извлечение текста"
 
 #: data/ui/preferences_general.blp:68
 msgid "Keep a local list of recently extracted texts"
-msgstr ""
+msgstr "Сохранить местный список недавно извлеченных текстов"
 
 #: data/ui/preferences_general.blp:72
 msgid "History Size"
-msgstr ""
+msgstr "Размер истории"
 
 #: data/ui/preferences_general.blp:73
 msgid "Maximum number of entries kept in history"
-msgstr ""
+msgstr "Максимальное количество записей в истории"
 
 #: data/ui/preferences_general.blp:86
 msgid "Show Line Numbers"
-msgstr ""
+msgstr "Показать номера линий"
 
 #: data/ui/preferences_general.blp:87
 msgid "Display line numbers along the edge of the editor"
