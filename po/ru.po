@@ -1578,6 +1578,8 @@ msgid ""
 "Enable \"Save Extraction History\" in Preferences to start recording "
 "extracted texts."
 msgstr ""
+"Включить «Историю спасения» в Предпочтения для начала записи извлеченных "
+"текстов."
 
 #: data/ui/language_popover.blp:27 data/ui/preferences_languages.blp:34
 #, fuzzy
