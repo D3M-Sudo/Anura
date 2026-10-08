@@ -7,7 +7,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-12 19:27+0200\n"
 "PO-Revision-Date: 2026-10-09 13:32+0000\n"
-"Last-Translator: LibreTranslate <noreply-mt-libretranslate@weblate.org>\n"
+"Last-Translator: vityatii <vitya.molodets.000@gmail.com>\n"
 "Language-Team: Russian <https://hosted.weblate.org/projects/anura/anura/ru/>"
 "\n"
 "Language: ru\n"
@@ -33,7 +33,7 @@ msgstr "Не удалось загрузить перетащенный файл
 #: anura/controllers/dnd_controller.py:52
 #: anura/services/screenshot_service.py:581 anura/window.py:238
 msgid "Invalid image file"
-msgstr ""
+msgstr "Неверный файл изображения"
 
 #: anura/controllers/dnd_controller.py:65
 msgid "Failed to process the file."
@@ -105,7 +105,7 @@ msgstr "Все файлы (*)"
 
 #: anura/controllers/tts_controller.py:73
 msgid "Text-to-speech is not available for this language"
-msgstr ""
+msgstr "Преобразование текста в речь недоступно для этого языка"
 
 #: anura/controllers/tts_controller.py:106
 msgid "Request timed out. Please try again."
@@ -141,7 +141,7 @@ msgstr "Сообщить о проблеме"
 
 #: anura/core/dialogs.py:80
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: anura/main.py:81
 msgid "Extract directly into the clipboard"
@@ -181,19 +181,20 @@ msgid "QR Code URL Detected"
 msgstr "Обнаружен URL в QR-коде"
 
 #: anura/main.py:243
-#, fuzzy
 msgid "URL copied to clipboard"
-msgstr "Текст скопирован"
+msgstr "Текст скопирован в буфер обмена"
 
 #: anura/main.py:251 anura/window.py:407
 msgid ""
 "Anura could not capture a screenshot because no suitable portal backend or "
 "fallback tool was found."
 msgstr ""
+"Anura не смогла сделать скриншот, потому что не нашла подходящий бэкенд-"
+"портал или резервный инструмент."
 
 #: anura/main.py:254 anura/window.py:410
 msgid "Capture Failed"
-msgstr ""
+msgstr "Захват не удался"
 
 #: anura/main.py:323
 msgid "Bug fixes and improvements."
@@ -206,7 +207,7 @@ msgstr "Ничего не найдено"
 
 #: anura/main.py:422
 msgid "Text copied to clipboard."
-msgstr ""
+msgstr "Текст скопирован в буфер обмена."
 
 #: anura/main.py:424
 msgid "Text extracted."
@@ -729,11 +730,11 @@ msgstr "Не удалось создать временный файл."
 
 #: anura/services/screenshot/legacy_provider.py:189
 msgid "Screenshot tool produced no output."
-msgstr ""
+msgstr "Инструмент создания скриншота не выдал результата."
 
 #: anura/services/screenshot_service.py:67
 msgid "Enhancing image..."
-msgstr ""
+msgstr "Улучшение изображения..."
 
 #: anura/services/screenshot_service.py:81
 msgid "Running Tesseract OCR..."
@@ -773,11 +774,11 @@ msgstr "Не могу сделать скриншот."
 
 #: anura/services/screenshot_service.py:470
 msgid "Extracting text..."
-msgstr ""
+msgstr "Извлечение текста..."
 
 #: anura/services/screenshot_service.py:490
 msgid "OCR processing failed. Please try again."
-msgstr "Обработка OCR провалилась. Попробуй еще раз."
+msgstr "Обработка OCR не удалась. Попробуйте еще раз."
 
 #: anura/services/screenshot_service.py:605
 #: anura/services/screenshot_service.py:811
@@ -798,9 +799,8 @@ msgid "Failed to decode data."
 msgstr "Не удалось декодировать данные."
 
 #: anura/services/screenshot_service.py:832
-#, fuzzy
 msgid "Failed to decode image."
-msgstr "Не удалось декодировать данные."
+msgstr "Не удалось декодировать изображение."
 
 #: anura/services/share_providers.py:27
 msgid "Email"
@@ -873,6 +873,10 @@ msgid ""
 "Screenshot=kde, and restart the portal (systemctl --user restart xdg-desktop-"
 "portal.service)."
 msgstr ""
+"Для LXQt: установите xdg-desktop-portal-kde, затем создайте ~/.config/xdg-"
+"desktop-portal/lxqt-portals.conf, в котором [preferred] будет "
+"org.freedesktop.impl.portal.Screenshot=kde, и перезапустите портал "
+"(systemctl --user restart xdg-desktop-portal.service)."
 
 #: anura/utils/portal_advice.py:100
 msgid "KDE Plasma"
@@ -924,12 +928,17 @@ msgstr "GNOME"
 msgid ""
 "Screenshot portal unavailable. Install xdg-desktop-portal-gnome and re-login."
 msgstr ""
+"Скриншот-портал недоступен. Установите xdg-desktop-portal-gnome и "
+"перелогиньтесь."
 
 #: anura/utils/portal_advice.py:129
 msgid ""
 "Screenshot failed. On GNOME / Ubuntu, install xdg-desktop-portal-gnome (e.g. "
 "sudo apt install xdg-desktop-portal-gnome) and log out and back in."
 msgstr ""
+"Не удалось сделать скриншот. На GNOME / Ubuntu нужно установить xdg-desktop-"
+"portal-gnome (например, sudo apt install xdg-desktop-portal-gnome) и "
+"перезайти."
 
 #: anura/utils/portal_advice.py:148
 msgid ""
@@ -986,26 +995,28 @@ msgstr "Не удалось открыть ссылку"
 msgid ""
 "Shows character and word count. If text is selected, shows selection stats."
 msgstr ""
+"Показывает количество символов и слов. Если текст выделен, то показывает для "
+"выделенного."
 
 #: anura/widgets/extracted_page.py:191
 msgid "Selection: "
-msgstr ""
+msgstr "Выделено: "
 
 #: anura/widgets/extracted_page.py:199
 #, python-brace-format
 msgid "{n} word"
 msgid_plural "{n} words"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{n} слово"
+msgstr[1] "{n} слова"
+msgstr[2] "{n} слов"
 
 #: anura/widgets/extracted_page.py:200
 #, python-brace-format
 msgid "{n} character"
 msgid_plural "{n} characters"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{n} символ"
+msgstr[1] "{n} символа"
+msgstr[2] "{n} символов"
 
 #: anura/widgets/extracted_page.py:203
 #, python-brace-format
@@ -1025,12 +1036,12 @@ msgstr "Слушать выделенный текст (Ctrl+L)"
 #: anura/widgets/extracted_page.py:213
 msgctxt "Extracted screen"
 msgid "Share Selection To"
-msgstr ""
+msgstr "Поделиться выделенным"
 
 #: anura/widgets/extracted_page.py:215 data/ui/extracted_page.blp:36
 msgctxt "Extracted screen"
 msgid "Copy Extracted Text to Clipboard (Ctrl+C)"
-msgstr ""
+msgstr "Скопировать извлечённый текст в буфер обмена (Ctrl+C)"
 
 #: anura/widgets/extracted_page.py:216 data/ui/extracted_page.blp:82
 msgctxt "Extracted screen"
@@ -1043,102 +1054,100 @@ msgid "Share To"
 msgstr "Поделиться"
 
 #: anura/widgets/extracted_page.py:245
-#, fuzzy
 msgctxt "Extracted screen"
 msgid "Copied to clipboard!"
-msgstr "Текст скопирован"
+msgstr "Текст скопирован!"
 
 #: anura/widgets/extracted_page.py:300
 #, python-brace-format
 msgid "Smart Parse: {name}"
-msgstr ""
+msgstr "Умный парсинг: {name}"
 
 #: anura/widgets/extracted_page.py:343
-#, fuzzy
 msgid "Searching…"
-msgstr "Найти язык…"
+msgstr "Поиск…"
 
 #: anura/widgets/extracted_page.py:345
 msgid "No matches"
-msgstr ""
+msgstr "Не найдено"
 
 #: anura/widgets/extracted_page.py:347
 #, python-brace-format
 msgid "{n} match"
 msgid_plural "{n} matches"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{n} совпадение"
+msgstr[1] "{n} совпадения"
+msgstr[2] "{n} совпадений"
 
 #: anura/widgets/extracted_page.py:415
 msgctxt "Extracted screen"
 msgid "Pause listening (Ctrl+Alt+L)"
-msgstr ""
+msgstr "Приостановить прослушивание (Ctrl+Alt+L)"
 
 #: anura/widgets/extracted_page.py:416
 msgctxt "Extracted screen"
 msgid "Pause listening"
-msgstr ""
+msgstr "Приостановить прослушивание"
 
 #: anura/widgets/extracted_page.py:424
 msgctxt "Extracted screen"
 msgid "Resume listening (Ctrl+Alt+L)"
-msgstr ""
+msgstr "Продолжить прослушивание (Ctrl+Alt+L)"
 
 #: anura/widgets/extracted_page.py:425
 msgctxt "Extracted screen"
 msgid "Resume listening"
-msgstr ""
+msgstr "Продолжить прослушивание"
 
 #: anura/widgets/history_page.py:137
 msgid "Clear History?"
-msgstr ""
+msgstr "Очистить историю?"
 
 #: anura/widgets/history_page.py:138
 msgid "All stored extraction history will be removed. This cannot be undone."
 msgstr ""
+"Вся сохраненная история извлечений будет удалена. Это нельзя будет отменить."
 
 #: anura/widgets/history_page.py:141
 msgid "Clear"
-msgstr ""
+msgstr "Очистить"
 
 #: anura/widgets/language_popover.py:125 anura/widgets/language_popover.py:149
 #: data/ui/language_popover.blp:53
-#, fuzzy
 msgid "Language list"
-msgstr "_Языки"
+msgstr "Список языков"
 
 #: anura/widgets/language_popover.py:127
 msgid "Language list — No matching languages found"
-msgstr ""
+msgstr "Список языков — Подходящих языков не найдено"
 
 #: anura/widgets/language_popover.py:130
 #, python-brace-format
 msgid "Language list ({n} matching language)"
 msgid_plural "Language list ({n} matching languages)"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Список языков ({n} подходящий язык)"
+msgstr[1] "Список языков ({n} подходящих языка)"
+msgstr[2] "Список языков ({n} подходящих языков)"
 
 #: anura/widgets/language_popover_row.py:46
 #, python-brace-format
 msgid "{language} (active language)"
-msgstr ""
+msgstr "{language} (активный язык)"
 
 #: anura/widgets/language_popover_row.py:48
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Select {language}"
-msgstr "Выберите язык"
+msgstr "Выбран {language}"
 
 #: anura/widgets/language_row.py:59
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Install {language}"
-msgstr "Установленные языки"
+msgstr "Установить {language}"
 
 #: anura/widgets/language_row.py:60
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Remove {language}"
-msgstr "Добавить язык"
+msgstr "Удалить {language}"
 
 #: anura/widgets/preferences_general_page.py:197
 #, python-brace-format
@@ -1170,7 +1179,7 @@ msgstr "Стандарт"
 
 #: anura/widgets/preferences_languages_page.py:186
 msgid "Best"
-msgstr ""
+msgstr "Лучшее"
 
 #: anura/widgets/share_row.py:29
 #, python-brace-format
@@ -1203,7 +1212,7 @@ msgstr "Редактор"
 
 #: anura/widgets/shortcuts_overlay.py:74
 msgid "Select all text (in editor)"
-msgstr "Выберите весь текст (в редакторе)"
+msgstr "Выбрать весь текст (в редакторе)"
 
 #: anura/widgets/shortcuts_overlay.py:75
 msgid "Copy text to clipboard"
@@ -1211,36 +1220,35 @@ msgstr "Скопировать текст в буфер обмена"
 
 #: anura/widgets/shortcuts_overlay.py:76
 msgid "Undo (in editor)"
-msgstr ""
+msgstr "Отменить (в редакторе)"
 
 #: anura/widgets/shortcuts_overlay.py:77
 msgid "Redo (in editor)"
-msgstr ""
+msgstr "Повторить (в редакторе)"
 
 #: anura/widgets/shortcuts_overlay.py:78
 msgid "Search text"
-msgstr ""
+msgstr "Поиск текста"
 
 #: anura/widgets/shortcuts_overlay.py:79
 msgid "Open in external editor"
-msgstr ""
+msgstr "Открыть во внешнем редакторе"
 
 #: anura/widgets/shortcuts_overlay.py:84 data/ui/preferences_general.blp:102
 msgid "Text-to-Speech"
-msgstr ""
+msgstr "Преобразование текста в речь"
 
 #: anura/widgets/shortcuts_overlay.py:86
-#, fuzzy
 msgid "Listen to text"
-msgstr "Прослушать текст (TTS)"
+msgstr "Прослушать текст"
 
 #: anura/widgets/shortcuts_overlay.py:87
 msgid "Pause/resume listening"
-msgstr ""
+msgstr "Пауза/продолжение прослушивания"
 
 #: anura/widgets/shortcuts_overlay.py:88
 msgid "Stop listening"
-msgstr ""
+msgstr "Остановить прослушивание"
 
 #: anura/widgets/shortcuts_overlay.py:93
 msgid "Application"
@@ -1270,18 +1278,16 @@ msgstr "Закрыть диалоговое окно или вернуться �
 #: anura/widgets/welcome_page.py:76 anura/widgets/welcome_page.py:78
 #: anura/widgets/welcome_page.py:129 anura/widgets/welcome_page.py:131
 #: anura/widgets/welcome_page.py:312 anura/widgets/welcome_page.py:314
-#, fuzzy
 msgid "Drop image here"
 msgstr "Перетащите файл изображения сюда"
 
 #: anura/widgets/welcome_page.py:122 anura/widgets/welcome_page.py:124
 msgid "Hide drop area"
-msgstr ""
+msgstr "Спрятать область дропа"
 
 #: anura/widgets/welcome_page.py:142
-#, fuzzy
 msgid "Drop image to extract text"
-msgstr "Открыть изображение"
+msgstr "Перетащите изображение, чтобы извлечь из него текст"
 
 #: anura/widgets/welcome_page.py:154 anura/widgets/welcome_page.py:315
 #: data/ui/welcome_page.blp:54
@@ -1304,6 +1310,8 @@ msgstr "Можно перетаскивать только локальные ф
 msgid ""
 "File not accessible. Ensure Anura has permission to access this location."
 msgstr ""
+"Нет доступа к файлу. Проверьте, что у Anura есть разрешение на доступ в это "
+"место."
 
 #: anura/widgets/welcome_page.py:272
 msgid "Only images can be processed that way."
@@ -1318,9 +1326,8 @@ msgid "Processing..."
 msgstr "Обработка..."
 
 #: anura/widgets/welcome_page.py:299
-#, fuzzy
 msgid "Image drop zone: Processing..."
-msgstr "Обработка..."
+msgstr "Зона дропа изображения: Обработка..."
 
 #: anura/widgets/welcome_page.py:303 data/ui/welcome_page.blp:153
 msgid "Drop image file here"
@@ -1328,7 +1335,7 @@ msgstr "Перетащите файл изображения сюда"
 
 #: anura/widgets/welcome_page.py:304 data/ui/welcome_page.blp:150
 msgid "Image drop zone"
-msgstr ""
+msgstr "Зона дропа изображения"
 
 #: anura/window.py:161
 msgid "Tesseract OCR not found on system"
@@ -1336,15 +1343,15 @@ msgstr "Tesseract OCR не найден в системе"
 
 #: anura/window.py:167
 msgid "TTS dependencies (gTTS/GStreamer) missing"
-msgstr ""
+msgstr "TTS зависимости (gTTS/GStreamer) не найдены"
 
 #: anura/window.py:188
 msgid "Screenshot timed out. Please try again."
-msgstr ""
+msgstr "Скриншот ушел в таймаут. Попробуйте еще раз."
 
 #: anura/window.py:200
 msgid "Capture already in progress"
-msgstr ""
+msgstr "Захват уже в процессе"
 
 #: anura/window.py:221
 msgid "Failed to capture screenshot"
@@ -1360,7 +1367,7 @@ msgstr "Ошибка загрузки файла"
 
 #: anura/window.py:258
 msgid "Selection copied to clipboard"
-msgstr ""
+msgstr "Выделенное было скопировано в буфер обмена"
 
 #: anura/window.py:263
 msgid "No text to copy"
@@ -1368,7 +1375,7 @@ msgstr "Ничего не найдено"
 
 #: anura/window.py:323
 msgid "No text to open in external editor"
-msgstr ""
+msgstr "Нет текста для открытия во внешнем редакторе"
 
 #: anura/window.py:345
 #, fuzzy
@@ -1377,11 +1384,11 @@ msgstr "Не удалось открыть ссылку"
 
 #: anura/window.py:351
 msgid "Opened in external editor"
-msgstr "Открыт во внешнем редакторе"
+msgstr "Открыто во внешнем редакторе"
 
 #: anura/window.py:354
 msgid "Could not launch external editor"
-msgstr ""
+msgstr "Не удалось запустить внешний редактор"
 
 #: anura/window.py:456
 msgid "No text to share."
@@ -1389,12 +1396,11 @@ msgstr "Нет текста для публикации."
 
 #: data/ui/extracted_page.blp:14
 msgid "Extracted"
-msgstr ""
+msgstr "Извлечено"
 
 #: data/ui/extracted_page.blp:25
-#, fuzzy
 msgid "Take a Screenshot (Ctrl+G)"
-msgstr "_Сделать снимок"
+msgstr "Сделать скриншот (Ctrl+G)"
 
 #: data/ui/extracted_page.blp:27
 msgid "Take a screenshot"
@@ -1408,75 +1414,75 @@ msgstr "Копировать извлеченный текст в буфер о�
 #: data/ui/extracted_page.blp:46
 msgctxt "Extracted screen"
 msgid "Undo (Ctrl+Z)"
-msgstr ""
+msgstr "Отменить действие (Ctrl+Z)"
 
 #: data/ui/extracted_page.blp:48
 msgctxt "Extracted screen"
 msgid "Undo"
-msgstr ""
+msgstr "Отменить действие"
 
 #: data/ui/extracted_page.blp:56
 msgctxt "Extracted screen"
 msgid "Redo (Ctrl+Shift+Z)"
-msgstr ""
+msgstr "Повторить действие (Ctrl+Shift+Z)"
 
 #: data/ui/extracted_page.blp:58
 msgctxt "Extracted screen"
 msgid "Redo"
-msgstr ""
+msgstr "Повторить действие"
 
 #: data/ui/extracted_page.blp:66
 msgctxt "Extracted screen"
 msgid "Search Text (Ctrl+F)"
-msgstr ""
+msgstr "Поиск текста (Ctrl+F)"
 
 #: data/ui/extracted_page.blp:68
 msgctxt "Extracted screen"
 msgid "Search text"
-msgstr ""
+msgstr "Поиск текста"
 
 #: data/ui/extracted_page.blp:84
 msgctxt "Extracted screen"
 msgid "Listen to text"
-msgstr ""
+msgstr "Прослушать текст"
 
 #: data/ui/extracted_page.blp:95 data/ui/extracted_page.blp:132
 msgctxt "Extracted screen"
 msgid "Stop listening (Ctrl+Shift+L)"
-msgstr ""
+msgstr "Остановить прослушивание (Ctrl+Shift+L)"
 
 #: data/ui/extracted_page.blp:97 data/ui/extracted_page.blp:134
 msgctxt "Extracted screen"
 msgid "Stop listening"
-msgstr ""
+msgstr "Остановить прослушивание"
 
 #: data/ui/extracted_page.blp:110
 msgid "Generating audio"
-msgstr ""
+msgstr "Генерация аудио"
 
 #: data/ui/extracted_page.blp:122
 msgctxt "Extracted screen"
 msgid "Pause/Resume listening (Ctrl+Alt+L)"
-msgstr ""
+msgstr "Пауза/продолжение прослушивания (Ctrl+Alt+L)"
 
 #: data/ui/extracted_page.blp:124
 msgctxt "Extracted screen"
 msgid "Pause or resume listening"
-msgstr ""
+msgstr "Пауза или продолжение прослушивания"
 
 #: data/ui/extracted_page.blp:146 data/ui/extracted_page.blp:148
 msgctxt "Extracted screen"
 msgid "Open menu"
-msgstr ""
+msgstr "Открыть меню"
 
 #: data/ui/extracted_page.blp:158
 msgctxt "Extracted screen"
 msgid "Share text to other applications"
-msgstr "Поделить текст другим приложениям"
+msgstr "Поделиться текстом с другими приложениями"
 
 #: data/ui/extracted_page.blp:166
 msgid "Share providers"
-msgstr ""
+msgstr "Провайдеры для \"Поделиться\""
 
 #: data/ui/extracted_page.blp:190
 #, fuzzy
@@ -1490,41 +1496,39 @@ msgstr "Извлечённый текст"
 
 #: data/ui/extracted_page.blp:204 data/ui/extracted_page.blp:206
 msgid "Match Case"
-msgstr ""
+msgstr "Учитывать регистр"
 
 #: data/ui/extracted_page.blp:212
 msgid "Previous Match (Shift+Enter)"
-msgstr ""
+msgstr "Предыдущее совпадение (Shift+Enter)"
 
 #: data/ui/extracted_page.blp:214
 msgid "Previous match"
-msgstr ""
+msgstr "Предыдущее совпадение"
 
 #: data/ui/extracted_page.blp:220
 msgid "Next Match (Enter)"
-msgstr ""
+msgstr "Следующее совпадение (Enter)"
 
 #: data/ui/extracted_page.blp:222
 msgid "Next match"
-msgstr ""
+msgstr "Следующее совпадение"
 
 #: data/ui/extracted_page.blp:237
-#, fuzzy
 msgid "Extracted text editing buffer"
-msgstr "Извлечённый текст"
+msgstr "Буфер редактирования извлеченного текста"
 
 #: data/ui/extracted_page.blp:270
 msgid "Applied smart transformation"
-msgstr ""
+msgstr "Применена умная трансформация"
 
 #: data/ui/extracted_page.blp:282
-#, fuzzy
 msgid "Text statistics"
-msgstr "Операции с текстом"
+msgstr "Статистика текста"
 
 #: data/ui/extracted_page.blp:292
 msgid "Open in External Editor"
-msgstr "Открытый во внешнем редакторе"
+msgstr "Открыть во внешнем редакторе"
 
 #: data/ui/extracted_page.blp:298 data/ui/preferences_dialog.blp:13
 #: data/ui/welcome_page.blp:177
@@ -1566,25 +1570,24 @@ msgid ""
 "Extracted texts will appear here once you enable history in Preferences and "
 "extract some text."
 msgstr ""
-"Вычтенные тексты появятся здесь, как только вы включите историю в "
-"Предпочтениях и изучите какой-нибудь текст."
+"Извлеченные тексты появятся здесь, как только вы включите историю в "
+"Настройках и извлечёте какой-нибудь текст."
 
 #: data/ui/history_page.blp:58
 msgid "History Disabled"
-msgstr ""
+msgstr "История отключена"
 
 #: data/ui/history_page.blp:59
 msgid ""
 "Enable \"Save Extraction History\" in Preferences to start recording "
 "extracted texts."
 msgstr ""
-"Включить «Историю спасения» в Предпочтения для начала записи извлеченных "
-"текстов."
+"Включите «Сохранять историю извлечений» в Настройках для начала записи "
+"извлеченных текстов."
 
 #: data/ui/language_popover.blp:27 data/ui/preferences_languages.blp:34
-#, fuzzy
 msgid "Search Languages"
-msgstr "Найти язык…"
+msgstr "Найти языки"
 
 #: data/ui/language_popover.blp:30 data/ui/preferences_languages.blp:38
 msgid "Search Languages…"
@@ -1597,16 +1600,15 @@ msgstr "Ничего не найдено"
 #: data/ui/language_popover.blp:89 data/ui/preferences_languages.blp:126
 #: data/ui/shortcuts_overlay.blp:65
 msgid "Try a different search term"
-msgstr "Попробуйте другой поисковый термин"
+msgstr "Попробуйте другое поисковое условие"
 
 #: data/ui/language_popover.blp:104
-#, fuzzy
 msgid "_Manage Languages…"
-msgstr "Найти язык…"
+msgstr "Управление языками…"
 
 #: data/ui/language_popover.blp:106
 msgid "Open preferences to download more languages (Ctrl+,)"
-msgstr "Открытые предпочтения для загрузки большего количества языков (Ctrl+,)"
+msgstr "Откройте Настройки для загрузки большего количества языков (Ctrl+,)"
 
 #: data/ui/language_row.blp:29 data/ui/language_row.blp:31
 msgctxt "Preferences Language Row"
@@ -1648,11 +1650,11 @@ msgstr "Дополнительный язык используемый при и
 
 #: data/ui/preferences_general.blp:36
 msgid "Smart Text Parsing"
-msgstr ""
+msgstr "Умный парсинг текста"
 
 #: data/ui/preferences_general.blp:37
 msgid "Automatically reformat URLs, emails and paragraphs"
-msgstr "Автоматически переформатировать URL-адреса, электронные письма и пункты"
+msgstr "Автоматически переформатировать URL-адреса, электронные письма и абзацы"
 
 #: data/ui/preferences_general.blp:42
 msgid "Behavior"
@@ -1675,13 +1677,12 @@ msgid ""
 "Open QR code URLs directly in browser. Otherwise, a clickable notification "
 "is shown."
 msgstr ""
-"Открыть URL-адреса QR-кода непосредственно в браузере. В противном случае "
-"отображается нажатое уведомление."
+"Открыть URL-адреса QR-кодов непосредственно в браузере. В противном случае "
+"отображается нажимаемое уведомление."
 
 #: data/ui/preferences_general.blp:67
-#, fuzzy
 msgid "Save Extraction History"
-msgstr "Извлечение текста"
+msgstr "Сохранять историю извлечений"
 
 #: data/ui/preferences_general.blp:68
 msgid "Keep a local list of recently extracted texts"
@@ -1697,7 +1698,7 @@ msgstr "Максимальное количество записей в исто
 
 #: data/ui/preferences_general.blp:86
 msgid "Show Line Numbers"
-msgstr "Показать номера линий"
+msgstr "Показать номера строк"
 
 #: data/ui/preferences_general.blp:87
 msgid "Display line numbers along the edge of the editor"
@@ -1705,27 +1706,27 @@ msgstr "Показать номера строк вдоль края редак�
 
 #: data/ui/preferences_general.blp:91
 msgid "Highlight Current Line"
-msgstr ""
+msgstr "Подсвечивать текущую строку"
 
 #: data/ui/preferences_general.blp:92
 msgid "Highlight the active line containing cursor"
-msgstr ""
+msgstr "Подсвечивает активную строку, на которой находится курсор"
 
 #: data/ui/preferences_general.blp:96
 msgid "Word Wrap Mode"
-msgstr ""
+msgstr "Режим переноса слов"
 
 #: data/ui/preferences_general.blp:97
 msgid "Policy for wrapping long lines of text"
-msgstr ""
+msgstr "Политика переноса длинных строк текста"
 
 #: data/ui/preferences_general.blp:105
 msgid "Volume"
-msgstr ""
+msgstr "Громкость"
 
 #: data/ui/preferences_general.blp:106
 msgid "TTS playback volume level (0-100%)"
-msgstr "Уровень воспроизведения TTS (0-100%)"
+msgstr "Уровень громкости воспроизведения TTS (0-100%)"
 
 #: data/ui/preferences_general.blp:115
 msgid "TTS Language"
@@ -1733,7 +1734,7 @@ msgstr "Язык TTS"
 
 #: data/ui/preferences_general.blp:116
 msgid "Language for speech synthesis. Uses OCR language if not set."
-msgstr "Язык для синтеза речи. использует язык OCR, если не установлен."
+msgstr "Язык для синтеза речи. Использует язык OCR, если не настроен."
 
 #: data/ui/preferences_languages.blp:14
 msgid "_Languages"
@@ -1761,14 +1762,13 @@ msgstr "Добавить язык"
 
 #: data/ui/shortcuts_overlay.blp:38
 msgid "Search shortcuts..."
-msgstr ""
+msgstr "Быстрый поиск..."
 
 #: data/ui/shortcuts_overlay.blp:40
 msgid "Search shortcuts"
-msgstr ""
+msgstr "Быстрый поиск"
 
 #: data/ui/shortcuts_overlay.blp:64
-#, fuzzy
 msgid "No results found"
 msgstr "Ничего не найдено"
 
@@ -1782,78 +1782,71 @@ msgid "Anura"
 msgstr "anura"
 
 #: data/ui/welcome_page.blp:27
-#, fuzzy
 msgid "_Language"
-msgstr "_Языки"
+msgstr "_Язык"
 
 #: data/ui/welcome_page.blp:29
 msgid "Select language to extract"
 msgstr "Выберите язык"
 
 #: data/ui/welcome_page.blp:37
-#, fuzzy
 msgid "Extracting text"
-msgstr "Извлечённый текст"
+msgstr "Извлечение текста"
 
 #: data/ui/welcome_page.blp:45 data/ui/welcome_page.blp:47
 msgid "Open menu"
-msgstr "Открытое меню"
+msgstr "Открыть меню"
 
 #: data/ui/welcome_page.blp:65
-#, fuzzy
 msgctxt "Welcome screen"
 msgid "Take a Screenshot (Ctrl+G)"
-msgstr "_Сделать снимок"
+msgstr "Сделать скриншот (Ctrl+G)"
 
 #: data/ui/welcome_page.blp:67
 msgctxt "Welcome screen"
 msgid "Take a Screenshot"
-msgstr ""
+msgstr "Сделать скриншот"
 
 #: data/ui/welcome_page.blp:76
 msgid "_Take a Screenshot"
 msgstr "_Сделать снимок"
 
 #: data/ui/welcome_page.blp:84
-#, fuzzy
 msgctxt "Welcome screen"
 msgid "Open Image (Ctrl+O)"
-msgstr "_Открыть Изображение"
+msgstr "Открыть Изображение (Ctrl+O)"
 
 #: data/ui/welcome_page.blp:86
 msgctxt "Welcome screen"
 msgid "Open Image"
-msgstr "Открытое изображение"
+msgstr "Открыть изображение"
 
 #: data/ui/welcome_page.blp:95
 msgid "_Open Image"
 msgstr "_Открыть Изображение"
 
 #: data/ui/welcome_page.blp:103
-#, fuzzy
 msgctxt "Welcome screen"
 msgid "Paste Image from Clipboard (Ctrl+V)"
-msgstr "Вставить из буфера"
+msgstr "Вставить изображение из буфера (Ctrl+V)"
 
 #: data/ui/welcome_page.blp:105
 msgctxt "Welcome screen"
 msgid "Paste Image"
-msgstr ""
+msgstr "Вставить изображение"
 
 #: data/ui/welcome_page.blp:114
-#, fuzzy
 msgid "_Paste Image"
-msgstr "Открыть Изображение"
+msgstr "Вставить Изображение"
 
 #: data/ui/welcome_page.blp:121 data/ui/welcome_page.blp:123
 msgctxt "Welcome screen"
 msgid "Drop image here"
-msgstr ""
+msgstr "Переместите изображение сюда"
 
 #: data/ui/welcome_page.blp:132
-#, fuzzy
 msgid "_Drop Image"
-msgstr "_Открыть Изображение"
+msgstr "_Перетащить Изображение"
 
 #: data/ui/welcome_page.blp:205
 msgid "⭐ Star on GitHub"
@@ -1864,6 +1857,8 @@ msgid ""
 "Screenshot portal unavailable. Install xdg-desktop-portal-gtk (or the "
 "backend matching your desktop) and re-login."
 msgstr ""
+"Скриншот-портал недоступен. Установите xdg-desktop-portal-gtk (или другой "
+"бэкенд, подходящий для вашего окружения) и перезайдите."
 
 #: data/ui/window.blp:28
 msgid "Dismiss"
@@ -1879,8 +1874,8 @@ msgstr ""
 
 #: data/io.github.d3msudo.anura.desktop.in:11
 msgid "OCR;Text;Extraction;Reader;QR;Scanner;"
-msgstr ""
+msgstr "OCR;Текст;Извлечение;Чтение;QR;Сканер;"
 
 #: data/io.github.d3msudo.anura.desktop.in:17
 msgid "Extract Text to Clipboard"
-msgstr ""
+msgstr "Извлечь текст в буфер обмена"
