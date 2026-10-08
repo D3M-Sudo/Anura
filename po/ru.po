@@ -1729,11 +1729,11 @@ msgstr "Уровень воспроизведения TTS (0-100%)"
 
 #: data/ui/preferences_general.blp:115
 msgid "TTS Language"
-msgstr ""
+msgstr "Язык TTS"
 
 #: data/ui/preferences_general.blp:116
 msgid "Language for speech synthesis. Uses OCR language if not set."
-msgstr ""
+msgstr "Язык для синтеза речи. использует язык OCR, если не установлен."
 
 #: data/ui/preferences_languages.blp:14
 msgid "_Languages"
