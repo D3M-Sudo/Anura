@@ -1741,11 +1741,11 @@ msgstr "_Языки"
 
 #: data/ui/preferences_languages.blp:20
 msgid "Model Quality"
-msgstr ""
+msgstr "Качество модели"
 
 #: data/ui/preferences_languages.blp:21
 msgid "Higher quality is slower but more accurate"
-msgstr ""
+msgstr "Более высокое качество медленнее, но точнее"
 
 #: data/ui/preferences_languages.blp:45
 msgid "Retry"
@@ -1774,7 +1774,7 @@ msgstr "Ничего не найдено"
 
 #: data/ui/welcome_page.blp:13
 msgid "Welcome"
-msgstr ""
+msgstr "Добро пожаловать"
 
 #: data/ui/welcome_page.blp:22 data/ui/welcome_page.blp:53
 #: data/io.github.d3msudo.anura.desktop.in:3
@@ -1797,7 +1797,7 @@ msgstr "Извлечённый текст"
 
 #: data/ui/welcome_page.blp:45 data/ui/welcome_page.blp:47
 msgid "Open menu"
-msgstr ""
+msgstr "Открытое меню"
 
 #: data/ui/welcome_page.blp:65
 #, fuzzy
