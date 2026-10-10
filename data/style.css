@@ -24,6 +24,15 @@
     color: @accent_color;
 }
 
+/* History page empty/disabled states: teal-tinted circle behind the
+   symbolic icon, consistent with the rest of the modernized UI. */
+.history-empty-state image.icon {
+    background-color: alpha(@accent_color, 0.12);
+    color: @accent_color;
+    border-radius: 9999px;
+    padding: 20px;
+}
+
 /* #lang_list row { */
 /*     padding: 0; */
 /* } */
