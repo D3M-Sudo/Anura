@@ -1,7 +1,13 @@
+/* Anura brand accent — fixed teal, intentionally overrides the
+   GNOME system accent color so the app keeps a consistent identity
+   regardless of the user's Adwaita accent preference. */
+@define-color accent_color #1D9E75;
+@define-color accent_bg_color #1D9E75;
+@define-color accent_fg_color #ffffff;
 
 .downloaded label {
     font-weight: bold;
-    color: #3584e4;
+    color: @accent_color;
 }
 
 /* #lang_list row { */
