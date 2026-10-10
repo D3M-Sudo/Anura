@@ -103,8 +103,9 @@
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 1; }
+    0% { opacity: 1; }
     50% { opacity: 0.7; }
+    100% { opacity: 1; }
 }
 
 /* Enhanced extracted page styling */
@@ -212,11 +213,14 @@
 }
 
 @keyframes readyPulse {
-    0%, 100% {
+    0% {
         box-shadow: 0 0 0 0 alpha(@accent_color, 0.4);
     }
     50% {
         box-shadow: 0 0 0 8px alpha(@accent_color, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 alpha(@accent_color, 0.4);
     }
 }
 
