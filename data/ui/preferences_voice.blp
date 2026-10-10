@@ -1,0 +1,35 @@
+// This file is part of Anura.
+// Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+// Copyright (C) 2026 D3M-Sudo (Anura)
+//
+// SPDX-License-Identifier: MIT
+
+using Gtk 4.0;
+using Adw 1;
+
+translation-domain 'io.github.d3msudo.anura';
+
+template $PreferencesVoicePage : Adw.PreferencesPage {
+  title: _("_Voice");
+  use-underline: true;
+  icon-name: "audio-speakers-symbolic";
+
+  Adw.PreferencesGroup {
+    title: _("Text-to-Speech");
+
+    Adw.SpinRow volume_row {
+      title: _("Volume");
+      subtitle: _("TTS playback volume level (0-100%)");
+      adjustment: Adjustment {
+        lower: 0.0;
+        upper: 100.0;
+        step-increment: 10.0;
+      };
+    }
+
+    Adw.ComboRow tts_language_combo {
+      title: _("TTS Language");
+      subtitle: _("Language for speech synthesis. Uses OCR language if not set.");
+    }
+  }
+}
