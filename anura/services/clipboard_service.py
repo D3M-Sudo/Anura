@@ -108,11 +108,15 @@ class ClipboardService(GObject.GObject):
         # cancel any pending read.
         self._clear_active_timeout()
 
-        # Gdk.Clipboard.set_text() was removed in GTK4.
-        # The correct GTK4 API is set_content() with a ContentProvider wrapping
-        # a GLib.Variant string, which is supported across all GTK4 backends
-        # (X11, Wayland, Broadway).
-        content = Gdk.ContentProvider.new_for_value(GLib.Variant("s", value))
+        # Gdk.Clipboard.set_text() is not exposed to PyGObject in GTK4, so the text is
+        # published through set_content() with a ContentProvider.
+        #
+        # The provider must wrap a plain string (G_TYPE_STRING): GTK then advertises
+        # text/plain;charset=utf-8 and text/plain (plus UTF8_STRING and friends on X11)
+        # and every other application can paste it. Wrapping the string in a
+        # GLib.Variant would publish only the "GVariant" format, which nothing else
+        # can read, so the copy would silently never reach the other apps.
+        content = Gdk.ContentProvider.new_for_value(GObject.Value(GObject.TYPE_STRING, value))
         # Gdk.Clipboard.set_content() returns True if the content was set.
         # We don't need a watchdog for a one-shot synchronous set operation
         # that doesn't involve any async callback or stream read.

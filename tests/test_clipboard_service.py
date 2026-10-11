@@ -37,29 +37,49 @@ class TestClipboardServiceEnterprise:
         assert service._clipboard is None
         assert service._cancellable is None
 
-    def test_copy_text_trigger(self, service):
-        """Test that copy_text triggers clipboard set_content (GTK4 API).
+    def test_copy_text_publishes_a_plain_string(self, service):
+        """set()/copy_text() must hand GTK a plain string, never a GLib.Variant.
 
-        GTK4 removed Gdk.Clipboard.set_text().  The production code wraps the
-        string in a GLib.Variant("s", ...) and passes it to
-        Gdk.ContentProvider.new_for_value(), then calls clipboard.set_content().
-        We mock both the ContentProvider factory and the clipboard property so
-        the test remains headless-safe and asserts the correct GTK4 call path.
+        Regression (F-13): the text used to be wrapped in GLib.Variant("s", ...), which
+        GTK publishes only as the "GVariant" format, so no other application could
+        paste it. The ContentProvider has to carry a G_TYPE_STRING value so that GTK
+        advertises text/plain. The previous version of this test replaced both the
+        provider factory and GLib.Variant with mocks and only asserted that
+        set_content was called, so it passed with the broken implementation.
         """
         from unittest.mock import PropertyMock
+
+        from gi.repository import GLib, GObject
 
         mock_clipboard = MagicMock()
         mock_content_provider = MagicMock()
 
         with (
             patch.object(ClipboardService, "clipboard", new_callable=PropertyMock) as mock_cb_prop,
-            patch("gi.repository.Gdk.ContentProvider.new_for_value", return_value=mock_content_provider),
-            patch("gi.repository.GLib.Variant"),
+            patch("gi.repository.Gdk.ContentProvider.new_for_value", return_value=mock_content_provider) as factory,
         ):
             mock_cb_prop.return_value = mock_clipboard
             service.copy_text("Enterprise Audit")
-            # GTK4: set_content() replaces the removed set_text()
-            mock_clipboard.set_content.assert_called_once_with(mock_content_provider)
+
+        factory.assert_called_once()
+        value = factory.call_args.args[0]
+        assert not isinstance(value, GLib.Variant)
+        # A plain str and a G_TYPE_STRING GObject.Value are equivalent for GTK.
+        if isinstance(value, GObject.Value):
+            assert value.g_type == GObject.TYPE_STRING
+            value = value.get_string()
+        assert value == "Enterprise Audit"
+        mock_clipboard.set_content.assert_called_once_with(mock_content_provider)
+
+    def test_set_ignores_empty_text(self, service):
+        from unittest.mock import PropertyMock
+
+        mock_clipboard = MagicMock()
+        with patch.object(ClipboardService, "clipboard", new_callable=PropertyMock) as mock_cb_prop:
+            mock_cb_prop.return_value = mock_clipboard
+            service.set("")
+
+        mock_clipboard.set_content.assert_not_called()
 
     def test_cancel_pending_operations(self, service):
         """Test atomic cancellation logic."""
@@ -176,3 +196,68 @@ class TestClipboardServiceEnterprise:
 
             # Verify error signal was emitted
             assert mock_idle_add.called
+
+
+class TestClipboardRealRoundtrip:
+    """Tests against the real display clipboard (no mocks).
+
+    The mocked tests above cannot tell whether the text is actually pasteable. These
+    ones publish text through ClipboardService and read it back from the same
+    clipboard, and check which formats other applications are offered.
+    """
+
+    SAMPLE = "Testo OCR: àèì — “ok” 日本語 😀\nsecond line & <b>tag</b>"
+
+    @pytest.fixture
+    def real_service(self):
+        import gi
+
+        gi.require_version("Gdk", "4.0")
+        gi.require_version("Gtk", "4.0")
+        from gi.repository import Gdk, Gtk
+
+        if not Gtk.init_check() or Gdk.Display.get_default() is None:
+            pytest.skip("no GDK display available")
+        service = ClipboardService()
+        service.init()
+        return service
+
+    @staticmethod
+    def _read_text(clipboard, timeout_seconds: float = 5.0):
+        """Read the clipboard text asynchronously, pumping the default main context."""
+        import time
+
+        from gi.repository import GLib
+
+        result: dict[str, str] = {}
+
+        def done(source, async_result):
+            try:
+                result["text"] = source.read_text_finish(async_result)
+            except GLib.Error as e:
+                result["error"] = e.message
+
+        clipboard.read_text_async(None, done)
+        context = GLib.MainContext.default()
+        deadline = time.monotonic() + timeout_seconds
+        while "text" not in result and "error" not in result and time.monotonic() < deadline:
+            context.iteration(False)
+            time.sleep(0.005)
+        return result
+
+    def test_set_text_is_readable_from_the_clipboard(self, real_service):
+        real_service.set(self.SAMPLE)
+
+        result = self._read_text(real_service.clipboard)
+
+        assert result == {"text": self.SAMPLE}
+
+    def test_set_text_advertises_plain_text_formats_to_other_apps(self, real_service):
+        from gi.repository import GObject
+
+        real_service.set(self.SAMPLE)
+
+        formats = real_service.clipboard.get_formats()
+        assert formats.contain_gtype(GObject.TYPE_STRING)
+        assert formats.contain_mime_type("text/plain;charset=utf-8")
+        assert formats.contain_mime_type("text/plain")
