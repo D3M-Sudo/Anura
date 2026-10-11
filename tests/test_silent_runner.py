@@ -80,3 +80,51 @@ def test_silent_ocr_failure_exits_with_error_code(fake_clipboard):
     assert _run_with_hang_guard(runner) == 1
 
     fake_clipboard.set.assert_not_called()
+
+
+def test_clipboard_handed_to_manager_exits_without_waiting(fake_clipboard):
+    fake_clipboard.hand_off_to_manager.return_value = True
+    runner = SilentRunner(_StubApp(), "/tmp/image.png")
+
+    assert _run_with_hang_guard(runner) == 0
+
+    fake_clipboard.hand_off_to_manager.assert_called_once_with()
+    fake_clipboard.wait_until_replaced.assert_not_called()
+
+
+def test_without_clipboard_manager_the_process_keeps_serving_the_clipboard(fake_clipboard):
+    """No manager: the text is pasteable only while the process lives, so it must linger."""
+    from anura.core import silent_runner
+
+    fake_clipboard.hand_off_to_manager.return_value = False
+    fake_clipboard.wait_until_replaced.return_value = True
+    runner = SilentRunner(_StubApp(), "/tmp/image.png")
+
+    assert _run_with_hang_guard(runner) == 0
+
+    fake_clipboard.wait_until_replaced.assert_called_once_with(
+        silent_runner._CLIPBOARD_LINGER_SECONDS, runner.interrupted.is_set
+    )
+
+
+def test_signal_while_waiting_for_the_clipboard_still_exits_successfully(fake_clipboard):
+    """The OCR already succeeded; a signal only cuts the courtesy wait short."""
+    fake_clipboard.hand_off_to_manager.return_value = False
+    runner = SilentRunner(_StubApp(), "/tmp/image.png")
+
+    def interrupted_while_waiting(_timeout, _should_stop):
+        runner.interrupted.set()
+        return False
+
+    fake_clipboard.wait_until_replaced.side_effect = interrupted_while_waiting
+
+    assert _run_with_hang_guard(runner) == 0
+
+
+def test_failed_ocr_does_not_wait_for_the_clipboard(fake_clipboard):
+    runner = SilentRunner(_StubApp(success=False, text="", error="no tesseract"), "/tmp/image.png")
+
+    assert _run_with_hang_guard(runner) == 1
+
+    fake_clipboard.hand_off_to_manager.assert_not_called()
+    fake_clipboard.wait_until_replaced.assert_not_called()

@@ -9,6 +9,7 @@ from gettext import gettext as _
 from io import BytesIO
 from pathlib import Path
 import threading
+import time
 from typing import ClassVar
 
 import gi
@@ -128,6 +129,74 @@ class ClipboardService(GObject.GObject):
     def copy_text(self, text: str) -> None:
         """Legacy alias for set(text)."""
         self.set(text)
+
+    def hand_off_to_manager(self, timeout_seconds: float = 3.0) -> bool:
+        """Ask the desktop clipboard manager to keep the current content after exit.
+
+        The clipboard belongs to the process that set it: when a short-lived process
+        (headless/silent mode) exits, the text disappears unless a clipboard manager
+        took it over first. This asks GTK to do that and waits for the answer.
+
+        Blocking: it runs the default main context itself, so call it only when no UI
+        main loop is running. Never raises; returns True only if a manager took the
+        content. Returns False when there is no manager (X11: "No clipboard manager is
+        active") or the backend cannot store at all (Wayland: "cannot store data").
+        """
+        try:
+            clipboard = self.clipboard
+        except RuntimeError as e:
+            logger.warning(f"Anura Clipboard: Cannot hand off clipboard content: {e}")
+            return False
+
+        outcome: dict[str, bool] = {}
+        cancellable = Gio.Cancellable()
+
+        def on_stored(source: Gdk.Clipboard, result: Gio.AsyncResult) -> None:
+            try:
+                source.store_finish(result)
+                outcome["stored"] = True
+            except GLib.Error as e:
+                logger.debug(f"Anura Clipboard: Clipboard manager hand-off unavailable: {e.message}")
+                outcome["stored"] = False
+
+        clipboard.store_async(GLib.PRIORITY_DEFAULT, cancellable, on_stored)
+        context = GLib.MainContext.default()
+        deadline = time.monotonic() + timeout_seconds
+        while "stored" not in outcome and time.monotonic() < deadline:
+            context.iteration(False)
+            time.sleep(0.005)
+
+        if "stored" not in outcome:
+            cancellable.cancel()
+            logger.warning("Anura Clipboard: Clipboard manager hand-off timed out.")
+            return False
+        return outcome["stored"]
+
+    def wait_until_replaced(self, timeout_seconds: float, should_stop: Callable[[], bool] | None = None) -> bool:
+        """Keep serving our clipboard content until another application replaces it.
+
+        Fallback for short-lived processes when no clipboard manager took the content
+        over (see hand_off_to_manager): the text stays pasteable only while this process
+        is alive and its main context keeps answering paste requests.
+
+        Blocking, same caveat as hand_off_to_manager. Returns True when another
+        application took the clipboard, False on timeout, on should_stop() or when no
+        display is available.
+        """
+        try:
+            clipboard = self.clipboard
+        except RuntimeError as e:
+            logger.warning(f"Anura Clipboard: Cannot wait for clipboard replacement: {e}")
+            return False
+
+        context = GLib.MainContext.default()
+        deadline = time.monotonic() + timeout_seconds
+        while clipboard.is_local():
+            if (should_stop is not None and should_stop()) or time.monotonic() >= deadline:
+                return False
+            context.iteration(False)
+            time.sleep(0.02)
+        return True
 
     def _on_read_texture(self, _sender: GObject.GObject, result: Gio.AsyncResult) -> None:
         """

@@ -261,3 +261,99 @@ class TestClipboardRealRoundtrip:
         assert formats.contain_gtype(GObject.TYPE_STRING)
         assert formats.contain_mime_type("text/plain;charset=utf-8")
         assert formats.contain_mime_type("text/plain")
+
+
+class TestClipboardLifetime:
+    """hand_off_to_manager() and wait_until_replaced(): short-lived processes (silent mode)."""
+
+    @staticmethod
+    def _service_with(clipboard):
+        from unittest.mock import PropertyMock
+
+        service = ClipboardService()
+        patcher = patch.object(ClipboardService, "clipboard", new_callable=PropertyMock, return_value=clipboard)
+        patcher.start()
+        return service, patcher
+
+    def test_hand_off_reports_success_when_the_manager_takes_the_content(self):
+        clipboard = MagicMock()
+        clipboard.store_async.side_effect = lambda _prio, _cancellable, callback: callback(clipboard, "result")
+        clipboard.store_finish.return_value = True
+        service, patcher = self._service_with(clipboard)
+        try:
+            assert service.hand_off_to_manager(timeout_seconds=1.0) is True
+        finally:
+            patcher.stop()
+
+    def test_hand_off_reports_failure_when_there_is_no_manager(self):
+        from gi.repository import Gio, GLib
+
+        clipboard = MagicMock()
+        clipboard.store_async.side_effect = lambda _prio, _cancellable, callback: callback(clipboard, "result")
+        clipboard.store_finish.side_effect = GLib.Error.new_literal(
+            Gio.io_error_quark(), "Cannot store clipboard. No clipboard manager is active.", Gio.IOErrorEnum.NOT_SUPPORTED
+        )
+        service, patcher = self._service_with(clipboard)
+        try:
+            assert service.hand_off_to_manager(timeout_seconds=1.0) is False
+        finally:
+            patcher.stop()
+
+    def test_hand_off_gives_up_and_cancels_when_the_manager_never_answers(self):
+        clipboard = MagicMock()  # store_async never calls its callback
+        service, patcher = self._service_with(clipboard)
+        try:
+            assert service.hand_off_to_manager(timeout_seconds=0.1) is False
+        finally:
+            patcher.stop()
+        cancellable = clipboard.store_async.call_args.args[1]
+        assert cancellable.is_cancelled()
+
+    def test_wait_until_replaced_returns_true_once_another_app_owns_the_clipboard(self):
+        clipboard = MagicMock()
+        clipboard.is_local.side_effect = [True, True, False]
+        service, patcher = self._service_with(clipboard)
+        try:
+            assert service.wait_until_replaced(timeout_seconds=5.0) is True
+        finally:
+            patcher.stop()
+
+    def test_wait_until_replaced_times_out_while_we_still_own_the_clipboard(self):
+        clipboard = MagicMock()
+        clipboard.is_local.return_value = True
+        service, patcher = self._service_with(clipboard)
+        try:
+            assert service.wait_until_replaced(timeout_seconds=0.1) is False
+        finally:
+            patcher.stop()
+
+    def test_wait_until_replaced_stops_when_asked(self):
+        clipboard = MagicMock()
+        clipboard.is_local.return_value = True
+        service, patcher = self._service_with(clipboard)
+        try:
+            assert service.wait_until_replaced(timeout_seconds=30.0, should_stop=lambda: True) is False
+        finally:
+            patcher.stop()
+
+    def test_real_clipboard_hand_off_answers_instead_of_hanging(self):
+        """Against the real display: with no clipboard manager this must fail fast, not block."""
+        import time
+
+        import gi
+
+        gi.require_version("Gdk", "4.0")
+        gi.require_version("Gtk", "4.0")
+        from gi.repository import Gdk, Gtk
+
+        if not Gtk.init_check() or Gdk.Display.get_default() is None:
+            pytest.skip("no GDK display available")
+        service = ClipboardService()
+        service.init()
+        service.set("hand-off check")
+
+        started = time.monotonic()
+        result = service.hand_off_to_manager(timeout_seconds=3.0)
+
+        assert isinstance(result, bool)
+        assert time.monotonic() - started < 4.0
