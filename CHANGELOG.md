@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - History: row titles and subtitles were parsed as Pango markup, so extracted text containing `&` or `<` (for example "R&D" or code such as `if (a<b)`) produced an empty row title and `<b>`-style text lost its tags
 - Clipboard: copying text (extracted text, QR URL, History rows) did not reach other applications, so it could not be pasted anywhere. `ClipboardService.set()` wrapped the text in a `GLib.Variant`, which GTK publishes only as the unreadable `GVariant` format; it now publishes a plain string (`text/plain`). Present since the change that replaced `Gdk.Clipboard.set_text()` (v0.1.5, v0.2.0)
+- Silent CLI mode (`--silent`) never ran the OCR and then hung: the runner called `GLib.MainContext.push()`/`pop()`, which do not exist in PyGObject (`push_thread_default()`/`pop_thread_default()` do; `AttributeError`), and its main-loop callbacks took no arguments while PyGObject passes the source `user_data`, so every callback raised `TypeError` and not even the 60 s timeout could end the loop. Found on PyGObject 3.48.2; the only test mocked the whole runner
 
 ## [0.2.0] - 2026-09-21
 

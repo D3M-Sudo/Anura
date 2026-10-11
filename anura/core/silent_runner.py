@@ -53,7 +53,7 @@ class SilentRunner:
         self._ocr_success = False
         self._timed_out = False
 
-        def check_interrupted():
+        def check_interrupted(*_args):
             if self.interrupted.is_set():
                 loop.quit()
                 return False
@@ -64,7 +64,7 @@ class SilentRunner:
         check_source.attach(ctx)
         sources.append(check_source)
 
-        def do_ocr():
+        def do_ocr(*_args):
             if self.interrupted.is_set():
                 loop.quit()
                 return False
@@ -103,7 +103,7 @@ class SilentRunner:
         idle_source.attach(ctx)
         sources.append(idle_source)
 
-        def on_timeout():
+        def on_timeout(*_args):
             logger.error("Anura: Silent mode timed out after 60 seconds.")
             self._timed_out = True
             loop.quit()
@@ -119,11 +119,11 @@ class SilentRunner:
             logger.error("Anura: Could not acquire GLib MainContext for silent mode.")
             return 1
 
-        ctx.push()
+        ctx.push_thread_default()
         try:
             loop.run()
         finally:
-            ctx.pop()
+            ctx.pop_thread_default()
             ctx.release()
 
         for source in sources:
