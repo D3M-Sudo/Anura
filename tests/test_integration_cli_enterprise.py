@@ -44,6 +44,38 @@ class TestCLIIntegrationEnterprise:
         assert exit_code == 0
         app.backend.capture.assert_called_once_with("eng", copy=True)
 
+    def test_command_line_file_option_is_decoded_to_a_path_string(self, app):
+        """Regression: `--file` crashed with TypeError before reaching any handler.
+
+        GLib.OptionArg.FILENAME yields an 'ay' bytestring; unpack() turns it into a list
+        of ints and Path() rejects that. The handler must receive a decoded str, with
+        non-ASCII names intact.
+        """
+        from gi.repository import GLib
+
+        options = GLib.VariantDict.new(None)
+        options.insert_value("file", GLib.Variant.new_bytestring("/tmp/scansione è.png".encode()))
+        options.insert_value("silent", GLib.Variant.new_boolean(True))
+        command_line = MagicMock()
+        command_line.get_options_dict.return_value = options
+
+        with patch.object(app, "_handle_file_option", return_value=0) as handler:
+            assert app.do_command_line(command_line) == 0
+
+        handler.assert_called_once_with("/tmp/scansione è.png", True)
+
+    def test_command_line_without_file_option_activates_the_window(self, app):
+        from gi.repository import GLib
+
+        command_line = MagicMock()
+        command_line.get_options_dict.return_value = GLib.VariantDict.new(None)
+
+        with patch.object(app, "activate") as activate, patch.object(app, "_handle_file_option") as handler:
+            assert app.do_command_line(command_line) == 0
+
+        activate.assert_called_once()
+        handler.assert_not_called()
+
     def test_handle_file_option_silent(self, app):
         """Test the -f --silent CLI flow."""
         file_path = "/tmp/test.png"
@@ -101,8 +133,13 @@ class TestCLIIntegrationEnterprise:
             app.do_command_line(cmd_line)
             mock_extract.assert_called_once()
 
-        # Test -f
-        cmd_line.get_options_dict().end().unpack.return_value = {"file": "image.png"}
+        # Test -f: GLib.OptionArg.FILENAME arrives as an 'ay' bytestring, never as a str
+        # (the previous version of this test fed a plain str, which hid a TypeError crash)
+        from gi.repository import GLib
+
+        file_options = GLib.VariantDict.new(None)
+        file_options.insert_value("file", GLib.Variant.new_bytestring(b"image.png"))
+        cmd_line.get_options_dict.return_value = file_options
         with patch.object(app, "_handle_file_option", return_value=0) as mock_file:
             app.do_command_line(cmd_line)
             mock_file.assert_called_once_with("image.png", False)
