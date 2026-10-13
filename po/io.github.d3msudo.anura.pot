@@ -31,6 +31,10 @@ msgstr ""
 msgid "Failed to process the file."
 msgstr ""
 
+#: anura/controllers/history_controller.py:65
+msgid "Failed to copy text to clipboard"
+msgstr ""
+
 #: anura/controllers/ocr_controller.py:105
 msgid "No text found. Try to grab another region."
 msgstr ""
@@ -144,6 +148,7 @@ msgid "Run OCR without UI (copy result to clipboard)"
 msgstr ""
 
 #: anura/main.py:210 anura/main.py:356 anura/window.py:260
+#: anura/window.py:474 anura/widgets/history_page.py:181
 msgid "Text copied to clipboard"
 msgstr ""
 
@@ -1157,6 +1162,7 @@ msgstr ""
 msgid "Select all text (in editor)"
 msgstr ""
 
+#: anura/widgets/history_page.py:155 anura/widgets/history_page.py:191
 #: anura/widgets/shortcuts_overlay.py:75
 msgid "Copy text to clipboard"
 msgstr ""
@@ -1309,7 +1315,7 @@ msgstr ""
 msgid "Selection copied to clipboard"
 msgstr ""
 
-#: anura/window.py:263
+#: anura/controllers/history_controller.py:56 anura/window.py:263
 msgid "No text to copy"
 msgstr ""
 
