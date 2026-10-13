@@ -86,6 +86,9 @@ replace, the suggestions in "Interaction model" above.
   `Gtk.TextView` inside a `Gtk.ScrolledWindow`. A `Gtk.Label` was measured and rejected:
   the first expansion took 1.06 s with 50 KB and 24 s with 300 KB, against 0.40 s and
   0.80 s for the text view. Short text takes only the height it needs.
+  A text view reports only the height of the part it has already laid out (about two
+  lines for a long text), so the area's minimum height is estimated from the text
+  (`estimate_text_area_height`); without it the area stayed about 54 px tall.
 - **No new strings, no new GSettings keys, no new shortcuts.** `HistoryEntry` is not
   mutated; opening a row is a read-only action.
 - Row-level actions beyond Copy (external editor, TTS, Re-OCR) remain out of this cut.

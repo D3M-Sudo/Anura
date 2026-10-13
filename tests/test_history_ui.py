@@ -134,29 +134,31 @@ def _make_wired_page(headless_gi_mocks, tmp_path, copy_result=True):
     return page, controller
 
 
-def test_rows_are_not_activatable_and_only_copy_button_is_wired(headless_gi_mocks, monkeypatch, tmp_path):
-    """Row activation is reserved for the expandable rows; it must not copy."""
+def test_rows_are_expander_rows_with_a_copy_button_in_the_header(headless_gi_mocks, monkeypatch, tmp_path):
+    """Each entry is an expandable row; the copy button is a header suffix, not a row action."""
     fake_adw, fake_gtk, _fake_glib = _patch_ui(monkeypatch)
     service = HistoryService(base_dir=tmp_path)
     service.record("first", "eng")
     service.record("second", "eng")
     _make_page(headless_gi_mocks, service)
 
-    assert fake_adw.ActionRow.call_count == 2
-    for call in fake_adw.ActionRow.call_args_list:
-        assert not call.kwargs.get("activatable", False)
-    fake_adw.ActionRow.return_value.connect.assert_not_called()
+    assert fake_adw.ExpanderRow.call_count == 2
+    fake_row = fake_adw.ExpanderRow.return_value
+    assert fake_row.add_suffix.call_count == 2
 
-    connect_calls = fake_gtk.Button.return_value.connect.call_args_list
-    assert [c.args[0] for c in connect_calls] == ["clicked", "clicked"]
-    # Newest first, each button carries the text of its own entry.
-    assert [c.args[2] for c in connect_calls] == ["second", "first"]
+    # The button's own handler is "clicked"; the row only listens to its expansion.
+    button_calls = fake_gtk.Button.return_value.connect.call_args_list
+    assert [c.args[0] for c in button_calls] == ["clicked", "clicked"]
+    assert [c.args[2] for c in button_calls] == ["second", "first"]  # newest first
+    row_calls = fake_row.connect.call_args_list
+    assert [c.args[0] for c in row_calls] == ["notify::expanded", "notify::expanded"]
+    assert [c.args[2] for c in row_calls] == ["second", "first"]
 
 
 def test_row_text_is_not_parsed_as_pango_markup(headless_gi_mocks, monkeypatch, tmp_path):
     """Regression: OCR text like "a < b & c" must not be parsed as markup.
 
-    AdwActionRow parses title and subtitle as Pango markup by default; text with
+    Adwaita rows parse title and subtitle as Pango markup by default; text with
     `&` or `<` then fails to parse and the row shows an empty title (or drops
     tags such as `<b>`).
     """
@@ -166,9 +168,128 @@ def test_row_text_is_not_parsed_as_pango_markup(headless_gi_mocks, monkeypatch, 
     service.record("<b>bold</b> R&D", "eng")
     _make_page(headless_gi_mocks, service)
 
-    assert fake_adw.ActionRow.call_count == 2
-    for call in fake_adw.ActionRow.call_args_list:
+    assert fake_adw.ExpanderRow.call_count == 2
+    for call in fake_adw.ExpanderRow.call_args_list:
         assert call.kwargs.get("use_markup") is False
+
+
+def test_no_text_area_exists_before_a_row_is_expanded(headless_gi_mocks, monkeypatch, tmp_path):
+    """The area is created on the first expansion: building the list must stay cheap."""
+    fake_adw, fake_gtk, _fake_glib = _patch_ui(monkeypatch)
+    service = HistoryService(base_dir=tmp_path)
+    for i in range(3):
+        service.record(f"entry {i} " + "x" * 10_000, "eng")
+    _make_page(headless_gi_mocks, service)
+
+    fake_gtk.TextView.assert_not_called()
+    fake_gtk.ScrolledWindow.assert_not_called()
+    fake_adw.ExpanderRow.return_value.add_row.assert_not_called()
+
+
+def test_expanding_a_row_builds_a_bounded_read_only_text_area_once(headless_gi_mocks, monkeypatch, tmp_path):
+    _fake_adw, fake_gtk, _fake_glib = _patch_ui(monkeypatch)
+    page, _controller = _make_wired_page(headless_gi_mocks, tmp_path)
+    row = MagicMock()
+    row.get_expanded.return_value = True
+
+    page._on_row_expanded(row, None, "full stored text")
+    page._on_row_expanded(row, None, "full stored text")  # re-expanding must not rebuild
+
+    row.add_row.assert_called_once_with(fake_gtk.ScrolledWindow.return_value)
+    fake_gtk.TextView.assert_called_once()
+    text_view_kwargs = fake_gtk.TextView.call_args.kwargs
+    assert text_view_kwargs["editable"] is False
+    assert text_view_kwargs["accepts_tab"] is False
+    fake_gtk.TextView.return_value.get_buffer.return_value.set_text.assert_called_once_with("full stored text")
+    scrolled_kwargs = fake_gtk.ScrolledWindow.call_args.kwargs
+    assert scrolled_kwargs["max_content_height"] == 240
+    assert scrolled_kwargs["propagate_natural_height"] is True
+    assert scrolled_kwargs["hscrollbar_policy"] == fake_gtk.PolicyType.NEVER
+
+
+def test_the_expanded_text_is_the_full_text_not_the_header_title(headless_gi_mocks, monkeypatch, tmp_path):
+    """The header shows the first line, capped; the text handed to the area is the whole entry."""
+    fake_adw, _fake_gtk, _fake_glib = _patch_ui(monkeypatch)
+    full_text = ("first line " * 40) + "\nsecond line\nthird line " + ("y" * 5_000)
+    service = HistoryService(base_dir=tmp_path)
+    service.record(full_text, "eng")
+    _make_page(headless_gi_mocks, service)
+
+    title = fake_adw.ExpanderRow.call_args.kwargs["title"]
+    assert len(title) < len(full_text)
+    assert "second line" not in title
+    assert fake_adw.ExpanderRow.return_value.connect.call_args.args[2] == full_text
+
+
+def test_only_one_row_is_open_at_a_time(headless_gi_mocks, monkeypatch, tmp_path):
+    _patch_ui(monkeypatch)
+    page, _controller = _make_wired_page(headless_gi_mocks, tmp_path)
+    first, second = MagicMock(name="first"), MagicMock(name="second")
+    first.get_expanded.return_value = True
+    second.get_expanded.return_value = True
+
+    page._on_row_expanded(first, None, "A")
+    assert page._open_row is first
+    first.set_expanded.assert_not_called()
+
+    page._on_row_expanded(second, None, "B")
+    assert page._open_row is second
+    first.set_expanded.assert_called_once_with(False)
+    second.set_expanded.assert_not_called()
+
+    # The previous row reporting that it collapsed must not close the new one.
+    first.get_expanded.return_value = False
+    page._on_row_expanded(first, None, "A")
+    assert page._open_row is second
+
+    # Collapsing the open row leaves none open.
+    second.get_expanded.return_value = False
+    page._on_row_expanded(second, None, "B")
+    assert page._open_row is None
+
+
+def test_text_area_height_estimate_is_small_for_short_text_and_capped_for_long_text(headless_gi_mocks):
+    """Regression: a text view reports a tiny natural height until its layout is validated.
+
+    With a long text the area stayed about 54 px tall, so the user would have had to
+    scroll a two-line window. The minimum height is estimated from the text instead.
+    """
+    from anura.widgets.history_page import estimate_text_area_height
+
+    assert estimate_text_area_height("") == estimate_text_area_height("short")
+    assert 0 < estimate_text_area_height("short") < 100
+    assert estimate_text_area_height("one\ntwo\nthree") > estimate_text_area_height("one")
+    assert estimate_text_area_height("w" * 600) > estimate_text_area_height("w" * 60)  # wrapped lines count
+    assert estimate_text_area_height("long " * 4_000) == 240
+    assert estimate_text_area_height("x\n" * 100_000) == 240
+
+
+def test_expanded_area_minimum_height_comes_from_the_text(headless_gi_mocks, monkeypatch, tmp_path):
+    _fake_adw, fake_gtk, _fake_glib = _patch_ui(monkeypatch)
+    page, _controller = _make_wired_page(headless_gi_mocks, tmp_path)
+    row = MagicMock()
+    row.get_expanded.return_value = True
+
+    page._on_row_expanded(row, None, "long " * 4_000)
+
+    assert fake_gtk.ScrolledWindow.call_args.kwargs["min_content_height"] == 240
+
+
+def test_refresh_forgets_the_open_row_and_the_built_text_areas(headless_gi_mocks, monkeypatch, tmp_path):
+    _patch_ui(monkeypatch)
+    service = HistoryService(base_dir=tmp_path)
+    service.record("entry", "eng")
+    page = _make_page(headless_gi_mocks, service)
+    row = MagicMock()
+    row.get_expanded.return_value = True
+    page._on_row_expanded(row, None, "entry")
+    assert page._open_row is row
+    assert row in page._content_built
+
+    page.refresh()
+
+    assert page._open_row is None
+    assert page._content_built == set()
 
 
 def test_copy_click_delegates_to_controller_and_shows_feedback(headless_gi_mocks, monkeypatch, tmp_path):
@@ -247,13 +368,15 @@ def test_copy_without_controller_is_a_safe_noop(headless_gi_mocks):
 
 
 def test_clear_rows_cancels_timers_and_disconnects_row_handlers(headless_gi_mocks, monkeypatch, tmp_path):
-    _adw, fake_gtk, fake_glib = _patch_ui(monkeypatch)
+    fake_adw, fake_gtk, fake_glib = _patch_ui(monkeypatch)
     fake_button = fake_gtk.Button.return_value
+    fake_row = fake_adw.ExpanderRow.return_value
     fake_button.connect.side_effect = [11, 12, 13, 14]
+    fake_row.connect.side_effect = [21, 22, 23, 24]
     service = HistoryService(base_dir=tmp_path)
     service.record("first", "eng")
     service.record("second", "eng")
-    page = _make_page(headless_gi_mocks, service)  # first refresh: handlers 11, 12
+    page = _make_page(headless_gi_mocks, service)  # first refresh: buttons 11, 12; rows 21, 22
     controller = MagicMock()
     controller.copy_entry_text.return_value = True
 
@@ -261,7 +384,9 @@ def test_clear_rows_cancels_timers_and_disconnects_row_handlers(headless_gi_mock
 
     fake_button.disconnect.assert_any_call(11)
     fake_button.disconnect.assert_any_call(12)
-    assert [handler_id for _widget, handler_id in page._row_handlers] == [13, 14]
+    fake_row.disconnect.assert_any_call(21)
+    fake_row.disconnect.assert_any_call(22)
+    assert sorted(handler_id for _widget, handler_id in page._row_handlers) == [13, 14, 23, 24]
 
     page._on_copy_clicked(MagicMock(), "text")
     pending_id = next(iter(page._feedback_timers.values()))
@@ -270,6 +395,8 @@ def test_clear_rows_cancels_timers_and_disconnects_row_handlers(headless_gi_mock
     fake_glib.source_remove.assert_called_once_with(pending_id)
     fake_button.disconnect.assert_any_call(13)
     fake_button.disconnect.assert_any_call(14)
+    fake_row.disconnect.assert_any_call(23)
+    fake_row.disconnect.assert_any_call(24)
     assert page._feedback_timers == {}
     assert page._row_handlers == []
 
@@ -286,7 +413,7 @@ def test_refresh_does_not_accumulate_tracked_connections(headless_gi_mocks, tmp_
         page.refresh()
 
     assert page.get_tracked_signal_count() == baseline
-    assert len(page._row_handlers) == 5
+    assert len(page._row_handlers) == 5 * 2  # copy button + expansion, per row
 
 
 def test_teardown_all_cancels_pending_timers_and_drops_controller(headless_gi_mocks, monkeypatch, tmp_path):
