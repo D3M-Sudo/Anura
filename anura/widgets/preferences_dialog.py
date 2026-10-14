@@ -9,8 +9,10 @@ from gi.repository import Adw, GLib, Gtk
 from anura.config import RESOURCE_PREFIX
 from anura.services.language_manager import get_language_manager
 from anura.utils.signal_manager import SignalManagerMixin
+from anura.widgets.preferences_editor_page import PreferencesEditorPage
 from anura.widgets.preferences_general_page import PreferencesGeneralPage
 from anura.widgets.preferences_languages_page import PreferencesLanguagesPage
+from anura.widgets.preferences_voice_page import PreferencesVoicePage
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/preferences_dialog.ui")
@@ -18,6 +20,8 @@ class PreferencesDialog(Adw.PreferencesDialog, SignalManagerMixin):
     __gtype_name__ = "PreferencesDialog"
 
     general_page: PreferencesGeneralPage = Gtk.Template.Child()
+    editor_page: PreferencesEditorPage = Gtk.Template.Child()
+    voice_page: PreferencesVoicePage = Gtk.Template.Child()
     languages_page: PreferencesLanguagesPage = Gtk.Template.Child()
 
     def __init__(self, **kwargs: object) -> None:
@@ -51,6 +55,10 @@ class PreferencesDialog(Adw.PreferencesDialog, SignalManagerMixin):
         # Ensure child pages clean up their signal connections
         if hasattr(self.general_page, "disconnect_all_signals"):
             self.general_page.disconnect_all_signals()
+        if hasattr(self.editor_page, "disconnect_all_signals"):
+            self.editor_page.disconnect_all_signals()
+        if hasattr(self.voice_page, "disconnect_all_signals"):
+            self.voice_page.disconnect_all_signals()
         if hasattr(self.languages_page, "disconnect_all_signals"):
             self.languages_page.disconnect_all_signals()
 

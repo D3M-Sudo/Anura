@@ -53,6 +53,7 @@ template $WelcomePage : Adw.NavigationPage {
         title: _("Anura");
         description: _("Extract text from anywhere");
         icon-name: "io.github.d3msudo.anura";
+        styles ["welcome-hero"]
 
         Adw.Clamp {
           maximum-size: 240;
@@ -79,60 +80,72 @@ template $WelcomePage : Adw.NavigationPage {
               };
             }
 
-            Button {
-              action-name: "app.open_image";
-              tooltip-text: C_("Welcome screen", "Open Image (Ctrl+O)");
-              accessibility {
-                label: C_("Welcome screen", "Open Image");
-              }
-              styles ["pill", "anura-button"]
+            Box {
+              orientation: horizontal;
+              homogeneous: true;
+              spacing: 6;
 
-              child: Box {
-                halign: center;
-                spacing: 6;
-                Image { icon-name: "folder-open-symbolic"; }
-                Label {
-                  label: _("_Open Image");
-                  use-underline: true;
+              Button {
+                action-name: "app.open_image";
+                tooltip-text: C_("Welcome screen", "Open Image (Ctrl+O)");
+                accessibility {
+                  label: C_("Welcome screen", "Open Image");
                 }
-              };
-            }
+                styles ["anura-button", "flat"]
 
-             Button {
-              action-name: "app.paste_from_clipboard";
-              tooltip-text: C_("Welcome screen", "Paste Image from Clipboard (Ctrl+V)");
-              accessibility {
-                label: C_("Welcome screen", "Paste Image");
+                child: Box {
+                  orientation: vertical;
+                  halign: center;
+                  spacing: 4;
+                  Image { icon-name: "folder-open-symbolic"; }
+                  Label {
+                    label: _("_Open Image");
+                    use-underline: true;
+                    styles ["caption"]
+                  }
+                };
               }
-              styles ["pill", "anura-button"]
 
-              child: Box {
-                halign: center;
-                spacing: 6;
-                Image { icon-name: "edit-paste-symbolic"; }
-                Label {
-                  label: _("_Paste Image");
-                  use-underline: true;
+              Button {
+                action-name: "app.paste_from_clipboard";
+                tooltip-text: C_("Welcome screen", "Paste Image from Clipboard (Ctrl+V)");
+                accessibility {
+                  label: C_("Welcome screen", "Paste Image");
                 }
-              };
-            }
+                styles ["anura-button", "flat"]
 
-            Button drop_button {
-              tooltip-text: C_("Welcome screen", "Drop image here");
-              accessibility {
-                label: C_("Welcome screen", "Drop image here");
+                child: Box {
+                  orientation: vertical;
+                  halign: center;
+                  spacing: 4;
+                  Image { icon-name: "edit-paste-symbolic"; }
+                  Label {
+                    label: _("_Paste Image");
+                    use-underline: true;
+                    styles ["caption"]
+                  }
+                };
               }
-              styles ["pill", "anura-button"]
 
-              child: Box {
-                halign: center;
-                spacing: 6;
-                Image { icon-name: "folder-drag-accept-symbolic"; }
-                Label {
-                  label: _("_Drop Image");
-                  use-underline: true;
+              Button drop_button {
+                tooltip-text: C_("Welcome screen", "Drop image here");
+                accessibility {
+                  label: C_("Welcome screen", "Drop image here");
                 }
-              };
+                styles ["anura-button", "flat"]
+
+                child: Box {
+                  orientation: vertical;
+                  halign: center;
+                  spacing: 4;
+                  Image { icon-name: "folder-drag-accept-symbolic"; }
+                  Label {
+                    label: _("_Drop Image");
+                    use-underline: true;
+                    styles ["caption"]
+                  }
+                };
+              }
             }
 
             Revealer drop_revealer {
