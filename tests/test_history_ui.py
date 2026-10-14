@@ -51,6 +51,7 @@ def test_empty_enabled_history_shows_empty_state(headless_gi_mocks, tmp_path):
     page = _make_page(headless_gi_mocks, service, enabled=True)
 
     page.history_stack.set_visible_child_name.assert_called_with("empty")
+    page.clear_button.set_sensitive.assert_called_with(False)
 
 
 def test_disabled_history_shows_disabled_state(headless_gi_mocks, tmp_path):
@@ -58,6 +59,7 @@ def test_disabled_history_shows_disabled_state(headless_gi_mocks, tmp_path):
     page = _make_page(headless_gi_mocks, service, enabled=False)
 
     page.history_stack.set_visible_child_name.assert_called_with("disabled")
+    page.clear_button.set_sensitive.assert_called_with(False)
 
 
 def test_disabled_history_does_not_delete_existing_entries(headless_gi_mocks, tmp_path):
@@ -81,6 +83,7 @@ def test_one_entry_displayed(headless_gi_mocks, tmp_path):
 
     page.history_stack.set_visible_child_name.assert_called_with("entries")
     assert page.history_list.append.call_count == 1
+    page.clear_button.set_sensitive.assert_called_with(True)
 
 
 def test_multiple_entries_newest_first(headless_gi_mocks, tmp_path):
