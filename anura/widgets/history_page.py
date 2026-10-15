@@ -33,6 +33,27 @@ if TYPE_CHECKING:
 _COPY_ICON = "edit-copy-symbolic"
 _COPIED_ICON = "object-select-symbolic"
 _COPY_FEEDBACK_SECONDS = 2
+# Tallest the expanded text area may grow; longer text scrolls inside it.
+_EXPANDED_TEXT_MAX_HEIGHT = 240
+# A text view reports only the height of the part it has already laid out, which for a
+# long text is a couple of lines, so the area's minimum height is estimated from the text.
+_TEXT_AREA_VERTICAL_MARGINS = 16
+_ESTIMATED_CHARS_PER_LINE = 60
+_ESTIMATED_LINE_HEIGHT = 22
+
+
+def estimate_text_area_height(text: str) -> int:
+    """Rough height in pixels of ``text`` wrapped in the expanded area, capped at the maximum.
+
+    Only used as the area's minimum height: short text gets just the room it needs and
+    long text gets the full capped height, without laying the whole text out first.
+    """
+    height = _TEXT_AREA_VERTICAL_MARGINS
+    for line in text.split("\n"):
+        height += max(1, -(-len(line) // _ESTIMATED_CHARS_PER_LINE)) * _ESTIMATED_LINE_HEIGHT
+        if height >= _EXPANDED_TEXT_MAX_HEIGHT:
+            return _EXPANDED_TEXT_MAX_HEIGHT
+    return height
 
 
 def format_entry_timestamp(iso_timestamp: str) -> str:
@@ -73,10 +94,12 @@ def format_entry_title(text: str, max_chars: int = 200) -> str:
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/history_page.ui")
 class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
-    """Dedicated History page: list of persisted extractions with a per-row copy action.
+    """Dedicated History page: list of persisted extractions.
 
-    The page is a UI shell: copying is delegated to ``HistoryController`` and
-    only the visual feedback (icon, tooltip, accessible label) lives here.
+    Each row can be expanded to show the full stored text (one row open at a time) and
+    has a copy action in its header. The page is a UI shell: copying is delegated to
+    ``HistoryController`` and only the visual feedback (icon, tooltip, accessible label)
+    lives here.
     """
 
     __gtype_name__ = "HistoryPage"
@@ -90,6 +113,10 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
         # Weak reference: the window owns the controller, the page must not keep it alive.
         self._history_controller: weakref.ReferenceType[HistoryController] | None = None
         self._rows: list[Gtk.Widget] = []
+        # The expanded row (at most one) and the rows whose text area already exists:
+        # the area is created on the first expansion, not when the page is populated.
+        self._open_row: Adw.ExpanderRow | None = None
+        self._content_built: set[Adw.ExpanderRow] = set()
         # Per-row handlers are NOT tracked by SignalManagerMixin (it would keep
         # every discarded row alive until teardown); they are disconnected in
         # _clear_rows() instead.
@@ -148,9 +175,9 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
 
     def _append_row(self, entry: "HistoryEntry") -> None:
         """Build one history row with its copy button and register it."""
-        # OCR text is arbitrary: with markup parsing on (the AdwActionRow default) a
-        # title such as "a < b & c" fails to parse and the row is shown blank.
-        row = Adw.ActionRow(
+        # OCR text is arbitrary: with markup parsing on (the row default) a title such as
+        # "a < b & c" fails to parse and the row is shown blank.
+        row = Adw.ExpanderRow(
             title=format_entry_title(entry.text),
             subtitle=format_entry_subtitle(entry),
             use_markup=False,
@@ -166,8 +193,53 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
         handler_id = copy_btn.connect("clicked", self._on_copy_clicked, entry.text)
         self._row_handlers.append((copy_btn, handler_id))
         row.add_suffix(copy_btn)
+        expanded_handler_id = row.connect("notify::expanded", self._on_row_expanded, entry.text)
+        self._row_handlers.append((row, expanded_handler_id))
         self.history_list.append(row)
         self._rows.append(row)
+
+    def _on_row_expanded(self, row: Adw.ExpanderRow, _pspec: object, text: str) -> None:
+        """Create the text area on first expansion and keep a single row open."""
+        if not row.get_expanded():
+            if self._open_row is row:
+                self._open_row = None
+            return
+
+        if row not in self._content_built:
+            self._content_built.add(row)
+            row.add_row(self._build_text_area(text))
+
+        previous, self._open_row = self._open_row, row
+        if previous is not None and previous is not row:
+            previous.set_expanded(False)
+
+    @staticmethod
+    def _build_text_area(text: str) -> Gtk.ScrolledWindow:
+        """Read-only, wrapping text view in a scrolled window of bounded height.
+
+        A text view lays text out incrementally, so very long OCR results stay cheap
+        (a label with 300 KB took 24 s to show, the text view 0.8 s). Short text takes
+        only the height it needs.
+        """
+        text_view = Gtk.TextView(
+            editable=False,
+            cursor_visible=False,
+            accepts_tab=False,
+            wrap_mode=Gtk.WrapMode.WORD_CHAR,
+            top_margin=8,
+            bottom_margin=8,
+            left_margin=12,
+            right_margin=12,
+        )
+        text_view.get_buffer().set_text(text)
+        scrolled = Gtk.ScrolledWindow(
+            hscrollbar_policy=Gtk.PolicyType.NEVER,
+            propagate_natural_height=True,
+            min_content_height=estimate_text_area_height(text),
+            max_content_height=_EXPANDED_TEXT_MAX_HEIGHT,
+        )
+        scrolled.set_child(text_view)
+        return scrolled
 
     def _on_copy_clicked(self, button: Gtk.Button, text: str) -> None:
         """Delegate the copy to the controller; show feedback only on success."""
@@ -213,6 +285,8 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
             with contextlib.suppress(TypeError, RuntimeError):
                 widget.disconnect(handler_id)
         self._row_handlers.clear()
+        self._open_row = None
+        self._content_built.clear()
         for row in self._rows:
             with contextlib.suppress(RuntimeError):
                 self.history_list.remove(row)
