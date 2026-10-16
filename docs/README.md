@@ -9,6 +9,7 @@ documentation lives in the root (`README.md`, `AGENTS.md`, `CONTRIBUTING.md`,
 | Document | Status | Purpose |
 | --- | --- | --- |
 | [reference/history-v1.md](reference/history-v1.md) | **Current / normative** | Extraction History V1: behaviour, storage, settings, UI, limits |
+| [reference/history-v2.md](reference/history-v2.md) | **Current / normative** | History V2 minimal cut: expandable rows, copy action, lifecycle, tests |
 | [reference/dependencies.md](reference/dependencies.md) | **Current / normative** | Python/Flatpak dependency workflow: uv.lock, sync, FEDC/certifi ownership, headless GTK testing |
 | [reference/tessdata-integrity.md](reference/tessdata-integrity.md) | **Current / normative** | Tessdata model integrity: checksum manifest, fail-closed verification, atomic install, anti-drift |
 
@@ -16,7 +17,7 @@ documentation lives in the root (`README.md`, `AGENTS.md`, `CONTRIBUTING.md`,
 
 | Document | Status | Purpose |
 | --- | --- | --- |
-| [planning/history-v2-interactive-rows.md](planning/history-v2-interactive-rows.md) | **Active — not yet implemented** | History V2: interactive history rows (copy, external editor, optional re-OCR/TTS) |
+| [planning/history-v2-interactive-rows.md](planning/history-v2-interactive-rows.md) | **Active — minimal cut implemented; rest planning** | History V2: interactive history rows (copy and expansion done; external editor, TTS and re-OCR tracked in #454–#456) |
 
 ## Historical material (audit/legacy)
 
@@ -41,9 +42,10 @@ docs/
 ├── README.md              ← this index
 ├── reference/             ← current (normative) references
 │   ├── history-v1.md
+│   ├── history-v2.md
 │   ├── dependencies.md
 │   └── tessdata-integrity.md
-├── planning/              ← active (not yet implemented) plans
+├── planning/              ← active plans (History V2: minimal cut implemented)
 │   └── history-v2-interactive-rows.md
 └── audit/                 ← QA/security audit material
     ├── README.md          ← audit root guide (root = active audits)

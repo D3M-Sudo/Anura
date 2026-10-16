@@ -1,8 +1,8 @@
 # Anura — History V2: Interactive History Rows (planning)
 
-**Status:** Minimal cut (copy button + expandable rows) in implementation; everything else still planning.  
+**Status:** Minimal cut (copy button + expandable rows) implemented in #434 and #452; the remaining items are tracked as separate issues and are still planning.  
 **Target:** next major/minor release after History V1 stabilisation.  
-**Owning documents:** this file, `docs/reference/history-v1.md`, `docs/README.md`.
+**Owning documents:** this file, `docs/reference/history-v1.md`, `docs/reference/history-v2.md`, `docs/README.md`.
 
 ## Motivation
 
@@ -92,6 +92,19 @@ replace, the suggestions in "Interaction model" above.
 - **No new strings, no new GSettings keys, no new shortcuts.** `HistoryEntry` is not
   mutated; opening a row is a read-only action.
 - Row-level actions beyond Copy (external editor, TTS, Re-OCR) remain out of this cut.
+
+## Implementation status
+
+| Item | Status |
+| --- | --- |
+| Copy to clipboard from the row | Implemented ([#434](https://github.com/D3M-Sudo/Anura/pull/434)) |
+| Activatable, expandable rows | Implemented ([#452](https://github.com/D3M-Sudo/Anura/pull/452)) |
+| Open in external editor | Planning, [#454](https://github.com/D3M-Sudo/Anura/issues/454) |
+| TTS replay | Planning, [#455](https://github.com/D3M-Sudo/Anura/issues/455) |
+| Re-OCR | Needs design first, [#456](https://github.com/D3M-Sudo/Anura/issues/456) |
+
+The behaviour that is implemented is documented in
+[../reference/history-v2.md](../reference/history-v2.md).
 
 ## Proposed scope (History V2)
 
