@@ -16,6 +16,7 @@ L'analisi fin qui è principalmente statica. Non sono stati installati strumenti
 - [Rapporto dei rilievi](./FINDINGS.md) — registro dei findings, evidenze e priorità.
 - [Manifesti, dipendenze e licenze](./MANIFEST-DEPENDENCIES-LICENSES.md) — struttura dei manifesti, sorgenti, dipendenze, licenze e riproducibilità.
 - [Piano di chiusura](./REMEDIATION-PLAN.md) — ordine operativo e gate da superare prima della submission.
+- [Priorità operative](./PRIORITIES.md) — ordine raccomandato, criteri di completamento e decisioni che richiedono il maintainer.
 
 ## Baseline e metodo
 
@@ -24,16 +25,19 @@ La baseline è stata identificata come `testing@ceeb66c9b0c4b5b81357e7924de76015
 Le fonti pubbliche normative principali consultate sono:
 
 - Flathub — [Requirements](https://docs.flathub.org/docs/for-app-authors/requirements)
+- Flathub — [Runtimes](https://docs.flathub.org/docs/for-app-authors/runtimes)
+- Flathub — [Submission](https://docs.flathub.org/docs/for-app-authors/submission)
 - Flathub — [Linter](https://docs.flathub.org/docs/for-app-authors/linter)
 - Flathub infrastructure — [flatpak-builder-lint](https://github.com/flathub-infra/flatpak-builder-lint)
 - GNOME — [GNOME 51 released](https://discourse.gnome.org/t/gnome-51-released/38820)
 - Tesseract — [tessdata_fast](https://github.com/tesseract-ocr/tessdata_fast) e [tessdata README](https://github.com/tesseract-ocr/tessdata)
+- gTTS — [API documentation](https://gtts.readthedocs.io/en/stable/module.html)
 
-Le policy e i runtime cambiano: ricontrollare le fonti ufficiali immediatamente prima della submission.
+Le policy e i runtime cambiano: ricontrollare le fonti ufficiali immediatamente prima della submission. La documentazione generale sui runtime conferma che deve essere usata una versione ospitata da Flathub e che la versione più recente al momento dell'invio è un requisito; non abbiamo concluso dalla sola pagina runtime che GNOME 51 sia sicuramente il ramo più recente ospitato. Questo va verificato direttamente prima di scegliere il target.
 
 ## Provenienza di questi documenti
 
-Questi appunti di audit sono stati redatti con assistenza IA sulla base di ispezioni del repository e fonti pubbliche. Non costituiscono codice dell'applicazione né un manifesto di submission. Prima della submission, il maintainer deve applicare la policy Flathub sull'uso dell'IA e dichiarare in modo accurato il materiale assistito dall'IA incluso nel progetto, ove richiesto. Il manifesto destinato alla submission deve essere preparato nel rispetto delle regole Flathub e non deve contenere materiale generato o assistito dall'IA.
+Questi appunti di audit sono stati redatti con assistenza IA sulla base di ispezioni del repository e fonti pubbliche. Non costituiscono codice dell'applicazione né un manifesto di submission. Il maintainer deve valutare se e quali parti di questa documentazione rientrino nel materiale dell'applicazione o del packaging da dichiarare secondo la policy Flathub corrente. La cartella di audit non va copiata automaticamente nel repository di submission. Il manifesto destinato alla submission deve essere preparato nel rispetto delle regole Flathub e non deve contenere materiale generato o assistito dall'IA.
 
 ## Convenzioni
 
