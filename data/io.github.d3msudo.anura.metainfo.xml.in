@@ -26,10 +26,12 @@
       <li>Modern GTK4 / Libadwaita interface following GNOME Human Interface Guidelines.</li>
     </ul>
     <p>
-      Network access is used exclusively for two purposes: downloading
-      Tesseract OCR language models on demand (sourced from GitHub), and
-      the optional text-to-speech feature powered by Google TTS. No user
-      data or extracted text is ever transmitted externally.
+      Network access is used to download Tesseract OCR language models from
+      GitHub. Anura's text-to-speech feature uses Google TTS: when speech is
+      generated, the selected text is sent to Google's service for processing.
+      The application also requests the list of supported TTS languages from
+      Google when the TTS service initializes. Do not use TTS with text you do
+      not want to send to an external service.
     </p>
     <p>
       Screenshot capture uses the XDG Desktop Portal interface, which
