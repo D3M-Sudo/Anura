@@ -11,6 +11,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - History: each row of the History page now has a copy button that copies the stored text to the clipboard, with icon and toast feedback (History V2, minimal cut). Row activation is intentionally not bound to any action yet. The action logic lives in the new `HistoryController`, which reports outcomes through signals, so `HistoryPage` stays a UI shell
 - Tests: `tests/test_pot_template.py` validates the gettext template with the checks that apply to a template (it parses, no duplicate msgids, the History strings are extracted). `msgfmt -c` is not one of them: it rejects the placeholder header xgettext writes, and is meant for the translated `.po` files
 
+### Changed
+- History: the Clear button is insensitive while there are no entries, so it can no longer open an empty confirmation dialog
+
 ### Fixed
 - History: row titles and subtitles were parsed as Pango markup, so extracted text containing `&` or `<` (for example "R&D" or code such as `if (a<b)`) produced an empty row title and `<b>`-style text lost its tags
 - Clipboard: copying text (extracted text, QR URL, History rows) did not reach other applications, so it could not be pasted anywhere. `ClipboardService.set()` wrapped the text in a `GLib.Variant`, which GTK publishes only as the unreadable `GVariant` format; it now publishes a plain string (`text/plain`). Present since the change that replaced `Gdk.Clipboard.set_text()` (v0.1.5, v0.2.0)
