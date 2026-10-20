@@ -41,6 +41,7 @@ anura/
 │   ├── controllers/            Business Logic Controllers
 │   │   ├── ocr_controller.py   OCR coordination and signal handling
 │   │   ├── tts_controller.py   TTS lifecycle and UI state management
+│   │   ├── history_controller.py   History entry actions (copy) reported through signals
 │   │   └── dnd_controller.py   Asynchronous Drag-and-Drop coordination
 │   ├── services/
 │   │   ├── clipboard_service.py    Clipboard read/write (Gdk.Clipboard)
@@ -94,7 +95,7 @@ anura/
 │   │   └── validators.py          URI validation, security & text sanitization
 │   ├── widgets/
 │   │   ├── extracted_page.py       OCR result page: GtkSourceView 5 editor (native search, external editor handoff) + share/TTS actions
-│   │   ├── history_page.py         History V1 page (read-only list, clear action)
+│   │   ├── history_page.py         History page (expandable rows with copy action, clear action; see docs/reference/history-v2.md)
 │   │   ├── language_popover.py     Language selector with search
 │   │   ├── language_popover_row.py Language row in popover
 │   │   ├── language_row.py         Language row in preferences page
@@ -118,7 +119,7 @@ anura/
 ├── docs/
 │   ├── README.md               Documentation index (normative / planning / audit)
 │   ├── reference/              Current (normative) references:
-│   │                            history-v1.md, dependencies.md, tessdata-integrity.md
+│   │                            history-v1.md, history-v2.md, dependencies.md, tessdata-integrity.md
 │   ├── planning/               Active (not yet implemented) plans (recreated when needed)
 │   └── audit/                  QA/security audit material:
 │                                README.md (root = active audits) + legacy/ (append-only: reports/)
@@ -185,6 +186,37 @@ flatpak-builder --force-clean builddir flatpak/io.github.d3msudo.anura.local.jso
 # Run the build
 flatpak-builder --run builddir flatpak/io.github.d3msudo.anura.local.json anura
 ```
+
+
+## Release Process
+
+> **AGENT REMINDER — the GitHub release body is NOT automated.**
+> The CI auto-creates the GitHub release for every `v*` tag (the
+> `flatpak-builder` job in `.github/workflows/main.yml` calls
+> `softprops/action-gh-release` and attaches the Flatpak bundle) — but with
+> an **EMPTY body**. Populating the release notes is a **mandatory manual
+> step** every time a tag is created and pushed.
+
+1. Run `./build-aux/release.sh <version>` (bumps version, pins tessdata,
+   generates the release manifest) and push the tag.
+2. Wait for the tag's CI run to complete (`gh run watch <run-id>`): the
+   release is created only when the `flatpak-builder` job finishes.
+3. Populate the release body — `CHANGELOG.md` is the single source of truth:
+   ```bash
+   { echo "## Anura v<version> — <YYYY-MM-DD>"; echo;
+     awk 'BEGIN{p=0} /^## \[<version>\]/{p=1; next} /^## \[<prev-version>\]/{exit} p{print}' \
+       CHANGELOG.md > /tmp/notes-<version>.md
+     gh release edit v<version> --title "v<version>" \
+       --notes-file /tmp/notes-<version>.md --latest
+   ```
+   - Header style: `## Anura vX.Y.Z — YYYY-MM-DD`; keep the date consistent
+     with the CHANGELOG entry (both files are the reference for users).
+   - Never leave the body empty and never invent notes that are not in the
+     CHANGELOG; keep the `### Added / Fixed / Changed / Security / Removed`
+     subsection structure as-is.
+4. Final check: `gh release view v<version>` — asset
+   `io.github.d3msudo.anura.flatpak` attached, notes complete, `Latest`
+   flag on the new release.
 
 ## Dependency Management
 
@@ -350,6 +382,8 @@ History V1 tests: `tests/test_history_storage.py`,
 `tests/test_history_controller_integration.py`, `tests/test_history_ui.py`
 (headless), `tests/test_history_settings.py` (GTK-marked) and
 `tests/test_preferences_page_resilience.py` (history/TTS wiring regression).
+History V2 tests: `tests/test_history_controller.py`, `tests/test_history_expansion_real.py`
+(GTK-marked, real widgets); `tests/test_pot_template.py` validates the gettext template.
 Shortcuts overlay consistency: `tests/test_shortcuts_consistency.py`.
 Tessdata integrity: `tests/test_tessdata_checksums.py` (manifest lookup and
 fail-closed semantics, headless) and `tests/test_tessdata_consistency.py`

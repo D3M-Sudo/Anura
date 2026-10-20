@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- History: rows now expand (Enter, Space or click on the row) to show the full extracted text in a scrollable area of limited height; one row is open at a time and all rows start collapsed every time the page is opened. The copy button stays in the row header. The text area is created on the first expansion, so a long history with large entries opens as fast as before (History V2, minimal cut). Tests: `tests/test_history_expansion_real.py` runs the real page and real widgets
+- History: each row of the History page now has a copy button that copies the stored text to the clipboard, with icon and toast feedback (History V2, minimal cut). Row activation is intentionally not bound to any action yet. The action logic lives in the new `HistoryController`, which reports outcomes through signals, so `HistoryPage` stays a UI shell
+- Tests: `tests/test_pot_template.py` validates the gettext template with the checks that apply to a template (it parses, no duplicate msgids, the History strings are extracted). `msgfmt -c` is not one of them: it rejects the placeholder header xgettext writes, and is meant for the translated `.po` files
+
+### Changed
+- History: the Clear button is insensitive while there are no entries, so it can no longer open an empty confirmation dialog
+
+### Fixed
+- History: row titles and subtitles were parsed as Pango markup, so extracted text containing `&` or `<` (for example "R&D" or code such as `if (a<b)`) produced an empty row title and `<b>`-style text lost its tags
+- Clipboard: copying text (extracted text, QR URL, History rows) did not reach other applications, so it could not be pasted anywhere. `ClipboardService.set()` wrapped the text in a `GLib.Variant`, which GTK publishes only as the unreadable `GVariant` format; it now publishes a plain string (`text/plain`). Present since the change that replaced `Gdk.Clipboard.set_text()` (v0.1.5, v0.2.0)
+- Silent CLI mode (`--silent`) never ran the OCR and then hung: the runner called `GLib.MainContext.push()`/`pop()`, which do not exist in PyGObject (`push_thread_default()`/`pop_thread_default()` do; `AttributeError`), and its main-loop callbacks took no arguments while PyGObject passes the source `user_data`, so every callback raised `TypeError` and not even the 60 s timeout could end the loop. Found on PyGObject 3.48.2; the only test mocked the whole runner
+- Silent CLI mode (`--silent`): the copied text could not be pasted once the process exited, because the clipboard belongs to the process that set it. The text is now handed to the desktop clipboard manager when there is one; otherwise the process keeps serving the clipboard for up to 30 seconds, or until another application copies something, and then exits. Checked on X11 with and without a clipboard manager; on Wayland the backend cannot hand content to a manager, so only the wait applies
+- CLI: `anura --file <image>` (with or without `--silent`) crashed with a `TypeError` before processing anything. The file name comes from GLib as a bytestring, `unpack()` turns it into a list of integers and `Path()` rejects that; it is now decoded to a string, non-ASCII names included. The test that covered this fed a plain string, which GLib never delivers. Found on PyGObject 3.48.2 / GLib 2.80
+
 ## [0.2.0] - 2026-09-21
 
 ### Added

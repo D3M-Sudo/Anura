@@ -1,8 +1,8 @@
 # Anura — History V2: Interactive History Rows (planning)
 
-**Status:** Active planning — not yet implemented.  
+**Status:** Minimal cut (copy button + expandable rows) implemented in #434 and #452; the remaining items are tracked as separate issues and are still planning.  
 **Target:** next major/minor release after History V1 stabilisation.  
-**Owning documents:** this file, `docs/reference/history-v1.md`, `docs/README.md`.
+**Owning documents:** this file, `docs/reference/history-v1.md`, `docs/reference/history-v2.md`, `docs/README.md`.
 
 ## Motivation
 
@@ -62,6 +62,49 @@ Suggested approach, consistent with current `ExtractedPage` patterns:
 - Actions not applicable to a particular entry (for example TTS not available for
   that language) must be disabled/absent, not failing unexpectedly.
 
+
+## Decisions for the minimal cut (expandable rows)
+
+Recorded after the design audit of 2026-10-12. They refine, and where they differ
+replace, the suggestions in "Interaction model" above.
+
+- **Activating a row expands it** (Enter/Space/click on the header) to show the full
+  stored text. The per-row copy button stays in the header as a suffix, so it is
+  reachable with the keyboard whether the row is open or not, and the copy keeps
+  using the full stored text.
+- **Widget: `Adw.ExpanderRow`** (`expanded`, `add_row()`, `add_suffix()`; available
+  since libadwaita 1.3). A custom row or a virtualised `Gtk.ListView` was considered
+  and left out of this cut.
+- **Content is created on the first expansion, not when the page is populated.** The
+  history list is not virtualised and stored text has no size limit. Measured with 50
+  entries of 50 KB each: creating every row's content up front took 48 s to show the
+  page, against 2 s with the current rows and 2 s when it is created on expansion.
+- **One open row at a time.** Expanding a row collapses the previous one.
+- **Expansion is not remembered.** Every `refresh()` (opening the page, after Clear)
+  rebuilds the list with all rows collapsed.
+- **Long text is shown in a scrollable area with a maximum height**, a read-only
+  `Gtk.TextView` inside a `Gtk.ScrolledWindow`. A `Gtk.Label` was measured and rejected:
+  the first expansion took 1.06 s with 50 KB and 24 s with 300 KB, against 0.40 s and
+  0.80 s for the text view. Short text takes only the height it needs.
+  A text view reports only the height of the part it has already laid out (about two
+  lines for a long text), so the area's minimum height is estimated from the text
+  (`estimate_text_area_height`); without it the area stayed about 54 px tall.
+- **No new strings, no new GSettings keys, no new shortcuts.** `HistoryEntry` is not
+  mutated; opening a row is a read-only action.
+- Row-level actions beyond Copy (external editor, TTS, Re-OCR) remain out of this cut.
+
+## Implementation status
+
+| Item | Status |
+| --- | --- |
+| Copy to clipboard from the row | Implemented ([#434](https://github.com/D3M-Sudo/Anura/pull/434)) |
+| Activatable, expandable rows | Implemented ([#452](https://github.com/D3M-Sudo/Anura/pull/452)) |
+| Open in external editor | Planning, [#454](https://github.com/D3M-Sudo/Anura/issues/454) |
+| TTS replay | Planning, [#455](https://github.com/D3M-Sudo/Anura/issues/455) |
+| Re-OCR | Needs design first, [#456](https://github.com/D3M-Sudo/Anura/issues/456) |
+
+The behaviour that is implemented is documented in
+[../reference/history-v2.md](../reference/history-v2.md).
 
 ## Proposed scope (History V2)
 

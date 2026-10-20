@@ -5,12 +5,17 @@ integration. The pre-implementation plan is preserved as historical material in
 [../audit/legacy/reports/history-v1-plan.md](../audit/legacy/reports/history-v1-plan.md) and must not be
 treated as current guidance.
 
+What the rows do (copy button, expandable rows) since the History V2 minimal cut is
+documented in [history-v2.md](history-v2.md); this document keeps describing storage,
+settings and the page states.
+
 ## What History V1 provides
 
 - Opt-in local history of recent OCR extractions, newest-first.
-- Read-only history page (`HistoryPage`, `data/ui/history_page.blp`) with
+- History page (`HistoryPage`, `data/ui/history_page.blp`) with
   empty/disabled/entries states and a destructive clear action with
-  confirmation (`Adw.MessageDialog`).
+  confirmation (`Adw.AlertDialog`). The page never edits stored entries; only the
+  clear action removes them.
 - Navigation entry via the `win.show-history` action from the welcome page.
 - History preferences in `PreferencesGeneralPage` (`Save Extraction History`
   switch + `History Size` spin row).
@@ -81,6 +86,7 @@ Notes:
   empty fields.
 - Malformed timestamps fall back to the raw string; formatting never crashes.
 - Clear action removes all entries through the service and refreshes the page.
+- Row interaction (expansion, copy) is described in [history-v2.md](history-v2.md).
 
 ## Lifecycle and boundaries
 
