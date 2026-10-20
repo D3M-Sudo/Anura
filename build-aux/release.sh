@@ -34,6 +34,8 @@ MANIFEST_FILE="$PROJECT_ROOT/flatpak/io.github.d3msudo.anura.json"
 MANIFEST_LOCAL="$PROJECT_ROOT/flatpak/io.github.d3msudo.anura.local.json"
 METAINFO_FILE="$PROJECT_ROOT/data/io.github.d3msudo.anura.metainfo.xml.in"
 MESON_BUILD_FILE="$PROJECT_ROOT/meson.build"
+PYPROJECT_FILE="$PROJECT_ROOT/pyproject.toml"
+UV_LOCK_FILE="$PROJECT_ROOT/uv.lock"
 DATE=$(date +%Y-%m-%d)
 
 echo "=== Anura Release $VERSION ==="
@@ -56,6 +58,46 @@ if [ -f "$MESON_BUILD_FILE" ]; then
 else
     echo "⚠ $MESON_BUILD_FILE not found, skipping"
 fi
+
+echo ""
+
+# Keep every declared version in step: pyproject.toml is the source uv reads,
+# and the lockfile repeats the same version for the virtual `anura` package.
+# Both are rewritten with Python (no network, no re-lock) so a release can
+# never leave the project version behind: `uv sync --frozen` compares them.
+echo "Updating $PYPROJECT_FILE and $UV_LOCK_FILE with version $VERSION..."
+python3 - "$PYPROJECT_FILE" "$UV_LOCK_FILE" "$VERSION" <<'PY'
+import re
+import sys
+
+pyproject_path, lock_path, version = sys.argv[1:4]
+
+with open(pyproject_path, encoding="utf-8") as handle:
+    text = handle.read()
+text, replaced = re.subn(
+    r'^version = "[^"]*"$', f'version = "{version}"', text, count=1, flags=re.MULTILINE
+)
+if replaced != 1:
+    sys.exit(f"pyproject.toml: expected exactly one version line, found {replaced}")
+with open(pyproject_path, "w", encoding="utf-8") as handle:
+    handle.write(text)
+
+with open(lock_path, encoding="utf-8") as handle:
+    text = handle.read()
+text, replaced = re.subn(
+    r'(name = "anura"\nversion = ")[^"]*(")',
+    lambda match: f"{match.group(1)}{version}{match.group(2)}",
+    text,
+    count=1,
+)
+if replaced != 1:
+    sys.exit(f"uv.lock: expected exactly one anura package entry, found {replaced}")
+with open(lock_path, "w", encoding="utf-8") as handle:
+    handle.write(text)
+
+print(f"✓ pyproject.toml and uv.lock updated to {version}")
+PY
+git add "$PYPROJECT_FILE" "$UV_LOCK_FILE"
 
 echo ""
 
@@ -150,6 +192,8 @@ echo ""
 echo "=== Summary of changes ==="
 echo "Files modified:"
 echo "  - $MESON_BUILD_FILE (version bumped to $VERSION)"
+echo "  - $PYPROJECT_FILE (version bumped to $VERSION)"
+echo "  - $UV_LOCK_FILE (anura package version bumped to $VERSION)"
 echo "  - $MANIFEST_LOCAL (tessdata pinned to ref $TESSDATA_REF)"
 echo "  - $METAINFO_FILE (release $VERSION added)"
 echo "  - $MANIFEST_FILE (regenerated from $MANIFEST_LOCAL)"
@@ -164,6 +208,7 @@ echo "Creating commit..."
 git commit -m "Release v$VERSION
 
 - Bump version to $VERSION in meson.build
+- Keep pyproject.toml and the uv.lock anura entry at the same version
 - Pin tessdata to ref $TESSDATA_REF in the local Flatpak manifest
 - Regenerate the release Flatpak manifest from the local one
 - Update metainfo for v$VERSION release"
