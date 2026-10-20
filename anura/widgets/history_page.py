@@ -163,6 +163,9 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
                 logger.exception("HistoryPage: Failed to read history for display")
                 entries = []
 
+        if self.clear_button:
+            self.clear_button.set_sensitive(bool(entries))
+
         if not entries:
             # Disabled recording shows the dedicated state; existing stored
             # history is still displayed even when recording is off.
