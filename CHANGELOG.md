@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-20
+
 ### Added
 - History: rows now expand (Enter, Space or click on the row) to show the full extracted text in a scrollable area of limited height; one row is open at a time and all rows start collapsed every time the page is opened. The copy button stays in the row header. The text area is created on the first expansion, so a long history with large entries opens as fast as before (History V2, minimal cut). Tests: `tests/test_history_expansion_real.py` runs the real page and real widgets
 - History: each row of the History page now has a copy button that copies the stored text to the clipboard, with icon and toast feedback (History V2, minimal cut). Row activation is intentionally not bound to any action yet. The action logic lives in the new `HistoryController`, which reports outcomes through signals, so `HistoryPage` stays a UI shell
