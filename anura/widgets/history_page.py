@@ -7,6 +7,7 @@ import contextlib
 from datetime import datetime
 from gettext import gettext as _
 from typing import TYPE_CHECKING
+import weakref
 
 import gi
 
@@ -16,7 +17,7 @@ gi.require_version("GLib", "2.0")
 gi.require_version("GObject", "2.0")
 gi.require_version("Gtk", "4.0")
 
-from gi.repository import Adw, Gtk  # noqa: E402
+from gi.repository import Adw, GLib, Gtk  # noqa: E402
 from loguru import logger  # noqa: E402
 
 from anura.config import RESOURCE_PREFIX  # noqa: E402
@@ -24,8 +25,35 @@ from anura.services.settings import settings  # noqa: E402
 from anura.utils.signal_manager import SignalManagerMixin  # noqa: E402
 
 if TYPE_CHECKING:
+    from anura.controllers.history_controller import HistoryController
     from anura.models.history import HistoryEntry
     from anura.services.history_service import HistoryService
+
+
+_COPY_ICON = "edit-copy-symbolic"
+_COPIED_ICON = "object-select-symbolic"
+_COPY_FEEDBACK_SECONDS = 2
+# Tallest the expanded text area may grow; longer text scrolls inside it.
+_EXPANDED_TEXT_MAX_HEIGHT = 240
+# A text view reports only the height of the part it has already laid out, which for a
+# long text is a couple of lines, so the area's minimum height is estimated from the text.
+_TEXT_AREA_VERTICAL_MARGINS = 16
+_ESTIMATED_CHARS_PER_LINE = 60
+_ESTIMATED_LINE_HEIGHT = 22
+
+
+def estimate_text_area_height(text: str) -> int:
+    """Rough height in pixels of ``text`` wrapped in the expanded area, capped at the maximum.
+
+    Only used as the area's minimum height: short text gets just the room it needs and
+    long text gets the full capped height, without laying the whole text out first.
+    """
+    height = _TEXT_AREA_VERTICAL_MARGINS
+    for line in text.split("\n"):
+        height += max(1, -(-len(line) // _ESTIMATED_CHARS_PER_LINE)) * _ESTIMATED_LINE_HEIGHT
+        if height >= _EXPANDED_TEXT_MAX_HEIGHT:
+            return _EXPANDED_TEXT_MAX_HEIGHT
+    return height
 
 
 def format_entry_timestamp(iso_timestamp: str) -> str:
@@ -66,7 +94,13 @@ def format_entry_title(text: str, max_chars: int = 200) -> str:
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/history_page.ui")
 class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
-    """Dedicated History V1 page: read-only list of persisted extractions."""
+    """Dedicated History page: list of persisted extractions.
+
+    Each row can be expanded to show the full stored text (one row open at a time) and
+    has a copy action in its header. The page is a UI shell: copying is delegated to
+    ``HistoryController`` and only the visual feedback (icon, tooltip, accessible label)
+    lives here.
+    """
 
     __gtype_name__ = "HistoryPage"
 
@@ -76,18 +110,42 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
 
     def __init__(self, **kwargs: object) -> None:
         self._history_service = None  # type: "HistoryService | None"  # TYPE_CHECKING-only import
+        # Weak reference: the window owns the controller, the page must not keep it alive.
+        self._history_controller: weakref.ReferenceType[HistoryController] | None = None
         self._rows: list[Gtk.Widget] = []
+        # The expanded row (at most one) and the rows whose text area already exists:
+        # the area is created on the first expansion, not when the page is populated.
+        self._open_row: Adw.ExpanderRow | None = None
+        self._content_built: set[Adw.ExpanderRow] = set()
+        # Per-row handlers are NOT tracked by SignalManagerMixin (it would keep
+        # every discarded row alive until teardown); they are disconnected in
+        # _clear_rows() instead.
+        self._row_handlers: list[tuple[Gtk.Widget, int]] = []
+        # Copy-button feedback timers, keyed by button so they can be cancelled.
+        self._feedback_timers: dict[Gtk.Button, int] = {}
 
         super().__init__(**kwargs)
         SignalManagerMixin.__init__(self)
         self.settings = settings
 
         self.connect_tracked(self.clear_button, "clicked", self._on_clear_clicked)
+        # SignalManagerMixin.teardown_all() calls teardown() on registered controllers.
+        self.register_controller(self)
 
-    def setup(self, history_service: "HistoryService") -> None:
-        """Wire the shared HistoryService instance (injected by AnuraWindow)."""
+    def setup(self, history_service: "HistoryService", history_controller: "HistoryController | None" = None) -> None:
+        """Wire the shared HistoryService and HistoryController (injected by AnuraWindow)."""
         self._history_service = history_service
+        self._history_controller = weakref.ref(history_controller) if history_controller is not None else None
         self.refresh()
+
+    def teardown(self) -> None:
+        """Unified teardown called by SignalManagerMixin."""
+        self.cleanup()
+
+    def cleanup(self) -> None:
+        """Release row handlers, feedback timers and the controller reference."""
+        self._clear_rows()
+        self._history_controller = None
 
     def refresh(self) -> None:
         """Reload entries from the service and repopulate the list."""
@@ -105,6 +163,9 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
                 logger.exception("HistoryPage: Failed to read history for display")
                 entries = []
 
+        if self.clear_button:
+            self.clear_button.set_sensitive(bool(entries))
+
         if not entries:
             # Disabled recording shows the dedicated state; existing stored
             # history is still displayed even when recording is off.
@@ -113,15 +174,122 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
 
         self.history_stack.set_visible_child_name("entries")
         for entry in entries:
-            row = Adw.ActionRow(
-                title=format_entry_title(entry.text),
-                subtitle=format_entry_subtitle(entry),
-            )
-            self.history_list.append(row)
-            self._rows.append(row)
+            self._append_row(entry)
+
+    def _append_row(self, entry: "HistoryEntry") -> None:
+        """Build one history row with its copy button and register it."""
+        # OCR text is arbitrary: with markup parsing on (the row default) a title such as
+        # "a < b & c" fails to parse and the row is shown blank.
+        row = Adw.ExpanderRow(
+            title=format_entry_title(entry.text),
+            subtitle=format_entry_subtitle(entry),
+            use_markup=False,
+        )
+        copy_label = _("Copy text to clipboard")
+        copy_btn = Gtk.Button(
+            icon_name=_COPY_ICON,
+            valign=Gtk.Align.CENTER,
+            tooltip_text=copy_label,
+        )
+        copy_btn.add_css_class("flat")
+        copy_btn.update_property([Gtk.AccessibleProperty.LABEL], [copy_label])
+        handler_id = copy_btn.connect("clicked", self._on_copy_clicked, entry.text)
+        self._row_handlers.append((copy_btn, handler_id))
+        row.add_suffix(copy_btn)
+        expanded_handler_id = row.connect("notify::expanded", self._on_row_expanded, entry.text)
+        self._row_handlers.append((row, expanded_handler_id))
+        self.history_list.append(row)
+        self._rows.append(row)
+
+    def _on_row_expanded(self, row: Adw.ExpanderRow, _pspec: object, text: str) -> None:
+        """Create the text area on first expansion and keep a single row open."""
+        if not row.get_expanded():
+            if self._open_row is row:
+                self._open_row = None
+            return
+
+        if row not in self._content_built:
+            self._content_built.add(row)
+            row.add_row(self._build_text_area(text))
+
+        previous, self._open_row = self._open_row, row
+        if previous is not None and previous is not row:
+            previous.set_expanded(False)
+
+    @staticmethod
+    def _build_text_area(text: str) -> Gtk.ScrolledWindow:
+        """Read-only, wrapping text view in a scrolled window of bounded height.
+
+        A text view lays text out incrementally, so very long OCR results stay cheap
+        (a label with 300 KB took 24 s to show, the text view 0.8 s). Short text takes
+        only the height it needs.
+        """
+        text_view = Gtk.TextView(
+            editable=False,
+            cursor_visible=False,
+            accepts_tab=False,
+            wrap_mode=Gtk.WrapMode.WORD_CHAR,
+            top_margin=8,
+            bottom_margin=8,
+            left_margin=12,
+            right_margin=12,
+        )
+        text_view.get_buffer().set_text(text)
+        scrolled = Gtk.ScrolledWindow(
+            hscrollbar_policy=Gtk.PolicyType.NEVER,
+            propagate_natural_height=True,
+            min_content_height=estimate_text_area_height(text),
+            max_content_height=_EXPANDED_TEXT_MAX_HEIGHT,
+        )
+        scrolled.set_child(text_view)
+        return scrolled
+
+    def _on_copy_clicked(self, button: Gtk.Button, text: str) -> None:
+        """Delegate the copy to the controller; show feedback only on success."""
+        controller = self._history_controller() if self._history_controller is not None else None
+        if controller is None:
+            logger.warning("HistoryPage: Copy requested but no HistoryController is wired")
+            return
+        if controller.copy_entry_text(text):
+            self._show_row_copy_feedback(button)
+
+    def _show_row_copy_feedback(self, button: Gtk.Button) -> None:
+        if button in self._feedback_timers:
+            return  # Feedback already showing; the pending timer will restore the button.
+        copied_text = _("Text copied to clipboard")
+        button.set_icon_name(_COPIED_ICON)
+        button.set_tooltip_text(copied_text)
+        button.update_property([Gtk.AccessibleProperty.LABEL], [copied_text])
+        self._feedback_timers[button] = GLib.timeout_add_seconds(
+            _COPY_FEEDBACK_SECONDS, self._reset_row_copy_button, button
+        )
+
+    def _reset_row_copy_button(self, button: Gtk.Button) -> bool:
+        self._feedback_timers.pop(button, None)
+        copy_label = _("Copy text to clipboard")
+        button.set_icon_name(_COPY_ICON)
+        button.set_tooltip_text(copy_label)
+        button.update_property([Gtk.AccessibleProperty.LABEL], [copy_label])
+        return GLib.SOURCE_REMOVE
+
+    def _cancel_feedback_timers(self) -> None:
+        for source_id in self._feedback_timers.values():
+            GLib.source_remove(source_id)
+        self._feedback_timers.clear()
 
     def _clear_rows(self) -> None:
-        """Remove previously displayed rows (tracked in Python, mock-safe)."""
+        """Remove previously displayed rows (tracked in Python, mock-safe).
+
+        Also cancels pending feedback timers and disconnects the per-row
+        handlers so discarded rows and buttons can be finalised.
+        """
+        self._cancel_feedback_timers()
+        for widget, handler_id in self._row_handlers:
+            with contextlib.suppress(TypeError, RuntimeError):
+                widget.disconnect(handler_id)
+        self._row_handlers.clear()
+        self._open_row = None
+        self._content_built.clear()
         for row in self._rows:
             with contextlib.suppress(RuntimeError):
                 self.history_list.remove(row)

@@ -243,12 +243,17 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
                 win.show_toast(_("URL copied to clipboard"))
 
     def do_command_line(self, command_line: Gio.ApplicationCommandLine) -> int:
-        options = command_line.get_options_dict().end().unpack()
+        options_dict = command_line.get_options_dict()
+        # A G_OPTION_ARG_FILENAME option is a bytestring ('ay'): unpack() turns it into a
+        # list of ints, which Path() rejects with a TypeError. Read it before end() empties
+        # the dict and decode it the way the filesystem does.
+        file_variant = options_dict.lookup_value("file", None)
+        options = options_dict.end().unpack()
 
         if "extract_to_clipboard" in options:
             return self._handle_extract_to_clipboard()
-        if "file" in options:
-            return self._handle_file_option(options["file"], "silent" in options)
+        if file_variant is not None:
+            return self._handle_file_option(os.fsdecode(file_variant.get_bytestring()), "silent" in options)
 
         self.activate()
         return 0

@@ -16,6 +16,10 @@ from anura.services.clipboard_service import get_clipboard_service
 
 _SignalHandler = sig.Handlers | Callable[[int, FrameType | None], Any] | int | None
 
+# How long the silent process keeps serving the clipboard when no clipboard manager took
+# the text over (the text is only pasteable while the process is alive).
+_CLIPBOARD_LINGER_SECONDS = 30
+
 
 class SilentRunner:
     """Headless engine for running OCR without UI."""
@@ -53,7 +57,7 @@ class SilentRunner:
         self._ocr_success = False
         self._timed_out = False
 
-        def check_interrupted():
+        def check_interrupted(*_args):
             if self.interrupted.is_set():
                 loop.quit()
                 return False
@@ -64,7 +68,7 @@ class SilentRunner:
         check_source.attach(ctx)
         sources.append(check_source)
 
-        def do_ocr():
+        def do_ocr(*_args):
             if self.interrupted.is_set():
                 loop.quit()
                 return False
@@ -103,7 +107,7 @@ class SilentRunner:
         idle_source.attach(ctx)
         sources.append(idle_source)
 
-        def on_timeout():
+        def on_timeout(*_args):
             logger.error("Anura: Silent mode timed out after 60 seconds.")
             self._timed_out = True
             loop.quit()
@@ -119,11 +123,11 @@ class SilentRunner:
             logger.error("Anura: Could not acquire GLib MainContext for silent mode.")
             return 1
 
-        ctx.push()
+        ctx.push_thread_default()
         try:
             loop.run()
         finally:
-            ctx.pop()
+            ctx.pop_thread_default()
             ctx.release()
 
         for source in sources:
@@ -133,4 +137,33 @@ class SilentRunner:
             return 130
         if self._timed_out:
             return 124  # Standard timeout exit code
-        return 0 if self._ocr_success else 1
+        if not self._ocr_success:
+            return 1
+
+        self._keep_clipboard_available()
+        return 0
+
+    def _keep_clipboard_available(self) -> None:
+        """Make sure the copied text is still pasteable after this process exits.
+
+        The clipboard belongs to the process that set it: exiting right after set() leaves
+        nothing to paste unless a clipboard manager took the text over. Hand it to the
+        manager if there is one; otherwise keep serving it until another application copies
+        something or the linger timeout expires. A signal during the wait just ends it: the
+        OCR already succeeded.
+
+        The wait must iterate the *default* main context: GDK answers paste requests from
+        there, while the OCR loop above iterates a private context (checked: a process that
+        only iterates a private context cannot be pasted from, even while it is alive).
+        """
+        service = get_clipboard_service()
+        if service.hand_off_to_manager():
+            logger.info("Anura: Clipboard content handed over to the clipboard manager.")
+            return
+
+        logger.info(
+            f"Anura: No clipboard manager; serving the clipboard for up to {_CLIPBOARD_LINGER_SECONDS}s "
+            "or until another application replaces it."
+        )
+        if service.wait_until_replaced(_CLIPBOARD_LINGER_SECONDS, self.interrupted.is_set):
+            logger.info("Anura: Clipboard replaced by another application, exiting.")

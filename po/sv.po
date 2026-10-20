@@ -7,198 +7,205 @@ msgstr ""
 "Project-Id-Version: anura 1.4.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-12 19:27+0200\n"
-"PO-Revision-Date: 2026-09-12 19:20+0200\n"
-"Last-Translator: Automatically generated\n"
-"Language-Team: none\n"
+"PO-Revision-Date: 2026-09-19 17:55+0000\n"
+"Last-Translator: Daniel Nylander <yeagersthlm@gmail.com>\n"
+"Language-Team: Swedish <https://hosted.weblate.org/projects/anura/anura/sv/>"
+"\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 2026.10.dev0\n"
 
 #: anura/controllers/dnd_controller.py:45
 msgid "Failed to load dropped file (invalid path)."
-msgstr ""
+msgstr "Kunde inte läsa in den släppta filen (ogiltig sökväg)."
 
 #: anura/controllers/dnd_controller.py:52
 #: anura/services/screenshot_service.py:581 anura/window.py:238
 msgid "Invalid image file"
-msgstr ""
+msgstr "Ogiltig bildfil"
 
 #: anura/controllers/dnd_controller.py:65
 msgid "Failed to process the file."
-msgstr ""
+msgstr "Kunde inte bearbeta filen."
 
 #: anura/controllers/ocr_controller.py:105
 msgid "No text found. Try to grab another region."
-msgstr ""
+msgstr "Ingen text hittades. Prova att markera ett annat område."
 
 #: anura/controllers/ocr_controller.py:120
 msgid "Text extracted"
-msgstr ""
+msgstr "Text extraherad"
 
 #: anura/controllers/ocr_controller.py:175
 #, python-brace-format
 msgid "{n} email found in text"
 msgid_plural "{n} emails found in text"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{n} e-postadress hittades i texten"
+msgstr[1] "{n} e-postadresser hittades i texten"
 
 #: anura/controllers/ocr_controller.py:181
 #, python-brace-format
 msgid "{n} phone number found in text"
 msgid_plural "{n} phone numbers found in text"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{n} telefonnummer hittades i texten"
+msgstr[1] "{n} telefonnummer hittades i texten"
 
 #: anura/controllers/ocr_controller.py:227
 msgid "Choose an image for extraction"
-msgstr ""
+msgstr "Välj en bild för extrahering"
 
 #: anura/controllers/ocr_controller.py:230
 msgid "All supported images"
-msgstr ""
+msgstr "Alla bildformat som stöds"
 
 #: anura/controllers/ocr_controller.py:262
 msgid "PNG images (*.png)"
-msgstr ""
+msgstr "PNG-bilder (*.png)"
 
 #: anura/controllers/ocr_controller.py:263
 msgid "JPEG images (*.jpg)"
-msgstr ""
+msgstr "JPEG-bilder (*.jpg)"
 
 #: anura/controllers/ocr_controller.py:264
 msgid "WebP images (*.webp)"
-msgstr ""
+msgstr "WebP-bilder (*.webp)"
 
 #: anura/controllers/ocr_controller.py:265
 msgid "AVIF images (*.avif)"
-msgstr ""
+msgstr "AVIF-bilder (*.avif)"
 
 #: anura/controllers/ocr_controller.py:266
 msgid "TIFF images (*.tif)"
-msgstr ""
+msgstr "TIFF-bilder (*.tif)"
 
 #: anura/controllers/ocr_controller.py:267
 msgid "BMP images (*.bmp)"
-msgstr ""
+msgstr "BMP-bilder (*.bmp)"
 
 #: anura/controllers/ocr_controller.py:268
 msgid "GIF images (*.gif)"
-msgstr ""
+msgstr "GIF-bilder (*.gif)"
 
 #: anura/controllers/ocr_controller.py:271
 msgid "All files (*)"
-msgstr ""
+msgstr "Alla filer (*)"
 
 #: anura/controllers/tts_controller.py:73
 msgid "Text-to-speech is not available for this language"
-msgstr ""
+msgstr "Text-till-tal är inte tillgängligt för det här språket"
 
 #: anura/controllers/tts_controller.py:106
 msgid "Request timed out. Please try again."
-msgstr ""
+msgstr "Begäran tog för lång tid. Försök igen."
 
 #: anura/controllers/tts_controller.py:108
 msgid "Network error. Please check your internet connection."
-msgstr ""
+msgstr "Nätverksfel. Kontrollera internetanslutningen."
 
 #: anura/controllers/tts_controller.py:110
 msgid "Text-to-speech failed. Please try again."
-msgstr ""
+msgstr "Text-till-tal misslyckades. Försök igen."
 
 #: anura/core/dialogs.py:39
 msgid "Acknowledgements"
-msgstr ""
+msgstr "Tack"
 
 #: anura/core/dialogs.py:42
 msgid ""
 "Built with Tesseract OCR, GTK4, Libadwaita, and other open source components."
 msgstr ""
+"Byggd med Tesseract OCR, GTK4, Libadwaita och andra komponenter med öppen "
+"källkod."
 
 #: anura/core/dialogs.py:44
 msgid "Changelog"
-msgstr ""
+msgstr "Ändringslogg"
 
 #: anura/core/dialogs.py:45 data/ui/extracted_page.blp:318
 #: data/ui/welcome_page.blp:197
 msgid "Report an Issue"
-msgstr ""
+msgstr "Rapportera ett problem"
 
 #: anura/core/dialogs.py:80
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: anura/main.py:81
 msgid "Extract directly into the clipboard"
-msgstr ""
+msgstr "Extrahera direkt till urklipp"
 
 #: anura/main.py:89
 msgid "Process image file for OCR"
-msgstr ""
+msgstr "Bearbeta bildfil för OCR"
 
 #: anura/main.py:97
 msgid "Run OCR without UI (copy result to clipboard)"
-msgstr ""
+msgstr "Kör OCR utan gränssnitt (kopiera resultatet till urklipp)"
 
 #: anura/main.py:210 anura/main.py:356 anura/window.py:260
 msgid "Text copied to clipboard"
-msgstr ""
+msgstr "Texten kopierades till urklipp"
 
 #: anura/main.py:213 anura/main.py:218 anura/main.py:258 anura/main.py:417
 #: anura/main.py:422 anura/main.py:424 anura/main.py:438
 msgid "Anura OCR"
-msgstr ""
+msgstr "Anura OCR"
 
 #: anura/main.py:213
 msgid "Text extracted and copied to clipboard."
-msgstr ""
+msgstr "Texten extraherades och kopierades till urklipp."
 
 #: anura/main.py:218
 msgid "Text extracted successfully."
-msgstr ""
+msgstr "Texten extraherades."
 
 #: anura/main.py:227
 msgid "URL opened automatically"
-msgstr ""
+msgstr "URL:en öppnades automatiskt"
 
 #: anura/main.py:232
 msgid "QR Code URL Detected"
-msgstr ""
+msgstr "URL från QR-kod upptäcktes"
 
 #: anura/main.py:243
 msgid "URL copied to clipboard"
-msgstr ""
+msgstr "URL:en kopierades till urklipp"
 
 #: anura/main.py:251 anura/window.py:407
 msgid ""
 "Anura could not capture a screenshot because no suitable portal backend or "
 "fallback tool was found."
 msgstr ""
+"Anura kunde inte ta en skärmbild eftersom ingen lämplig portalbakände eller "
+"reservfunktion hittades."
 
 #: anura/main.py:254 anura/window.py:410
 msgid "Capture Failed"
-msgstr ""
+msgstr "Fångst misslyckades"
 
 #: anura/main.py:323
 msgid "Bug fixes and improvements."
-msgstr ""
+msgstr "Felrättningar och förbättringar."
 
 #: anura/main.py:417 anura/services/screenshot_service.py:794
 #: anura/services/screenshot_service.py:827
 msgid "No text found."
-msgstr ""
+msgstr "Ingen text hittades."
 
 #: anura/main.py:422
 msgid "Text copied to clipboard."
-msgstr ""
+msgstr "Texten kopierades till urklipp."
 
 #: anura/main.py:424
 msgid "Text extracted."
-msgstr ""
+msgstr "Text extraherades."
 
 #: anura/main.py:435
 msgid "Cancelled"
-msgstr ""
+msgstr "Avbruten"
 
 #: anura/services/clipboard_service.py:184
 #: anura/services/clipboard_service.py:200
@@ -212,640 +219,642 @@ msgstr ""
 #: anura/services/clipboard_service.py:616
 #: anura/services/clipboard_service.py:628
 msgid "No image in clipboard"
-msgstr ""
+msgstr "Ingen bild i urklipp"
 
 #: anura/services/clipboard_service.py:672
 msgid "Clipboard read operation timed out."
-msgstr ""
+msgstr "Tidsgränsen för läsning från urklipp överskreds."
 
 #: anura/services/language_manager.py:52
 #: anura/services/language/validator.py:50 anura/window.py:89
 msgid "English"
-msgstr ""
+msgstr "Engelska"
 
 #: anura/services/language/validator.py:23
 msgid "Afrikaans"
-msgstr ""
+msgstr "Afrikaans"
 
 #: anura/services/language/validator.py:24
 msgid "Amharic"
-msgstr ""
+msgstr "Amhariska"
 
 #: anura/services/language/validator.py:25
 msgid "Arabic"
-msgstr ""
+msgstr "Arabiska"
 
 #: anura/services/language/validator.py:26
 msgid "Assamese"
-msgstr ""
+msgstr "Assamesiska"
 
 #: anura/services/language/validator.py:27
 msgid "Azerbaijani"
-msgstr ""
+msgstr "Azerbajdzjanska"
 
 #: anura/services/language/validator.py:28
 msgid "Azerbaijani - Cyrillic"
-msgstr ""
+msgstr "Azerbajdzjanska – kyrillisk"
 
 #: anura/services/language/validator.py:29
 msgid "Belarusian"
-msgstr ""
+msgstr "Belarusiska"
 
 #: anura/services/language/validator.py:30
 msgid "Bengali"
-msgstr ""
+msgstr "Bengaliska"
 
 #: anura/services/language/validator.py:31
 msgid "Tibetan"
-msgstr ""
+msgstr "Tibetanska"
 
 #: anura/services/language/validator.py:32
 msgid "Bosnian"
-msgstr ""
+msgstr "Bosniska"
 
 #: anura/services/language/validator.py:33
 msgid "Breton"
-msgstr ""
+msgstr "Bretonska"
 
 #: anura/services/language/validator.py:34
 msgid "Bulgarian"
-msgstr ""
+msgstr "Bulgariska"
 
 #: anura/services/language/validator.py:35
 msgid "Catalan"
-msgstr ""
+msgstr "Katalanska"
 
 #: anura/services/language/validator.py:36
 msgid "Cebuano"
-msgstr ""
+msgstr "Cebuano"
 
 #: anura/services/language/validator.py:37
 msgid "Czech"
-msgstr ""
+msgstr "Tjeckiska"
 
 #: anura/services/language/validator.py:38
 msgid "Chinese - Simplified"
-msgstr ""
+msgstr "Kinesiska – förenklad"
 
 #: anura/services/language/validator.py:39
 msgid "Chinese - Simplified (vertical)"
-msgstr ""
+msgstr "Kinesiska – förenklad (vertikal)"
 
 #: anura/services/language/validator.py:40
 msgid "Chinese - Traditional"
-msgstr ""
+msgstr "Kinesiska – traditionell"
 
 #: anura/services/language/validator.py:41
 msgid "Chinese - Traditional (vertical)"
-msgstr ""
+msgstr "Kinesiska – traditionell (vertikal)"
 
 #: anura/services/language/validator.py:42
 msgid "Cherokee"
-msgstr ""
+msgstr "Cherokesiska"
 
 #: anura/services/language/validator.py:43
 msgid "Corsican"
-msgstr ""
+msgstr "Korsikanska"
 
 #: anura/services/language/validator.py:44
 msgid "Welsh"
-msgstr ""
+msgstr "Walesiska"
 
 #: anura/services/language/validator.py:45
 msgid "Danish"
-msgstr ""
+msgstr "Danska"
 
 #: anura/services/language/validator.py:46
 msgid "German"
-msgstr ""
+msgstr "Tyska"
 
 #: anura/services/language/validator.py:47
 msgid "German - Fraktur"
-msgstr ""
+msgstr "Tyska – frakturstil"
 
 #: anura/services/language/validator.py:48
 msgid "Dzongkha"
-msgstr ""
+msgstr "Dzongkha"
 
 #: anura/services/language/validator.py:49
 msgid "Greek"
-msgstr ""
+msgstr "Grekiska"
 
 #: anura/services/language/validator.py:51
 msgid "English, Middle"
-msgstr ""
+msgstr "Medelengelska"
 
 #: anura/services/language/validator.py:52
 msgid "Esperanto"
-msgstr ""
+msgstr "Esperanto"
 
 #: anura/services/language/validator.py:53
 msgid "Estonian"
-msgstr ""
+msgstr "Estniska"
 
 #: anura/services/language/validator.py:54
 msgid "Basque"
-msgstr ""
+msgstr "Baskiska"
 
 #: anura/services/language/validator.py:55
 msgid "Faroese"
-msgstr ""
+msgstr "Färöiska"
 
 #: anura/services/language/validator.py:56
 msgid "Persian"
-msgstr ""
+msgstr "Persiska"
 
 #: anura/services/language/validator.py:57
 msgid "Filipino"
-msgstr ""
+msgstr "Filipino"
 
 #: anura/services/language/validator.py:58
 msgid "Finnish"
-msgstr ""
+msgstr "Finska"
 
 #: anura/services/language/validator.py:59
 msgid "French"
-msgstr ""
+msgstr "Franska"
 
 #: anura/services/language/validator.py:60
 msgid "French, Middle"
-msgstr ""
+msgstr "Medelfranska"
 
 #: anura/services/language/validator.py:61
 msgid "Western Frisian"
-msgstr ""
+msgstr "Västfrisiska"
 
 #: anura/services/language/validator.py:62
 msgid "Scottish Gaelic"
-msgstr ""
+msgstr "Skotsk gaeliska"
 
 #: anura/services/language/validator.py:63
 msgid "Irish"
-msgstr ""
+msgstr "Irländska"
 
 #: anura/services/language/validator.py:64
 msgid "Galician"
-msgstr ""
+msgstr "Galiciska"
 
 #: anura/services/language/validator.py:65
 msgid "Greek, Ancient"
-msgstr ""
+msgstr "Forngrekiska"
 
 #: anura/services/language/validator.py:66
 msgid "Gujarati"
-msgstr ""
+msgstr "Gujarati"
 
 #: anura/services/language/validator.py:67
 msgid "Haitian"
-msgstr ""
+msgstr "Haitiska"
 
 #: anura/services/language/validator.py:68
 msgid "Hebrew"
-msgstr ""
+msgstr "Hebreiska"
 
 #: anura/services/language/validator.py:69
 msgid "Hindi"
-msgstr ""
+msgstr "Hindi"
 
 #: anura/services/language/validator.py:70
 msgid "Croatian"
-msgstr ""
+msgstr "Kroatiska"
 
 #: anura/services/language/validator.py:71
 msgid "Hungarian"
-msgstr ""
+msgstr "Ungerska"
 
 #: anura/services/language/validator.py:72
 msgid "Armenian"
-msgstr ""
+msgstr "Armeniska"
 
 #: anura/services/language/validator.py:73
 msgid "Inuktitut"
-msgstr ""
+msgstr "Inuktitut"
 
 #: anura/services/language/validator.py:74
 msgid "Indonesian"
-msgstr ""
+msgstr "Indonesiska"
 
 #: anura/services/language/validator.py:75
 msgid "Icelandic"
-msgstr ""
+msgstr "Isländska"
 
 #: anura/services/language/validator.py:76
 msgid "Italian"
-msgstr ""
+msgstr "Italienska"
 
 #: anura/services/language/validator.py:77
 msgid "Italian - Old"
-msgstr ""
+msgstr "Fornitalienska"
 
 #: anura/services/language/validator.py:78
 msgid "Javanese"
-msgstr ""
+msgstr "Javanesiska"
 
 #: anura/services/language/validator.py:79
 msgid "Japanese"
-msgstr ""
+msgstr "Japanska"
 
 #: anura/services/language/validator.py:80
 msgid "Japanese (vertical)"
-msgstr ""
+msgstr "Japanska (vertikal)"
 
 #: anura/services/language/validator.py:81
 msgid "Kannada"
-msgstr ""
+msgstr "Kannada"
 
 #: anura/services/language/validator.py:82
 msgid "Georgian"
-msgstr ""
+msgstr "Georgiska"
 
 #: anura/services/language/validator.py:83
 msgid "Georgian - Old"
-msgstr ""
+msgstr "Forngeorgiska"
 
 #: anura/services/language/validator.py:84
 msgid "Kazakh"
-msgstr ""
+msgstr "Kazakiska"
 
 #: anura/services/language/validator.py:85
 msgid "Central Khmer"
-msgstr ""
+msgstr "Central khmer"
 
 #: anura/services/language/validator.py:86
 msgid "Kirghiz"
-msgstr ""
+msgstr "Kirgiziska"
 
 #: anura/services/language/validator.py:87
 msgid "Kurmanji"
-msgstr ""
+msgstr "Kurmanji"
 
 #: anura/services/language/validator.py:88
 msgid "Korean"
-msgstr ""
+msgstr "Koreanska"
 
 #: anura/services/language/validator.py:89
 msgid "Korean (vertical)"
-msgstr ""
+msgstr "Koreanska (vertikal)"
 
 #: anura/services/language/validator.py:90
 msgid "Lao"
-msgstr ""
+msgstr "Lao"
 
 #: anura/services/language/validator.py:91
 msgid "Latin"
-msgstr ""
+msgstr "Latin"
 
 #: anura/services/language/validator.py:92
 msgid "Latvian"
-msgstr ""
+msgstr "Lettiska"
 
 #: anura/services/language/validator.py:93
 msgid "Lithuanian"
-msgstr ""
+msgstr "Litauiska"
 
 #: anura/services/language/validator.py:94
 msgid "Luxembourgish"
-msgstr ""
+msgstr "Luxemburgiska"
 
 #: anura/services/language/validator.py:95
 msgid "Malayalam"
-msgstr ""
+msgstr "Malayalam"
 
 #: anura/services/language/validator.py:96
 msgid "Marathi"
-msgstr ""
+msgstr "Marathi"
 
 #: anura/services/language/validator.py:97
 msgid "Macedonian"
-msgstr ""
+msgstr "Makedonska"
 
 #: anura/services/language/validator.py:98
 msgid "Maltese"
-msgstr ""
+msgstr "Maltesiska"
 
 #: anura/services/language/validator.py:99
 msgid "Mongolian"
-msgstr ""
+msgstr "Mongoliska"
 
 #: anura/services/language/validator.py:100
 msgid "Maori"
-msgstr ""
+msgstr "Maori"
 
 #: anura/services/language/validator.py:101
 msgid "Malay"
-msgstr ""
+msgstr "Malajiska"
 
 #: anura/services/language/validator.py:102
 msgid "Burmese"
-msgstr ""
+msgstr "Burmesiska"
 
 #: anura/services/language/validator.py:103
 msgid "Nepali"
-msgstr ""
+msgstr "Nepalesiska"
 
 #: anura/services/language/validator.py:104
 msgid "Dutch"
-msgstr ""
+msgstr "Nederländska"
 
 #: anura/services/language/validator.py:105
 msgid "Norwegian"
-msgstr ""
+msgstr "Norska"
 
 #: anura/services/language/validator.py:106
 msgid "Occitan"
-msgstr ""
+msgstr "Occitanska"
 
 #: anura/services/language/validator.py:107
 msgid "Oriya"
-msgstr ""
+msgstr "Oriya"
 
 #: anura/services/language/validator.py:108
 msgid "Panjabi"
-msgstr ""
+msgstr "Panjabi"
 
 #: anura/services/language/validator.py:109
 msgid "Polish"
-msgstr ""
+msgstr "Polska"
 
 #: anura/services/language/validator.py:110
 msgid "Portuguese"
-msgstr ""
+msgstr "Portugisiska"
 
 #: anura/services/language/validator.py:111
 msgid "Pushto"
-msgstr ""
+msgstr "Pashto"
 
 #: anura/services/language/validator.py:112
 msgid "Quechua"
-msgstr ""
+msgstr "Quechua"
 
 #: anura/services/language/validator.py:113
 msgid "Romanian"
-msgstr ""
+msgstr "Rumänska"
 
 #: anura/services/language/validator.py:114
 msgid "Russian"
-msgstr ""
+msgstr "Ryska"
 
 #: anura/services/language/validator.py:115
 msgid "Sanskrit"
-msgstr ""
+msgstr "Sanskrit"
 
 #: anura/services/language/validator.py:116
 msgid "Sinhala"
-msgstr ""
+msgstr "Singalesiska"
 
 #: anura/services/language/validator.py:117
 msgid "Slovak"
-msgstr ""
+msgstr "Slovakiska"
 
 #: anura/services/language/validator.py:118
 msgid "Slovenian"
-msgstr ""
+msgstr "Slovenska"
 
 #: anura/services/language/validator.py:119
 msgid "Sindhi"
-msgstr ""
+msgstr "Sindhi"
 
 #: anura/services/language/validator.py:120
 msgid "Spanish"
-msgstr ""
+msgstr "Spanska"
 
 #: anura/services/language/validator.py:121
 msgid "Spanish - Old"
-msgstr ""
+msgstr "Fornspanska"
 
 #: anura/services/language/validator.py:122
 msgid "Albanian"
-msgstr ""
+msgstr "Albanska"
 
 #: anura/services/language/validator.py:123
 msgid "Serbian"
-msgstr ""
+msgstr "Serbiska"
 
 #: anura/services/language/validator.py:124
 msgid "Serbian - Latin"
-msgstr ""
+msgstr "Serbiska – latinsk"
 
 #: anura/services/language/validator.py:125
 msgid "Sundanese"
-msgstr ""
+msgstr "Sundanesiska"
 
 #: anura/services/language/validator.py:126
 msgid "Swahili"
-msgstr ""
+msgstr "Swahili"
 
 #: anura/services/language/validator.py:127
 msgid "Swedish"
-msgstr ""
+msgstr "Svenska"
 
 #: anura/services/language/validator.py:128
 msgid "Syriac"
-msgstr ""
+msgstr "Syriska"
 
 #: anura/services/language/validator.py:129
 msgid "Tamil"
-msgstr ""
+msgstr "Tamil"
 
 #: anura/services/language/validator.py:130
 msgid "Tatar"
-msgstr ""
+msgstr "Tatariska"
 
 #: anura/services/language/validator.py:131
 msgid "Telugu"
-msgstr ""
+msgstr "Telugu"
 
 #: anura/services/language/validator.py:132
 msgid "Tajik"
-msgstr ""
+msgstr "Tadzjikiska"
 
 #: anura/services/language/validator.py:133
 msgid "Thai"
-msgstr ""
+msgstr "Thailändska"
 
 #: anura/services/language/validator.py:134
 msgid "Tigrinya"
-msgstr ""
+msgstr "Tigrinja"
 
 #: anura/services/language/validator.py:135
 msgid "Tonga"
-msgstr ""
+msgstr "Tonganska"
 
 #: anura/services/language/validator.py:136
 msgid "Turkish"
-msgstr ""
+msgstr "Turkiska"
 
 #: anura/services/language/validator.py:137
 msgid "Uighur"
-msgstr ""
+msgstr "Uiguriska"
 
 #: anura/services/language/validator.py:138
 msgid "Ukrainian"
-msgstr ""
+msgstr "Ukrainska"
 
 #: anura/services/language/validator.py:139
 msgid "Urdu"
-msgstr ""
+msgstr "Urdu"
 
 #: anura/services/language/validator.py:140
 msgid "Uzbek"
-msgstr ""
+msgstr "Uzbekiska"
 
 #: anura/services/language/validator.py:141
 msgid "Uzbek - Cyrillic"
-msgstr ""
+msgstr "Uzbekiska – kyrillisk"
 
 #: anura/services/language/validator.py:142
 msgid "Vietnamese"
-msgstr ""
+msgstr "Vietnamesiska"
 
 #: anura/services/language/validator.py:143
 msgid "Yiddish"
-msgstr ""
+msgstr "Jiddisch"
 
 #: anura/services/language/validator.py:144
 msgid "Yoruba"
-msgstr ""
+msgstr "Yoruba"
 
 #: anura/services/screenshot/legacy_provider.py:86
 msgid "Failed to create temporary file."
-msgstr ""
+msgstr "Kunde inte skapa temporär fil."
 
 #: anura/services/screenshot/legacy_provider.py:189
 msgid "Screenshot tool produced no output."
-msgstr ""
+msgstr "Skärmbildsverktyget gav ingen utdata."
 
 #: anura/services/screenshot_service.py:67
 msgid "Enhancing image..."
-msgstr ""
+msgstr "Förbättrar bilden…"
 
 #: anura/services/screenshot_service.py:81
 msgid "Running Tesseract OCR..."
-msgstr ""
+msgstr "Kör Tesseract OCR…"
 
 #: anura/services/screenshot_service.py:95
 msgid "Reconstructing structure..."
-msgstr ""
+msgstr "Återskapar strukturen…"
 
 #: anura/services/screenshot_service.py:106
 msgid "Magic processing..."
-msgstr ""
+msgstr "Magisk bearbetning…"
 
 #: anura/services/screenshot_service.py:161
 #: anura/services/screenshot_service.py:631
 msgid "The selected image file is empty."
-msgstr ""
+msgstr "Den valda bildfilen är tom."
 
 #: anura/services/screenshot_service.py:254
 msgid "Failed to process image in isolated process."
-msgstr ""
+msgstr "Kunde inte bearbeta bilden i en isolerad process."
 
 #: anura/services/screenshot_service.py:381
 #: anura/services/screenshot_service.py:389
 #, python-brace-format
 msgid "Screenshot failed: {reason}"
-msgstr ""
+msgstr "Det gick inte att ta skärmbild: {reason}"
 
 #: anura/services/screenshot_service.py:399
 msgid "Failed to initiate screenshot capture."
-msgstr ""
+msgstr "Kunde inte starta skärmbildsfångst."
 
 #: anura/services/screenshot_service.py:410
 #: anura/services/screenshot_service.py:420
 msgid "Can't take a screenshot."
-msgstr ""
+msgstr "Det går inte att ta en skärmbild."
 
 #: anura/services/screenshot_service.py:470
 msgid "Extracting text..."
-msgstr ""
+msgstr "Extraherar text…"
 
 #: anura/services/screenshot_service.py:490
 msgid "OCR processing failed. Please try again."
-msgstr ""
+msgstr "OCR-bearbetningen misslyckades. Försök igen."
 
 #: anura/services/screenshot_service.py:605
 #: anura/services/screenshot_service.py:811
 msgid "Invalid language code specified."
-msgstr ""
+msgstr "Ogiltig språkkod angavs."
 
 #: anura/services/screenshot_service.py:752
 msgid "Failed to read image file."
-msgstr ""
+msgstr "Kunde inte läsa bildfilen."
 
 #: anura/services/screenshot_service.py:755
 msgid "OCR engine failed to process image."
-msgstr ""
+msgstr "OCR-motorn kunde inte bearbeta bilden."
 
 #: anura/services/screenshot_service.py:758
 #: anura/services/screenshot_service.py:763
 msgid "Failed to decode data."
-msgstr ""
+msgstr "Kunde inte avkoda data."
 
 #: anura/services/screenshot_service.py:832
 msgid "Failed to decode image."
-msgstr ""
+msgstr "Kunde inte avkoda bilden."
 
 #: anura/services/share_providers.py:27
 msgid "Email"
-msgstr ""
+msgstr "E-post"
 
 #: anura/services/share_providers.py:32
 msgid "Mastodon"
-msgstr ""
+msgstr "Mastodon"
 
 #: anura/services/share_providers.py:37
 msgid "Reddit"
-msgstr ""
+msgstr "Reddit"
 
 #: anura/services/share_providers.py:46
 msgid "Telegram"
-msgstr ""
+msgstr "Telegram"
 
 #: anura/services/share_providers.py:51
 msgid "X"
-msgstr ""
+msgstr "X"
 
 #: anura/services/share_providers.py:56
 msgid "Bluesky"
-msgstr ""
+msgstr "Bluesky"
 
 #: anura/services/share_providers.py:61
 msgid "Discord"
-msgstr ""
+msgstr "Discord"
 
 #: anura/services/share_providers.py:66
 msgid "LinkedIn"
-msgstr ""
+msgstr "LinkedIn"
 
 #: anura/services/share_providers.py:71
 msgid "Threads"
-msgstr ""
+msgstr "Threads"
 
 #: anura/services/share_service.py:199
 msgid "Select Mastodon Instance"
-msgstr ""
+msgstr "Välj Mastodon-instans"
 
 #: anura/services/share_service.py:200
 msgid "Choose your Mastodon instance to share the extracted text:"
-msgstr ""
+msgstr "Välj din Mastodon-instans för att dela den extraherade texten:"
 
 #: anura/services/share_service.py:206 anura/widgets/history_page.py:140
 msgid "Cancel"
-msgstr ""
+msgstr "Avbryt"
 
 #: anura/services/share_service.py:245
 msgid "Cannot show dialog without active window"
-msgstr ""
+msgstr "Det går inte att visa dialogrutan utan ett aktivt fönster"
 
 #: anura/utils/portal_advice.py:86
 msgid "LXQt"
-msgstr ""
+msgstr "LXQt"
 
 #: anura/utils/portal_advice.py:87
 msgid ""
 "Screenshot portal is not configured for LXQt. See the README for the LXQt "
 "setup steps."
 msgstr ""
+"Skärmbildsportalen är inte konfigurerad för LXQt. Se README för "
+"installationsstegen för LXQt."
 
 #: anura/utils/portal_advice.py:89
 msgid ""
@@ -854,30 +863,41 @@ msgid ""
 "Screenshot=kde, and restart the portal (systemctl --user restart xdg-desktop-"
 "portal.service)."
 msgstr ""
+"I LXQt installerar du xdg-desktop-portal-kde, skapar sedan ~/.config/xdg-"
+"desktop-portal/lxqt-portals.conf med [preferred] "
+"org.freedesktop.impl.portal.Screenshot=kde och startar om portalen "
+"(systemctl --user restart xdg-desktop-portal.service)."
 
 #: anura/utils/portal_advice.py:100
 msgid "KDE Plasma"
-msgstr ""
+msgstr "KDE Plasma"
 
 #: anura/utils/portal_advice.py:101
 msgid ""
 "Screenshot portal unavailable. Install xdg-desktop-portal-kde and re-login."
 msgstr ""
+"Skärmbildsportalen är inte tillgänglig. Installera xdg-desktop-portal-kde "
+"och logga in igen."
 
 #: anura/utils/portal_advice.py:103
 msgid ""
 "Screenshot failed. On KDE Plasma, install xdg-desktop-portal-kde (e.g. sudo "
 "apt install xdg-desktop-portal-kde) and log out and back in."
 msgstr ""
+"Det gick inte att ta skärmbild. Installera xdg-desktop-portal-kde i KDE "
+"Plasma (t.ex. sudo apt install xdg-desktop-portal-kde) och logga ut och in "
+"igen."
 
 #: anura/utils/portal_advice.py:112
 msgid "your wlroots compositor"
-msgstr ""
+msgstr "din wlroots-kompositor"
 
 #: anura/utils/portal_advice.py:113
 msgid ""
 "Screenshot portal unavailable. Install xdg-desktop-portal-wlr and re-login."
 msgstr ""
+"Skärmbildsportalen är inte tillgänglig. Installera xdg-desktop-portal-wlr "
+"och logga in igen."
 
 #: anura/utils/portal_advice.py:115
 msgid ""
@@ -885,27 +905,37 @@ msgid ""
 "Niri, …), install xdg-desktop-portal-wlr (e.g. sudo apt install xdg-desktop-"
 "portal-wlr) and log out and back in."
 msgstr ""
+"Det gick inte att ta skärmbild. Installera xdg-desktop-portal-wlr i wlroots-"
+"baserade kompositorer (Sway, Hyprland, river, Niri, …), t.ex. med sudo apt "
+"install xdg-desktop-portal-wlr, och logga ut och in igen."
 
 #: anura/utils/portal_advice.py:126
 msgid "GNOME"
-msgstr ""
+msgstr "GNOME"
 
 #: anura/utils/portal_advice.py:127
 msgid ""
 "Screenshot portal unavailable. Install xdg-desktop-portal-gnome and re-login."
 msgstr ""
+"Skärmbildsportalen är inte tillgänglig. Installera xdg-desktop-portal-gnome "
+"och logga in igen."
 
 #: anura/utils/portal_advice.py:129
 msgid ""
 "Screenshot failed. On GNOME / Ubuntu, install xdg-desktop-portal-gnome (e.g. "
 "sudo apt install xdg-desktop-portal-gnome) and log out and back in."
 msgstr ""
+"Det gick inte att ta skärmbild. Installera xdg-desktop-portal-gnome i GNOME "
+"eller Ubuntu (t.ex. sudo apt install xdg-desktop-portal-gnome) och logga ut "
+"och in igen."
 
 #: anura/utils/portal_advice.py:148
 msgid ""
 "Screenshot portal unavailable. Install xdg-desktop-portal-gnome (or -kde) "
 "and re-login."
 msgstr ""
+"Skärmbildsportalen är inte tillgänglig. Installera xdg-desktop-portal-gnome "
+"(eller -kde) och logga in igen."
 
 #: anura/utils/portal_advice.py:150
 #, python-brace-format
@@ -914,16 +944,22 @@ msgid ""
 "desktop-portal-kde) and log out and back in. On modern Ubuntu xdg-desktop-"
 "portal-gtk no longer provides the Screenshot interface."
 msgstr ""
+"Det gick inte att ta skärmbild. Installera xdg-desktop-portal-gnome (eller "
+"xdg-desktop-portal-kde) för {desktop} och logga ut och in igen. I moderna "
+"Ubuntu tillhandahåller xdg-desktop-portal-gtk inte längre "
+"skärmbildsgränssnittet."
 
 #: anura/utils/portal_advice.py:159
 msgid "your desktop"
-msgstr ""
+msgstr "din skrivbordsmiljö"
 
 #: anura/utils/portal_advice.py:160
 msgid ""
 "Screenshot portal unavailable. Install the xdg-desktop-portal backend "
 "matching your desktop."
 msgstr ""
+"Skärmbildsportalen är inte tillgänglig. Installera den xdg-desktop-portal-"
+"bakände som passar din skrivbordsmiljö."
 
 #: anura/utils/portal_advice.py:162
 msgid ""
@@ -931,877 +967,895 @@ msgid ""
 "screenshot portal. Install the xdg-desktop-portal backend matching your "
 "desktop (e.g. xdg-desktop-portal-gnome, -kde, -wlr) and re-login."
 msgstr ""
+"Det gick inte att ta skärmbild. Din skrivbordssession verkar inte ha någon "
+"fungerande skärmbildsportal. Installera den xdg-desktop-portal-bakände som "
+"passar din skrivbordsmiljö (t.ex. xdg-desktop-portal-gnome, -kde eller -wlr) "
+"och logga in igen."
 
 #: anura/utils/validators.py:476
 msgid "Invalid URL blocked for security"
-msgstr ""
+msgstr "Ogiltig URL blockerades av säkerhetsskäl"
 
 #: anura/utils/validators.py:490
 msgid "Failed to open link"
-msgstr ""
+msgstr "Kunde inte öppna länken"
 
 #: anura/widgets/extracted_page.py:123
 msgid ""
 "Shows character and word count. If text is selected, shows selection stats."
 msgstr ""
+"Visar antal tecken och ord. Om text är markerad visas statistik för "
+"markeringen."
 
 #: anura/widgets/extracted_page.py:191
 msgid "Selection: "
-msgstr ""
+msgstr "Markering: "
 
 #: anura/widgets/extracted_page.py:199
 #, python-brace-format
 msgid "{n} word"
 msgid_plural "{n} words"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{n} ord"
+msgstr[1] "{n} ord"
 
 #: anura/widgets/extracted_page.py:200
 #, python-brace-format
 msgid "{n} character"
 msgid_plural "{n} characters"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{n} tecken"
+msgstr[1] "{n} tecken"
 
 #: anura/widgets/extracted_page.py:203
 #, python-brace-format
 msgid "{words} | {chars}"
-msgstr ""
+msgstr "{words} | {chars}"
 
 #: anura/widgets/extracted_page.py:211
 msgctxt "Extracted screen"
 msgid "Copy Selected Text to Clipboard (Ctrl+C)"
-msgstr ""
+msgstr "Kopiera markerad text till urklipp (Ctrl+C)"
 
 #: anura/widgets/extracted_page.py:212
 msgctxt "Extracted screen"
 msgid "Listen to Selected Text (Ctrl+L)"
-msgstr ""
+msgstr "Lyssna på markerad text (Ctrl+L)"
 
 #: anura/widgets/extracted_page.py:213
 msgctxt "Extracted screen"
 msgid "Share Selection To"
-msgstr ""
+msgstr "Dela markeringen via"
 
 #: anura/widgets/extracted_page.py:215 data/ui/extracted_page.blp:36
 msgctxt "Extracted screen"
 msgid "Copy Extracted Text to Clipboard (Ctrl+C)"
-msgstr ""
+msgstr "Kopiera extraherad text till urklipp (Ctrl+C)"
 
 #: anura/widgets/extracted_page.py:216 data/ui/extracted_page.blp:82
 msgctxt "Extracted screen"
 msgid "Listen to Text (Ctrl+L)"
-msgstr ""
+msgstr "Lyssna på text (Ctrl+L)"
 
 #: anura/widgets/extracted_page.py:217 data/ui/extracted_page.blp:156
 msgctxt "Extracted screen"
 msgid "Share To"
-msgstr ""
+msgstr "Dela via"
 
 #: anura/widgets/extracted_page.py:245
 msgctxt "Extracted screen"
 msgid "Copied to clipboard!"
-msgstr ""
+msgstr "Kopierat till urklipp!"
 
 #: anura/widgets/extracted_page.py:300
 #, python-brace-format
 msgid "Smart Parse: {name}"
-msgstr ""
+msgstr "Smart tolkning: {name}"
 
 #: anura/widgets/extracted_page.py:343
 msgid "Searching…"
-msgstr ""
+msgstr "Söker…"
 
 #: anura/widgets/extracted_page.py:345
 msgid "No matches"
-msgstr ""
+msgstr "Inga träffar"
 
 #: anura/widgets/extracted_page.py:347
 #, python-brace-format
 msgid "{n} match"
 msgid_plural "{n} matches"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{n} träff"
+msgstr[1] "{n} träffar"
 
 #: anura/widgets/extracted_page.py:415
 msgctxt "Extracted screen"
 msgid "Pause listening (Ctrl+Alt+L)"
-msgstr ""
+msgstr "Pausa lyssning (Ctrl+Alt+L)"
 
 #: anura/widgets/extracted_page.py:416
 msgctxt "Extracted screen"
 msgid "Pause listening"
-msgstr ""
+msgstr "Pausa lyssning"
 
 #: anura/widgets/extracted_page.py:424
 msgctxt "Extracted screen"
 msgid "Resume listening (Ctrl+Alt+L)"
-msgstr ""
+msgstr "Återuppta lyssning (Ctrl+Alt+L)"
 
 #: anura/widgets/extracted_page.py:425
 msgctxt "Extracted screen"
 msgid "Resume listening"
-msgstr ""
+msgstr "Återuppta lyssning"
 
 #: anura/widgets/history_page.py:137
 msgid "Clear History?"
-msgstr ""
+msgstr "Rensa historiken?"
 
 #: anura/widgets/history_page.py:138
 msgid "All stored extraction history will be removed. This cannot be undone."
-msgstr ""
+msgstr "All sparad extraheringshistorik tas bort. Detta går inte att ångra."
 
 #: anura/widgets/history_page.py:141
 msgid "Clear"
-msgstr ""
+msgstr "Rensa"
 
 #: anura/widgets/language_popover.py:125 anura/widgets/language_popover.py:149
 #: data/ui/language_popover.blp:53
 msgid "Language list"
-msgstr ""
+msgstr "Språklista"
 
 #: anura/widgets/language_popover.py:127
 msgid "Language list — No matching languages found"
-msgstr ""
+msgstr "Språklista – inga matchande språk hittades"
 
 #: anura/widgets/language_popover.py:130
 #, python-brace-format
 msgid "Language list ({n} matching language)"
 msgid_plural "Language list ({n} matching languages)"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Språklista ({n} matchande språk)"
+msgstr[1] "Språklista ({n} matchande språk)"
 
 #: anura/widgets/language_popover_row.py:46
 #, python-brace-format
 msgid "{language} (active language)"
-msgstr ""
+msgstr "{language} (aktivt språk)"
 
 #: anura/widgets/language_popover_row.py:48
 #, python-brace-format
 msgid "Select {language}"
-msgstr ""
+msgstr "Välj {language}"
 
 #: anura/widgets/language_row.py:59
 #, python-brace-format
 msgid "Install {language}"
-msgstr ""
+msgstr "Installera {language}"
 
 #: anura/widgets/language_row.py:60
 #, python-brace-format
 msgid "Remove {language}"
-msgstr ""
+msgstr "Ta bort {language}"
 
 #: anura/widgets/preferences_general_page.py:197
 #, python-brace-format
 msgid "TTS playback volume level: {percentage:.0f}%"
-msgstr ""
+msgstr "Volym för TTS-uppspelning: {percentage:.0f} %"
 
 #: anura/widgets/preferences_general_page.py:212
 msgid "Auto (follow OCR language)"
-msgstr ""
+msgstr "Automatiskt (följ OCR-språk)"
 
 #: anura/widgets/preferences_languages_page.py:76
 #: data/ui/preferences_languages.blp:43
 msgid "OCR models unreachable. Please check your internet connection."
-msgstr ""
+msgstr "Det går inte att nå OCR-modellerna. Kontrollera internetanslutningen."
 
 #: anura/widgets/preferences_languages_page.py:81
 msgid "Metered connection detected. Model downloads may incur data costs."
 msgstr ""
+"Anslutning med datatrafik upptäcktes. Hämtning av modeller kan medföra "
+"datakostnader."
 
 #: anura/widgets/preferences_languages_page.py:186
 msgid "Fast"
-msgstr ""
+msgstr "Snabb"
 
 #: anura/widgets/preferences_languages_page.py:186
 msgid "Standard"
-msgstr ""
+msgstr "Standard"
 
 #: anura/widgets/preferences_languages_page.py:186
 msgid "Best"
-msgstr ""
+msgstr "Bäst"
 
 #: anura/widgets/share_row.py:29
 #, python-brace-format
 msgid "Share via {name}"
-msgstr ""
+msgstr "Dela via {name}"
 
 #: anura/widgets/shortcuts_overlay.py:62
 msgid "Screenshot & OCR"
-msgstr ""
+msgstr "Skärmbild och OCR"
 
 #: anura/widgets/shortcuts_overlay.py:64
 msgid "Take screenshot"
-msgstr ""
+msgstr "Ta skärmbild"
 
 #: anura/widgets/shortcuts_overlay.py:65
 msgid "Take screenshot and copy to clipboard"
-msgstr ""
+msgstr "Ta en skärmbild och kopiera till urklipp"
 
 #: anura/widgets/shortcuts_overlay.py:66
 msgid "Open image file"
-msgstr ""
+msgstr "Öppna bildfil"
 
 #: anura/widgets/shortcuts_overlay.py:67
 msgid "Paste image from clipboard"
-msgstr ""
+msgstr "Klistra in bild från urklipp"
 
 #: anura/widgets/shortcuts_overlay.py:72 data/ui/preferences_general.blp:83
 msgid "Editor"
-msgstr ""
+msgstr "Redigerare"
 
 #: anura/widgets/shortcuts_overlay.py:74
 msgid "Select all text (in editor)"
-msgstr ""
+msgstr "Markera all text (i redigeraren)"
 
 #: anura/widgets/shortcuts_overlay.py:75
 msgid "Copy text to clipboard"
-msgstr ""
+msgstr "Kopiera text till urklipp"
 
 #: anura/widgets/shortcuts_overlay.py:76
 msgid "Undo (in editor)"
-msgstr ""
+msgstr "Ångra (i redigeraren)"
 
 #: anura/widgets/shortcuts_overlay.py:77
 msgid "Redo (in editor)"
-msgstr ""
+msgstr "Gör om (i redigeraren)"
 
 #: anura/widgets/shortcuts_overlay.py:78
 msgid "Search text"
-msgstr ""
+msgstr "Sök text"
 
 #: anura/widgets/shortcuts_overlay.py:79
 msgid "Open in external editor"
-msgstr ""
+msgstr "Öppna i extern redigerare"
 
 #: anura/widgets/shortcuts_overlay.py:84 data/ui/preferences_general.blp:102
 msgid "Text-to-Speech"
-msgstr ""
+msgstr "Text-till-tal"
 
 #: anura/widgets/shortcuts_overlay.py:86
 msgid "Listen to text"
-msgstr ""
+msgstr "Lyssna på text"
 
 #: anura/widgets/shortcuts_overlay.py:87
 msgid "Pause/resume listening"
-msgstr ""
+msgstr "Pausa/återuppta lyssning"
 
 #: anura/widgets/shortcuts_overlay.py:88
 msgid "Stop listening"
-msgstr ""
+msgstr "Sluta lyssna"
 
 #: anura/widgets/shortcuts_overlay.py:93
 msgid "Application"
-msgstr ""
+msgstr "Program"
 
 #: anura/widgets/shortcuts_overlay.py:95
 msgid "Open preferences"
-msgstr ""
+msgstr "Öppna inställningar"
 
 #: anura/widgets/shortcuts_overlay.py:96
 msgid "Show keyboard shortcuts"
-msgstr ""
+msgstr "Visa tangentbordsgenvägar"
 
 #: anura/widgets/shortcuts_overlay.py:97
 msgid "Quit application"
-msgstr ""
+msgstr "Avsluta programmet"
 
 #: anura/widgets/shortcuts_overlay.py:102
 msgid "Navigation"
-msgstr ""
+msgstr "Navigering"
 
 #: anura/widgets/shortcuts_overlay.py:104
 msgid "Clear search / go back"
-msgstr ""
+msgstr "Rensa sökning / gå tillbaka"
 
 #: anura/widgets/welcome_page.py:76 anura/widgets/welcome_page.py:78
 #: anura/widgets/welcome_page.py:129 anura/widgets/welcome_page.py:131
 #: anura/widgets/welcome_page.py:312 anura/widgets/welcome_page.py:314
 msgid "Drop image here"
-msgstr ""
+msgstr "Släpp bild här"
 
 #: anura/widgets/welcome_page.py:122 anura/widgets/welcome_page.py:124
 msgid "Hide drop area"
-msgstr ""
+msgstr "Dölj släppområde"
 
 #: anura/widgets/welcome_page.py:142
 msgid "Drop image to extract text"
-msgstr ""
+msgstr "Släpp en bild för att extrahera text"
 
 #: anura/widgets/welcome_page.py:154 anura/widgets/welcome_page.py:315
 #: data/ui/welcome_page.blp:54
 msgid "Extract text from anywhere"
-msgstr ""
+msgstr "Extrahera text var som helst"
 
 #: anura/widgets/welcome_page.py:234
 msgid "No file data received from drop"
-msgstr ""
+msgstr "Inga fildata togs emot från släppet"
 
 #: anura/widgets/welcome_page.py:247
 msgid "No valid file found in drop"
-msgstr ""
+msgstr "Ingen giltig fil hittades i släppet"
 
 #: anura/widgets/welcome_page.py:256
 msgid "Only local files can be dropped"
-msgstr ""
+msgstr "Endast lokala filer kan släppas"
 
 #: anura/widgets/welcome_page.py:265
 msgid ""
 "File not accessible. Ensure Anura has permission to access this location."
 msgstr ""
+"Filen är inte åtkomlig. Kontrollera att Anura har behörighet till den här "
+"platsen."
 
 #: anura/widgets/welcome_page.py:272
 msgid "Only images can be processed that way."
-msgstr ""
+msgstr "Endast bilder kan bearbetas på det sättet."
 
 #: anura/widgets/welcome_page.py:278
 msgid "Failed to process dropped file"
-msgstr ""
+msgstr "Kunde inte bearbeta den släppta filen"
 
 #: anura/widgets/welcome_page.py:298
 msgid "Processing..."
-msgstr ""
+msgstr "Bearbetar…"
 
 #: anura/widgets/welcome_page.py:299
 msgid "Image drop zone: Processing..."
-msgstr ""
+msgstr "Bildsläppzon: bearbetar…"
 
 #: anura/widgets/welcome_page.py:303 data/ui/welcome_page.blp:153
 msgid "Drop image file here"
-msgstr ""
+msgstr "Släpp bildfilen här"
 
 #: anura/widgets/welcome_page.py:304 data/ui/welcome_page.blp:150
 msgid "Image drop zone"
-msgstr ""
+msgstr "Bildsläppzon"
 
 #: anura/window.py:161
 msgid "Tesseract OCR not found on system"
-msgstr ""
+msgstr "Tesseract OCR hittades inte i systemet"
 
 #: anura/window.py:167
 msgid "TTS dependencies (gTTS/GStreamer) missing"
-msgstr ""
+msgstr "Beroenden för text-till-tal (gTTS/GStreamer) saknas"
 
 #: anura/window.py:188
 msgid "Screenshot timed out. Please try again."
-msgstr ""
+msgstr "Tidsgränsen för skärmbild överskreds. Försök igen."
 
 #: anura/window.py:200
 msgid "Capture already in progress"
-msgstr ""
+msgstr "Fångst pågår redan"
 
 #: anura/window.py:221
 msgid "Failed to capture screenshot"
-msgstr ""
+msgstr "Kunde inte ta skärmbild"
 
 #: anura/window.py:244
 msgid "Failed to load image file"
-msgstr ""
+msgstr "Kunde inte läsa in bildfilen"
 
 #: anura/window.py:248
 msgid "Error loading file"
-msgstr ""
+msgstr "Fel vid inläsning av fil"
 
 #: anura/window.py:258
 msgid "Selection copied to clipboard"
-msgstr ""
+msgstr "Markeringen kopierades till urklipp"
 
 #: anura/window.py:263
 msgid "No text to copy"
-msgstr ""
+msgstr "Ingen text att kopiera"
 
 #: anura/window.py:323
 msgid "No text to open in external editor"
-msgstr ""
+msgstr "Ingen text att öppna i extern redigerare"
 
 #: anura/window.py:345
 msgid "Failed to open external editor"
-msgstr ""
+msgstr "Kunde inte öppna extern redigerare"
 
 #: anura/window.py:351
 msgid "Opened in external editor"
-msgstr ""
+msgstr "Öppnades i extern redigerare"
 
 #: anura/window.py:354
 msgid "Could not launch external editor"
-msgstr ""
+msgstr "Kunde inte starta extern redigerare"
 
 #: anura/window.py:456
 msgid "No text to share."
-msgstr ""
+msgstr "Ingen text att dela."
 
 #: data/ui/extracted_page.blp:14
 msgid "Extracted"
-msgstr ""
+msgstr "Extraherat"
 
 #: data/ui/extracted_page.blp:25
 msgid "Take a Screenshot (Ctrl+G)"
-msgstr ""
+msgstr "Ta en skärmbild (Ctrl+G)"
 
 #: data/ui/extracted_page.blp:27
 msgid "Take a screenshot"
-msgstr ""
+msgstr "Ta en skärmbild"
 
 #: data/ui/extracted_page.blp:38
 msgctxt "Extracted screen"
 msgid "Copy extracted text to clipboard"
-msgstr ""
+msgstr "Kopiera extraherad text till urklipp"
 
 #: data/ui/extracted_page.blp:46
 msgctxt "Extracted screen"
 msgid "Undo (Ctrl+Z)"
-msgstr ""
+msgstr "Ångra (Ctrl+Z)"
 
 #: data/ui/extracted_page.blp:48
 msgctxt "Extracted screen"
 msgid "Undo"
-msgstr ""
+msgstr "Ångra"
 
 #: data/ui/extracted_page.blp:56
 msgctxt "Extracted screen"
 msgid "Redo (Ctrl+Shift+Z)"
-msgstr ""
+msgstr "Gör om (Ctrl+Skift+Z)"
 
 #: data/ui/extracted_page.blp:58
 msgctxt "Extracted screen"
 msgid "Redo"
-msgstr ""
+msgstr "Gör om"
 
 #: data/ui/extracted_page.blp:66
 msgctxt "Extracted screen"
 msgid "Search Text (Ctrl+F)"
-msgstr ""
+msgstr "Sök text (Ctrl+F)"
 
 #: data/ui/extracted_page.blp:68
 msgctxt "Extracted screen"
 msgid "Search text"
-msgstr ""
+msgstr "Sök text"
 
 #: data/ui/extracted_page.blp:84
 msgctxt "Extracted screen"
 msgid "Listen to text"
-msgstr ""
+msgstr "Lyssna på text"
 
 #: data/ui/extracted_page.blp:95 data/ui/extracted_page.blp:132
 msgctxt "Extracted screen"
 msgid "Stop listening (Ctrl+Shift+L)"
-msgstr ""
+msgstr "Sluta lyssna (Ctrl+Skift+L)"
 
 #: data/ui/extracted_page.blp:97 data/ui/extracted_page.blp:134
 msgctxt "Extracted screen"
 msgid "Stop listening"
-msgstr ""
+msgstr "Sluta lyssna"
 
 #: data/ui/extracted_page.blp:110
 msgid "Generating audio"
-msgstr ""
+msgstr "Genererar ljud"
 
 #: data/ui/extracted_page.blp:122
 msgctxt "Extracted screen"
 msgid "Pause/Resume listening (Ctrl+Alt+L)"
-msgstr ""
+msgstr "Pausa/återuppta lyssning (Ctrl+Alt+L)"
 
 #: data/ui/extracted_page.blp:124
 msgctxt "Extracted screen"
 msgid "Pause or resume listening"
-msgstr ""
+msgstr "Pausa eller återuppta lyssning"
 
 #: data/ui/extracted_page.blp:146 data/ui/extracted_page.blp:148
 msgctxt "Extracted screen"
 msgid "Open menu"
-msgstr ""
+msgstr "Öppna meny"
 
 #: data/ui/extracted_page.blp:158
 msgctxt "Extracted screen"
 msgid "Share text to other applications"
-msgstr ""
+msgstr "Dela text med andra program"
 
 #: data/ui/extracted_page.blp:166
 msgid "Share providers"
-msgstr ""
+msgstr "Delningsleverantörer"
 
 #: data/ui/extracted_page.blp:190
 msgid "Search text…"
-msgstr ""
+msgstr "Sök text…"
 
 #: data/ui/extracted_page.blp:192
 msgid "Search extracted text"
-msgstr ""
+msgstr "Sök i extraherad text"
 
 #: data/ui/extracted_page.blp:204 data/ui/extracted_page.blp:206
 msgid "Match Case"
-msgstr ""
+msgstr "Matcha skiftläge"
 
 #: data/ui/extracted_page.blp:212
 msgid "Previous Match (Shift+Enter)"
-msgstr ""
+msgstr "Föregående träff (Skift+Retur)"
 
 #: data/ui/extracted_page.blp:214
 msgid "Previous match"
-msgstr ""
+msgstr "Föregående träff"
 
 #: data/ui/extracted_page.blp:220
 msgid "Next Match (Enter)"
-msgstr ""
+msgstr "Nästa träff (Retur)"
 
 #: data/ui/extracted_page.blp:222
 msgid "Next match"
-msgstr ""
+msgstr "Nästa träff"
 
 #: data/ui/extracted_page.blp:237
 msgid "Extracted text editing buffer"
-msgstr ""
+msgstr "Redigeringsbuffert för extraherad text"
 
 #: data/ui/extracted_page.blp:270
 msgid "Applied smart transformation"
-msgstr ""
+msgstr "Smart omvandling tillämpades"
 
 #: data/ui/extracted_page.blp:282
 msgid "Text statistics"
-msgstr ""
+msgstr "Textstatistik"
 
 #: data/ui/extracted_page.blp:292
 msgid "Open in External Editor"
-msgstr ""
+msgstr "Öppna i extern redigerare"
 
 #: data/ui/extracted_page.blp:298 data/ui/preferences_dialog.blp:13
 #: data/ui/welcome_page.blp:177
 msgid "Preferences"
-msgstr ""
+msgstr "Inställningar"
 
 #: data/ui/extracted_page.blp:306 data/ui/shortcuts_overlay.blp:13
 #: data/ui/shortcuts_overlay.blp:25 data/ui/welcome_page.blp:185
 msgid "Keyboard Shortcuts"
-msgstr ""
+msgstr "Tangentbordsgenvägar"
 
 #: data/ui/extracted_page.blp:312 data/ui/welcome_page.blp:191
 msgid "About Anura"
-msgstr ""
+msgstr "Om Anura"
 
 #: data/ui/extracted_page.blp:327
 msgid "Open image"
-msgstr ""
+msgstr "Öppna bild"
 
 #: data/ui/extracted_page.blp:328
 msgid "Paste from clipboard"
-msgstr ""
+msgstr "Klistra in från urklipp"
 
 #: data/ui/history_page.blp:12 data/ui/preferences_general.blp:64
 #: data/ui/welcome_page.blp:171
 msgid "History"
-msgstr ""
+msgstr "Historik"
 
 #: data/ui/history_page.blp:20 data/ui/history_page.blp:22
 msgid "Clear all history"
-msgstr ""
+msgstr "Rensa hela historiken"
 
 #: data/ui/history_page.blp:50
 msgid "No History"
-msgstr ""
+msgstr "Ingen historik"
 
 #: data/ui/history_page.blp:51
 msgid ""
 "Extracted texts will appear here once you enable history in Preferences and "
 "extract some text."
 msgstr ""
+"Extraherade texter visas här när du aktiverar historik i Inställningar och "
+"extraherar text."
 
 #: data/ui/history_page.blp:58
 msgid "History Disabled"
-msgstr ""
+msgstr "Historik inaktiverad"
 
 #: data/ui/history_page.blp:59
 msgid ""
 "Enable \"Save Extraction History\" in Preferences to start recording "
 "extracted texts."
 msgstr ""
+"Aktivera ”Spara extraheringshistorik” i Inställningar för att börja "
+"registrera extraherade texter."
 
 #: data/ui/language_popover.blp:27 data/ui/preferences_languages.blp:34
 msgid "Search Languages"
-msgstr ""
+msgstr "Sök språk"
 
 #: data/ui/language_popover.blp:30 data/ui/preferences_languages.blp:38
 msgid "Search Languages…"
-msgstr ""
+msgstr "Sök språk…"
 
 #: data/ui/language_popover.blp:84 data/ui/preferences_languages.blp:125
 msgid "No Results Found"
-msgstr ""
+msgstr "Inga resultat hittades"
 
 #: data/ui/language_popover.blp:89 data/ui/preferences_languages.blp:126
 #: data/ui/shortcuts_overlay.blp:65
 msgid "Try a different search term"
-msgstr ""
+msgstr "Prova en annan sökterm"
 
 #: data/ui/language_popover.blp:104
 msgid "_Manage Languages…"
-msgstr ""
+msgstr "_Hantera språk…"
 
 #: data/ui/language_popover.blp:106
 msgid "Open preferences to download more languages (Ctrl+,)"
-msgstr ""
+msgstr "Öppna inställningarna för att hämta fler språk (Ctrl+,)"
 
 #: data/ui/language_row.blp:29 data/ui/language_row.blp:31
 msgctxt "Preferences Language Row"
 msgid "Install language"
-msgstr ""
+msgstr "Installera språk"
 
 #: data/ui/language_row.blp:41 data/ui/language_row.blp:43
 msgctxt "Preferences Language Row"
 msgid "Remove language"
-msgstr ""
+msgstr "Ta bort språk"
 
 #: data/ui/preferences_general.blp:13
 msgid "_General"
-msgstr ""
+msgstr "_Allmänt"
 
 #: data/ui/preferences_general.blp:18
 msgid "Appearance"
-msgstr ""
+msgstr "Utseende"
 
 #: data/ui/preferences_general.blp:21
 msgid "Color Scheme"
-msgstr ""
+msgstr "Färgschema"
 
 #: data/ui/preferences_general.blp:22
 msgid "The preferred color scheme for the application."
-msgstr ""
+msgstr "Önskat färgschema för programmet."
 
 #: data/ui/preferences_general.blp:27
 msgid "Text Extraction"
-msgstr ""
+msgstr "Textextrahering"
 
 #: data/ui/preferences_general.blp:30
 msgid "_Secondary Language"
-msgstr ""
+msgstr "_Andraspråk"
 
 #: data/ui/preferences_general.blp:32
 msgid "Additional language used in text recognition"
-msgstr ""
+msgstr "Ytterligare språk som används vid textigenkänning"
 
 #: data/ui/preferences_general.blp:36
 msgid "Smart Text Parsing"
-msgstr ""
+msgstr "Smart texttolkning"
 
 #: data/ui/preferences_general.blp:37
 msgid "Automatically reformat URLs, emails and paragraphs"
-msgstr ""
+msgstr "Formatera automatiskt om URL:er, e-postadresser och stycken"
 
 #: data/ui/preferences_general.blp:42
 msgid "Behavior"
-msgstr ""
+msgstr "Beteende"
 
 #: data/ui/preferences_general.blp:45
 msgid "_Copy to Clipboard"
-msgstr ""
+msgstr "_Kopiera till urklipp"
 
 #: data/ui/preferences_general.blp:47
 msgid "Automatically copy the extracted text after detection"
-msgstr ""
+msgstr "Kopiera automatiskt den extraherade texten efter identifiering"
 
 #: data/ui/preferences_general.blp:51
 msgid "_Open QR-code Links"
-msgstr ""
+msgstr "Ö_ppna QR-kodlänkar"
 
 #: data/ui/preferences_general.blp:53
 msgid ""
 "Open QR code URLs directly in browser. Otherwise, a clickable notification "
 "is shown."
 msgstr ""
+"Öppna URL:er från QR-koder direkt i webbläsaren. Annars visas en klickbar "
+"avisering."
 
 #: data/ui/preferences_general.blp:67
 msgid "Save Extraction History"
-msgstr ""
+msgstr "Spara extraheringshistorik"
 
 #: data/ui/preferences_general.blp:68
 msgid "Keep a local list of recently extracted texts"
-msgstr ""
+msgstr "Behåll en lokal lista över nyligen extraherade texter"
 
 #: data/ui/preferences_general.blp:72
 msgid "History Size"
-msgstr ""
+msgstr "Historikstorlek"
 
 #: data/ui/preferences_general.blp:73
 msgid "Maximum number of entries kept in history"
-msgstr ""
+msgstr "Största antal poster som behålls i historiken"
 
 #: data/ui/preferences_general.blp:86
 msgid "Show Line Numbers"
-msgstr ""
+msgstr "Visa radnummer"
 
 #: data/ui/preferences_general.blp:87
 msgid "Display line numbers along the edge of the editor"
-msgstr ""
+msgstr "Visa radnummer längs redigerarens kant"
 
 #: data/ui/preferences_general.blp:91
 msgid "Highlight Current Line"
-msgstr ""
+msgstr "Markera aktuell rad"
 
 #: data/ui/preferences_general.blp:92
 msgid "Highlight the active line containing cursor"
-msgstr ""
+msgstr "Markera den aktiva raden med markören"
 
 #: data/ui/preferences_general.blp:96
 msgid "Word Wrap Mode"
-msgstr ""
+msgstr "Radbrytningsläge"
 
 #: data/ui/preferences_general.blp:97
 msgid "Policy for wrapping long lines of text"
-msgstr ""
+msgstr "Princip för radbrytning av långa textrader"
 
 #: data/ui/preferences_general.blp:105
 msgid "Volume"
-msgstr ""
+msgstr "Volym"
 
 #: data/ui/preferences_general.blp:106
 msgid "TTS playback volume level (0-100%)"
-msgstr ""
+msgstr "Volym för TTS-uppspelning (0–100 %)"
 
 #: data/ui/preferences_general.blp:115
 msgid "TTS Language"
-msgstr ""
+msgstr "TTS-språk"
 
 #: data/ui/preferences_general.blp:116
 msgid "Language for speech synthesis. Uses OCR language if not set."
-msgstr ""
+msgstr "Språk för talsyntes. Använder OCR-språket om inget anges."
 
 #: data/ui/preferences_languages.blp:14
 msgid "_Languages"
-msgstr ""
+msgstr "_Språk"
 
 #: data/ui/preferences_languages.blp:20
 msgid "Model Quality"
-msgstr ""
+msgstr "Modellkvalitet"
 
 #: data/ui/preferences_languages.blp:21
 msgid "Higher quality is slower but more accurate"
-msgstr ""
+msgstr "Högre kvalitet är långsammare men mer exakt"
 
 #: data/ui/preferences_languages.blp:45
 msgid "Retry"
-msgstr ""
+msgstr "Försök igen"
 
 #: data/ui/preferences_languages.blp:61
 msgid "Installed Languages"
-msgstr ""
+msgstr "Installerade språk"
 
 #: data/ui/preferences_languages.blp:70 data/ui/preferences_languages.blp:72
 msgid "Add language"
-msgstr ""
+msgstr "Lägg till språk"
 
 #: data/ui/shortcuts_overlay.blp:38
 msgid "Search shortcuts..."
-msgstr ""
+msgstr "Sök genvägar…"
 
 #: data/ui/shortcuts_overlay.blp:40
 msgid "Search shortcuts"
-msgstr ""
+msgstr "Sök genvägar"
 
 #: data/ui/shortcuts_overlay.blp:64
 msgid "No results found"
-msgstr ""
+msgstr "Inga resultat hittades"
 
 #: data/ui/welcome_page.blp:13
 msgid "Welcome"
-msgstr ""
+msgstr "Välkommen"
 
 #: data/ui/welcome_page.blp:22 data/ui/welcome_page.blp:53
 #: data/io.github.d3msudo.anura.desktop.in:3
 msgid "Anura"
-msgstr "anura"
+msgstr "Anura"
 
 #: data/ui/welcome_page.blp:27
 msgid "_Language"
-msgstr ""
+msgstr "_Språk"
 
 #: data/ui/welcome_page.blp:29
 msgid "Select language to extract"
-msgstr ""
+msgstr "Välj språk för extrahering"
 
 #: data/ui/welcome_page.blp:37
 msgid "Extracting text"
-msgstr ""
+msgstr "Extraherar text"
 
 #: data/ui/welcome_page.blp:45 data/ui/welcome_page.blp:47
 msgid "Open menu"
-msgstr ""
+msgstr "Öppna meny"
 
 #: data/ui/welcome_page.blp:65
 msgctxt "Welcome screen"
 msgid "Take a Screenshot (Ctrl+G)"
-msgstr ""
+msgstr "Ta en skärmbild (Ctrl+G)"
 
 #: data/ui/welcome_page.blp:67
 msgctxt "Welcome screen"
 msgid "Take a Screenshot"
-msgstr ""
+msgstr "Ta en skärmbild"
 
 #: data/ui/welcome_page.blp:76
 msgid "_Take a Screenshot"
-msgstr ""
+msgstr "_Ta en skärmbild"
 
 #: data/ui/welcome_page.blp:84
 msgctxt "Welcome screen"
 msgid "Open Image (Ctrl+O)"
-msgstr ""
+msgstr "Öppna bild (Ctrl+O)"
 
 #: data/ui/welcome_page.blp:86
 msgctxt "Welcome screen"
 msgid "Open Image"
-msgstr ""
+msgstr "Öppna bild"
 
 #: data/ui/welcome_page.blp:95
 msgid "_Open Image"
-msgstr ""
+msgstr "Ö_ppna bild"
 
 #: data/ui/welcome_page.blp:103
 msgctxt "Welcome screen"
 msgid "Paste Image from Clipboard (Ctrl+V)"
-msgstr ""
+msgstr "Klistra in bild från urklipp (Ctrl+V)"
 
 #: data/ui/welcome_page.blp:105
 msgctxt "Welcome screen"
 msgid "Paste Image"
-msgstr ""
+msgstr "Klistra in bild"
 
 #: data/ui/welcome_page.blp:114
 msgid "_Paste Image"
-msgstr ""
+msgstr "_Klistra in bild"
 
 #: data/ui/welcome_page.blp:121 data/ui/welcome_page.blp:123
 msgctxt "Welcome screen"
 msgid "Drop image here"
-msgstr ""
+msgstr "Släpp bild här"
 
 #: data/ui/welcome_page.blp:132
 msgid "_Drop Image"
-msgstr ""
+msgstr "_Släpp bild"
 
 #: data/ui/welcome_page.blp:205
 msgid "⭐ Star on GitHub"
-msgstr ""
+msgstr "⭐ Stjärnmärk på GitHub"
 
 #: data/ui/window.blp:27
 msgid ""
 "Screenshot portal unavailable. Install xdg-desktop-portal-gtk (or the "
 "backend matching your desktop) and re-login."
 msgstr ""
+"Skärmbildsportalen är inte tillgänglig. Installera xdg-desktop-portal-gtk "
+"(eller den bakände som passar din skrivbordsmiljö) och logga in igen."
 
 #: data/ui/window.blp:28
 msgid "Dismiss"
-msgstr ""
+msgstr "Avfärda"
 
 #: data/io.github.d3msudo.anura.desktop.in:4
 msgid "OCR Tool"
-msgstr ""
+msgstr "OCR-verktyg"
 
 #: data/io.github.d3msudo.anura.desktop.in:5
 msgid "Extract text from any image, video, or web page"
-msgstr ""
+msgstr "Extrahera text från valfri bild, video eller webbsida"
 
 #: data/io.github.d3msudo.anura.desktop.in:11
 msgid "OCR;Text;Extraction;Reader;QR;Scanner;"
-msgstr ""
+msgstr "OCR;Text;Extrahering;Läsare;QR;Skanner;"
 
 #: data/io.github.d3msudo.anura.desktop.in:17
 msgid "Extract Text to Clipboard"
-msgstr ""
+msgstr "Extrahera text till urklipp"
