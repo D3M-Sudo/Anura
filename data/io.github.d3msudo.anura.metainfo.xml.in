@@ -67,6 +67,12 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="0.2.1" type="stable" date="2026-10-20">
+      <description>
+        <!-- TODO: Add release notes before publishing -->
+        <p>Release 0.2.1.</p>
+      </description>
+    </release>
     <release version="0.2.0" type="stable" date="2026-09-21">
       <description>
         <p>GtkSourceView 5 editor migration, tessdata integrity verification, and defensive-audit hardening.</p>
