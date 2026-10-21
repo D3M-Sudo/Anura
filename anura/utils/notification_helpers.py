@@ -8,6 +8,7 @@ from typing import ClassVar
 
 try:
     from gi.repository import Gio, GLib
+
     HAS_GIO = True
 except ImportError:
     HAS_GIO = False

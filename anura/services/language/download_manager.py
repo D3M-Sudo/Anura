@@ -131,6 +131,7 @@ class DownloadManager(GObject.GObject):
             self.loading_languages[code] = DownloadState()
 
         if on_started:
+
             def _on_started_idle(c):
                 try:
                     on_started(c)
@@ -240,8 +241,7 @@ class DownloadManager(GObject.GObject):
                     # Security: Enforce download size limit via Content-Length header (DoS prevention)
                     if total_size > MAX_MODEL_SIZE_BYTES:
                         logger.error(
-                            f"Anura: Blocked oversized model download: {total_size} bytes "
-                            f"(max {MAX_MODEL_SIZE_BYTES})"
+                            f"Anura: Blocked oversized model download: {total_size} bytes (max {MAX_MODEL_SIZE_BYTES})"
                         )
                         return None
 
@@ -292,6 +292,7 @@ class DownloadManager(GObject.GObject):
                                     if total_size > 0:
                                         progress = int(downloaded * 100 / total_size)
                                         if progress != last_progress_value:
+
                                             def _on_progress_idle(c, p):
                                                 try:
                                                     self.emit("downloading", c, p)
@@ -373,6 +374,7 @@ class DownloadManager(GObject.GObject):
                 self.loading_languages.pop(requested_code)
 
             if result_code:
+
                 def _on_downloaded_idle(c):
                     try:
                         self.emit("downloaded", c)
@@ -382,6 +384,7 @@ class DownloadManager(GObject.GObject):
 
                 GLib.idle_add(_on_downloaded_idle, result_code, priority=GLib.PRIORITY_DEFAULT)
             else:
+
                 def _on_failed_idle(c):
                     try:
                         self.emit("download-failed", c)

@@ -210,8 +210,7 @@ def _check_hostname_homograph(hostname: str) -> bool:
                     # ONLY if the entire hostname uses them (pure IDN).
                     # If there's ANY ASCII label elsewhere, we block.
                     any_ascii_label = any(
-                        part.isascii() and any(c.isalpha() for c in part)
-                        for part in effective_hostname.split(".")
+                        part.isascii() and any(c.isalpha() for c in part) for part in effective_hostname.split(".")
                     )
                     if any_ascii_label:
                         return False

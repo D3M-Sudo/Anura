@@ -25,7 +25,9 @@ PROVIDERS: list[ShareProvider] = [
     ShareProvider(
         id="email",
         name=_("Email"),
-        handler=lambda text: f"mailto:?subject={quote(_('Extracted Text'), safe='')}&body={quote(text.strip(), safe='')}",
+        handler=lambda text: (
+            f"mailto:?subject={quote(_('Extracted Text'), safe='')}&body={quote(text.strip(), safe='')}"
+        ),
     ),
     ShareProvider(
         id="mastodon",
@@ -64,7 +66,9 @@ PROVIDERS: list[ShareProvider] = [
     ShareProvider(
         id="linkedin",
         name=_("LinkedIn"),
-        handler=lambda text: f"https://www.linkedin.com/sharing/share-offsite/?url={quote('https://github.com/D3M-Sudo/Anura', safe='')}&summary={quote(text.strip(), safe='')}",
+        handler=lambda text: (
+            f"https://www.linkedin.com/sharing/share-offsite/?url={quote('https://github.com/D3M-Sudo/Anura', safe='')}&summary={quote(text.strip(), safe='')}"
+        ),
     ),
     ShareProvider(
         id="threads",

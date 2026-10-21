@@ -94,17 +94,11 @@ class CacheManager:
                             # interrupting active downloads from other instances.
                             if time.time() - file_path.stat().st_mtime > 3600:
                                 file_path.unlink()
-                                logger.warning(
-                                    f"Anura: Cleaned up orphaned temporary file: {file_path.name}"
-                                )
+                                logger.warning(f"Anura: Cleaned up orphaned temporary file: {file_path.name}")
                         except PermissionError:
-                            logger.error(
-                                f"Anura: Permission denied removing orphaned file in {scan_dir.name}"
-                            )
+                            logger.error(f"Anura: Permission denied removing orphaned file in {scan_dir.name}")
                         except OSError:
-                            logger.error(
-                                f"Anura: Failed to remove orphaned file in {scan_dir.name}"
-                            )
+                            logger.error(f"Anura: Failed to remove orphaned file in {scan_dir.name}")
         except OSError:
             logger.error("Anura: Error scanning for orphaned temporary language files")
 
@@ -142,8 +136,7 @@ class CacheManager:
                             if f.name.endswith(".traineddata") and not f.name.startswith("osd")
                         ]
                         logger.debug(
-                            f"Anura CacheManager: User directory scanned, "
-                            f"{len(user_files)} models found: {user_files}",
+                            f"Anura CacheManager: User directory scanned, {len(user_files)} models found: {user_files}",
                         )
                         codes.update(Path(f).stem for f in user_files)
                     except OSError as e:

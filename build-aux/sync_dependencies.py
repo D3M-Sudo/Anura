@@ -126,11 +126,7 @@ def select_release_file(release: dict[str, Any], *, prefer_wheel: bool) -> dict[
     """Pick the artifact that best matches the manifest source type."""
     files = release.get("urls") or []
     if prefer_wheel:
-        pure_wheels = [
-            f
-            for f in files
-            if f.get("filename", "").endswith(".whl") and "py3-none-any" in f["filename"]
-        ]
+        pure_wheels = [f for f in files if f.get("filename", "").endswith(".whl") and "py3-none-any" in f["filename"]]
         if pure_wheels:
             return sorted(pure_wheels, key=lambda f: f["filename"])[0]
         any_wheels = [f for f in files if f.get("filename", "").endswith(".whl")]
@@ -210,10 +206,7 @@ def sync_manifest(
                 print(f"[{_STATUS_OK}]   {name:<30} build dep (managed by FEDC)")
                 stats[_STATUS_OK] += 1
             elif check_only:
-                print(
-                    f"[{_STATUS_DRIFT}] {name:<30} build dep without x-checker-data "
-                    "(run --update to add it)"
-                )
+                print(f"[{_STATUS_DRIFT}] {name:<30} build dep without x-checker-data (run --update to add it)")
                 stats[_STATUS_DRIFT] += 1
             else:
                 ensure_x_checker_data(module, pypi_name)
@@ -294,10 +287,7 @@ def sync_manifest(
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description=(
-            "Check or update the Flatpak Python dependencies against "
-            "uv.lock / pyproject.toml."
-        )
+        description=("Check or update the Flatpak Python dependencies against uv.lock / pyproject.toml.")
     )
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--check", action="store_true", help="detect drift, exit non-zero if found")

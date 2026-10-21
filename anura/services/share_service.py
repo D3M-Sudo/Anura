@@ -317,7 +317,6 @@ class ShareService(GObject.GObject):
             GLib.idle_add(_on_share_idle, False)
 
 
-
 # Thread-safe singleton instance for global app access
 def get_share_service() -> ShareService:
     """Get thread-safe share service singleton."""

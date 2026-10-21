@@ -199,8 +199,7 @@ class AtomicTaskManager:
                 # The worker process was killed (e.g. Tesseract segfault).
                 # Reset the executor so the next call gets a fresh pool.
                 logger.error(
-                    "AtomicTaskManager: Process pool broken (worker crashed) — "
-                    "resetting executor for next task"
+                    "AtomicTaskManager: Process pool broken (worker crashed) — resetting executor for next task"
                 )
                 with self._state_lock:
                     self._teardown_process_executor_locked()

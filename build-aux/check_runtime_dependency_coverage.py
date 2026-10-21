@@ -104,6 +104,7 @@ TARGET_ENV: dict[str, str] = {
     "platform_python_implementation": platform.python_implementation(),
 }
 
+
 @dataclass
 class CheckResult:
     """Outcome of a runtime dependency coverage check."""
@@ -265,11 +266,7 @@ def parse_manifest_modules(path: str) -> set[str]:
     """Return the set of ``python3-*`` module names declared in a Flatpak manifest."""
     with open(path, encoding="utf-8") as fh:
         data = json.load(fh)
-    return {
-        m.get("name", "")
-        for m in data.get("modules", [])
-        if m.get("name", "").startswith("python3-")
-    }
+    return {m.get("name", "") for m in data.get("modules", []) if m.get("name", "").startswith("python3-")}
 
 
 def check_runtime_coverage(
@@ -303,8 +300,7 @@ def check_runtime_coverage(
         for manifest in manifest_modules:
             if module not in manifest_modules[manifest]:
                 result.errors.append(
-                    f"runtime package '{pkg}' ({version}) -> module '{module}' "
-                    f"MISSING in {os.path.basename(manifest)}"
+                    f"runtime package '{pkg}' ({version}) -> module '{module}' MISSING in {os.path.basename(manifest)}"
                 )
 
         if pkg in FEDC_OWNED_PYPI:
@@ -318,8 +314,7 @@ def check_runtime_coverage(
             continue  # build-only modules are intentionally not runtime deps
         if pypi not in runtime:
             result.warnings.append(
-                f"module '{module}' maps to '{pypi}' which is NOT a runtime dependency"
-                " (stale / dev-only module)"
+                f"module '{module}' maps to '{pypi}' which is NOT a runtime dependency (stale / dev-only module)"
             )
 
     return result

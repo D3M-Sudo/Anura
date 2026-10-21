@@ -44,7 +44,9 @@ def _is_flatpak_environment() -> bool:
     return Path("/.flatpak-info").exists() or "FLATPAK_ID" in os.environ
 
 
-def _pipeline_detect_barcodes(img, start_time: float) -> tuple[bool, str | None, str | None, OcrResult | None, str] | None:
+def _pipeline_detect_barcodes(
+    img, start_time: float
+) -> tuple[bool, str | None, str | None, OcrResult | None, str] | None:
     """Stage 1: Barcode Detection"""
     from anura.utils.barcode_detector import detect_barcodes
 
@@ -66,9 +68,7 @@ def _pipeline_enhance_image(img, preprocessing_mode: str, task_id, status_callba
     if status_callback:
         status_callback(_("Enhancing image..."))
     preprocessor = get_text_preprocessor()
-    enhanced_img = (
-        preprocessor.enhance_image(img, task_id=task_id) if preprocessing_mode != "off" else img
-    )
+    enhanced_img = preprocessor.enhance_image(img, task_id=task_id) if preprocessing_mode != "off" else img
     return enhanced_img
 
 
@@ -188,17 +188,13 @@ def run_ocr_pipeline(
                         return barcode_result
 
                     # 2. Pre-processing
-                    enhanced_img = _pipeline_enhance_image(
-                        img, preprocessing_mode, task_id, status_callback
-                    )
+                    enhanced_img = _pipeline_enhance_image(img, preprocessing_mode, task_id, status_callback)
 
                     # 3. Tesseract OCR
                     ocr_result = _pipeline_run_tesseract(enhanced_img, lang, task_id, status_callback)
 
                     # 4. Reconstruction
-                    spatially_reconstructed, recon_conf = _pipeline_reconstruct(
-                        ocr_result, task_id, status_callback
-                    )
+                    spatially_reconstructed, recon_conf = _pipeline_reconstruct(ocr_result, task_id, status_callback)
 
                     # 5. Magic Processing
                     # FIX BUG-H-003: capture applied_name so callers don't need to re-run
@@ -238,14 +234,14 @@ def run_ocr_pipeline(
                 # worker — so no disk bloat occurs during long batch sessions.
                 if task_id:
                     from anura.config import TESSDATA_POOL_DIR
+
                     pool_task_dir = Path(TESSDATA_POOL_DIR) / task_id
                     if pool_task_dir.is_dir():
                         import contextlib
+
                         with contextlib.suppress(OSError):
                             shutil.rmtree(pool_task_dir)
-                            logger.debug(
-                                f"Anura OCR (Isolated): Cleaned up tessdata pool dir for task {task_id}"
-                            )
+                            logger.debug(f"Anura OCR (Isolated): Cleaned up tessdata pool dir for task {task_id}")
 
     except InterruptedError:
         return False, None, None, None, ""
@@ -390,16 +386,12 @@ class ScreenshotService(GObject.GObject):
                     # guarantee _is_capturing is reset even if the fallback raises before
                     # its callback is ever scheduled.
                     try:
-                        self.fallback_provider.capture(
-                            lang, copy, lambda s, u, e: _on_capture_result(s, u, e, True)
-                        )
+                        self.fallback_provider.capture(lang, copy, lambda s, u, e: _on_capture_result(s, u, e, True))
                     except (GLib.Error, RuntimeError, AttributeError) as e:
                         self._is_capturing = False
                         logger.error(f"Anura Screenshot: Fallback provider raised: {e}")
                         self._emit_capture_finished(False)
-                        self._emit_decode_error(
-                            _("Screenshot failed: {reason}").format(reason=str(e))
-                        )
+                        self._emit_decode_error(_("Screenshot failed: {reason}").format(reason=str(e)))
                 else:
                     self._is_capturing = False
                     self._emit_capture_finished(False)
@@ -670,6 +662,7 @@ class ScreenshotService(GObject.GObject):
             return None, _("The selected image file is empty."), None, ""
 
         import contextlib
+
         img_context: Any
         if isinstance(file, Image.Image):
             img_context = contextlib.nullcontext(file)
@@ -688,9 +681,7 @@ class ScreenshotService(GObject.GObject):
 
                 if img.mode != "L":
                     img = img.convert("L")  # type: ignore[assignment]
-                extracted, ocr_result, applied_name = self._try_ocr_extraction(
-                    img, lang, start_time, task_id=task_id
-                )
+                extracted, ocr_result, applied_name = self._try_ocr_extraction(img, lang, start_time, task_id=task_id)
 
         return extracted, error_message, ocr_result, applied_name
 

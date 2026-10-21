@@ -39,9 +39,7 @@ def _is_safe_executable(path: Path) -> bool:
     if not mode & stat.S_IXUSR:
         return False
     if mode & (stat.S_IWGRP | stat.S_IWOTH):
-        logger.warning(
-            f"Screenshot: rejecting unsafe scrot binary {path}: writable by group/others."
-        )
+        logger.warning(f"Screenshot: rejecting unsafe scrot binary {path}: writable by group/others.")
         return False
     return True
 
@@ -220,8 +218,7 @@ class LegacyX11Provider(ScreenshotProvider):
             if not proc.get_if_exited() or proc.get_exit_status() != 0:
                 exit_status = proc.get_exit_status() if proc.get_if_exited() else -1
                 logger.info(
-                    f"LegacyX11Provider: scrot exited with status {exit_status} — "
-                    "user likely cancelled the selection."
+                    f"LegacyX11Provider: scrot exited with status {exit_status} — user likely cancelled the selection."
                 )
                 self._cleanup_file(output_path)
                 # Treat non-zero exit as user cancellation (None error = no error toast)

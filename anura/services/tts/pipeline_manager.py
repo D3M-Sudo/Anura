@@ -82,7 +82,9 @@ class PipelineManager(GObject.GObject):
         """Handle player end-of-stream with staleness verification."""
         # Verify this callback is for the current generation
         if generation_id != self._generation_id:
-            logger.debug(f"PipelineManager: Ignoring stale EOS callback (gen {generation_id} != current {self._generation_id})")
+            logger.debug(
+                f"PipelineManager: Ignoring stale EOS callback (gen {generation_id} != current {self._generation_id})"
+            )
             return
 
         # Clean up the speech file
@@ -96,7 +98,9 @@ class PipelineManager(GObject.GObject):
         """Handle player error with staleness verification."""
         # Verify this callback is for the current generation
         if generation_id != self._generation_id:
-            logger.debug(f"PipelineManager: Ignoring stale error callback (gen {generation_id} != current {self._generation_id})")
+            logger.debug(
+                f"PipelineManager: Ignoring stale error callback (gen {generation_id} != current {self._generation_id})"
+            )
             return
 
         # Clean up the speech file

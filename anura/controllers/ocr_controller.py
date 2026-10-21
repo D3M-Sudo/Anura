@@ -183,7 +183,9 @@ class OcrController(GObject.GObject, SignalManagerMixin):
                 if result.phone_numbers:
                     count = len(result.phone_numbers)
                     self._window.show_toast(
-                        ngettext("{n} phone number found in text", "{n} phone numbers found in text", count).format(n=count)
+                        ngettext("{n} phone number found in text", "{n} phone numbers found in text", count).format(
+                            n=count
+                        )
                     )
             except ReferenceError:
                 logger.debug("OcrController: Window was already destroyed, skipping toasts.")

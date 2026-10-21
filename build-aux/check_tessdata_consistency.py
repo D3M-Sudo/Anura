@@ -34,14 +34,10 @@ CHECKSUMS_MANIFEST = REPO_ROOT / "anura" / "data" / "tessdata_checksums.json"
 # from tessdata GitHub URLs. Refs may be tags since Bug #6 (2026-09): upstream
 # repos rewrite history, orphaning hardcoded commit SHAs.
 # Matches patterns like: tessdata_fast/raw/<ref>/filename
-TESSDATA_URL_PATTERN = re.compile(
-    r"github\.com/tesseract-ocr/tessdata[^/]*/raw/([A-Za-z0-9._-]+)/"
-)
+TESSDATA_URL_PATTERN = re.compile(r"github\.com/tesseract-ocr/tessdata[^/]*/raw/([A-Za-z0-9._-]+)/")
 
 # Regex to extract tessdata git ref from config.py TESSDATA_BEST_URL
-CONFIG_TESSDATA_PATTERN = re.compile(
-    r"TESSDATA_BEST_URL\s*=\s*[\"']https?://[^\"']*/raw/([A-Za-z0-9._-]+)/"
-)
+CONFIG_TESSDATA_PATTERN = re.compile(r"TESSDATA_BEST_URL\s*=\s*[\"']https?://[^\"']*/raw/([A-Za-z0-9._-]+)/")
 
 # Regex to extract the pinned base URLs (TESSDATA_URL, TESSDATA_BEST_URL,
 # TESSDATA_STANDARD_URL) declared in config.py

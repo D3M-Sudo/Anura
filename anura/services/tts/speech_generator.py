@@ -59,8 +59,7 @@ class SpeechGenerator:
         # exhaustion (DoS).
         if len(text) > MAX_TTS_TEXT_LENGTH:
             logger.warning(
-                f"Anura TTS: Text exceeds maximum length ({len(text)} > {MAX_TTS_TEXT_LENGTH}). "
-                "Truncating for safety."
+                f"Anura TTS: Text exceeds maximum length ({len(text)} > {MAX_TTS_TEXT_LENGTH}). Truncating for safety."
             )
             text = text[:MAX_TTS_TEXT_LENGTH]
 
@@ -111,7 +110,6 @@ class SpeechGenerator:
             filepath = self._current_speech_file
             self._current_speech_file = None
             return filepath
-
 
     def cleanup_file(self, filepath: str | None) -> None:
         """Clean up a speech file."""

@@ -153,6 +153,7 @@ class LanguageManager(GObject.GObject):
 
         success = self._cache_manager.remove_model_file(code)
         if success:
+
             def _on_removed_idle(c):
                 try:
                     self.emit("removed", c)

@@ -341,9 +341,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         except (GLib.Error, RuntimeError) as e:
             # User dismissed the portal's "choose an application" dialog: not
             # an error, stay quiet.
-            if isinstance(e, GLib.Error) and e.matches(
-                Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED
-            ):
+            if isinstance(e, GLib.Error) and e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED):
                 logger.debug("External editor launch cancelled by user.")
                 return
             # Gtk.FileLauncher goes through the org.freedesktop.portal.OpenURI
@@ -416,12 +414,13 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         # window context is always available, avoiding the double-notification
         # burst caused by connecting error-occurred twice.
         from anura.services.screenshot_service import get_screenshot_service
+
         backend = get_screenshot_service()
         if "screenshot failed" in message.lower() and not getattr(backend, "fallback_provider", None):
             from anura.core.dialogs import DialogManager
+
             error_body = _(
-                "Anura could not capture a screenshot because no suitable "
-                "portal backend or fallback tool was found."
+                "Anura could not capture a screenshot because no suitable portal backend or fallback tool was found."
             )
             DialogManager.show_fatal_error(self, _("Capture Failed"), error_body)
         else:

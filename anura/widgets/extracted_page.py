@@ -131,12 +131,8 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
 
         # Undo/Redo buttons: sensitivity driven by the buffer undo stack
         if self.undo_btn and self.redo_btn:
-            self.buffer.bind_property(
-                "can-undo", self.undo_btn, "sensitive", GObject.BindingFlags.SYNC_CREATE
-            )
-            self.buffer.bind_property(
-                "can-redo", self.redo_btn, "sensitive", GObject.BindingFlags.SYNC_CREATE
-            )
+            self.buffer.bind_property("can-undo", self.undo_btn, "sensitive", GObject.BindingFlags.SYNC_CREATE)
+            self.buffer.bind_property("can-redo", self.redo_btn, "sensitive", GObject.BindingFlags.SYNC_CREATE)
             self.connect_tracked(self.undo_btn, "clicked", self._on_undo)
             self.connect_tracked(self.redo_btn, "clicked", self._on_redo)
 
@@ -426,7 +422,9 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
                 self.listen_pause_btn.set_icon_name("media-playback-pause-symbolic")
                 self.listen_pause_btn.update_state([Gtk.AccessibleState.PRESSED], [True])
                 self.listen_pause_btn.set_tooltip_text(C_("Extracted screen", "Pause listening (Ctrl+Alt+L)"))
-                self.listen_pause_btn.update_property([Gtk.AccessibleProperty.LABEL], [C_("Extracted screen", "Pause listening")])
+                self.listen_pause_btn.update_property(
+                    [Gtk.AccessibleProperty.LABEL], [C_("Extracted screen", "Pause listening")]
+                )
         elif state == "paused":
             self.swap_controls(True)
             if self.listen_stack:
@@ -435,7 +433,9 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
                 self.listen_pause_btn.set_icon_name("media-playback-start-symbolic")
                 self.listen_pause_btn.update_state([Gtk.AccessibleState.PRESSED], [False])
                 self.listen_pause_btn.set_tooltip_text(C_("Extracted screen", "Resume listening (Ctrl+Alt+L)"))
-                self.listen_pause_btn.update_property([Gtk.AccessibleProperty.LABEL], [C_("Extracted screen", "Resume listening")])
+                self.listen_pause_btn.update_property(
+                    [Gtk.AccessibleProperty.LABEL], [C_("Extracted screen", "Resume listening")]
+                )
         else:  # idle
             self.swap_controls(False)
             if self.listen_stack:

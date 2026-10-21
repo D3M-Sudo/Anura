@@ -90,6 +90,7 @@ class TtsController(GObject.GObject, SignalManagerMixin):
 
         if not tts_lang:
             from gettext import gettext as _
+
             self.emit("error-occurred", _("Text-to-speech is not available for this language"))
             self.emit("state-changed", "idle")
             return
@@ -100,9 +101,7 @@ class TtsController(GObject.GObject, SignalManagerMixin):
             self._active_generation_seq = seq
             self._cancel_generation_timers()
             try:
-                self._waiting_source = GLib.timeout_add_seconds(
-                    _TTS_STILL_WAITING_DELAY_S, self._on_still_waiting, seq
-                )
+                self._waiting_source = GLib.timeout_add_seconds(_TTS_STILL_WAITING_DELAY_S, self._on_still_waiting, seq)
             except (GLib.Error, RuntimeError, TypeError) as e:
                 logger.debug(f"TtsController: cannot schedule still-waiting timer: {e}")
                 self._waiting_source = None
@@ -189,6 +188,7 @@ class TtsController(GObject.GObject, SignalManagerMixin):
         if not self._settle_generation():
             return
         from gettext import gettext as _
+
         if isinstance(error, TimeoutError):
             msg = _("Request timed out. Please try again.")
         elif isinstance(error, (requests.RequestException, OSError)):

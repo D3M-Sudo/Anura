@@ -158,9 +158,7 @@ class ClipboardService(GObject.GObject):
         all (Wayland: "cannot store data").
         """
         if self._default_context_in_use():
-            logger.warning(
-                "Anura Clipboard: refusing to iterate the default main context while it is running."
-            )
+            logger.warning("Anura Clipboard: refusing to iterate the default main context while it is running.")
             return False
 
         try:
@@ -206,9 +204,7 @@ class ClipboardService(GObject.GObject):
         is already running.
         """
         if self._default_context_in_use():
-            logger.warning(
-                "Anura Clipboard: refusing to iterate the default main context while it is running."
-            )
+            logger.warning("Anura Clipboard: refusing to iterate the default main context while it is running.")
             return False
 
         try:

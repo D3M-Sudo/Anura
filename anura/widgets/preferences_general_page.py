@@ -108,6 +108,7 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
     def _setup_color_scheme(self) -> None:
         """Initialize color scheme selector from settings."""
         from gettext import pgettext
+
         qualities = [
             pgettext("color-scheme", "System"),
             pgettext("color-scheme", "Light"),

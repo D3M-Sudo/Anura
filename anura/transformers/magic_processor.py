@@ -34,10 +34,10 @@ class MagicProcessor:
                 return
 
             from anura.transformers.base_transformers import (
-            MultiLineTransformer,
-            ParagraphTransformer,
-            SingleLineTransformer,
-        )
+                MultiLineTransformer,
+                ParagraphTransformer,
+                SingleLineTransformer,
+            )
         from anura.transformers.email_transformer import EmailTransformer
         from anura.transformers.url_transformer import UrlTransformer
 
