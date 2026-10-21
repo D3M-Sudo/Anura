@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+- Flatpak: automated certifi updates no longer break the build — the FEDC update now rewrites the certifi filename referenced by the module's `build-commands` (the 2026.10.18 bump made `pip3 install` look for the previous 2026.7.22 tarball). Covered by `tests/test_fedc_certifi.py`
+
 ## [0.2.1] - 2026-10-20
 
 ### Added
