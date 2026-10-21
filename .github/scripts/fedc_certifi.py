@@ -72,11 +72,35 @@ def create_isolated_manifest(real_manifest_path: str, output_path: str) -> None:
     Path(output_path).write_text(json.dumps(isolated, indent=4) + "\n")
 
 
+def sync_build_command_filenames(
+    module: dict[str, Any], old_filename: str, new_filename: str
+) -> None:
+    """Rewrite build-commands that pin the previous source filename.
+
+    FEDC updates only the source URL and checksum. Without this step the module
+    keeps installing the previous tarball (for example
+    ``certifi-2026.7.22.tar.gz``) while the new source has a different name,
+    and the Flatpak build fails with "No such file or directory".
+
+    The caller (``replace_certifi_source``) verifies afterwards that the module
+    no longer references the old filename, so a leftover reference fails closed
+    instead of producing a PR with a broken Flatpak build.
+    """
+    build_commands = module.get("build-commands")
+    if not build_commands or not old_filename or old_filename == new_filename:
+        return
+
+    module["build-commands"] = [
+        command.replace(old_filename, new_filename) for command in build_commands
+    ]
+
+
 def replace_certifi_source(real_manifest_path: str, updated_manifest_path: str) -> None:
     """Replace the real certifi source with the FEDC-updated source.
 
     x-checker-data is temporary FEDC metadata and must never be copied into
-    the real manifest.
+    the real manifest. The certifi module's build-commands are kept in sync
+    with the updated source filename.
     """
     real_manifest = json.loads(Path(real_manifest_path).read_text())
     updated_manifest = json.loads(Path(updated_manifest_path).read_text())
@@ -97,7 +121,14 @@ def replace_certifi_source(real_manifest_path: str, updated_manifest_path: str) 
             continue
         for i, source in enumerate(module.get("sources", [])):
             if is_certifi_source(source):
+                old_filename = os.path.basename(source.get("url", ""))
+                new_filename = os.path.basename(source_to_insert.get("url", ""))
                 module["sources"][i] = source_to_insert
+                sync_build_command_filenames(module, old_filename, new_filename)
+                if old_filename and old_filename != new_filename and old_filename in json.dumps(module):
+                    raise SystemExit(
+                        f"Certifi module still references the previous source filename {old_filename!r}"
+                    )
                 replaced = True
                 break
 
