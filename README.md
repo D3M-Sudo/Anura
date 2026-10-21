@@ -144,7 +144,7 @@ Valid levels: `TRACE`, `DEBUG`, `INFO` (default), `WARNING`, `ERROR`, `CRITICAL`
 | Python | ≥ 3.12 |
 | GTK4 + Libadwaita | latest |
 | Tesseract OCR | 5.3.4 |
-| zxing-cpp | 3.0.0 |
+| zxing-cpp | 3.1.1 |
 | Leptonica | 1.87.0 |
 | Blueprint Compiler | ≥ 0.16.0 |
 | gettext | latest |

@@ -41,7 +41,7 @@ Intentional exceptions handled without false positives:
 - certifi (FEDC-owned): presence is enforced, but the *version* is owned by
   FEDC and is deliberately never compared here (that decision belongs to
   sync_dependencies.py + flatpak-dependencies.yml).
-- Build-only modules (python3-pybind11, python3-scikit-build-core): never
+- Build-only modules (python3-pybind11, python3-nanobind, python3-scikit-build-core): never
   required as runtime uv.lock packages.
 - Dev/test dependencies and their transitives: never required in the manifests.
 - System / externally-provided dependencies (tesseract, tessdata, leptonica,
