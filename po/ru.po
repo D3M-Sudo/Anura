@@ -22,8 +22,8 @@ msgstr ""
 "X-Poedit-SearchPath-0: .\n"
 "X-Poedit-SearchPath-1: anura\n"
 "X-Poedit-SearchPath-2: data/ui\n"
-"X-Poedit-SearchPath-3: data/com.github.d3msudo.anura.metainfo.xml.in\n"
-"X-Poedit-SearchPath-4: data/com.github.d3msudo.anura.desktop.in\n"
+"X-Poedit-SearchPath-3: data/io.github.d3msudo.anura.metainfo.xml.in\n"
+"X-Poedit-SearchPath-4: data/io.github.d3msudo.anura.desktop.in\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 
 #: anura/controllers/dnd_controller.py:45
