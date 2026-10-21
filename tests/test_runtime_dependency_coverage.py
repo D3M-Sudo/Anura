@@ -251,18 +251,18 @@ def test_4_certifi_fedc_owned_version_divergence_passes(tmp_path: Path) -> None:
 
 
 def test_5_build_only_modules_not_required(tmp_path: Path) -> None:
-    """Test 5: build-only modules (pybind11, scikit-build-core) are never
+    """Test 5: build-only modules (nanobind, scikit-build-core) are never
     required as runtime uv.lock packages."""
     pyproject, uv_lock, main, local = _base_files(tmp_path)
 
     # Add the build-only modules to the manifests (they are not in uv.lock).
-    modules = RUNTIME_MODULES | {"python3-pybind11", "python3-scikit-build-core"}
+    modules = RUNTIME_MODULES | {"python3-nanobind", "python3-scikit-build-core"}
     _write_manifest(main, modules)
     _write_manifest(local, modules)
 
     result = checker.check_runtime_coverage(pyproject, uv_lock, (main, local), env=LINUX_ENV)
     assert result.passed is True, result.errors
-    assert not any("pybind11" in e for e in result.errors)
+    assert not any("nanobind" in e for e in result.errors)
     assert not any("scikit-build-core" in e for e in result.errors)
 
 

@@ -227,9 +227,9 @@ Anura uses `uv` for Python development and native dependencies via Flatpak.
 | Module | Version | Purpose |
 |--------|---------|---------|
 | tesseract | 5.3.4 | OCR engine |
-| zxing-cpp | 3.0.0 | High-performance Barcode/QR decoding |
+| zxing-cpp | 3.1.1 | High-performance Barcode/QR decoding |
 | leptonica | 1.87.0 | Image processing library |
-| libportal | 0.9.1 | XDG Desktop Portal API |
+| libportal | 0.11.0 | XDG Desktop Portal API |
 | blueprint-compiler | 0.16.0 | UI compilation .blp → .ui |
 
 ### Build Dependencies (Flatpak)
@@ -240,7 +240,7 @@ present in `uv.lock`:
 
 | Module | Purpose |
 |--------|---------|
-| pybind11 | Python bindings for zxing-cpp (build-time only) |
+| nanobind | Python bindings used by zxing-cpp ≥3.1 (build-time only) |
 | scikit-build-core | Build system for zxing-cpp (build-time only) |
 
 ### Special Dependency Ownership

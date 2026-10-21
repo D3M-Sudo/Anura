@@ -52,11 +52,11 @@ MODULE_TO_PYPI: dict[str, str] = {
     "python3-gTTS": "gtts",
     "python3-idna": "idna",
     "python3-loguru": "loguru",
+    "python3-nanobind": "nanobind",
     "python3-packaging": "packaging",
     "python3-pathspec": "pathspec",
     "python3-pillow": "pillow",
     "python3-psutil": "psutil",
-    "python3-pybind11": "pybind11",
     "python3-pytesseract": "pytesseract",
     "python3-requests": "requests",
     "python3-scikit-build-core": "scikit-build-core",
@@ -69,7 +69,7 @@ MODULE_TO_PYPI: dict[str, str] = {
 # instead of the uv.lock-based sync.
 BUILD_DEPS_OVERRIDES: frozenset[str] = frozenset(
     {
-        "python3-pybind11",
+        "python3-nanobind",
         "python3-scikit-build-core",
     }
 )
