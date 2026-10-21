@@ -140,6 +140,25 @@
             ]
         },
         {
+            "name": "python3-pybind11",
+            "buildsystem": "simple",
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app .",
+                "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/pybind11-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/pybind11/LICENSE \\; -quit || true'"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://files.pythonhosted.org/packages/76/f3/95b0f40b31df41dbfe6bb0857419c9442c15839cbac4796f1c26ae0b6081/pybind11-3.1.0.tar.gz",
+                    "sha256": "a1cc06b524ab3edca51f8ad3895f9c4fa20b8b19283173dff4ae781449dc9639",
+                    "x-checker-data": {
+                        "type": "pypi",
+                        "name": "pybind11"
+                    }
+                }
+            ]
+        },
+        {
             "name": "python3-nanobind",
             "buildsystem": "simple",
             "build-commands": [

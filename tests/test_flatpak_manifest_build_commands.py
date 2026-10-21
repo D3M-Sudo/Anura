@@ -57,13 +57,21 @@ def test_wheel_modules_install_the_wheel_they_declare(manifest: dict) -> None:
 
 
 def test_zxing_cpp_uses_nanobind_not_pybind11(manifest: dict) -> None:
-    """zxing-cpp >=3.1 builds with nanobind; pybind11 must not be required."""
+    """zxing-cpp >=3.1 builds with nanobind, not the pybind11_DIR workaround."""
     modules = _modules(manifest)
     zxing = modules["python3-zxing-cpp"]
 
     assert "python3-nanobind" in modules
-    assert "python3-pybind11" not in modules
     assert not any("pybind11" in command for command in zxing.get("build-commands", []))
+
+
+def test_build_time_helpers_precede_the_modules_that_import_them(manifest: dict) -> None:
+    """Pillow imports pybind11 and zxing-cpp imports nanobind at build time."""
+    order = {module["name"]: index for index, module in enumerate(manifest["modules"])}
+
+    assert order["python3-pybind11"] < order["python3-pillow"]
+    assert order["python3-nanobind"] < order["python3-zxing-cpp"]
+    assert order["python3-scikit-build-core"] < order["python3-zxing-cpp"]
 
 
 def test_zxing_cpp_installs_the_sdist_it_declares(manifest: dict) -> None:

@@ -240,6 +240,7 @@ present in `uv.lock`:
 
 | Module | Purpose |
 |--------|---------|
+| pybind11 | Build-time helper required by Pillow ≥13 (`setup_helpers.ParallelCompile`) |
 | nanobind | Python bindings used by zxing-cpp ≥3.1 (build-time only) |
 | scikit-build-core | Build system for zxing-cpp (build-time only) |
 
