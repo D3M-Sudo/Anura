@@ -15,6 +15,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Flatpak: automated certifi updates no longer break the build — the FEDC update now rewrites the certifi filename referenced by the module's `build-commands` (the 2026.10.18 bump made `pip3 install` look for the previous 2026.7.22 tarball). Covered by `tests/test_fedc_certifi.py`
 - Clipboard: `hand_off_to_manager()` and `wait_until_replaced()` now refuse to iterate the default GLib main context when it is already running (an active GTK loop, or another thread owns it), logging a warning and returning `False` instead of re-entering the loop (AUDIT-001, #469)
 
+### Security
+- Dependabot #47, #49, #50, #51: `urllib3` 2.7.0 → 2.8.0, fixing the unbounded chunk-size line buffered by `HTTPResponse.stream()`/`read_chunked()`, the HTTPS proxy TLS configuration that could be ignored or overridden, and the infinite loop on chunked deflate streaming. The Flatpak `python3-urllib3` module was resynced by `build-aux/sync_dependencies.py` (wheel 2.8.0 + sha256)
+- Dependabot #48, #47: `anyio` 4.13.0 → 4.14.2 (Python < 3.15) / 4.15.1 (Python ≥ 3.15), fixing the IDNA 2003 host-name encoding in `TLSStream` that enabled TLS certificate spoofing and the process-pool workers that could block indefinitely on undrained stderr. `anyio` is transitive (`httpx` → `safety`), so only `uv.lock` changes
+- Dependabot #32 (`nltk`): removed the direct development dependency. It was declared in `pyproject.toml` but never imported by the application, the tests or the build scripts, and NLTK has no fixed release for the model-artifact path traversal. It is not shipped in the Flatpak; it now stays in `uv.lock` only as a transitive dependency of the `safety` dev tool (3.8.1, the latest release, still requires `nltk>=3.9`), so the residual exposure is limited to developer machines
+
 ## [0.2.1] - 2026-10-20
 
 ### Added
