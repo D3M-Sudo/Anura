@@ -2,7 +2,7 @@
 #
 # postinstall.py
 #
-# Copyright 2021-2025 Andrey Maksimov
+# Copyright 2021-2025 Andrey Maksimov (Frog)
 # Copyright 2026 D3M-Sudo (Anura fork and modifications)
 #
 # Standard post-installation script for Meson build system.
