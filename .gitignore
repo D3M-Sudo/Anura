@@ -36,6 +36,8 @@ meson-private/
 # Flatpak build artifacts
 .flatpak-builder/
 repo/
+# Bundles produced by flatpak-builder / CI (io.github.d3msudo.anura.flatpak)
+*.flatpak
 
 # Generated at build time — do NOT commit
 anura/_release_notes.py
@@ -50,6 +52,8 @@ gschemas.compiled
 .pytest_cache/
 htmlcov/
 .coverage
+# coverage combine / parallel runs produce .coverage.<host>.<pid>
+.coverage.*
 coverage.xml
 
 # Gettext compiled
@@ -68,13 +72,27 @@ coverage.xml
 run_tests.py
 
 # Local development and temporary files
-.jules/
-cline/
 .env
 .env.*
 *.bak
 *.tmp
 *.temp
+*.log
+*.orig
+*.rej
+.python-version
+.direnv/
+.envrc
+
+# AI/agent tooling
+# Shared project rules ARE versioned and must stay tracked: .clinerules/, .agents/
+# Per-agent scratch state and local runtime data are never committed.
+.cline-home/
+.jules/
+.Jules/
+cline/
+aidlc-docs/
+memory-bank/
 
 # Test audit files
 audit-report.md
