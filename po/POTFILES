@@ -1,13 +1,9 @@
-# Python sources
 anura/controllers/dnd_controller.py
 anura/controllers/history_controller.py
 anura/controllers/ocr_controller.py
 anura/controllers/tts_controller.py
-
 anura/core/dialogs.py
-
 anura/main.py
-
 anura/services/clipboard_service.py
 anura/services/language_manager.py
 anura/services/language/validator.py
@@ -15,15 +11,8 @@ anura/services/screenshot/legacy_provider.py
 anura/services/screenshot_service.py
 anura/services/share_providers.py
 anura/services/share_service.py
-anura/services/tts/audio_player.py
-anura/services/tts/language_mapper.py
-anura/services/tts/pipeline_manager.py
-anura/services/tts/service.py
-anura/services/tts/speech_generator.py
-
 anura/utils/portal_advice.py
 anura/utils/validators.py
-
 anura/widgets/extracted_page.py
 anura/widgets/history_page.py
 anura/widgets/language_popover.py
@@ -34,20 +23,16 @@ anura/widgets/preferences_languages_page.py
 anura/widgets/share_row.py
 anura/widgets/shortcuts_overlay.py
 anura/widgets/welcome_page.py
-
 anura/window.py
-
-# Data files
 data/io.github.d3msudo.anura.desktop.in
+data/io.github.d3msudo.anura.metainfo.xml.in
 data/ui/extracted_page.blp
 data/ui/history_page.blp
 data/ui/language_popover.blp
-data/ui/language_popover_row.blp
 data/ui/language_row.blp
 data/ui/preferences_dialog.blp
 data/ui/preferences_general.blp
 data/ui/preferences_languages.blp
-data/ui/share_row.blp
 data/ui/shortcuts_overlay.blp
 data/ui/welcome_page.blp
 data/ui/window.blp
