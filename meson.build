@@ -8,10 +8,12 @@ project('anura',
 )
 
 author = 'd3msudo'
+github_owner = 'D3M-Sudo'
+github_repo = 'Anura'
 domain = 'io.github'
 app_id = '@0@.@1@.@2@'.format(domain, author, meson.project_name())
-gitrepo = 'https://github.com/@0@/@1@'.format(author, meson.project_name())
-website = 'https://github.com/d3msudo/anura'
+gitrepo = 'https://github.com/@0@/@1@'.format(github_owner, github_repo)
+website = gitrepo
 
 i18n = import('i18n')
 pymod = import('python')

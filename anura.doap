@@ -12,12 +12,19 @@
     from images, screenshots, or any region of your screen using Tesseract.
   </description>
 
-  <homepage rdf:resource="https://github.com/d3msudo/anura" />
-  <bug-database rdf:resource="https://github.com/d3msudo/anura/issues" />
+  <homepage rdf:resource="https://github.com/D3M-Sudo/Anura" />
+  <bug-database rdf:resource="https://github.com/D3M-Sudo/Anura/issues" />
   <license rdf:resource="http://usefulinc.com/ns/doap#MIT" />
   <programming-language>Python</programming-language>
   <platform>GTK 4</platform>
   <platform>Libadwaita</platform>
+
+  <author>
+    <foaf:Person>
+      <foaf:name>D3M-Sudo</foaf:name>
+      <gnome:userid>d3msudo</gnome:userid>
+    </foaf:Person>
+  </author>
 
   <maintainer>
     <foaf:Person>
@@ -26,9 +33,9 @@
     </foaf:Person>
   </maintainer>
 
-  <author>
+  <contributor>
     <foaf:Person>
       <foaf:name>Andrey Maksimov</foaf:name>
     </foaf:Person>
-  </author>
+  </contributor>
 </Project>

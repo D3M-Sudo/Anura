@@ -7,7 +7,7 @@
 
 ```bash
 # 1. Clone and enter the repo
-git clone https://github.com/d3msudo/anura && cd anura
+git clone https://github.com/D3M-Sudo/Anura.git && cd Anura
 
 # 2. Setup environment and install dev tools
 uv sync --dev

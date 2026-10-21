@@ -34,9 +34,9 @@ def test_magic_processor_single_line():
 
 def test_magic_processor_url():
     processor = get_magic_processor()
-    ocr_res = create_mock_ocr_result(["https://github.com/d3msudo/anura"])
+    ocr_res = create_mock_ocr_result(["https://github.com/D3M-Sudo/Anura"])
     text, _conf, name = processor.process(ocr_res)
-    assert "https://github.com/d3msudo/anura" in text
+    assert "https://github.com/D3M-Sudo/Anura" in text
     assert name == "Url"
 
 
