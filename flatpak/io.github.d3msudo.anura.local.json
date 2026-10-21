@@ -123,17 +123,18 @@
             "name": "python3-scikit-build-core",
             "buildsystem": "simple",
             "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed scikit_build_core-1.0.1-py3-none-any.whl",
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed scikit_build_core-1.1.1-py3-none-any.whl",
                 "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/scikit_build_core-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/scikit-build-core/LICENSE \\; -quit || true'"
             ],
             "sources": [
                 {
                     "type": "file",
-                    "url": "https://files.pythonhosted.org/packages/41/3d/463f75ff6f1346371883e7c51c0b9ac62b07e0c2f54366f79658cf49db52/scikit_build_core-1.0.1-py3-none-any.whl",
-                    "sha256": "1b3a660e819b6a99908f01d1df3fbcc75ef3aaa4c1bbf7d6c88de11d1ff21393",
+                    "url": "https://files.pythonhosted.org/packages/01/1b/83913d6d5c6a7f8ad5bf5d67b2d57ab09475f1bb9dd0c7a3f44067d59b90/scikit_build_core-1.1.1-py3-none-any.whl",
+                    "sha256": "6f6d6cf600e2e9639fd258ecd11cfc19bd189354b968916a519c6793e7e26237",
                     "x-checker-data": {
                         "type": "pypi",
-                        "name": "scikit-build-core"
+                        "name": "scikit-build-core",
+                        "packagetype": "bdist_wheel"
                     }
                 }
             ]
@@ -148,8 +149,8 @@
             "sources": [
                 {
                     "type": "archive",
-                    "url": "https://files.pythonhosted.org/packages/cc/f0/35145a3c3baffeef55d4b8324caa33abaa8fa56ab345ecd4b2211d09163e/pybind11-3.0.4.tar.gz",
-                    "sha256": "3286b59c8a774b9ee650169302dd5a4eedc30a8617905a0560dd8ee44775130c",
+                    "url": "https://files.pythonhosted.org/packages/76/f3/95b0f40b31df41dbfe6bb0857419c9442c15839cbac4796f1c26ae0b6081/pybind11-3.1.0.tar.gz",
+                    "sha256": "a1cc06b524ab3edca51f8ad3895f9c4fa20b8b19283173dff4ae781449dc9639",
                     "x-checker-data": {
                         "type": "pypi",
                         "name": "pybind11"
@@ -158,17 +159,37 @@
             ]
         },
         {
+            "name": "python3-nanobind",
+            "buildsystem": "simple",
+            "build-commands": [
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed nanobind-2.11.0-py3-none-any.whl",
+                "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/nanobind-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/nanobind/LICENSE \\; -quit || true'"
+            ],
+            "sources": [
+                {
+                    "type": "file",
+                    "url": "https://files.pythonhosted.org/packages/e8/1c/37ae5b9a0d13defd8e27222e4cbfb82e569dbfd12d16ba8c78cab593e56c/nanobind-2.11.0-py3-none-any.whl",
+                    "sha256": "8097442c3e55d011a67f016ce1d9567ed9e3cdb3ad6749f13a76dbbc2721f0ee",
+                    "x-checker-data": {
+                        "type": "pypi",
+                        "name": "nanobind",
+                        "packagetype": "bdist_wheel"
+                    }
+                }
+            ]
+        },
+        {
             "name": "python3-zxing-cpp",
             "buildsystem": "simple",
             "build-commands": [
-                "bash -c 'env pybind11_DIR=$(python3 -c \"import pybind11; print(pybind11.get_cmake_dir())\") pip3 install --no-deps --no-build-isolation --prefix=/app .'",
+                "pip3 install --no-deps --no-build-isolation --prefix=/app .",
                 "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/zxing_cpp-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/zxing-cpp/LICENSE \\; -quit || true'"
             ],
             "sources": [
                 {
                     "type": "archive",
-                    "url": "https://files.pythonhosted.org/packages/f1/c6/ac2a12cdc2b1c296804fc6a65bf112b607825ca7f47742a5aca541134711/zxing_cpp-3.0.0.tar.gz",
-                    "sha256": "703353304de24d947bd68044fac4e062953a7b64029de6941ba8ffeb4476b60d",
+                    "url": "https://files.pythonhosted.org/packages/b9/30/ad0e0352c593712ebb47143571ff11b130812e2852d7540e7c80cdf23340/zxing_cpp-3.1.1.tar.gz",
+                    "sha256": "1051a521b21a9fe206702ad4186aeb195154e3e1badcd99576d030723f36382b",
                     "x-checker-data": {
                         "type": "pypi",
                         "name": "zxing-cpp"
@@ -229,8 +250,8 @@
             "sources": [
                 {
                     "type": "archive",
-                    "url": "https://files.pythonhosted.org/packages/1c/3d/bb7fca845737cf9d7dbde16ed1843984665ff2e0a518f5db43e77ec540b9/pillow-12.3.0.tar.gz",
-                    "sha256": "3b8182a766685eaa002637e28b4ec8d6b18819a0c71f579bf0dbaa5830297cce",
+                    "url": "https://files.pythonhosted.org/packages/ce/a4/9cc30690a394a8305e8be4c9036aa16d0dfddadd09079860b582f562496d/pillow-13.0.0.tar.gz",
+                    "sha256": "cdcd1ba258178f7356d74170c9a81ba4eab6a5d55748bc402a5a2a6fe6be3510",
                     "x-checker-data": {
                         "type": "pypi",
                         "name": "Pillow"
@@ -302,14 +323,14 @@
             "name": "python3-urllib3",
             "buildsystem": "simple",
             "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed urllib3-2.7.0-py3-none-any.whl",
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed urllib3-2.8.0-py3-none-any.whl",
                 "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/urllib3-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/urllib3/LICENSE \\; -quit || true'"
             ],
             "sources": [
                 {
                     "type": "file",
-                    "url": "https://files.pythonhosted.org/packages/7f/3e/5db95bcf282c52709639744ca2a8b149baccf648e39c8cc87553df9eae0c/urllib3-2.7.0-py3-none-any.whl",
-                    "sha256": "9fb4c81ebbb1ce9531cce37674bbc6f1360472bc18ca9a553ede278ef7276897"
+                    "url": "https://files.pythonhosted.org/packages/92/9d/c4e665119135114480843e7ab388fa94d8480650450e6f8e26b70d323a4c/urllib3-2.8.0-py3-none-any.whl",
+                    "sha256": "0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3"
                 }
             ]
         },
@@ -317,14 +338,14 @@
             "name": "python3-certifi",
             "buildsystem": "simple",
             "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed certifi-2026.7.22.tar.gz",
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed certifi-2026.10.18.tar.gz",
                 "bash -c 'shopt -s nocaseglob; find /app/lib/python3.*/site-packages/certifi-*.dist-info -type f -iname \"*icense*\" -exec install -Dm0644 {} $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/certifi/LICENSE \\; -quit || true'"
             ],
             "sources": [
                 {
                     "type": "file",
-                    "url": "https://files.pythonhosted.org/packages/a3/c2/24167ea9858356b47a87a50d39908bfdb72ceeefe0041586e704e5376b3a/certifi-2026.7.22.tar.gz",
-                    "sha256": "741e2c3b351ddf169a738da9f2c048608ff7f2c5cc02f1ebc6b118bb090d5d55"
+                    "url": "https://files.pythonhosted.org/packages/7e/eb/a2aa1ac3ea30dd3f30ca57f40232138b6b0040719316ecb85daf61167771/certifi-2026.10.18.tar.gz",
+                    "sha256": "b9995d97b64d0431a5af837d8ca8cd6238104d1f319f04bd93ea43124d6c861e"
                 }
             ]
         },
@@ -338,8 +359,8 @@
             "sources": [
                 {
                     "type": "archive",
-                    "url": "https://files.pythonhosted.org/packages/e7/a1/67fe25fac3c7642725500a3f6cfe5821ad557c3abb11c9d20d12c7008d3e/charset_normalizer-3.4.7.tar.gz",
-                    "sha256": "ae89db9e5f98a11a4bf50407d4363e7b09b31e55bc117b4f7d80aab97ba009e5",
+                    "url": "https://files.pythonhosted.org/packages/33/1c/f41d4e74c28ab327ff3acd36053f7ea506c55872d7a90b0fa71aa3ab0c89/charset_normalizer-3.5.2.tar.gz",
+                    "sha256": "39de2a259fc954455c57274dc94c79d5842774e1247a016aff30bc0efed0f4ef",
                     "x-checker-data": {
                         "type": "pypi",
                         "name": "charset-normalizer"
@@ -442,8 +463,8 @@
                 {
                     "type": "git",
                     "url": "https://github.com/flatpak/libportal.git",
-                    "tag": "0.9.1",
-                    "commit": "8f5dc8d192f6e31dafe69e35219e3b707bde71ce",
+                    "tag": "0.11.0",
+                    "commit": "fc4d62cfe131e8494c82f597f92b2234d584c367",
                     "x-checker-data": {
                         "type": "git"
                     }

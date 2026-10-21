@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+- Flatpak: updated the Python modules requested by FEDC in #427 — zxing-cpp 3.0.0 → 3.1.1, Pillow 12.3.0 → 13.0.0 (security release), charset-normalizer 3.4.7 → 3.5.2, libportal 0.9.1 → 0.11.0 and scikit-build-core 1.0.1 → 1.1.1. `pyproject.toml` now requires `pillow>=13.0.0` and `zxing-cpp>=3.1.1`, with `uv.lock` regenerated so `sync_dependencies.py --check` stays green
+- Flatpak: zxing-cpp 3.1 builds its Python wheel with nanobind instead of pybind11, so `python3-nanobind` 2.11.0 was added and the zxing build no longer sets `pybind11_DIR`. `pybind11` stays (updated to 3.1.0) because Pillow 13 now imports `pybind11.setup_helpers` at build time
+- Flatpak: scikit-build-core is installed from its `1.1.1` wheel; FEDC's proposed sdist could not be installed by the module's `--no-build-isolation` build command, which referenced the old wheel by filename. The `x-checker-data` now pins `packagetype: bdist_wheel`, and `tests/test_flatpak_manifest_build_commands.py` guards wheel modules against the same mismatch
+
+### Removed
+- Development tooling: dropped the `safety` dev dependency (and its entry in the Dependabot `dev-deps` group). It was added by the one-off June 2026 audit (`ead78f1`) to produce `docs/audit/safety_scan.json`, which is no longer tracked; no workflow, test or build script invokes it, and dependency scanning is covered by Dependabot and CodeQL. The development graph drops from 72 to 39 packages (also losing `cryptography`, `httpx`, `h11`, `pydantic` and `nltk`, which came in through it); runtime dependencies and the Flatpak manifests are untouched. `bandit` is kept
+
+### Fixed
+- Flatpak: automated certifi updates no longer break the build — the FEDC update now rewrites the certifi filename referenced by the module's `build-commands` (the 2026.10.18 bump made `pip3 install` look for the previous 2026.7.22 tarball). Covered by `tests/test_fedc_certifi.py`
+- Clipboard: `hand_off_to_manager()` and `wait_until_replaced()` now refuse to iterate the default GLib main context when it is already running (an active GTK loop, or another thread owns it), logging a warning and returning `False` instead of re-entering the loop (AUDIT-001, #469)
+
+### Security
+- Dependabot #49, #50, #51: `urllib3` 2.7.0 → 2.8.0, fixing the unbounded chunk-size line buffered by `HTTPResponse.stream()`/`read_chunked()`, the HTTPS proxy TLS configuration that could be ignored or overridden, and the infinite loop on chunked deflate streaming. The Flatpak `python3-urllib3` module was resynced by `build-aux/sync_dependencies.py` (wheel 2.8.0 + sha256)
+- Dependabot #47, #48 (`anyio`): no longer in the dependency graph. `anyio` was only reachable through `httpx`, which was required exclusively by the `safety` dev tool removed above; `uv.lock` now has no `anyio` entry, so the IDNA 2003 host-name encoding in `TLSStream` (TLS certificate spoofing) and the process-pool workers blocked on undrained stderr no longer apply
+- Dependabot #32 (`nltk`): no longer in the dependency graph. The direct dev dependency was unused (never imported by the application, the tests or the build scripts), and dropping `safety` removes the only transitive path (`safety 3.8.1` requires `nltk>=3.9`), so NLTK's unfixed model-artifact path traversal cannot be reached from this project at all. NLTK was never shipped in the Flatpak
+
 ## [0.2.1] - 2026-10-20
 
 ### Added
