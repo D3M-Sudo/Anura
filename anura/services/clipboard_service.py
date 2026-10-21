@@ -130,6 +130,19 @@ class ClipboardService(GObject.GObject):
         """Legacy alias for set(text)."""
         self.set(text)
 
+    def _default_context_in_use(self) -> bool:
+        """Return True when iterating the default context would re-enter its loop.
+
+        Silent/CLI mode iterates a private context, so the default one is free
+        there; an active GTK main loop owns it instead. Checking the depth as
+        well covers a call made from another thread while the loop runs.
+        """
+        context = GLib.MainContext.default()
+        if context.is_owner():
+            return True
+        depth = getattr(context, "depth", 0)
+        return isinstance(depth, int) and depth > 0
+
     def hand_off_to_manager(self, timeout_seconds: float = 3.0) -> bool:
         """Ask the desktop clipboard manager to keep the current content after exit.
 
@@ -138,10 +151,18 @@ class ClipboardService(GObject.GObject):
         took it over first. This asks GTK to do that and waits for the answer.
 
         Blocking: it runs the default main context itself, so call it only when no UI
-        main loop is running. Never raises; returns True only if a manager took the
-        content. Returns False when there is no manager (X11: "No clipboard manager is
-        active") or the backend cannot store at all (Wayland: "cannot store data").
+        main loop is running. Returns False without iterating when the default context
+        is already running (for example when called from a GTK callback). Never raises;
+        returns True only if a manager took the content. Returns False when there is no
+        manager (X11: "No clipboard manager is active") or the backend cannot store at
+        all (Wayland: "cannot store data").
         """
+        if self._default_context_in_use():
+            logger.warning(
+                "Anura Clipboard: refusing to iterate the default main context while it is running."
+            )
+            return False
+
         try:
             clipboard = self.clipboard
         except RuntimeError as e:
@@ -181,8 +202,15 @@ class ClipboardService(GObject.GObject):
 
         Blocking, same caveat as hand_off_to_manager. Returns True when another
         application took the clipboard, False on timeout, on should_stop() or when no
-        display is available.
+        display is available. Returns False without iterating when the default context
+        is already running.
         """
+        if self._default_context_in_use():
+            logger.warning(
+                "Anura Clipboard: refusing to iterate the default main context while it is running."
+            )
+            return False
+
         try:
             clipboard = self.clipboard
         except RuntimeError as e:

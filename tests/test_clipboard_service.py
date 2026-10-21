@@ -336,6 +336,46 @@ class TestClipboardLifetime:
         finally:
             patcher.stop()
 
+    def test_hand_off_refuses_to_reenter_a_running_default_context(self):
+        clipboard = MagicMock()
+        context = MagicMock()
+        context.is_owner.return_value = True
+        service, patcher = self._service_with(clipboard)
+        try:
+            with patch("gi.repository.GLib.MainContext.default", return_value=context):
+                assert service.hand_off_to_manager(timeout_seconds=0.1) is False
+        finally:
+            patcher.stop()
+        clipboard.store_async.assert_not_called()
+        context.iteration.assert_not_called()
+
+    def test_hand_off_refuses_when_another_thread_owns_the_default_context(self):
+        clipboard = MagicMock()
+        context = MagicMock()
+        context.is_owner.return_value = False
+        context.depth = 1
+        service, patcher = self._service_with(clipboard)
+        try:
+            with patch("gi.repository.GLib.MainContext.default", return_value=context):
+                assert service.hand_off_to_manager(timeout_seconds=0.1) is False
+        finally:
+            patcher.stop()
+        clipboard.store_async.assert_not_called()
+
+    def test_wait_until_replaced_refuses_to_reenter_a_running_default_context(self):
+        clipboard = MagicMock()
+        clipboard.is_local.return_value = True
+        context = MagicMock()
+        context.is_owner.return_value = True
+        service, patcher = self._service_with(clipboard)
+        try:
+            with patch("gi.repository.GLib.MainContext.default", return_value=context):
+                assert service.wait_until_replaced(timeout_seconds=0.1) is False
+        finally:
+            patcher.stop()
+        context.iteration.assert_not_called()
+
+
     def test_real_clipboard_hand_off_answers_instead_of_hanging(self):
         """Against the real display: with no clipboard manager this must fail fast, not block."""
         import time
