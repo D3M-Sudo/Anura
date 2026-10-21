@@ -9,7 +9,7 @@
 
 ### Preferred — GitHub Security Advisories
 
-**[Open a private Security Advisory →](https://github.com/d3msudo/anura/security/advisories/new)**
+**[Open a private Security Advisory →](https://github.com/D3M-Sudo/Anura/security/advisories/new)**
 
 ---
 
@@ -90,6 +90,6 @@
 
 | Channel | Link |
 | ------- | ---- |
-| Security vulnerabilities | [GitHub Security Advisories](https://github.com/d3msudo/anura/security/advisories) |
-| General issues | [GitHub Issues](https://github.com/d3msudo/anura/issues) |
-| Project | https://github.com/d3msudo/anura |
+| Security vulnerabilities | [GitHub Security Advisories](https://github.com/D3M-Sudo/Anura/security/advisories) |
+| General issues | [GitHub Issues](https://github.com/D3M-Sudo/Anura/issues) |
+| Project | https://github.com/D3M-Sudo/Anura |

@@ -60,6 +60,7 @@ anura/
 │   │   ├── screenshot_service.py   Screenshot capture orchestration
 │   │   ├── history_service.py      Opt-in local JSON history (History V1, see docs/reference/history-v1.md)
 │   │   ├── settings.py             GSettings singleton wrapper
+│   │   ├── share_providers.py      Social share provider definitions
 │   │   ├── share_service.py        Social sharing (9 providers)
 │   │   ├── tts/                    Text-to-speech modular components
 │   │   │   ├── audio_player.py     GStreamer audio playback
@@ -72,7 +73,8 @@ anura/
 │   │   ├── download_state.py       DownloadState enum
 │   │   ├── history.py              Immutable HistoryEntry dataclass (History V1)
 │   │   ├── language_item.py        LanguageItem dataclass
-│   │   └── ocr.py                  Immutable OcrResult and OcrWord dataclasses
+│   │   ├── ocr.py                  Immutable OcrResult and OcrWord dataclasses
+│   │   └── tessdata_checksum.py    Tessdata model integrity (git-blob SHA-1 verification)
 │   ├── transformers/          Semantic text transformers (Chain of Responsibility)
 │   │   ├── base_transformers.py Base implementations (SingleLine, Paragraph, etc.)
 │   │   ├── email_transformer.py Specialized email extraction & scoring
@@ -140,7 +142,7 @@ anura/
 │   └── meson/postinstall.py    Post-install script
 ├── bin/
 │   └── anura.in                Entry point script (installed as `anura`)
-├── po/                         Gettext translations (25+ languages)
+├── po/                         Gettext translations (26 languages)
 ├── .github/
 │   ├── workflows/
 │   │   ├── main.yml                    CI build and smoke tests
@@ -227,9 +229,9 @@ Anura uses `uv` for Python development and native dependencies via Flatpak.
 | Module | Version | Purpose |
 |--------|---------|---------|
 | tesseract | 5.3.4 | OCR engine |
-| zxing-cpp | 3.0.0 | High-performance Barcode/QR decoding |
+| zxing-cpp | 3.1.1 | High-performance Barcode/QR decoding |
 | leptonica | 1.87.0 | Image processing library |
-| libportal | 0.9.1 | XDG Desktop Portal API |
+| libportal | 0.11.0 | XDG Desktop Portal API |
 | blueprint-compiler | 0.16.0 | UI compilation .blp → .ui |
 
 ### Build Dependencies (Flatpak)
@@ -240,7 +242,8 @@ present in `uv.lock`:
 
 | Module | Purpose |
 |--------|---------|
-| pybind11 | Python bindings for zxing-cpp (build-time only) |
+| pybind11 | Build-time helper required by Pillow ≥13 (`setup_helpers.ParallelCompile`) |
+| nanobind | Python bindings used by zxing-cpp ≥3.1 (build-time only) |
 | scikit-build-core | Build system for zxing-cpp (build-time only) |
 
 ### Special Dependency Ownership

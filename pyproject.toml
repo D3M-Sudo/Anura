@@ -7,11 +7,11 @@ license = { text = "MIT" }
 dependencies = [
     "gtts>=2.5.4",
     "loguru>=0.7.3",
-    "pillow>=12.3.0",
+    "pillow>=13.0.0",
     "psutil>=7.2.2",
     "pytesseract>=0.3.13",
     "requests>=2.34.2",
-    "zxing-cpp>=2.3.0",
+    "zxing-cpp>=3.1.1",
 ]
 
 # ─── Ruff ─────────────────────────────────────────────────────────────────────
@@ -78,12 +78,10 @@ dev = [
     "bandit>=1.9.4",
     "meson>=1.11.2",
     "mypy>=2.1.0",
-    "nltk>=3.10.3",
     "ninja>=1.13.0",
     "pytest>=9.1.1",
     "pytest-cov>=6.0.0",
     "pytest-timeout>=2.3.1",
     "ruff>=0.15.21",
-    "safety>=3.8.1",
     "vulture>=2.16",
 ]
