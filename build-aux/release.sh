@@ -8,6 +8,15 @@
 
 set -e
 
+# --- i18n policy (D5) ---
+# Do NOT regenerate po/*.pot or run msgmerge here.
+# Translations are managed externally via Weblate.
+# Local xgettext runs introduce spurious '#:' line-reference diffs
+# that conflict with the Weblate-managed .po files (see #447).
+# Structural pot generation is delegated to dedicated PRs
+# that run: cd po && ./update_potfiles.sh
+# --- end i18n policy ---
+
 VERSION="$1"
 # Default: tessdata release tag (Bug #6, 2026-09). Do NOT re-pin to commit SHAs:
 # upstream tesseract-ocr repos rewrite history, orphaning hardcoded SHAs (404).
