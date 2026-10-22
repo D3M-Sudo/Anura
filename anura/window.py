@@ -225,6 +225,16 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         if not file_path:
             return
 
+        # #509: validate from filesystem metadata (is_file + stat) before
+        # reading anything. load_contents_async() would otherwise load the
+        # entire file — a video, an ISO, an archive chosen via "All files" —
+        # just for validate_image_resource() to reject its size afterwards.
+        # The byte check in the callback stays as defence in depth.
+        is_valid, _size, error = validate_image_resource(file_path)
+        if not is_valid:
+            self.show_toast(_(error) if error else _("Invalid image file"))
+            return
+
         gfile: Gio.File = Gio.File.new_for_path(file_path)
         self.welcome_page.show_spinner()
 
