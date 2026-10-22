@@ -36,6 +36,11 @@ _CLIPBOARD_TEXT_URI_LIST = "text/uri-list"
 # Stream chunk size when slurping clipboard streams.
 _CLIPBOARD_STREAM_CHUNK = 16 * 1024
 
+# Hard cap on the text/uri-list payload buffered in memory. The clipboard source
+# controls the stream length, and CLIPBOARD_TIMEOUT_SECONDS only bounds elapsed
+# time: without a byte cap a paste can allocate an unbounded amount of memory.
+_CLIPBOARD_URI_LIST_MAX_BYTES = 1024 * 1024
+
 
 class ClipboardService(GObject.GObject):
     """
@@ -605,11 +610,44 @@ class ClipboardService(GObject.GObject):
         stream: Gio.InputStream,
         cancellable: Gio.Cancellable | None,
         on_done: Callable[[bytes], None],
+        max_bytes: int = _CLIPBOARD_URI_LIST_MAX_BYTES,
     ) -> None:
-        """Read a Gio.InputStream fully and invoke ``on_done(bytes)``."""
+        """Read a Gio.InputStream fully and invoke ``on_done(bytes)``.
+
+        At most ``max_bytes`` are buffered: past the limit the read is stopped,
+        the chunks are dropped and a clipboard error is emitted, so an oversized
+        payload never reaches the join/decode/split stage. The existing timeout
+        bounds elapsed time, not memory.
+        """
         chunks: list[bytes] = []
+        total = 0
+        rejected = False
+
+        def _reject(reason: str) -> None:
+            nonlocal rejected
+            if rejected:
+                return
+            rejected = True
+            chunks.clear()
+            logger.warning(f"Anura Clipboard: {reason}")
+            # Stop the pending read and release the stream; both are best-effort
+            # because the source may already be gone.
+            if cancellable is not None:
+                cancellable.cancel()
+            stream.close_async(GLib.PRIORITY_DEFAULT, None, None)
+
+            def _on_error_idle() -> bool:
+                # Reuses the existing translated string: the payload is treated
+                # as unusable content, while the precise reason stays in the log.
+                self.emit("error", _("No image in clipboard"))
+                return GLib.SOURCE_REMOVE
+
+            GLib.idle_add(_on_error_idle)
 
         def _on_chunk(_stream: Gio.InputStream, res: Gio.AsyncResult) -> None:
+            nonlocal total
+            if rejected:
+                return
             try:
                 gbytes = stream.read_bytes_finish(res)
             except GLib.Error as e:
@@ -628,6 +666,10 @@ class ClipboardService(GObject.GObject):
             if not data:
                 on_done(b"".join(chunks))
                 return
+            if total + len(data) > max_bytes:
+                _reject(f"URI list exceeds the {max_bytes}-byte limit; discarding")
+                return
+            total += len(data)
             chunks.append(bytes(data))
             stream.read_bytes_async(
                 _CLIPBOARD_STREAM_CHUNK,
