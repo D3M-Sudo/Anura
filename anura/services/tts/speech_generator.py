@@ -117,17 +117,20 @@ class SpeechGenerator:
         filename = f"speech_{uuid.uuid4().hex}.mp3"
         filepath = str(self._speech_dir / filename)
 
-        tts = _VerifiedTTS(text, lang=lang, tld=self._tld, timeout=REQUEST_TIMEOUT)
-        logger.info(f"Anura TTS: Generating speech for language: {lang} (timeout={REQUEST_TIMEOUT}s)")
-
         try:
+            # The gTTS constructor validates the language and may raise
+            # ValueError for an unsupported/stale code; keep it inside the guard
+            # so the pipeline gets its normal empty-path failure instead of an
+            # unhandled exception (#547). gTTSError covers API/network failures.
+            tts = _VerifiedTTS(text, lang=lang, tld=self._tld, timeout=REQUEST_TIMEOUT)
+            logger.info(f"Anura TTS: Generating speech for language: {lang} (timeout={REQUEST_TIMEOUT}s)")
             # Perform blocking I/O without holding the state lock
             tts.save(filepath)
         except (SystemExit, KeyboardInterrupt):
             # Re-raise system exceptions that should terminate the application
             raise
-        except (requests.RequestException, OSError) as e:
-            logger.error(f"Anura TTS: Failed to save speech file: {e}")
+        except (ValueError, gtts.gTTSError, requests.RequestException, OSError) as e:
+            logger.error(f"Anura TTS: Failed to generate speech file: {e}")
             path = Path(filepath)
             if path.exists():
                 with contextlib.suppress(OSError):

@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Development tooling: dropped the `safety` dev dependency (and its entry in the Dependabot `dev-deps` group). It was added by the one-off June 2026 audit (`ead78f1`) to produce `docs/audit/safety_scan.json`, which is no longer tracked; no workflow, test or build script invokes it, and dependency scanning is covered by Dependabot and CodeQL. The development graph drops from 72 to 39 packages (also losing `cryptography`, `httpx`, `h11`, `pydantic` and `nltk`, which came in through it); runtime dependencies and the Flatpak manifests are untouched. `bandit` is kept
 
 ### Fixed
+- TTS: a stale or unsupported speech language no longer breaks the failure path. The gTTS constructor runs inside the guard, so its `ValueError` (and `gTTSError` from the API) map to the normal empty-path result the pipeline already handles, and any partial MP3 is removed (#547)
 - History: the clear-confirmation callback now re-checks the history service before using it, so a window teardown between opening the dialog and the user response can no longer raise `AttributeError` (#514)
 - UI: `ShortcutsOverlay.shortcuts_data` is typed with `TypedDict` entries, so category and shortcut lookups are checked instead of being inferred as `Collection[str]` (#515)
 - Types: the headless `GObject` fallback used when PyGObject is unavailable is now marked as an intentional redefinition, keeping `mypy` clean in CI (#516)
