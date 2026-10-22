@@ -219,6 +219,12 @@ class DownloadManager(GObject.GObject):
             logger.error(f"Anura: Refusing to download '{tessfile}' without a pinned checksum.")
             return None
 
+        # #520: track the streamed response so it can be closed on every exit
+        # path (size rejection, announced-size mismatch, cancellation, I/O
+        # error). An unread stream keeps its connection and socket alive and
+        # repeated failures would starve the session pool.
+        response: requests.Response | None = None
+
         try:
             url = url_base + tessfile
             with tempfile.NamedTemporaryFile(
@@ -348,6 +354,14 @@ class DownloadManager(GObject.GObject):
                         return None
 
                 finally:
+                    # #520: close the streamed response before anything else;
+                    # this runs on success, early returns and exceptions.
+                    if response is not None:
+                        try:
+                            response.close()
+                        except (OSError, ValueError) as e:
+                            logger.debug(f"Anura: Failed to close the download response: {e}")
+
                     # Ensure temporary file is always cleaned up
                     if tmp_path and tmp_path.exists():
                         try:
