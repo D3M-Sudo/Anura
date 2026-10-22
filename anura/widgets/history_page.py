@@ -320,6 +320,11 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
         dialog.force_close()
         if response != "clear":
             return
+        # The service reference can be cleared while the dialog is open (window
+        # teardown), so re-check instead of relying on the guard in
+        # _on_clear_clicked: this callback runs later, asynchronously.
+        if self._history_service is None:
+            return
         try:
             self._history_service.clear()
         except OSError:
