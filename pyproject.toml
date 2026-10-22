@@ -73,6 +73,15 @@ docstring-code-line-length = 100
 targets = ["anura"]
 exclude_dirs = ["tests", ".git", "__pycache__", "builddir", "build", "dist", ".venv"]
 
+# ─── Mypy ─────────────────────────────────────────────────────────────────────
+# Non-strict gate: PyGObject ships no usable type stubs and the codebase still
+# has a long tail of intentionally untyped callbacks. With the ignores below the
+# production tree is clean; per-module strictness is tracked as a separate epic.
+[tool.mypy]
+python_version = "3.12"
+files = ["anura"]
+ignore_missing_imports = true
+
 
 # ─── Pytest ───────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]

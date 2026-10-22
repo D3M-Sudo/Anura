@@ -72,9 +72,17 @@ gates today; see D4.
 | --- | --- | --- | --- |
 | 518 | P3 | `[tool.bandit]` with `targets = ["anura"]`, `exclude_dirs = ["tests", ...]` | `pyproject.toml` |
 | 517 | P3 | CI: `ruff format --check`, `bandit`, non-blocking `vulture`, non-strict `mypy`; formatting baseline as a separate commit | `.github/workflows/main.yml`, `pyproject.toml` |
+| 514 | P3 | `None` guard in `_on_clear_response` | `anura/widgets/history_page.py` |
+| 515 | P3 | `TypedDict` entries for the shortcuts data model | `anura/widgets/shortcuts_overlay.py` |
+| 516 | P3 | `type: ignore[no-redef]` on the headless `GObject` stub | `anura/utils/signal_manager.py` |
+
+**Reordering note:** #514, #515 and #516 moved from Batch 4 into Batch 0. After
+`--ignore-missing-imports`, non-strict `mypy` reports exactly four errors, all from
+those three issues; fixing them is what makes the mypy gate blocking instead of
+advisory. Batch 0 is therefore a hard prerequisite for every later batch.
 
 Batch 0 lands first so that every later batch is checked by the same gates and so
-that the 34-file formatting diff does not collide with functional changes.
+that the 29-file formatting diff does not collide with functional changes.
 
 ### Batch 1 — Security and privacy (P0/P1)
 
@@ -127,9 +135,9 @@ Ordering constraints: `540 → 510 → 511`.
 ### Batch 4 — Hygiene (P3)
 
 `#512` (loguru in history service), `#513` (`AGENTS.md` alignment, per D3),
-`#514` (None guard), `#515` (`ClassVar` annotation), `#516`
-(`type: ignore[no-redef]`), `#544` (test that actually exercises constructor
-initialisation).
+`#544` (test that actually exercises constructor initialisation).
+
+`#514`, `#515` and `#516` were moved into Batch 0 (see the reordering note there).
 
 ## Verification
 
@@ -144,6 +152,14 @@ uv run pytest tests/ -v -m "not gtk"
 GTK/toolkit paths (`#523`, `#532`, `#538`, `#539`, `#521`, `#529`) additionally
 need a smoke test on a real desktop session; the PR states which paths were
 verified manually.
+
+## Open blockers
+
+- **#517 — workflow wiring:** the CI automation identity (`cline-cloud[bot]`) is a
+  GitHub App without the `workflows` permission, so it cannot push changes to
+  `.github/workflows/*.yml`. The configuration and the local commands are in place
+  (`[tool.mypy]`, `[tool.bandit]`, format baseline, clean mypy); the workflow diff is
+  posted on the issue for a maintainer to apply.
 
 ## Out of scope
 
