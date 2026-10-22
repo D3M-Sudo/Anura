@@ -4,10 +4,13 @@
 #
 # SPDX-License-Identifier: MIT
 
+import base64
 import contextlib
 import os
 from pathlib import Path
+import re
 import threading
+import urllib.request
 import uuid
 
 import gtts
@@ -15,6 +18,53 @@ from loguru import logger
 import requests
 
 from anura.config import MAX_TTS_TEXT_LENGTH, REQUEST_TIMEOUT
+
+
+class _VerifiedTTS(gtts.gTTS):
+    """gTTS client that actually verifies the server certificate.
+
+    gTTS 2.5.4 hardcodes ``verify=False`` in ``stream()`` and exposes no switch,
+    so the extracted text was sent to Google and the audio received over a
+    channel whose peer was never authenticated: a MITM could read the text or
+    replace the returned MP3 (which is then played by GStreamer).
+
+    This subclass reproduces the request loop of the pinned upstream version
+    (same ``_prepare_requests``/``iter_lines`` parsing) with ``verify=True``.
+    It is deliberately minimal: ``tests/test_tts_tls_verify.py`` fails if the
+    request no longer uses verification, and the upstream version is pinned in
+    ``pyproject.toml``/``uv.lock`` so a bump is reviewed against this code.
+    """
+
+    def stream(self):
+        for idx, prepared in enumerate(self._prepare_requests()):
+            response = None
+            try:
+                with requests.Session() as session:
+                    response = session.send(
+                        request=prepared,
+                        verify=True,
+                        proxies=urllib.request.getproxies(),
+                        timeout=self.timeout,
+                    )
+                response.raise_for_status()
+            except requests.exceptions.HTTPError as e:
+                logger.error(f"Anura TTS: HTTP error from the speech service: {e}")
+                raise gtts.gTTSError(tts=self, response=response) from e
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Anura TTS: request to the speech service failed: {e}")
+                raise gtts.gTTSError(tts=self) from e
+
+            assert response is not None  # both failure paths raise above
+            for line in response.iter_lines(chunk_size=1024):
+                decoded_line = line.decode("utf-8")
+                if "jQ1olc" not in decoded_line:
+                    continue
+                audio_search = re.search(r'jQ1olc","\[\\"(.*)\\"\]', decoded_line)
+                if not audio_search:
+                    # Successful request, no audio in the response.
+                    raise gtts.gTTSError(tts=self, response=response)
+                yield base64.b64decode(audio_search.group(1).encode("ascii"))
+            logger.debug(f"Anura TTS: audio part {idx} received")
 
 
 class SpeechGenerator:
@@ -67,7 +117,7 @@ class SpeechGenerator:
         filename = f"speech_{uuid.uuid4().hex}.mp3"
         filepath = str(self._speech_dir / filename)
 
-        tts = gtts.gTTS(text, lang=lang, tld=self._tld, timeout=REQUEST_TIMEOUT)
+        tts = _VerifiedTTS(text, lang=lang, tld=self._tld, timeout=REQUEST_TIMEOUT)
         logger.info(f"Anura TTS: Generating speech for language: {lang} (timeout={REQUEST_TIMEOUT}s)")
 
         try:
