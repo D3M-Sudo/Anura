@@ -18,6 +18,8 @@ documentation lives in the root (`README.md`, `AGENTS.md`, `CONTRIBUTING.md`,
 | Document | Status | Purpose |
 | --- | --- | --- |
 | [planning/history-v2-interactive-rows.md](planning/history-v2-interactive-rows.md) | **Active — minimal cut implemented; rest planning** | History V2: interactive history rows (copy and expansion done; external editor, TTS and re-OCR tracked in #454–#456) |
+| [planning/runtime-fixes-m1.md](planning/runtime-fixes-m1.md) | **Active — approved 2026-10-22** | Milestone 1: severity/batch plan for 36 runtime issues (security, reliability, state/UI, hygiene) |
+| [planning/flathub-readiness-m2.md](planning/flathub-readiness-m2.md) | **Active — scheduled after M1** | Milestone 2: 31 packaging/CI/Flathub issues in four phases |
 
 ## Historical material (audit/legacy)
 
@@ -45,8 +47,10 @@ docs/
 │   ├── history-v2.md
 │   ├── dependencies.md
 │   └── tessdata-integrity.md
-├── planning/              ← active plans (History V2: minimal cut implemented)
-│   └── history-v2-interactive-rows.md
+├── planning/              ← active plans (History V2 minimal cut + M1/M2 fix plans)
+│   ├── history-v2-interactive-rows.md
+│   ├── runtime-fixes-m1.md
+│   └── flathub-readiness-m2.md
 └── audit/                 ← QA/security audit material
     ├── README.md          ← audit root guide (root = active audits)
     └── legacy/            ← historical archive (append-only, see legacy/README.md)
