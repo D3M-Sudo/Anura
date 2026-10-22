@@ -15,6 +15,7 @@ from urllib.parse import urlparse
 from loguru import logger
 
 from anura.config import (
+    MAX_IMAGE_PIXELS,
     MAX_IMAGE_SIZE_BYTES,
     MAX_IMAGE_SIZE_MB,
     MAX_TEXT_LENGTH,
@@ -332,6 +333,32 @@ def is_safe_url_string(text: str) -> bool:
     # BEFORE strip/sanitize to catch malicious trailing/injected characters.
     # Note: Regex is ~13x faster than a manual loop for this check.
     return not _CONTROL_CHARS_RE.search(text)
+
+
+def validate_image_dimensions(width: int, height: int) -> tuple[bool, str | None]:
+    """Enforce the decoded-pixel budget for an untrusted image.
+
+    ``validate_image_resource()`` bounds the compressed size only: a small PNG
+    can decode to a bitmap of arbitrary size (decompression bomb). The
+    dimensions are known from the image header, so this runs before ``load()``,
+    ``convert()``, barcode detection or OCR allocate the full buffer.
+
+    Args:
+        width: Decoded width in pixels (from ``Image.size``).
+        height: Decoded height in pixels (from ``Image.size``).
+
+    Returns:
+        tuple: (is_valid, error_message)
+    """
+    if width <= 0 or height <= 0:
+        return False, "Invalid image dimensions"
+
+    pixels = width * height
+    if pixels > MAX_IMAGE_PIXELS:
+        megapixels = round(pixels / 1_000_000, 1)
+        return False, f"Image too large: {megapixels}MP (max {MAX_IMAGE_PIXELS // 1_000_000}MP)"
+
+    return True, None
 
 
 def validate_image_resource(

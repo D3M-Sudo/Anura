@@ -32,7 +32,7 @@ from anura.core.atomic_task_manager import get_atomic_manager  # noqa: E402
 from anura.models.ocr import OcrResult  # noqa: E402
 from anura.services.language_manager import get_tesseract_config  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
-from anura.utils import mask_url, sanitize_text, validate_image_resource  # noqa: E402
+from anura.utils import mask_url, sanitize_text, validate_image_dimensions, validate_image_resource  # noqa: E402
 from anura.utils.portal_advice import detect_portal_advice  # noqa: E402
 from anura.utils.singleton import get_instance  # noqa: E402
 from anura.utils.structural_reconstructor import get_structural_reconstructor  # noqa: E402
@@ -182,6 +182,14 @@ def run_ocr_pipeline(
                     os.environ[k] = tmp_dir
 
                 with Image.open(file_path) as img:  # type: ignore[assignment]
+                    # #522: Image.open() reads only the header, so reject a
+                    # decompression bomb before convert/barcode/OCR allocate
+                    # the full bitmap. Must match the synchronous path below.
+                    dims_ok, dims_error = validate_image_dimensions(*img.size)
+                    if not dims_ok:
+                        logger.error(f"Anura OCR: {dims_error}: {file_path}")
+                        return False, "", _(dims_error) if dims_error else _("Invalid image file"), None, ""
+
                     # 1. Barcode Detection
                     barcode_result = _pipeline_detect_barcodes(img, start_time)
                     if barcode_result:
@@ -671,6 +679,15 @@ class ScreenshotService(GObject.GObject):
 
         with img_context as img:
             image_size = img.size
+            # #522: same pixel budget as the isolated worker path. The size is
+            # known from the header, before convert()/barcode/OCR allocate the
+            # decoded buffer; this also covers an already-decoded Image passed
+            # in by a caller.
+            dims_ok, dims_error = validate_image_dimensions(*image_size)
+            if not dims_ok:
+                logger.error(f"Anura OCR: {dims_error}")
+                return None, _(dims_error) if dims_error else _("Invalid image file"), None, ""
+
             logger.debug(f"Anura OCR: Processing image size: {image_size[0]}x{image_size[1]}")
 
             extracted = self._try_barcode_detection(img, start_time)
