@@ -24,7 +24,7 @@ from gi.repository import Gdk, Gio, GLib, GObject  # noqa: E402
 from loguru import logger  # noqa: E402
 from PIL import Image  # noqa: E402
 
-from anura.utils import mask_url, validate_image_resource  # noqa: E402
+from anura.utils import mask_url, validate_image_dimensions, validate_image_resource  # noqa: E402
 from anura.utils.singleton import get_instance  # noqa: E402
 
 # When the clipboard advertises a file URI list (e.g. user copied a PNG from
@@ -743,6 +743,14 @@ class ClipboardService(GObject.GObject):
 
         try:
             with Image.open(path) as img:
+                # #522: reject a decompression bomb from the header before
+                # load()/convert() allocate the decoded bitmap.
+                dims_ok, dims_error = validate_image_dimensions(*img.size)
+                if not dims_ok:
+                    logger.error(f"Anura Clipboard: {dims_error}")
+                    self._emit_clipboard_error(_("No image in clipboard"))
+                    return
+
                 img.load()
                 out = img if img.mode in ("RGB", "RGBA", "L") else img.convert("RGBA")
                 buf = BytesIO()

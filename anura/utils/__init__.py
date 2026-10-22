@@ -11,6 +11,7 @@ from anura.utils.validators import (
     mask_url,
     sanitize_text,
     uri_validator,
+    validate_image_dimensions,
     validate_image_resource,
 )
 
@@ -23,5 +24,6 @@ __all__ = [
     "mask_url",
     "sanitize_text",
     "uri_validator",
+    "validate_image_dimensions",
     "validate_image_resource",
 ]
