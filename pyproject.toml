@@ -59,6 +59,19 @@ indent-style = "space"
 docstring-code-format = true
 docstring-code-line-length = 100
 
+# ─── Bandit ───────────────────────────────────────────────────────────────────
+# Production code is scanned in full. Test code is excluded because pytest
+# legitimately uses assert (B101), try/except/pass (B110), hardcoded temp paths
+# (B108) and subprocess/shell mocks (B403/B404/B602/B603), which would otherwise
+# produce ~1,000 non-actionable findings and mask real production regressions.
+#
+# Bandit only reads this section when the config is passed explicitly:
+#   bandit -c pyproject.toml -r .
+[tool.bandit]
+targets = ["anura"]
+exclude_dirs = ["tests", ".git", "__pycache__", "builddir", "build", "dist", ".venv"]
+
+
 # ─── Pytest ───────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]
 testpaths = ["tests"]
