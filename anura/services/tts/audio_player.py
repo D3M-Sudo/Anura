@@ -18,6 +18,8 @@ gi.require_version("Gst", "1.0")
 from gi.repository import GLib, GObject, Gst  # noqa: E402
 from loguru import logger  # noqa: E402
 
+from anura.utils.file_uri import file_uri  # noqa: E402
+
 
 class AudioPlayer(GObject.GObject):
     """
@@ -65,7 +67,7 @@ class AudioPlayer(GObject.GObject):
             self.emit("error", generation_id, "Failed to create GStreamer playbin")
             return
 
-        self.player.set_property("uri", f"file://{filepath}")
+        self.player.set_property("uri", file_uri(filepath))
         self.player.set_property("volume", max(0.0, min(1.0, volume)))
 
         # Setup bus before starting playback
