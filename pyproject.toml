@@ -19,7 +19,9 @@ dependencies = [
 line-length = 120
 target-version = "py312"
 src = ["anura", "build-aux"]
-exclude = ["data/", "po/"]
+# Markdown is excluded: ruff >=0.15 also formats fenced code blocks inside
+# Markdown, which would rewrite documentation snippets and agent rules.
+exclude = ["data/", "po/", "**/*.md"]
 
 [tool.ruff.lint]
 select = [

@@ -571,9 +571,7 @@ class _FakeAlertDialog:
         self.presented_with = parent
 
 
-def test_clear_clicked_uses_alert_dialog_and_presents_with_parent(
-    headless_gi_mocks, monkeypatch, tmp_path
-):
+def test_clear_clicked_uses_alert_dialog_and_presents_with_parent(headless_gi_mocks, monkeypatch, tmp_path):
     """Regression: Adw.MessageDialog.present(parent) raised TypeError.
 
     The clear-confirmation dialog must be an Adw.AlertDialog presented with
@@ -601,9 +599,7 @@ def test_clear_clicked_uses_alert_dialog_and_presents_with_parent(
     assert dialog.presented_with is parent
 
 
-def test_clear_dialog_response_wiring_survives_migration(
-    headless_gi_mocks, monkeypatch, tmp_path
-):
+def test_clear_dialog_response_wiring_survives_migration(headless_gi_mocks, monkeypatch, tmp_path):
     """The 'clear' response must still trigger service.clear(); 'cancel' must not."""
     import anura.widgets.history_page as history_page_module
 

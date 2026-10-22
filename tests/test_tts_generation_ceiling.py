@@ -43,7 +43,9 @@ def _install_stubs(monkeypatch):
     monkeypatch.setitem(sys.modules, "gi.repository", types.SimpleNamespace(GLib=fake_glib, GObject=fake_gobject))
     monkeypatch.setitem(sys.modules, "loguru", fake_loguru)
     monkeypatch.setitem(
-        sys.modules, "anura.core.atomic_task_manager", types.SimpleNamespace(get_atomic_manager=fake_atomic.get_atomic_manager)
+        sys.modules,
+        "anura.core.atomic_task_manager",
+        types.SimpleNamespace(get_atomic_manager=fake_atomic.get_atomic_manager),
     )
     monkeypatch.setitem(sys.modules, "anura.services.settings", types.SimpleNamespace(settings=fake_settings))
     monkeypatch.setitem(sys.modules, "anura.services.tts", fake_tts_mod)

@@ -78,11 +78,11 @@ class TestUriValidatorEnterprise:
         [
             ("Normal text", "Normal text"),
             ("Text with \n newline", "Text with \n newline"),
-            ("Text with \uE000 private use", "Text with private use"),
-            ("Text with \uD800 surrogate", "Text with surrogate"),
-            ("Text with \u202E RLO", "Text with RLO"),
-            ("Mixed \uE000 and \n inside", "Mixed and \n inside"),
-            ("Text with \u088F unassigned", "Text with unassigned"),  # Cn category
+            ("Text with \ue000 private use", "Text with private use"),
+            ("Text with \ud800 surrogate", "Text with surrogate"),
+            ("Text with \u202e RLO", "Text with RLO"),
+            ("Mixed \ue000 and \n inside", "Mixed and \n inside"),
+            ("Text with \u088f unassigned", "Text with unassigned"),  # Cn category
             ("e\u0301", "é"),  # NFC Normalization: 'e' + combining acute -> 'é'
         ],
     )

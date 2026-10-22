@@ -30,7 +30,10 @@ if os.path.exists(resource_path):
     resource._register()
 else:
     import warnings
-    warnings.warn(f"GResource bundle not found at {resource_path}, widget templates may fail to load", UserWarning, stacklevel=2)
+
+    warnings.warn(
+        f"GResource bundle not found at {resource_path}, widget templates may fail to load", UserWarning, stacklevel=2
+    )
 
 from anura.models.language_item import LanguageItem  # noqa: E402
 from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
@@ -148,6 +151,7 @@ class TestWelcomePageEnterprise:
     def test_drop_button_toggle(self, widget):
         """Test that the drop area visibility is toggled by the button."""
         import sys
+
         initial_revealed = widget.drop_revealer.get_reveal_child()
         print(f"\n[DEBUG] initial_revealed = {initial_revealed}")
         print(f"[DEBUG] initial tooltip = '{widget.drop_button.get_tooltip_text()}'")
@@ -158,7 +162,9 @@ class TestWelcomePageEnterprise:
 
         tooltip_1 = widget.drop_button.get_tooltip_text() or ""
         print(f"[DEBUG] after first click, revealed = {widget.drop_revealer.get_reveal_child()}")
-        print(f"[DEBUG] after first click, has suggested-action = {widget.drop_button.has_css_class('suggested-action')}")
+        print(
+            f"[DEBUG] after first click, has suggested-action = {widget.drop_button.has_css_class('suggested-action')}"
+        )
         print(f"[DEBUG] after first click, tooltip = '{tooltip_1}'")
         sys.stdout.flush()
 
@@ -172,7 +178,9 @@ class TestWelcomePageEnterprise:
 
         tooltip_2 = widget.drop_button.get_tooltip_text() or ""
         print(f"[DEBUG] after second click, revealed = {widget.drop_revealer.get_reveal_child()}")
-        print(f"[DEBUG] after second click, has suggested-action = {widget.drop_button.has_css_class('suggested-action')}")
+        print(
+            f"[DEBUG] after second click, has suggested-action = {widget.drop_button.has_css_class('suggested-action')}"
+        )
         print(f"[DEBUG] after second click, tooltip = '{tooltip_2}'")
         sys.stdout.flush()
 
@@ -403,6 +411,7 @@ class TestAccessibilityEnhancementsEnterprise:
 
             # Simulate Escape key press on key controller
             from gi.repository import Gdk
+
             res = widget._on_drop_area_key_pressed(None, Gdk.KEY_Escape, 0, 0)
             assert res is True
             assert widget.drop_revealer.get_reveal_child() is False

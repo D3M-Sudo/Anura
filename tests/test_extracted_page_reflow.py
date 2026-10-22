@@ -27,12 +27,7 @@ def test_extracted_page_ui_reflow_properties() -> None:
 
     # Check if blueprint-compiler is available
     try:
-        subprocess.run(
-            ["blueprint-compiler", "--version"],
-            check=True,
-            capture_output=True,
-            text=True
-        )
+        subprocess.run(["blueprint-compiler", "--version"], check=True, capture_output=True, text=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
         pytest.skip("blueprint-compiler not available, skipping .ui compilation test")
 
@@ -45,7 +40,7 @@ def test_extracted_page_ui_reflow_properties() -> None:
                 ["blueprint-compiler", "compile", str(blp_file), "--output", str(ui_file)],
                 check=True,
                 capture_output=True,
-                text=True
+                text=True,
             )
         except subprocess.CalledProcessError as e:
             # A missing GIR namespace (e.g. GtkSource-5 typelib not installed)

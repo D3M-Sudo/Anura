@@ -78,6 +78,7 @@ _GI_KEYS: tuple[str, ...] = (
 
 _GI_INJECTED: list[str] = []
 
+
 class PropertyStub:
     def __init__(self, fget=None, fset=None, **kwargs):
         self.fget = fget
@@ -152,6 +153,7 @@ class MockModule(MagicMock):
         super().__init__(*args, **kwargs)
         self.__name__ = name
         import importlib.machinery
+
         self.__spec__ = importlib.machinery.ModuleSpec(name, loader=None)
         self.__loader__ = None
         self.__package__ = name.rsplit(".", 1)[0] if "." in name else name
@@ -160,8 +162,10 @@ class MockModule(MagicMock):
     def __getattr__(self, name: str):
         if name == "Property":
             return lambda *args, **kwargs: PropertyStub()
-        if name.startswith("_") or name.startswith("mock") or name in (
-            "called", "call_count", "call_args", "call_args_list", "return_value", "side_effect"
+        if (
+            name.startswith("_")
+            or name.startswith("mock")
+            or name in ("called", "call_count", "call_args", "call_args_list", "return_value", "side_effect")
         ):
             return super().__getattr__(name)
         # Dynamically return a class that inherits from UniversalStub to prevent metaclass conflicts
@@ -230,11 +234,11 @@ if _CI_MODE:
             str(_ci_log_file),
             level="DEBUG",
             format="{time:HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
-            rotation=None,       # no rotation during a single test run
-            enqueue=True,        # thread-safe async queue — no GLib event loop needed
+            rotation=None,  # no rotation during a single test run
+            enqueue=True,  # thread-safe async queue — no GLib event loop needed
             catch=True,
             encoding="utf-8",
-            mode="w",            # fresh file per run
+            mode="w",  # fresh file per run
         )
     except Exception:
         pass  # Never let logging setup break the test suite
@@ -243,6 +247,7 @@ if _CI_MODE:
 # ---------------------------------------------------------------------------
 # Pillar 1 — Source-level detection helper (used by Pillar 3 hook).
 # ---------------------------------------------------------------------------
+
 
 def _module_needs_gi(fspath: object) -> bool:
     """Return True if the test module at *fspath* depends on gi.repository.
@@ -278,6 +283,7 @@ def _module_needs_gi(fspath: object) -> bool:
 #     false failures.
 # ---------------------------------------------------------------------------
 
+
 def pytest_collection_modifyitems(items: list) -> None:
     """Tag gi-dependent tests; skip them in CI mode."""
     _gi_file_cache: dict[str, bool] = {}
@@ -305,6 +311,7 @@ def pytest_collection_modifyitems(items: list) -> None:
 # already injected in CI mode (no-op) or injects them on demand otherwise.
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture(scope="session")
 def headless_gi_mocks():
     """Ensure MagicMock stubs for gi are present for the test session.
@@ -324,6 +331,7 @@ def headless_gi_mocks():
     inserted: list[str] = []
     try:
         import gi  # noqa: F401
+
         yield
         return
     except ImportError:
@@ -338,6 +346,7 @@ def headless_gi_mocks():
 # ---------------------------------------------------------------------------
 # Standard test fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def tmp_tessdata(tmp_path):
@@ -380,8 +389,8 @@ def _print_failure_reports(tr):
     """
     # (label, stats_key) pairs — order determines print order.
     _categories: list[tuple[str, str]] = [
-        ("ERROR IN", "error"),    # collection/fixture errors first
-        ("FAILURE IN", "failed"), # assertion failures second
+        ("ERROR IN", "error"),  # collection/fixture errors first
+        ("FAILURE IN", "failed"),  # assertion failures second
     ]
 
     for label, key in _categories:
@@ -420,6 +429,7 @@ def pytest_sessionfinish(session, exitstatus):
     # 1a. Shutdown AtomicTaskManager
     try:
         from anura.core.atomic_task_manager import get_atomic_manager
+
         get_atomic_manager().shutdown()
     except (ImportError, AttributeError, RuntimeError, ValueError):
         pass
@@ -427,6 +437,7 @@ def pytest_sessionfinish(session, exitstatus):
     # 1b. Shutdown LanguageManager
     try:
         from anura.services.language_manager import get_language_manager
+
         get_language_manager().shutdown()
     except (ImportError, AttributeError, RuntimeError, ValueError):
         pass
@@ -434,6 +445,7 @@ def pytest_sessionfinish(session, exitstatus):
     # 1c. Cleanup TTSService
     try:
         from anura.services.tts import get_tts_service
+
         get_tts_service().cleanup()
     except (ImportError, AttributeError, RuntimeError, ValueError):
         pass
@@ -441,6 +453,7 @@ def pytest_sessionfinish(session, exitstatus):
     # 1d. Reset singletons
     try:
         from anura.utils.singleton import ThreadSafeSingleton
+
         ThreadSafeSingleton.reset_for_testing()
     except (ImportError, AttributeError):
         pass
@@ -455,6 +468,7 @@ def pytest_sessionfinish(session, exitstatus):
     if _CI_MODE:
         try:
             from loguru import logger as _log
+
             _log.complete()
         except Exception:
             pass
@@ -473,6 +487,7 @@ def pytest_sessionfinish(session, exitstatus):
     # 3b. Forcefully terminate all child processes to prevent GHA from hanging on open pipes.
     try:
         import psutil
+
         current_process = psutil.Process()
         children = current_process.children(recursive=True)
         for child in children:
