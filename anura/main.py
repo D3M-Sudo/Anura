@@ -54,7 +54,7 @@ from anura.services.notification_service import (
 )
 from anura.services.screenshot_service import ScreenshotService, get_screenshot_service
 from anura.services.settings import settings
-from anura.utils import cleanup_orphaned_resources
+from anura.utils import cleanup_orphaned_resources, is_local_or_private_url
 from anura.utils.signal_manager import SignalManagerMixin
 from anura.utils.validators import launch_uri
 from anura.window import AnuraWindow
@@ -221,7 +221,13 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
     def _on_uri_detected(self, _controller, url: str, copy_requested: bool) -> None:
         win = self.get_active_window()
 
-        if self.settings.get_boolean("autolinks"):
+        # #529: loopback and private-network destinations always need an
+        # explicit confirmation, even when autolinks is enabled: a crafted QR
+        # code must not drive the browser into a local administration UI or an
+        # intranet service that trusts browser-originated requests.
+        auto_open = self.settings.get_boolean("autolinks") and not is_local_or_private_url(url)
+
+        if auto_open:
             launch_uri(url, window=win, error_callback=lambda msg: win.show_toast(msg) if win else None)
             if win:
                 win.show_toast(_("URL opened automatically"))
@@ -239,7 +245,7 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         # Handle URL Clipboard (respecting global autocopy or explicit request)
         if self.settings.get_boolean("autocopy") or copy_requested:
             get_clipboard_service().set(url)
-            if win and not self.settings.get_boolean("autolinks"):
+            if win and not auto_open:
                 win.show_toast(_("URL copied to clipboard"))
 
     def do_command_line(self, command_line: Gio.ApplicationCommandLine) -> int:
