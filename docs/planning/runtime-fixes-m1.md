@@ -7,6 +7,19 @@ reliability, performance, hygiene). Packaging/Flathub work is tracked separately
 `docs/planning/flathub-readiness-m2.md`.
 **Owning documents:** this file, `docs/README.md`.
 
+## Progress
+
+| Batch | State | Landed |
+| --- | --- | --- |
+| 0 — Quality gates | Done (workflow diff pending maintainer) | #518, #517, #514, #515, #516 |
+| 1 — Security & privacy | Done | #527, #524, #522, #509, #505, #529 |
+| 2 — Reliability & lifecycle | Not started | — |
+| 3 — State, UI & privacy UX | Not started | — |
+| 4 — Hygiene | Not started | — |
+
+Baseline at Batch 0: 323 headless tests passing; after Batch 1: 361 passing
+(+38 regression tests).
+
 ## Motivation
 
 The repository has 70 open issues but no severity labels, so triage is implicit and
