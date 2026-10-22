@@ -121,8 +121,16 @@ class OcrController(GObject.GObject, SignalManagerMixin):
             self._handle_extraction_result(extraction_result, copy)
 
             if self._notification_service.is_available():
-                body = text[:80] + "…" if len(text) > 80 else text
-                self._notification_service.show(title=_("Text extracted"), body=body, priority="normal")
+                # Privacy (#534): never echo the extracted text in a desktop
+                # notification. Banners and notification history can be visible
+                # on the lock screen, and the text may be a private message,
+                # credentials or a medical/financial record. A preview would
+                # have to be a separate opt-in preference (default off).
+                self._notification_service.show(
+                    title=_("Text extracted"),
+                    body=_("Text extracted successfully."),
+                    priority="normal",
+                )
 
             # NEW-003 / NEW-008: Navigate only for the current active task
             # backend.current_task_id is now a public GObject property.
