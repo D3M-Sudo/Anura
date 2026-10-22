@@ -7,6 +7,7 @@
 from anura.utils.cleanup import cleanup_orphaned_resources, get_cache_info
 from anura.utils.portal_advice import PortalAdvice, detect_portal_advice
 from anura.utils.validators import (
+    is_local_or_private_url,
     is_safe_url_string,
     mask_url,
     sanitize_text,
@@ -20,6 +21,7 @@ __all__ = [
     "cleanup_orphaned_resources",
     "detect_portal_advice",
     "get_cache_info",
+    "is_local_or_private_url",
     "is_safe_url_string",
     "mask_url",
     "sanitize_text",
