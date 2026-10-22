@@ -5,16 +5,42 @@
 # MIT License
 
 import re
+from urllib.parse import urlsplit
 
 from anura.transformers.models import OcrResult, TransformerProtocol
 from anura.utils.validators import URL_RE
 
 
 def _has_valid_tld(url: str) -> bool:
-    """Verify the URL has a valid-looking TLD (at least 2 characters)."""
-    match = re.search(r"(?:\.)([a-zA-Z]{2,})(?:\/|$)", url, re.IGNORECASE)
-    tld = match.group(1) if match else ""
-    return len(tld) >= 2
+    """Verify the candidate has a hostname whose last label looks like a TLD.
+
+    The previous regex required ``/`` or end-of-string immediately after the
+    TLD, so ``https://example.com?next=/path``, ``https://example.com#section``
+    and ``https://example.com:8443/path`` were all discarded even though the
+    shared URL pattern matched them. Parsing separates the hostname from the
+    port, query and fragment.
+    """
+    # URL_RE also matches scheme-less forms such as "www.example.com"; urlsplit
+    # only fills .hostname when the authority is explicit.
+    candidate = url if "://" in url else f"//{url}"
+    try:
+        parsed = urlsplit(candidate)
+        host = parsed.hostname
+        # Reading .port validates it: a non-numeric port raises ValueError, and
+        # such a candidate must not be offered as a working URL.
+        _ = parsed.port
+    except ValueError:
+        return False
+
+    if not host:
+        return False
+
+    labels = host.rstrip(".").split(".")
+    if len(labels) < 2:
+        return False
+
+    tld = labels[-1]
+    return len(tld) >= 2 and tld.isascii() and tld.isalpha()
 
 
 def _extract_urls(text: str) -> list[str]:
