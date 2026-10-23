@@ -5,10 +5,10 @@ permissions:
 
 on:
   push:
-    branches: [ "main", "development", "testing" ]
+    branches: [ "main", "development", "testing", "feature" ]
     tags: [ "v*" ]
   pull_request:
-    branches: [ "main", "development", "testing" ]
+    branches: [ "main", "development", "testing", "feature" ]
 
 jobs:
   # JOB 1: Python code analysis and linting
