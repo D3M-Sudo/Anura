@@ -329,5 +329,17 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
             self._history_service.clear()
         except OSError:
             logger.exception("HistoryPage: Failed to clear history")
+            # #540: the service restored the previous entries, so tell the user
+            # the clear did not happen instead of silently leaving the page
+            # unchanged (and instead of showing a misleading empty list).
+            self._report_clear_failure()
         # Always refresh, even on failure, to reflect the actual stored state.
         self.refresh()
+
+    def _report_clear_failure(self) -> None:
+        """Report a failed clear through the controller (which owns the toast)."""
+        controller = self._history_controller() if self._history_controller is not None else None
+        if controller is not None:
+            controller.emit("error-occurred", _("History could not be cleared."))
+        else:
+            logger.error("HistoryPage: History could not be cleared.")

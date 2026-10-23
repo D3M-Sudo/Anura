@@ -73,9 +73,43 @@ class HistoryService:
         return list(entries)
 
     def clear(self) -> None:
-        """Remove all entries and persist the empty history."""
+        """Remove all entries and persist the empty history.
+
+        The in-memory cache is replaced only after the empty state has been
+        written. If persistence fails, the previous entries are restored, so a
+        failed clear can never look successful: without this the cache was
+        empty while the old ``history.json`` was still on disk, and the entries
+        "came back" after a restart (#540).
+        """
+        previous = self._load()
         self._entries = []
-        self._persist()
+        try:
+            self._persist()
+        except OSError:
+            self._entries = previous
+            raise
+
+    def set_limit(self, limit: int) -> None:
+        """Apply a new entry limit at runtime.
+
+        Shrinking the limit trims the in-memory list and persists it, so the
+        preference takes effect without a restart (#510). A failed write is
+        logged but not fatal: the limit still applies in memory and the next
+        ``record()`` rewrites the file with the new limit.
+        """
+        new_limit = max(1, int(limit))
+        if new_limit == self._limit:
+            return
+
+        self._limit = new_limit
+        entries = self._load()
+        if len(entries) > new_limit:
+            self._entries = entries[:new_limit]
+            try:
+                self._persist()
+            except OSError:
+                logger.warning(f"History: limit set to {new_limit} but trimming could not be persisted")
+        logger.debug(f"History: entry limit updated to {new_limit}")
 
     # ------------------------------------------------------------------ #
     # Internals
