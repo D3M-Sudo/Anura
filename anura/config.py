@@ -41,6 +41,11 @@ MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024
 # bitmap, so a byte-size limit alone is not enough.
 MAX_IMAGE_PIXELS = 40_000_000
 
+# Maximum wall-clock time for a single Tesseract invocation (seconds). The
+# process pool has one worker, so an unbounded call would block every later OCR
+# request; pytesseract kills the child process when the timeout expires.
+OCR_TIMEOUT_SECONDS = 120
+
 # Maximum Tesseract language model size (250MB) to prevent disk exhaustion (DoS).
 MAX_MODEL_SIZE_MB = 250
 MAX_MODEL_SIZE_BYTES = MAX_MODEL_SIZE_MB * 1024 * 1024

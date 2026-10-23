@@ -27,7 +27,7 @@ from loguru import logger  # noqa: E402
 from PIL import Image  # noqa: E402
 import pytesseract  # noqa: E402
 
-from anura.config import LANG_CODE_PATTERN  # noqa: E402
+from anura.config import LANG_CODE_PATTERN, OCR_TIMEOUT_SECONDS  # noqa: E402
 from anura.core.atomic_task_manager import get_atomic_manager  # noqa: E402
 from anura.models.ocr import OcrResult  # noqa: E402
 from anura.services.language_manager import get_tesseract_config  # noqa: E402
@@ -37,6 +37,15 @@ from anura.utils.portal_advice import detect_portal_advice  # noqa: E402
 from anura.utils.singleton import get_instance  # noqa: E402
 from anura.utils.structural_reconstructor import get_structural_reconstructor  # noqa: E402
 from anura.utils.text_preprocessor import get_text_preprocessor  # noqa: E402
+
+
+class OcrTimeoutError(RuntimeError):
+    """Tesseract exceeded the per-request time budget.
+
+    pytesseract kills the child process and raises a plain RuntimeError whose
+    message says "timeout"; this subclass keeps that case distinguishable so
+    the user-facing error is accurate (#533).
+    """
 
 
 def _is_flatpak_environment() -> bool:
@@ -84,6 +93,10 @@ def _pipeline_run_tesseract(enhanced_img, lang: str, task_id, status_callback) -
         lang=lang,
         config=get_tesseract_config(lang, task_id=task_id),
         output_type=Output.DICT,
+        # #533: bound the call; the pool has a single worker, so an unbounded
+        # Tesseract run would block every later OCR request. pytesseract kills
+        # the child process when the timeout expires.
+        timeout=OCR_TIMEOUT_SECONDS,
     )
     return OcrResult.from_tesseract_dict(ocr_data)
 
@@ -743,12 +756,23 @@ class ScreenshotService(GObject.GObject):
             if task_id and get_atomic_manager().is_cancelled(task_id):
                 raise InterruptedError(f"Task {task_id} was cancelled before Tesseract")
 
-            ocr_data = pytesseract.image_to_data(
-                enhanced_img,
-                lang=lang,
-                config=get_tesseract_config(lang, task_id=task_id),
-                output_type=Output.DICT,
-            )
+            try:
+                ocr_data = pytesseract.image_to_data(
+                    enhanced_img,
+                    lang=lang,
+                    config=get_tesseract_config(lang, task_id=task_id),
+                    output_type=Output.DICT,
+                    # #533: a stalled Tesseract used to occupy the single worker
+                    # forever and cancellation could not interrupt it (the
+                    # cooperative checks only run before/after the call).
+                    timeout=OCR_TIMEOUT_SECONDS,
+                )
+            except RuntimeError as e:
+                # pytesseract kills the child process and raises a plain
+                # RuntimeError whose message mentions the timeout.
+                if "timeout" in str(e).lower():
+                    raise OcrTimeoutError(f"Tesseract exceeded {OCR_TIMEOUT_SECONDS}s") from e
+                raise
 
             ocr_result = OcrResult.from_tesseract_dict(ocr_data)
 
@@ -782,6 +806,11 @@ class ScreenshotService(GObject.GObject):
             logger.info(f"Anura OCR: Text extraction and Magics completed in {duration:.3f}s")
 
             return cleaned_text, ocr_result, applied_name
+        except OcrTimeoutError:
+            # #533: a timeout must reach _handle_decode_exception so the user
+            # sees an error instead of a silent empty result.
+            logger.debug("Anura OCR: Tesseract timeout intercepted, re-raising")
+            raise
         except InterruptedError:
             logger.debug("Anura OCR: Cancellation intercepted, re-raising InterruptedError")
             raise
@@ -794,7 +823,12 @@ class ScreenshotService(GObject.GObject):
         extracted = None
         error_message = None
 
-        if isinstance(e, OSError):
+        if isinstance(e, OcrTimeoutError):
+            # #533: the Tesseract child was killed after the budget expired.
+            # Reuses the existing translated generic OCR error.
+            logger.error(f"Anura OCR: Tesseract timed out after {OCR_TIMEOUT_SECONDS}s")
+            error_message = _("OCR processing failed. Please try again.")
+        elif isinstance(e, OSError):
             logger.exception(f"Anura OCR/QR File Error: {e}")
             error_message = _("Failed to read image file.")
         elif isinstance(e, (pytesseract.TesseractError, pytesseract.TesseractNotFoundError)):
