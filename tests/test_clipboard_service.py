@@ -471,3 +471,48 @@ class TestUriListStreamLimits:
 
         done.assert_not_called()
         assert stream.closed
+
+
+class TestTextureFallbackCancellable:
+    """#525: a fallback started from the texture callback keeps its cancellable."""
+
+    @pytest.fixture
+    def service(self):
+        with patch("gi.repository.Gdk.Display.get_default") as mock_display_get:
+            mock_display = MagicMock()
+            mock_display_get.return_value = mock_display
+            mock_display.get_clipboard.return_value = MagicMock()
+            service = ClipboardService()
+            service._clipboard = MagicMock()
+            return service
+
+    def _run_callback(self, service):
+        # The callback schedules its body with GLib.idle_add; run it inline.
+        with patch("anura.services.clipboard_service.GLib.idle_add", side_effect=lambda fn, *args: fn(*args)):
+            service._on_read_texture(None, None)
+
+    def test_fallback_keeps_its_cancellable(self, service):
+        texture_cancellable = MagicMock()
+        fallback_cancellable = MagicMock()
+        service._cancellable = texture_cancellable
+        service._fallback_attempted = False
+        service.clipboard.read_texture_finish = MagicMock(side_effect=ValueError("no texture"))
+
+        def _start_fallback():
+            service._cancellable = fallback_cancellable
+
+        service._fallback_to_uri_list_read = MagicMock(side_effect=_start_fallback)
+
+        self._run_callback(service)
+
+        service._fallback_to_uri_list_read.assert_called_once()
+        assert service._cancellable is fallback_cancellable
+
+    def test_successful_read_clears_its_own_cancellable(self, service):
+        service._cancellable = MagicMock()
+        service.emit = MagicMock()
+        service.clipboard.read_texture_finish = MagicMock(return_value=MagicMock())
+
+        self._run_callback(service)
+
+        assert service._cancellable is None

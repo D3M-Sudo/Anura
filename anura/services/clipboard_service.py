@@ -242,7 +242,8 @@ class ClipboardService(GObject.GObject):
 
         State mutates:
             - Sets _fallback_attempted = True on first failure before delegating
-            - Clears _cancellable in finally block regardless of outcome
+            - Clears _cancellable only if it still belongs to this texture read
+              (a fallback started from this callback owns a newer one, #525)
 
         Hand-off:
             - Calls _fallback_to_uri_list_read() on texture read failure
@@ -259,6 +260,13 @@ class ClipboardService(GObject.GObject):
         # async operation, cancelling it now would prevent read_texture_finish()
         # from succeeding. We only stop the watchdog timer.
         self._stop_timeout()
+
+        # #525: remember which cancellable belongs to this texture read. The
+        # URI-list fallback installs a new one inside process_result(); clearing
+        # unconditionally in `finally` used to erase the fallback's cancellable,
+        # which disabled its watchdog and its cancellation during teardown.
+        with self._state_lock:
+            texture_cancellable = self._cancellable
 
         try:
             # Marshal GTK operations to main thread
@@ -306,9 +314,12 @@ class ClipboardService(GObject.GObject):
                     self._fallback_to_uri_list_read()
                     return
                 finally:
-                    # Clean up cancellable regardless of outcome
+                    # #525: only drop the cancellable this read owns. The
+                    # fallback may have installed a newer one that the watchdog
+                    # and teardown must still be able to cancel.
                     with self._state_lock:
-                        self._cancellable = None
+                        if self._cancellable is texture_cancellable:
+                            self._cancellable = None
 
             GLib.idle_add(process_result)
 
