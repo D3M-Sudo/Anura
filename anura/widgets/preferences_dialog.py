@@ -4,6 +4,8 @@
 #
 # SPDX-License-Identifier: MIT
 
+from collections.abc import Callable
+
 from gi.repository import Adw, GLib, Gtk
 
 from anura.config import RESOURCE_PREFIX
@@ -24,11 +26,46 @@ class PreferencesDialog(Adw.PreferencesDialog, SignalManagerMixin):
         super().__init__(**kwargs)
         SignalManagerMixin.__init__(self)
 
+        # #539: idle callbacks scheduled by language-download signals must be
+        # cancellable. Disconnecting the signals in do_destroy() does not
+        # cancel an idle source that was already queued, which then ran
+        # against destroyed child pages.
+        self._pending_idle_sources: set[int] = set()
+        self._disposed = False
+
         mgr = get_language_manager()
-        self.connect_tracked(mgr, "downloaded", lambda _, code: GLib.idle_add(self.on_language_downloaded, code))
         self.connect_tracked(
-            mgr, "download-failed", lambda _, code: GLib.idle_add(self.on_language_download_failed, code)
+            mgr,
+            "downloaded",
+            lambda _, code: self._schedule_idle(self.on_language_downloaded, code),
         )
+        self.connect_tracked(
+            mgr,
+            "download-failed",
+            lambda _, code: self._schedule_idle(self.on_language_download_failed, code),
+        )
+
+    def _schedule_idle(self, callback: Callable[[str], None], code: str) -> None:
+        """Queue *callback* on the next main-loop idle and track its source.
+
+        The source id is kept so ``do_destroy()`` can remove it; the wrapper
+        also re-checks ``_disposed`` in case the dialog is closing between the
+        idle being scheduled and it running.
+        """
+        if self._disposed:
+            return
+
+        source: list[int] = []
+
+        def _run() -> bool:
+            if source:
+                self._pending_idle_sources.discard(source[0])
+            if not self._disposed:
+                callback(code)
+            return GLib.SOURCE_REMOVE
+
+        source.append(GLib.idle_add(_run))
+        self._pending_idle_sources.add(source[0])
 
     def on_language_downloaded(self, code: str) -> None:
         """Handle language download completion - refresh UI state."""
@@ -46,6 +83,13 @@ class PreferencesDialog(Adw.PreferencesDialog, SignalManagerMixin):
 
     def do_destroy(self) -> None:
         """Clean up child pages when dialog is destroyed."""
+        # #539: drop any queued language-refresh idle before the pages go away,
+        # and make sure a callback that already started bails out.
+        self._disposed = True
+        for source_id in list(self._pending_idle_sources):
+            GLib.source_remove(source_id)
+        self._pending_idle_sources.clear()
+
         # Ensure child pages clean up their signal connections
         if hasattr(self.general_page, "disconnect_all_signals"):
             self.general_page.disconnect_all_signals()
