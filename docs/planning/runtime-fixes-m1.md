@@ -11,14 +11,14 @@ reliability, performance, hygiene). Packaging/Flathub work is tracked separately
 
 | Batch | State | Landed |
 | --- | --- | --- |
-| 0 — Quality gates | Done (workflow diff pending maintainer) | #518, #517, #514, #515, #516 |
+| 0 — Quality gates | Done (CI green on PR #548) | #518, #517, #514, #515, #516 |
 | 1 — Security & privacy | Done | #527, #524, #522, #509, #505, #529 |
 | 2 — Reliability & lifecycle | Partial — 6 of 11 | #547, #528, #530, #533, #523, #520 |
-| 3 — State, UI & privacy UX | Partial — 2 of 11 | #534, #537 |
+| 3 — State, UI & privacy UX | Partial — 8 of 11 | #534, #537, #540, #510, #536, #539, #538, #525 |
 | 4 — Hygiene | Not started | — |
 
-Baseline at Batch 0: 323 headless tests passing; after the current work: 406 passing
-(+83 regression tests). Gates at every commit: `ruff check`, `ruff format --check`,
+Baseline at Batch 0: 323 headless tests passing; after the current work: 426 passing
+(+103 regression tests). Gates at every commit: `ruff check`, `ruff format --check`,
 `bandit -c pyproject.toml -r .`, non-strict `mypy`, `pytest -m "not gtk"`.
 
 ### Resume notes
@@ -34,10 +34,8 @@ Remaining Batch 2 work, in dependency order:
 4. **#506** — bounded shutdown wait (same file as #507).
 5. **#526** — executor identity guard on `BrokenProcessPool` (same file as #507).
 
-Remaining Batch 3 work: #540 → #510 → #511 (history sequence),
-then #536 (non-initializing TTS lookup), #532 (cached gTTS catalog),
-#539 (idle source ids), #538 (DnD cancellable identity), #525 (clipboard
-fallback identity), #521 (tessdata lease).
+Remaining Batch 3 work: #511 (async, coalesced persistence),
+#532 (cached gTTS catalog), #521 (tessdata lease).
 
 Batch 4: #512, #513 (AGENTS.md alignment), #544.
 
