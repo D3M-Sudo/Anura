@@ -25,7 +25,14 @@ class HistoryService:
     ``$XDG_DATA_HOME/anura/history/history.json`` with atomic writes and
     corruption recovery. No threading, no database — integration concerns
     are deferred to later phases.
+
+    The stored text is user content (documents, messages, credentials), so the
+    directory is kept ``0700`` and the JSON file ``0600``: the default umask
+    would otherwise leave them readable by other local accounts.
     """
+
+    _DIR_MODE = 0o700
+    _FILE_MODE = 0o600
 
     def __init__(
         self,
@@ -107,16 +114,42 @@ class HistoryService:
         except OSError:
             logger.exception("Failed to quarantine corrupted history file")
 
+    def _ensure_base_dir(self) -> None:
+        """Create the history directory private to the current user.
+
+        ``mkdir(mode=...)`` is filtered by the process umask, so the mode is
+        applied explicitly afterwards; a pre-existing permissive directory is
+        tightened too. The path is always derived from ``XDG_DATA_HOME`` (never
+        from a filename supplied by the caller), so chmod cannot be redirected
+        to an unrelated file.
+        """
+        self._base_dir.mkdir(parents=True, exist_ok=True, mode=self._DIR_MODE)
+        try:
+            if self._base_dir.stat().st_mode & 0o777 != self._DIR_MODE:
+                self._base_dir.chmod(self._DIR_MODE)
+        except OSError:
+            # Non-fatal: persistence can still succeed on filesystems that do
+            # not support chmod (e.g. some FUSE mounts).
+            logger.warning("Could not tighten history directory permissions: %s", self._base_dir)
+
     def _persist(self) -> None:
         """Atomically write the history file (temp file + os.replace)."""
-        self._base_dir.mkdir(parents=True, exist_ok=True)
+        self._ensure_base_dir()
         payload = json.dumps([e.to_dict() for e in self._entries or []], ensure_ascii=False, indent=2)
         tmp_path = self._base_dir / f"history.json.tmp-{os.getpid()}"
         try:
-            with open(tmp_path, "w", encoding="utf-8") as fh:
+            # Create the temp file ourselves with mode 0600 instead of using
+            # open(): the default 0666 & ~umask would expose OCR text to other
+            # local users. O_EXCL guarantees we never reuse someone else's file
+            # (a stale temp from a crashed run with a recycled PID is removed
+            # first, which is safe because the name is PID-scoped).
+            tmp_path.unlink(missing_ok=True)
+            fd = os.open(tmp_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, self._FILE_MODE)
+            with os.fdopen(fd, "w", encoding="utf-8") as fh:
                 fh.write(payload)
                 fh.flush()
                 os.fsync(fh.fileno())
+            # os.replace keeps the temp file mode, so the final file stays 0600.
             os.replace(tmp_path, self._history_file)
         except OSError:
             logger.exception("Failed to persist history")
