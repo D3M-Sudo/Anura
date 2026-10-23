@@ -54,7 +54,10 @@ class _VerifiedTTS(gtts.gTTS):
                 logger.error(f"Anura TTS: request to the speech service failed: {e}")
                 raise gtts.gTTSError(tts=self) from e
 
-            assert response is not None  # both failure paths raise above
+            # Both failure paths above raise, so the response is always set.
+            if response is None:  # pragma: no cover - defensive, unreachable
+                raise gtts.gTTSError(tts=self)
+
             for line in response.iter_lines(chunk_size=1024):
                 decoded_line = line.decode("utf-8")
                 if "jQ1olc" not in decoded_line:
