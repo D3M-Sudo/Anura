@@ -47,9 +47,7 @@ class TestBug035Remediation:
     def _gio_mock(has_handler: bool) -> MagicMock:
         """Return a Gio mock with AppInfo configured per has_handler."""
         m = MagicMock()
-        m.AppInfo.get_default_for_uri_scheme.return_value = (
-            MagicMock() if has_handler else None
-        )
+        m.AppInfo.get_default_for_uri_scheme.return_value = MagicMock() if has_handler else None
         return m
 
     def _patch_gio(self, mock_gio: MagicMock):
@@ -81,9 +79,9 @@ class TestBug035Remediation:
             ("slack://open", True, True),
             ("zoommtg://join", True, True),
             # Custom-app schemes — no handler, whitelist decides
-            ("tg://share?text=hello", False, True),    # tg in whitelist
-            ("slack://open", False, True),              # slack in whitelist
-            ("zoommtg://join", False, False),           # zoommtg NOT in whitelist
+            ("tg://share?text=hello", False, True),  # tg in whitelist
+            ("slack://open", False, True),  # slack in whitelist
+            ("zoommtg://join", False, False),  # zoommtg NOT in whitelist
             # Whitelist-only schemes (no dynamic check needed)
             ("mailto:test@example.com", False, True),
             ("web+mastodon://share", False, True),
@@ -104,9 +102,7 @@ class TestBug035Remediation:
         finally:
             for p in patches:
                 p.stop()
-        assert result == expected, (
-            f"URL={url!r}  has_handler={has_handler}  expected={expected}  got={result}"
-        )
+        assert result == expected, f"URL={url!r}  has_handler={has_handler}  expected={expected}  got={result}"
 
     # ------------------------------------------------------------------
     # Exception handling — Gio raises at runtime
@@ -122,7 +118,7 @@ class TestBug035Remediation:
         for p in patches:
             p.start()
         try:
-            assert ShareService._validate_share_url("tg://test") is True       # tg in whitelist
+            assert ShareService._validate_share_url("tg://test") is True  # tg in whitelist
             assert ShareService._validate_share_url("unknown://test") is False  # not in whitelist
         finally:
             for p in patches:

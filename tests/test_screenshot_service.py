@@ -93,6 +93,7 @@ class TestScreenshotServiceEnterprise:
     def test_screenshot_fallback_logic_generic_dbus_error(self, service):
         """BUG-004: a real portal error that does NOT contain 'screenshot failed'
         (e.g. a localized GDBus UnknownMethod) must still trigger the fallback."""
+
         def _mock_capture(lang, copy, callback):
             callback(
                 False,
@@ -110,6 +111,7 @@ class TestScreenshotServiceEnterprise:
 
     def test_screenshot_fallback_logic_exact_screenshot_failed(self, service):
         """The historical exact string 'screenshot failed' still triggers the fallback."""
+
         def _mock_capture(lang, copy, callback):
             callback(False, None, "screenshot failed")
 
@@ -122,6 +124,7 @@ class TestScreenshotServiceEnterprise:
 
     def test_screenshot_fallback_user_cancellation_does_not_trigger(self, service):
         """BUG-004: error=None (user cancellation) must NOT trigger the fallback."""
+
         def _mock_capture(lang, copy, callback):
             callback(False, None, None)
 
@@ -160,6 +163,7 @@ class TestScreenshotServiceEnterprise:
         """BUG-004 safeguard: when the fallback itself fails with a real error, the
         service must NOT trigger the fallback again (no infinite loop) and must emit
         the generic error exactly once."""
+
         def _mock_capture(lang, copy, callback):
             callback(False, None, "The portal host does not support screenshot capture")
 

@@ -159,9 +159,7 @@ class TestCLIIntegrationEnterprise:
         while GLib.MainContext.default().iteration(False):
             pass
 
-        app.notification_service.show_notification.assert_called_with(
-            title="Anura OCR", body="No text found."
-        )
+        app.notification_service.show_notification.assert_called_with(title="Anura OCR", body="No text found.")
 
         # Case: Success with copy
         with patch("anura.main.get_clipboard_service") as mock_get_cb:

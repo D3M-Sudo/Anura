@@ -5,17 +5,13 @@ def test_mask_url_with_credentials():
     """Verify that credentials are redacted from various URL schemes."""
     assert mask_url("https://user:password@example.com") == "https://***:***@example.com"
     assert mask_url("http://admin@localhost:8080") == "http://***:***@localhost:8080"
-    assert (
-        mask_url("ftp://guest:secret@ftp.server.org/path") == "ftp://***:***@ftp.server.org/path"
-    )
+    assert mask_url("ftp://guest:secret@ftp.server.org/path") == "ftp://***:***@ftp.server.org/path"
 
 
 def test_mask_url_no_credentials():
     """Verify that URLs without credentials remain unchanged."""
     assert mask_url("https://google.com") == "https://google.com"
-    assert (
-        mask_url("https://google.com/path?query=val") == "https://google.com/path?query=val"
-    )
+    assert mask_url("https://google.com/path?query=val") == "https://google.com/path?query=val"
 
 
 def test_mask_url_empty_userinfo():
@@ -75,7 +71,4 @@ def test_mask_url_email_like_strings():
 
 def test_mask_url_regression_schemed_complex():
     """Verify complex schemed URL masking still works."""
-    assert (
-        mask_url("https://google.com/path?user=pass@evil.com")
-        == "https://google.com/path?user=pass@evil.com"
-    )
+    assert mask_url("https://google.com/path?user=pass@evil.com") == "https://google.com/path?user=pass@evil.com"

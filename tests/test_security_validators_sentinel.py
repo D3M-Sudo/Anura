@@ -22,6 +22,7 @@ def test_validate_image_resource_rejects_directory():
         assert size == 0
         assert error == "File not found"
 
+
 def test_validate_image_resource_accepts_regular_file():
     """
     Verify that validate_image_resource still accepts regular files.

@@ -22,9 +22,7 @@ def is_certifi_source(source: dict[str, Any]) -> bool:
     if not url:
         return False
     filename = os.path.basename(url)
-    return filename.startswith("certifi-") and filename.endswith(
-        (".whl", ".tar.gz", ".zip")
-    )
+    return filename.startswith("certifi-") and filename.endswith((".whl", ".tar.gz", ".zip"))
 
 
 def find_certifi_sources(manifest: dict[str, Any]) -> list[tuple[str, dict[str, Any]]]:
@@ -72,9 +70,7 @@ def create_isolated_manifest(real_manifest_path: str, output_path: str) -> None:
     Path(output_path).write_text(json.dumps(isolated, indent=4) + "\n")
 
 
-def sync_build_command_filenames(
-    module: dict[str, Any], old_filename: str, new_filename: str
-) -> None:
+def sync_build_command_filenames(module: dict[str, Any], old_filename: str, new_filename: str) -> None:
     """Rewrite build-commands that pin the previous source filename.
 
     FEDC updates only the source URL and checksum. Without this step the module
@@ -90,9 +86,7 @@ def sync_build_command_filenames(
     if not build_commands or not old_filename or old_filename == new_filename:
         return
 
-    module["build-commands"] = [
-        command.replace(old_filename, new_filename) for command in build_commands
-    ]
+    module["build-commands"] = [command.replace(old_filename, new_filename) for command in build_commands]
 
 
 def replace_certifi_source(real_manifest_path: str, updated_manifest_path: str) -> None:
@@ -108,9 +102,7 @@ def replace_certifi_source(real_manifest_path: str, updated_manifest_path: str) 
     module_name, _ = find_certifi_sources(real_manifest)[0]
     updated_module_name, updated_source = find_certifi_sources(updated_manifest)[0]
     if module_name != updated_module_name:
-        raise SystemExit(
-            f"Certifi module mismatch: real={module_name!r}, updated={updated_module_name!r}"
-        )
+        raise SystemExit(f"Certifi module mismatch: real={module_name!r}, updated={updated_module_name!r}")
 
     source_to_insert = copy.deepcopy(updated_source)
     source_to_insert.pop("x-checker-data", None)
@@ -126,9 +118,7 @@ def replace_certifi_source(real_manifest_path: str, updated_manifest_path: str) 
                 module["sources"][i] = source_to_insert
                 sync_build_command_filenames(module, old_filename, new_filename)
                 if old_filename and old_filename != new_filename and old_filename in json.dumps(module):
-                    raise SystemExit(
-                        f"Certifi module still references the previous source filename {old_filename!r}"
-                    )
+                    raise SystemExit(f"Certifi module still references the previous source filename {old_filename!r}")
                 replaced = True
                 break
 

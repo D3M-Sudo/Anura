@@ -78,9 +78,7 @@ def registered_accels():
 
 
 def _register_gresource():
-    path = os.path.join(
-        os.path.dirname(__file__), "..", "builddir", "data", "io.github.d3msudo.anura.gresource"
-    )
+    path = os.path.join(os.path.dirname(__file__), "..", "builddir", "data", "io.github.d3msudo.anura.gresource")
     if not os.path.exists(path):
         pytest.skip("Compiled GResource not found (run meson build first)")
     with open(path, "rb") as f:
@@ -125,8 +123,7 @@ class TestShortcutsConsistency:
                 continue
             action = registered_accels.get(combo)
             assert action is not None, (
-                f"Overlay documents {name} but no GAction accelerator matches it "
-                f"(not in NATIVE_WHITELIST either)"
+                f"Overlay documents {name} but no GAction accelerator matches it (not in NATIVE_WHITELIST either)"
             )
 
     def test_registered_accels_are_documented(self, registered_accels):

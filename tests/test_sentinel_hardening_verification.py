@@ -11,10 +11,7 @@ from anura.utils.validators import is_safe_url_string, sanitize_text
 class TestSentinelHardeningVerification:
     """Verification tests for security hardening of URI and text sanitization."""
 
-    @pytest.mark.parametrize(
-        "unsafe_char",
-        ["|", "^", "`", "{", "}"]
-    )
+    @pytest.mark.parametrize("unsafe_char", ["|", "^", "`", "{", "}"])
     def test_is_safe_url_string_blocks_additional_unsafe_chars(self, unsafe_char):
         """
         Verify that is_safe_url_string blocks characters that are generally

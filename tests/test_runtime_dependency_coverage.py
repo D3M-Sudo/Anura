@@ -47,7 +47,7 @@ def _uvlock_body(root_deps: list[str], extra_pkgs: str = "") -> str:
     ``root_deps`` are the dependencies of the root package. ``extra_pkgs`` is
     the concatenated ``[[package]]`` blocks for the transitive graph.
     """
-    live_deps = [f"    {{ name = \"{d}\" }}" for d in root_deps]
+    live_deps = [f'    {{ name = "{d}" }}' for d in root_deps]
     return (
         "version = 1\n"
         "\n"
@@ -71,12 +71,7 @@ def _pkg(name: str, version: str, deps: list[tuple[str, str | None]]) -> str:
     deps_body = ""
     if dep_lines:
         deps_body = "dependencies = [\n" + ",\n".join(f"    {d}" for d in dep_lines) + ",\n]\n"
-    return (
-        "[[package]]\n"
-        f'name = "{name}"\n'
-        f'version = "{version}"\n'
-        f"{deps_body}"
-    )
+    return f'[[package]]\nname = "{name}"\nversion = "{version}"\n{deps_body}'
 
 
 # Runtime reachable graph: the set of packages a Flatpak/Linux build needs.
@@ -115,7 +110,7 @@ def _base_files(tmp_path: Path):
         "[project]\n"
         'name = "test"\n'
         'version = "0.0.1"\n'
-        "requires-python = \">=3.12\"\n"
+        'requires-python = ">=3.12"\n'
         "dependencies = [\n"
         '    "gtts>=2.5.4",\n'
         '    "loguru>=0.7.3",\n'
@@ -123,7 +118,7 @@ def _base_files(tmp_path: Path):
         "]\n"
         "\n"
         "[dependency-groups]\n"
-        "dev = [\"pytest>=9\", \"mypy>=2\", \"packaging>=26\"]\n"
+        'dev = ["pytest>=9", "mypy>=2", "packaging>=26"]\n'
     )
 
     pkgs = (
@@ -219,9 +214,7 @@ def test_2_missing_transitive_dependency_fails(tmp_path: Path) -> None:
 
     result = checker.check_runtime_coverage(pyproject, new_uv, (main, local), env=LINUX_ENV)
     assert result.passed is False
-    assert any(
-        "new-package" in e and "no Flatpak python module mapping" in e for e in result.errors
-    )
+    assert any("new-package" in e and "no Flatpak python module mapping" in e for e in result.errors)
 
 
 def test_3_dev_only_dependency_not_required(tmp_path: Path) -> None:
