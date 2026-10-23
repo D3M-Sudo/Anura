@@ -26,7 +26,7 @@ import pytest
 
 pytest.importorskip("gi")
 
-from anura.config import TESSDATA_URL
+from anura.config import MAX_MODEL_SIZE_BYTES, TESSDATA_URL
 from anura.services.language.download_manager import DownloadManager
 from anura.utils.tessdata_integrity import ref_from_url, repo_key_from_url
 
@@ -108,6 +108,8 @@ class TestAtomicInstall:
 
         assert result == "fra"
         assert partial_visible == [False]
+        # #520: the streamed response is closed on the success path too.
+        response.close.assert_called_once()
         assert final_path.read_bytes() == payload
         assert list(tessdata_dir.glob("*.tmp")) == []
 
@@ -229,6 +231,24 @@ class TestIntegrityVerification:
         assert result is None
         assert not (tessdata_dir / "fra.traineddata").exists()
         assert list(tessdata_dir.glob("*.tmp")) == []
+        response.close.assert_called_once()
+
+    def test_oversized_download_closes_the_stream(self, manager, stub_integrity) -> None:
+        """A Content-Length above the limit is refused and the stream closed (#520)."""
+        dm, tessdata_dir = manager
+        stub_integrity(TESSDATA_URL, "fra.traineddata", b"MODEL")
+        response = _response([], {"content-length": str(MAX_MODEL_SIZE_BYTES + 1)})
+
+        with (
+            patch.object(dm.session, "get", return_value=response),
+            patch("anura.services.language.download_manager.shutil.which", return_value="/usr/bin/tesseract"),
+        ):
+            result = dm.download_begin("fra")
+
+        assert result is None
+        assert not (tessdata_dir / "fra.traineddata").exists()
+        assert list(tessdata_dir.glob("*.tmp")) == []
+        response.close.assert_called_once()
 
     def test_announced_size_mismatch_is_rejected(self, manager, stub_integrity) -> None:
         """A Content-Length that disagrees with the pin is refused early."""
@@ -246,3 +266,4 @@ class TestIntegrityVerification:
         assert result is None
         assert not (tessdata_dir / "fra.traineddata").exists()
         assert list(tessdata_dir.glob("*.tmp")) == []
+        response.close.assert_called_once()

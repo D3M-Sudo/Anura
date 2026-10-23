@@ -50,7 +50,7 @@ from anura.services.clipboard_service import get_clipboard_service
 from anura.services.language_manager import get_language_manager
 from anura.services.notification_service import (
     HAS_LIBNOTIFY,
-    NotificationService,
+    get_notification_service,
 )
 from anura.services.screenshot_service import ScreenshotService, get_screenshot_service
 from anura.services.settings import settings
@@ -69,7 +69,11 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         self.backend: ScreenshotService | None = None
         self.version = version
         self.settings = settings
-        self.notification_service = NotificationService(APP_ID)
+        # Use the same singleton the controllers use (#537): OcrController
+        # obtains notifications through get_notification_service(), so a
+        # separate instance here meant shutdown cleaned up an object that never
+        # owned the portal notification IDs.
+        self.notification_service = get_notification_service()
         self._setup_options()
 
     def _setup_options(self) -> None:

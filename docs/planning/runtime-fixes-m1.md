@@ -7,6 +7,51 @@ reliability, performance, hygiene). Packaging/Flathub work is tracked separately
 `docs/planning/flathub-readiness-m2.md`.
 **Owning documents:** this file, `docs/README.md`.
 
+## Progress
+
+| Batch | State | Landed |
+| --- | --- | --- |
+| 0 — Quality gates | Done (workflow diff pending maintainer) | #518, #517, #514, #515, #516 |
+| 1 — Security & privacy | Done | #527, #524, #522, #509, #505, #529 |
+| 2 — Reliability & lifecycle | Partial — 6 of 11 | #547, #528, #530, #533, #523, #520 |
+| 3 — State, UI & privacy UX | Partial — 2 of 11 | #534, #537 |
+| 4 — Hygiene | Not started | — |
+
+Baseline at Batch 0: 323 headless tests passing; after the current work: 406 passing
+(+83 regression tests). Gates at every commit: `ruff check`, `ruff format --check`,
+`bandit -c pyproject.toml -r .`, non-strict `mypy`, `pytest -m "not gtk"`.
+
+### Resume notes
+
+Remaining Batch 2 work, in dependency order:
+
+1. **#531** — manager-owned shutdown cancellable + close of the active response.
+   #520 (response ownership) has landed, so this is the only prerequisite left.
+2. **#507** — replace the single task slot with per-kind lanes in
+   `AtomicTaskManager`; always deliver callback *or* errorback. Largest change of
+   the milestone and the prerequisite for the three below.
+3. **#508** — proportional TTS watchdog (needs the lane generation ids from #507).
+4. **#506** — bounded shutdown wait (same file as #507).
+5. **#526** — executor identity guard on `BrokenProcessPool` (same file as #507).
+
+Remaining Batch 3 work: #540 → #510 → #511 (history sequence),
+then #536 (non-initializing TTS lookup), #532 (cached gTTS catalog),
+#539 (idle source ids), #538 (DnD cancellable identity), #525 (clipboard
+fallback identity), #521 (tessdata lease).
+
+Batch 4: #512, #513 (AGENTS.md alignment), #544.
+
+### Deviations from the original plan
+
+- #514, #515 and #516 moved from Batch 4 to Batch 0 (they were the only mypy
+  errors left once `--ignore-missing-imports` was enabled).
+- #509 only needed `anura/window.py`: the CLI path already validates the path
+  through `validate_image_resource()` before decoding.
+- #534 and #537 landed in Batch 2/3 order inverted relative to the plan (both are
+  notification fixes and share no files with the earlier reliability work).
+- The CI workflow edit in #517 cannot be pushed by this identity; the diff is
+  posted on the issue.
+
 ## Motivation
 
 The repository has 70 open issues but no severity labels, so triage is implicit and

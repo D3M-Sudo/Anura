@@ -225,29 +225,63 @@ class LegacyX11Provider(ScreenshotProvider):
                 callback(False, None, None)
                 return
 
-            # --- 3. Wait for filesystem to flush the PNG ---
-            # scrot may exit before the OS has written all bytes to disk.
-            if not self._file_retry.wait_for_file(output_path):
-                self._cleanup_file(output_path)
-                callback(False, None, _("Screenshot tool produced no output."))
-                return
-
-            # --- 4. Success: convert path to file:// URI for the OCR pipeline ---
-            try:
-                uri = GLib.filename_to_uri(output_path, None)
-            except GLib.Error as e:
-                logger.error(f"LegacyX11Provider: Failed to build URI for '{output_path}': {e.message}")
-                self._cleanup_file(output_path)
-                callback(False, None, e.message)
-                return
-
-            logger.info(f"LegacyX11Provider: scrot capture successful → {output_path}")
-            callback(True, uri, None)
+            # --- 3. Wait for filesystem to flush the PNG (without blocking) ---
+            # scrot may exit before the OS has written all bytes to disk. Poll
+            # from the GLib main loop instead of sleeping inside this callback:
+            # wait_async() resumes on the main context of the UI, so a blocking
+            # loop here froze the window for up to ~5 s (#523).
+            self._await_output_ready(output_path, callback)
         except (AttributeError, RuntimeError, TypeError) as e:
             # BUG-031: Ensure callback is ALWAYS invoked to prevent ScreenshotService deadlock
             logger.exception(f"LegacyX11Provider: Fatal error in callback wrapper: {e}")
             with contextlib.suppress(Exception):
                 callback(False, None, str(e))
+
+    def _await_output_ready(self, output_path: str, callback, attempt: int = 0) -> bool:
+        """Poll for the finished screenshot file from the main loop.
+
+        Returns ``GLib.SOURCE_REMOVE`` because each attempt either completes the
+        operation or schedules the next timeout.
+        """
+        try:
+            ready = Path(output_path).stat().st_size > 0
+        except OSError:
+            ready = False
+
+        if ready:
+            self._finish_success(output_path, callback)
+            return GLib.SOURCE_REMOVE
+
+        if attempt + 1 >= self._file_retry.retries:
+            logger.error(
+                f"LegacyX11Provider: File not ready after "
+                f"{self._file_retry.retries * self._file_retry.delay}s (path={output_path})"
+            )
+            self._cleanup_file(output_path)
+            callback(False, None, _("Screenshot tool produced no output."))
+            return GLib.SOURCE_REMOVE
+
+        GLib.timeout_add(
+            max(1, int(self._file_retry.delay * 1000)),
+            self._await_output_ready,
+            output_path,
+            callback,
+            attempt + 1,
+        )
+        return GLib.SOURCE_REMOVE
+
+    def _finish_success(self, output_path: str, callback) -> None:
+        """Convert the ready file to a URI and report success."""
+        try:
+            uri = GLib.filename_to_uri(output_path, None)
+        except GLib.Error as e:
+            logger.error(f"LegacyX11Provider: Failed to build URI for '{output_path}': {e.message}")
+            self._cleanup_file(output_path)
+            callback(False, None, e.message)
+            return
+
+        logger.info(f"LegacyX11Provider: scrot capture successful → {output_path}")
+        callback(True, uri, None)
 
     @staticmethod
     def _cleanup_file(path: str) -> None:
