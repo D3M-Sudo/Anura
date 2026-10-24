@@ -14,11 +14,11 @@ reliability, performance, hygiene). Packaging/Flathub work is tracked separately
 | 0 — Quality gates | Done (CI green on PR #548) | #518, #517, #514, #515, #516 |
 | 1 — Security & privacy | Done | #527, #524, #522, #509, #505, #529 |
 | 2 — Reliability & lifecycle | Partial — 7 of 11 | #547, #528, #530, #533, #523, #520, #531 |
-| 3 — State, UI & privacy UX | Partial — 9 of 11 | #534, #537, #540, #510, #536, #539, #538, #525, #532 |
+| 3 — State, UI & privacy UX | Partial — 10 of 11 | #534, #537, #540, #510, #536, #539, #538, #525, #532, #511 |
 | 4 — Hygiene | Done | #512, #513, #544 |
 
-Baseline at Batch 0: 323 headless tests passing; after the current work: 436 passing
-(+113 regression tests). Gates at every commit: `ruff check`, `ruff format --check`,
+Baseline at Batch 0: 323 headless tests passing; after the current work: 443 passing
+(+120 regression tests). Gates at every commit: `ruff check`, `ruff format --check`,
 `bandit -c pyproject.toml -r .`, non-strict `mypy`, `pytest -m "not gtk"`.
 
 ### Resume notes
@@ -34,8 +34,7 @@ Remaining Batch 2 work, in dependency order:
 4. **#506** — bounded shutdown wait (same file as #507).
 5. **#526** — executor identity guard on `BrokenProcessPool` (same file as #507).
 
-Remaining Batch 3 work: #511 (async, coalesced persistence),
-#521 (tessdata lease).
+Remaining Batch 3 work: #521 (tessdata lease).
 
 Batch 4: #512, #513 (AGENTS.md alignment), #544.
 
