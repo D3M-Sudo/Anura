@@ -20,13 +20,14 @@ Run with the system python3 + venv site-packages pattern documented in
 import hashlib
 from pathlib import Path
 import tempfile
+import threading
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 pytest.importorskip("gi")
 
-from anura.config import TESSDATA_URL
+from anura.config import MAX_MODEL_SIZE_BYTES, TESSDATA_URL
 from anura.services.language.download_manager import DownloadManager
 from anura.utils.tessdata_integrity import ref_from_url, repo_key_from_url
 
@@ -108,6 +109,8 @@ class TestAtomicInstall:
 
         assert result == "fra"
         assert partial_visible == [False]
+        # #520: the streamed response is closed on the success path too.
+        response.close.assert_called_once()
         assert final_path.read_bytes() == payload
         assert list(tessdata_dir.glob("*.tmp")) == []
 
@@ -229,6 +232,24 @@ class TestIntegrityVerification:
         assert result is None
         assert not (tessdata_dir / "fra.traineddata").exists()
         assert list(tessdata_dir.glob("*.tmp")) == []
+        response.close.assert_called_once()
+
+    def test_oversized_download_closes_the_stream(self, manager, stub_integrity) -> None:
+        """A Content-Length above the limit is refused and the stream closed (#520)."""
+        dm, tessdata_dir = manager
+        stub_integrity(TESSDATA_URL, "fra.traineddata", b"MODEL")
+        response = _response([], {"content-length": str(MAX_MODEL_SIZE_BYTES + 1)})
+
+        with (
+            patch.object(dm.session, "get", return_value=response),
+            patch("anura.services.language.download_manager.shutil.which", return_value="/usr/bin/tesseract"),
+        ):
+            result = dm.download_begin("fra")
+
+        assert result is None
+        assert not (tessdata_dir / "fra.traineddata").exists()
+        assert list(tessdata_dir.glob("*.tmp")) == []
+        response.close.assert_called_once()
 
     def test_announced_size_mismatch_is_rejected(self, manager, stub_integrity) -> None:
         """A Content-Length that disagrees with the pin is refused early."""
@@ -246,3 +267,47 @@ class TestIntegrityVerification:
         assert result is None
         assert not (tessdata_dir / "fra.traineddata").exists()
         assert list(tessdata_dir.glob("*.tmp")) == []
+        response.close.assert_called_once()
+
+    def test_shutdown_interrupts_an_active_download(self, manager, stub_integrity) -> None:
+        """#531: shutdown stops a streaming download instead of waiting for timeouts."""
+        dm, tessdata_dir = manager
+        payload = b"MODEL-DATA" * 64
+        stub_integrity(TESSDATA_URL, "fra.traineddata", payload)
+
+        streaming_started = threading.Event()
+        release_chunk = threading.Event()
+
+        response = _response([], {"content-length": str(len(payload))})
+
+        def iter_content(chunk_size: int = 8192):
+            streaming_started.set()
+            # A real socket blocks here until data arrives; shutdown must make
+            # the loop notice the manager signal and abandon the download.
+            release_chunk.wait(timeout=5)
+            yield payload
+
+        response.iter_content = iter_content
+
+        results: list[str | None] = []
+
+        with (
+            patch.object(dm.session, "get", return_value=response),
+            patch("anura.services.language.download_manager.shutil.which", return_value="/usr/bin/tesseract"),
+        ):
+            worker = threading.Thread(target=lambda: results.append(dm.download_begin("fra")))
+            worker.start()
+            assert streaming_started.wait(timeout=5), "download never started streaming"
+
+            dm.shutdown()
+            release_chunk.set()
+            worker.join(timeout=5)
+
+        assert not worker.is_alive()
+        assert results == [None]
+        # The model was never installed and no temporary file was left behind.
+        assert not (tessdata_dir / "fra.traineddata").exists()
+        assert list(tessdata_dir.glob("*.tmp")) == []
+        # shutdown() closed the active response and the worker loop noticed the
+        # signal instead of finishing the payload.
+        assert response.close.called

@@ -116,8 +116,6 @@ class TestClipboardServiceEnterprise:
             mock_cancellable.cancel.assert_called_once()
             assert mock_idle.called
 
-
-
     def test_uri_list_no_file_uri(self, service):
         """Test _on_uri_list_bytes emits error when no file:// URI in list."""
         with patch("gi.repository.GLib.idle_add") as mock_idle_add:
@@ -182,7 +180,12 @@ class TestClipboardServiceEnterprise:
         with (
             patch("anura.services.clipboard_service.validate_image_resource", return_value=(True, 1024, None)),
             patch("PIL.Image.open") as mock_image_open,
-            patch("gi.repository.Gdk.Texture.new_from_bytes", side_effect=GLib.Error.new_literal(Gio.io_error_quark(), "Texture creation failed", Gio.IOErrorEnum.FAILED)),
+            patch(
+                "gi.repository.Gdk.Texture.new_from_bytes",
+                side_effect=GLib.Error.new_literal(
+                    Gio.io_error_quark(), "Texture creation failed", Gio.IOErrorEnum.FAILED
+                ),
+            ),
             patch("gi.repository.GLib.Bytes.new"),
             patch("gi.repository.GLib.idle_add") as mock_idle_add,
         ):
@@ -291,7 +294,9 @@ class TestClipboardLifetime:
         clipboard = MagicMock()
         clipboard.store_async.side_effect = lambda _prio, _cancellable, callback: callback(clipboard, "result")
         clipboard.store_finish.side_effect = GLib.Error.new_literal(
-            Gio.io_error_quark(), "Cannot store clipboard. No clipboard manager is active.", Gio.IOErrorEnum.NOT_SUPPORTED
+            Gio.io_error_quark(),
+            "Cannot store clipboard. No clipboard manager is active.",
+            Gio.IOErrorEnum.NOT_SUPPORTED,
         )
         service, patcher = self._service_with(clipboard)
         try:
@@ -375,7 +380,6 @@ class TestClipboardLifetime:
             patcher.stop()
         context.iteration.assert_not_called()
 
-
     def test_real_clipboard_hand_off_answers_instead_of_hanging(self):
         """Against the real display: with no clipboard manager this must fail fast, not block."""
         import time
@@ -397,3 +401,118 @@ class TestClipboardLifetime:
 
         assert isinstance(result, bool)
         assert time.monotonic() - started < 4.0
+
+
+class _FakeBytes:
+    """Minimal GBytes stand-in exposing get_data()."""
+
+    def __init__(self, data: bytes) -> None:
+        self._data = data
+
+    def get_data(self) -> bytes:
+        return self._data
+
+
+class _FakeStream:
+    """Minimal Gio.InputStream stand-in that drives _read_stream_to_bytes."""
+
+    def __init__(self, chunks: list[bytes]) -> None:
+        self._chunks = list(chunks)
+        self._callback = None
+        self.closed = False
+
+    def read_bytes_async(self, _count, _priority, _cancellable, callback) -> None:
+        self._callback = callback
+
+    def read_bytes_finish(self, _res) -> _FakeBytes:
+        return _FakeBytes(self._chunks.pop(0) if self._chunks else b"")
+
+    def close_async(self, *_args) -> None:
+        self.closed = True
+
+    def pump(self) -> None:
+        """Run the pending read callback, as the GLib main loop would."""
+        callback = self._callback
+        self._callback = None
+        assert callback is not None
+        callback(self, None)
+
+
+class TestUriListStreamLimits:
+    """#524: the text/uri-list payload must be bounded in memory."""
+
+    @pytest.fixture
+    def service(self):
+        with patch("gi.repository.Gdk.Display.get_default") as mock_display_get:
+            mock_display = MagicMock()
+            mock_display_get.return_value = mock_display
+            mock_display.get_clipboard.return_value = MagicMock()
+            return ClipboardService()
+
+    def test_stream_under_limit_is_delivered(self, service):
+        stream = _FakeStream([b"aaaa", b"bbbb"])
+        done = MagicMock()
+
+        service._read_stream_to_bytes(stream, None, done, max_bytes=10)
+        stream.pump()  # 4 bytes
+        stream.pump()  # 8 bytes
+        stream.pump()  # EOF: delivers the accumulated payload
+
+        done.assert_called_once_with(b"aaaabbbb")
+        assert not stream.closed
+
+    def test_stream_over_limit_is_rejected_without_buffering(self, service):
+        stream = _FakeStream([b"a" * 8, b"b" * 8])
+        done = MagicMock()
+
+        service._read_stream_to_bytes(stream, None, done, max_bytes=10)
+        stream.pump()  # 8 bytes: accepted, schedules the next read
+        stream.pump()  # 16 bytes: exceeds the cap, must reject
+
+        done.assert_not_called()
+        assert stream.closed
+
+
+class TestTextureFallbackCancellable:
+    """#525: a fallback started from the texture callback keeps its cancellable."""
+
+    @pytest.fixture
+    def service(self):
+        with patch("gi.repository.Gdk.Display.get_default") as mock_display_get:
+            mock_display = MagicMock()
+            mock_display_get.return_value = mock_display
+            mock_display.get_clipboard.return_value = MagicMock()
+            service = ClipboardService()
+            service._clipboard = MagicMock()
+            return service
+
+    def _run_callback(self, service):
+        # The callback schedules its body with GLib.idle_add; run it inline.
+        with patch("anura.services.clipboard_service.GLib.idle_add", side_effect=lambda fn, *args: fn(*args)):
+            service._on_read_texture(None, None)
+
+    def test_fallback_keeps_its_cancellable(self, service):
+        texture_cancellable = MagicMock()
+        fallback_cancellable = MagicMock()
+        service._cancellable = texture_cancellable
+        service._fallback_attempted = False
+        service.clipboard.read_texture_finish = MagicMock(side_effect=ValueError("no texture"))
+
+        def _start_fallback():
+            service._cancellable = fallback_cancellable
+
+        service._fallback_to_uri_list_read = MagicMock(side_effect=_start_fallback)
+
+        self._run_callback(service)
+
+        service._fallback_to_uri_list_read.assert_called_once()
+        assert service._cancellable is fallback_cancellable
+
+    def test_successful_read_clears_its_own_cancellable(self, service):
+        service._cancellable = MagicMock()
+        service.emit = MagicMock()
+        service.clipboard.read_texture_finish = MagicMock(return_value=MagicMock())
+
+        self._run_callback(service)
+
+        assert service._cancellable is None

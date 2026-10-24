@@ -50,9 +50,9 @@ class TestShareServiceEnterprise:
     def test_link_generation_happy_path(self, service, provider, text, expected_part):
         """Test that link generation works correctly for various providers."""
         from anura.services.share_providers import generate_share_link
+
         link = generate_share_link(provider, text)
         assert expected_part in link
-
 
     @pytest.mark.parametrize(
         "url, expected",
@@ -107,6 +107,7 @@ class TestShareServiceEnterprise:
         """Test that link handlers are pure."""
         text = "stable text"
         from anura.services.share_providers import generate_share_link
+
         for p in service.providers():
             assert generate_share_link(p, text) == generate_share_link(p, text)
 

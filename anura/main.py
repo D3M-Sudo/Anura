@@ -50,12 +50,13 @@ from anura.services.clipboard_service import get_clipboard_service
 from anura.services.language_manager import get_language_manager
 from anura.services.notification_service import (
     HAS_LIBNOTIFY,
-    NotificationService,
+    get_notification_service,
 )
 from anura.services.screenshot_service import ScreenshotService, get_screenshot_service
 from anura.services.settings import settings
-from anura.utils import cleanup_orphaned_resources
+from anura.utils import cleanup_orphaned_resources, is_local_or_private_url
 from anura.utils.signal_manager import SignalManagerMixin
+from anura.utils.singleton import get_existing_instance
 from anura.utils.validators import launch_uri
 from anura.window import AnuraWindow
 
@@ -69,7 +70,11 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         self.backend: ScreenshotService | None = None
         self.version = version
         self.settings = settings
-        self.notification_service = NotificationService(APP_ID)
+        # Use the same singleton the controllers use (#537): OcrController
+        # obtains notifications through get_notification_service(), so a
+        # separate instance here meant shutdown cleaned up an object that never
+        # owned the portal notification IDs.
+        self.notification_service = get_notification_service()
         self._setup_options()
 
     def _setup_options(self) -> None:
@@ -155,10 +160,18 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         with contextlib.suppress(Exception):
             get_clipboard_service().cancel_pending_operations()
 
-        with contextlib.suppress(Exception):
-            from anura.services.tts import get_tts_service
+        # #536: clean up TTS only if it was actually used. The lazy getter used
+        # to construct TTSService — and start a network fetch of the Google
+        # language catalog — during shutdown of a silent CLI run that never
+        # touched TTS.
+        try:
+            from anura.services.tts.service import TTSService
 
-            get_tts_service().cleanup()
+            tts_service = get_existing_instance(TTSService)
+            if tts_service is not None:
+                tts_service.cleanup()
+        except (AttributeError, RuntimeError, OSError) as e:
+            logger.debug(f"Failed to clean up TTS service: {e}")
 
     def do_activate(self) -> None:
         win = self.props.active_window
@@ -221,7 +234,13 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
     def _on_uri_detected(self, _controller, url: str, copy_requested: bool) -> None:
         win = self.get_active_window()
 
-        if self.settings.get_boolean("autolinks"):
+        # #529: loopback and private-network destinations always need an
+        # explicit confirmation, even when autolinks is enabled: a crafted QR
+        # code must not drive the browser into a local administration UI or an
+        # intranet service that trusts browser-originated requests.
+        auto_open = self.settings.get_boolean("autolinks") and not is_local_or_private_url(url)
+
+        if auto_open:
             launch_uri(url, window=win, error_callback=lambda msg: win.show_toast(msg) if win else None)
             if win:
                 win.show_toast(_("URL opened automatically"))
@@ -239,7 +258,7 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         # Handle URL Clipboard (respecting global autocopy or explicit request)
         if self.settings.get_boolean("autocopy") or copy_requested:
             get_clipboard_service().set(url)
-            if win and not self.settings.get_boolean("autolinks"):
+            if win and not auto_open:
                 win.show_toast(_("URL copied to clipboard"))
 
     def do_command_line(self, command_line: Gio.ApplicationCommandLine) -> int:

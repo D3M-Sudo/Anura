@@ -336,7 +336,7 @@ get_atomic_manager().execute(
 **Logging Protocol:**
 1.  **Standard Output**: For terminal visibility during development.
 2.  **Offline Rotary Logs**: Secure local logs in `$XDG_STATE_HOME/anura/logs/`.
-3.  **Constraints**: 5MB max size, 3-file retention, plain text (no compression).
+3.  **Constraints**: 5MB max size, 5-file retention, gzip compression (the rotation policy is implemented in `anura/core/logger.py`; compressed archives are deliberate, see `26f08f5`).
 4.  **Privacy**: Strictly zero-telemetry.
 
 ### Semantic Transformation Pipeline (MagicProcessor)

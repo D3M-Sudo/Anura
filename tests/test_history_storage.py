@@ -69,6 +69,8 @@ def test_record_and_read(tmp_path):
 def test_data_survives_reopen(tmp_path):
     service = HistoryService(base_dir=tmp_path)
     entry = service.record("persisted", "ita", applied_name="Magic", conf=88.0)
+    # Writes are coalesced in the background (#511): flush before reopening.
+    service.flush()
     reopened = HistoryService(base_dir=tmp_path)
     entries = reopened.get_entries()
     assert len(entries) == 1
@@ -119,6 +121,7 @@ def test_clear(tmp_path):
 def test_atomic_write_no_temp_files(tmp_path):
     service = HistoryService(base_dir=tmp_path)
     service.record("atomic", "eng")
+    service.flush()
     history_file = tmp_path / "history.json"
     assert history_file.exists()
     data = json.loads(history_file.read_text(encoding="utf-8"))

@@ -34,6 +34,7 @@ def _make_mock_terminal_reporter(stats: dict) -> MagicMock:
 # Tests
 # ---------------------------------------------------------------------------
 
+
 class TestPrintFailureReports:
     """Tests for _print_failure_reports covering both 'failed' and 'error' keys."""
 
@@ -79,10 +80,12 @@ class TestPrintFailureReports:
             nodeid="tests/test_ok.py::test_one",
             longrepr="AssertionError: True is not False",
         )
-        tr = _make_mock_terminal_reporter({
-            "error": [err_rep],
-            "failed": [fail_rep],
-        })
+        tr = _make_mock_terminal_reporter(
+            {
+                "error": [err_rep],
+                "failed": [fail_rep],
+            }
+        )
 
         _print_failure_reports(tr)
 
@@ -97,10 +100,12 @@ class TestPrintFailureReports:
         """The 'error' category should be printed before 'failed'."""
         err_rep = _make_mock_report(nodeid="err_test", longrepr="error details")
         fail_rep = _make_mock_report(nodeid="fail_test", longrepr="failure details")
-        tr = _make_mock_terminal_reporter({
-            "error": [err_rep],
-            "failed": [fail_rep],
-        })
+        tr = _make_mock_terminal_reporter(
+            {
+                "error": [err_rep],
+                "failed": [fail_rep],
+            }
+        )
 
         _print_failure_reports(tr)
 
@@ -138,10 +143,12 @@ class TestPrintFailureReports:
         fail1 = _make_mock_report(nodeid="fail1.py", longrepr="failure 1")
         fail2 = _make_mock_report(nodeid="fail2.py", longrepr="failure 2")
 
-        tr = _make_mock_terminal_reporter({
-            "error": [err1, err2],
-            "failed": [fail1, fail2],
-        })
+        tr = _make_mock_terminal_reporter(
+            {
+                "error": [err1, err2],
+                "failed": [fail1, fail2],
+            }
+        )
 
         _print_failure_reports(tr)
 

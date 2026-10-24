@@ -24,7 +24,7 @@ from gi.repository import Gdk, Gio, GLib, GObject  # noqa: E402
 from loguru import logger  # noqa: E402
 from PIL import Image  # noqa: E402
 
-from anura.utils import mask_url, validate_image_resource  # noqa: E402
+from anura.utils import mask_url, validate_image_dimensions, validate_image_resource  # noqa: E402
 from anura.utils.singleton import get_instance  # noqa: E402
 
 # When the clipboard advertises a file URI list (e.g. user copied a PNG from
@@ -35,6 +35,11 @@ _CLIPBOARD_TEXT_URI_LIST = "text/uri-list"
 
 # Stream chunk size when slurping clipboard streams.
 _CLIPBOARD_STREAM_CHUNK = 16 * 1024
+
+# Hard cap on the text/uri-list payload buffered in memory. The clipboard source
+# controls the stream length, and CLIPBOARD_TIMEOUT_SECONDS only bounds elapsed
+# time: without a byte cap a paste can allocate an unbounded amount of memory.
+_CLIPBOARD_URI_LIST_MAX_BYTES = 1024 * 1024
 
 
 class ClipboardService(GObject.GObject):
@@ -237,7 +242,8 @@ class ClipboardService(GObject.GObject):
 
         State mutates:
             - Sets _fallback_attempted = True on first failure before delegating
-            - Clears _cancellable in finally block regardless of outcome
+            - Clears _cancellable only if it still belongs to this texture read
+              (a fallback started from this callback owns a newer one, #525)
 
         Hand-off:
             - Calls _fallback_to_uri_list_read() on texture read failure
@@ -254,6 +260,13 @@ class ClipboardService(GObject.GObject):
         # async operation, cancelling it now would prevent read_texture_finish()
         # from succeeding. We only stop the watchdog timer.
         self._stop_timeout()
+
+        # #525: remember which cancellable belongs to this texture read. The
+        # URI-list fallback installs a new one inside process_result(); clearing
+        # unconditionally in `finally` used to erase the fallback's cancellable,
+        # which disabled its watchdog and its cancellation during teardown.
+        with self._state_lock:
+            texture_cancellable = self._cancellable
 
         try:
             # Marshal GTK operations to main thread
@@ -301,9 +314,12 @@ class ClipboardService(GObject.GObject):
                     self._fallback_to_uri_list_read()
                     return
                 finally:
-                    # Clean up cancellable regardless of outcome
+                    # #525: only drop the cancellable this read owns. The
+                    # fallback may have installed a newer one that the watchdog
+                    # and teardown must still be able to cancel.
                     with self._state_lock:
-                        self._cancellable = None
+                        if self._cancellable is texture_cancellable:
+                            self._cancellable = None
 
             GLib.idle_add(process_result)
 
@@ -605,11 +621,44 @@ class ClipboardService(GObject.GObject):
         stream: Gio.InputStream,
         cancellable: Gio.Cancellable | None,
         on_done: Callable[[bytes], None],
+        max_bytes: int = _CLIPBOARD_URI_LIST_MAX_BYTES,
     ) -> None:
-        """Read a Gio.InputStream fully and invoke ``on_done(bytes)``."""
+        """Read a Gio.InputStream fully and invoke ``on_done(bytes)``.
+
+        At most ``max_bytes`` are buffered: past the limit the read is stopped,
+        the chunks are dropped and a clipboard error is emitted, so an oversized
+        payload never reaches the join/decode/split stage. The existing timeout
+        bounds elapsed time, not memory.
+        """
         chunks: list[bytes] = []
+        total = 0
+        rejected = False
+
+        def _reject(reason: str) -> None:
+            nonlocal rejected
+            if rejected:
+                return
+            rejected = True
+            chunks.clear()
+            logger.warning(f"Anura Clipboard: {reason}")
+            # Stop the pending read and release the stream; both are best-effort
+            # because the source may already be gone.
+            if cancellable is not None:
+                cancellable.cancel()
+            stream.close_async(GLib.PRIORITY_DEFAULT, None, None)
+
+            def _on_error_idle() -> bool:
+                # Reuses the existing translated string: the payload is treated
+                # as unusable content, while the precise reason stays in the log.
+                self.emit("error", _("No image in clipboard"))
+                return GLib.SOURCE_REMOVE
+
+            GLib.idle_add(_on_error_idle)
 
         def _on_chunk(_stream: Gio.InputStream, res: Gio.AsyncResult) -> None:
+            nonlocal total
+            if rejected:
+                return
             try:
                 gbytes = stream.read_bytes_finish(res)
             except GLib.Error as e:
@@ -628,6 +677,10 @@ class ClipboardService(GObject.GObject):
             if not data:
                 on_done(b"".join(chunks))
                 return
+            if total + len(data) > max_bytes:
+                _reject(f"URI list exceeds the {max_bytes}-byte limit; discarding")
+                return
+            total += len(data)
             chunks.append(bytes(data))
             stream.read_bytes_async(
                 _CLIPBOARD_STREAM_CHUNK,
@@ -701,6 +754,14 @@ class ClipboardService(GObject.GObject):
 
         try:
             with Image.open(path) as img:
+                # #522: reject a decompression bomb from the header before
+                # load()/convert() allocate the decoded bitmap.
+                dims_ok, dims_error = validate_image_dimensions(*img.size)
+                if not dims_ok:
+                    logger.error(f"Anura Clipboard: {dims_error}")
+                    self._emit_clipboard_error(_("No image in clipboard"))
+                    return
+
                 img.load()
                 out = img if img.mode in ("RGB", "RGBA", "L") else img.convert("RGBA")
                 buf = BytesIO()

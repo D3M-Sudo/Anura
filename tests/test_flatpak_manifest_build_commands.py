@@ -45,9 +45,7 @@ def test_wheel_modules_install_the_wheel_they_declare(manifest: dict) -> None:
             continue
 
         checked += 1
-        install_commands = [
-            command for command in module.get("build-commands", []) if "pip3 install" in command
-        ]
+        install_commands = [command for command in module.get("build-commands", []) if "pip3 install" in command]
         assert install_commands, f"{module['name']} has no pip3 install build-command"
         assert any(filename in command for command in install_commands), (
             f"{module['name']} build-command does not install {filename}: {install_commands!r}"
@@ -79,9 +77,7 @@ def test_zxing_cpp_installs_the_sdist_it_declares(manifest: dict) -> None:
     filename = _source_filename(zxing)
 
     assert filename.endswith(".tar.gz")
-    install_commands = [
-        command for command in zxing.get("build-commands", []) if "pip3 install" in command
-    ]
+    install_commands = [command for command in zxing.get("build-commands", []) if "pip3 install" in command]
     assert any("pip3 install" in command and command.rstrip().endswith(".") for command in install_commands), (
         f"zxing-cpp build-command does not build the extracted sdist: {install_commands!r}"
     )

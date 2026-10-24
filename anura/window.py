@@ -105,6 +105,11 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         # History V1: one HistoryService wired once with the configured limit;
         # recording itself is gated by the history-enabled setting at OCR time.
         self.history_service = HistoryService(limit=self.settings.get_int("history-limit"))
+        # #510: the limit used to be read only here, at startup. Apply later
+        # preference changes to the live service instead of waiting for a
+        # restart (lowering it used to keep 50 entries on disk, raising it kept
+        # truncating at the old value).
+        self.connect_tracked(self.settings, "changed::history-limit", self._on_history_limit_changed)
         self.history_controller = HistoryController(self)
         self.history_page.setup(self.history_service, self.history_controller)
         self.ocr_controller = OcrController(self, history_service=self.history_service)
@@ -225,6 +230,16 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         if not file_path:
             return
 
+        # #509: validate from filesystem metadata (is_file + stat) before
+        # reading anything. load_contents_async() would otherwise load the
+        # entire file — a video, an ISO, an archive chosen via "All files" —
+        # just for validate_image_resource() to reject its size afterwards.
+        # The byte check in the callback stays as defence in depth.
+        is_valid, _size, error = validate_image_resource(file_path)
+        if not is_valid:
+            self.show_toast(_(error) if error else _("Invalid image file"))
+            return
+
         gfile: Gio.File = Gio.File.new_for_path(file_path)
         self.welcome_page.show_spinner()
 
@@ -286,6 +301,12 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         if self._screenshot_timeout_id is not None:
             GLib.source_remove(self._screenshot_timeout_id)
             self._screenshot_timeout_id = None
+
+        # #511: history writes are coalesced in a background thread; flush them
+        # before the process exits, otherwise the last extractions are lost.
+        history_service = getattr(self, "history_service", None)
+        if history_service is not None:
+            history_service.close()
 
         clipboard_service_instance = get_clipboard_service()
         clipboard_service_instance.cancel_pending_operations()
@@ -476,6 +497,13 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         """Surface a failed history action to the user."""
         if message:
             self.show_toast(message)
+
+    def _on_history_limit_changed(self, settings: Gio.Settings, key: str) -> None:
+        """Apply a new history limit to the live service without a restart (#510)."""
+        limit = settings.get_int(key)
+        self.history_service.set_limit(limit)
+        self.history_page.refresh()
+        logger.debug(f"Anura Window: Applied history limit {limit}")
 
     def _cleanup_screenshot_state(self) -> None:
         """Restore window state after screenshot attempt."""

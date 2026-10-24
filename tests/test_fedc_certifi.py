@@ -20,9 +20,7 @@ NEW_FILENAME = "certifi-2026.10.18.tar.gz"
 BASE_URL = "https://files.pythonhosted.org/packages/xx/"
 OLD_URL = f"{BASE_URL}{OLD_FILENAME}"
 NEW_URL = f"{BASE_URL}{NEW_FILENAME}"
-LICENSE_COMMAND = (
-    "bash -c 'find /app/lib/python3.*/site-packages/certifi-*.dist-info -iname \"*icense*\"'"
-)
+LICENSE_COMMAND = "bash -c 'find /app/lib/python3.*/site-packages/certifi-*.dist-info -iname \"*icense*\"'"
 
 
 def _load_fedc_certifi():
@@ -141,9 +139,7 @@ def test_local_manifest_installs_the_certifi_source_it_declares():
     manifest = json.loads(manifest_path.read_text())
     module = _certifi_module(manifest)
     source_filename = module["sources"][0]["url"].rsplit("/", 1)[-1]
-    install_commands = [
-        command for command in module.get("build-commands", []) if "pip3 install" in command
-    ]
+    install_commands = [command for command in module.get("build-commands", []) if "pip3 install" in command]
 
     assert install_commands, "certifi module has no pip3 install build-command"
     assert any(source_filename in command for command in install_commands), (

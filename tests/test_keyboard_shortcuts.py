@@ -171,13 +171,9 @@ class TestKeyboardShortcuts:
             assert params[0] == "self", f"First param must be 'self', got {params[0]}"
 
             # Must have VAR_POSITIONAL (*args) to accept any GAction callback args
-            var_positional = [
-                p for p in sig.parameters.values()
-                if p.kind == inspect.Parameter.VAR_POSITIONAL
-            ]
+            var_positional = [p for p in sig.parameters.values() if p.kind == inspect.Parameter.VAR_POSITIONAL]
             assert len(var_positional) >= 1, (
-                f"on_paste_from_clipboard must accept *args to handle GAction callbacks. "
-                f"Current parameters: {params}"
+                f"on_paste_from_clipboard must accept *args to handle GAction callbacks. Current parameters: {params}"
             )
 
         except ImportError as e:
@@ -245,4 +241,3 @@ class TestShortcutsIntegration:
 
         assert "app.get_screenshot" in accels_map
         assert "<primary>g" in accels_map["app.get_screenshot"]
-

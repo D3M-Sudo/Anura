@@ -74,6 +74,7 @@ class TestIntegrationFlows:
 
             def capture_side_effect(lang, copy, callback):
                 callback(False, None, "Screenshot failed: generic error")
+
             mock_provider.capture = capture_side_effect
             service.provider = mock_provider
 

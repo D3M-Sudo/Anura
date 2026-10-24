@@ -36,6 +36,16 @@ TESSDATA_POOL_DIR = str(Path(XDG_CACHE_HOME) / "anura" / "tessdata_pool")
 MAX_IMAGE_SIZE_MB = 50
 MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024
 
+# Maximum decoded image size in pixels (40 MP ≈ 120 MB as RGB) to prevent
+# decompression-bomb DoS: a small compressed file can expand into a huge
+# bitmap, so a byte-size limit alone is not enough.
+MAX_IMAGE_PIXELS = 40_000_000
+
+# Maximum wall-clock time for a single Tesseract invocation (seconds). The
+# process pool has one worker, so an unbounded call would block every later OCR
+# request; pytesseract kills the child process when the timeout expires.
+OCR_TIMEOUT_SECONDS = 120
+
 # Maximum Tesseract language model size (250MB) to prevent disk exhaustion (DoS).
 MAX_MODEL_SIZE_MB = 250
 MAX_MODEL_SIZE_BYTES = MAX_MODEL_SIZE_MB * 1024 * 1024

@@ -302,6 +302,10 @@ msgstr ""
 msgid "Clear"
 msgstr ""
 
+#: ../anura/widgets/history_page.py:343
+msgid "History could not be cleared."
+msgstr ""
+
 #: ../anura/widgets/language_popover.py:125
 #: ../anura/widgets/language_popover.py:149
 msgid "Language list"

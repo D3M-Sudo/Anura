@@ -15,6 +15,7 @@ from urllib.parse import urlparse
 from loguru import logger
 
 from anura.config import (
+    MAX_IMAGE_PIXELS,
     MAX_IMAGE_SIZE_BYTES,
     MAX_IMAGE_SIZE_MB,
     MAX_TEXT_LENGTH,
@@ -24,6 +25,14 @@ from anura.config import (
 # Note: C1 controls (0x80-0x9F) are handled by is_safe_url_string's isascii() check.
 # Using a regex is ~13x faster than a manual loop for control character detection.
 _CONTROL_CHARS_RE = re.compile(r"[\x00-\x1f\x7f]")
+
+# Hostnames that always resolve to the local machine (see is_local_or_private_url).
+_LOCAL_HOSTNAMES = {
+    "localhost",
+    "localhost.localdomain",
+    "ip6-localhost",
+    "ip6-loopback",
+}
 
 # Performance constants for sanitize_text
 _DISCARD_CATEGORIES = {"Cc", "Cf", "Co", "Cs", "Cn"}
@@ -332,6 +341,63 @@ def is_safe_url_string(text: str) -> bool:
     # BEFORE strip/sanitize to catch malicious trailing/injected characters.
     # Note: Regex is ~13x faster than a manual loop for this check.
     return not _CONTROL_CHARS_RE.search(text)
+
+
+def is_local_or_private_url(url: str) -> bool:
+    """Return True when *url* targets the local machine or a private network.
+
+    Used before automatically opening a URL decoded from a QR code: a crafted
+    code could otherwise make the browser talk to a loopback administration UI
+    or to an intranet service that trusts browser-originated requests. Those
+    destinations require an explicit confirmation even when autolinks is on.
+
+    Unparsable or host-less URLs are treated as unsafe (True), so a parsing
+    surprise can never bypass the confirmation.
+    """
+    try:
+        host = urlparse(url).hostname
+    except ValueError:
+        return True
+
+    if not host:
+        return True
+
+    host = host.rstrip(".").lower()
+    if host in _LOCAL_HOSTNAMES or host.endswith(".local"):
+        return True
+
+    with contextlib.suppress(ValueError):
+        # ``is_global`` is False for loopback, private, link-local, reserved
+        # and unspecified addresses (IPv4 and IPv6 alike).
+        return not ipaddress.ip_address(host).is_global
+
+    return False
+
+
+def validate_image_dimensions(width: int, height: int) -> tuple[bool, str | None]:
+    """Enforce the decoded-pixel budget for an untrusted image.
+
+    ``validate_image_resource()`` bounds the compressed size only: a small PNG
+    can decode to a bitmap of arbitrary size (decompression bomb). The
+    dimensions are known from the image header, so this runs before ``load()``,
+    ``convert()``, barcode detection or OCR allocate the full buffer.
+
+    Args:
+        width: Decoded width in pixels (from ``Image.size``).
+        height: Decoded height in pixels (from ``Image.size``).
+
+    Returns:
+        tuple: (is_valid, error_message)
+    """
+    if width <= 0 or height <= 0:
+        return False, "Invalid image dimensions"
+
+    pixels = width * height
+    if pixels > MAX_IMAGE_PIXELS:
+        megapixels = round(pixels / 1_000_000, 1)
+        return False, f"Image too large: {megapixels}MP (max {MAX_IMAGE_PIXELS // 1_000_000}MP)"
+
+    return True, None
 
 
 def validate_image_resource(

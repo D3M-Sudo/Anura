@@ -21,7 +21,7 @@ try:
 except (ImportError, ValueError):
     HAS_GI = False
 
-    class GObject:
+    class GObject:  # type: ignore[no-redef]  # intentional headless fallback stub
         class Object:
             pass
 

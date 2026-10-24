@@ -60,6 +60,17 @@ class ThreadSafeSingleton:
             return cast(T, cls._instances[wrapped_class])
 
     @classmethod
+    def get_existing_instance(cls, wrapped_class: type[T]) -> T | None:
+        """Return the singleton if it already exists, without creating it.
+
+        Shutdown paths use this: cleaning up an optional service must not
+        instantiate it (#536). ``get_tts_service().cleanup()`` used to build a
+        ``TTSService`` — starting a Google language-catalog fetch — just to
+        tear it down in a silent CLI run that never used TTS.
+        """
+        return cast("T | None", cls._instances.get(wrapped_class))
+
+    @classmethod
     def reset_for_testing(cls) -> None:
         """
         Reset all singletons for testing purposes only.
@@ -78,3 +89,14 @@ def get_instance[T](wrapped_class: type[T]) -> T:
         service = get_instance(MyService)
     """
     return ThreadSafeSingleton.get_instance(wrapped_class)
+
+
+def get_existing_instance[T](wrapped_class: type[T]) -> T | None:
+    """Return an already-created singleton, or None, without creating it.
+
+    Usage (cleanup paths only):
+        service = get_existing_instance(TTSService)
+        if service is not None:
+            service.cleanup()
+    """
+    return ThreadSafeSingleton.get_existing_instance(wrapped_class)
