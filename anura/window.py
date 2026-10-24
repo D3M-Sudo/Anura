@@ -302,6 +302,12 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
             GLib.source_remove(self._screenshot_timeout_id)
             self._screenshot_timeout_id = None
 
+        # #511: history writes are coalesced in a background thread; flush them
+        # before the process exits, otherwise the last extractions are lost.
+        history_service = getattr(self, "history_service", None)
+        if history_service is not None:
+            history_service.close()
+
         clipboard_service_instance = get_clipboard_service()
         clipboard_service_instance.cancel_pending_operations()
 

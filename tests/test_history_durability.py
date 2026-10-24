@@ -30,7 +30,7 @@ def _stored(tmp_path: Path) -> list[dict]:
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
 
 
-def _failing_persist():
+def _failing_persist(*_args: object) -> None:
     raise OSError("read-only filesystem")
 
 
@@ -38,8 +38,9 @@ def test_failed_clear_restores_in_memory_entries(tmp_path, monkeypatch):
     service = _service(tmp_path)
     service.record("first", "eng")
     service.record("second", "ita")
+    service.flush()
 
-    monkeypatch.setattr(service, "_persist", _failing_persist)
+    monkeypatch.setattr(service, "_write_entries", _failing_persist)
 
     with pytest.raises(OSError):
         service.clear()
@@ -52,8 +53,9 @@ def test_failed_clear_restores_in_memory_entries(tmp_path, monkeypatch):
 def test_failed_clear_does_not_resurrect_after_reload(tmp_path, monkeypatch):
     service = _service(tmp_path)
     service.record("keep-me", "eng")
+    service.flush()
 
-    monkeypatch.setattr(service, "_persist", _failing_persist)
+    monkeypatch.setattr(service, "_write_entries", _failing_persist)
     with pytest.raises(OSError):
         service.clear()
     monkeypatch.undo()
