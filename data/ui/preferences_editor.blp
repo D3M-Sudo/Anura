@@ -1,0 +1,35 @@
+// This file is part of Anura.
+// Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+// Copyright (C) 2026 D3M-Sudo (Anura)
+//
+// SPDX-License-Identifier: MIT
+
+using Gtk 4.0;
+using Adw 1;
+
+translation-domain 'io.github.d3msudo.anura';
+
+template $PreferencesEditorPage : Adw.PreferencesPage {
+  title: _("_Editor");
+  use-underline: true;
+  icon-name: "text-editor-symbolic";
+
+  Adw.PreferencesGroup {
+    title: _("Editor");
+
+    Adw.SwitchRow editor_line_numbers_switch {
+      title: _("Show Line Numbers");
+      subtitle: _("Display line numbers along the edge of the editor");
+    }
+
+    Adw.SwitchRow editor_highlight_line_switch {
+      title: _("Highlight Current Line");
+      subtitle: _("Highlight the active line containing cursor");
+    }
+
+    Adw.ComboRow editor_wrap_mode_combo {
+      title: _("Word Wrap Mode");
+      subtitle: _("Policy for wrapping long lines of text");
+    }
+  }
+}

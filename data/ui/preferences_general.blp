@@ -78,42 +78,4 @@ template $PreferencesGeneralPage : Adw.PreferencesPage {
       };
     }
   }
-
-  Adw.PreferencesGroup {
-    title: _("Editor");
-
-    Adw.SwitchRow editor_line_numbers_switch {
-      title: _("Show Line Numbers");
-      subtitle: _("Display line numbers along the edge of the editor");
-    }
-
-    Adw.SwitchRow editor_highlight_line_switch {
-      title: _("Highlight Current Line");
-      subtitle: _("Highlight the active line containing cursor");
-    }
-
-    Adw.ComboRow editor_wrap_mode_combo {
-      title: _("Word Wrap Mode");
-      subtitle: _("Policy for wrapping long lines of text");
-    }
-  }
-
-  Adw.PreferencesGroup {
-    title: _("Text-to-Speech");
-
-    Adw.SpinRow volume_row {
-      title: _("Volume");
-      subtitle: _("TTS playback volume level (0-100%)");
-      adjustment: Adjustment {
-        lower: 0.0;
-        upper: 100.0;
-        step-increment: 10.0;
-      };
-    }
-
-    Adw.ComboRow tts_language_combo {
-      title: _("TTS Language");
-      subtitle: _("Language for speech synthesis. Uses OCR language if not set.");
-    }
-  }
 }

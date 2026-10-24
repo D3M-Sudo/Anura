@@ -57,6 +57,8 @@ blueprint_compiler = find_program('blueprint-compiler')
 blueprint_files = [
   'ui/preferences_dialog.blp',
   'ui/preferences_general.blp',
+  'ui/preferences_editor.blp',
+  'ui/preferences_voice.blp',
   'ui/preferences_languages.blp',
   'ui/shortcuts_overlay.blp',
   'ui/window.blp',
