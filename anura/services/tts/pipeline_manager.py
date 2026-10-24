@@ -149,8 +149,12 @@ class PipelineManager(GObject.GObject):
         return self._player.is_paused()
 
     def get_supported_languages(self) -> dict:
-        """Get supported gTTS languages."""
+        """Get supported gTTS languages (fetches on a cold cache)."""
         return self._mapper.get_supported_gtts_languages()
+
+    def get_cached_supported_languages(self) -> dict | None:
+        """Get the catalog only if it is already cached; never fetches (#532)."""
+        return self._mapper.peek_supported_gtts_languages()
 
     def map_language(self, tess_code: str) -> str | None:
         """Map Tesseract code to gTTS code."""

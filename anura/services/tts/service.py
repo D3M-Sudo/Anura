@@ -74,6 +74,14 @@ class TTSService(GObject.GObject):
         """
         return self._pipeline.get_supported_languages()
 
+    def get_cached_supported_languages(self) -> dict | None:
+        """Return the gTTS catalog only if already cached (never fetches).
+
+        The Preferences page uses this so opening it cannot block the GTK main
+        thread on a cold cache (#532).
+        """
+        return self._pipeline.get_cached_supported_languages()
+
     def get_effective_language(self, ocr_lang: str) -> str | None:
         """Return TTS language: user preference or fallback to OCR language."""
         tts_lang = settings.get_string("tts-language")

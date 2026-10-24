@@ -65,6 +65,15 @@ class DownloadManager(GObject.GObject):
         self._download_executor: ThreadPoolExecutor | None = None
         self._cache_lock = threading.Lock()
 
+        # #531: manager-owned cancellation. executor.shutdown(cancel_futures)
+        # only drops queued work: the running download kept streaming until the
+        # network timeouts expired, and Python joins the worker at interpreter
+        # shutdown. The stream loop checks this event and shutdown closes the
+        # active response to break the read.
+        self._shutdown = threading.Event()
+        self._active_response: requests.Response | None = None
+        self._response_lock = threading.Lock()
+
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": USER_AGENT})
 
@@ -128,6 +137,9 @@ class DownloadManager(GObject.GObject):
         with self._cache_lock:
             if code in self.loading_languages:
                 return
+            if self._shutdown.is_set():
+                logger.debug(f"Anura: Ignoring download request for {code} during shutdown")
+                return
             self.loading_languages[code] = DownloadState()
 
         if on_started:
@@ -179,6 +191,11 @@ class DownloadManager(GObject.GObject):
         # Security: Validate lang_code is a valid ISO 639-2 code
         if not code or not re.match(LANG_CODE_PATTERN, code):
             logger.error(f"Anura: Blocked invalid language code download attempt: '{code}'")
+            return None
+
+        # #531: do not start new network work once shutdown has begun.
+        if self._shutdown.is_set():
+            logger.debug(f"Anura: Skipping download of '{code}'; application is shutting down")
             return None
 
         # Hardening: verify Tesseract binary availability before downloading models
@@ -237,6 +254,10 @@ class DownloadManager(GObject.GObject):
                 try:
                     # Use central session with consistent headers and timeout
                     response = self.session.get(url, timeout=REQUEST_TIMEOUT, stream=True)
+                    # #531: publish the response so shutdown() can close it and
+                    # break the streamed read immediately.
+                    with self._response_lock:
+                        self._active_response = response
                     response.raise_for_status()
 
                     try:
@@ -270,7 +291,9 @@ class DownloadManager(GObject.GObject):
 
                     with tmp_path.open("wb") as f:
                         for chunk in response.iter_content(chunk_size=8192):
-                            if cancellable and cancellable.is_cancelled():
+                            # #531: stop on the manager-owned shutdown signal as
+                            # well as the caller's cancellable.
+                            if self._shutdown.is_set() or (cancellable and cancellable.is_cancelled()):
                                 logger.debug(f"Anura: Download of {code} cancelled")
                                 return None
                             if chunk:
@@ -357,6 +380,11 @@ class DownloadManager(GObject.GObject):
                     # #520: close the streamed response before anything else;
                     # this runs on success, early returns and exceptions.
                     if response is not None:
+                        # #531: release the shutdown hook first, so shutdown()
+                        # does not close a response we are already closing.
+                        with self._response_lock:
+                            if self._active_response is response:
+                                self._active_response = None
                         try:
                             response.close()
                         except (OSError, ValueError) as e:
@@ -409,7 +437,25 @@ class DownloadManager(GObject.GObject):
                 GLib.idle_add(_on_failed_idle, requested_code, priority=GLib.PRIORITY_DEFAULT)
 
     def shutdown(self) -> None:
-        """Shut down the download executor."""
+        """Stop downloads and interrupt the active one (#531).
+
+        ``executor.shutdown(cancel_futures=True)`` only drops *queued* work: a
+        running download keeps streaming until the request/retry timeouts
+        expire, and Python joins the executor workers at interpreter shutdown,
+        so the process could stay alive after the window closed. Set the
+        manager-owned signal checked by the stream loop and close the active
+        response so the read returns promptly.
+        """
+        self._shutdown.set()
+
+        with self._response_lock:
+            response = self._active_response
+        if response is not None:
+            try:
+                response.close()
+            except (OSError, ValueError) as e:
+                logger.debug(f"Anura: Failed to close the active download response: {e}")
+
         with self._cache_lock:
             executor = self._download_executor
             self._download_executor = None

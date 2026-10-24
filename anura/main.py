@@ -56,6 +56,7 @@ from anura.services.screenshot_service import ScreenshotService, get_screenshot_
 from anura.services.settings import settings
 from anura.utils import cleanup_orphaned_resources, is_local_or_private_url
 from anura.utils.signal_manager import SignalManagerMixin
+from anura.utils.singleton import get_existing_instance
 from anura.utils.validators import launch_uri
 from anura.window import AnuraWindow
 
@@ -159,10 +160,18 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         with contextlib.suppress(Exception):
             get_clipboard_service().cancel_pending_operations()
 
-        with contextlib.suppress(Exception):
-            from anura.services.tts import get_tts_service
+        # #536: clean up TTS only if it was actually used. The lazy getter used
+        # to construct TTSService — and start a network fetch of the Google
+        # language catalog — during shutdown of a silent CLI run that never
+        # touched TTS.
+        try:
+            from anura.services.tts.service import TTSService
 
-            get_tts_service().cleanup()
+            tts_service = get_existing_instance(TTSService)
+            if tts_service is not None:
+                tts_service.cleanup()
+        except (AttributeError, RuntimeError, OSError) as e:
+            logger.debug(f"Failed to clean up TTS service: {e}")
 
     def do_activate(self) -> None:
         win = self.props.active_window
