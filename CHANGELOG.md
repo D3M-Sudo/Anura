@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Changed
+- History: the service now logs through the project's `loguru` logger instead of the standard library, so the configured format, rotation and retention apply to it like everywhere else (#512)
+- Docs: `AGENTS.md` now describes the logging policy that is actually implemented (5-file retention, gzip compression) instead of the pre-`26f08f5` wording; the code was intentional and is unchanged (#513)
 - CI: the `python-quality` job now enforces `ruff format --check`, `bandit -c pyproject.toml -r .`, non-strict `mypy` and a non-blocking `vulture` report, on top of `ruff check` and pytest, with a single shared `uv sync --dev` step. `[tool.bandit]` excludes `tests/` (pytest's asserts, `try/except/pass` and subprocess mocks produced ~1,100 non-actionable findings), and Markdown is excluded from `ruff format` because ruff ≥ 0.15 also reformats fenced code blocks inside documentation (#517, #518)
 - Formatting: applied the `ruff format` baseline to 29 Python files (mechanical, behaviour-neutral) so the format check can be a blocking gate (#517)
 - Flatpak: updated the Python modules requested by FEDC in #427 — zxing-cpp 3.0.0 → 3.1.1, Pillow 12.3.0 → 13.0.0 (security release), charset-normalizer 3.4.7 → 3.5.2, libportal 0.9.1 → 0.11.0 and scikit-build-core 1.0.1 → 1.1.1. `pyproject.toml` now requires `pillow>=13.0.0` and `zxing-cpp>=3.1.1`, with `uv.lock` regenerated so `sync_dependencies.py --check` stays green

@@ -4,15 +4,14 @@
 # SPDX-License-Identifier: MIT
 
 import json
-import logging
 import os
 from pathlib import Path
 import time
 
+from loguru import logger
+
 from anura.config import XDG_DATA_HOME
 from anura.models.history import HistoryEntry
-
-logger = logging.getLogger(__name__)
 
 DEFAULT_HISTORY_LIMIT = 50
 
@@ -144,7 +143,7 @@ class HistoryService:
         quarantine = self._base_dir / f"history.json.corrupt-{int(time.time())}"
         try:
             os.replace(self._history_file, quarantine)
-            logger.warning("Corrupted history file quarantined: %s", quarantine)
+            logger.warning(f"Corrupted history file quarantined: {quarantine}")
         except OSError:
             logger.exception("Failed to quarantine corrupted history file")
 
@@ -164,7 +163,7 @@ class HistoryService:
         except OSError:
             # Non-fatal: persistence can still succeed on filesystems that do
             # not support chmod (e.g. some FUSE mounts).
-            logger.warning("Could not tighten history directory permissions: %s", self._base_dir)
+            logger.warning(f"Could not tighten history directory permissions: {self._base_dir}")
 
     def _persist(self) -> None:
         """Atomically write the history file (temp file + os.replace)."""
