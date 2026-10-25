@@ -150,6 +150,8 @@ class TestClipboardServiceEnterprise:
             # Mock PIL image operations
             mock_img = MagicMock()
             mock_img.mode = "RGB"
+            # #522: the pixel budget reads Image.size, so the mock needs one.
+            mock_img.size = (100, 100)
             mock_image_open.return_value.__enter__.return_value = mock_img
 
             # Trigger the method
@@ -192,6 +194,8 @@ class TestClipboardServiceEnterprise:
             # Mock PIL image operations
             mock_img = MagicMock()
             mock_img.mode = "RGB"
+            # #522: the pixel budget reads Image.size, so the mock needs one.
+            mock_img.size = (100, 100)
             mock_image_open.return_value.__enter__.return_value = mock_img
 
             # Trigger the method
