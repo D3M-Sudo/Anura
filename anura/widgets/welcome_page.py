@@ -166,14 +166,18 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
 
         if self._drop_cancellable:
             self._drop_cancellable.cancel()
-        self._drop_cancellable = Gio.Cancellable()
+        # #538: keep this reference and carry it through the async chain, so a
+        # late callback from a cancelled drop cannot clear the newest drop's
+        # cancellable (which would make the active read uncancellable).
+        cancellable = Gio.Cancellable()
+        self._drop_cancellable = cancellable
 
         drop.read_async(
             ["text/uri-list"],
             GLib.PRIORITY_DEFAULT,
-            self._drop_cancellable,
+            cancellable,
             self._on_drop_stream_ready,
-            drop,
+            (drop, cancellable),
         )
         return True  # Accept the drop; finish() will be called in _on_drop_bytes_ready
 
@@ -181,13 +185,14 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         self,
         source_object: Gdk.Drop,
         result: Gio.AsyncResult,
-        drop: Gdk.Drop,
+        user_data: tuple,
     ) -> None:
         """Called when the Xdnd stream is ready. Starts async byte read.
 
         source_object is the Gdk.Drop that initiated read_async (not an InputStream).
         We immediately start read_bytes_async — no blocking calls here.
         """
+        drop, cancellable = user_data
         try:
             input_stream, _mime_type = source_object.read_finish(result)
         except GLib.Error as e:
@@ -198,9 +203,9 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         input_stream.read_bytes_async(
             65536,  # 64 KB — more than enough for any URI list
             GLib.PRIORITY_DEFAULT,
-            self._drop_cancellable,
+            cancellable,
             self._on_drop_bytes_ready,
-            (input_stream, drop),
+            (input_stream, drop, cancellable),
         )
 
     def _on_drop_bytes_ready(
@@ -214,7 +219,7 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         This is the end of the async chain. We call drop.finish() here (required),
         then process the first valid local image path.
         """
-        stream, drop = user_data
+        stream, drop, cancellable = user_data
 
         try:
             gbytes = stream.read_bytes_finish(result)
@@ -223,7 +228,10 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
             drop.finish(Gdk.DragAction.COPY)
             return
         finally:
-            self._drop_cancellable = None
+            # #538: only release the cancellable this callback owns; a newer
+            # drop may already have installed its own.
+            if self._drop_cancellable is cancellable:
+                self._drop_cancellable = None
 
         # Xdnd protocol: always call finish BEFORE processing
         drop.finish(Gdk.DragAction.COPY)

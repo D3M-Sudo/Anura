@@ -4,6 +4,7 @@
 #
 # SPDX-License-Identifier: MIT
 
+import threading
 from typing import ClassVar
 
 import gtts
@@ -139,17 +140,43 @@ class LanguageMapper:
     }
 
     _gtts_cache: dict | None = None
+    _gtts_lock = threading.Lock()
+
+    @classmethod
+    def peek_supported_gtts_languages(cls) -> dict | None:
+        """Return the cached catalog, or None, without any network I/O.
+
+        UI code uses this so opening Preferences never blocks the GTK main
+        thread on a cold cache (#532).
+        """
+        return cls._gtts_cache
+
+    @classmethod
+    def refresh_supported_gtts_languages(cls) -> dict:
+        """Fetch the catalog and cache it; a transient failure is not cached.
+
+        The previous implementation stored ``{}`` on failure, so one flaky
+        request left TTS without a language list for the rest of the session.
+        """
+        with cls._gtts_lock:
+            if cls._gtts_cache is None:
+                try:
+                    cls._gtts_cache = gtts.lang.tts_langs()
+                except (requests.RequestException, ValueError, OSError) as e:
+                    logger.debug(f"Anura TTS: Failed to fetch gTTS languages: {e}")
+            return cls._gtts_cache or {}
 
     @classmethod
     def get_supported_gtts_languages(cls) -> dict:
-        """Cache of gTTS supported languages (class-level fallback)."""
-        if cls._gtts_cache is None:
-            try:
-                cls._gtts_cache = gtts.lang.tts_langs()
-            except (requests.RequestException, ValueError, OSError) as e:
-                logger.debug(f"Anura TTS: Failed to fetch gTTS languages: {e}")
-                cls._gtts_cache = {}
-        return cls._gtts_cache
+        """Cached catalog, fetching it when cold.
+
+        Never call this from the GTK main thread: the first call performs a
+        network request (see peek_supported_gtts_languages for the UI).
+        """
+        cached = cls._gtts_cache
+        if cached is not None:
+            return cached
+        return cls.refresh_supported_gtts_languages()
 
     @classmethod
     def map_tesseract_to_gtts(cls, tess_code: str) -> str | None:

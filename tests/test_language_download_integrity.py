@@ -20,6 +20,7 @@ Run with the system python3 + venv site-packages pattern documented in
 import hashlib
 from pathlib import Path
 import tempfile
+import threading
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -267,3 +268,46 @@ class TestIntegrityVerification:
         assert not (tessdata_dir / "fra.traineddata").exists()
         assert list(tessdata_dir.glob("*.tmp")) == []
         response.close.assert_called_once()
+
+    def test_shutdown_interrupts_an_active_download(self, manager, stub_integrity) -> None:
+        """#531: shutdown stops a streaming download instead of waiting for timeouts."""
+        dm, tessdata_dir = manager
+        payload = b"MODEL-DATA" * 64
+        stub_integrity(TESSDATA_URL, "fra.traineddata", payload)
+
+        streaming_started = threading.Event()
+        release_chunk = threading.Event()
+
+        response = _response([], {"content-length": str(len(payload))})
+
+        def iter_content(chunk_size: int = 8192):
+            streaming_started.set()
+            # A real socket blocks here until data arrives; shutdown must make
+            # the loop notice the manager signal and abandon the download.
+            release_chunk.wait(timeout=5)
+            yield payload
+
+        response.iter_content = iter_content
+
+        results: list[str | None] = []
+
+        with (
+            patch.object(dm.session, "get", return_value=response),
+            patch("anura.services.language.download_manager.shutil.which", return_value="/usr/bin/tesseract"),
+        ):
+            worker = threading.Thread(target=lambda: results.append(dm.download_begin("fra")))
+            worker.start()
+            assert streaming_started.wait(timeout=5), "download never started streaming"
+
+            dm.shutdown()
+            release_chunk.set()
+            worker.join(timeout=5)
+
+        assert not worker.is_alive()
+        assert results == [None]
+        # The model was never installed and no temporary file was left behind.
+        assert not (tessdata_dir / "fra.traineddata").exists()
+        assert list(tessdata_dir.glob("*.tmp")) == []
+        # shutdown() closed the active response and the worker loop noticed the
+        # signal instead of finishing the payload.
+        assert response.close.called
