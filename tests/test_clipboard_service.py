@@ -150,6 +150,8 @@ class TestClipboardServiceEnterprise:
             # Mock PIL image operations
             mock_img = MagicMock()
             mock_img.mode = "RGB"
+            # #522: the pixel budget reads Image.size, so the mock needs one.
+            mock_img.size = (100, 100)
             mock_image_open.return_value.__enter__.return_value = mock_img
 
             # Trigger the method
@@ -192,6 +194,8 @@ class TestClipboardServiceEnterprise:
             # Mock PIL image operations
             mock_img = MagicMock()
             mock_img.mode = "RGB"
+            # #522: the pixel budget reads Image.size, so the mock needs one.
+            mock_img.size = (100, 100)
             mock_image_open.return_value.__enter__.return_value = mock_img
 
             # Trigger the method
@@ -401,3 +405,73 @@ class TestClipboardLifetime:
 
         assert isinstance(result, bool)
         assert time.monotonic() - started < 4.0
+
+
+class _FakeBytes:
+    """Minimal GBytes stand-in exposing get_data()."""
+
+    def __init__(self, data: bytes) -> None:
+        self._data = data
+
+    def get_data(self) -> bytes:
+        return self._data
+
+
+class _FakeStream:
+    """Minimal Gio.InputStream stand-in that drives _read_stream_to_bytes."""
+
+    def __init__(self, chunks: list[bytes]) -> None:
+        self._chunks = list(chunks)
+        self._callback = None
+        self.closed = False
+
+    def read_bytes_async(self, _count, _priority, _cancellable, callback) -> None:
+        self._callback = callback
+
+    def read_bytes_finish(self, _res) -> _FakeBytes:
+        return _FakeBytes(self._chunks.pop(0) if self._chunks else b"")
+
+    def close_async(self, *_args) -> None:
+        self.closed = True
+
+    def pump(self) -> None:
+        """Run the pending read callback, as the GLib main loop would."""
+        callback = self._callback
+        self._callback = None
+        assert callback is not None
+        callback(self, None)
+
+
+class TestUriListStreamLimits:
+    """#524: the text/uri-list payload must be bounded in memory."""
+
+    @pytest.fixture
+    def service(self):
+        with patch("gi.repository.Gdk.Display.get_default") as mock_display_get:
+            mock_display = MagicMock()
+            mock_display_get.return_value = mock_display
+            mock_display.get_clipboard.return_value = MagicMock()
+            return ClipboardService()
+
+    def test_stream_under_limit_is_delivered(self, service):
+        stream = _FakeStream([b"aaaa", b"bbbb"])
+        done = MagicMock()
+
+        service._read_stream_to_bytes(stream, None, done, max_bytes=10)
+        stream.pump()  # 4 bytes
+        stream.pump()  # 8 bytes
+        stream.pump()  # EOF: delivers the accumulated payload
+
+        done.assert_called_once_with(b"aaaabbbb")
+        assert not stream.closed
+
+    def test_stream_over_limit_is_rejected_without_buffering(self, service):
+        stream = _FakeStream([b"a" * 8, b"b" * 8])
+        done = MagicMock()
+
+        service._read_stream_to_bytes(stream, None, done, max_bytes=10)
+        stream.pump()  # 8 bytes: accepted, schedules the next read
+        stream.pump()  # 16 bytes: exceeds the cap, must reject
+
+        done.assert_not_called()
+        assert stream.closed

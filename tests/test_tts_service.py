@@ -47,7 +47,7 @@ class TestTTSServiceEnterprise:
         assert service.generate("   ") == ""
         assert service.generate(None) == ""
 
-    @patch("gtts.gTTS")
+    @patch("anura.services.tts.speech_generator._VerifiedTTS")
     @patch("os.makedirs")
     def test_generate_save_error(self, mock_makedirs, mock_gtts, service):
         """Test error handling during speech file generation."""
