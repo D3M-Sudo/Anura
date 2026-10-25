@@ -30,7 +30,7 @@ def temp_config(tmp_path: Path) -> Path:
     """Create a temporary config.py with tessdata URLs."""
     config = tmp_path / "config.py"
     config.write_text(
-        f'# tessdata configuration\n'
+        f"# tessdata configuration\n"
         f'TESSDATA_BEST_URL = "https://github.com/tesseract-ocr/tessdata_best/raw/{VALID_SHA}/"\n'
     )
     return config
@@ -46,18 +46,16 @@ def temp_manifest(tmp_path: Path) -> Path:
             {
                 "name": "tessdata",
                 "buildsystem": "simple",
-                "build-commands": [
-                    "install -Dm0644 eng.traineddata /app/share/tessdata/eng.traineddata"
-                ],
+                "build-commands": ["install -Dm0644 eng.traineddata /app/share/tessdata/eng.traineddata"],
                 "sources": [
                     {
                         "type": "file",
                         "url": f"https://github.com/tesseract-ocr/tessdata_fast/raw/{VALID_SHA}/eng.traineddata",
-                        "sha256": "abc123"
+                        "sha256": "abc123",
                     }
-                ]
+                ],
             }
-        ]
+        ],
     }
     manifest.write_text(json.dumps(data, indent=4))
     return manifest
@@ -128,8 +126,8 @@ class TestExtractShasFromManifest:
                     "name": "tessdata",
                     "sources": [
                         {"url": f"https://github.com/tesseract-ocr/tessdata_fast/raw/{VALID_SHA}/eng.traineddata"},
-                        {"url": f"https://github.com/tesseract-ocr/tessdata_fast/raw/{VALID_SHA}/ita.traineddata"}
-                    ]
+                        {"url": f"https://github.com/tesseract-ocr/tessdata_fast/raw/{VALID_SHA}/ita.traineddata"},
+                    ],
                 }
             ]
         }
@@ -203,9 +201,7 @@ class TestConsistencyScenarios:
                 {
                     "name": "tessdata",
                     "sources": [
-                        {
-                            "url": f"https://github.com/tesseract-ocr/tessdata_fast/raw/{DIFFERENT_SHA}/eng.traineddata"
-                        }
+                        {"url": f"https://github.com/tesseract-ocr/tessdata_fast/raw/{DIFFERENT_SHA}/eng.traineddata"}
                     ],
                 }
             ]
@@ -235,9 +231,7 @@ class TestConsistencyScenarios:
                 {
                     "name": "tessdata",
                     "sources": [
-                        {
-                            "url": f"https://github.com/tesseract-ocr/tessdata_fast/raw/{DIFFERENT_SHA}/eng.traineddata"
-                        }
+                        {"url": f"https://github.com/tesseract-ocr/tessdata_fast/raw/{DIFFERENT_SHA}/eng.traineddata"}
                     ],
                 }
             ]
@@ -269,23 +263,17 @@ class TestConsistencyScenarios:
             "modules": [
                 {
                     "name": "leptonica",
-                    "sources": [
-                        {"type": "archive", "url": "https://example.com/leptonica.tar.gz"}
-                    ],
+                    "sources": [{"type": "archive", "url": "https://example.com/leptonica.tar.gz"}],
                 },
                 {
                     "name": "tessdata",
                     "sources": [
-                        {
-                            "url": f"https://github.com/tesseract-ocr/tessdata_fast/raw/{VALID_SHA}/eng.traineddata"
-                        }
+                        {"url": f"https://github.com/tesseract-ocr/tessdata_fast/raw/{VALID_SHA}/eng.traineddata"}
                     ],
                 },
                 {
                     "name": "extra-module",
-                    "sources": [
-                        {"type": "archive", "url": "https://example.com/extra.tar.gz"}
-                    ],
+                    "sources": [{"type": "archive", "url": "https://example.com/extra.tar.gz"}],
                 },
             ]
         }

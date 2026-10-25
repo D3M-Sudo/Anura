@@ -219,7 +219,7 @@ def test_extracted_page_disconnects_share_service_signal() -> None:
     """ExtractedPage must manage share service signal via connect_tracked."""
     text = (ANURA_PKG / "widgets" / "extracted_page.py").read_text()
     # Check that share signal is connected via mixin
-    assert "self.connect_tracked(self._share_service, \"share\"" in text
+    assert 'self.connect_tracked(self._share_service, "share"' in text
 
 
 def test_extracted_page_tracks_share_handler_id() -> None:

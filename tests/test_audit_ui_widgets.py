@@ -61,17 +61,11 @@ try:
     # those threads are released before Python begins its shutdown sequence.
     atexit.register(_adw_app.quit)
 except Exception as _register_exc:
-    warnings.warn(
-        f"Adw.Application.register() failed: {_register_exc}. "
-        "Falling back to Gtk.init().", stacklevel=2
-    )
+    warnings.warn(f"Adw.Application.register() failed: {_register_exc}. Falling back to Gtk.init().", stacklevel=2)
     try:
         Gtk.init()
     except Exception as _init_exc:
-        warnings.warn(
-            f"Gtk.init() also failed: {_init_exc}. "
-            "@Gtk.Template widgets will likely segfault.", stacklevel=2
-        )
+        warnings.warn(f"Gtk.init() also failed: {_init_exc}. @Gtk.Template widgets will likely segfault.", stacklevel=2)
 
 
 class TestWidgets:

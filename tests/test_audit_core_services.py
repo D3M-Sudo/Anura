@@ -37,11 +37,13 @@ class TestShareService:
 
     def test_get_link_telegram(self):
         from anura.services.share_providers import generate_share_link
+
         assert "t.me/share" in generate_share_link("telegram", "hello")
         assert generate_share_link("telegram", "") == "https://t.me/share/url?text="
 
     def test_get_link_email(self):
         from anura.services.share_providers import generate_share_link
+
         link = generate_share_link("email", "hello world")
         assert "mailto:" in link
         assert "subject=Extracted%20Text" in link

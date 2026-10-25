@@ -45,9 +45,10 @@ class TestSecurityDownloadLimit:
         # Set size slightly over the limit
         mock_response.headers = {"content-length": str(MAX_MODEL_SIZE_BYTES + 1)}
 
-        with patch.object(lm._download_manager.session, "get", return_value=mock_response), \
-             patch("shutil.which", return_value="/usr/bin/tesseract"):
-
+        with (
+            patch.object(lm._download_manager.session, "get", return_value=mock_response),
+            patch("shutil.which", return_value="/usr/bin/tesseract"),
+        ):
             result = lm._download_manager.download_begin("fra")
             assert result is None
 
@@ -68,10 +69,11 @@ class TestSecurityDownloadLimit:
 
         mock_response.iter_content = iter_content
 
-        with patch.object(lm._download_manager.session, "get", return_value=mock_response), \
-             patch("shutil.which", return_value="/usr/bin/tesseract"), \
-             patch("tempfile.NamedTemporaryFile") as mock_tmp:
-
+        with (
+            patch.object(lm._download_manager.session, "get", return_value=mock_response),
+            patch("shutil.which", return_value="/usr/bin/tesseract"),
+            patch("tempfile.NamedTemporaryFile") as mock_tmp,
+        ):
             # Mock temp file to avoid actual disk I/O
             mock_file = MagicMock()
             mock_tmp.return_value.__enter__.return_value.name = "/tmp/fake.tmp"

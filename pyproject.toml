@@ -19,7 +19,9 @@ dependencies = [
 line-length = 120
 target-version = "py312"
 src = ["anura", "build-aux"]
-exclude = ["data/", "po/"]
+# Markdown is excluded: ruff >=0.15 also formats fenced code blocks inside
+# Markdown, which would rewrite documentation snippets and agent rules.
+exclude = ["data/", "po/", "**/*.md"]
 
 [tool.ruff.lint]
 select = [
@@ -58,6 +60,28 @@ quote-style = "double"
 indent-style = "space"
 docstring-code-format = true
 docstring-code-line-length = 100
+
+# ─── Bandit ───────────────────────────────────────────────────────────────────
+# Production code is scanned in full. Test code is excluded because pytest
+# legitimately uses assert (B101), try/except/pass (B110), hardcoded temp paths
+# (B108) and subprocess/shell mocks (B403/B404/B602/B603), which would otherwise
+# produce ~1,000 non-actionable findings and mask real production regressions.
+#
+# Bandit only reads this section when the config is passed explicitly:
+#   bandit -c pyproject.toml -r .
+[tool.bandit]
+targets = ["anura"]
+exclude_dirs = ["tests", ".git", "__pycache__", "builddir", "build", "dist", ".venv"]
+
+# ─── Mypy ─────────────────────────────────────────────────────────────────────
+# Non-strict gate: PyGObject ships no usable type stubs and the codebase still
+# has a long tail of intentionally untyped callbacks. With the ignores below the
+# production tree is clean; per-module strictness is tracked as a separate epic.
+[tool.mypy]
+python_version = "3.12"
+files = ["anura"]
+ignore_missing_imports = true
+
 
 # ─── Pytest ───────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]

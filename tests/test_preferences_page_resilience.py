@@ -52,6 +52,7 @@ def _make_page(monkeypatch, tts_raises: Exception | None):
     monkeypatch.setattr(mod, "get_language_manager", lambda: fake_lang_manager)
 
     if tts_raises is not None:
+
         def _boom():
             raise tts_raises
 

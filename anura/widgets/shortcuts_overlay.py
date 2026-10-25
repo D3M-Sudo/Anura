@@ -10,7 +10,7 @@ Provides an elegant cheat sheet with all available keyboard shortcuts.
 """
 
 from gettext import gettext as _
-from typing import ClassVar
+from typing import ClassVar, TypedDict
 
 import gi
 
@@ -24,6 +24,20 @@ from gi.repository import Adw, Gdk, GLib, GObject, Gtk  # noqa: E402
 from anura.config import RESOURCE_PREFIX  # noqa: E402
 
 
+class _Shortcut(TypedDict):
+    """A single keyboard shortcut entry."""
+
+    key: str
+    description: str
+
+
+class _ShortcutCategory(TypedDict):
+    """A titled group of keyboard shortcuts."""
+
+    category: str
+    shortcuts: list[_Shortcut]
+
+
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/shortcuts_overlay.ui")
 class ShortcutsOverlay(Adw.Window):
     """Elegant keyboard shortcuts overlay window."""
@@ -33,6 +47,8 @@ class ShortcutsOverlay(Adw.Window):
     __gsignals__: ClassVar[dict[str, tuple]] = {
         "closed": (GObject.SignalFlags.RUN_LAST, None, ()),
     }
+
+    shortcuts_data: list[_ShortcutCategory]
 
     search_entry: Gtk.SearchEntry = Gtk.Template.Child()
     shortcuts_list: Gtk.ListBox = Gtk.Template.Child()

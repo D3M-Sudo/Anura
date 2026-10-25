@@ -18,6 +18,7 @@ def test_ocr_controller_window_destroyed_safety(headless_gi_mocks):
         def __init__(self):
             self.backend = MagicMock()
             self.portal_banner = MagicMock()
+
         def register_controller(self, ctrl):
             pass
 

@@ -5,10 +5,10 @@ permissions:
 
 on:
   push:
-    branches: [ "main", "development", "testing" ]
+    branches: [ "main", "development", "testing", "feature" ]
     tags: [ "v*" ]
   pull_request:
-    branches: [ "main", "development", "testing" ]
+    branches: [ "main", "development", "testing", "feature" ]
 
 jobs:
   # JOB 1: Python code analysis and linting
@@ -27,12 +27,34 @@ jobs:
           # Uses configuration from pyproject.toml.
           args: check --target-version py312
 
+      - name: Install uv and project dependencies
+        run: |
+          pip install uv
+          uv sync --dev
+
+      - name: Check code formatting
+        # Configuration in pyproject.toml; Markdown is excluded because the
+        # formatter would rewrite fenced code blocks in docs and agent rules.
+        run: uv run ruff format --check .
+
+      - name: Run type checker
+        # Non-strict by design (see [tool.mypy]); catches real regressions in
+        # the production tree without blocking on the untyped-GTK backlog.
+        run: uv run mypy
+
+      - name: Run security linter
+        # Bandit does not auto-discover pyproject.toml: the explicit -c is what
+        # applies the tests/ exclusion (see [tool.bandit]).
+        run: uv run bandit -c pyproject.toml -r .
+
+      - name: Detect dead code (non-blocking)
+        # Known findings are tracked as debt; report only, never fail the build.
+        run: uv run vulture anura/ || true
+
       - name: Run tests with coverage
         env:
           ANURA_CI_TEST_MODE: "1"
         run: |
-          pip install uv
-          uv sync --dev
           # The --ignore flags below mirror the addopts list in pyproject.toml.
           # They are kept explicit here so the gtk-tests job can override
           # addopts independently and collect those files without them.

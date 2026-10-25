@@ -116,8 +116,6 @@ class TestClipboardServiceEnterprise:
             mock_cancellable.cancel.assert_called_once()
             assert mock_idle.called
 
-
-
     def test_uri_list_no_file_uri(self, service):
         """Test _on_uri_list_bytes emits error when no file:// URI in list."""
         with patch("gi.repository.GLib.idle_add") as mock_idle_add:
@@ -182,7 +180,12 @@ class TestClipboardServiceEnterprise:
         with (
             patch("anura.services.clipboard_service.validate_image_resource", return_value=(True, 1024, None)),
             patch("PIL.Image.open") as mock_image_open,
-            patch("gi.repository.Gdk.Texture.new_from_bytes", side_effect=GLib.Error.new_literal(Gio.io_error_quark(), "Texture creation failed", Gio.IOErrorEnum.FAILED)),
+            patch(
+                "gi.repository.Gdk.Texture.new_from_bytes",
+                side_effect=GLib.Error.new_literal(
+                    Gio.io_error_quark(), "Texture creation failed", Gio.IOErrorEnum.FAILED
+                ),
+            ),
             patch("gi.repository.GLib.Bytes.new"),
             patch("gi.repository.GLib.idle_add") as mock_idle_add,
         ):
@@ -291,7 +294,9 @@ class TestClipboardLifetime:
         clipboard = MagicMock()
         clipboard.store_async.side_effect = lambda _prio, _cancellable, callback: callback(clipboard, "result")
         clipboard.store_finish.side_effect = GLib.Error.new_literal(
-            Gio.io_error_quark(), "Cannot store clipboard. No clipboard manager is active.", Gio.IOErrorEnum.NOT_SUPPORTED
+            Gio.io_error_quark(),
+            "Cannot store clipboard. No clipboard manager is active.",
+            Gio.IOErrorEnum.NOT_SUPPORTED,
         )
         service, patcher = self._service_with(clipboard)
         try:
@@ -374,7 +379,6 @@ class TestClipboardLifetime:
         finally:
             patcher.stop()
         context.iteration.assert_not_called()
-
 
     def test_real_clipboard_hand_off_answers_instead_of_hanging(self):
         """Against the real display: with no clipboard manager this must fail fast, not block."""
