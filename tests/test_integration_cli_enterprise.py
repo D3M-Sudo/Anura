@@ -26,7 +26,7 @@ class TestCLIIntegrationEnterprise:
         with (
             patch("anura.core.resources.load_gresource_bundle", return_value=True),
             patch("anura.main.ScreenshotService"),
-            patch("anura.main.NotificationService"),
+            patch("anura.main.get_notification_service"),
             patch("anura.main.get_clipboard_service"),
         ):
             app = AnuraApplication()
