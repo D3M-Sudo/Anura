@@ -95,14 +95,26 @@ class TestAppLifecycleEnterprise:
 
     def test_app_cleanup_handlers(self, app):
         """Test that shutdown cleans up various services."""
+        tts_service = MagicMock()
         with (
             patch("anura.main.get_clipboard_service") as mock_get_cb,
-            patch("anura.services.tts.get_tts_service") as mock_get_tts,
+            # #536: TTS is only cleaned up if it already exists, so the lookup
+            # is what returns the instance (it never constructs one).
+            patch("anura.main.get_existing_instance", return_value=tts_service),
         ):
             mock_cb = mock_get_cb.return_value
-            mock_tts = mock_get_tts.return_value
 
             app.do_shutdown()
 
             mock_cb.cancel_pending_operations.assert_called()
-            mock_tts.cleanup.assert_called()
+            tts_service.cleanup.assert_called()
+
+    def test_cleanup_does_not_instantiate_tts(self, app):
+        """#536: shutdown must not build a TTS service that was never used."""
+        with (
+            patch("anura.main.get_clipboard_service"),
+            patch("anura.main.get_existing_instance", return_value=None) as mock_lookup,
+        ):
+            app.do_shutdown()
+
+            mock_lookup.assert_called_once()
