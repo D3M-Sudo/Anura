@@ -11,7 +11,7 @@ from gi.repository import GLib, GObject
 from loguru import logger
 import requests
 
-from anura.core.atomic_task_manager import get_atomic_manager
+from anura.core.atomic_task_manager import TTS_LANE, get_atomic_manager
 from anura.services.settings import settings
 from anura.services.tts import get_tts_service
 from anura.utils.signal_manager import SignalManagerMixin
@@ -117,6 +117,10 @@ class TtsController(GObject.GObject, SignalManagerMixin):
                 (text, tts_lang),
                 callback=self._on_generated,
                 errorback=self._on_generate_error,
+                lane=TTS_LANE,
+                # A newer request replaces this one in the TTS lane: settle the
+                # pending state instead of waiting for the watchdog (#507).
+                on_superseded=lambda _task_id: self._on_generation_superseded(seq),
             )
         except (AttributeError, RuntimeError, TypeError) as e:
             logger.exception(f"TtsController: Failed to initiate speech generation: {e}")
@@ -182,6 +186,21 @@ class TtsController(GObject.GObject, SignalManagerMixin):
         logger.debug(f"TtsController: Generated {filepath} — queuing playback")
         self._tts_service.play(filepath)
         self.emit("state-changed", "playing")
+
+    def _on_generation_superseded(self, seq: int) -> None:
+        """Handle a generation replaced by a newer request in the TTS lane.
+
+        The manager drops the stale result; without this hook the controller
+        kept its pending state until the watchdog fired and showed a misleading
+        "taking too long" message (#507).
+        """
+        if seq != self._active_generation_seq:
+            return
+
+        logger.debug("TtsController: speech generation superseded by a newer request")
+        self._cancel_generation_timers()
+        self._active_generation_seq = None
+        self.emit("state-changed", "idle")
 
     def _on_generate_error(self, error: Exception, traceback_str: str | None = None):
         """Callback when generation fails."""

@@ -19,8 +19,6 @@ from unittest.mock import MagicMock
 
 def _install_stubs(monkeypatch):
     """Stub gi/loguru/atomic/settings/tts-service so the controller imports headless."""
-    import anura.controllers.tts_controller as ctl_module
-
     scheduled: list[tuple] = []
 
     fake_glib = types.SimpleNamespace(
@@ -45,7 +43,14 @@ def _install_stubs(monkeypatch):
     monkeypatch.setitem(
         sys.modules,
         "anura.core.atomic_task_manager",
-        types.SimpleNamespace(get_atomic_manager=fake_atomic.get_atomic_manager),
+        types.SimpleNamespace(
+            # #507: the controller now imports its lane constant from here.
+            DEFAULT_LANE="default",
+            OCR_LANE="ocr",
+            TTS_LANE="tts",
+            CLEANUP_LANE="cleanup",
+            get_atomic_manager=fake_atomic.get_atomic_manager,
+        ),
     )
     monkeypatch.setitem(sys.modules, "anura.services.settings", types.SimpleNamespace(settings=fake_settings))
     monkeypatch.setitem(sys.modules, "anura.services.tts", fake_tts_mod)
@@ -54,6 +59,11 @@ def _install_stubs(monkeypatch):
         "anura.utils.signal_manager",
         types.SimpleNamespace(SignalManagerMixin=object),
     )
+
+    # Import only after the stubs are in sys.modules: the controller (and the
+    # atomic manager it imports) would otherwise pull the real PyGObject.
+    import anura.controllers.tts_controller as ctl_module
+
     return ctl_module, scheduled, fake_glib
 
 

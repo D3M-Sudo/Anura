@@ -27,7 +27,7 @@ from anura.controllers.dnd_controller import DndController  # noqa: E402
 from anura.controllers.history_controller import HistoryController  # noqa: E402
 from anura.controllers.ocr_controller import OcrController  # noqa: E402
 from anura.controllers.tts_controller import TtsController  # noqa: E402
-from anura.core.atomic_task_manager import get_atomic_manager  # noqa: E402
+from anura.core.atomic_task_manager import OCR_LANE, get_atomic_manager  # noqa: E402
 from anura.models.context import get_app_context  # noqa: E402
 from anura.services.clipboard_service import get_clipboard_service  # noqa: E402
 from anura.services.history_service import HistoryService  # noqa: E402
@@ -253,7 +253,11 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
                         self.show_toast(_(error) if error else _("Invalid image file"))
                         return
 
-                    get_atomic_manager().execute(self.backend.decode_image, (self.get_language(), BytesIO(contents)))
+                    get_atomic_manager().execute(
+                        self.backend.decode_image,
+                        (self.get_language(), BytesIO(contents)),
+                        lane=OCR_LANE,
+                    )
                 else:
                     self.welcome_page.hide_spinner()
                     self.show_toast(_("Failed to load image file"))
@@ -280,7 +284,11 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     def _on_paste_from_clipboard_texture(self, _service: GObject.GObject, texture: Gdk.Texture) -> None:
         self.welcome_page.show_spinner()
         png_bytes: BytesIO = BytesIO(texture.save_to_png_bytes().get_data())
-        get_atomic_manager().execute(self.backend.decode_image, (self.get_language(), png_bytes))
+        get_atomic_manager().execute(
+            self.backend.decode_image,
+            (self.get_language(), png_bytes),
+            lane=OCR_LANE,
+        )
 
     def _on_clipboard_error(self, _service: GObject.GObject, message: str) -> None:
         """Handle clipboard service errors."""

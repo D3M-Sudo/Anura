@@ -24,6 +24,26 @@ from loguru import logger  # noqa: E402
 
 from anura.utils.singleton import get_instance  # noqa: E402
 
+# Lane used by callers that do not care about task kinds. Tasks in one lane
+# supersede each other; tasks in different lanes never do (#507).
+DEFAULT_LANE = "default"
+
+# Lanes used by the application: a new screenshot/OCR must not cancel a TTS
+# generation, and a file cleanup must not cancel an OCR task.
+OCR_LANE = "ocr"
+TTS_LANE = "tts"
+CLEANUP_LANE = "cleanup"
+
+
+class _Lane:
+    """The single in-flight task of one lane."""
+
+    __slots__ = ("cancellable", "task_id")
+
+    def __init__(self, task_id: str, cancellable: Gio.Cancellable) -> None:
+        self.task_id = task_id
+        self.cancellable = cancellable
+
 
 def _isolated_process_worker(command: "Callable", args: tuple, task_id: str, shared_map) -> object:
     """
@@ -57,11 +77,13 @@ class AtomicTaskResult:
     def __init__(
         self,
         task_id: str,
+        lane: str = DEFAULT_LANE,
         data: object = None,
         error: Exception | None = None,
         traceback_str: str | None = None,
     ) -> None:
         self.task_id = task_id
+        self.lane = lane
         self.data = data
         self.error = error
         self.traceback_str = traceback_str
@@ -75,14 +97,44 @@ class AtomicTaskManager:
     """
 
     def __init__(self) -> None:
-        self._current_task_id: str | None = None
-        self._cancellable: Gio.Cancellable | None = None
+        # One slot per lane: a task only supersedes the previous task of its own
+        # lane, so OCR, TTS and cleanup cannot invalidate each other (#507).
+        self._lanes: dict[str, _Lane] = {}
         self._executor: ThreadPoolExecutor | None = None
         self._process_executor: ProcessPoolExecutor | None = None
         self._process_manager: multiprocessing.managers.SyncManager | None = None
         self._isolated_cancellation_map: Any | None = None
         self._state_lock = threading.Lock()
-        logger.debug("AtomicTaskManager: Initialized (lazy executors)")
+        logger.debug("AtomicTaskManager: Initialized (lazy executors, per-lane slots)")
+
+    @property
+    def _current_task_id(self) -> str | None:
+        """Task id of the DEFAULT_LANE (backwards-compatible read-only view)."""
+        state = self._lanes.get(DEFAULT_LANE)
+        return state.task_id if state is not None else None
+
+    @property
+    def _cancellable(self) -> Gio.Cancellable | None:
+        """Cancellable of the DEFAULT_LANE (backwards-compatible read-only view)."""
+        state = self._lanes.get(DEFAULT_LANE)
+        return state.cancellable if state is not None else None
+
+    def _begin_lane_locked(self, lane: str, task_id: str) -> tuple[Gio.Cancellable, str | None]:
+        """Start *task_id* in *lane*, cancelling the previous task of that lane.
+
+        MUST be called with ``_state_lock`` held. Returns the new cancellable and
+        the superseded task id (if any).
+        """
+        previous = self._lanes.get(lane)
+        superseded: str | None = None
+        if previous is not None:
+            if not previous.cancellable.is_cancelled():
+                previous.cancellable.cancel()
+            superseded = previous.task_id
+
+        cancellable = Gio.Cancellable.new()
+        self._lanes[lane] = _Lane(task_id, cancellable)
+        return cancellable, superseded
 
     def _get_executor(self) -> ThreadPoolExecutor:
         """Lazy initialization of the thread executor."""
@@ -152,23 +204,24 @@ class AtomicTaskManager:
         callback: Callable | None = None,
         errorback: Callable | None = None,
         status_callback: Callable | None = None,
+        lane: str = DEFAULT_LANE,
+        on_superseded: Callable[[str], None] | None = None,
     ) -> str:
         """
-        Executes a command in a separate process, invalidating any previous task.
-        Use this for CPU-bound tasks like Tesseract to bypass the GIL.
+        Executes a command in a separate process, superseding the previous task
+        **of the same lane**. Use this for CPU-bound tasks like Tesseract to
+        bypass the GIL.
+
+        Args:
+            lane: Task kind. Tasks in other lanes are left untouched (#507).
+            on_superseded: Called with the task id when this task is replaced by
+                a newer one in the same lane, instead of dropping the result
+                silently.
         """
         new_task_id = str(uuid.uuid4())
-        old_task_id = None
 
         with self._state_lock:
-            if self._cancellable:
-                self._cancellable.cancel()
-                old_task_id = self._current_task_id
-
-            self._current_task_id = new_task_id
-            self._cancellable = Gio.Cancellable.new()
-            current_cancellable = self._cancellable
-
+            current_cancellable, old_task_id = self._begin_lane_locked(lane, new_task_id)
             self._ensure_process_executor_locked()
             shared_map = self._isolated_cancellation_map
 
@@ -179,21 +232,26 @@ class AtomicTaskManager:
             if old_task_id:
                 shared_map[old_task_id] = True
 
-        logger.debug(f"AtomicTaskManager: Enqueuing isolated process task {new_task_id}")
+        if old_task_id:
+            logger.debug(f"AtomicTaskManager: lane '{lane}' supersedes {old_task_id}")
+
+        logger.debug(f"AtomicTaskManager: Enqueuing isolated process task {new_task_id} (lane={lane})")
 
         def result_wrapper(future):
             # This runs in the ThreadPoolExecutor (main process) to handle the callback
             try:
                 if current_cancellable.is_cancelled():
+                    GLib.idle_add(self._handle_superseded, new_task_id, on_superseded)
                     return
 
                 result_data = future.result()
 
                 if current_cancellable.is_cancelled():
+                    GLib.idle_add(self._handle_superseded, new_task_id, on_superseded)
                     return
 
-                result = AtomicTaskResult(task_id=new_task_id, data=result_data)
-                GLib.idle_add(self._handle_success, result, callback)
+                result = AtomicTaskResult(task_id=new_task_id, lane=lane, data=result_data)
+                GLib.idle_add(self._handle_success, result, callback, on_superseded)
 
             except BrokenProcessPool as e:
                 # The worker process was killed (e.g. Tesseract segfault).
@@ -204,13 +262,13 @@ class AtomicTaskManager:
                 with self._state_lock:
                     self._teardown_process_executor_locked()
                 tb_str = traceback.format_exc()
-                result = AtomicTaskResult(task_id=new_task_id, error=e, traceback_str=tb_str)
-                GLib.idle_add(self._handle_error, result, errorback)
+                result = AtomicTaskResult(task_id=new_task_id, lane=lane, error=e, traceback_str=tb_str)
+                GLib.idle_add(self._handle_error, result, errorback, on_superseded)
 
             except Exception as e:
                 tb_str = traceback.format_exc()
-                result = AtomicTaskResult(task_id=new_task_id, error=e, traceback_str=tb_str)
-                GLib.idle_add(self._handle_error, result, errorback)
+                result = AtomicTaskResult(task_id=new_task_id, lane=lane, error=e, traceback_str=tb_str)
+                GLib.idle_add(self._handle_error, result, errorback, on_superseded)
             finally:
                 # Cleanup the shared map to prevent memory leaks
                 with self._state_lock:
@@ -233,9 +291,12 @@ class AtomicTaskManager:
         callback: Callable | None = None,
         errorback: Callable | None = None,
         pass_task_id: bool = False,
+        lane: str = DEFAULT_LANE,
+        on_superseded: Callable[[str], None] | None = None,
     ) -> str:
         """
-        Executes a command atomically, invalidating any previous task.
+        Executes a command on the thread pool, superseding the previous task
+        **of the same lane**.
 
         Args:
             command: The function to execute.
@@ -243,6 +304,9 @@ class AtomicTaskManager:
             callback: Function to call on the main thread upon success.
             errorback: Function to call on the main thread upon failure.
             pass_task_id: Whether to pass the task_id as the last argument to the command.
+            lane: Task kind. Tasks in other lanes are left untouched (#507).
+            on_superseded: Called with the task id when a newer task in the same
+                lane replaces this one, instead of dropping the result silently.
 
         Returns:
             str: The new Task ID.
@@ -250,22 +314,18 @@ class AtomicTaskManager:
         new_task_id = str(uuid.uuid4())
 
         with self._state_lock:
-            # 1. Invalidate previous task
-            if self._cancellable:
-                logger.debug(f"AtomicTaskManager: Cancelling previous task {self._current_task_id}")
-                self._cancellable.cancel()
+            # 1. Invalidate only the previous task of this lane.
+            current_cancellable, old_task_id = self._begin_lane_locked(lane, new_task_id)
 
-            # 2. Update state for the new task
-            self._current_task_id = new_task_id
-            self._cancellable = Gio.Cancellable.new()
-            current_cancellable = self._cancellable
-
-        logger.debug(f"AtomicTaskManager: Enqueuing task {new_task_id}")
+        if old_task_id:
+            logger.debug(f"AtomicTaskManager: lane '{lane}' supersedes {old_task_id}")
+        logger.debug(f"AtomicTaskManager: Enqueuing task {new_task_id} (lane={lane})")
 
         def wrapper():
             try:
                 # Early check for cancellation
                 if current_cancellable.is_cancelled():
+                    GLib.idle_add(self._handle_superseded, new_task_id, on_superseded)
                     return
 
                 # Execute the actual work
@@ -273,15 +333,16 @@ class AtomicTaskManager:
 
                 # Post-execution check for cancellation
                 if current_cancellable.is_cancelled():
+                    GLib.idle_add(self._handle_superseded, new_task_id, on_superseded)
                     return
 
-                result = AtomicTaskResult(task_id=new_task_id, data=result_data)
-                GLib.idle_add(self._handle_success, result, callback)
+                result = AtomicTaskResult(task_id=new_task_id, lane=lane, data=result_data)
+                GLib.idle_add(self._handle_success, result, callback, on_superseded)
 
             except Exception as e:
                 tb_str = traceback.format_exc()
-                result = AtomicTaskResult(task_id=new_task_id, error=e, traceback_str=tb_str)
-                GLib.idle_add(self._handle_error, result, errorback)
+                result = AtomicTaskResult(task_id=new_task_id, lane=lane, error=e, traceback_str=tb_str)
+                GLib.idle_add(self._handle_error, result, errorback, on_superseded)
 
         self._get_executor().submit(wrapper)
         return new_task_id
@@ -303,23 +364,45 @@ class AtomicTaskManager:
             # This is critical for worker processes where _current_task_id is always None.
             return self._isolated_cancellation_map.get(task_id, False)
 
-        # 2. Check local state for threads (main process only)
+        # 2. Check every lane for the task id.
         with self._state_lock:
-            # If the task_id is not the current one, it's considered cancelled/obsolete.
-            if task_id != self._current_task_id:
-                return True
-            # If it is the current one, check the GIO cancellable
-            return self._cancellable.is_cancelled() if self._cancellable else True
+            for state in self._lanes.values():
+                if state.task_id == task_id:
+                    return state.cancellable.is_cancelled()
+            # Not the current task of any lane: superseded, or never existed.
+            return True
 
-    def _handle_success(self, result: AtomicTaskResult, callback: Callable | None) -> bool:
-        """Main thread success handler with ID validation."""
-        if not callback:
+    def _current_lane_task_id(self, lane: str) -> str | None:
+        """Return the task id currently owning *lane* (thread-safe)."""
+        with self._state_lock:
+            state = self._lanes.get(lane)
+            return state.task_id if state is not None else None
+
+    def _handle_superseded(self, task_id: str, on_superseded: Callable[[str], None] | None) -> bool:
+        """Main thread: report that a task no longer owns its lane (#507)."""
+        if on_superseded is None:
+            logger.debug(f"AtomicTaskManager: Task {task_id} was superseded; result dropped")
             return GLib.SOURCE_REMOVE
 
-        with self._state_lock:
-            if result.task_id != self._current_task_id:
-                logger.debug(f"AtomicTaskManager: Ignoring obsolete success result from {result.task_id}")
-                return GLib.SOURCE_REMOVE
+        try:
+            on_superseded(task_id)
+        except (AttributeError, TypeError, RuntimeError) as e:
+            logger.error(f"AtomicTaskManager: Unhandled error in on_superseded callback: {e}")
+
+        return GLib.SOURCE_REMOVE
+
+    def _handle_success(
+        self,
+        result: AtomicTaskResult,
+        callback: Callable | None,
+        on_superseded: Callable[[str], None] | None = None,
+    ) -> bool:
+        """Main thread success handler with lane validation."""
+        if result.task_id != self._current_lane_task_id(result.lane):
+            return self._handle_superseded(result.task_id, on_superseded)
+
+        if not callback:
+            return GLib.SOURCE_REMOVE
 
         try:
             callback(result.data)
@@ -328,12 +411,15 @@ class AtomicTaskManager:
 
         return GLib.SOURCE_REMOVE
 
-    def _handle_error(self, result: AtomicTaskResult, errorback: Callable | None) -> bool:
-        """Main thread error handler with ID validation."""
-        with self._state_lock:
-            if result.task_id != self._current_task_id:
-                logger.debug(f"AtomicTaskManager: Ignoring obsolete error result from {result.task_id}")
-                return GLib.SOURCE_REMOVE
+    def _handle_error(
+        self,
+        result: AtomicTaskResult,
+        errorback: Callable | None,
+        on_superseded: Callable[[str], None] | None = None,
+    ) -> bool:
+        """Main thread error handler with lane validation."""
+        if result.task_id != self._current_lane_task_id(result.lane):
+            return self._handle_superseded(result.task_id, on_superseded)
 
         # Use default errorback if none provided
         eb = errorback or self._default_errorback
