@@ -192,6 +192,22 @@ class AtomicTaskManager:
         self._process_manager = None
         self._isolated_cancellation_map = None
 
+    def _handle_broken_pool(self, failed_executor: ProcessPoolExecutor) -> None:
+        """Reset the process pool only if it is still the one that failed (#526).
+
+        A stale ``BrokenProcessPool`` callback can run after another submission
+        already detected the failure and installed a replacement; tearing down
+        unconditionally would kill that healthy pool.
+        """
+        with self._state_lock:
+            if self._process_executor is not failed_executor:
+                logger.debug("AtomicTaskManager: broken-pool report from a replaced executor ignored")
+                return
+            logger.error(
+                "AtomicTaskManager: Process pool broken (worker crashed) — resetting executor for next task"
+            )
+            self._teardown_process_executor_locked()
+
     def _get_process_executor(self) -> ProcessPoolExecutor:
         """Lazy initialization of the process executor for OCR isolation."""
         with self._state_lock:
@@ -255,12 +271,8 @@ class AtomicTaskManager:
 
             except BrokenProcessPool as e:
                 # The worker process was killed (e.g. Tesseract segfault).
-                # Reset the executor so the next call gets a fresh pool.
-                logger.error(
-                    "AtomicTaskManager: Process pool broken (worker crashed) — resetting executor for next task"
-                )
-                with self._state_lock:
-                    self._teardown_process_executor_locked()
+                # Only the pool that actually failed may be reset (#526).
+                self._handle_broken_pool(executor)
                 tb_str = traceback.format_exc()
                 result = AtomicTaskResult(task_id=new_task_id, lane=lane, error=e, traceback_str=tb_str)
                 GLib.idle_add(self._handle_error, result, errorback, on_superseded)

@@ -124,6 +124,27 @@ def test_superseded_error_does_not_reach_the_errorback(manager):
     on_superseded.assert_called_once_with("stale-id")
 
 
+def test_broken_pool_from_a_replaced_executor_is_ignored(manager):
+    """#526: a stale failure must not tear down the replacement pool."""
+    replacement = MagicMock()
+    manager._process_executor = replacement
+
+    manager._handle_broken_pool(MagicMock())
+
+    assert manager._process_executor is replacement
+
+
+def test_broken_pool_tears_down_the_failed_executor(manager):
+    """#526: the pool that actually failed is still reset."""
+    failed = MagicMock()
+    manager._process_executor = failed
+
+    manager._handle_broken_pool(failed)
+
+    assert manager._process_executor is None
+    failed.shutdown.assert_called_once()
+
+
 def test_cancel_all_lanes_cancels_every_lane(manager):
     """#506: shutdown cancels OCR, TTS and cleanup together."""
     release = threading.Event()

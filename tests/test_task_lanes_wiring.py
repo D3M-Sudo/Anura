@@ -39,6 +39,14 @@ def test_tts_uses_its_own_lane_and_reports_supersession():
     assert "def _on_generation_superseded" in tts
 
 
+def test_broken_pool_teardown_is_guarded_by_identity():
+    manager = _source("anura/core/atomic_task_manager.py")
+
+    assert "def _handle_broken_pool" in manager
+    assert "if self._process_executor is not failed_executor:" in manager
+    assert "self._handle_broken_pool(executor)" in manager
+
+
 def test_manager_exposes_the_lane_api():
     manager = _source("anura/core/atomic_task_manager.py")
 
