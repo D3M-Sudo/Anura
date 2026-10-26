@@ -124,6 +124,24 @@ def test_superseded_error_does_not_reach_the_errorback(manager):
     on_superseded.assert_called_once_with("stale-id")
 
 
+def test_cancel_all_lanes_cancels_every_lane(manager):
+    """#506: shutdown cancels OCR, TTS and cleanup together."""
+    release = threading.Event()
+
+    def blocking():
+        release.wait(timeout=5)
+
+    tts_id = manager.execute(blocking, lane=TTS_LANE)
+    ocr_id = manager.execute(blocking, lane=OCR_LANE)
+
+    manager.cancel_all_lanes()
+
+    assert manager.is_cancelled(tts_id) is True
+    assert manager.is_cancelled(ocr_id) is True
+
+    release.set()
+
+
 def test_cancel_lane_discards_a_late_result(manager):
     """#508: cancelling a lane (watchdog) must drop the in-flight result."""
     release = threading.Event()

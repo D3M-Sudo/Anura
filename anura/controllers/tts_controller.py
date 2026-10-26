@@ -112,7 +112,9 @@ class TtsController(GObject.GObject, SignalManagerMixin):
             except (GLib.Error, RuntimeError, TypeError) as e:
                 logger.debug(f"TtsController: cannot schedule generation-timeout timer: {e}")
                 self._timeout_source = None
-            get_atomic_manager().execute(
+            # #506: a daemon thread, so a blocked gTTS request cannot keep the
+            # process alive after the window closes.
+            get_atomic_manager().execute_daemon(
                 self._tts_service.generate,
                 (text, tts_lang),
                 callback=self._on_generated,

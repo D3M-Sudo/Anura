@@ -321,31 +321,98 @@ class AtomicTaskManager:
             logger.debug(f"AtomicTaskManager: lane '{lane}' supersedes {old_task_id}")
         logger.debug(f"AtomicTaskManager: Enqueuing task {new_task_id} (lane={lane})")
 
-        def wrapper():
-            try:
-                # Early check for cancellation
-                if current_cancellable.is_cancelled():
-                    GLib.idle_add(self._handle_superseded, new_task_id, on_superseded)
-                    return
-
-                # Execute the actual work
-                result_data = command(*args, task_id=new_task_id) if pass_task_id else command(*args)
-
-                # Post-execution check for cancellation
-                if current_cancellable.is_cancelled():
-                    GLib.idle_add(self._handle_superseded, new_task_id, on_superseded)
-                    return
-
-                result = AtomicTaskResult(task_id=new_task_id, lane=lane, data=result_data)
-                GLib.idle_add(self._handle_success, result, callback, on_superseded)
-
-            except Exception as e:
-                tb_str = traceback.format_exc()
-                result = AtomicTaskResult(task_id=new_task_id, lane=lane, error=e, traceback_str=tb_str)
-                GLib.idle_add(self._handle_error, result, errorback, on_superseded)
-
-        self._get_executor().submit(wrapper)
+        self._get_executor().submit(
+            self._run_task,
+            command,
+            args,
+            new_task_id,
+            lane,
+            current_cancellable,
+            callback,
+            errorback,
+            on_superseded,
+            pass_task_id,
+        )
         return new_task_id
+
+    def execute_daemon(
+        self,
+        command: Callable,
+        args: tuple = (),
+        callback: Callable | None = None,
+        errorback: Callable | None = None,
+        lane: str = DEFAULT_LANE,
+        on_superseded: Callable[[str], None] | None = None,
+    ) -> str:
+        """Run *command* on a dedicated daemon thread instead of the pool.
+
+        Same lane/versioning semantics as :meth:`execute`, but the thread is a
+        daemon: CPython joins ``ThreadPoolExecutor`` workers at interpreter
+        exit, so a blocking request that cannot be cancelled (gTTS `save()`)
+        would otherwise keep the process alive after the window closed (#506).
+        """
+        new_task_id = str(uuid.uuid4())
+
+        with self._state_lock:
+            current_cancellable, old_task_id = self._begin_lane_locked(lane, new_task_id)
+
+        if old_task_id:
+            logger.debug(f"AtomicTaskManager: lane '{lane}' supersedes {old_task_id}")
+        logger.debug(f"AtomicTaskManager: Starting daemon task {new_task_id} (lane={lane})")
+
+        thread = threading.Thread(
+            target=self._run_task,
+            args=(
+                command,
+                args,
+                new_task_id,
+                lane,
+                current_cancellable,
+                callback,
+                errorback,
+                on_superseded,
+                False,
+            ),
+            name=f"AnuraDaemonTask-{lane}",
+            daemon=True,
+        )
+        thread.start()
+        return new_task_id
+
+    def _run_task(
+        self,
+        command: Callable,
+        args: tuple,
+        task_id: str,
+        lane: str,
+        cancellable: Gio.Cancellable,
+        callback: Callable | None,
+        errorback: Callable | None,
+        on_superseded: Callable[[str], None] | None,
+        pass_task_id: bool = False,
+    ) -> None:
+        """Execute a task and marshal its outcome to the main thread."""
+        try:
+            # Early check for cancellation
+            if cancellable.is_cancelled():
+                GLib.idle_add(self._handle_superseded, task_id, on_superseded)
+                return
+
+            # Execute the actual work
+            result_data = command(*args, task_id=task_id) if pass_task_id else command(*args)
+
+            # Post-execution check for cancellation
+            if cancellable.is_cancelled():
+                GLib.idle_add(self._handle_superseded, task_id, on_superseded)
+                return
+
+            result = AtomicTaskResult(task_id=task_id, lane=lane, data=result_data)
+            GLib.idle_add(self._handle_success, result, callback, on_superseded)
+
+        except Exception as e:
+            tb_str = traceback.format_exc()
+            result = AtomicTaskResult(task_id=task_id, lane=lane, error=e, traceback_str=tb_str)
+            GLib.idle_add(self._handle_error, result, errorback, on_superseded)
 
     def set_isolated_cancellation_map(self, cancellation_map) -> None:
         """Set the shared cancellation map (used by isolated processes)."""
@@ -401,6 +468,14 @@ class AtomicTaskManager:
         if cancellable is not None and not cancellable.is_cancelled():
             logger.debug(f"AtomicTaskManager: cancelling lane '{lane}'")
             cancellable.cancel()
+
+    def cancel_all_lanes(self) -> None:
+        """Cancel the current task of every lane (used at shutdown, #506)."""
+        with self._state_lock:
+            lanes = list(self._lanes)
+
+        for lane in lanes:
+            self.cancel_lane(lane)
 
     def _handle_superseded(self, task_id: str, on_superseded: Callable[[str], None] | None) -> bool:
         """Main thread: report that a task no longer owns its lane (#507)."""
@@ -494,12 +569,19 @@ class AtomicTaskManager:
 
         # Shut down OUTSIDE the lock — prevents the deadlock described above.
 
+        # 0. Cancel every lane so cooperative tasks stop at their next check
+        #    (#506); a task blocked in I/O still finishes, but its result is
+        #    discarded as superseded.
+        self.cancel_all_lanes()
+
         # 1. Thread executor (main process tasks)
         if thread_executor is not None:
-            # NEW-001: Ensure the thread executor is fully disposed.
-            # Since max_workers=1, waiting is generally safe during app shutdown.
+            # NEW-001 + #506: do not wait for the running task. Waiting here
+            # blocked do_shutdown() until the task finished (e.g. OCR up to its
+            # 120 s budget); TTS no longer lives in this pool (execute_daemon),
+            # so nothing unbounded is joined by the interpreter exit.
             try:
-                thread_executor.shutdown(wait=True, cancel_futures=True)
+                thread_executor.shutdown(wait=False, cancel_futures=True)
             except Exception as e:
                 logger.debug(f"AtomicTaskManager: Thread executor shutdown warning: {e}")
 
