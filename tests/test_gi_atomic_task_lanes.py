@@ -124,6 +124,28 @@ def test_superseded_error_does_not_reach_the_errorback(manager):
     on_superseded.assert_called_once_with("stale-id")
 
 
+def test_cancel_lane_discards_a_late_result(manager):
+    """#508: cancelling a lane (watchdog) must drop the in-flight result."""
+    release = threading.Event()
+
+    def blocking():
+        release.wait(timeout=5)
+
+    task_id = manager.execute(blocking, lane=TTS_LANE)
+    manager.cancel_lane(TTS_LANE)
+
+    assert manager.is_cancelled(task_id) is True
+
+    late = AtomicTaskResult(task_id=task_id, lane=TTS_LANE, data="late")
+    callback, on_superseded = MagicMock(), MagicMock()
+    manager._handle_success(late, callback, on_superseded)
+
+    callback.assert_not_called()
+    on_superseded.assert_called_once_with(task_id)
+
+    release.set()
+
+
 def test_current_error_reaches_the_errorback(manager):
     task_id = manager.execute(lambda: None, lane=DEFAULT_LANE)
     result = AtomicTaskResult(task_id=task_id, lane=DEFAULT_LANE, error=RuntimeError("boom"))

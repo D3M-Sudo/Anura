@@ -378,6 +378,30 @@ class AtomicTaskManager:
             state = self._lanes.get(lane)
             return state.task_id if state is not None else None
 
+    def _lane_owns(self, lane: str, task_id: str) -> bool:
+        """True when *task_id* is still the live, non-cancelled task of *lane*."""
+        with self._state_lock:
+            state = self._lanes.get(lane)
+            if state is None or state.task_id != task_id:
+                return False
+            return not state.cancellable.is_cancelled()
+
+    def cancel_lane(self, lane: str) -> None:
+        """Cancel the current task of *lane* without starting a replacement.
+
+        Used by watchdogs (TTS generation timeout) and shutdown: the worker may
+        not observe the cancellation while blocked in I/O, but its result is
+        then discarded as superseded instead of being delivered to a caller that
+        already gave up (#508).
+        """
+        with self._state_lock:
+            state = self._lanes.get(lane)
+            cancellable = state.cancellable if state is not None else None
+
+        if cancellable is not None and not cancellable.is_cancelled():
+            logger.debug(f"AtomicTaskManager: cancelling lane '{lane}'")
+            cancellable.cancel()
+
     def _handle_superseded(self, task_id: str, on_superseded: Callable[[str], None] | None) -> bool:
         """Main thread: report that a task no longer owns its lane (#507)."""
         if on_superseded is None:
@@ -398,7 +422,7 @@ class AtomicTaskManager:
         on_superseded: Callable[[str], None] | None = None,
     ) -> bool:
         """Main thread success handler with lane validation."""
-        if result.task_id != self._current_lane_task_id(result.lane):
+        if not self._lane_owns(result.lane, result.task_id):
             return self._handle_superseded(result.task_id, on_superseded)
 
         if not callback:
@@ -418,7 +442,7 @@ class AtomicTaskManager:
         on_superseded: Callable[[str], None] | None = None,
     ) -> bool:
         """Main thread error handler with lane validation."""
-        if result.task_id != self._current_lane_task_id(result.lane):
+        if not self._lane_owns(result.lane, result.task_id):
             return self._handle_superseded(result.task_id, on_superseded)
 
         # Use default errorback if none provided

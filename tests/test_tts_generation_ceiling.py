@@ -36,6 +36,9 @@ def _install_stubs(monkeypatch):
     fake_tts_mod = types.SimpleNamespace(
         get_tts_service=lambda: MagicMock(is_paused=lambda: False),
     )
+    # Deterministic watchdog budget; the formula is covered by
+    # tests/test_tts_timeout_budget.py.
+    fake_tts_timeout = types.SimpleNamespace(tts_timeout_seconds=lambda _text: 30)
 
     monkeypatch.setitem(sys.modules, "gi", types.SimpleNamespace())
     monkeypatch.setitem(sys.modules, "gi.repository", types.SimpleNamespace(GLib=fake_glib, GObject=fake_gobject))
@@ -54,6 +57,7 @@ def _install_stubs(monkeypatch):
     )
     monkeypatch.setitem(sys.modules, "anura.services.settings", types.SimpleNamespace(settings=fake_settings))
     monkeypatch.setitem(sys.modules, "anura.services.tts", fake_tts_mod)
+    monkeypatch.setitem(sys.modules, "anura.services.tts.timeout", fake_tts_timeout)
     monkeypatch.setitem(
         sys.modules,
         "anura.utils.signal_manager",
@@ -99,7 +103,8 @@ def test_still_waiting_emits_one_shot_before_timeout(monkeypatch):
     waiting_delay, waiting_cb, (waiting_seq,) = scheduled[0]
     timeout_delay, timeout_cb, (timeout_seq,) = scheduled[1]
     assert waiting_delay == ctl_module._TTS_STILL_WAITING_DELAY_S
-    assert timeout_delay == ctl_module._TTS_GENERATION_TIMEOUT_S
+    # #508: the hard timeout is now computed per request (stubbed to 30 here).
+    assert timeout_delay == 30
     assert controller._active_generation_seq == waiting_seq == timeout_seq
 
     assert waiting_cb(waiting_seq) is False  # one-shot GLib source

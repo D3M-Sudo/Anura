@@ -14,16 +14,16 @@ import requests
 from anura.core.atomic_task_manager import TTS_LANE, get_atomic_manager
 from anura.services.settings import settings
 from anura.services.tts import get_tts_service
+from anura.services.tts.timeout import tts_timeout_seconds
 from anura.utils.signal_manager import SignalManagerMixin
 
 # UX ceiling for TTS generation (independent of the underlying network cause).
 # After _TTS_STILL_WAITING_DELAY_S the user gets a one-shot 'still waiting'
-# toast so the spinner is never mute; after _TTS_GENERATION_TIMEOUT_S
-# generation is treated as failed and the UI returns to idle even if the
-# worker thread is still blocked. Superseded by real completion via a
-# monotonic request id.
+# toast so the spinner is never mute; the hard timeout is proportional to the
+# text length (anura.services.tts.timeout, #508) and treats the generation as
+# failed, returning the UI to idle even if the worker is still blocked.
+# Superseded by real completion via a monotonic request id.
 _TTS_STILL_WAITING_DELAY_S = 8
-_TTS_GENERATION_TIMEOUT_S = 35
 
 
 class TtsController(GObject.GObject, SignalManagerMixin):
@@ -105,10 +105,10 @@ class TtsController(GObject.GObject, SignalManagerMixin):
             except (GLib.Error, RuntimeError, TypeError) as e:
                 logger.debug(f"TtsController: cannot schedule still-waiting timer: {e}")
                 self._waiting_source = None
+            timeout_s = tts_timeout_seconds(text)
+            logger.debug(f"TtsController: generation watchdog armed for {timeout_s}s")
             try:
-                self._timeout_source = GLib.timeout_add_seconds(
-                    _TTS_GENERATION_TIMEOUT_S, self._on_generation_timeout, seq
-                )
+                self._timeout_source = GLib.timeout_add_seconds(timeout_s, self._on_generation_timeout, seq)
             except (GLib.Error, RuntimeError, TypeError) as e:
                 logger.debug(f"TtsController: cannot schedule generation-timeout timer: {e}")
                 self._timeout_source = None
@@ -153,7 +153,11 @@ class TtsController(GObject.GObject, SignalManagerMixin):
         self._timeout_source = None
         if seq != self._active_generation_seq:
             return False
-        logger.warning(f"TtsController: generation timed out after {_TTS_GENERATION_TIMEOUT_S}s")
+        logger.warning("TtsController: speech generation timed out")
+        # The worker cannot be interrupted inside gTTS; cancelling the lane
+        # guarantees that a late result is discarded instead of touching a
+        # newer request (#508).
+        get_atomic_manager().cancel_lane(TTS_LANE)
         self._cancel_generation_timers()
         self._active_generation_seq = None
         self.emit("error-occurred", _("Text-to-speech is taking too long. Please try again."))

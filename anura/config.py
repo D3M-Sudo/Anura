@@ -46,6 +46,13 @@ MAX_IMAGE_PIXELS = 40_000_000
 # request; pytesseract kills the child process when the timeout expires.
 OCR_TIMEOUT_SECONDS = 120
 
+# TTS generation watchdog. gTTS issues one HTTP request per 100-character
+# fragment, so a fixed budget fires too early on long texts and waits far too
+# long on short ones (#508).
+TTS_TIMEOUT_BASE_S = 30.0
+TTS_TIMEOUT_PER_FRAGMENT_S = 1.5
+TTS_TIMEOUT_MAX_S = 300.0
+
 # Maximum Tesseract language model size (250MB) to prevent disk exhaustion (DoS).
 MAX_MODEL_SIZE_MB = 250
 MAX_MODEL_SIZE_BYTES = MAX_MODEL_SIZE_MB * 1024 * 1024
