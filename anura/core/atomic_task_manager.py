@@ -203,9 +203,7 @@ class AtomicTaskManager:
             if self._process_executor is not failed_executor:
                 logger.debug("AtomicTaskManager: broken-pool report from a replaced executor ignored")
                 return
-            logger.error(
-                "AtomicTaskManager: Process pool broken (worker crashed) — resetting executor for next task"
-            )
+            logger.error("AtomicTaskManager: Process pool broken (worker crashed) — resetting executor for next task")
             self._teardown_process_executor_locked()
 
     def _get_process_executor(self) -> ProcessPoolExecutor:
