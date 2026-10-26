@@ -13,30 +13,22 @@ reliability, performance, hygiene). Packaging/Flathub work is tracked separately
 | --- | --- | --- |
 | 0 — Quality gates | Done (CI green on PR #548) | #518, #517, #514, #515, #516 |
 | 1 — Security & privacy | Done | #527, #524, #522, #509, #505, #529 |
-| 2 — Reliability & lifecycle | Partial — 7 of 11 | #547, #528, #530, #533, #523, #520, #531 |
+| 2 — Reliability & lifecycle | Done | #547, #528, #530, #533, #523, #520, #531, #507, #508, #506, #526 |
 | 3 — State, UI & privacy UX | Partial — 10 of 11 | #534, #537, #540, #510, #536, #539, #538, #525, #532, #511 |
 | 4 — Hygiene | Done | #512, #513, #544 |
 
-Baseline at Batch 0: 323 headless tests passing; after the current work: 443 passing
-(+120 regression tests). Gates at every commit: `ruff check`, `ruff format --check`,
+Baseline at Batch 0: 323 headless tests passing; after the current work: 455 passing
+(+132 regression tests). Gates at every commit: `ruff check`, `ruff format --check`,
 `bandit -c pyproject.toml -r .`, non-strict `mypy`, `pytest -m "not gtk"`.
 
 ### Resume notes
 
-Remaining Batch 2 work, in dependency order:
+Remaining Batch 3 work: **#521** (tessdata lease) — the only open issue of Milestone 1.
 
-1. **#531** — manager-owned shutdown cancellable + close of the active response.
-   #520 (response ownership) has landed, so this is the only prerequisite left.
-2. **#507** — replace the single task slot with per-kind lanes in
-   `AtomicTaskManager`; always deliver callback *or* errorback. Largest change of
-   the milestone and the prerequisite for the three below.
-3. **#508** — proportional TTS watchdog (needs the lane generation ids from #507).
-4. **#506** — bounded shutdown wait (same file as #507).
-5. **#526** — executor identity guard on `BrokenProcessPool` (same file as #507).
-
-Remaining Batch 3 work: #521 (tessdata lease).
-
-Batch 4: #512, #513 (AGENTS.md alignment), #544.
+Batch 2 and Batch 4 are complete. The task-lane cluster landed as one branch
+(`m1/batch2b-task-lanes`): #507 (per-lane slots + `on_superseded`), #508
+(proportional TTS watchdog + lane cancellation), #506 (`execute_daemon` for TTS
++ non-blocking shutdown), #526 (pool identity guard).
 
 ### Deviations from the original plan
 
