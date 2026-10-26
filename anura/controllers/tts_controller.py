@@ -11,19 +11,19 @@ from gi.repository import GLib, GObject
 from loguru import logger
 import requests
 
-from anura.core.atomic_task_manager import get_atomic_manager
+from anura.core.atomic_task_manager import TTS_LANE, get_atomic_manager
 from anura.services.settings import settings
 from anura.services.tts import get_tts_service
+from anura.services.tts.timeout import tts_timeout_seconds
 from anura.utils.signal_manager import SignalManagerMixin
 
 # UX ceiling for TTS generation (independent of the underlying network cause).
 # After _TTS_STILL_WAITING_DELAY_S the user gets a one-shot 'still waiting'
-# toast so the spinner is never mute; after _TTS_GENERATION_TIMEOUT_S
-# generation is treated as failed and the UI returns to idle even if the
-# worker thread is still blocked. Superseded by real completion via a
-# monotonic request id.
+# toast so the spinner is never mute; the hard timeout is proportional to the
+# text length (anura.services.tts.timeout, #508) and treats the generation as
+# failed, returning the UI to idle even if the worker is still blocked.
+# Superseded by real completion via a monotonic request id.
 _TTS_STILL_WAITING_DELAY_S = 8
-_TTS_GENERATION_TIMEOUT_S = 35
 
 
 class TtsController(GObject.GObject, SignalManagerMixin):
@@ -105,18 +105,24 @@ class TtsController(GObject.GObject, SignalManagerMixin):
             except (GLib.Error, RuntimeError, TypeError) as e:
                 logger.debug(f"TtsController: cannot schedule still-waiting timer: {e}")
                 self._waiting_source = None
+            timeout_s = tts_timeout_seconds(text)
+            logger.debug(f"TtsController: generation watchdog armed for {timeout_s}s")
             try:
-                self._timeout_source = GLib.timeout_add_seconds(
-                    _TTS_GENERATION_TIMEOUT_S, self._on_generation_timeout, seq
-                )
+                self._timeout_source = GLib.timeout_add_seconds(timeout_s, self._on_generation_timeout, seq)
             except (GLib.Error, RuntimeError, TypeError) as e:
                 logger.debug(f"TtsController: cannot schedule generation-timeout timer: {e}")
                 self._timeout_source = None
-            get_atomic_manager().execute(
+            # #506: a daemon thread, so a blocked gTTS request cannot keep the
+            # process alive after the window closes.
+            get_atomic_manager().execute_daemon(
                 self._tts_service.generate,
                 (text, tts_lang),
                 callback=self._on_generated,
                 errorback=self._on_generate_error,
+                lane=TTS_LANE,
+                # A newer request replaces this one in the TTS lane: settle the
+                # pending state instead of waiting for the watchdog (#507).
+                on_superseded=lambda _task_id: self._on_generation_superseded(seq),
             )
         except (AttributeError, RuntimeError, TypeError) as e:
             logger.exception(f"TtsController: Failed to initiate speech generation: {e}")
@@ -149,7 +155,11 @@ class TtsController(GObject.GObject, SignalManagerMixin):
         self._timeout_source = None
         if seq != self._active_generation_seq:
             return False
-        logger.warning(f"TtsController: generation timed out after {_TTS_GENERATION_TIMEOUT_S}s")
+        logger.warning("TtsController: speech generation timed out")
+        # The worker cannot be interrupted inside gTTS; cancelling the lane
+        # guarantees that a late result is discarded instead of touching a
+        # newer request (#508).
+        get_atomic_manager().cancel_lane(TTS_LANE)
         self._cancel_generation_timers()
         self._active_generation_seq = None
         self.emit("error-occurred", _("Text-to-speech is taking too long. Please try again."))
@@ -182,6 +192,21 @@ class TtsController(GObject.GObject, SignalManagerMixin):
         logger.debug(f"TtsController: Generated {filepath} — queuing playback")
         self._tts_service.play(filepath)
         self.emit("state-changed", "playing")
+
+    def _on_generation_superseded(self, seq: int) -> None:
+        """Handle a generation replaced by a newer request in the TTS lane.
+
+        The manager drops the stale result; without this hook the controller
+        kept its pending state until the watchdog fired and showed a misleading
+        "taking too long" message (#507).
+        """
+        if seq != self._active_generation_seq:
+            return
+
+        logger.debug("TtsController: speech generation superseded by a newer request")
+        self._cancel_generation_timers()
+        self._active_generation_seq = None
+        self.emit("state-changed", "idle")
 
     def _on_generate_error(self, error: Exception, traceback_str: str | None = None):
         """Callback when generation fails."""

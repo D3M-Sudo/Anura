@@ -19,8 +19,6 @@ from unittest.mock import MagicMock
 
 def _install_stubs(monkeypatch):
     """Stub gi/loguru/atomic/settings/tts-service so the controller imports headless."""
-    import anura.controllers.tts_controller as ctl_module
-
     scheduled: list[tuple] = []
 
     fake_glib = types.SimpleNamespace(
@@ -38,6 +36,9 @@ def _install_stubs(monkeypatch):
     fake_tts_mod = types.SimpleNamespace(
         get_tts_service=lambda: MagicMock(is_paused=lambda: False),
     )
+    # Deterministic watchdog budget; the formula is covered by
+    # tests/test_tts_timeout_budget.py.
+    fake_tts_timeout = types.SimpleNamespace(tts_timeout_seconds=lambda _text: 30)
 
     monkeypatch.setitem(sys.modules, "gi", types.SimpleNamespace())
     monkeypatch.setitem(sys.modules, "gi.repository", types.SimpleNamespace(GLib=fake_glib, GObject=fake_gobject))
@@ -45,15 +46,28 @@ def _install_stubs(monkeypatch):
     monkeypatch.setitem(
         sys.modules,
         "anura.core.atomic_task_manager",
-        types.SimpleNamespace(get_atomic_manager=fake_atomic.get_atomic_manager),
+        types.SimpleNamespace(
+            # #507: the controller now imports its lane constant from here.
+            DEFAULT_LANE="default",
+            OCR_LANE="ocr",
+            TTS_LANE="tts",
+            CLEANUP_LANE="cleanup",
+            get_atomic_manager=fake_atomic.get_atomic_manager,
+        ),
     )
     monkeypatch.setitem(sys.modules, "anura.services.settings", types.SimpleNamespace(settings=fake_settings))
     monkeypatch.setitem(sys.modules, "anura.services.tts", fake_tts_mod)
+    monkeypatch.setitem(sys.modules, "anura.services.tts.timeout", fake_tts_timeout)
     monkeypatch.setitem(
         sys.modules,
         "anura.utils.signal_manager",
         types.SimpleNamespace(SignalManagerMixin=object),
     )
+
+    # Import only after the stubs are in sys.modules: the controller (and the
+    # atomic manager it imports) would otherwise pull the real PyGObject.
+    import anura.controllers.tts_controller as ctl_module
+
     return ctl_module, scheduled, fake_glib
 
 
@@ -89,7 +103,8 @@ def test_still_waiting_emits_one_shot_before_timeout(monkeypatch):
     waiting_delay, waiting_cb, (waiting_seq,) = scheduled[0]
     timeout_delay, timeout_cb, (timeout_seq,) = scheduled[1]
     assert waiting_delay == ctl_module._TTS_STILL_WAITING_DELAY_S
-    assert timeout_delay == ctl_module._TTS_GENERATION_TIMEOUT_S
+    # #508: the hard timeout is now computed per request (stubbed to 30 here).
+    assert timeout_delay == 30
     assert controller._active_generation_seq == waiting_seq == timeout_seq
 
     assert waiting_cb(waiting_seq) is False  # one-shot GLib source

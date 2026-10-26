@@ -28,7 +28,7 @@ from PIL import Image  # noqa: E402
 import pytesseract  # noqa: E402
 
 from anura.config import LANG_CODE_PATTERN, OCR_TIMEOUT_SECONDS  # noqa: E402
-from anura.core.atomic_task_manager import get_atomic_manager  # noqa: E402
+from anura.core.atomic_task_manager import CLEANUP_LANE, OCR_LANE, get_atomic_manager  # noqa: E402
 from anura.models.ocr import OcrResult  # noqa: E402
 from anura.services.language_manager import get_tesseract_config  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
@@ -384,7 +384,10 @@ class ScreenshotService(GObject.GObject):
                 self._emit_capture_finished(True)
                 # Move URI parsing and file existence check to background thread
                 task_id = get_atomic_manager().execute(
-                    self._handle_portal_uri_background, (lang, uri, copy), pass_task_id=True
+                    self._handle_portal_uri_background,
+                    (lang, uri, copy),
+                    pass_task_id=True,
+                    lane=OCR_LANE,
                 )
                 self._current_task_id = task_id
                 self._is_capturing = False
@@ -535,7 +538,7 @@ class ScreenshotService(GObject.GObject):
                 self._emit_decode_error("")
 
             if remove_source:
-                get_atomic_manager().execute(Path(file).unlink, ())
+                get_atomic_manager().execute(Path(file).unlink, (), lane=CLEANUP_LANE)
 
         def _on_isolated_error(error, _traceback_str):
             logger.error(f"Anura OCR (Isolated): Process error: {error}")
@@ -555,6 +558,7 @@ class ScreenshotService(GObject.GObject):
             callback=_on_isolated_complete,
             errorback=_on_isolated_error,
             status_callback=_on_isolated_status,
+            lane=OCR_LANE,
         )
 
     # Environment variables surfaced when the portal screenshot fails. These
