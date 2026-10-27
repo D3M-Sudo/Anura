@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Changed
+- Flatpak: license collection is now fail-closed. Every module installs a deterministic license file (source `LICENSE` for sdists, the dist-info license for wheels) and the build fails when it is missing; the `loguru` wheel ships no license file, so its LICENSE comes from the hash-pinned sdist (#477)
+- Packaging: `build-aux/check_license_inventory.py` derives the expected `share/licenses` inventory from the manifest and verifies a built prefix, failing on missing or empty files; it can also emit the inventory as a CI artefact (#493)
 - Flatpak: imlib2 1.12.6 no longer receives configure options it does not recognize (`--without-bmp`, `--without-xbm`, `--without-xpm`, `--with-loader-dir`), and its helper programs and demo data are removed from the runtime (#542, #546)
 - Flatpak: Tesseract's ignored `--disable-training` option is gone; the training tools the build installs are removed from the final prefix instead (#543)
 - Flatpak: the build environment no longer hardcodes `/app/lib/x86_64-linux-gnu`, so the manifest is architecture-neutral (#480)
