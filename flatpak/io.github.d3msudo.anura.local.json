@@ -28,12 +28,21 @@
         "/share/aclocal",
         "/share/pkgconfig",
         "*.la",
-        "*.a"
+        "*.a",
+        "/lib/python3.*/site-packages/scikit_build_core",
+        "/lib/python3.*/site-packages/scikit_build_core-*.dist-info",
+        "/lib/python3.*/site-packages/pybind11",
+        "/lib/python3.*/site-packages/pybind11-*.dist-info",
+        "/lib/python3.*/site-packages/nanobind",
+        "/lib/python3.*/site-packages/nanobind-*.dist-info",
+        "/share/licenses/io.github.d3msudo.anura/scikit-build-core",
+        "/share/licenses/io.github.d3msudo.anura/pybind11",
+        "/share/licenses/io.github.d3msudo.anura/nanobind"
     ],
     "build-options": {
         "env": {
-            "GI_TYPELIB_PATH": "/app/lib/girepository-1.0:/app/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0",
-            "LD_LIBRARY_PATH": "/app/lib:/app/lib/x86_64-linux-gnu",
+            "GI_TYPELIB_PATH": "/app/lib/girepository-1.0:/usr/lib/girepository-1.0",
+            "LD_LIBRARY_PATH": "/app/lib",
             "TESSDATA_PREFIX": "/app/share/tessdata",
             "NO_AT_BRIDGE": "1",
             "GTK_A11Y": "none"
@@ -202,7 +211,21 @@
             "buildsystem": "autotools",
             "cleanup": [
                 "/include",
-                "/lib/pkgconfig"
+                "/lib/pkgconfig",
+                "/bin/ambiguous_words",
+                "/bin/classifier_tester",
+                "/bin/cntraining",
+                "/bin/combine_tessdata",
+                "/bin/dawg2wordlist",
+                "/bin/lstmeval",
+                "/bin/lstmtraining",
+                "/bin/merge_unicharsets",
+                "/bin/mftraining",
+                "/bin/set_unicharset_properties",
+                "/bin/shapeclustering",
+                "/bin/text2image",
+                "/bin/unicharset_extractor",
+                "/bin/wordlist2dawg"
             ],
             "sources": [
                 {
@@ -213,8 +236,7 @@
             ],
             "config-opts": [
                 "--disable-graphics",
-                "--disable-legacy",
-                "--disable-training"
+                "--disable-legacy"
             ],
             "post-install": [
                 "install -Dm0644 LICENSE $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/tesseract/LICENSE"
@@ -401,22 +423,22 @@
         {
             "name": "imlib2",
             "buildsystem": "autotools",
+            "cleanup": [
+                "/bin",
+                "/share/imlib2/data"
+            ],
             "config-opts": [
                 "--with-png",
                 "--with-jpeg",
                 "--with-zlib",
                 "--without-gif",
                 "--without-tiff",
-                "--without-bmp",
-                "--without-xbm",
-                "--without-xpm",
                 "--without-heif",
                 "--without-j2k",
                 "--without-avif",
                 "--without-webp",
                 "--without-id3",
-                "--without-ps",
-                "--with-loader-dir=/app/lib/imlib2/loaders"
+                "--without-ps"
             ],
             "post-install": [
                 "ls /app/lib/imlib2/loaders/png.so || (echo 'FATAL: imlib2 PNG loader missing' && exit 1)"
