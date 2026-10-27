@@ -25,6 +25,7 @@ from loguru import logger  # noqa: E402
 from anura.config import (  # noqa: E402
     LANG_CODE_PATTERN,
     TESSDATA_POOL_DIR,
+    TESSDATA_POOL_LEASE,
     TESSDATA_SYSTEM_DIR,
 )
 from anura.models.language_item import LanguageItem  # noqa: E402
@@ -221,6 +222,12 @@ def get_tesseract_config(lang_code: str, task_id: str | None = None) -> str:
     pool_dir.mkdir(parents=True, exist_ok=True)
     with contextlib.suppress(OSError):
         pool_dir.chmod(0o700)
+
+    if task_id:
+        # #521: record the owning process so startup cleanup can tell a live
+        # task (or another instance) from a genuine leftover.
+        with contextlib.suppress(OSError):
+            (pool_dir / TESSDATA_POOL_LEASE).write_text(str(os.getpid()), encoding="utf-8")
 
     for code in codes:
         # Resolve source

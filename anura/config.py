@@ -31,6 +31,11 @@ TESSDATA_DIR = str(Path(XDG_DATA_HOME) / "anura" / "tessdata")
 # Cache directory for multi-language model pooling (Flatpak optimization)
 TESSDATA_POOL_DIR = str(Path(XDG_CACHE_HOME) / "anura" / "tessdata_pool")
 
+# Lease file written inside a task-isolated pool directory: it contains the PID
+# of the process that owns it, so startup cleanup never deletes a directory that
+# a live task or another Anura instance is still using (#521).
+TESSDATA_POOL_LEASE = "owner.pid"
+
 # Maximum image file size (50MB) to prevent memory exhaustion (DoS)
 # Used for input validation across services and UI.
 MAX_IMAGE_SIZE_MB = 50

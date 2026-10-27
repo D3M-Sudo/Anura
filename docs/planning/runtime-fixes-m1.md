@@ -14,21 +14,20 @@ reliability, performance, hygiene). Packaging/Flathub work is tracked separately
 | 0 — Quality gates | Done (CI green on PR #548) | #518, #517, #514, #515, #516 |
 | 1 — Security & privacy | Done | #527, #524, #522, #509, #505, #529 |
 | 2 — Reliability & lifecycle | Done | #547, #528, #530, #533, #523, #520, #531, #507, #508, #506, #526 |
-| 3 — State, UI & privacy UX | Partial — 10 of 11 | #534, #537, #540, #510, #536, #539, #538, #525, #532, #511 |
+| 3 — State, UI & privacy UX | Done | #534, #537, #540, #510, #536, #539, #538, #525, #532, #511, #521 |
 | 4 — Hygiene | Done | #512, #513, #544 |
 
-Baseline at Batch 0: 323 headless tests passing; after the current work: 455 passing
-(+132 regression tests). Gates at every commit: `ruff check`, `ruff format --check`,
+Baseline at Batch 0: 323 headless tests passing; after the current work: 462 passing
+(+139 regression tests). Gates at every commit: `ruff check`, `ruff format --check`,
 `bandit -c pyproject.toml -r .`, non-strict `mypy`, `pytest -m "not gtk"`.
 
 ### Resume notes
 
-Remaining Batch 3 work: **#521** (tessdata lease) — the only open issue of Milestone 1.
-
-Batch 2 and Batch 4 are complete. The task-lane cluster landed as one branch
-(`m1/batch2b-task-lanes`): #507 (per-lane slots + `on_superseded`), #508
+**Milestone 1 is complete: 36 of 36 issues.** The task-lane cluster landed as one
+branch (`m1/batch2b-task-lanes`): #507 (per-lane slots + `on_superseded`), #508
 (proportional TTS watchdog + lane cancellation), #506 (`execute_daemon` for TTS
-+ non-blocking shutdown), #526 (pool identity guard).
++ non-blocking shutdown), #526 (pool identity guard). #521 replaced the
+destructive startup pool cleanup with an owner-PID lease.
 
 ### Deviations from the original plan
 
