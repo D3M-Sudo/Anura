@@ -12,8 +12,13 @@ import time
 
 from loguru import logger
 
-from anura.config import TESSDATA_DIR, TESSDATA_POOL_DIR
+from anura.config import TESSDATA_DIR, TESSDATA_POOL_DIR, TESSDATA_POOL_LEASE
 from anura.utils.export_files import cleanup_stale_export_files
+
+# A pool directory without a lease file is only considered abandoned after
+# this long: a task can legitimately run for hours, and the PID lease is the
+# authoritative signal when it exists (#521).
+STALE_POOL_DIR_AGE_SECONDS = 24 * 3600
 
 
 def cleanup_orphaned_resources(active_lang_code: str = "eng") -> None:
@@ -83,44 +88,76 @@ def _cleanup_tts_cache(cutoff_time: float) -> None:
         logger.error(f"Anura Cleanup: Error accessing TTS cache directory: {e}")
 
 
-def _cleanup_tessdata_pool(active_lang_code: str) -> None:
-    """
-    Remove stale models and task-isolated directories from the pool.
+def _pid_is_alive(pid: int) -> bool:
+    """Return True when a process with *pid* exists (best effort)."""
+    if pid <= 0:
+        return False
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        # The process exists but belongs to another user.
+        return True
+    except OSError:
+        # Cannot tell: assume it is alive and keep the files.
+        return True
+    return True
 
-    Args:
-        active_lang_code: The currently active language code (e.g. 'eng' or 'eng+ita')
+
+def _read_lease_pid(directory: Path) -> int | None:
+    """Read the owner PID from a task pool directory, or None when absent."""
+    try:
+        return int((directory / TESSDATA_POOL_LEASE).read_text(encoding="utf-8").strip())
+    except (OSError, ValueError):
+        return None
+
+
+def _cleanup_tessdata_pool(_active_lang_code: str) -> None:
+    """Remove only task pool directories that provably have no live owner.
+
+    Top-level ``*.traineddata`` files are **never** removed here: the pool is
+    shared by every Anura instance, so deleting the models that do not match
+    this instance's active language could remove a file another instance (or a
+    long-running OCR task) is reading (#521).
+
+    A task directory is removed only when
+      * its ``owner.pid`` lease names a process that no longer exists, or
+      * it has no lease (legacy directory) and is older than one day.
+
+    The active language argument is kept for API compatibility; it no longer
+    decides what is deleted.
     """
     pool_dir = Path(TESSDATA_POOL_DIR)
     if not pool_dir.exists():
         return
 
     try:
-        needed_codes = set(active_lang_code.split("+"))
         removed_count = 0
+        legacy_cutoff = time.time() - STALE_POOL_DIR_AGE_SECONDS
 
-        # Clean top-level models (legacy/fallback)
-        for file_path in pool_dir.glob("*.traineddata"):
-            stem = file_path.name[: -len(".traineddata")]
-            if stem not in needed_codes:
-                with contextlib.suppress(OSError):
-                    file_path.unlink()
-                    removed_count += 1
-
-        # NEW-007: Clean task-isolated subdirectories older than 1 hour.
-        # Active directories from the current session are preserved.
-        one_hour_ago = time.time() - 3600
         for item in pool_dir.iterdir():
-            if item.is_dir():
-                try:
-                    # If directory is old, remove it entirely
-                    if item.stat().st_mtime < one_hour_ago:
-                        shutil.rmtree(item)
-                        removed_count += 1
-                except OSError as e:
-                    logger.debug(f"Anura Cleanup: Failed to remove old pool dir {item.name}: {e}")
+            if not item.is_dir():
+                continue
+            try:
+                owner = _read_lease_pid(item)
+                if owner is not None:
+                    if _pid_is_alive(owner):
+                        logger.debug(f"Anura Cleanup: pool dir {item.name} is owned by live process {owner}")
+                        continue
+                    stale = True
+                else:
+                    # Legacy directory: only age can prove it is abandoned.
+                    stale = item.stat().st_mtime < legacy_cutoff
+
+                if stale:
+                    shutil.rmtree(item)
+                    removed_count += 1
+            except OSError as e:
+                logger.debug(f"Anura Cleanup: Failed to remove pool dir {item.name}: {e}")
 
         if removed_count > 0:
-            logger.info(f"Anura Cleanup: Removed {removed_count} stale pool assets")
+            logger.info(f"Anura Cleanup: Removed {removed_count} stale pool directories")
 
     except OSError as e:
         logger.error(f"Anura Cleanup: Error scanning tessdata pool directory: {e}")
