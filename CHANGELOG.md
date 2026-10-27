@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Changed
+- Flatpak: imlib2 1.12.6 no longer receives configure options it does not recognize (`--without-bmp`, `--without-xbm`, `--without-xpm`, `--with-loader-dir`), and its helper programs and demo data are removed from the runtime (#542, #546)
+- Flatpak: Tesseract's ignored `--disable-training` option is gone; the training tools the build installs are removed from the final prefix instead (#543)
+- Flatpak: the build environment no longer hardcodes `/app/lib/x86_64-linux-gnu`, so the manifest is architecture-neutral (#480)
+- Flatpak: the build-only Python tooling (`scikit-build-core`, `pybind11`, `nanobind`) and its license files are removed from the runtime (#482)
 - Performance/History: `record()` no longer serialises, `fsync`s and replaces the whole `history.json` on the GTK main thread. Entries are appended in memory and written by a coalesced background writer; each entry is capped at 100,000 characters, and `do_destroy()` flushes pending writes through `close()` so nothing is lost at exit. `clear()` and `set_limit()` stay synchronous because they must be able to report a failure and roll back (#511)
 - History: the service now logs through the project's `loguru` logger instead of the standard library, so the configured format, rotation and retention apply to it like everywhere else (#512)
 - Docs: `AGENTS.md` now describes the logging policy that is actually implemented (5-file retention, gzip compression) instead of the pre-`26f08f5` wording; the code was intentional and is unchanged (#513)
