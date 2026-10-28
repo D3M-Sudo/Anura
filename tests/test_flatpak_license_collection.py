@@ -70,4 +70,9 @@ def test_loguru_ships_its_license_from_the_pinned_sdist(manifest: dict) -> None:
 
     assert any(src.get("url", "").endswith("loguru-0.7.3.tar.gz") for src in sources)
     assert any(src.get("sha256") for src in sources if src.get("url", "").endswith(".tar.gz"))
-    assert any(cmd.startswith("install -Dm0644 LICENSE") for cmd in loguru["build-commands"])
+    # The layout of the extracted sdist is not guaranteed when the module has
+    # several sources, so the command locates the file and fails closed.
+    license_commands = [cmd for cmd in loguru["build-commands"] if "share/licenses" in cmd]
+    assert len(license_commands) == 1
+    assert "share/licenses/io.github.d3msudo.anura/loguru/LICENSE" in license_commands[0]
+    assert "exit 1" in license_commands[0]

@@ -331,7 +331,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed loguru-0.7.3-py3-none-any.whl",
-                "install -Dm0644 LICENSE \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/loguru/LICENSE\""
+                "bash -c 'set -e; f=$(find . -maxdepth 3 -type f -iname \"LICENSE*\" -print -quit); [ -n \"$f\" ] || { echo \"FATAL: no license file for loguru\"; exit 1; }; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/loguru/LICENSE\"'"
             ],
             "sources": [
                 {
