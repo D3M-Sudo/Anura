@@ -63,16 +63,16 @@ def test_fail_closed_wheel_commands_check_for_the_file(manifest: dict) -> None:
         assert "exit 1" in cmd, f"{name} does not fail when the license is missing"
 
 
-def test_loguru_ships_its_license_from_the_pinned_sdist(manifest: dict) -> None:
-    """The loguru wheel has no license file, so the sdist provides it."""
+def test_loguru_ships_its_license_from_the_upstream_file(manifest: dict) -> None:
+    """Neither the loguru wheel nor its sdist contains a license file."""
     loguru = next(m for m in manifest["modules"] if m["name"] == "python3-loguru")
-    sources = loguru["sources"]
+    license_sources = [src for src in loguru["sources"] if src.get("dest-filename") == "loguru-LICENSE"]
 
-    assert any(src.get("url", "").endswith("loguru-0.7.3.tar.gz") for src in sources)
-    assert any(src.get("sha256") for src in sources if src.get("url", "").endswith(".tar.gz"))
-    # The layout of the extracted sdist is not guaranteed when the module has
-    # several sources, so the command locates the file and fails closed.
+    assert len(license_sources) == 1
+    source = license_sources[0]
+    assert source["url"].endswith("/0.7.3/LICENSE")
+    assert source["sha256"], "the upstream license must be hash-pinned"
+
     license_commands = [cmd for cmd in loguru["build-commands"] if "share/licenses" in cmd]
     assert len(license_commands) == 1
-    assert "share/licenses/io.github.d3msudo.anura/loguru/LICENSE" in license_commands[0]
-    assert "exit 1" in license_commands[0]
+    assert license_commands[0].startswith("install -Dm0644 loguru-LICENSE")

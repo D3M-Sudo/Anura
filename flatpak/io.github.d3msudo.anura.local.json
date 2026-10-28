@@ -331,7 +331,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed loguru-0.7.3-py3-none-any.whl",
-                "bash -c 'set -e; f=$(find . -maxdepth 3 -type f -iname \"LICENSE*\" -print -quit); [ -n \"$f\" ] || { echo \"FATAL: no license file for loguru\"; exit 1; }; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/loguru/LICENSE\"'"
+                "install -Dm0644 loguru-LICENSE \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/loguru/LICENSE\""
             ],
             "sources": [
                 {
@@ -340,9 +340,10 @@
                     "sha256": "31a33c10c8e1e10422bfd431aeb5d351c7cf7fa671e3c4df004162264b28220c"
                 },
                 {
-                    "type": "archive",
-                    "url": "https://files.pythonhosted.org/packages/3a/05/a1dae3dffd1116099471c643b8924f5aa6524411dc6c63fdae648c4f1aca/loguru-0.7.3.tar.gz",
-                    "sha256": "19480589e77d47b8d85b2c827ad95d49bf31b0dcde16593892eb51dd18706eb6"
+                    "type": "file",
+                    "url": "https://raw.githubusercontent.com/Delgan/loguru/0.7.3/LICENSE",
+                    "sha256": "b35d026cc7aca9d5859a02eb87ddf7a386a24c986838651bd1f283f94e003327",
+                    "dest-filename": "loguru-LICENSE"
                 }
             ]
         },
