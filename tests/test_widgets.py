@@ -183,7 +183,7 @@ class TestWelcomePageEnterprise:
 
     @pytest.mark.gtk
     def test_language_changed_signal(self, widget):
-        """Test that language change updates the UI and settings."""
+        """Test that language change updates the UI, accessibility metadata, and settings."""
         widget.settings = MagicMock()
         lang_item = LanguageItem(code="fra", title="French")
 
@@ -191,6 +191,7 @@ class TestWelcomePageEnterprise:
         widget.language_popover.emit("language-changed", lang_item)
 
         assert widget.lang_combo.get_label() == "French"
+        assert "OCR language: French" in widget.lang_combo.get_tooltip_text()
         widget.settings.set_string.assert_called_with("active-language", "fra")
 
     @pytest.mark.gtk

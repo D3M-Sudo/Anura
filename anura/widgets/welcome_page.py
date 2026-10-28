@@ -46,9 +46,9 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         self.connect_tracked(self.language_popover, "language-changed", self._on_language_changed)
 
         current_lang_code = self.settings.get_string("active-language")
-        self.lang_combo.set_label(
-            get_language_manager().get_language(current_lang_code),
-        )
+        lang_title = get_language_manager().get_language(current_lang_code)
+        self.lang_combo.set_label(lang_title)
+        self._update_lang_combo_accessibility(lang_title)
 
         self.connect_tracked(self.drop_button, "clicked", self._on_drop_button_clicked)
         self._setup_drop_target()
@@ -329,8 +329,15 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         self.spinner.set_visible(True)
         self.spinner.start()
 
+    def _update_lang_combo_accessibility(self, title: str) -> None:
+        """Dynamically update tooltip and accessible label on language selection button."""
+        tooltip_text = _("OCR language: {name} (click to change)").format(name=title)
+        self.lang_combo.set_tooltip_text(tooltip_text)
+        self.lang_combo.update_property([Gtk.AccessibleProperty.LABEL], [tooltip_text])
+
     def _on_language_changed(self, _: LanguagePopover, language: LanguageItem) -> None:
         self.lang_combo.set_label(language.title)
+        self._update_lang_combo_accessibility(language.title)
         self.settings.set_string("active-language", language.code)
 
     def do_destroy(self) -> None:
