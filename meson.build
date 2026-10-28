@@ -28,6 +28,13 @@ pkgdatadir = prefix / datadir / meson.project_name()
 pythondir = python.get_install_dir() / 'anura'
 localedir = prefix / get_option('localedir')
 
+# Application license: Flathub expects the app's own license text in the
+# bundle. Installing it from Meson keeps it independent of flatpak-builder's
+# automatic source-license recording (#478, #493).
+install_data('LICENSE',
+  install_dir: join_paths(datadir, 'licenses', app_id)
+)
+
 # Generate _release_notes.py from CHANGELOG.md
 release_notes_py = custom_target('release_notes',
   input: ['CHANGELOG.md', 'build-aux/generate_release_notes.py'],

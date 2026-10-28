@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Changed
+- Flatpak: the application's own MIT license is now installed by Meson (`install_data`), so it reaches `share/licenses/io.github.d3msudo.anura/LICENSE` regardless of flatpak-builder's automatic recording; the build-only modules' auto-recorded license directories are removed together with the modules (#478, #482)
+- Packaging: license checks no longer print `FATAL: …` inside the build commands — flatpak-builder echoes each command, and that text looked like a missing-license error for a license that was actually present (#477); the inventory checker now also requires the application license and the native modules' licenses and records the full listing as JSON evidence (#493)
 - Flatpak: license collection is now fail-closed. Every module installs a deterministic license file (source `LICENSE` for sdists, the dist-info license for wheels) and the build fails when it is missing; the `loguru` wheel ships no license file, so its LICENSE comes from the hash-pinned sdist (#477)
 - Packaging: `build-aux/check_license_inventory.py` derives the expected `share/licenses` inventory from the manifest and verifies a built prefix, failing on missing or empty files; it can also emit the inventory as a CI artefact (#493)
 - Flatpak: imlib2 1.12.6 no longer receives configure options it does not recognize (`--without-bmp`, `--without-xbm`, `--without-xpm`, `--with-loader-dir`), and its helper programs and demo data are removed from the runtime (#542, #546)

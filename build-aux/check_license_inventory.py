@@ -5,11 +5,18 @@
 
 """Check the license inventory of a built Flatpak prefix (#493).
 
-The manifest declares, per module, where the license text must be installed
-under ``/app/share/licenses/<app-id>/<name>/LICENSE``. This script derives the
-expected list from the manifest and verifies it against a real prefix (for
-example ``.flatpak-builder/build/<app>/files`` after a build, or ``/app`` inside
-the container), failing when a file is missing or empty.
+Three things are verified against a real prefix:
+
+* every Python/native module that declares an install command in the manifest
+  has its ``share/licenses/<app-id>/<name>/LICENSE``;
+* application's own license is at ``share/licenses/<app-id>/LICENSE`` (installed
+  by Meson);
+* the native modules whose license flatpak-builder records automatically
+  (imlib2, scrot, libportal, tessdata_fast) have at least one non-empty file in
+  their directory, whatever upstream names it.
+
+The full directory listing is included in the JSON output as evidence for the
+release review.
 
 Usage:
     python3 build-aux/check_license_inventory.py --root builddir/files
@@ -26,10 +33,19 @@ import sys
 
 LICENSE_DEST_RE = re.compile(r"share/licenses/([^/\"]+)/([^/\"]+)/LICENSE")
 
+# Licenses flatpak-builder records automatically from the extracted sources; the
+# file name differs per project (COPYING, COPYING-PLAIN, LICENSE), so only the
+# presence of a non-empty file is required.
+NATIVE_LICENSE_MODULES = ("imlib2", "scrot", "libportal", "tessdata_fast")
+
+
+def _manifest(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))
+
 
 def expected_licenses(manifest_path: Path) -> list[tuple[str, str]]:
     """Return (module, destination) pairs declared by the manifest."""
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest = _manifest(manifest_path)
     expected: list[tuple[str, str]] = []
 
     for module in manifest.get("modules", []):
@@ -44,8 +60,29 @@ def expected_licenses(manifest_path: Path) -> list[tuple[str, str]]:
     return expected
 
 
-def build_inventory(root: Path, expected: list[tuple[str, str]]) -> tuple[list[dict], list[str]]:
-    """Return the inventory entries and the list of problems found."""
+def app_id_from_manifest(manifest_path: Path) -> str:
+    return _manifest(manifest_path)["app-id"]
+
+
+def scan_licenses(root: Path, app_id: str) -> list[dict]:
+    """Return every file under share/licenses/<app-id>, for the release evidence."""
+    base = root / "share" / "licenses" / app_id
+    if not base.is_dir():
+        return []
+
+    return [
+        {"path": str(path.relative_to(root)), "bytes": path.stat().st_size}
+        for path in sorted(base.rglob("*"))
+        if path.is_file()
+    ]
+
+
+def build_inventory(
+    root: Path,
+    expected: list[tuple[str, str]],
+    app_id: str,
+) -> tuple[list[dict], list[str]]:
+    """Return the required inventory entries and the list of problems found."""
     entries: list[dict] = []
     problems: list[str] = []
 
@@ -59,6 +96,40 @@ def build_inventory(root: Path, expected: list[tuple[str, str]]) -> tuple[list[d
             problems.append(f"empty license for {module}: {relative}")
             continue
         entries.append({"module": module, "path": relative, "bytes": size})
+
+    base = root / "share" / "licenses" / app_id
+
+    app_license = base / "LICENSE"
+    if not app_license.is_file():
+        problems.append(f"missing application license: share/licenses/{app_id}/LICENSE")
+    elif app_license.stat().st_size == 0:
+        problems.append(f"empty application license: share/licenses/{app_id}/LICENSE")
+    else:
+        entries.append(
+            {
+                "module": "anura",
+                "path": f"share/licenses/{app_id}/LICENSE",
+                "bytes": app_license.stat().st_size,
+            }
+        )
+
+    for name in NATIVE_LICENSE_MODULES:
+        directory = base / name
+        files = (
+            [path for path in directory.iterdir() if path.is_file() and path.stat().st_size > 0]
+            if directory.is_dir()
+            else []
+        )
+        if not files:
+            problems.append(f"missing license for native module {name}: share/licenses/{app_id}/{name}/")
+            continue
+        entries.append(
+            {
+                "module": name,
+                "path": str(files[0].relative_to(root)),
+                "bytes": files[0].stat().st_size,
+            }
+        )
 
     return entries, problems
 
@@ -87,18 +158,25 @@ def main(argv: list[str] | None = None) -> int:
         print(f"FAIL: prefix not found: {args.root}")
         return 1
 
+    app_id = app_id_from_manifest(args.manifest)
     expected = expected_licenses(args.manifest)
-    entries, problems = build_inventory(args.root, expected)
+    entries, problems = build_inventory(args.root, expected, app_id)
 
     if args.output:
-        args.output.write_text(json.dumps(entries, indent=2) + "\n", encoding="utf-8")
+        payload = {
+            "app_id": app_id,
+            "required": entries,
+            "problems": problems,
+            "all_license_files": scan_licenses(args.root, app_id),
+        }
+        args.output.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
     for entry in entries:
         print(f"OK   {entry['module']:28} {entry['bytes']:>7} B  {entry['path']}")
     for problem in problems:
         print(f"FAIL {problem}")
 
-    print(f"\n{len(entries)}/{len(expected)} licenses present")
+    print(f"\n{len(entries)}/{len(expected) + 1 + len(NATIVE_LICENSE_MODULES)} required licenses present")
     return 0 if not problems else 1
 
 
