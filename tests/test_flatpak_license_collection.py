@@ -60,7 +60,14 @@ def test_fail_closed_wheel_commands_check_for_the_file(manifest: dict) -> None:
 
     assert wheel_commands
     for name, cmd in wheel_commands:
-        assert "exit 1" in cmd, f"{name} does not fail when the license is missing"
+        assert "set -e" in cmd, f"{name} does not abort on failure"
+        assert 'test -n "$f"' in cmd, f"{name} does not fail when the license is missing"
+
+
+def test_no_license_command_prints_error_looking_text(manifest: dict) -> None:
+    """flatpak-builder echoes every command, so a FATAL string looks like a bug."""
+    for name, cmd in _license_commands(manifest):
+        assert "FATAL" not in cmd, f"{name} prints an error-looking message into the build log"
 
 
 def test_loguru_ships_its_license_from_the_upstream_file(manifest: dict) -> None:
