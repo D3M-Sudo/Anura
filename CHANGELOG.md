@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Changed
+- Docs: the privacy statements now separate local OCR from the optional text-to-speech feature, which uploads the selected text to Google; `SECURITY.md` gains a data-flow table (#495)
+- AppStream: the screenshot URLs are pinned to the `v0.2.1` tag instead of the mutable `main` branch, and the 0.2.1 release notes replace the placeholder with the actual changes (#499, #481)
+- Tests: `tests/test_appstream_metadata.py` validates the metainfo (id, licenses, developer, launchable, screenshots pinned to the version, releases without placeholders), the desktop entry and the gettext catalogue set (#497)
 - Flatpak: the application's own MIT license is now installed by Meson (`install_data`), so it reaches `share/licenses/io.github.d3msudo.anura/LICENSE` regardless of flatpak-builder's automatic recording; the build-only modules' auto-recorded license directories are removed together with the modules (#478, #482)
 - Packaging: license checks no longer print `FATAL: …` inside the build commands — flatpak-builder echoes each command, and that text looked like a missing-license error for a license that was actually present (#477); the inventory checker now also requires the application license and the native modules' licenses and records the full listing as JSON evidence (#493)
 - Flatpak: license collection is now fail-closed. Every module installs a deterministic license file (source `LICENSE` for sdists, the dist-info license for wheels) and the build fails when it is missing; the `loguru` wheel ships no license file, so its LICENSE comes from the hash-pinned sdist (#477)

@@ -52,27 +52,32 @@
   </description>
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/main/data/screenshots/anura-extracted-page.png</image>
+      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/v0.2.1/data/screenshots/anura-extracted-page.png</image>
       <caption>Extracted text in the built-in editor with smart parsing and selection statistics</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/main/data/screenshots/anura-welcome-page.png</image>
+      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/v0.2.1/data/screenshots/anura-welcome-page.png</image>
       <caption>Welcome screen with screenshot, open, paste and drag-and-drop actions</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/main/data/screenshots/anura-history-page.png</image>
+      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/v0.2.1/data/screenshots/anura-history-page.png</image>
       <caption>Opt-in local extraction history of recent extractions</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/main/data/screenshots/anura-preferences-page.png</image>
+      <image>https://raw.githubusercontent.com/D3M-Sudo/Anura/v0.2.1/data/screenshots/anura-preferences-page.png</image>
       <caption>Preferences for appearance, OCR extraction and behaviour</caption>
     </screenshot>
   </screenshots>
   <releases>
     <release version="0.2.1" type="stable" date="2026-10-20">
       <description>
-        <!-- TODO: Add release notes before publishing -->
-        <p>Release 0.2.1.</p>
+        <p>Interactive extraction history, clipboard fixes and CLI stability.</p>
+        <ul>
+          <li>History: rows expand to show the full extracted text, and every row has a copy button.</li>
+          <li>History: row titles and subtitles are no longer parsed as Pango markup, so text with &amp; or &lt; is shown correctly.</li>
+          <li>Clipboard: copied text is published as plain text and can be pasted in other applications again.</li>
+          <li>CLI: silent mode processes the image and exits cleanly, and --file accepts non-ASCII paths.</li>
+        </ul>
       </description>
     </release>
     <release version="0.2.0" type="stable" date="2026-09-21">
