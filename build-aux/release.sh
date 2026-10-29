@@ -47,6 +47,35 @@ PYPROJECT_FILE="$PROJECT_ROOT/pyproject.toml"
 UV_LOCK_FILE="$PROJECT_ROOT/uv.lock"
 DATE=$(date +%Y-%m-%d)
 
+# --- Preflight (#487) -------------------------------------------------------
+# Nothing below this point is safe to run twice or on a dirty tree: the script
+# stages files, commits and tags. Refuse early instead of leaving a partial
+# release behind.
+if [ -n "$(git -C "$PROJECT_ROOT" status --porcelain)" ]; then
+    echo "✗ Working tree or index is not clean. Commit or stash your changes first:"
+    git -C "$PROJECT_ROOT" status --short
+    exit 1
+fi
+
+if git -C "$PROJECT_ROOT" rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+    echo "✗ Tag v$VERSION already exists."
+    exit 1
+fi
+
+CURRENT_BRANCH="$(git -C "$PROJECT_ROOT" rev-parse --abbrev-ref HEAD)"
+EXPECTED_BRANCH="${RELEASE_BRANCH:-main}"
+if [ "$CURRENT_BRANCH" != "$EXPECTED_BRANCH" ]; then
+    echo "✗ Releases are cut from '$EXPECTED_BRANCH' (current: '$CURRENT_BRANCH')."
+    echo "  Switch branch, or set RELEASE_BRANCH=<branch> to override."
+    exit 1
+fi
+
+# Release notes come from CHANGELOG.md, the single source of truth. The helper
+# exits when the section is missing or still a placeholder, so a release can
+# never publish "TODO" metadata (#485).
+echo "Reading release notes for $VERSION from CHANGELOG.md..."
+RELEASE_ENTRY="$(python3 "$SCRIPT_DIR/generate_release_notes.py" --metainfo "$PROJECT_ROOT/CHANGELOG.md" "$VERSION" "$DATE")"
+
 echo "=== Anura Release $VERSION ==="
 echo "Tessdata ref: $TESSDATA_REF"
 echo "Release date: $DATE"
@@ -129,13 +158,7 @@ fi
 echo ""
 echo "Updating $METAINFO_FILE with new release entry..."
 
-# Create new release entry
-RELEASE_ENTRY="    <release version=\"$VERSION\" type=\"stable\" date=\"$DATE\">
-      <description>
-        <!-- TODO: Add release notes before publishing -->
-        <p>Release $VERSION.</p>
-      </description>
-    </release>"
+# The release entry was generated from CHANGELOG.md during preflight (#485).
 
 # Insert after the <releases> opening tag
 if grep -q '<releases>' "$METAINFO_FILE"; then
@@ -228,6 +251,12 @@ git tag -a "v$VERSION" -m "Anura v$VERSION
 Release highlights:
 - Tessdata models pinned to ref $TESSDATA_REF
 - See CHANGELOG.md for full details"
+
+# The repository manifest pins the tag; the Flathub submission manifest should
+# pin the commit it resolves to, so a moved tag cannot change the sources (#501).
+RELEASE_COMMIT="$(git -C "$PROJECT_ROOT" rev-parse "v$VERSION^{commit}")"
+echo "Source commit for v$VERSION: $RELEASE_COMMIT"
+echo "For the submission manifest: build-aux/pin_source_commit.py --tag v$VERSION"
 
 echo ""
 echo "=== Release v$VERSION prepared successfully ==="

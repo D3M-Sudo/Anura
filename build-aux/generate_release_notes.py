@@ -80,6 +80,54 @@ def parse_changelog(changelog_path: Path) -> dict:
     return releases
 
 
+def _metainfo_sections(changelog_path: Path, version: str) -> dict[str, list[str]]:
+    """Return the ``### Section -> [items]`` map of one CHANGELOG version.
+
+    Unlike :func:`parse_changelog`, this keeps snake_case identifiers (the HTML
+    variant strips every underscore, turning ``test_x.py`` into ``testx.py``).
+    """
+    content = changelog_path.read_text(encoding="utf-8")
+    pattern = (
+        r"^## \[" + re.escape(version) + r"\] - \d{4}-\d{2}-\d{2}\n"
+        r"(?P<content>.*?)(?=^## \[|\Z)"
+    )
+    match = re.search(pattern, content, re.MULTILINE | re.DOTALL)
+    if match is None:
+        return {}
+
+    sections: dict[str, list[str]] = {}
+    current = "Changes"
+    for raw_line in match.group("content").strip().splitlines():
+        line = raw_line.strip()
+        if line.startswith("### "):
+            current = line[4:].strip()
+            sections.setdefault(current, [])
+        elif line.startswith("- "):
+            item = html.escape(line[2:].replace("**", "").replace("`", ""))
+            sections.setdefault(current, []).append(item)
+    return {name: items for name, items in sections.items() if items}
+
+
+def metainfo_release_entry(changelog_path: Path, version: str, date: str) -> str:
+    """Return the AppStream <release> block for *version* from CHANGELOG.md.
+
+    Fails instead of writing a placeholder: a release must never publish
+    "TODO" or a bare "Release x.y.z." description (#485).
+    """
+    sections = _metainfo_sections(changelog_path, version)
+    if not sections:
+        sys.exit(f"CHANGELOG.md has no [{version}] section with entries: add the release notes before releasing")
+
+    lines = [f'    <release version="{version}" type="stable" date="{date}">', "      <description>"]
+    for name, items in sections.items():
+        lines.append(f"        <p><em>{html.escape(name)}</em></p>")
+        lines.append("        <ul>")
+        lines.extend(f"          <li>{item}</li>" for item in items[:5])
+        lines.append("        </ul>")
+    lines.extend(["      </description>", "    </release>"])
+    return "\n".join(lines)
+
+
 def generate_release_notes_py(changelog_path: Path, output_path: Path, current_version: str) -> None:
     """Generate the _release_notes.py file."""
     releases = parse_changelog(changelog_path)
@@ -129,13 +177,30 @@ def validate_version(version: str) -> bool:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
+    arguments = sys.argv[1:]
+
+    # Release helper: print the AppStream entry for the version being released.
+    #   generate_release_notes.py --metainfo <changelog.md> <version> <date>
+    if arguments and arguments[0] == "--metainfo":
+        if len(arguments) != 4:
+            print(
+                f"Usage: {sys.argv[0]} --metainfo <changelog.md> <version> <YYYY-MM-DD>",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        changelog, version, date = Path(arguments[1]), arguments[2], arguments[3]
+        if not validate_version(version):
+            sys.exit(f"Error: Invalid version format: {version}")
+        print(metainfo_release_entry(changelog, version, date))
+        sys.exit(0)
+
+    if len(arguments) != 3:
         print(f"Usage: {sys.argv[0]} <changelog.md> <output.py> <version>", file=sys.stderr)
         sys.exit(1)
 
-    changelog = Path(sys.argv[1])
-    output = Path(sys.argv[2])
-    version = sys.argv[3]
+    changelog = Path(arguments[0])
+    output = Path(arguments[1])
+    version = arguments[2]
 
     if not validate_version(version):
         print(f"Error: Invalid version format: {version}", file=sys.stderr)
