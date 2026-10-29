@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Changed
+- Release: `build-aux/release.sh` now refuses to run on a dirty tree, on an existing tag or outside the release branch (`RELEASE_BRANCH` overrides it), and it builds the AppStream entry from the `CHANGELOG.md` section instead of writing a `TODO` placeholder (#487, #485)
+- Release: `build-aux/pin_source_commit.py` writes the tag's commit into the submission manifest, so a moved tag cannot change the sources; `--check` verifies it (#501)
 - Docs: the privacy statements now separate local OCR from the optional text-to-speech feature, which uploads the selected text to Google; `SECURITY.md` gains a data-flow table (#495)
 - AppStream: the screenshot URLs are pinned to the `v0.2.1` tag instead of the mutable `main` branch, and the 0.2.1 release notes replace the placeholder with the actual changes (#499, #481)
 - Tests: `tests/test_appstream_metadata.py` validates the metainfo (id, licenses, developer, launchable, screenshots pinned to the version, releases without placeholders), the desktop entry and the gettext catalogue set (#497)

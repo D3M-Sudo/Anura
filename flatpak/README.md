@@ -37,6 +37,21 @@ shipping silently.
 See `docs/reference/dependencies.md` for the full dependency pipeline and the
 release-time vs continuous-CI split of the checks above.
 
+## Pinning the source in the submission manifest (#501)
+
+The release manifest pins the `anura` module to the release tag. A tag can be
+moved, so the manifest copied to the Flathub submission repository also carries
+the commit the tag resolved to when the release was cut:
+
+```bash
+build-aux/pin_source_commit.py --tag v0.2.1          # writes "commit" next to "tag"
+build-aux/pin_source_commit.py --tag v0.2.1 --check  # verifies it (CI/review)
+```
+
+Run it **after** tagging (the commit must exist) and before copying the manifest
+to the submission repository. `release.sh` prints the same reminder with the
+resolved SHA at the end of a release.
+
 ## Licenses in the bundle
 
 Every license ends up under `share/licenses/io.github.d3msudo.anura/`:

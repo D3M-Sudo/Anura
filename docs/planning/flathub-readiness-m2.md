@@ -24,7 +24,8 @@ must mirror.
 | 542, 543, 546, 480, 482 | Done (#560) |
 | 477 | Done (#561) |
 | 478, 482 (licences) | Application licence installed by Meson, build-only licences removed with the modules (#563) |
-| 495, 499, 497, 481 | Done (this PR) |
+| 495, 499, 497, 481 | Done (#566) |
+| 485, 487, 501 | Done (release tooling PR) |
 | 493 | Checker merged; the CI step needs the workflow patch |
 | 479, 490, 496, 501, 503, 504, 500 | Open (see the phases below) |
 | Phase 2.1 (CI/release) | Mostly workflow changes, see the patch note at the end |

@@ -200,7 +200,13 @@ flatpak-builder --run builddir flatpak/io.github.d3msudo.anura.local.json anura
 > step** every time a tag is created and pushed.
 
 1. Run `./build-aux/release.sh <version>` (bumps version, pins tessdata,
-   generates the release manifest) and push the tag.
+   generates the release manifest) and push the tag. The script refuses to run
+   on a dirty tree, on an existing tag or outside `main` (`RELEASE_BRANCH`
+   overrides the branch), and it takes the AppStream notes from the
+   `CHANGELOG.md` section for that version — add the section first, it will not
+   write placeholders. For the Flathub submission manifest, run
+   `build-aux/pin_source_commit.py --tag v<version>` after tagging to pin the
+   tag's commit.
 2. Wait for the tag's CI run to complete (`gh run watch <run-id>`): the
    release is created only when the `flatpak-builder` job finishes.
 3. Populate the release body — `CHANGELOG.md` is the single source of truth:
