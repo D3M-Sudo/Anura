@@ -1,9 +1,27 @@
 # Security Policy
 
-> Anura OCR takes security seriously. All processing happens locally — no data leaves your machine.  
+> Anura OCR takes security seriously. OCR and QR decoding run entirely on your machine; the optional text-to-speech feature sends the selected text to Google (see [Data flows](#data-flows)).  
 > If you find a vulnerability, please follow the responsible disclosure process below.
 
 ---
+
+## Data flows
+
+Anura does not collect telemetry. Two features talk to the network, and only one
+sends user content:
+
+| Flow | Direction | When | Notes |
+| ---- | --------- | ---- | ----- |
+| OCR, QR/barcode decoding, image processing | local only | always | Tesseract, zxing-cpp and Pillow run in the app and in an isolated worker process |
+| OCR model download | GitHub → disk | when you add a language | HTTPS; the model is verified against the pinned git-blob SHA-1 manifest before installation |
+| **Text-to-speech** | **selected text → Google** | only when you press *Listen* | gTTS uploads the text to Google Translate TTS and returns an MP3; the supported-language list is also requested from Google. Do not use TTS with text you do not want to send to a third party |
+| Extraction history | local only | opt-in | `$XDG_DATA_HOME/anura/history/`, directory `0700`, file `0600` |
+| Logs | local only | always | rotary files under `$XDG_STATE_HOME/anura/logs/`, never transmitted |
+| Clipboard, sharing, external editor | local / user-initiated | on your action | sharing opens the provider you chose in your browser |
+| Telemetry, analytics, remote logging | — | never | not implemented |
+
+OCR is fully offline. TTS is the only feature that sends user content to a third
+party, and it is opt-in per request.
 
 ## Reporting a Vulnerability
 
@@ -73,7 +91,7 @@
 | **Config Layer Leakage Protection** | Prevents unintended exposure of internal configuration through lifecycle-scoped access controls. |
 | **Hierarchical ID Collision Prevention** | Guards against identifier conflicts that could lead to OCR pipeline instability and data cross-contamination. |
 | **Dynamic URI Scheme Validation** | ShareService implements dynamic URI scheme validation to prevent protocol injection attacks. |
-| **Atomic Task Management** | `AtomicTaskManager` prevents race conditions via single-slot execution and UUID versioning with `BrokenProcessPool` recovery. |
+| **Atomic Task Management** | `AtomicTaskManager` prevents race conditions with one slot per task lane (OCR, TTS, cleanup), UUID versioning and `BrokenProcessPool` recovery that never tears down a healthy replacement pool. |
 | **Secure Logging** | Offline rotary logging system with strict rotation and retention policies; strictly zero-telemetry. |
 | **Automated Lifecycle** | Native GObject destruction hooks ensure complete signal disconnection and resource teardown. |
 | **Hardened OCR export files (F3)** | External-editor hand-off files are created in `$XDG_RUNTIME_DIR/anura/exports` (per-user, per-session) via `tempfile.mkstemp()` with mode `0600` and random names; stale export files are cleaned on boot (never in the world-readable shared `/tmp`). |

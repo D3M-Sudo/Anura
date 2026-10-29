@@ -17,6 +17,18 @@ manifest regeneration and mix two different verification models (headless pytest
 Flatpak builds). Milestone 1 also produces the dependency changes that Milestone 2
 must mirror.
 
+## Progress
+
+| Issue | State |
+| --- | --- |
+| 542, 543, 546, 480, 482 | Done (#560) |
+| 477 | Done (#561) |
+| 478, 482 (licences) | Application licence installed by Meson, build-only licences removed with the modules (#563) |
+| 495, 499, 497, 481 | Done (this PR) |
+| 493 | Checker merged; the CI step needs the workflow patch |
+| 479, 490, 496, 501, 503, 504, 500 | Open (see the phases below) |
+| Phase 2.1 (CI/release) | Mostly workflow changes, see the patch note at the end |
+
 ## Phase 2.0 — Build correctness
 
 | # | Sev | Fix | Depends on |
@@ -76,6 +88,15 @@ come last. #495 pairs with the runtime fix for #505 and must use the same wordin
 
 #454 (open in external editor), #455 (replay through TTS), #456 (re-OCR) require an
 updated `docs/planning/history-v2-interactive-rows.md` design before any code.
+
+## Workflow patch (blocked identity)
+
+Several issues only need edits to `.github/workflows/*.yml`, which this
+automation identity cannot push: 479 (CI image `gnome-51`), 493 (inventory
+step), 483 (AppStream validators), 486 (non-GTK tests), 488 (`uv sync --locked`
++ pinned uv), 535 (issue body newlines), 541 (Codecov), 494 (multiarch),
+500 (Flatpak functional tests) and, after the next release, 491/484 (manifest
+drift). They are collected in one patch for the local agent.
 
 ## Verification per phase
 

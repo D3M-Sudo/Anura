@@ -67,7 +67,7 @@ It also decodes **QR codes and Barcodes** in a single click using **zxing-cpp**,
 | ✏️ **Selection-Aware Actions** | Text statistics and actions based on selection in OCR results |
 | ↩️ **Undo/Redo** | Full undo/redo support in ExtractedPage for text editing workflow |
 | ✏️ **GtkSourceView Editor** | Native search bar, editor preferences, and "Open in External Editor" handoff in OCR results |
-| 🔒 **Privacy-first** | All processing happens locally — no telemetry or tracking |
+| 🔒 **Privacy-first** | OCR runs locally — no telemetry or tracking. The optional text-to-speech sends the selected text to Google ([details](SECURITY.md#data-flows)) |
 | 🎨 **Native GTK4** | Designed for GNOME, built with Libadwaita, GtkSourceView and Blueprint |
 | 🚀 **Async D&D** | Smooth, non-blocking asynchronous drag-and-drop |
 | ♿ **Enhanced Accessibility** | Improved keyboard navigation, tooltips, and screen reader support |
