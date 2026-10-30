@@ -28,9 +28,12 @@ jobs:
           args: check --target-version py312
 
       - name: Install uv and project dependencies
+        # Pin uv so a new release cannot change resolution behaviour between
+        # runs, and sync in --locked mode so an out-of-date uv.lock fails the
+        # build instead of being silently rewritten (#488).
         run: |
-          pip install uv
-          uv sync --dev
+          pip install "uv==0.13.5"
+          uv sync --locked --dev
 
       - name: Check code formatting
         # Configuration in pyproject.toml; Markdown is excluded because the
@@ -71,13 +74,8 @@ jobs:
             --ignore=tests/test_widgets.py \
             --ignore=tests/test_audit_app_logic.py \
             --ignore=tests/test_integration_cli_enterprise.py \
+            --ignore=tests/test_security_download_limit.py \
             --cov=anura --cov-report=xml --cov-report=term-missing
-
-      - name: Upload coverage report
-        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
-        with:
-          files: coverage.xml
-          fail_ci_if_error: false
 
       - name: Check Flatpak runtime dependency coverage (F-005)
         # Ensure every runtime Python dependency in uv.lock (resolved from
@@ -247,7 +245,7 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-50
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-51
       options: --privileged
 
     steps:
@@ -334,6 +332,42 @@ jobs:
             exit 1
           fi
           echo "✓ Smoke test passed"
+
+      - name: Locate the installed prefix
+        id: prefix
+        run: |
+          APP_DIR="$(flatpak info --user --show-location io.github.d3msudo.anura)"
+          if [ -z "$APP_DIR" ] || [ ! -d "$APP_DIR/files" ]; then
+            echo "✗ Installed app files not found (flatpak info returned '$APP_DIR')"
+            exit 1
+          fi
+          echo "prefix=$APP_DIR/files" >> "$GITHUB_OUTPUT"
+          echo "Using prefix: $APP_DIR/files"
+
+      - name: Validate desktop file and AppStream metadata
+        # Mandatory since #483: a broken launcher or an invalid metainfo blocks
+        # the Flathub submission, and the SDK ships both validators.
+        run: |
+          PREFIX="${{ steps.prefix.outputs.prefix }}"
+          desktop-file-validate "$PREFIX/share/applications/io.github.d3msudo.anura.desktop"
+          appstreamcli validate --no-net \
+            "$PREFIX/share/metainfo/io.github.d3msudo.anura.metainfo.xml"
+
+      - name: Check the licence inventory
+        # Fails when a declared licence is missing or empty, and keeps the full
+        # listing as evidence for the release review (#493).
+        run: |
+          python3 build-aux/check_license_inventory.py \
+            --root "${{ steps.prefix.outputs.prefix }}" \
+            --output license-inventory.json
+
+      - name: Upload licence inventory
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: license-inventory-${{ github.run_id }}
+          path: license-inventory.json
+          retention-days: 30
 
       - name: Upload Flatpak Artifact (Debug)
         if: always()

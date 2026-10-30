@@ -105,7 +105,7 @@ jobs:
                 '- `flatpak/io.github.d3msudo.anura.local.json`',
                 '',
                 '_This issue was automatically created by the Flatpak dependency checker._'
-              ].join('\\n');
+              ].join('\n');
 
               if (!existing) {
                 await github.rest.issues.create({
