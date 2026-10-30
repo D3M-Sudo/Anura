@@ -124,3 +124,61 @@ def test_main_fails_on_a_missing_license(tmp_path):
     (tmp_path / "share" / "licenses" / app_id / "LICENSE").unlink()
 
     assert checker.main(["--root", str(tmp_path)]) == 1
+
+
+def test_build_only_modules_are_not_required(tmp_path):
+    """Licences removed by the app cleanup must not be required (#482)."""
+    expected = checker.expected_licenses(MANIFEST)
+    excluded = checker.excluded_licenses(MANIFEST)
+
+    expected_dests = " ".join(dest for _module, dest in expected)
+    excluded_dests = " ".join(dest for _module, dest in excluded)
+
+    for name in ("scikit-build-core", "pybind11", "nanobind"):
+        assert f"/{name}/LICENSE" in excluded_dests
+        assert f"/{name}/LICENSE" not in expected_dests
+
+
+def test_a_module_without_cleanup_is_required(tmp_path):
+    """Without a cleanup rule the declared licence stays part of the inventory."""
+    manifest = {
+        "app-id": "io.github.d3msudo.anura",
+        "cleanup": [],
+        "modules": [
+            {
+                "name": "python3-tool",
+                "build-commands": [
+                    'install -Dm0644 LICENSE "$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/tool/LICENSE"'
+                ],
+            }
+        ],
+    }
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    assert checker.expected_licenses(manifest_path) == [
+        ("python3-tool", "share/licenses/io.github.d3msudo.anura/tool/LICENSE")
+    ]
+    assert checker.excluded_licenses(manifest_path) == []
+
+
+def test_a_module_removed_by_cleanup_is_excluded(tmp_path):
+    manifest = {
+        "app-id": "io.github.d3msudo.anura",
+        "cleanup": ["/share/licenses/io.github.d3msudo.anura/tool"],
+        "modules": [
+            {
+                "name": "python3-tool",
+                "build-commands": [
+                    'install -Dm0644 LICENSE "$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/tool/LICENSE"'
+                ],
+            }
+        ],
+    }
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    assert checker.expected_licenses(manifest_path) == []
+    assert checker.excluded_licenses(manifest_path) == [
+        ("python3-tool", "share/licenses/io.github.d3msudo.anura/tool/LICENSE")
+    ]

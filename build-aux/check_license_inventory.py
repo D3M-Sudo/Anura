@@ -26,6 +26,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import json
 from pathlib import Path
 import re
@@ -43,10 +44,26 @@ def _manifest(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def expected_licenses(manifest_path: Path) -> list[tuple[str, str]]:
-    """Return (module, destination) pairs declared by the manifest."""
+def removed_license_dirs(manifest_path: Path) -> set[str]:
+    """Directories under share/licenses/<app-id>/ removed by the app cleanup.
+
+    Build-only modules (scikit-build-core, pybind11, nanobind) install a licence
+    and are then removed from the runtime together with it (#482): requiring
+    their licence would fail a correct bundle.
+    """
     manifest = _manifest(manifest_path)
-    expected: list[tuple[str, str]] = []
+    prefix = f"/share/licenses/{manifest['app-id']}/"
+    return {entry[len(prefix) :].strip("/") for entry in manifest.get("cleanup") or [] if entry.startswith(prefix)}
+
+
+def _is_removed(name: str, removed: set[str]) -> bool:
+    return any(fnmatch.fnmatch(name, pattern) for pattern in removed)
+
+
+def _declared_licenses(manifest_path: Path) -> list[tuple[str, str, str]]:
+    """Return (module, directory, destination) for every declared licence."""
+    manifest = _manifest(manifest_path)
+    declared: list[tuple[str, str, str]] = []
 
     for module in manifest.get("modules", []):
         for command in module.get("build-commands") or []:
@@ -55,9 +72,33 @@ def expected_licenses(manifest_path: Path) -> list[tuple[str, str]]:
             match = LICENSE_DEST_RE.search(command)
             if match:
                 app_id, name = match.groups()
-                expected.append((module["name"], f"share/licenses/{app_id}/{name}/LICENSE"))
+                declared.append((module["name"], name, f"share/licenses/{app_id}/{name}/LICENSE"))
 
-    return expected
+    return declared
+
+
+def expected_licenses(manifest_path: Path) -> list[tuple[str, str]]:
+    """Return (module, destination) pairs that must exist in the bundle.
+
+    Licences removed by the app-level cleanup are excluded: those modules are
+    not distributed.
+    """
+    removed = removed_license_dirs(manifest_path)
+    return [
+        (module, destination)
+        for module, name, destination in _declared_licenses(manifest_path)
+        if not _is_removed(name, removed)
+    ]
+
+
+def excluded_licenses(manifest_path: Path) -> list[tuple[str, str]]:
+    """Return (module, destination) pairs intentionally removed from the runtime."""
+    removed = removed_license_dirs(manifest_path)
+    return [
+        (module, destination)
+        for module, name, destination in _declared_licenses(manifest_path)
+        if _is_removed(name, removed)
+    ]
 
 
 def app_id_from_manifest(manifest_path: Path) -> str:
@@ -167,9 +208,15 @@ def main(argv: list[str] | None = None) -> int:
             "app_id": app_id,
             "required": entries,
             "problems": problems,
+            "excluded_build_only": [
+                {"module": module, "path": destination} for module, destination in excluded_licenses(args.manifest)
+            ],
             "all_license_files": scan_licenses(args.root, app_id),
         }
         args.output.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+
+    for module, destination in excluded_licenses(args.manifest):
+        print(f"SKIP {module:28} {destination} (build-only, removed from the runtime)")
 
     for entry in entries:
         print(f"OK   {entry['module']:28} {entry['bytes']:>7} B  {entry['path']}")
