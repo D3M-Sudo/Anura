@@ -79,3 +79,35 @@ Two rules to keep in mind when editing the manifest:
 
 The inventory can be verified against a built prefix with
 `build-aux/check_license_inventory.py --root <prefix>` (see #493).
+
+## Permissions (`finish-args`)
+
+Every static permission is mapped to the feature that needs it.
+`tests/test_flatpak_manifest_hygiene.py` fails when the manifest and this table
+drift apart, so a new permission has to be justified here first (#498).
+
+| Flag | Why Anura needs it |
+| --- | --- |
+| `--share=network` | Downloads Tesseract language models from GitHub; when the user asks for speech, sends the selected text to Google TTS |
+| `--share=ipc` | Shared memory with X11 and the portals (screenshot buffers) |
+| `--socket=wayland` | Native Wayland window; required on Wayland sessions |
+| `--socket=x11` | X11 window plus the `scrot` screenshot fallback, which is X11-only |
+| `--socket=pulseaudio` | Playback of the generated speech through GStreamer |
+| `--device=dri` | GPU rendering for GTK4 |
+| `--filesystem=xdg-pictures:ro` | Open an image from Pictures and accept drag-and-drop from it |
+| `--filesystem=xdg-download:ro` | Same, for Downloads |
+| `--filesystem=xdg-desktop:ro` | Same, for Desktop |
+| `--filesystem=xdg-documents:ro` | Same, for Documents |
+| `--talk-name=org.a11y.Bus` | Screen-reader support (AT-SPI) |
+| `--talk-name=org.freedesktop.portal.Desktop` | Screenshot portal, file chooser, notifications, external-editor handoff |
+| `--talk-name=org.freedesktop.Notifications` | libnotify fallback when no notification portal is available |
+| `--env=TESSDATA_PREFIX=/app/share/tessdata` | Tells Tesseract where the bundled models live |
+
+Notes:
+
+- The four read-only XDG folders are under review in #490: they let the file
+  chooser and drag-and-drop hand over images from the standard folders without
+  extra portal round-trips.
+- Wayland and X11 (including the `scrot` fallback) still need a manual runtime
+  test on a desktop session. The CI only runs `anura --help` inside the sandbox
+  (#498, #500).

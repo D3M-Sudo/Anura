@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Changed
+- Flatpak: every `finish-arg` is now mapped to the feature that needs it in `flatpak/README.md`, and `tests/test_flatpak_manifest_hygiene.py` fails when the manifest, the documentation or the source pinning drift apart (an unpinned `file`/`archive`/`git` source or an undocumented permission) (#498, #504)
+- Release: `generate_release_notes.py --markdown` produces the GitHub release body from the `CHANGELOG.md` section for the tag, so a release can no longer be published with an empty body (#489)
+- Docs: `docs/reference/dependencies.md` explains how the manifest satisfies the Flathub dependency-manifest requirement and how to prove an offline build (#504)
 - Packaging: the licence inventory checker no longer requires the licences of build-only modules (`scikit-build-core`, `pybind11`, `nanobind`), which are removed from the runtime together with their licence copies; they are reported as `SKIP` and listed under `excluded_build_only` in the JSON evidence (#493)
 - Release: `build-aux/release.sh` now refuses to run on a dirty tree, on an existing tag or outside the release branch (`RELEASE_BRANCH` overrides it), and it builds the AppStream entry from the `CHANGELOG.md` section instead of writing a `TODO` placeholder (#487, #485)
 - Release: `build-aux/pin_source_commit.py` writes the tag's commit into the submission manifest, so a moved tag cannot change the sources; `--check` verifies it (#501)

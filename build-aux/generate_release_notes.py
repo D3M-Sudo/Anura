@@ -80,6 +80,26 @@ def parse_changelog(changelog_path: Path) -> dict:
     return releases
 
 
+def markdown_release_notes(changelog_path: Path, version: str, date: str) -> str:
+    """Return the GitHub release body for *version*, taken from CHANGELOG.md.
+
+    The section is copied verbatim (headings and bullets), so the published
+    release and the changelog cannot disagree (#489).
+    """
+    content = changelog_path.read_text(encoding="utf-8")
+    pattern = (
+        r"^## \[" + re.escape(version) + r"\] - \d{4}-\d{2}-\d{2}\n"
+        r"(?P<content>.*?)(?=^## \[|\Z)"
+    )
+    match = re.search(pattern, content, re.MULTILINE | re.DOTALL)
+    body = match.group("content").strip() if match else ""
+
+    if not body:
+        sys.exit(f"CHANGELOG.md has no [{version}] section: the release body would be empty")
+
+    return f"## Anura v{version} — {date}\n\n{body}\n"
+
+
 def _metainfo_sections(changelog_path: Path, version: str) -> dict[str, list[str]]:
     """Return the ``### Section -> [items]`` map of one CHANGELOG version.
 
@@ -181,6 +201,19 @@ if __name__ == "__main__":
 
     # Release helper: print the AppStream entry for the version being released.
     #   generate_release_notes.py --metainfo <changelog.md> <version> <date>
+    if arguments and arguments[0] == "--markdown":
+        if len(arguments) != 4:
+            print(
+                f"Usage: {sys.argv[0]} --markdown <changelog.md> <version> <YYYY-MM-DD>",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        changelog, version, date = Path(arguments[1]), arguments[2], arguments[3]
+        if not validate_version(version):
+            sys.exit(f"Error: Invalid version format: {version}")
+        print(markdown_release_notes(changelog, version, date))
+        sys.exit(0)
+
     if arguments and arguments[0] == "--metainfo":
         if len(arguments) != 4:
             print(
