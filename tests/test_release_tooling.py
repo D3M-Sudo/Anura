@@ -66,3 +66,17 @@ def test_generator_emits_a_valid_release_entry():
 def test_generator_refuses_a_version_without_notes():
     with pytest.raises(SystemExit):
         generator.metainfo_release_entry(CHANGELOG, "9.9.9", "2026-10-20")
+
+
+def test_markdown_release_notes_come_from_the_changelog():
+    """The GitHub release body mirrors the CHANGELOG section (#489)."""
+    body = generator.markdown_release_notes(CHANGELOG, "0.2.1", "2026-10-20")
+
+    assert body.startswith("## Anura v0.2.1 — 2026-10-20")
+    assert "### Added" in body
+    assert "tests/test_history_expansion_real.py" in body
+
+
+def test_markdown_release_notes_refuse_a_missing_version():
+    with pytest.raises(SystemExit):
+        generator.markdown_release_notes(CHANGELOG, "9.9.9", "2026-10-20")

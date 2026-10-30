@@ -181,3 +181,46 @@ PYTHONPATH=".:$SP" /usr/bin/python3 script.py
 
 Reference implementation: the shortcuts-overlay vs `ActionRegistry`
 accelerator consistency check (2026-09-12) validated this approach end to end.
+
+## Flathub dependency manifest and offline build
+
+Flathub requires the manifest itself to describe every input: each source with a
+URL, a type and a checksum (or a git commit), so a build is reproducible and does
+not fetch anything undeclared. `pyproject.toml` and `uv.lock` belong to the
+development workflow (`uv sync`) and are **not** a substitute for that manifest.
+
+How Anura satisfies it:
+
+- every Python module installs a pinned wheel or sdist with its `sha256`, in
+  build order (build backends first: `scikit-build-core`, `pybind11`,
+  `nanobind`, `packaging`, `pathspec`);
+- native dependencies are pinned archives (`leptonica`, `tesseract`, `imlib2`,
+  `scrot`, `libportal`) with checksums;
+- the OCR models are pinned URLs inside the `tessdata` module, and the runtime
+  verifies their digest against `anura/data/tessdata_checksums.json`;
+- the release manifest (`flatpak/io.github.d3msudo.anura.json`) is generated from
+  the local one by `build-aux/release.sh`, which rewrites the `anura` module's
+  `dir` source into a `git` source at the release tag; for the Flathub submission
+  repository, `build-aux/pin_source_commit.py` adds the tag's `commit` so a moved
+  tag cannot change the sources.
+
+`tests/test_flatpak_manifest_hygiene.py::test_every_source_is_pinned` enforces the
+checksum rule on every commit: a `file`/`archive` source without `sha256`, a git
+source without tag/commit, or a `dir` source outside the app module fails the
+`python-quality` job.
+
+### Checking a submission build
+
+```bash
+# Flathub linter (run against the submission manifest, needs network for schema checks)
+flatpak-builder-lint manifest flatpak/io.github.d3msudo.anura.json
+flatpak-builder-lint appstream  <installed-prefix>/share/metainfo/io.github.d3msudo.anura.metainfo.xml
+
+# Offline proof: the second build must not download anything
+flatpak-builder --force-clean --state-dir=.fb-state builddir flatpak/io.github.d3msudo.anura.local.json
+flatpak-builder --force-clean --disable-downloads --state-dir=.fb-state builddir flatpak/io.github.d3msudo.anura.local.json
+```
+
+The `--state-dir` cache keeps the downloaded sources, so the second run proves
+the manifest is self-contained. Both commands are to be run where Flatpak is
+available; the CI sandbox only builds with network access (#504).
