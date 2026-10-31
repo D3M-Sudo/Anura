@@ -333,6 +333,25 @@ jobs:
           fi
           echo "✓ Smoke test passed"
 
+      - name: Functional test - OCR in the sandbox
+        run: |
+          echo "=== OCR su immagine valida dentro sandbox ==="
+          if ! timeout 120 xvfb-run -a flatpak run --file-forwarding io.github.d3msudo.anura \
+               -f @@ "$PWD/data/screenshots/anura-welcome-page.png" @@ --silent; then
+            echo "✗ OCR failed inside the sandbox"; exit 1
+          fi
+          echo "✓ OCR passed inside the sandbox"
+
+      - name: Functional test - OCR negativo su file non immagine
+        run: |
+          echo "=== OCR negativo su file non immagine (.txt) ==="
+          echo "non è un'immagine valida" > /tmp/notanimage.txt
+          if timeout 120 xvfb-run -a flatpak run --file-forwarding io.github.d3msudo.anura \
+               -f @@ /tmp/notanimage.txt @@ --silent; then
+            echo "✗ OCR non dovrebbe avere successo su un .txt"; exit 1
+          fi
+          echo "✓ OCR negativo correttamente fallito"
+
       - name: Locate the installed prefix
         id: prefix
         run: |
