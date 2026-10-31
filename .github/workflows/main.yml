@@ -377,10 +377,20 @@ jobs:
           path: io.github.d3msudo.anura.flatpak
           retention-days: 7
 
+      - name: Build release notes from CHANGELOG
+        # Never publish a release with an empty body (#489): the helper exits
+        # when the version has no CHANGELOG section.
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          python3 build-aux/generate_release_notes.py --markdown CHANGELOG.md "$VERSION" "$(date -u +%F)" > release-notes.md
+          test -s release-notes.md
+
       - name: Upload Flatpak Bundle to Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           files: io.github.d3msudo.anura.flatpak
+          body_path: release-notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
