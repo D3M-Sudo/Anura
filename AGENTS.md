@@ -192,12 +192,13 @@ flatpak-builder --run builddir flatpak/io.github.d3msudo.anura.local.json anura
 
 ## Release Process
 
-> **AGENT REMINDER — the GitHub release body is NOT automated.**
-> The CI auto-creates the GitHub release for every `v*` tag (the
-> `flatpak-builder` job in `.github/workflows/main.yml` calls
-> `softprops/action-gh-release` and attaches the Flatpak bundle) — but with
-> an **EMPTY body**. Populating the release notes is a **mandatory manual
-> step** every time a tag is created and pushed.
+> **AGENT REMINDER — the GitHub release body comes from `CHANGELOG.md`.**
+> The CI creates the release for every `v*` tag (the `flatpak-builder` job in
+> `.github/workflows/main.yml`): it generates `release-notes.md` with
+> `build-aux/generate_release_notes.py --markdown` and passes it to
+> `softprops/action-gh-release` through `body_path`. If the tag has no
+> `CHANGELOG.md` section the step fails before the release is published, so an
+> empty body can no longer reach users (#489).
 
 1. Run `./build-aux/release.sh <version>` (bumps version, pins tessdata,
    generates the release manifest) and push the tag. The script refuses to run
@@ -209,19 +210,15 @@ flatpak-builder --run builddir flatpak/io.github.d3msudo.anura.local.json anura
    tag's commit.
 2. Wait for the tag's CI run to complete (`gh run watch <run-id>`): the
    release is created only when the `flatpak-builder` job finishes.
-3. Populate the release body — `CHANGELOG.md` is the single source of truth:
+3. Verify the generated body (it comes from `CHANGELOG.md`, the single source of
+   truth, so the release and the changelog cannot disagree):
    ```bash
-   { echo "## Anura v<version> — <YYYY-MM-DD>"; echo;
-     awk 'BEGIN{p=0} /^## \[<version>\]/{p=1; next} /^## \[<prev-version>\]/{exit} p{print}' \
-       CHANGELOG.md > /tmp/notes-<version>.md
-     gh release edit v<version> --title "v<version>" \
-       --notes-file /tmp/notes-<version>.md --latest
+   gh release view v<version> --json body -q .body | head -20
    ```
    - Header style: `## Anura vX.Y.Z — YYYY-MM-DD`; keep the date consistent
-     with the CHANGELOG entry (both files are the reference for users).
-   - Never leave the body empty and never invent notes that are not in the
-     CHANGELOG; keep the `### Added / Fixed / Changed / Security / Removed`
-     subsection structure as-is.
+     with the CHANGELOG entry.
+   - Only edit the body by fixing `CHANGELOG.md` and re-running the step; never
+     hand-write notes that are not in the changelog.
 4. Final check: `gh release view v<version>` — asset
    `io.github.d3msudo.anura.flatpak` attached, notes complete, `Latest`
    flag on the new release.
