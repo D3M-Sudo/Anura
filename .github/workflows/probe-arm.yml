@@ -1,0 +1,13 @@
+name: Probe ARM runner
+
+on:
+  push:
+    branches: [ "m2/probe-arm-runner" ]
+
+jobs:
+  probe-arm:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 5
+    steps:
+      - name: Report architecture
+        run: uname -m
