@@ -88,7 +88,6 @@ DOCUMENTED_FINISH_ARGS = {
     "--filesystem=xdg-desktop:ro",
     "--filesystem=xdg-documents:ro",
     "--talk-name=org.a11y.Bus",
-    "--talk-name=org.freedesktop.portal.Desktop",
     "--talk-name=org.freedesktop.Notifications",
     "--env=TESSDATA_PREFIX=/app/share/tessdata",
 }
