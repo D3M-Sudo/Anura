@@ -99,12 +99,13 @@ drift apart, so a new permission has to be justified here first (#498).
 | `--filesystem=xdg-desktop:ro` | Same, for Desktop |
 | `--filesystem=xdg-documents:ro` | Same, for Documents |
 | `--talk-name=org.a11y.Bus` | Screen-reader support (AT-SPI) |
-| `--talk-name=org.freedesktop.portal.Desktop` | Screenshot portal, file chooser, notifications, external-editor handoff |
 | `--talk-name=org.freedesktop.Notifications` | libnotify fallback when no notification portal is available |
 | `--env=TESSDATA_PREFIX=/app/share/tessdata` | Tells Tesseract where the bundled models live |
 
 Notes:
 
+- No `--talk-name=org.freedesktop.portal.*` entries: portals are reachable through their API
+  without one, and `flatpak-builder-lint` rejects them (`finish-args-portal-talk-name`).
 - The four read-only XDG folders are under review in #490: they let the file
   chooser and drag-and-drop hand over images from the standard folders without
   extra portal round-trips.

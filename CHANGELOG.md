@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Changed
+- Flatpak: dropped `--talk-name=org.freedesktop.portal.Desktop`. Portals are reachable through their API without a talk-name, and `flatpak-builder-lint` rejects any `--talk-name=org.freedesktop.portal.*` as an error (`finish-args-portal-talk-name`), which blocks the Flathub submission (#504)
 - Flatpak: every `finish-arg` is now mapped to the feature that needs it in `flatpak/README.md`, and `tests/test_flatpak_manifest_hygiene.py` fails when the manifest, the documentation or the source pinning drift apart (an unpinned `file`/`archive`/`git` source or an undocumented permission) (#498, #504)
 - Release: `generate_release_notes.py --markdown` produces the GitHub release body from the `CHANGELOG.md` section for the tag, so a release can no longer be published with an empty body (#489)
 - Docs: `docs/reference/dependencies.md` explains how the manifest satisfies the Flathub dependency-manifest requirement and how to prove an offline build (#504)
