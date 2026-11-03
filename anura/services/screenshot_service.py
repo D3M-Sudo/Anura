@@ -656,7 +656,7 @@ class ScreenshotService(GObject.GObject):
 
     def _validate_decode_inputs(self, lang: str) -> tuple[bool, str | None, str | None, OcrResult | None, str]:
         """Validate language code for OCR processing."""
-        if not lang or not re.match(LANG_CODE_PATTERN, lang):
+        if not lang or not re.fullmatch(LANG_CODE_PATTERN, lang):
             logger.error(f"Anura: Invalid language code '{lang}' for OCR")
             return (False, "", _("Invalid language code specified."), None, "")
         return (True, None, None, None, "")
@@ -891,7 +891,7 @@ class ScreenshotService(GObject.GObject):
         Wraps decode_image_sync() for use with GUI mode.
         """
         # Validate language code before processing
-        if not lang or not re.match(LANG_CODE_PATTERN, lang):
+        if not lang or not re.fullmatch(LANG_CODE_PATTERN, lang):
             logger.error(f"Anura: Invalid language code '{lang}' for OCR")
             self._emit_decode_error(_("Invalid language code specified."))
             return False

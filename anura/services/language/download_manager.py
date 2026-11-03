@@ -189,7 +189,7 @@ class DownloadManager(GObject.GObject):
             The language code if successful, None otherwise
         """
         # Security: Validate lang_code is a valid ISO 639-2 code
-        if not code or not re.match(LANG_CODE_PATTERN, code):
+        if not code or not re.fullmatch(LANG_CODE_PATTERN, code):
             logger.error(f"Anura: Blocked invalid language code download attempt: '{code}'")
             return None
 
