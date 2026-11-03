@@ -8,7 +8,6 @@ import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
-from PIL import Image
 
 pytest.importorskip("gi")
 
@@ -185,6 +184,8 @@ class TestScreenshotServiceEnterprise:
 
     def test_unidentified_image_error_logs_without_traceback(self, service):
         """A non-image file is an expected input error and must not log a traceback."""
+        from PIL import Image
+
         error = Image.UnidentifiedImageError("cannot identify image file")
         with (
             patch("anura.services.screenshot_service.logger.error") as log_error,
