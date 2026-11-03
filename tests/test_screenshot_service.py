@@ -182,6 +182,21 @@ class TestScreenshotServiceEnterprise:
         service._emit_decode_error.assert_called_once()
         assert service._is_capturing is False
 
+    def test_unidentified_image_error_logs_without_traceback(self, service):
+        """A non-image file is an expected input error and must not log a traceback."""
+        from PIL import Image
+
+        error = Image.UnidentifiedImageError("cannot identify image file")
+        with (
+            patch("anura.services.screenshot_service.logger.error") as log_error,
+            patch("anura.services.screenshot_service.logger.exception") as log_exception,
+        ):
+            result = ScreenshotService._handle_decode_exception(service, error)
+
+        assert result[1] == "Failed to read image file."
+        log_error.assert_called_once()
+        log_exception.assert_not_called()
+
     def test_format_decode_result(self, service):
         """Test result formatting for various OCR outcomes."""
         # Success

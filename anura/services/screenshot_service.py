@@ -837,7 +837,10 @@ class ScreenshotService(GObject.GObject):
             logger.error(f"Anura OCR: Tesseract timed out after {OCR_TIMEOUT_SECONDS}s")
             error_message = _("OCR processing failed. Please try again.")
         elif isinstance(e, OSError):
-            logger.exception(f"Anura OCR/QR File Error: {e}")
+            # Invalid user-selected files are expected input errors, not crashes.
+            # Avoid logger.exception() here: it prints a traceback for ordinary
+            # cases such as PIL.UnidentifiedImageError in silent CLI mode.
+            logger.error(f"Anura OCR/QR File Error: {e}")
             error_message = _("Failed to read image file.")
         elif isinstance(e, (pytesseract.TesseractError, pytesseract.TesseractNotFoundError)):
             logger.exception(f"Anura OCR Error: Tesseract failed: {e}")
