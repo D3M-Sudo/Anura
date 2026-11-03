@@ -20,9 +20,7 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path]:
     (root / "data" / "ui").mkdir(parents=True)
     po.mkdir()
     fakebin.mkdir()
-    (root / "meson.build").write_text(
-        "project('anura', version: '1.2.3')\n", encoding="utf-8"
-    )
+    (root / "meson.build").write_text("project('anura', version: '1.2.3')\n", encoding="utf-8")
     (root / "anura" / "sample.py").write_text("_('Sample')\n", encoding="utf-8")
     (root / "data" / "ui" / "sample.blp").write_text("// sample\n", encoding="utf-8")
     (root / "data" / "sample.desktop.in").write_text("Name=Sample\n", encoding="utf-8")
@@ -61,13 +59,9 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path]:
 
 def _run(po: Path, fakebin: Path, **extra_env: str) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
-    env.update(
-        {"PATH": f"{fakebin}:{env['PATH']}", "FAIL_XGETTEXT": "0", "FAIL_MSGCAT": "0"}
-    )
+    env.update({"PATH": f"{fakebin}:{env['PATH']}", "FAIL_XGETTEXT": "0", "FAIL_MSGCAT": "0"})
     env.update(extra_env)
-    return subprocess.run(
-        ["bash", "update_potfiles.sh"], cwd=po, env=env, capture_output=True, text=True
-    )
+    return subprocess.run(["bash", "update_potfiles.sh"], cwd=po, env=env, capture_output=True, text=True)
 
 
 def test_xgettext_failure_preserves_existing_outputs(tmp_path: Path) -> None:
