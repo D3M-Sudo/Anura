@@ -58,6 +58,7 @@ class TestCLIIntegrationEnterprise:
         options.insert_value("silent", GLib.Variant.new_boolean(True))
         command_line = MagicMock()
         command_line.get_options_dict.return_value = options
+        command_line.get_cwd.return_value = "/tmp/client"
 
         with patch.object(app, "_handle_file_option", return_value=0) as handler:
             assert app.do_command_line(command_line) == 0
@@ -140,9 +141,10 @@ class TestCLIIntegrationEnterprise:
         file_options = GLib.VariantDict.new(None)
         file_options.insert_value("file", GLib.Variant.new_bytestring(b"image.png"))
         cmd_line.get_options_dict.return_value = file_options
+        cmd_line.get_cwd.return_value = "/tmp/requesting-client"
         with patch.object(app, "_handle_file_option", return_value=0) as mock_file:
             app.do_command_line(cmd_line)
-            mock_file.assert_called_once_with("image.png", False)
+            mock_file.assert_called_once_with("/tmp/requesting-client/image.png", False)
 
     def test_on_decoded_no_window(self, app):
         """Test application-level on_decoded when no GUI window is present."""

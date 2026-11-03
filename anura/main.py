@@ -272,7 +272,14 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         if "extract_to_clipboard" in options:
             return self._handle_extract_to_clipboard()
         if file_variant is not None:
-            return self._handle_file_option(os.fsdecode(file_variant.get_bytestring()), "silent" in options)
+            file_path = os.fsdecode(file_variant.get_bytestring())
+            # A remote invocation can target an already-running primary instance.
+            # Resolve relative paths against the requesting client's CWD, not the
+            # primary process's working directory.
+            client_cwd = command_line.get_cwd()
+            if client_cwd and not os.path.isabs(file_path):
+                file_path = os.path.join(client_cwd, file_path)
+            return self._handle_file_option(file_path, "silent" in options)
 
         self.activate()
         return 0
