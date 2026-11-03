@@ -7,8 +7,8 @@ from anura.services.language.validator import LanguageValidator
 
 
 def test_language_code_format_rejects_trailing_newline() -> None:
-    assert not LanguageValidator.is_valid_code_format("eng\\n")
-    assert not LanguageValidator.is_valid_code_format("eng\\r\\n")
+    assert not LanguageValidator.is_valid_code_format("eng\n")
+    assert not LanguageValidator.is_valid_code_format("eng\r\n")
 
 
 def test_language_code_format_accepts_valid_codes() -> None:
