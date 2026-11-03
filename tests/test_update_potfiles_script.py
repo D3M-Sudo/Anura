@@ -40,7 +40,10 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path]:
     (fakebin / "xgettext").write_text(
         "#!/bin/sh\n"
         "if [ \"$FAIL_XGETTEXT\" = 1 ]; then exit 23; fi\n"
-        "for arg in \"$@\"; do case \"$arg\" in --output=*) out=$(printf '%s' \"$arg\" | sed 's/^--output=//');; esac; done\n"
+        "for arg in \"$@\"; do "
+        "case \"$arg\" in --output=*) "
+        "out=$(printf '%s' \"$arg\" | sed 's/^--output=//');; "
+        "esac; done\n"
         "printf '#: ../anura/sample.py:1\\nmsgid \"\"\\nmsgstr \"\"\\n' > \"$out\"\n",
         encoding="utf-8",
     )
