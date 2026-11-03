@@ -97,6 +97,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
 
         # Use shared singleton instance
         self.share_service = get_share_service()
+        self.connect_tracked(self.share_service, "share", self._on_share_status)
         share_action = Gio.SimpleAction.new("share", GLib.VariantType.new("s"))
         self.connect_tracked(share_action, "activate", self._on_share)
         self.add_action(share_action)
@@ -528,6 +529,13 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
             self.show_toast(_("No text to share."))
             return
         self.share_service.share(provider, text)
+
+    def _on_share_status(self, _service: object, success: bool) -> None:
+        """Report asynchronous share success or failure to the user."""
+        if success:
+            self.show_toast(_("Text shared successfully."))
+        else:
+            self.show_toast(_("Failed to share text. Try a shorter selection or another provider."))
 
     def show_toast(self, title: str, priority: Adw.ToastPriority = Adw.ToastPriority.NORMAL) -> None:
         """Show a toast notification to the user."""
