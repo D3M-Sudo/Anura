@@ -58,10 +58,9 @@ class ShareService(GObject.GObject):
         if not isinstance(url, str) or not url or len(url) > ShareService.MAX_URL_LENGTH:
             return False
 
-        # Reject characters that can cause URI parsing or launching discrepancies.
-        if any(c in url for c in ("\\\\", "<", ">", '"', "|", "^", "`", "{", "}")):
-            return False
-        if not url.isascii() or any(ord(c) < 0x20 or ord(c) == 0x7F for c in url):
+        # Apply the shared safety gate to every scheme before any allowlist decision.
+        # An explicitly allowed scheme must not bypass the common validation checks.
+        if not is_safe_url_string(url):
             return False
 
         try:
