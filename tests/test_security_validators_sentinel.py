@@ -5,7 +5,7 @@
 
 import tempfile
 
-from anura.utils.validators import validate_image_resource
+from anura.utils.validators import is_local_or_private_url, validate_image_resource
 
 
 def test_validate_image_resource_rejects_directory():
@@ -37,8 +37,6 @@ def test_validate_image_resource_accepts_regular_file():
         assert size > 0
         assert error is None
 
-
-from anura.utils.validators import is_local_or_private_url
 
 
 def test_local_or_private_url_rejects_legacy_ipv4_notation() -> None:
