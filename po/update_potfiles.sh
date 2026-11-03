@@ -1,10 +1,9 @@
 #!/bin/bash
+set -euo pipefail
 #
 # update_potfile.sh
 # 
 # Technical script for Anura OCR to extract translatable strings.
-
-set -euo pipefail
 
 DOMAIN_EXTENSION="io.github"
 AUTHOR="d3msudo"
@@ -18,12 +17,18 @@ fi
 
 lang="${1:-}"
 
-tmpdir=$(mktemp -d "./.anura-pot-update.XXXXXX")
+# 1. Keep intermediates private; do not remove the previous valid template.
+tmpdir=$(mktemp -d "${TMPDIR:-.}/.anura-pot-update.XXXXXX")
 trap 'rm -rf -- "$tmpdir"' EXIT
 
 # 2. Extract version from root meson.build
 # Using a more robust grep pattern to avoid 'meson' string interference
 version=$(grep -Po "version:\s*'\K[^']+" ../meson.build | head -n 1)
+
+if [[ -z "$version" ]]; then
+    echo "Anura: Could not determine version from ../meson.build" >&2
+    exit 1
+fi
 
 echo "Anura: Starting string extraction for version $version..."
 
@@ -50,10 +55,9 @@ msgfmt --check-format --check-header -o /dev/null "$tmpdir/$APPID.pot"
 grep -F "#: " "$tmpdir/$APPID.pot" > "$tmpdir/references.txt" || true
 sed 's/#: //g;s/:[0-9]*//g;s/\.\.\///g' "$tmpdir/references.txt" | tr ' ' '\n' | sort -u > "$tmpdir/POTFILES"
 
-# Replace tracked outputs only after extraction and validation succeed.
+# Commit generated outputs only after extraction and validation succeed.
 mv -- "$tmpdir/$APPID.pot" "$APPID.pot"
 mv -- "$tmpdir/POTFILES" POTFILES
-rm -f POTFILES.in
 
 # 6. Language Update Phase (Optional argument)
 if [ ! -z "${lang}" ]; then
@@ -72,6 +76,6 @@ fi
 # 7. Finalization
 # Keep the POT file named after the APPID for Meson i18n compatibility
 # No renaming needed
-rm -f $APPNAME.pot $APPNAME-python.pot $APPNAME-blueprint.pot $APPNAME-desktop.pot $APPNAME-metainfo.pot *.ui
+
 
 echo "Anura: Extraction complete. Template saved as $APPID.pot"
