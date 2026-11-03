@@ -201,6 +201,23 @@ class TestScreenshotServiceEnterprise:
         assert s is False
         assert "No text found" in e
 
+    def test_cancelled_portal_capture_cleans_up_source_file(self, service, tmp_path):
+        """A cancelled portal task must remove its temporary screenshot before OCR."""
+        temp_file = tmp_path / "cancelled-shot.png"
+        temp_file.write_bytes(b"temporary screenshot")
+
+        manager = MagicMock()
+        manager.is_cancelled.return_value = True
+        manager.execute.side_effect = lambda fn, args, **kwargs: fn(*args)
+        with patch("anura.services.screenshot_service.get_atomic_manager", return_value=manager):
+            result = ScreenshotService._handle_portal_uri_background(
+                service, "eng", temp_file.as_uri(), False, task_id="cancelled-task"
+            )
+
+        assert result is False
+        assert not temp_file.exists()
+        manager.execute.assert_called_once()
+
     def test_cleanup_temporary_file(self, service, tmp_path):
         """Test cleanup logic for source files."""
         temp_file = tmp_path / "shot.png"

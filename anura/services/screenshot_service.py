@@ -453,8 +453,10 @@ class ScreenshotService(GObject.GObject):
             self._emit_decode_error(_("Can't take a screenshot."))
             return False
 
-        # Check for cancellation before I/O
+        # Check for cancellation before I/O. Portal/scrot capture files are temporary
+        # sources and must be removed even when cancellation prevents OCR from starting.
         if task_id and get_atomic_manager().is_cancelled(task_id):
+            get_atomic_manager().execute(Path(filename).unlink, (), lane=CLEANUP_LANE)
             return False
 
         # Validate the extracted filename before processing (on background thread)
@@ -543,6 +545,8 @@ class ScreenshotService(GObject.GObject):
         def _on_isolated_error(error, _traceback_str):
             logger.error(f"Anura OCR (Isolated): Process error: {error}")
             self._emit_decode_error(_("OCR processing failed. Please try again."))
+            if remove_source:
+                get_atomic_manager().execute(Path(file).unlink, (), lane=CLEANUP_LANE)
 
         def _on_isolated_status(status_msg):
             self._emit_status(status_msg)
