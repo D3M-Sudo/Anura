@@ -49,10 +49,16 @@ _DEFAULT_WINDOW_WIDTH = 1000
 _DEFAULT_WINDOW_HEIGHT = 700
 
 
-def _initial_window_size(saved_width: int, saved_height: int, screen_width: int, screen_height: int) -> tuple[int, int]:
+def _initial_window_size(
+    saved_width: int, saved_height: int, screen_width: int, screen_height: int
+) -> tuple[int, int]:
     """Choose a useful initial size while respecting the current monitor bounds."""
-    max_width = max(320, int(screen_width * 0.9)) if screen_width > 0 else _DEFAULT_WINDOW_WIDTH
-    max_height = max(240, int(screen_height * 0.9)) if screen_height > 0 else _DEFAULT_WINDOW_HEIGHT
+    max_width = (
+        max(320, int(screen_width * 0.9)) if screen_width > 0 else _DEFAULT_WINDOW_WIDTH
+    )
+    max_height = (
+        max(240, int(screen_height * 0.9)) if screen_height > 0 else _DEFAULT_WINDOW_HEIGHT
+    )
     width = saved_width if saved_width > 0 else _DEFAULT_WINDOW_WIDTH
     height = saved_height if saved_height > 0 else _DEFAULT_WINDOW_HEIGHT
     min_width = min(400, max_width)
@@ -60,7 +66,6 @@ def _initial_window_size(saved_width: int, saved_height: int, screen_width: int,
     return min(max(width, min_width), max_width), min(max(height, min_height), max_height)
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/window.ui")
-
 class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     __gtype_name__ = "AnuraWindow"
 
