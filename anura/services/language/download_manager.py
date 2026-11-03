@@ -156,8 +156,11 @@ class DownloadManager(GObject.GObject):
         def download_done_wrapper(future) -> None:
             try:
                 result_code = future.result()
-            except (AttributeError, RuntimeError, TypeError, ValueError, OSError) as e:
-                logger.error(f"Anura: Unexpected error during download of {code}: {e}")
+            except Exception as e:
+                # A future can raise exceptions outside the expected I/O set
+                # (including cancellation or malformed integrity metadata).
+                # Always dispatch completion so download_done clears the loading state.
+                logger.exception(f"Anura: Unexpected error during download of {code}: {e}")
                 result_code = None
 
             def _on_done_idle():
