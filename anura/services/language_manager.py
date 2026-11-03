@@ -189,7 +189,7 @@ def get_tesseract_config(lang_code: str, task_id: str | None = None) -> str:
         Config string with --tessdata-dir pointing to the correct directory.
     """
     # Security: Validate lang_code
-    if not lang_code or not re.match(LANG_CODE_PATTERN, lang_code):
+    if not lang_code or not re.fullmatch(LANG_CODE_PATTERN, lang_code):
         logger.error(f"Anura: Invalid language code '{lang_code}' - using 'eng'")
         lang_code = "eng"
 
