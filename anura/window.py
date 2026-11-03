@@ -44,8 +44,6 @@ from anura.widgets.preferences_dialog import PreferencesDialog  # noqa: E402
 from anura.widgets.welcome_page import WelcomePage  # noqa: E402
 
 
-@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/window.ui")
-
 _DEFAULT_WINDOW_WIDTH = 1000
 _DEFAULT_WINDOW_HEIGHT = 700
 
@@ -59,6 +57,8 @@ def _initial_window_size(saved_width: int, saved_height: int, screen_width: int,
     min_width = min(400, max_width)
     min_height = min(300, max_height)
     return min(max(width, min_width), max_width), min(max(height, min_height), max_height)
+
+@Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/window.ui")
 
 class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     __gtype_name__ = "AnuraWindow"
