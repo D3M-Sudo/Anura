@@ -84,13 +84,14 @@ class ShareService(GObject.GObject):
             return (
                 parsed.netloc == "share"
                 and parsed.path == ""
-                and parsed.query.startswith("text=")
-                and "&" not in parsed.query
+                and (not parsed.query or (parsed.query.startswith("text=") and "&" not in parsed.query))
                 and not parsed.fragment
             )
 
-        # A desktop handler registration alone is not a security policy.
-        return False
+        # Keep only the explicit custom protocols historically supported by Anura.
+        # Never infer trust from a handler being installed on the user's desktop.
+        safe_schemes = ("mailto", "tg", "slack", "zoom", "zoommtg", "discord", "whatsapp")
+        return scheme in safe_schemes
 
     def share(self, provider: str, text: str) -> None:
         """
