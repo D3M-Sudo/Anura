@@ -6,7 +6,7 @@
 
 import pytest
 
-from anura.utils.validators import uri_validator
+from anura.utils.validators import is_local_or_private_url, uri_validator
 
 
 class TestUriValidatorEnterprise:
@@ -172,3 +172,23 @@ class TestUriValidatorEnterprise:
         url = "https://google.com"
         assert uri_validator(url) == uri_validator(url)
         assert uri_validator(url) is True
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "http://127.1/",
+        "http://127.0.1/",
+        "http://0x7f.0.0.1/",
+        "http://0177.0.0.1/",
+        "http://10.1/",
+    ],
+)
+def test_local_or_private_url_recognizes_legacy_ipv4_forms(url):
+    """Legacy numeric IPv4 forms must still require confirmation before opening."""
+    assert is_local_or_private_url(url) is True
+
+
+@pytest.mark.parametrize("url", ["https://example.com/", "https://8.8.8.8/"])
+def test_local_or_private_url_allows_public_destinations(url):
+    assert is_local_or_private_url(url) is False
