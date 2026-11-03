@@ -59,9 +59,7 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path]:
     return po, fakebin
 
 
-def _run(
-    po: Path, fakebin: Path, **extra_env: str
-) -> subprocess.CompletedProcess[str]:
+def _run(po: Path, fakebin: Path, **extra_env: str) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env.update(
         {"PATH": f"{fakebin}:{env['PATH']}", "FAIL_XGETTEXT": "0", "FAIL_MSGCAT": "0"}
