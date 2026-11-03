@@ -77,6 +77,12 @@ class TestCLIIntegrationEnterprise:
         activate.assert_called_once()
         handler.assert_not_called()
 
+    def test_handle_missing_file_returns_failure_without_opening_picker(self, app):
+        """An explicit missing --file path must not silently open the image picker."""
+        with patch("pathlib.Path.exists", return_value=False), patch.object(app, "activate") as activate:
+            assert app._handle_file_option("/tmp/missing.png", is_silent=False) == 1
+        activate.assert_not_called()
+
     def test_handle_file_option_silent(self, app):
         """Test the -f --silent CLI flow."""
         file_path = "/tmp/test.png"

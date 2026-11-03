@@ -307,6 +307,12 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
                 self.props.active_window.process_file(file_path)
             return 0
 
+        # An explicit --file argument must not silently fall back to the image
+        # picker when the requested path does not exist.
+        if not _exists:
+            logger.error(f"Anura CLI: File does not exist: {file_path}")
+            return 1
+
         if not is_silent:
             self.activate()
             if self.props.active_window:
