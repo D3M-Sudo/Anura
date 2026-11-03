@@ -3,6 +3,7 @@
 # Copyright (C) 2026 D3M-Sudo (Anura)
 #
 # SPDX-License-Identifier: MIT
+# ruff: noqa: I001
 
 import contextlib
 from gettext import gettext as _
