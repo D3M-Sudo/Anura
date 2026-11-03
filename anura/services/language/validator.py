@@ -154,7 +154,7 @@ class LanguageValidator:
         Returns:
             True if valid, False otherwise
         """
-        if not code or not re.match(LANG_CODE_PATTERN, code):
+        if not code or not re.fullmatch(LANG_CODE_PATTERN, code):
             return False
         return code in cls._languages
 
@@ -171,7 +171,7 @@ class LanguageValidator:
         Returns:
             True if format is valid, False otherwise
         """
-        return bool(code and re.match(LANG_CODE_PATTERN, code))
+        return bool(code and re.fullmatch(LANG_CODE_PATTERN, code))
 
     @classmethod
     def is_safe_filename(cls, filename: str) -> bool:
