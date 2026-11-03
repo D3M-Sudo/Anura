@@ -40,7 +40,7 @@ jobs:
                 -v "$FEDC_HOME:/tmp/fedc-home" \
                 -v "${{ github.workspace }}:/github/workspace" \
                 -w /github/workspace \
-                ghcr.io/flathub-infra/flatpak-external-data-checker:latest \
+                ghcr.io/flathub-infra/flatpak-external-data-checker:latest@sha256:ea7b3bf6c05ff4536b5450a1ef451d157be544b95fb6abf56a32a80da4819526 \
                 --update --edit-only \
                 "/github/workspace/$manifest"
 
@@ -157,7 +157,7 @@ jobs:
             -v "$FEDC_HOME:/tmp/fedc-home" \
             -v "${{ github.workspace }}:/github/workspace" \
             -w /github/workspace \
-            ghcr.io/flathub-infra/flatpak-external-data-checker:latest \
+            ghcr.io/flathub-infra/flatpak-external-data-checker:latest@sha256:ea7b3bf6c05ff4536b5450a1ef451d157be544b95fb6abf56a32a80da4819526 \
             --update --edit-only \
             "/github/workspace/.fedc-certifi-tmp/io.github.d3msudo.anura.certifi.json"
 
