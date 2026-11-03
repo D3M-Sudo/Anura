@@ -70,6 +70,7 @@ def _initial_window_size(
         min(max(height, min_height), max_height),
     )
 
+
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/window.ui")
 class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     __gtype_name__ = "AnuraWindow"
