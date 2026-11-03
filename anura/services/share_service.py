@@ -76,24 +76,9 @@ class ShareService(GObject.GObject):
         if scheme in ("http", "https"):
             return uri_validator(url)
 
-        # BUG-035: Check if the system has a registered handler for this scheme.
-        # This allows sharing to any installed app (Telegram, Slack, etc.)
-        # that registers a protocol handler.
-        if scheme:
-            try:
-                from gi.repository import Gio
-
-                # Gio.AppInfo.get_default_for_uri_scheme returns None if no handler is found
-                if Gio.AppInfo.get_default_for_uri_scheme(scheme) is not None:
-                    return True
-            except (ImportError, ValueError, RuntimeError, TypeError):
-                # Fallback to whitelist if Gio/AppInfo is unavailable or fails
-                pass
-
-        # Fallback Whitelist: Allow common safe schemes if dynamic detection is
-        # unavailable or if running in a restricted/headless environment.
-        safe_schemes = ("mailto", "web+mastodon", "tg", "slack", "zoom", "discord", "whatsapp")
-        return scheme in safe_schemes
+        # Only permit protocol handlers that this application intentionally supports.
+        # A registered desktop handler is not evidence that an arbitrary URI scheme is safe.
+        return scheme in ("mailto", "web+mastodon")
 
     def share(self, provider: str, text: str) -> None:
         """
@@ -153,6 +138,12 @@ class ShareService(GObject.GObject):
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_share_idle, False)
+            return
+
+        # Keep the custom protocol behind the same explicit scheme allowlist as other providers.
+        if not self._validate_share_url(mastodon_url):
+            logger.warning("Anura Share: Blocked invalid Mastodon share URL.")
+            GLib.idle_add(lambda: (self.emit("share", False), GLib.SOURCE_REMOVE)[1])
             return
 
         self.launcher.set_uri(mastodon_url)
