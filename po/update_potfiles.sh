@@ -11,7 +11,7 @@ AUTHOR="d3msudo"
 APPNAME="anura"
 APPID="${DOMAIN_EXTENSION}.${AUTHOR}.${APPNAME}"
 
-if [ "$1" == "-h" ]; then
+if [ "${1:-}" == "-h" ]; then
     echo "Usage: $0 [lang]"
     exit 0
 fi
