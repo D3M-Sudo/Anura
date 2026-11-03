@@ -18,7 +18,7 @@ fi
 
 lang="${1:-}"
 
-tmpdir=$(mktemp -d "${TMPDIR:-.}/.anura-pot-update.XXXXXX")
+tmpdir=$(mktemp -d "./.anura-pot-update.XXXXXX")
 trap 'rm -rf -- "$tmpdir"' EXIT
 
 # 2. Extract version from root meson.build
