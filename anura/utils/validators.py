@@ -9,6 +9,7 @@ import ipaddress
 import os
 from pathlib import Path
 import re
+import socket
 import unicodedata
 from urllib.parse import urlparse
 
@@ -366,12 +367,20 @@ def is_local_or_private_url(url: str) -> bool:
     if host in _LOCAL_HOSTNAMES or host.endswith(".local"):
         return True
 
-    with contextlib.suppress(ValueError):
+    try:
         # ``is_global`` is False for loopback, private, link-local, reserved
         # and unspecified addresses (IPv4 and IPv6 alike).
-        return not ipaddress.ip_address(host).is_global
+        address = ipaddress.ip_address(host)
+    except ValueError:
+        # Browsers normalize legacy IPv4 forms such as 127.1, 0177.0.0.1 and
+        # 0x7f.0.0.1. inet_aton applies the same numeric IPv4 parsing so these
+        # forms cannot bypass the confirmation required for private destinations.
+        try:
+            address = ipaddress.ip_address(socket.inet_ntoa(socket.inet_aton(host)))
+        except OSError:
+            return False
 
-    return False
+    return not address.is_global
 
 
 def validate_image_dimensions(width: int, height: int) -> tuple[bool, str | None]:
