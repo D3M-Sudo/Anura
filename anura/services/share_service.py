@@ -102,10 +102,12 @@ class ShareService(GObject.GObject):
         text = text.strip() if text else ""
         if not text:
             logger.warning("Anura Share: Attempted to share empty text.")
+            self.emit("share", False)
             return
 
         if provider not in self.providers():
             logger.warning(f"Anura Share: Unknown provider '{provider}' - no handler found")
+            self.emit("share", False)
             return
 
         try:
@@ -118,18 +120,21 @@ class ShareService(GObject.GObject):
             # Validate URL length before attempting to launch
             if len(share_link) > self.MAX_URL_LENGTH:
                 logger.warning(f"Anura Share: URL too long ({len(share_link)} chars, max {self.MAX_URL_LENGTH})")
+                self.emit("share", False)
                 return
 
             # Security: validate URL before launching (defense in depth)
             # Use static method to avoid circular imports and instance creation
             if not ShareService._validate_share_url(share_link):
                 logger.warning(f"Anura Share: Blocked invalid URL: {mask_url(share_link)}")
+                self.emit("share", False)
                 return
 
             self.launcher.set_uri(share_link)
             self.launcher.launch(parent=None, cancellable=None, callback=self._on_share)
         except (ValueError, TypeError, AttributeError) as e:
             logger.error(f"Anura Share Error: Failed to share via {provider}. Reason: {e}")
+            self.emit("share", False)
 
     def _share_mastodon_with_fallback(self, text: str) -> None:
         """Share to Mastodon with official scheme and fallback to instance selection."""

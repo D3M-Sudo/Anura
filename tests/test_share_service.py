@@ -103,6 +103,17 @@ class TestShareServiceEnterprise:
         service.launcher.set_uri.assert_called()
         service.launcher.launch.assert_called()
 
+
+    def test_share_early_failures_emit_false(self, service):
+        """Every synchronous share rejection must notify connected UI listeners."""
+        results = []
+        service.connect("share", lambda _service, success: results.append(success))
+
+        service.share("unknown-provider", "text")
+        service.share("email", "a" * 3000)
+
+        assert results == [False, False]
+
     def test_referential_transparency_handlers(self, service):
         """Test that link handlers are pure."""
         text = "stable text"
