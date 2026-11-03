@@ -3,12 +3,12 @@
 #
 # SPDX-License-Identifier: MIT
 
+from pathlib import Path
 import os
-import pathlib
 import subprocess
 
 
-SCRIPT = pathlib.Path(__file__).resolve().parents[1] / "po" / "update_potfiles.sh"
+SCRIPT = Path(__file__).resolve().parents[1] / "po" / "update_potfiles.sh"
 
 
 def _fixture(tmp_path: Path) -> tuple[Path, Path]:
