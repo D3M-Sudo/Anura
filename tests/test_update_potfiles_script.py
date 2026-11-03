@@ -2,6 +2,7 @@
 # Copyright (C) 2026 D3M-Sudo (Anura)
 #
 # SPDX-License-Identifier: MIT
+# fmt: off
 # ruff: noqa: I001
 
 from pathlib import Path
