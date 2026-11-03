@@ -62,6 +62,7 @@ class TestShareServiceEnterprise:
             ("https://google.com", True),
             ("http://localhost", True),
             ("ftp://evil.com", False),
+            ("custom-handler://launch/arbitrary", False),
             ("file:///etc/passwd", False),
             ("javascript:alert(1)", False),
             ("", False),

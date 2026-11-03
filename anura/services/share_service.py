@@ -54,45 +54,42 @@ class ShareService(GObject.GObject):
 
     @staticmethod
     def _validate_share_url(url: str) -> bool:
-        """
-        Validate URL for sharing using security checks.
-        Returns True if URL is safe to share, False otherwise.
-        """
-        # Security: Perform fundamental checks (length, control chars, ASCII) on all URLs
+        """Validate a share URL against the protocols intentionally used by Anura."""
+        if not isinstance(url, str) or not url or len(url) > ShareService.MAX_URL_LENGTH:
+            return False
+
+        # Apply the shared safety gate to every scheme before any allowlist decision.
+        # An explicitly allowed scheme must not bypass the common validation checks.
         if not is_safe_url_string(url):
             return False
 
-        url = url.strip() if url else ""
-
-        # Use urlparse to extract the scheme for more robust validation
         try:
             from urllib.parse import urlparse
 
-            scheme = urlparse(url).scheme.lower()
+            parsed = urlparse(url)
+            scheme = parsed.scheme.lower()
         except (ValueError, AttributeError):
             return False
 
-        # If it's a web URL, use the standard uri_validator (includes hostname checks)
         if scheme in ("http", "https"):
-            return uri_validator(url)
+            return is_safe_url_string(url) and uri_validator(url)
 
-        # BUG-035: Check if the system has a registered handler for this scheme.
-        # This allows sharing to any installed app (Telegram, Slack, etc.)
-        # that registers a protocol handler.
-        if scheme:
-            try:
-                from gi.repository import Gio
+        if scheme == "mailto":
+            return is_safe_url_string(url)
 
-                # Gio.AppInfo.get_default_for_uri_scheme returns None if no handler is found
-                if Gio.AppInfo.get_default_for_uri_scheme(scheme) is not None:
-                    return True
-            except (ImportError, ValueError, RuntimeError, TypeError):
-                # Fallback to whitelist if Gio/AppInfo is unavailable or fails
-                pass
+        if scheme == "web+mastodon":
+            # This custom URI is generated internally as web+mastodon://share?text=<quoted>.
+            # Do not accept arbitrary authorities, paths, fragments, or extra parameters.
+            return (
+                parsed.netloc == "share"
+                and parsed.path == ""
+                and (not parsed.query or (parsed.query.startswith("text=") and "&" not in parsed.query))
+                and not parsed.fragment
+            )
 
-        # Fallback Whitelist: Allow common safe schemes if dynamic detection is
-        # unavailable or if running in a restricted/headless environment.
-        safe_schemes = ("mailto", "web+mastodon", "tg", "slack", "zoom", "discord", "whatsapp")
+        # Keep only the explicit custom protocols historically supported by Anura.
+        # Never infer trust from a handler being installed on the user's desktop.
+        safe_schemes = ("mailto", "tg", "slack", "zoom", "zoommtg", "discord", "whatsapp")
         return scheme in safe_schemes
 
     def share(self, provider: str, text: str) -> None:
@@ -153,6 +150,12 @@ class ShareService(GObject.GObject):
                 return GLib.SOURCE_REMOVE
 
             GLib.idle_add(_on_share_idle, False)
+            return
+
+        # Keep the custom protocol behind the same explicit scheme allowlist as other providers.
+        if not self._validate_share_url(mastodon_url):
+            logger.warning("Anura Share: Blocked invalid Mastodon share URL.")
+            GLib.idle_add(lambda: (self.emit("share", False), GLib.SOURCE_REMOVE)[1])
             return
 
         self.launcher.set_uri(mastodon_url)

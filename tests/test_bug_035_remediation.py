@@ -81,13 +81,14 @@ class TestBug035Remediation:
             # Custom-app schemes — no handler, whitelist decides
             ("tg://share?text=hello", False, True),  # tg in whitelist
             ("slack://open", False, True),  # slack in whitelist
-            ("zoommtg://join", False, False),  # zoommtg NOT in whitelist
+            ("zoommtg://join", False, True),  # explicitly allowlisted
             # Whitelist-only schemes (no dynamic check needed)
             ("mailto:test@example.com", False, True),
             ("web+mastodon://share", False, True),
             # Standard web URL — goes through uri_validator
             ("https://google.com", False, True),
             # Completely invalid scheme — no handler, not in whitelist
+            ("invalid-scheme://test", True, False),  # registered handler must not bypass allowlist
             ("invalid-scheme://test", False, False),
         ],
     )
