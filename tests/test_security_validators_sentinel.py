@@ -36,3 +36,21 @@ def test_validate_image_resource_accepts_regular_file():
         assert is_valid is True
         assert size > 0
         assert error is None
+
+
+from anura.utils.validators import is_local_or_private_url
+
+
+def test_local_or_private_url_rejects_legacy_ipv4_notation() -> None:
+    for url in (
+        "http://127.1/",
+        "http://127.0.1/",
+        "http://0x7f.0.0.1/",
+        "http://0177.0.0.1/",
+        "http://10.1/",
+    ):
+        assert is_local_or_private_url(url) is True
+
+
+def test_local_or_private_url_keeps_public_ipv4_public() -> None:
+    assert is_local_or_private_url("https://8.8.8.8/") is False

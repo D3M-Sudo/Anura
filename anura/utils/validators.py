@@ -9,6 +9,7 @@ import ipaddress
 import os
 from pathlib import Path
 import re
+import socket
 import unicodedata
 from urllib.parse import urlparse
 
@@ -367,9 +368,14 @@ def is_local_or_private_url(url: str) -> bool:
         return True
 
     with contextlib.suppress(ValueError):
-        # ``is_global`` is False for loopback, private, link-local, reserved
-        # and unspecified addresses (IPv4 and IPv6 alike).
+        # Parse canonical IPv4 and IPv6 forms first.
         return not ipaddress.ip_address(host).is_global
+
+    # WHATWG URL parsers accept legacy IPv4 forms (127.1, octal and hex).
+    # Normalize those forms before deciding whether a QR target is public.
+    with contextlib.suppress(OSError):
+        normalized_ipv4 = socket.inet_ntoa(socket.inet_aton(host))
+        return not ipaddress.ip_address(normalized_ipv4).is_global
 
     return False
 
