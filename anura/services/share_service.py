@@ -54,31 +54,43 @@ class ShareService(GObject.GObject):
 
     @staticmethod
     def _validate_share_url(url: str) -> bool:
-        """
-        Validate URL for sharing using security checks.
-        Returns True if URL is safe to share, False otherwise.
-        """
-        # Security: Perform fundamental checks (length, control chars, ASCII) on all URLs
-        if not is_safe_url_string(url):
+        """Validate a share URL against the protocols intentionally used by Anura."""
+        if not isinstance(url, str) or not url or len(url) > ShareService.MAX_URL_LENGTH:
             return False
 
-        url = url.strip() if url else ""
+        # Reject characters that can cause URI parsing or launching discrepancies.
+        if any(c in url for c in ("\\\\", "<", ">", '"', "|", "^", "`", "{", "}")):
+            return False
+        if not url.isascii() or any(ord(c) < 0x20 or ord(c) == 0x7F for c in url):
+            return False
 
-        # Use urlparse to extract the scheme for more robust validation
         try:
             from urllib.parse import urlparse
 
-            scheme = urlparse(url).scheme.lower()
+            parsed = urlparse(url)
+            scheme = parsed.scheme.lower()
         except (ValueError, AttributeError):
             return False
 
-        # If it's a web URL, use the standard uri_validator (includes hostname checks)
         if scheme in ("http", "https"):
-            return uri_validator(url)
+            return is_safe_url_string(url) and uri_validator(url)
 
-        # Only permit protocol handlers that this application intentionally supports.
-        # A registered desktop handler is not evidence that an arbitrary URI scheme is safe.
-        return scheme in ("mailto", "web+mastodon")
+        if scheme == "mailto":
+            return is_safe_url_string(url)
+
+        if scheme == "web+mastodon":
+            # This custom URI is generated internally as web+mastodon://share?text=<quoted>.
+            # Do not accept arbitrary authorities, paths, fragments, or extra parameters.
+            return (
+                parsed.netloc == "share"
+                and parsed.path == ""
+                and parsed.query.startswith("text=")
+                and "&" not in parsed.query
+                and not parsed.fragment
+            )
+
+        # A desktop handler registration alone is not a security policy.
+        return False
 
     def share(self, provider: str, text: str) -> None:
         """
