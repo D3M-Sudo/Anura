@@ -51,3 +51,11 @@ def test_new_downloads_are_refused_after_shutdown():
     body = _method_body("download_begin", _source())
 
     assert "Skipping download" in body
+
+
+def test_download_completion_catches_unexpected_worker_exceptions():
+    body = _method_body("download_done_wrapper", _source())
+
+    assert "except Exception as e:" in body
+    assert "result_code = None" in body
+    assert "self.download_done(code, result_code)" in body
