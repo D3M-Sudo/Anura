@@ -22,8 +22,8 @@ pytest.importorskip("gi")
 from gi.repository import GLib
 
 from anura.core.atomic_task_manager import (
-    CLIPBOARD_LANE,
     CLEANUP_LANE,
+    CLIPBOARD_LANE,
     DEFAULT_LANE,
     OCR_LANE,
     TTS_LANE,
