@@ -520,3 +520,58 @@ class TestTextureFallbackCancellable:
         self._run_callback(service)
 
         assert service._cancellable is None
+
+
+class TestClipboardDecodeOffMainThread:
+    """#581: the image decode must not run on the GTK main thread."""
+
+    @pytest.fixture
+    def service(self):
+        with patch("gi.repository.Gdk.Display.get_default") as mock_display_get:
+            mock_display = MagicMock()
+            mock_display_get.return_value = mock_display
+            mock_display.get_clipboard.return_value = MagicMock()
+            return ClipboardService()
+
+    def test_decode_is_dispatched_to_the_clipboard_lane(self, service):
+        manager = MagicMock()
+        with patch("anura.services.clipboard_service.get_atomic_manager", return_value=manager):
+            service._emit_texture_from_file("/tmp/picture.png")
+
+        manager.execute_daemon.assert_called_once()
+        kwargs = manager.execute_daemon.call_args.kwargs
+        assert kwargs["lane"] == "clipboard"
+        assert manager.execute_daemon.call_args.args[0] == service._decode_image_file
+
+    def test_decode_reads_a_real_image(self, tmp_path):
+        from PIL import Image
+
+        path = tmp_path / "clip.png"
+        Image.new("RGB", (8, 8), (10, 20, 30)).save(path, format="PNG")
+
+        png_bytes = ClipboardService._decode_image_file(str(path))
+
+        assert png_bytes.startswith(b"\x89PNG")
+
+    def test_decode_rejects_a_non_image(self, tmp_path):
+        path = tmp_path / "notanimage.txt"
+        path.write_text("nope", encoding="utf-8")
+
+        with pytest.raises(ValueError):
+            ClipboardService._decode_image_file(str(path))
+
+    def test_decoded_png_is_emitted_as_a_texture(self, service):
+        service.emit = MagicMock()
+        texture = MagicMock()
+
+        with patch("gi.repository.Gdk.Texture.new_from_bytes", return_value=texture):
+            service._on_image_decoded(b"\x89PNG-fake")
+
+        service.emit.assert_called_once_with("paste_from_clipboard", texture)
+
+    def test_failed_decode_is_reported(self, service):
+        service.emit = MagicMock()
+
+        service._on_image_decode_failed(ValueError("No image in clipboard"))
+
+        service.emit.assert_called_once_with("error", "No image in clipboard")

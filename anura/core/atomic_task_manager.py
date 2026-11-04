@@ -33,6 +33,9 @@ DEFAULT_LANE = "default"
 OCR_LANE = "ocr"
 TTS_LANE = "tts"
 CLEANUP_LANE = "cleanup"
+# Image decoding for a clipboard paste: its own lane so a new paste supersedes
+# the previous decode without touching OCR or TTS work (#581).
+CLIPBOARD_LANE = "clipboard"
 
 
 class _Lane:
