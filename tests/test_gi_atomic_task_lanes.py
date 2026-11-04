@@ -23,6 +23,7 @@ from gi.repository import GLib
 
 from anura.core.atomic_task_manager import (
     CLEANUP_LANE,
+    CLIPBOARD_LANE,
     DEFAULT_LANE,
     OCR_LANE,
     TTS_LANE,
@@ -75,6 +76,15 @@ def test_same_lane_supersedes_only_the_previous_task(manager):
 
     assert manager.is_cancelled(first) is True
     assert manager.is_cancelled(second) is False
+
+def test_new_clipboard_paste_supersedes_previous_decode(manager):
+    """A new paste invalidates only the in-flight clipboard decode (#581)."""
+    first = manager.execute_daemon(lambda: None, lane=CLIPBOARD_LANE)
+    second = manager.execute_daemon(lambda: None, lane=CLIPBOARD_LANE)
+
+    assert manager.is_cancelled(first) is True
+    assert manager.is_cancelled(second) is False
+    assert manager._current_lane_task_id(CLIPBOARD_LANE) == second
 
 
 def test_unknown_task_id_is_cancelled(manager):
