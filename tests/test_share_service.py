@@ -32,6 +32,7 @@ class TestShareServiceEnterprise:
         assert "email" in providers
         assert "x" in providers
         assert "mastodon" in providers
+        assert "linkedin" not in providers
 
     @pytest.mark.parametrize(
         "provider, text, expected_part",
@@ -41,9 +42,8 @@ class TestShareServiceEnterprise:
             ("email", "hi", "mailto:?subject="),
             ("mastodon", "test", "web+mastodon://share?text=test"),
             ("bluesky", "blue", "bsky.app/intent/compose?text=blue"),
-            ("reddit", "short", "reddit.com/submit?title=short&selftext=short"),
+            ("reddit", "short", "reddit.com/submit?selftext=short"),
             ("reddit", "a" * 101, "reddit.com/submit?selftext=" + "a" * 101),
-            ("linkedin", "pro", "linkedin.com/sharing/share-offsite/"),
             ("threads", "thread", "threads.net/intent/post?text=thread"),
         ],
     )

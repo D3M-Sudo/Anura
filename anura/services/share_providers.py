@@ -37,11 +37,9 @@ PROVIDERS: list[ShareProvider] = [
     ShareProvider(
         id="reddit",
         name=_("Reddit"),
-        handler=lambda text: (
-            f"https://www.reddit.com/submit?title={quote(text, safe='')}&selftext={quote(text, safe='')}"
-            if len(text) < 100
-            else f"https://www.reddit.com/submit?selftext={quote(text, safe='')}"
-        ),
+        # The title is short and cannot hold the extracted text; putting the text
+        # in both fields duplicated it on the compose page (#579).
+        handler=lambda text: f"https://www.reddit.com/submit?selftext={quote(text.strip(), safe='')}",
     ),
     ShareProvider(
         id="telegram",
@@ -59,23 +57,13 @@ PROVIDERS: list[ShareProvider] = [
         handler=lambda text: f"https://bsky.app/intent/compose?text={quote(text.strip(), safe='')}",
     ),
     ShareProvider(
-        id="discord",
-        name=_("Discord"),
-        handler=lambda text: f"https://discord.com/channels/@me?content={quote(text.strip(), safe='')}",
-    ),
-    ShareProvider(
-        id="linkedin",
-        name=_("LinkedIn"),
-        handler=lambda text: (
-            f"https://www.linkedin.com/sharing/share-offsite/?url={quote('https://github.com/D3M-Sudo/Anura', safe='')}&summary={quote(text.strip(), safe='')}"
-        ),
-    ),
-    ShareProvider(
         id="threads",
         name=_("Threads"),
         handler=lambda text: f"https://www.threads.net/intent/post?text={quote(text.strip(), safe='')}",
     ),
     # NOTE: "instagram" removed — no URL prefill API available
+    # NOTE: "discord" removed — /channels/@me?content= does not pre-fill a
+    # message, so the link silently opened an empty channel (#579).
 ]
 
 
