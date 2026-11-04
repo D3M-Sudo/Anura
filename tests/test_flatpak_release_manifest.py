@@ -83,5 +83,5 @@ def test_checker_detects_runtime_permission_module_and_checksum_drift() -> None:
     changed["modules"][0]["sources"][0]["sha256"] = "0" * 64
     differences = CHECKER._differences(CHECKER.normalize_manifest(local), CHECKER.normalize_manifest(changed))
     assert "$.runtime-version" in differences
-    assert "$.finish-args (length" in differences
+    assert any(item.startswith("$.finish-args (length") for item in differences)
     assert any(".sha256" in item for item in differences)
