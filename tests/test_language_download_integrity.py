@@ -79,8 +79,8 @@ class TestAtomicInstall:
             patch("anura.services.language.download_manager.TESSDATA_DIR", str(tessdata_dir)),
             patch("anura.services.language.download_manager.settings") as mock_settings,
         ):
-            # "fast" resolves to the base tessdata dir, keeping assertions simple.
-            mock_settings.get_string.return_value = "fast"
+            # These cases assert root-directory behavior; select the standard profile explicitly.
+            mock_settings.get_string.return_value = "standard"
             yield DownloadManager(), tessdata_dir
 
     def test_successful_download_installs_model_atomically(self, manager, stub_integrity) -> None:
@@ -181,7 +181,7 @@ class TestIntegrityVerification:
             patch("anura.services.language.download_manager.TESSDATA_DIR", str(tessdata_dir)),
             patch("anura.services.language.download_manager.settings") as mock_settings,
         ):
-            mock_settings.get_string.return_value = "fast"
+            mock_settings.get_string.return_value = "standard"
             yield DownloadManager(), tessdata_dir
 
     def test_unpinned_model_is_refused_before_any_request(self, manager) -> None:
