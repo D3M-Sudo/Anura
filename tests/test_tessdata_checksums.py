@@ -94,17 +94,17 @@ class TestGitBlobHasher:
             chunked.update(chunk)
 
         assert chunked.received == one_shot.received
-        assert chunked.matches(TessdataChecksum("x", 6, HELLO_GIT_BLOB_SHA1))
+        assert chunked.matches(TessdataChecksum(filename="x", size=6, sha1=HELLO_GIT_BLOB_SHA1))
 
     def test_rejects_wrong_size(self) -> None:
         hasher = integrity.GitBlobHasher(declared_size=6)
         hasher.update(b"hello\n")
-        assert not hasher.matches(TessdataChecksum("x", 7, HELLO_GIT_BLOB_SHA1))
+        assert not hasher.matches(TessdataChecksum(filename="x", size=7, sha1=HELLO_GIT_BLOB_SHA1))
 
     def test_rejects_tampered_content(self) -> None:
         hasher = integrity.GitBlobHasher(declared_size=6)
         hasher.update(b"hell0\n")
-        assert not hasher.matches(TessdataChecksum("x", 6, HELLO_GIT_BLOB_SHA1))
+        assert not hasher.matches(TessdataChecksum(filename="x", size=6, sha1=HELLO_GIT_BLOB_SHA1))
 
     def test_negative_declared_size_is_rejected(self) -> None:
         with pytest.raises(ValueError):
