@@ -136,7 +136,6 @@ class TestClipboardServiceEnterprise:
             # Verify error was emitted
             mock_error.assert_called_once()
 
-
     def test_emit_texture_from_file_dispatches_decode(self, service):
         """The file path must dispatch CPU decoding to the clipboard worker lane."""
         manager = MagicMock()
@@ -178,6 +177,7 @@ class TestClipboardServiceEnterprise:
             service._on_image_decoded(b"\x89PNG-fake")
 
         mock_error.assert_called_once_with("No image in clipboard")
+
 
 class TestClipboardRealRoundtrip:
     """Tests against the real display clipboard (no mocks).
