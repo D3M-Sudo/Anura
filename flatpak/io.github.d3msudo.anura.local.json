@@ -173,14 +173,14 @@
             "name": "python3-nanobind",
             "buildsystem": "simple",
             "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed nanobind-2.11.0-py3-none-any.whl",
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed nanobind-3.1.0-py3-none-any.whl",
                 "bash -c 'set -e; f=$(find /app/lib/python3.*/site-packages/nanobind-*.dist-info -type f -iname \"*licen*\" -print -quit); test -n \"$f\"; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/nanobind/LICENSE\"'"
             ],
             "sources": [
                 {
                     "type": "file",
-                    "url": "https://files.pythonhosted.org/packages/e8/1c/37ae5b9a0d13defd8e27222e4cbfb82e569dbfd12d16ba8c78cab593e56c/nanobind-2.11.0-py3-none-any.whl",
-                    "sha256": "8097442c3e55d011a67f016ce1d9567ed9e3cdb3ad6749f13a76dbbc2721f0ee",
+                    "url": "https://files.pythonhosted.org/packages/36/c1/6fd56f7a02a478d54a1a3e6000eccd34b446b1c45cbf0d002fe5d2937126/nanobind-3.1.0-py3-none-any.whl",
+                    "sha256": "96984dbe8154ffb86e653b1b60aaeed6985c710c5e75ad0279eb87943c66292d",
                     "x-checker-data": {
                         "type": "pypi",
                         "name": "nanobind",
@@ -368,14 +368,14 @@
             "name": "python3-certifi",
             "buildsystem": "simple",
             "build-commands": [
-                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed certifi-2026.10.18.tar.gz",
+                "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed certifi-2026.10.23.tar.gz",
                 "bash -c 'set -e; f=$(find /app/lib/python3.*/site-packages/certifi-*.dist-info -type f -iname \"*licen*\" -print -quit); test -n \"$f\"; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/certifi/LICENSE\"'"
             ],
             "sources": [
                 {
                     "type": "file",
-                    "url": "https://files.pythonhosted.org/packages/7e/eb/a2aa1ac3ea30dd3f30ca57f40232138b6b0040719316ecb85daf61167771/certifi-2026.10.18.tar.gz",
-                    "sha256": "b9995d97b64d0431a5af837d8ca8cd6238104d1f319f04bd93ea43124d6c861e"
+                    "url": "https://files.pythonhosted.org/packages/fd/11/b524cbd9bbdaca58608e4cf4053fd463417549e1959fa8d3aa18319f9555/certifi-2026.10.23.tar.gz",
+                    "sha256": "a9895e6e2758b371e0545e321a3a8fd1fcfd9829ada8824a936dfb16aaaf36cd"
                 }
             ]
         },
