@@ -38,7 +38,11 @@ from anura.config import (  # noqa: E402
 )
 from anura.models.download_state import DownloadState  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
-from anura.utils.tessdata_integrity import GitBlobHasher, get_expected_checksum  # noqa: E402
+from anura.utils.tessdata_integrity import (  # noqa: E402
+    GitBlobHasher,
+    Sha256Hasher,
+    get_expected_checksum,
+)
 
 
 class DownloadManager(GObject.GObject):
@@ -287,6 +291,7 @@ class DownloadManager(GObject.GObject):
 
                     downloaded = 0
                     hasher = GitBlobHasher(expected.size)
+                    sha256_hasher = Sha256Hasher(expected.size)
 
                     # Throttle progress updates to prevent main loop saturation
                     last_progress_time = time.monotonic()
@@ -302,6 +307,7 @@ class DownloadManager(GObject.GObject):
                             if chunk:
                                 f.write(chunk)
                                 hasher.update(chunk)
+                                sha256_hasher.update(chunk)
                                 downloaded += len(chunk)
 
                                 # Security: Monitor cumulative downloaded bytes
@@ -360,11 +366,21 @@ class DownloadManager(GObject.GObject):
                             os.fsync(f.fileno())
 
                     # Security (NEW-F1): compare the streamed model with the
-                    # pinned git blob digest before it is installed.
+                    # pinned SHA-256 digest before it is installed. SHA-256 is
+                    # the primary integrity anchor; git blob SHA-1 is verified
+                    # as a defence-in-depth additional check.
+                    if not sha256_hasher.matches(expected):
+                        logger.error(
+                            f"Anura: SHA-256 integrity check failed for '{tessfile}': received "
+                            f"{sha256_hasher.received} bytes, expected {expected.size} bytes with "
+                            f"SHA-256 {expected.sha256}."
+                        )
+                        return None
                     if not hasher.matches(expected):
                         logger.error(
-                            f"Anura: Integrity check failed for '{tessfile}': received {hasher.received} "
-                            f"bytes, expected {expected.size} bytes with SHA-1 {expected.sha1}."
+                            f"Anura: Git blob SHA-1 integrity check failed for '{tessfile}': received "
+                            f"{hasher.received} bytes, expected {expected.size} bytes with SHA-1 "
+                            f"{expected.sha1}."
                         )
                         return None
 

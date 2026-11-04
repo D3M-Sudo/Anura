@@ -182,3 +182,50 @@ class GitBlobHasher:
     def matches(self, expected: TessdataChecksum) -> bool:
         """Return ``True`` when length and git blob digest match ``expected``."""
         return self._received == expected.size and self._hash.hexdigest() == expected.sha1
+
+
+class Sha256Hasher:
+    """Incremental SHA-256 over the *raw bytes* of a download.
+
+    SHA-256 is a pre-image resistant cryptographic digest, so matching the
+    pinned digest proves the downloaded bytes are exactly the upstream bytes
+    — neither corrupted in transit nor tampered with upstream or by an
+    intermediary. Hashing incrementally while the response is streamed means
+    the model never needs a second pass on disk and never needs to be held
+    entirely in memory.
+    """
+
+    __slots__ = ("_declared_size", "_hash", "_received")
+
+    def __init__(self, declared_size: int) -> None:
+        if declared_size < 0:
+            raise ValueError("declared_size must not be negative")
+
+        self._declared_size = declared_size
+        self._received = 0
+        # usedforsecurity=True: SHA-256 here is a cryptographic integrity
+        # anchor, not merely content addressing.
+        self._hash = hashlib.sha256(usedforsecurity=True)
+
+    def update(self, chunk: bytes) -> None:
+        """Feed one chunk of the streamed model."""
+        self._hash.update(chunk)
+        self._received += len(chunk)
+
+    @property
+    def received(self) -> int:
+        """Number of bytes hashed so far."""
+        return self._received
+
+    @property
+    def declared_size(self) -> int:
+        """Size the integrity manifest expects for this model."""
+        return self._declared_size
+
+    def matches(self, expected: TessdataChecksum) -> bool:
+        """Return ``True`` when length and SHA-256 digest match ``expected``.
+
+        This is the primary integrity check. ``sha1`` is verified separately
+        as a defence-in-depth additional check.
+        """
+        return self._received == expected.size and self._hash.hexdigest() == expected.sha256

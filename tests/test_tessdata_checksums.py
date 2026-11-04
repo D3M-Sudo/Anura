@@ -20,6 +20,8 @@ from anura.utils import tessdata_integrity as integrity
 
 #: Git blob hash of b"hello\n", cross-checked with `git hash-object --stdin`.
 HELLO_GIT_BLOB_SHA1 = "ce013625030ba8dba906f756967f9e9ca394464a"
+#: SHA-256 of b"hello\n".
+HELLO_SHA256 = "b1946ac92492d2347c6235b4d26111844b67511da8ed5089a3c0423477cab304"
 
 CONFIG_URLS = {TESSDATA_URL, TESSDATA_STANDARD_URL, TESSDATA_BEST_URL}
 
@@ -81,7 +83,9 @@ class TestGitBlobHasher:
         hasher = integrity.GitBlobHasher(declared_size=6)
         hasher.update(b"hello\n")
 
-        expected = TessdataChecksum(filename="hello.txt", size=6, sha1=HELLO_GIT_BLOB_SHA1)
+        expected = TessdataChecksum(
+            filename="hello.txt", size=6, sha1=HELLO_GIT_BLOB_SHA1, sha256=HELLO_SHA256
+        )
         assert hasher.received == 6
         assert hasher.matches(expected)
 
@@ -104,7 +108,9 @@ class TestGitBlobHasher:
     def test_rejects_tampered_content(self) -> None:
         hasher = integrity.GitBlobHasher(declared_size=6)
         hasher.update(b"hell0\n")
-        assert not hasher.matches(TessdataChecksum("x", 6, HELLO_GIT_BLOB_SHA1))
+        assert not hasher.matches(
+            TessdataChecksum("x", 6, HELLO_GIT_BLOB_SHA1, HELLO_SHA256)
+        )
 
     def test_negative_declared_size_is_rejected(self) -> None:
         with pytest.raises(ValueError):
@@ -116,7 +122,7 @@ class TestCommittedManifest:
 
     def test_manifest_is_well_formed(self) -> None:
         manifest = json.loads(integrity.CHECKSUMS_PATH.read_text(encoding="utf-8"))
-        assert manifest["version"] == 1
+        assert manifest["version"] == 2
 
         repositories = manifest["repositories"]
         assert {entry["url"] for entry in repositories.values()} == CONFIG_URLS
@@ -129,6 +135,8 @@ class TestCommittedManifest:
                 assert entry["size"] > 0
                 assert len(entry["sha1"]) == 40
                 assert all(char in "0123456789abcdef" for char in entry["sha1"])
+                assert len(entry["sha256"]) == 64
+                assert all(char in "0123456789abcdef" for char in entry["sha256"])
 
     def test_bundled_language_is_pinned(self) -> None:
         checksum = integrity.get_expected_checksum(TESSDATA_URL, "eng.traineddata")
