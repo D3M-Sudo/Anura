@@ -136,73 +136,55 @@ class TestClipboardServiceEnterprise:
             # Verify error was emitted
             mock_error.assert_called_once()
 
-    def test_emit_texture_from_file_success(self, service):
-        """Test _emit_texture_from_file success path."""
-        mock_texture = MagicMock()
-
-        with (
-            patch("anura.services.clipboard_service.validate_image_resource", return_value=(True, 1024, None)),
-            patch("PIL.Image.open") as mock_image_open,
-            patch("gi.repository.Gdk.Texture.new_from_bytes", return_value=mock_texture),
-            patch("gi.repository.GLib.Bytes.new"),
-            patch("gi.repository.GLib.idle_add") as mock_idle_add,
-        ):
-            # Mock PIL image operations
-            mock_img = MagicMock()
-            mock_img.mode = "RGB"
-            # #522: the pixel budget reads Image.size, so the mock needs one.
-            mock_img.size = (100, 100)
-            mock_image_open.return_value.__enter__.return_value = mock_img
-
-            # Trigger the method
+    def test_emit_texture_from_file_dispatches_decode(self, service):
+        """The file path must dispatch CPU decoding to the clipboard worker lane."""
+        manager = MagicMock()
+        with patch("anura.services.clipboard_service.get_atomic_manager", return_value=manager):
             service._emit_texture_from_file("/tmp/test.png")
 
-            # Verify success signal was emitted
-            assert mock_idle_add.called
+        manager.execute_daemon.assert_called_once()
+        args, kwargs = manager.execute_daemon.call_args
+        assert args[0] == service._decode_image_file
+        assert args[1] == ("/tmp/test.png",)
+        assert kwargs["callback"] == service._on_image_decoded
+        assert kwargs["errorback"] == service._on_image_decode_failed
+        assert kwargs["lane"] == "clipboard"
+        assert kwargs["on_superseded"] == service._on_image_decode_superseded
 
-    def test_emit_texture_from_file_pil_failure(self, service):
-        """Test _emit_texture_from_file PIL decode failure."""
+    def test_decode_image_file_pil_failure_is_reported(self, service):
+        """PIL decode errors are raised by the worker helper for the task manager."""
         from PIL import Image
 
         with (
-            patch("anura.services.clipboard_service.validate_image_resource", return_value=(True, 1024, None)),
-            patch("PIL.Image.open", side_effect=Image.UnidentifiedImageError("Cannot identify image file")),
-            patch("gi.repository.GLib.idle_add") as mock_idle_add,
+            patch(
+                "anura.services.clipboard_service.validate_image_resource",
+                return_value=(True, 1024, None),
+            ),
+            patch(
+                "PIL.Image.open",
+                side_effect=Image.UnidentifiedImageError("Cannot identify image file"),
+            ),
+            pytest.raises(ValueError, match="No image in clipboard"),
         ):
-            # Trigger the method
-            service._emit_texture_from_file("/tmp/test.png")
+            service._decode_image_file("/tmp/test.png")
 
-            # Verify error signal was emitted
-            assert mock_idle_add.called
-
-    def test_emit_texture_from_file_gdk_failure(self, service):
-        """Test _emit_texture_from_file Gdk.Texture failure."""
+    def test_decoded_texture_gdk_failure_is_reported(self, service):
+        """GTK texture construction remains on the main thread and reports failures."""
         from gi.repository import Gio, GLib
 
+        error = GLib.Error.new_literal(
+            Gio.io_error_quark(),
+            "Texture creation failed",
+            Gio.IOErrorEnum.FAILED,
+        )
         with (
-            patch("anura.services.clipboard_service.validate_image_resource", return_value=(True, 1024, None)),
-            patch("PIL.Image.open") as mock_image_open,
-            patch(
-                "gi.repository.Gdk.Texture.new_from_bytes",
-                side_effect=GLib.Error.new_literal(
-                    Gio.io_error_quark(), "Texture creation failed", Gio.IOErrorEnum.FAILED
-                ),
-            ),
+            patch("gi.repository.Gdk.Texture.new_from_bytes", side_effect=error),
             patch("gi.repository.GLib.Bytes.new"),
-            patch("gi.repository.GLib.idle_add") as mock_idle_add,
+            patch.object(service, "_emit_clipboard_error") as mock_error,
         ):
-            # Mock PIL image operations
-            mock_img = MagicMock()
-            mock_img.mode = "RGB"
-            # #522: the pixel budget reads Image.size, so the mock needs one.
-            mock_img.size = (100, 100)
-            mock_image_open.return_value.__enter__.return_value = mock_img
+            service._on_image_decoded(b"\x89PNG-fake")
 
-            # Trigger the method
-            service._emit_texture_from_file("/tmp/test.png")
-
-            # Verify error signal was emitted
-            assert mock_idle_add.called
+        mock_error.assert_called_once_with("No image in clipboard")
 
 
 class TestClipboardRealRoundtrip:
@@ -520,3 +502,70 @@ class TestTextureFallbackCancellable:
         self._run_callback(service)
 
         assert service._cancellable is None
+
+
+class TestClipboardDecodeOffMainThread:
+    """#581: the image decode must not run on the GTK main thread."""
+
+    @pytest.fixture
+    def service(self):
+        with patch("gi.repository.Gdk.Display.get_default") as mock_display_get:
+            mock_display = MagicMock()
+            mock_display_get.return_value = mock_display
+            mock_display.get_clipboard.return_value = MagicMock()
+            return ClipboardService()
+
+    def test_decode_is_dispatched_to_the_clipboard_lane(self, service):
+        manager = MagicMock()
+        with patch("anura.services.clipboard_service.get_atomic_manager", return_value=manager):
+            service._emit_texture_from_file("/tmp/picture.png")
+
+        manager.execute_daemon.assert_called_once()
+        kwargs = manager.execute_daemon.call_args.kwargs
+        assert kwargs["lane"] == "clipboard"
+        assert manager.execute_daemon.call_args.args[0] == service._decode_image_file
+
+    def test_decode_reads_a_real_image(self, tmp_path):
+        from PIL import Image
+
+        path = tmp_path / "clip.png"
+        Image.new("RGB", (8, 8), (10, 20, 30)).save(path, format="PNG")
+
+        png_bytes = ClipboardService._decode_image_file(str(path))
+
+        assert png_bytes.startswith(b"\x89PNG")
+
+    def test_decode_rejects_a_non_image(self, tmp_path):
+        path = tmp_path / "notanimage.txt"
+        path.write_text("nope", encoding="utf-8")
+
+        with pytest.raises(ValueError):
+            ClipboardService._decode_image_file(str(path))
+
+    def test_decode_handles_a_large_image(self, tmp_path):
+        from io import BytesIO
+
+        from PIL import Image
+
+        path = tmp_path / "large.png"
+        Image.new("RGB", (4096, 4096), (10, 20, 30)).save(path, format="PNG")
+
+        png_bytes = ClipboardService._decode_image_file(str(path))
+
+        with Image.open(BytesIO(png_bytes)) as decoded:
+            assert decoded.size == (4096, 4096)
+
+    def test_decoded_png_is_emitted_as_a_texture(self, service):
+        service.emit = MagicMock()
+        texture = MagicMock()
+
+        with patch("gi.repository.Gdk.Texture.new_from_bytes", return_value=texture):
+            service._on_image_decoded(b"\x89PNG-fake")
+
+        service.emit.assert_called_once_with("paste_from_clipboard", texture)
+
+    def test_failed_decode_is_reported(self, service):
+        with patch.object(service, "_emit_clipboard_error") as mock_error:
+            service._on_image_decode_failed(ValueError("No image in clipboard"))
+
+        mock_error.assert_called_once_with("No image in clipboard")

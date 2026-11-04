@@ -24,6 +24,7 @@ from gi.repository import Gdk, Gio, GLib, GObject  # noqa: E402
 from loguru import logger  # noqa: E402
 from PIL import Image  # noqa: E402
 
+from anura.core.atomic_task_manager import CLIPBOARD_LANE, get_atomic_manager  # noqa: E402
 from anura.utils import mask_url, validate_image_dimensions, validate_image_resource  # noqa: E402
 from anura.utils.singleton import get_instance  # noqa: E402
 
@@ -743,14 +744,21 @@ class ClipboardService(GObject.GObject):
 
         self._emit_texture_from_file(path)
 
-    def _emit_texture_from_file(self, path: str) -> None:
-        """Decode an image file with PIL → re-encode to PNG → Gdk.Texture."""
+    @staticmethod
+    def _decode_image_file(path: str) -> bytes:
+        """Decode an image file with PIL and re-encode it as PNG bytes.
+
+        Pure CPU work with no GTK calls, so it can run on a worker thread: the
+        previous version did the decode inside a main-loop callback, which froze
+        the UI for the whole duration of a large image (#581).
+
+        Raises ValueError with a user-facing message when the file is not a
+        usable image.
+        """
         # Security Hardening: Validate file size before opening (DoS prevention)
         is_valid, _size, error = validate_image_resource(path)
         if not is_valid:
-            logger.error(f"Anura Clipboard: {error}")
-            self._emit_clipboard_error(_(error) if error else _("No image in clipboard"))
-            return
+            raise ValueError(error or _("No image in clipboard"))
 
         try:
             with Image.open(path) as img:
@@ -758,44 +766,57 @@ class ClipboardService(GObject.GObject):
                 # load()/convert() allocate the decoded bitmap.
                 dims_ok, dims_error = validate_image_dimensions(*img.size)
                 if not dims_ok:
-                    logger.error(f"Anura Clipboard: {dims_error}")
-                    self._emit_clipboard_error(_("No image in clipboard"))
-                    return
+                    raise ValueError(dims_error or _("No image in clipboard"))
 
                 img.load()
                 out = img if img.mode in ("RGB", "RGBA", "L") else img.convert("RGBA")
                 buf = BytesIO()
                 out.save(buf, format="PNG")
-                png_bytes = buf.getvalue()
-        except (OSError, ValueError, Image.UnidentifiedImageError) as e:
-            logger.warning(f"Anura Clipboard: PIL failed to decode {path!r}: {e}")
+                return buf.getvalue()
+        except (OSError, Image.UnidentifiedImageError) as e:
+            raise ValueError(_("No image in clipboard")) from e
 
-            def _on_error_idle() -> bool:
-                self.emit("error", _("No image in clipboard"))
-                return GLib.SOURCE_REMOVE
+    def _emit_texture_from_file(self, path: str) -> None:
+        """Decode an image file off the main thread and emit it as a texture.
 
-            GLib.idle_add(_on_error_idle)
+        The decode runs in the clipboard lane of the task manager, so a new
+        paste supersedes the previous one and the GTK main thread only does the
+        cheap `Gdk.Texture.new_from_bytes` + `emit` (#581).
+        """
+        get_atomic_manager().execute_daemon(
+            self._decode_image_file,
+            (path,),
+            callback=self._on_image_decoded,
+            errorback=self._on_image_decode_failed,
+            lane=CLIPBOARD_LANE,
+            on_superseded=self._on_image_decode_superseded,
+        )
+
+    def _on_image_decoded(self, png_bytes: bytes) -> None:
+        """Main thread: wrap the decoded PNG in a texture and emit it."""
+        if not png_bytes:
+            self._emit_clipboard_error(_("No image in clipboard"))
             return
 
         try:
             texture = Gdk.Texture.new_from_bytes(GLib.Bytes.new(png_bytes))
         except GLib.Error as e:
             logger.warning(f"Anura Clipboard: Gdk.Texture.new_from_bytes failed: {e.message}")
-
-            def _on_error_idle() -> bool:
-                self.emit("error", _("No image in clipboard"))
-                return GLib.SOURCE_REMOVE
-
-            GLib.idle_add(_on_error_idle)
+            self._emit_clipboard_error(_("No image in clipboard"))
             return
 
-        logger.debug(f"Anura Clipboard: loaded image from clipboard file URI ({path}).")
+        logger.debug("Anura Clipboard: loaded image from clipboard file URI.")
+        self.emit("paste_from_clipboard", texture)
 
-        def _on_success_idle(tex: Gdk.Texture) -> bool:
-            self.emit("paste_from_clipboard", tex)
-            return GLib.SOURCE_REMOVE
+    def _on_image_decode_failed(self, error: Exception, _traceback_str: str | None = None) -> None:
+        """Main thread: report a decode failure that the user can act on."""
+        message = str(error) or _("No image in clipboard")
+        logger.warning(f"Anura Clipboard: failed to decode clipboard image: {message}")
+        self._emit_clipboard_error(message)
 
-        GLib.idle_add(_on_success_idle, texture)
+    def _on_image_decode_superseded(self, _task_id: str) -> None:
+        """A newer paste replaced this decode: drop the result silently."""
+        logger.debug("Anura Clipboard: image decode superseded by a newer paste.")
 
     # Note: read_text() and _on_text_read() have been removed as they were dead code.
     # The method read clipboard text but never emitted a signal or called a callback,
