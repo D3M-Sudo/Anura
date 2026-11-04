@@ -180,7 +180,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--manifest",
         type=Path,
-        default=Path("flatpak/io.github.d3msudo.anura.local.json"),
+        default=Path("flatpak/io.github.d3m_sudo.anura.local.json"),
         help="manifest to read the expected licenses from",
     )
     parser.add_argument(

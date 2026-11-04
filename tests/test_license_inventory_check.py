@@ -11,7 +11,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = REPO_ROOT / "build-aux" / "check_license_inventory.py"
-MANIFEST = REPO_ROOT / "flatpak" / "io.github.d3msudo.anura.local.json"
+MANIFEST = REPO_ROOT / "flatpak" / "io.github.d3m_sudo.anura.local.json"
 
 
 def _load_module():
@@ -113,7 +113,7 @@ def test_main_writes_the_inventory_and_exit_code(tmp_path):
 
     assert code == 0
     payload = json.loads(output.read_text())
-    assert payload["app_id"] == "io.github.d3msudo.anura"
+    assert payload["app_id"] == "io.github.d3m_sudo.anura"
     assert payload["problems"] == []
     assert payload["required"]
     assert payload["all_license_files"]
@@ -142,13 +142,13 @@ def test_build_only_modules_are_not_required(tmp_path):
 def test_a_module_without_cleanup_is_required(tmp_path):
     """Without a cleanup rule the declared licence stays part of the inventory."""
     manifest = {
-        "app-id": "io.github.d3msudo.anura",
+        "app-id": "io.github.d3m_sudo.anura",
         "cleanup": [],
         "modules": [
             {
                 "name": "python3-tool",
                 "build-commands": [
-                    'install -Dm0644 LICENSE "$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/tool/LICENSE"'
+                    'install -Dm0644 LICENSE "$FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/tool/LICENSE"'
                 ],
             }
         ],
@@ -157,20 +157,20 @@ def test_a_module_without_cleanup_is_required(tmp_path):
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
 
     assert checker.expected_licenses(manifest_path) == [
-        ("python3-tool", "share/licenses/io.github.d3msudo.anura/tool/LICENSE")
+        ("python3-tool", "share/licenses/io.github.d3m_sudo.anura/tool/LICENSE")
     ]
     assert checker.excluded_licenses(manifest_path) == []
 
 
 def test_a_module_removed_by_cleanup_is_excluded(tmp_path):
     manifest = {
-        "app-id": "io.github.d3msudo.anura",
-        "cleanup": ["/share/licenses/io.github.d3msudo.anura/tool"],
+        "app-id": "io.github.d3m_sudo.anura",
+        "cleanup": ["/share/licenses/io.github.d3m_sudo.anura/tool"],
         "modules": [
             {
                 "name": "python3-tool",
                 "build-commands": [
-                    'install -Dm0644 LICENSE "$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/tool/LICENSE"'
+                    'install -Dm0644 LICENSE "$FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/tool/LICENSE"'
                 ],
             }
         ],
@@ -180,5 +180,5 @@ def test_a_module_removed_by_cleanup_is_excluded(tmp_path):
 
     assert checker.expected_licenses(manifest_path) == []
     assert checker.excluded_licenses(manifest_path) == [
-        ("python3-tool", "share/licenses/io.github.d3msudo.anura/tool/LICENSE")
+        ("python3-tool", "share/licenses/io.github.d3m_sudo.anura/tool/LICENSE")
     ]

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-"""Validate the gettext template (po/io.github.d3msudo.anura.pot).
+"""Validate the gettext template (po/io.github.d3m_sudo.anura.pot).
 
 `msgfmt -c` is the wrong check for a *template*: its header check
 (`--check-header`) rejects the placeholder header that xgettext always writes
@@ -30,7 +30,7 @@ import subprocess
 import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-POT_FILE = PROJECT_ROOT / "po" / "io.github.d3msudo.anura.pot"
+POT_FILE = PROJECT_ROOT / "po" / "io.github.d3m_sudo.anura.pot"
 
 # Sources whose translatable strings must be present in the template.
 HISTORY_SOURCES = (
