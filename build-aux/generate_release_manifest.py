@@ -51,13 +51,9 @@ def generate_release_manifest(
         raise ValueError(f"expected exactly one 'anura' module, found {len(app_modules)}")
 
     if source_path is None:
-        app_modules[0]["sources"] = [
-            {"type": "git", "url": APP_SOURCE_URL, "tag": f"v{version}"}
-        ]
+        app_modules[0]["sources"] = [{"type": "git", "url": APP_SOURCE_URL, "tag": f"v{version}"}]
     else:
-        app_modules[0]["sources"] = [
-            {"type": "git", "path": source_path, "commit": source_commit}
-        ]
+        app_modules[0]["sources"] = [{"type": "git", "path": source_path, "commit": source_commit}]
     return manifest
 
 
