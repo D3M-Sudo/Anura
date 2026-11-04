@@ -175,7 +175,9 @@ class TestClipboardServiceEnterprise:
         from gi.repository import Gio, GLib
 
         error = GLib.Error.new_literal(
-            Gio.io_error_quark(), "Texture creation failed", Gio.IOErrorEnum.FAILED
+            Gio.io_error_quark(),
+            "Texture creation failed",
+            Gio.IOErrorEnum.FAILED,
         )
         with (
             patch("gi.repository.Gdk.Texture.new_from_bytes", side_effect=error),
