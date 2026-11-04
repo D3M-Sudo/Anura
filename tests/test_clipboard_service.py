@@ -156,8 +156,14 @@ class TestClipboardServiceEnterprise:
         from PIL import Image
 
         with (
-            patch("anura.services.clipboard_service.validate_image_resource", return_value=(True, 1024, None)),
-            patch("PIL.Image.open", side_effect=Image.UnidentifiedImageError("Cannot identify image file")),
+            patch(
+                "anura.services.clipboard_service.validate_image_resource",
+                return_value=(True, 1024, None),
+            ),
+            patch(
+                "PIL.Image.open",
+                side_effect=Image.UnidentifiedImageError("Cannot identify image file"),
+            ),
             pytest.raises(ValueError, match="No image in clipboard"),
         ):
             service._decode_image_file("/tmp/test.png")
