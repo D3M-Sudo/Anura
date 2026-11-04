@@ -32,7 +32,7 @@ from anura.config import (  # noqa: E402
     REQUEST_TIMEOUT,
     TESSDATA_BEST_URL,
     TESSDATA_DIR,
-    TESSDATA_STANDARD_URL,
+    TESSDATA_FAST_URL,
     TESSDATA_URL,
     USER_AGENT,
 )
@@ -96,8 +96,10 @@ class DownloadManager(GObject.GObject):
         base_dir = Path(TESSDATA_DIR)
         if quality == "best":
             return str(base_dir / "tessdata_best")
-        if quality == "standard" or quality == "fast":
+        if quality == "fast":
             return str(base_dir / "tessdata_fast")
+        if quality == "standard":
+            return str(base_dir)
         return str(base_dir)
 
     def _get_model_quality_url(self, quality: str | None = None) -> str:
@@ -107,8 +109,10 @@ class DownloadManager(GObject.GObject):
 
         if quality == "best":
             return TESSDATA_BEST_URL
-        if quality == "standard" or quality == "fast":
-            return TESSDATA_STANDARD_URL
+        if quality == "fast":
+            return TESSDATA_FAST_URL
+        if quality == "standard":
+            return TESSDATA_URL
         return TESSDATA_URL
 
     def _get_download_executor(self) -> ThreadPoolExecutor:

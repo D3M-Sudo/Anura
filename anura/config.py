@@ -120,18 +120,18 @@ TESSDATA_SYSTEM_DIR = _get_tessdata_system_dir()
 # (see Bug #6, 2026-09). Hash-pinning for manifests is preserved via sha256
 # checks on the downloaded files.
 # Three distinct repositories with different accuracy/speed trade-offs:
-#   tessdata      → legacy models (fast, mixed LSTM+legacy engines)
-#   tessdata_fast → LSTM fast models (balanced accuracy/speed, recommended default)
-#   tessdata_best → LSTM best models (highest accuracy, slower)
+#   tessdata_fast → integerized LSTM models (fastest, lower accuracy)
+#   tessdata      → legacy + LSTM models (standard profile)
+#   tessdata_best → LSTM models (highest accuracy, slower)
 #
-# tessdata (legacy/fast models) - Pinned to release tag 4.1.0 (Bug #6, 2026-09)
+# tessdata (standard profile) - Pinned to release tag 4.1.0 (Bug #6, 2026-09)
 TESSDATA_URL = "https://github.com/tesseract-ocr/tessdata/raw/4.1.0/"
 # tessdata_best (high-quality LSTM models) - Pinned to release tag 4.1.0 (Bug #6, 2026-09)
 TESSDATA_BEST_URL = "https://github.com/tesseract-ocr/tessdata_best/raw/4.1.0/"
-# tessdata_fast (balanced LSTM models) - Pinned to release tag 4.1.0 (Bug #6, 2026-09)
-# FIX BUG-H-004: was incorrectly pointing to tessdata (same as TESSDATA_URL).
-# Standard quality must use the tessdata_fast repository (different repo, different models).
-TESSDATA_STANDARD_URL = "https://github.com/tesseract-ocr/tessdata_fast/raw/4.1.0/"
+# tessdata_fast (fast LSTM models) - Pinned to release tag 4.1.0 (Bug #6, 2026-09)
+TESSDATA_FAST_URL = "https://github.com/tesseract-ocr/tessdata_fast/raw/4.1.0/"
+# Backward-compatible alias; callers should use TESSDATA_FAST_URL for the fast profile.
+TESSDATA_STANDARD_URL = TESSDATA_FAST_URL
 
 # Network configuration for LanguageManager
 USER_AGENT = "Anura-OCR-Client/1.0 (Linux; Flatpak)"
