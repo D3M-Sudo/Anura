@@ -93,7 +93,7 @@ drift apart, so a new permission has to be justified here first (#498).
 | `--share=network` | Downloads Tesseract language models from GitHub; when the user asks for speech, sends the selected text to Google TTS |
 | `--share=ipc` | Shared memory with X11 and the portals (screenshot buffers) |
 | `--socket=wayland` | Native Wayland window; required on Wayland sessions |
-| `--socket=x11` | X11 window plus the `scrot` screenshot fallback, which is X11-only |
+| `--socket=fallback-x11` | X11 fallback for the window and bundled `scrot` screenshot fallback when Wayland is unavailable; Wayland remains preferred |
 | `--socket=pulseaudio` | Playback of the generated speech through GStreamer |
 | `--device=dri` | GPU rendering for GTK4 |
 | `--filesystem=xdg-pictures:ro` | Open an image from Pictures and accept drag-and-drop from it |
