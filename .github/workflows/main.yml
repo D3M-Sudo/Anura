@@ -38,7 +38,7 @@ jobs:
       - name: Check code formatting
         # Configuration in pyproject.toml; Markdown is excluded because the
         # formatter would rewrite fenced code blocks in docs and agent rules.
-        run: uv run ruff format --check .
+        run: uv run ruff format --check --diff .
 
       - name: Run type checker
         # Non-strict by design (see [tool.mypy]); catches real regressions in
