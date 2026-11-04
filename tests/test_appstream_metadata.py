@@ -64,6 +64,7 @@ def test_application_identity_is_consistent_across_runtime_and_schema(metainfo: 
     # the application-ID migration.
     assert schema.get("path") == "/io/github/d3msudo/anura/"
 
+
 def test_summary_and_description_are_present(metainfo: ET.Element) -> None:
     summary = metainfo.findtext("summary", "").strip()
     description = metainfo.find("description")
