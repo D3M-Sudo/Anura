@@ -175,7 +175,7 @@ class TestClipboardServiceEnterprise:
             patch("gi.repository.GLib.Bytes.new"),
             patch.object(service, "_emit_clipboard_error") as mock_error,
         ):
-            service._on_image_decoded(b"\\x89PNG-fake")
+            service._on_image_decoded(b"\x89PNG-fake")
 
         mock_error.assert_called_once_with("No image in clipboard")
 
