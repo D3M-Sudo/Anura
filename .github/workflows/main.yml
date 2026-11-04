@@ -267,9 +267,15 @@ jobs:
       - name: Generate release-style Flatpak manifest
         run: |
           VERSION="$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          # Lint the real submission shape (public repository URL + release tag).
           python3 build-aux/generate_release_manifest.py \
             --input flatpak/io.github.d3msudo.anura.local.json \
-            --output flatpak/io.github.d3msudo.anura.ci.json \
+            --output flatpak/io.github.d3msudo.anura.ci-release.json \
+            --version "$VERSION"
+          # Build the exact checked-out source without a network Git fetch.
+          python3 build-aux/generate_release_manifest.py \
+            --input flatpak/io.github.d3msudo.anura.local.json \
+            --output flatpak/io.github.d3msudo.anura.ci-build.json \
             --version "$VERSION" \
             --source-path .. \
             --source-commit "$GITHUB_SHA"
@@ -281,16 +287,16 @@ jobs:
           echo "=== Comparing every shared release field ==="
           python3 build-aux/check_manifest_consistency.py \
             --local flatpak/io.github.d3msudo.anura.local.json \
-            --release flatpak/io.github.d3msudo.anura.ci.json
+            --release flatpak/io.github.d3msudo.anura.ci-release.json
           echo "=== Running Flathub manifest lint ==="
-          flatpak-builder-lint manifest flatpak/io.github.d3msudo.anura.ci.json
+          flatpak-builder-lint manifest flatpak/io.github.d3msudo.anura.ci-release.json
           echo "✓ Local and generated release manifests validated"
 
       - name: Build Anura Flatpak
         uses: flatpak/flatpak-github-actions/flatpak-builder@79327416609af08178ad73b352877e51450790b3 # v6.7.0
         with:
           bundle: io.github.d3msudo.anura.flatpak
-          manifest-path: flatpak/io.github.d3msudo.anura.ci.json
+          manifest-path: flatpak/io.github.d3msudo.anura.ci-build.json
           cache: false
           keep-build-dirs: true
           state-dir: .flatpak-builder

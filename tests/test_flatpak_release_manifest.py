@@ -42,7 +42,9 @@ def test_release_generation_preserves_all_shared_manifest_data() -> None:
     assert generated["runtime-version"] == "51"
     assert generated["sdk"] == local["sdk"]
     assert generated["finish-args"] == local["finish-args"]
-    assert generated["modules"][:-1] == local["modules"][:-1]
+    local_shared = {m["name"]: m for m in local["modules"] if m["name"] != "anura"}
+    generated_shared = {m["name"]: m for m in generated["modules"] if m["name"] != "anura"}
+    assert generated_shared == local_shared
     app = next(module for module in generated["modules"] if module["name"] == "anura")
     assert app["sources"] == [
         {"type": "git", "url": GENERATOR.APP_SOURCE_URL, "tag": "v0.2.1"}

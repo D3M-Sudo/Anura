@@ -38,6 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Development tooling: dropped the `safety` dev dependency (and its entry in the Dependabot `dev-deps` group). It was added by the one-off June 2026 audit (`ead78f1`) to produce `docs/audit/safety_scan.json`, which is no longer tracked; no workflow, test or build script invokes it, and dependency scanning is covered by Dependabot and CodeQL. The development graph drops from 72 to 39 packages (also losing `cryptography`, `httpx`, `h11`, `pydantic` and `nltk`, which came in through it); runtime dependencies and the Flatpak manifests are untouched. `bandit` is kept
 
 ### Fixed
+- Flatpak: update Nanobind and Certifi sources, keep GNOME 51 in the release manifest, and validate/build a generated release-style manifest in CI (#479, #556, #491, #484)
 - Share: Reddit sends extracted text in `selftext` only; LinkedIn and Discord are removed from text sharing because their URL endpoints do not prefill the extracted text (#579)
 - OCR: `fast`, `standard` and `best` now select `tessdata_fast`, legacy `tessdata` and `tessdata_best` respectively; cache discovery follows the same profile directories (#571)
 - Clipboard: decoding an image copied as a file URI no longer blocks the GTK main thread. The PIL decode and PNG re-encode run in the clipboard lane of the task manager, and only the cheap `Gdk.Texture` creation happens on the main loop; a newer paste supersedes an in-flight decode (#581)
