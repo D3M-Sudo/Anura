@@ -34,7 +34,7 @@ MANIFESTS = [
     # Only the local manifest is synced directly. The release (Flathub)
     # manifest is generated from it by build-aux/release.sh and must never be
     # a target of dependency synchronization.
-    REPO_ROOT / "flatpak" / "io.github.d3msudo.anura.local.json",
+    REPO_ROOT / "flatpak" / "io.github.d3m_sudo.anura.local.json",
 ]
 UV_LOCK = REPO_ROOT / "uv.lock"
 

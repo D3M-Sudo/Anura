@@ -11,7 +11,7 @@ the corresponding run is green.
 
 ## Why after Milestone 1
 
-Every manifest edit flows into `release.sh` → `flatpak/io.github.d3msudo.anura.json`.
+Every manifest edit flows into `release.sh` → `flatpak/io.github.d3m_sudo.anura.json`.
 Landing packaging changes while runtime code is still moving would force repeated
 manifest regeneration and mix two different verification models (headless pytest vs.
 Flatpak builds). Milestone 1 also produces the dependency changes that Milestone 2

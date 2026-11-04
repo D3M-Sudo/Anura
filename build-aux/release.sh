@@ -39,9 +39,9 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-MANIFEST_FILE="$PROJECT_ROOT/flatpak/io.github.d3msudo.anura.json"
-MANIFEST_LOCAL="$PROJECT_ROOT/flatpak/io.github.d3msudo.anura.local.json"
-METAINFO_FILE="$PROJECT_ROOT/data/io.github.d3msudo.anura.metainfo.xml.in"
+MANIFEST_FILE="$PROJECT_ROOT/flatpak/io.github.d3m_sudo.anura.json"
+MANIFEST_LOCAL="$PROJECT_ROOT/flatpak/io.github.d3m_sudo.anura.local.json"
+METAINFO_FILE="$PROJECT_ROOT/data/io.github.d3m_sudo.anura.metainfo.xml.in"
 MESON_BUILD_FILE="$PROJECT_ROOT/meson.build"
 PYPROJECT_FILE="$PROJECT_ROOT/pyproject.toml"
 UV_LOCK_FILE="$PROJECT_ROOT/uv.lock"

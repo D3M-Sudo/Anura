@@ -21,7 +21,7 @@ uv.lock (resolved versions + dependency graph)
       |
       +---> build-aux/sync_dependencies.py --update/--check
       |         synchronises URL + sha256 of python3-* modules in
-      |         flatpak/io.github.d3msudo.anura.local.json only — the sole
+      |         flatpak/io.github.d3m_sudo.anura.local.json only — the sole
       |         hand/bot-maintained manifest (anura module: dir source)
       |
       +---> build-aux/check_runtime_dependency_coverage.py (F-005)
@@ -33,18 +33,18 @@ uv.lock (resolved versions + dependency graph)
                   since the release manifest was just generated from the
                   local one
 
-flatpak/io.github.d3msudo.anura.local.json
+flatpak/io.github.d3m_sudo.anura.local.json
       |
       +---> build-aux/generate_release_manifest.py
       |         CI: temporary release-style manifest pinned to the exact
       |             checked-out commit; linted and built on every PR
       |
       v   build-aux/release.sh, at release time
-flatpak/io.github.d3msudo.anura.json  (release / Flathub manifest)
+flatpak/io.github.d3m_sudo.anura.json  (release / Flathub manifest)
 ```
 
-**Only `flatpak/io.github.d3msudo.anura.local.json` is hand/bot-maintained.**
-`flatpak/io.github.d3msudo.anura.json` (the release/Flathub manifest) is
+**Only `flatpak/io.github.d3m_sudo.anura.local.json` is hand/bot-maintained.**
+`flatpak/io.github.d3m_sudo.anura.json` (the release/Flathub manifest) is
 **generated automatically by `build-aux/release.sh`** at every release and
 must never be hand-edited, added to `sync_dependencies.py`'s `MANIFESTS`, or
 targeted by any Dependabot/FEDC step directly. Generation copies every module verbatim from the local
@@ -162,7 +162,7 @@ PYTHONPATH=".:$SP" /usr/bin/python3 script.py
   compiled GResource first**:
 
   ```python
-  with open("builddir/data/io.github.d3msudo.anura.gresource", "rb") as f:
+  with open("builddir/data/io.github.d3m_sudo.anura.gresource", "rb") as f:
       Gio.Resource.new_from_data(GLib.Bytes.new(f.read()))._register()
   ```
 
@@ -200,7 +200,7 @@ How Anura satisfies it:
   `scrot`, `libportal`) with checksums;
 - the OCR models are pinned URLs inside the `tessdata` module, and the runtime
   verifies their digest against `anura/data/tessdata_checksums.json`;
-- the release manifest (`flatpak/io.github.d3msudo.anura.json`) is generated from
+- the release manifest (`flatpak/io.github.d3m_sudo.anura.json`) is generated from
   the local one by `build-aux/release.sh`, which rewrites the `anura` module's
   `dir` source into a `git` source at the release tag; for the Flathub submission
   repository, `build-aux/pin_source_commit.py` adds the tag's `commit` so a moved
@@ -215,12 +215,12 @@ source without tag/commit, or a `dir` source outside the app module fails the
 
 ```bash
 # Flathub linter (run against the submission manifest, needs network for schema checks)
-flatpak-builder-lint manifest flatpak/io.github.d3msudo.anura.json
-flatpak-builder-lint appstream  <installed-prefix>/share/metainfo/io.github.d3msudo.anura.metainfo.xml
+flatpak-builder-lint manifest flatpak/io.github.d3m_sudo.anura.json
+flatpak-builder-lint appstream  <installed-prefix>/share/metainfo/io.github.d3m_sudo.anura.metainfo.xml
 
 # Offline proof: the second build must not download anything
-flatpak-builder --force-clean --state-dir=.fb-state builddir flatpak/io.github.d3msudo.anura.local.json
-flatpak-builder --force-clean --disable-downloads --state-dir=.fb-state builddir flatpak/io.github.d3msudo.anura.local.json
+flatpak-builder --force-clean --state-dir=.fb-state builddir flatpak/io.github.d3m_sudo.anura.local.json
+flatpak-builder --force-clean --disable-downloads --state-dir=.fb-state builddir flatpak/io.github.d3m_sudo.anura.local.json
 ```
 
 The `--state-dir` cache keeps the downloaded sources, so the second run proves

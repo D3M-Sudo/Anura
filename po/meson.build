@@ -1,3 +1,3 @@
-i18n.gettext('io.github.d3msudo.anura',
+i18n.gettext('io.github.d3m_sudo.anura',
     preset: 'glib'
 )

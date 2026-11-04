@@ -16,8 +16,8 @@ import sys
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-MANIFEST_RELEASE = REPO_ROOT / "flatpak" / "io.github.d3msudo.anura.json"
-MANIFEST_LOCAL = REPO_ROOT / "flatpak" / "io.github.d3msudo.anura.local.json"
+MANIFEST_RELEASE = REPO_ROOT / "flatpak" / "io.github.d3m_sudo.anura.json"
+MANIFEST_LOCAL = REPO_ROOT / "flatpak" / "io.github.d3m_sudo.anura.local.json"
 LOCAL_ONLY_KEYS = ("branch", "separate-locales")
 
 

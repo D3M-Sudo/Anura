@@ -7,7 +7,7 @@ project('anura',
   ],
 )
 
-author = 'd3msudo'
+author = 'd3m_sudo'
 github_owner = 'D3M-Sudo'
 github_repo = 'Anura'
 domain = 'io.github'

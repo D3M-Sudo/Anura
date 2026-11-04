@@ -30,7 +30,7 @@ CHECKER = _load_module("check_manifest_consistency", ROOT / "build-aux" / "check
 
 
 def _local_manifest() -> dict[str, Any]:
-    return json.loads((ROOT / "flatpak" / "io.github.d3msudo.anura.local.json").read_text(encoding="utf-8"))
+    return json.loads((ROOT / "flatpak" / "io.github.d3m_sudo.anura.local.json").read_text(encoding="utf-8"))
 
 
 def test_release_generation_preserves_all_shared_manifest_data() -> None:

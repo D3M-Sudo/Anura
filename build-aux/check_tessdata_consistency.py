@@ -5,8 +5,8 @@
 Verifies that the tessdata git refs are consistent between:
 
 - anura/config.py (TESSDATA_BEST_URL)
-- flatpak/io.github.d3msudo.anura.json (tessdata module sources)
-- flatpak/io.github.d3msudo.anura.local.json (tessdata module sources)
+- flatpak/io.github.d3m_sudo.anura.json (tessdata module sources)
+- flatpak/io.github.d3m_sudo.anura.local.json (tessdata module sources)
 
 and that the committed integrity manifest
 (anura/data/tessdata_checksums.json) still describes the repositories pinned in
@@ -26,8 +26,8 @@ import sys
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CONFIG_PY = REPO_ROOT / "anura" / "config.py"
-MANIFEST_MAIN = REPO_ROOT / "flatpak" / "io.github.d3msudo.anura.json"
-MANIFEST_LOCAL = REPO_ROOT / "flatpak" / "io.github.d3msudo.anura.local.json"
+MANIFEST_MAIN = REPO_ROOT / "flatpak" / "io.github.d3m_sudo.anura.json"
+MANIFEST_LOCAL = REPO_ROOT / "flatpak" / "io.github.d3m_sudo.anura.local.json"
 CHECKSUMS_MANIFEST = REPO_ROOT / "anura" / "data" / "tessdata_checksums.json"
 
 # Regex to extract tessdata git ref (commit SHA or release tag, e.g. "4.1.0")

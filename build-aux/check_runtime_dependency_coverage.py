@@ -72,8 +72,8 @@ from sync_dependencies import BUILD_DEPS_OVERRIDES, MODULE_TO_PYPI, REPO_ROOT
 
 PYPROJECT_TOML = REPO_ROOT / "pyproject.toml"
 UV_LOCK = REPO_ROOT / "uv.lock"
-MANIFEST_MAIN = REPO_ROOT / "flatpak" / "io.github.d3msudo.anura.json"
-MANIFEST_LOCAL = REPO_ROOT / "flatpak" / "io.github.d3msudo.anura.local.json"
+MANIFEST_MAIN = REPO_ROOT / "flatpak" / "io.github.d3m_sudo.anura.json"
+MANIFEST_LOCAL = REPO_ROOT / "flatpak" / "io.github.d3m_sudo.anura.local.json"
 
 # PyPI name -> corresponding python3-* Flatpak module (reversed MODULE_TO_PYPI).
 _PYPI_TO_MODULE: dict[str, str] = {pypi: module for module, pypi in MODULE_TO_PYPI.items()}

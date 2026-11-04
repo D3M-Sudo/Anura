@@ -1,9 +1,11 @@
 {
-    "app-id": "io.github.d3msudo.anura",
+    "app-id": "io.github.d3m_sudo.anura",
     "runtime": "org.gnome.Platform",
     "runtime-version": "51",
     "sdk": "org.gnome.Sdk",
     "command": "anura",
+    "branch": "main",
+    "separate-locales": false,
     "finish-args": [
         "--share=network",
         "--share=ipc",
@@ -32,12 +34,12 @@
         "/lib/python3.*/site-packages/pybind11-*.dist-info",
         "/lib/python3.*/site-packages/nanobind",
         "/lib/python3.*/site-packages/nanobind-*.dist-info",
-        "/share/licenses/io.github.d3msudo.anura/scikit-build-core",
-        "/share/licenses/io.github.d3msudo.anura/pybind11",
-        "/share/licenses/io.github.d3msudo.anura/nanobind",
-        "/share/licenses/io.github.d3msudo.anura/python3-scikit-build-core",
-        "/share/licenses/io.github.d3msudo.anura/python3-pybind11",
-        "/share/licenses/io.github.d3msudo.anura/python3-nanobind"
+        "/share/licenses/io.github.d3m_sudo.anura/scikit-build-core",
+        "/share/licenses/io.github.d3m_sudo.anura/pybind11",
+        "/share/licenses/io.github.d3m_sudo.anura/nanobind",
+        "/share/licenses/io.github.d3m_sudo.anura/python3-scikit-build-core",
+        "/share/licenses/io.github.d3m_sudo.anura/python3-pybind11",
+        "/share/licenses/io.github.d3m_sudo.anura/python3-nanobind"
     ],
     "build-options": {
         "env": {
@@ -63,7 +65,7 @@
                 "--with-zlib"
             ],
             "post-install": [
-                "install -Dm0644 leptonica-license.txt $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/leptonica/LICENSE"
+                "install -Dm0644 leptonica-license.txt $FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/leptonica/LICENSE"
             ],
             "sources": [
                 {
@@ -84,7 +86,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app .",
-                "install -Dm0644 LICENSE \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/psutil/LICENSE\""
+                "install -Dm0644 LICENSE \"$FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/psutil/LICENSE\""
             ],
             "sources": [
                 {
@@ -103,7 +105,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed packaging-26.2-py3-none-any.whl",
-                "bash -c 'set -e; f=$(find /app/lib/python3.*/site-packages/packaging-*.dist-info -type f -iname \"*licen*\" -print -quit); test -n \"$f\"; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/packaging/LICENSE\"'"
+                "bash -c 'set -e; f=$(find /app/lib/python3.*/site-packages/packaging-*.dist-info -type f -iname \"*licen*\" -print -quit); test -n \"$f\"; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/packaging/LICENSE\"'"
             ],
             "sources": [
                 {
@@ -118,7 +120,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed pathspec-1.1.1-py3-none-any.whl",
-                "bash -c 'set -e; f=$(find /app/lib/python3.*/site-packages/pathspec-*.dist-info -type f -iname \"*licen*\" -print -quit); test -n \"$f\"; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/pathspec/LICENSE\"'"
+                "bash -c 'set -e; f=$(find /app/lib/python3.*/site-packages/pathspec-*.dist-info -type f -iname \"*licen*\" -print -quit); test -n \"$f\"; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/pathspec/LICENSE\"'"
             ],
             "sources": [
                 {
@@ -133,7 +135,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed scikit_build_core-1.1.1-py3-none-any.whl",
-                "bash -c 'set -e; f=$(find /app/lib/python3.*/site-packages/scikit_build_core-*.dist-info -type f -iname \"*licen*\" -print -quit); test -n \"$f\"; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/scikit-build-core/LICENSE\"'"
+                "bash -c 'set -e; f=$(find /app/lib/python3.*/site-packages/scikit_build_core-*.dist-info -type f -iname \"*licen*\" -print -quit); test -n \"$f\"; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/scikit-build-core/LICENSE\"'"
             ],
             "sources": [
                 {
@@ -153,7 +155,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app .",
-                "install -Dm0644 LICENSE \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/pybind11/LICENSE\""
+                "install -Dm0644 LICENSE \"$FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/pybind11/LICENSE\""
             ],
             "sources": [
                 {
@@ -172,7 +174,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed nanobind-3.1.0-py3-none-any.whl",
-                "bash -c 'set -e; f=$(find /app/lib/python3.*/site-packages/nanobind-*.dist-info -type f -iname \"*licen*\" -print -quit); test -n \"$f\"; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/nanobind/LICENSE\"'"
+                "bash -c 'set -e; f=$(find /app/lib/python3.*/site-packages/nanobind-*.dist-info -type f -iname \"*licen*\" -print -quit); test -n \"$f\"; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/nanobind/LICENSE\"'"
             ],
             "sources": [
                 {
@@ -192,7 +194,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app .",
-                "install -Dm0644 LICENSE \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/zxing-cpp/LICENSE\""
+                "install -Dm0644 LICENSE \"$FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/zxing-cpp/LICENSE\""
             ],
             "sources": [
                 {
@@ -239,7 +241,7 @@
                 "--disable-legacy"
             ],
             "post-install": [
-                "install -Dm0644 LICENSE $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/tesseract/LICENSE"
+                "install -Dm0644 LICENSE $FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/tesseract/LICENSE"
             ]
         },
         {
@@ -267,7 +269,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app .",
-                "install -Dm0644 LICENSE \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/pillow/LICENSE\""
+                "install -Dm0644 LICENSE \"$FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/pillow/LICENSE\""
             ],
             "sources": [
                 {
@@ -286,7 +288,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed pytesseract-0.3.13-py3-none-any.whl",
-                "bash -c 'set -e; f=$(find /app/lib/python3.*/site-packages/pytesseract-*.dist-info -type f -iname \"*licen*\" -print -quit); test -n \"$f\"; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/pytesseract/LICENSE\"'"
+                "bash -c 'set -e; f=$(find /app/lib/python3.*/site-packages/pytesseract-*.dist-info -type f -iname \"*licen*\" -print -quit); test -n \"$f\"; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/pytesseract/LICENSE\"'"
             ],
             "sources": [
                 {
@@ -301,7 +303,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed click-8.1.8-py3-none-any.whl",
-                "bash -c 'set -e; f=$(find /app/lib/python3.*/site-packages/click-*.dist-info -type f -iname \"*licen*\" -print -quit); test -n \"$f\"; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/click/LICENSE\"'"
+                "bash -c 'set -e; f=$(find /app/lib/python3.*/site-packages/click-*.dist-info -type f -iname \"*licen*\" -print -quit); test -n \"$f\"; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/click/LICENSE\"'"
             ],
             "sources": [
                 {
@@ -316,7 +318,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed gTTS-2.5.4-py3-none-any.whl",
-                "bash -c 'set -e; f=$(find /app/lib/python3.*/site-packages/gTTS-*.dist-info -type f -iname \"*licen*\" -print -quit); test -n \"$f\"; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/gTTS/LICENSE\"'"
+                "bash -c 'set -e; f=$(find /app/lib/python3.*/site-packages/gTTS-*.dist-info -type f -iname \"*licen*\" -print -quit); test -n \"$f\"; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/gTTS/LICENSE\"'"
             ],
             "sources": [
                 {
@@ -331,7 +333,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed loguru-0.7.3-py3-none-any.whl",
-                "install -Dm0644 loguru-LICENSE \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/loguru/LICENSE\""
+                "install -Dm0644 loguru-LICENSE \"$FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/loguru/LICENSE\""
             ],
             "sources": [
                 {
@@ -352,7 +354,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed urllib3-2.8.0-py3-none-any.whl",
-                "bash -c 'set -e; f=$(find /app/lib/python3.*/site-packages/urllib3-*.dist-info -type f -iname \"*licen*\" -print -quit); test -n \"$f\"; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/urllib3/LICENSE\"'"
+                "bash -c 'set -e; f=$(find /app/lib/python3.*/site-packages/urllib3-*.dist-info -type f -iname \"*licen*\" -print -quit); test -n \"$f\"; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/urllib3/LICENSE\"'"
             ],
             "sources": [
                 {
@@ -367,7 +369,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed certifi-2026.10.23.tar.gz",
-                "bash -c 'set -e; f=$(find /app/lib/python3.*/site-packages/certifi-*.dist-info -type f -iname \"*licen*\" -print -quit); test -n \"$f\"; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/certifi/LICENSE\"'"
+                "bash -c 'set -e; f=$(find /app/lib/python3.*/site-packages/certifi-*.dist-info -type f -iname \"*licen*\" -print -quit); test -n \"$f\"; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/certifi/LICENSE\"'"
             ],
             "sources": [
                 {
@@ -382,7 +384,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app .",
-                "install -Dm0644 LICENSE \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/charset-normalizer/LICENSE\""
+                "install -Dm0644 LICENSE \"$FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/charset-normalizer/LICENSE\""
             ],
             "sources": [
                 {
@@ -401,7 +403,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed idna-3.15-py3-none-any.whl",
-                "bash -c 'set -e; f=$(find /app/lib/python3.*/site-packages/idna-*.dist-info -type f -iname \"*licen*\" -print -quit); test -n \"$f\"; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/idna/LICENSE\"'"
+                "bash -c 'set -e; f=$(find /app/lib/python3.*/site-packages/idna-*.dist-info -type f -iname \"*licen*\" -print -quit); test -n \"$f\"; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/idna/LICENSE\"'"
             ],
             "sources": [
                 {
@@ -416,7 +418,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app --root-user-action=ignore --ignore-installed requests-2.34.2-py3-none-any.whl",
-                "bash -c 'set -e; f=$(find /app/lib/python3.*/site-packages/requests-*.dist-info -type f -iname \"*licen*\" -print -quit); test -n \"$f\"; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/requests/LICENSE\"'"
+                "bash -c 'set -e; f=$(find /app/lib/python3.*/site-packages/requests-*.dist-info -type f -iname \"*licen*\" -print -quit); test -n \"$f\"; install -Dm0644 \"$f\" \"$FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/requests/LICENSE\"'"
             ],
             "sources": [
                 {
@@ -468,7 +470,7 @@
                 }
             ],
             "post-install": [
-                "install -Dm0644 COPYING $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/scrot/COPYING"
+                "install -Dm0644 COPYING $FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/scrot/COPYING"
             ]
         },
         {
@@ -485,7 +487,7 @@
                 "/share/vala"
             ],
             "post-install": [
-                "install -Dm0644 ../COPYING $FLATPAK_DEST/share/licenses/io.github.d3msudo.anura/libportal/COPYING"
+                "install -Dm0644 ../COPYING $FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/libportal/COPYING"
             ],
             "sources": [
                 {
@@ -504,9 +506,8 @@
             "buildsystem": "meson",
             "sources": [
                 {
-                    "type": "git",
-                    "url": "https://github.com/D3M-Sudo/Anura.git",
-                    "tag": "v0.2.1"
+                    "type": "dir",
+                    "path": ".."
                 }
             ]
         }

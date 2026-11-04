@@ -23,7 +23,7 @@ import re
 import subprocess
 import sys
 
-DEFAULT_MANIFEST = Path("flatpak/io.github.d3msudo.anura.json")
+DEFAULT_MANIFEST = Path("flatpak/io.github.d3m_sudo.anura.json")
 COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 
 

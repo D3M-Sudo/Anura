@@ -20,12 +20,12 @@ import xml.etree.ElementTree as ET
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-METAINFO = REPO_ROOT / "data" / "io.github.d3msudo.anura.metainfo.xml.in"
-DESKTOP = REPO_ROOT / "data" / "io.github.d3msudo.anura.desktop.in"
+METAINFO = REPO_ROOT / "data" / "io.github.d3m_sudo.anura.metainfo.xml.in"
+DESKTOP = REPO_ROOT / "data" / "io.github.d3m_sudo.anura.desktop.in"
 MESON = REPO_ROOT / "meson.build"
 LINGUAS = REPO_ROOT / "po" / "LINGUAS"
 
-APP_ID = "io.github.d3msudo.anura"
+APP_ID = "io.github.d3m_sudo.anura"
 
 
 @pytest.fixture(scope="module")
