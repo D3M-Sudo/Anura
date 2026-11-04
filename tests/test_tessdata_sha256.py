@@ -109,9 +109,7 @@ class TestSha256Hasher:
             chunked.update(chunk)
 
         assert chunked.received == one_shot.received
-        expected = TessdataChecksum(
-            "x", len(payload), _sha256(payload), _git_blob_sha1(payload)
-        )
+        expected = TessdataChecksum("x", len(payload), _sha256(payload), _git_blob_sha1(payload))
         assert chunked.matches(expected)
         assert one_shot.matches(expected)
 
@@ -120,9 +118,7 @@ class TestSha256Hasher:
         hasher = Sha256Hasher(declared_size=len(payload))
         hasher.update(payload[:-1] + b"X")  # corrupt last byte
 
-        expected = TessdataChecksum(
-            "x", len(payload), _sha256(payload), _git_blob_sha1(payload)
-        )
+        expected = TessdataChecksum("x", len(payload), _sha256(payload), _git_blob_sha1(payload))
         assert not hasher.matches(expected)
 
     def test_wrong_size_is_rejected(self) -> None:
@@ -130,17 +126,13 @@ class TestSha256Hasher:
         hasher = Sha256Hasher(declared_size=len(payload))
         hasher.update(payload)
 
-        expected = TessdataChecksum(
-            "x", len(payload) + 1, _sha256(payload), _git_blob_sha1(payload)
-        )
+        expected = TessdataChecksum("x", len(payload) + 1, _sha256(payload), _git_blob_sha1(payload))
         assert not hasher.matches(expected)
 
     def test_empty_payload(self) -> None:
         payload = b""
         hasher = Sha256Hasher(declared_size=0)
-        expected = TessdataChecksum(
-            "x", 0, _sha256(payload), _git_blob_sha1(payload)
-        )
+        expected = TessdataChecksum("x", 0, _sha256(payload), _git_blob_sha1(payload))
         assert hasher.matches(expected)
 
 
@@ -326,9 +318,12 @@ class TestNetworkFailure:
         def boom(*args, **kwargs):
             raise requests.ConnectionError("refused")
 
-        with patch.object(dm.session, "get", side_effect=boom), patch(
-            "anura.services.language.download_manager.shutil.which",
-            return_value="/usr/bin/tesseract",
+        with (
+            patch.object(dm.session, "get", side_effect=boom),
+            patch(
+                "anura.services.language.download_manager.shutil.which",
+                return_value="/usr/bin/tesseract",
+            ),
         ):
             result = dm.download_begin("fra")
 
@@ -393,9 +388,7 @@ class TestAtomicInstallation:
 
         # New payload has a *different* sha256 -> verification fails.
         stub_integrity(TESSDATA_URL, "fra.traineddata", b"CORRUPTED-PAYLOAD")
-        response = _response(
-            [b"CORRUPTED-PAYLOAD"], {"content-length": str(len(b"CORRUPTED-PAYLOAD"))}
-        )
+        response = _response([b"CORRUPTED-PAYLOAD"], {"content-length": str(len(b"CORRUPTED-PAYLOAD"))})
 
         with (
             patch.object(dm.session, "get", return_value=response),

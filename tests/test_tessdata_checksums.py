@@ -83,9 +83,7 @@ class TestGitBlobHasher:
         hasher = integrity.GitBlobHasher(declared_size=6)
         hasher.update(b"hello\n")
 
-        expected = TessdataChecksum(
-            filename="hello.txt", size=6, sha1=HELLO_GIT_BLOB_SHA1, sha256=HELLO_SHA256
-        )
+        expected = TessdataChecksum(filename="hello.txt", size=6, sha1=HELLO_GIT_BLOB_SHA1, sha256=HELLO_SHA256)
         assert hasher.received == 6
         assert hasher.matches(expected)
 
@@ -108,9 +106,7 @@ class TestGitBlobHasher:
     def test_rejects_tampered_content(self) -> None:
         hasher = integrity.GitBlobHasher(declared_size=6)
         hasher.update(b"hell0\n")
-        assert not hasher.matches(
-            TessdataChecksum("x", 6, HELLO_GIT_BLOB_SHA1, HELLO_SHA256)
-        )
+        assert not hasher.matches(TessdataChecksum("x", 6, HELLO_GIT_BLOB_SHA1, HELLO_SHA256))
 
     def test_negative_declared_size_is_rejected(self) -> None:
         with pytest.raises(ValueError):

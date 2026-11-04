@@ -123,17 +123,13 @@ def download_and_compute_sha256(url: str, expected_size: int) -> tuple[str, int]
                 received += len(chunk)
                 if received > expected_size:
                     raise ApiError(
-                        f"Download of {url} exceeded expected size {expected_size} "
-                        f"bytes (received {received})."
+                        f"Download of {url} exceeded expected size {expected_size} bytes (received {received})."
                     )
     except (HTTPError, URLError, OSError, ValueError) as error:
         raise ApiError(f"Failed to download {url}: {error}") from error
 
     if received != expected_size:
-        raise ApiError(
-            f"Download of {url} received {received} bytes, tree listing expects "
-            f"{expected_size} bytes."
-        )
+        raise ApiError(f"Download of {url} received {received} bytes, tree listing expects {expected_size} bytes.")
 
     return digest.hexdigest(), received
 
