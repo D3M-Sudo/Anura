@@ -223,11 +223,11 @@ class TestLanguageManagerEnterprise:
 
     def test_download_profile_directory_and_repository_mapping(self, manager, tmp_path):
         """Each quality selects the matching upstream model family and cache path."""
-        from anura.config import TESSDATA_BEST_URL, TESSDATA_STANDARD_URL, TESSDATA_URL
+        from anura.config import TESSDATA_BEST_URL, TESSDATA_FAST_URL, TESSDATA_URL
 
         download_manager = manager._download_manager
         expected = {
-            "fast": (tmp_path / "tessdata_fast", TESSDATA_STANDARD_URL),
+            "fast": (tmp_path / "tessdata_fast", TESSDATA_FAST_URL),
             "standard": (tmp_path, TESSDATA_URL),
             "best": (tmp_path / "tessdata_best", TESSDATA_BEST_URL),
         }

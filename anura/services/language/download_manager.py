@@ -32,7 +32,7 @@ from anura.config import (  # noqa: E402
     REQUEST_TIMEOUT,
     TESSDATA_BEST_URL,
     TESSDATA_DIR,
-    TESSDATA_STANDARD_URL,
+    TESSDATA_FAST_URL,
     TESSDATA_URL,
     USER_AGENT,
 )
@@ -110,7 +110,7 @@ class DownloadManager(GObject.GObject):
         if quality == "best":
             return TESSDATA_BEST_URL
         if quality == "fast":
-            return TESSDATA_STANDARD_URL
+            return TESSDATA_FAST_URL
         if quality == "standard":
             return TESSDATA_URL
         return TESSDATA_URL
