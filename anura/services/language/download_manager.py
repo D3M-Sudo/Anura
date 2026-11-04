@@ -96,8 +96,8 @@ class DownloadManager(GObject.GObject):
         base_dir = Path(TESSDATA_DIR)
         if quality == "best":
             return str(base_dir / "tessdata_best")
-        if quality == "standard":
-            return str(base_dir / "tessdata")
+        if quality == "standard" or quality == "fast":
+            return str(base_dir / "tessdata_fast")
         return str(base_dir)
 
     def _get_model_quality_url(self, quality: str | None = None) -> str:
@@ -107,7 +107,7 @@ class DownloadManager(GObject.GObject):
 
         if quality == "best":
             return TESSDATA_BEST_URL
-        if quality == "standard":
+        if quality == "standard" or quality == "fast":
             return TESSDATA_STANDARD_URL
         return TESSDATA_URL
 

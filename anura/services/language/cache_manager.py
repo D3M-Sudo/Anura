@@ -40,8 +40,8 @@ class CacheManager:
         base_dir = Path(TESSDATA_DIR)
         if quality == "best":
             return base_dir / "tessdata_best"
-        if quality == "standard":
-            return base_dir / "tessdata"
+        if quality == "standard" or quality == "fast":
+            return base_dir / "tessdata_fast"
         return base_dir
 
     def init_tessdata(self) -> None:
