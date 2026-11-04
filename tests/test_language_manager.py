@@ -36,11 +36,13 @@ class TestLanguageManagerEnterprise:
             patch("anura.services.language.cache_manager.TESSDATA_SYSTEM_DIR", str(tmp_path / "system"), create=True),
             patch("anura.services.language.download_manager.TESSDATA_DIR", str(tmp_path), create=True),
             patch("anura.services.language.cache_manager.settings") as mock_settings,
+            patch("anura.services.language.download_manager.settings") as mock_download_settings,
         ):
             # Most tests below exercise the root tessdata directory. Select the
-            # standard profile explicitly; profile-specific behavior is tested
-            # separately in test_downloaded_codes_follow_selected_quality.
+            # standard profile explicitly in both services; profile-specific
+            # behavior is tested separately in test_downloaded_codes_follow_selected_quality.
             mock_settings.get_string.return_value = "standard"
+            mock_download_settings.get_string.return_value = "standard"
             os.makedirs(tmp_path / "system", exist_ok=True)
             yield LanguageManager()
 
