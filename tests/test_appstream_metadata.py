@@ -52,14 +52,13 @@ def test_component_identity_matches_the_desktop_entry(metainfo: ET.Element) -> N
 
 
 def test_application_identity_is_consistent_across_runtime_and_schema(metainfo: ET.Element) -> None:
-    from anura.config import APP_ID as CONFIG_APP_ID
-    from anura.services.settings import APP_ID as SETTINGS_APP_ID
-
+    config_source = (REPO_ROOT / "anura" / "config.py").read_text(encoding="utf-8")
+    settings_source = (REPO_ROOT / "anura" / "services" / "settings.py").read_text(encoding="utf-8")
     schema_path = REPO_ROOT / "data" / f"{APP_ID}.gschema.xml"
     schema = ET.parse(schema_path).getroot().find("schema")
 
-    assert CONFIG_APP_ID == APP_ID
-    assert SETTINGS_APP_ID == APP_ID
+    assert re.search(rf'APP_ID = "{re.escape(APP_ID)}"', config_source)
+    assert re.search(rf'APP_ID = "{re.escape(APP_ID)}"', settings_source)
     assert schema is not None
     assert schema.get("id") == APP_ID
     # Keep the GSettings storage path stable so existing preferences survive
