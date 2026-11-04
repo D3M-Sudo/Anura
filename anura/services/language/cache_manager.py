@@ -40,9 +40,9 @@ class CacheManager:
         base_dir = Path(TESSDATA_DIR)
         if quality == "best":
             return base_dir / "tessdata_best"
-        if quality == "standard":
-            return base_dir / "tessdata_fast"
         if quality == "fast":
+            return base_dir / "tessdata_fast"
+        if quality == "standard":
             return base_dir
         return base_dir
 
@@ -79,7 +79,7 @@ class CacheManager:
         try:
             tess_path = Path(TESSDATA_DIR)
             # Scan root and standard quality subdirectories
-            scan_dirs = [tess_path, tess_path / "tessdata", tess_path / "tessdata_fast", tess_path / "tessdata_best"]
+            scan_dirs = [tess_path, tess_path / "tessdata_fast", tess_path / "tessdata", tess_path / "tessdata_best"]
 
             for scan_dir in scan_dirs:
                 if not scan_dir.exists():

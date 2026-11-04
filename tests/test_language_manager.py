@@ -208,25 +208,30 @@ class TestLanguageManagerEnterprise:
         assert manager.get_downloaded_codes() == ["eng", "ita"]
 
     def test_downloaded_codes_follow_selected_quality(self, manager, tmp_path):
-        """The installed list must reflect the *currently selected* model quality.
-
-        Regression test for VM bug #2: switching the quality selector wrote the
-        new ``tessdata-model`` setting but never invalidated CacheManager, so the
-        list kept showing the scan from the previous quality. Files for different
-        qualities coexist on disk (base dir = fast, tessdata/ = standard,
-        tessdata_best/ = best), so the cache must be rescanned on every switch.
-        """
-        # fast (base dir) holds French; best (tessdata_best/) holds English.
-        (tmp_path / "fra.traineddata").touch()
+        """The installed list must reflect the currently selected profile directory."""
+        (tmp_path / "tessdata_fast").mkdir()
+        (tmp_path / "tessdata_fast" / "fra.traineddata").touch()
+        (tmp_path / "eng.traineddata").touch()
         (tmp_path / "tessdata_best").mkdir()
-        (tmp_path / "tessdata_best" / "eng.traineddata").touch()
+        (tmp_path / "tessdata_best" / "deu.traineddata").touch()
 
         with patch("anura.services.language.cache_manager.settings") as mock_settings:
-            mock_settings.get_string.return_value = "fast"
-            manager.invalidate_cache()
-            assert manager.get_downloaded_codes() == ["fra"]
+            for quality, expected in (("fast", ["fra"]), ("standard", ["eng"]), ("best", ["deu"])):
+                mock_settings.get_string.return_value = quality
+                manager.invalidate_cache()
+                assert manager.get_downloaded_codes() == expected
 
-            # Simulate _on_model_quality_changed(): new quality + cache invalidation.
-            mock_settings.get_string.return_value = "best"
-            manager.invalidate_cache()
-            assert manager.get_downloaded_codes() == ["eng"]
+    def test_download_profile_directory_and_repository_mapping(self, manager, tmp_path):
+        """Each quality selects the matching upstream model family and cache path."""
+        from anura.config import TESSDATA_BEST_URL, TESSDATA_STANDARD_URL, TESSDATA_URL
+
+        download_manager = manager._download_manager
+        expected = {
+            "fast": (tmp_path / "tessdata_fast", TESSDATA_STANDARD_URL),
+            "standard": (tmp_path, TESSDATA_URL),
+            "best": (tmp_path / "tessdata_best", TESSDATA_BEST_URL),
+        }
+        for quality, (directory, url) in expected.items():
+            assert Path(manager._cache_manager._get_model_quality_dir(quality)) == directory
+            assert Path(download_manager._get_model_quality_dir(quality)) == directory
+            assert download_manager._get_model_quality_url(quality) == url
