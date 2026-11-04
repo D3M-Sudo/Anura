@@ -50,7 +50,6 @@ def test_component_identity_matches_the_desktop_entry(metainfo: ET.Element) -> N
     assert launchable.text == f"{APP_ID}.desktop"
 
 
-
 def test_application_identity_is_consistent_across_runtime_and_schema(metainfo: ET.Element) -> None:
     config_source = (REPO_ROOT / "anura" / "config.py").read_text(encoding="utf-8")
     settings_source = (REPO_ROOT / "anura" / "services" / "settings.py").read_text(encoding="utf-8")
