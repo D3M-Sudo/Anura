@@ -544,6 +544,19 @@ class TestClipboardDecodeOffMainThread:
         with pytest.raises(ValueError):
             ClipboardService._decode_image_file(str(path))
 
+    def test_decode_handles_a_large_image(self, tmp_path):
+        from io import BytesIO
+
+        from PIL import Image
+
+        path = tmp_path / "large.png"
+        Image.new("RGB", (4096, 4096), (10, 20, 30)).save(path, format="PNG")
+
+        png_bytes = ClipboardService._decode_image_file(str(path))
+
+        with Image.open(BytesIO(png_bytes)) as decoded:
+            assert decoded.size == (4096, 4096)
+
     def test_decoded_png_is_emitted_as_a_texture(self, service):
         service.emit = MagicMock()
         texture = MagicMock()
