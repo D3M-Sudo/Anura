@@ -77,6 +77,7 @@ def test_same_lane_supersedes_only_the_previous_task(manager):
     assert manager.is_cancelled(first) is True
     assert manager.is_cancelled(second) is False
 
+
 def test_new_clipboard_paste_supersedes_previous_decode(manager):
     """A new paste invalidates only the in-flight clipboard decode (#581)."""
     first = manager.execute_daemon(lambda: None, lane=CLIPBOARD_LANE)
