@@ -159,9 +159,9 @@ class TestClipboardServiceEnterprise:
         with (
             patch("anura.services.clipboard_service.validate_image_resource", return_value=(True, 1024, None)),
             patch("PIL.Image.open", side_effect=Image.UnidentifiedImageError("Cannot identify image file")),
+            pytest.raises(ValueError, match="No image in clipboard"),
         ):
-            with pytest.raises(ValueError, match="No image in clipboard"):
-                service._decode_image_file("/tmp/test.png")
+            service._decode_image_file("/tmp/test.png")
 
     def test_decoded_texture_gdk_failure_is_reported(self, service):
         """GTK texture construction remains on the main thread and reports failures."""
