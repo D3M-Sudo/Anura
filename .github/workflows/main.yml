@@ -40,6 +40,10 @@ jobs:
         # formatter would rewrite fenced code blocks in docs and agent rules.
         run: uv run ruff format --check .
 
+      - name: Diagnostic Ruff format diff (temporary)
+        if: always()
+        run: uv run ruff format --diff tests/test_clipboard_service.py
+
       - name: Run type checker
         # Non-strict by design (see [tool.mypy]); catches real regressions in
         # the production tree without blocking on the untyped-GTK backlog.
