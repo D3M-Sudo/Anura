@@ -11,6 +11,7 @@ pytest.importorskip("gi")
 
 import hashlib
 import os
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from anura.models.download_state import DownloadState
