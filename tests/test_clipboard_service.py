@@ -139,7 +139,9 @@ class TestClipboardServiceEnterprise:
     def test_emit_texture_from_file_dispatches_decode(self, service):
         """The file path must dispatch CPU decoding to the clipboard worker lane."""
         manager = MagicMock()
-        with patch("anura.services.clipboard_service.get_atomic_manager", return_value=manager):
+        with patch(
+            "anura.services.clipboard_service.get_atomic_manager", return_value=manager
+        ):
             service._emit_texture_from_file("/tmp/test.png")
 
         manager.execute_daemon.assert_called_once()
@@ -515,7 +517,9 @@ class TestClipboardDecodeOffMainThread:
 
     def test_decode_is_dispatched_to_the_clipboard_lane(self, service):
         manager = MagicMock()
-        with patch("anura.services.clipboard_service.get_atomic_manager", return_value=manager):
+        with patch(
+            "anura.services.clipboard_service.get_atomic_manager", return_value=manager
+        ):
             service._emit_texture_from_file("/tmp/picture.png")
 
         manager.execute_daemon.assert_called_once()
