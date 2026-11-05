@@ -17,7 +17,6 @@
         "--filesystem=xdg-download:ro",
         "--filesystem=xdg-desktop:ro",
         "--filesystem=xdg-documents:ro",
-        "--filesystem=~/.var/app/io.github.d3msudo.anura/data:ro",
         "--talk-name=org.a11y.Bus",
         "--talk-name=org.freedesktop.Notifications",
         "--env=TESSDATA_PREFIX=/app/share/tessdata"
