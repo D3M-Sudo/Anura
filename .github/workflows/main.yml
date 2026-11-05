@@ -301,6 +301,16 @@ jobs:
           keep-build-dirs: true
           state-dir: .flatpak-builder
 
+      - name: Prove Flatpak build works without source downloads
+        # Reuse the source cache populated by the preceding clean build. A
+        # fresh build directory plus --disable-download proves every source
+        # needed by the generated manifest is already declared and cached.
+        run: |
+          flatpak-builder --force-clean --disable-download --disable-rofiles-fuse \
+            --state-dir=.flatpak-builder \
+            builddir-offline \
+            flatpak/.ci-build/io.github.d3m_sudo.anura.json
+
       - name: Verify Blueprint and Resource Structure
         run: |
           echo "=== Verifying generated UI files ==="
