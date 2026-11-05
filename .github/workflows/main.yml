@@ -86,7 +86,7 @@ jobs:
         # manifest is generated from it by build-aux/release.sh and is only
         # guaranteed to match right after a release (checked there instead,
         # in --manifest both mode, as a post-generation self-check).
-        run: python3 build-aux/check_runtime_dependency_coverage.py --manifest local
+        run: python3 build-aux/check_runtime_dependency_coverage.py --manifest local --arch x86_64 --arch aarch64
 
   gtk-tests:
     name: GTK Integration Tests
