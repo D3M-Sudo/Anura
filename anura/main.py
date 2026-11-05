@@ -214,9 +214,7 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
             if selected_path:
                 try:
                     if not migrate_legacy_flatpak_data(old_data_dir=Path(selected_path)):
-                        logger.warning(
-                            "Legacy Anura data was not imported. The migration prompt will be shown again."
-                        )
+                        logger.warning("Legacy Anura data was not imported. The migration prompt will be shown again.")
                 except (OSError, RuntimeError, ValueError) as exc:
                     logger.exception(f"Legacy Anura data migration failed: {exc}")
             else:
