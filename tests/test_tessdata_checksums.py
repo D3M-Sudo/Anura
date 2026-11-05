@@ -84,6 +84,14 @@ class TestTessdataChecksum:
         checksum = TessdataChecksum(filename="eng.traineddata", size=1, sha256="A" * 64)
         assert checksum.sha256 == "A" * 64
 
+    def test_safe_nested_model_path_accepted(self) -> None:
+        checksum = TessdataChecksum(
+            filename="script/Arabic.traineddata",
+            size=123,
+            sha256="a" * 64,
+        )
+        assert checksum.filename == "script/Arabic.traineddata"
+
     def test_invalid_filename_rejected(self) -> None:
         with pytest.raises(ValueError, match="filename"):
             TessdataChecksum(filename="eng.txt", size=1, sha256="a" * 64)
