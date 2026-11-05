@@ -89,15 +89,16 @@ def _copy_tree_without_overwrite(source: Path, destination: Path) -> tuple[int, 
 
 def migrate_legacy_flatpak_data(
     *,
-    old_data_dir: Path | str | None = None,
+    old_data_dir: Path | str,
     new_data_home: Path | str | None = None,
     flatpak_info: Path | str = FLATPAK_INFO,
 ) -> bool:
-    """Migrate history and downloaded OCR models from the old Flatpak ID.
+    """Migrate data from the portal-authorized old Flatpak data directory.
 
-    Returns True when the migration is complete (or was already completed).
-    Returns False when it is not applicable or a recoverable error occurred.
-    The old data is never modified or deleted.
+    old_data_dir must be the directory returned by the GTK folder chooser.
+    Returns True when migration is complete (or already completed), False when
+    the source is invalid or a recoverable error occurred. The source is never
+    modified or deleted.
     """
     if not Path(flatpak_info).is_file():
         return False
@@ -107,7 +108,7 @@ def migrate_legacy_flatpak_data(
     if marker.is_file():
         return True
 
-    source_home = Path(old_data_dir) if old_data_dir is not None else Path.home() / ".var" / "app" / OLD_APP_ID / "data"
+    source_home = Path(old_data_dir)
     source_app_data = source_home / "anura"
     if not source_app_data.is_dir():
         logger.info("Legacy Flatpak data directory not found; migration will be checked again on next launch.")
