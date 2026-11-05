@@ -30,9 +30,14 @@ def main() -> int:
     library_paths = os.environ.get("LD_LIBRARY_PATH", "").split(os.pathsep)
     if "/usr/lib/girepository-1.0" not in typelib_paths:
         raise RuntimeError("GI_TYPELIB_PATH does not include the runtime typelib directory")
-    if "/app/lib" not in library_paths or not os.path.isdir("/app/lib"):
-        raise RuntimeError("LD_LIBRARY_PATH does not expose the application library directory")
-    for path in typelib_paths + library_paths:
+    if "/app/lib/girepository-1.0" not in typelib_paths:
+        raise RuntimeError("GI_TYPELIB_PATH does not include the application typelib directory")
+    if not os.path.isdir("/app/lib"):
+        raise RuntimeError("application library directory is missing")
+    # Flatpak configures the dynamic-linker search path independently of this
+    # explicit GI check. Do not require LD_LIBRARY_PATH to expose /app/lib:
+    # loading libtesseract by soname below verifies the actual linker behavior.
+    for path in typelib_paths + [p for p in library_paths if p]:
         if "x86_64-linux-gnu" in path or "aarch64-linux-gnu" in path:
             raise RuntimeError(f"architecture-specific library path found: {path}")
 
