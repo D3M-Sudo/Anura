@@ -20,7 +20,6 @@ Only plans with unfinished, currently relevant scope belong here. Completed plan
 
 | Document | Status | Purpose |
 | --- | --- | --- |
-| [planning/flathub-readiness-m2.md](planning/flathub-readiness-m2.md) | **Historical plan — implementation status superseded by current CI and GitHub issues** | Original Milestone 2 sequencing; consult the issue tracker and normative Flatpak references for current status |
 
 ## Historical material (audit/legacy)
 
@@ -29,6 +28,7 @@ Only plans with unfinished, currently relevant scope belong here. Completed plan
 | [audit/legacy/reports/history-v1-plan.md](audit/legacy/reports/history-v1-plan.md) | **Historical** | Pre-implementation History V1 plan (baseline `testing @ a52f4563`); superseded by the merged History V1 integration |
 | [audit/legacy/reports/history-v2-interactive-rows-plan.md](audit/legacy/reports/history-v2-interactive-rows-plan.md) | **Historical** | Completed History V2 design and implementation plan; current behaviour is in `reference/history-v2.md` |
 | [audit/legacy/reports/runtime-fixes-m1-plan.md](audit/legacy/reports/runtime-fixes-m1-plan.md) | **Historical** | Completed runtime-fixes Milestone 1 plan (36/36 scoped issues resolved) |
+| [planning/flathub-readiness-m2.md](planning/flathub-readiness-m2.md) | **Historical** | Original Milestone 2 sequencing; implementation status is superseded by current CI and GitHub issues |
 | [audit/legacy/reports/diagnosis-vm-followup-2026-09-17.md](audit/legacy/reports/diagnosis-vm-followup-2026-09-17.md) | **Historical** | VM follow-up diagnosis (findings resolved at HEAD, re-verified by the 2026-09-20 audit) |
 | [audit/legacy/reports/diagnosis-full-test-tiers-2026-09-20.md](audit/legacy/reports/diagnosis-full-test-tiers-2026-09-20.md) | **Historical** | Full diagnostics and test-tier audit (`HEAD: aba2884`) |
 | [audit/legacy/reports/](audit/legacy/reports/) | **Historical** | Bug-hunt/QA/diagnosis reports, append-only (per-report index in `reports/README.md`) |
@@ -50,7 +50,7 @@ docs/
 │   ├── history-v2.md
 │   ├── dependencies.md
 │   └── tessdata-integrity.md
-├── planning/              ← active plans (currently Flathub M2)
+├── planning/              ← planning records (including historical snapshots)
 │   └── flathub-readiness-m2.md
 └── audit/                 ← QA/security audit material
     ├── README.md          ← audit root guide (root = active audits)
