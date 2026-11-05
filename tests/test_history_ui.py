@@ -388,7 +388,7 @@ def test_clear_rows_cancels_timers_and_disconnects_row_handlers(headless_gi_mock
     service = HistoryService(base_dir=tmp_path)
     service.record("first", "eng")
     service.record("second", "eng")
-    page = _make_page(headless_gi_mocks, service)  # first refresh: buttons 11–14; rows 21, 22
+    page = _make_page(headless_gi_mocks, service)  # first refresh: buttons 11-14; rows 21, 22
     controller = MagicMock()
     controller.copy_entry_text.return_value = True
 
