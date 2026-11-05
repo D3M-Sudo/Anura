@@ -68,6 +68,7 @@ def test_unexpected_errors_are_not_swallowed(headless_gi_mocks, monkeypatch):
 
 def test_open_entry_exports_in_background_and_emits_file_ready(headless_gi_mocks, monkeypatch, tmp_path):
     from pathlib import Path
+
     import anura.controllers.history_controller as module
 
     manager = MagicMock()
