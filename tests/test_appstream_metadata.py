@@ -20,12 +20,12 @@ import xml.etree.ElementTree as ET
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-METAINFO = REPO_ROOT / "data" / "io.github.d3msudo.anura.metainfo.xml.in"
-DESKTOP = REPO_ROOT / "data" / "io.github.d3msudo.anura.desktop.in"
+METAINFO = REPO_ROOT / "data" / "io.github.d3m_sudo.anura.metainfo.xml.in"
+DESKTOP = REPO_ROOT / "data" / "io.github.d3m_sudo.anura.desktop.in"
 MESON = REPO_ROOT / "meson.build"
 LINGUAS = REPO_ROOT / "po" / "LINGUAS"
 
-APP_ID = "io.github.d3msudo.anura"
+APP_ID = "io.github.d3m_sudo.anura"
 
 
 @pytest.fixture(scope="module")
@@ -48,6 +48,21 @@ def test_component_identity_matches_the_desktop_entry(metainfo: ET.Element) -> N
     assert launchable is not None
     assert launchable.get("type") == "desktop-id"
     assert launchable.text == f"{APP_ID}.desktop"
+
+
+def test_application_identity_is_consistent_across_runtime_and_schema(metainfo: ET.Element) -> None:
+    config_source = (REPO_ROOT / "anura" / "config.py").read_text(encoding="utf-8")
+    settings_source = (REPO_ROOT / "anura" / "services" / "settings.py").read_text(encoding="utf-8")
+    schema_path = REPO_ROOT / "data" / f"{APP_ID}.gschema.xml"
+    schema = ET.parse(schema_path).getroot().find("schema")
+
+    assert re.search(rf'APP_ID = "{re.escape(APP_ID)}"', config_source)
+    assert re.search(rf'APP_ID = "{re.escape(APP_ID)}"', settings_source)
+    assert schema is not None
+    assert schema.get("id") == APP_ID
+    # Keep the GSettings storage path stable so existing preferences survive
+    # the application-ID migration.
+    assert schema.get("path") == "/io/github/d3msudo/anura/"
 
 
 def test_summary_and_description_are_present(metainfo: ET.Element) -> None:

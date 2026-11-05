@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 
 # Core Application Identity
-APP_ID = "io.github.d3msudo.anura"
+APP_ID = "io.github.d3m_sudo.anura"
 
 # Logging configuration — override via ANURA_LOG_LEVEL env var
 _LOG_LEVEL = os.environ.get("ANURA_LOG_LEVEL", "INFO").upper()

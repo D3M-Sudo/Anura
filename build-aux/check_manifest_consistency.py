@@ -1,95 +1,89 @@
 #!/usr/bin/env python3
-# build-aux/check_manifest_consistency.py
-"""Check dependency consistency between Flatpak manifests.
+# This file is part of Anura.
+# Copyright (C) 2026 D3M-Sudo (Anura)
+#
+# SPDX-License-Identifier: MIT
 
-Detects drift between anura.json and anura.local.json for all
-shared Python modules. Exits non-zero if inconsistencies are found.
+"""Compare complete local and release Flatpak manifests."""
 
-Intentional differences are ignored:
-- anura application module (source differs: git vs dir)
-- x-checker-data fields
-"""
+from __future__ import annotations
 
+import argparse
+import copy
 import json
 from pathlib import Path
 import sys
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-MANIFEST_MAIN = REPO_ROOT / "flatpak" / "io.github.d3msudo.anura.json"
-MANIFEST_LOCAL = REPO_ROOT / "flatpak" / "io.github.d3msudo.anura.local.json"
-
-# Fields that may intentionally differ between manifests
-IGNORED_FIELDS = {"x-checker-data"}
-
-# Modules that are intentionally different
-IGNORED_MODULES = {"anura"}
+MANIFEST_RELEASE = REPO_ROOT / "flatpak" / "io.github.d3m_sudo.anura.json"
+MANIFEST_LOCAL = REPO_ROOT / "flatpak" / "io.github.d3m_sudo.anura.local.json"
+LOCAL_ONLY_KEYS = ("branch", "separate-locales")
 
 
-def get_python_modules(manifest_path: Path) -> dict[str, dict]:
-    """Extract Python modules with their normalized sources.
+def normalize_manifest(data: dict[str, Any]) -> dict[str, Any]:
+    """Normalize only documented local/release differences."""
+    normalized = copy.deepcopy(data)
+    for key in LOCAL_ONLY_KEYS:
+        normalized.pop(key, None)
 
-    Returns {module_name: normalized_source_dict}.
-    """
-    data = json.loads(manifest_path.read_text())
-    modules: dict[str, dict] = {}
+    app_modules = [m for m in normalized.get("modules", []) if m.get("name") == "anura"]
+    if len(app_modules) != 1:
+        raise ValueError(f"expected exactly one 'anura' module, found {len(app_modules)}")
+    app_modules[0]["sources"] = [{"type": "git", "url": "<app-source>", "tag": "<release-tag>"}]
+    return normalized
 
-    for module in data.get("modules", []):
-        name = module.get("name", "")
-        if not name.startswith("python3-") or name in IGNORED_MODULES:
-            continue
 
-        sources = module.get("sources", [])
-        if not sources:
-            continue
+def _differences(left: Any, right: Any, path: str = "$") -> list[str]:
+    if isinstance(left, dict) and isinstance(right, dict):
+        result: list[str] = []
+        for key in sorted(set(left) | set(right)):
+            child = f"{path}.{key}"
+            if key not in left or key not in right:
+                result.append(child)
+            else:
+                result.extend(_differences(left[key], right[key], child))
+        return result
+    if isinstance(left, list) and isinstance(right, list):
+        if len(left) != len(right):
+            return [f"{path} (length {len(left)} != {len(right)})"]
+        result = []
+        for index, (a, b) in enumerate(zip(left, right, strict=True)):
+            result.extend(_differences(a, b, f"{path}[{index}]"))
+        return result
+    return [] if left == right else [path]
 
-        # Normalize source by removing intentionally different fields
-        source = {k: v for k, v in sources[0].items() if k not in IGNORED_FIELDS}
-        modules[name] = source
 
-    return modules
+def check_consistency(local_path: Path = MANIFEST_LOCAL, release_path: Path = MANIFEST_RELEASE) -> list[str]:
+    local = json.loads(local_path.read_text(encoding="utf-8"))
+    release = json.loads(release_path.read_text(encoding="utf-8"))
+    return _differences(normalize_manifest(local), normalize_manifest(release))
 
 
 def main() -> int:
-    """Check consistency. Returns 0 if consistent, 1 if drift detected."""
-    if not MANIFEST_MAIN.exists():
-        print(f"ERROR: {MANIFEST_MAIN} not found", file=sys.stderr)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--local", type=Path, default=MANIFEST_LOCAL)
+    parser.add_argument("--release", type=Path, default=MANIFEST_RELEASE)
+    args = parser.parse_args()
+
+    for path in (args.local, args.release):
+        if not path.is_file():
+            print(f"ERROR: {path} not found", file=sys.stderr)
+            return 2
+    try:
+        differences = check_consistency(args.local, args.release)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        print(f"ERROR: cannot compare manifests: {exc}", file=sys.stderr)
         return 2
-    if not MANIFEST_LOCAL.exists():
-        print(f"ERROR: {MANIFEST_LOCAL} not found", file=sys.stderr)
-        return 2
 
-    main_modules = get_python_modules(MANIFEST_MAIN)
-    local_modules = get_python_modules(MANIFEST_LOCAL)
-
-    errors: list[str] = []
-
-    # Check for modules only in main
-    only_main = sorted(set(main_modules.keys()) - set(local_modules.keys()))
-    if only_main:
-        errors.append(f"Modules only in main manifest: {', '.join(only_main)}")
-
-    # Check for modules only in local
-    only_local = sorted(set(local_modules.keys()) - set(main_modules.keys()))
-    if only_local:
-        errors.append(f"Modules only in local manifest: {', '.join(only_local)}")
-
-    # Check for source drift in shared modules
-    for name in sorted(set(main_modules.keys()) & set(local_modules.keys())):
-        if main_modules[name] != local_modules[name]:
-            errors.append(f"\nDrift detected in '{name}':")
-            errors.append(f"  main:  {main_modules[name]}")
-            errors.append(f"  local: {local_modules[name]}")
-
-    if errors:
-        print("FAIL: Manifest consistency check failed")
-        for error in errors:
-            print(error)
+    if differences:
+        print("FAIL: release manifest differs from local source of truth")
+        for path in differences:
+            print(f"  {path}")
         return 1
-
-    shared = len(set(main_modules.keys()) & set(local_modules.keys()))
-    print(f"PASS: Manifests are consistent ({shared} shared Python modules)")
+    print("PASS: complete release manifest matches local source of truth")
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())

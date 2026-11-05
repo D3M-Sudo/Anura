@@ -19,9 +19,9 @@ import re
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-MANIFEST_PATH = REPO_ROOT / "flatpak" / "io.github.d3msudo.anura.local.json"
+MANIFEST_PATH = REPO_ROOT / "flatpak" / "io.github.d3m_sudo.anura.local.json"
 
-LICENSE_DEST_RE = re.compile(r"share/licenses/io\.github\.d3msudo\.anura/([^/\"]+)/LICENSE")
+LICENSE_DEST_RE = re.compile(r"share/licenses/io\.github\.d3m_sudo\.anura/([^/\"]+)/LICENSE")
 
 
 @pytest.fixture(scope="module")

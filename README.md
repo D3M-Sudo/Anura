@@ -99,7 +99,7 @@ As of **v0.2.0**, Anura features an **Enterprise Clean Architecture** focused on
 Download the `.flatpak` bundle from the [Releases](https://github.com/D3M-Sudo/Anura/releases/latest) page, then install:
 
 ```bash
-flatpak install --user ~/Downloads/io.github.d3msudo.anura.flatpak
+flatpak install --user ~/Downloads/io.github.d3m_sudo.anura.flatpak
 ```
 
 ### Runtime requirements
@@ -127,7 +127,7 @@ On **X11 sessions**, if the portal fails, Anura automatically falls back to a **
 Anura supports configurable logging levels via the `ANURA_LOG_LEVEL` environment variable:
 
 ```bash
-ANURA_LOG_LEVEL=DEBUG flatpak run io.github.d3msudo.anura
+ANURA_LOG_LEVEL=DEBUG flatpak run io.github.d3m_sudo.anura
 ```
 
 Valid levels: `TRACE`, `DEBUG`, `INFO` (default), `WARNING`, `ERROR`, `CRITICAL`
@@ -228,7 +228,7 @@ Contributions in any language are welcome.
 ```bash
 cd po
 ./update_potfiles.sh
-for f in *.po; do msgmerge -U "$f" io.github.d3msudo.anura.pot --backup=none; done
+for f in *.po; do msgmerge -U "$f" io.github.d3m_sudo.anura.pot --backup=none; done
 ```
 
 ---

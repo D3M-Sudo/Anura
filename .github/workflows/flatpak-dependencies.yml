@@ -32,7 +32,7 @@ jobs:
           UPDATES_FILE="$RUNNER_TEMP/fedc-updates.md"
           : > "$UPDATES_FILE"
 
-          for manifest in flatpak/io.github.d3msudo.anura.local.json; do
+          for manifest in flatpak/io.github.d3m_sudo.anura.local.json; do
             if [ -f "$manifest" ]; then
               docker run --rm \
                 --user $(id -u):$(id -g) \
@@ -102,7 +102,7 @@ jobs:
                 'These dependencies require manual testing before update.',
                 '',
                 '### Files to update',
-                '- `flatpak/io.github.d3msudo.anura.local.json`',
+                '- `flatpak/io.github.d3m_sudo.anura.local.json`',
                 '',
                 '_This issue was automatically created by the Flatpak dependency checker._'
               ].join('\n');
@@ -137,19 +137,19 @@ jobs:
 
       - name: Auto-update certifi only
         run: |
-          git restore -- flatpak/io.github.d3msudo.anura.local.json
+          git restore -- flatpak/io.github.d3m_sudo.anura.local.json
 
           FEDC_HOME="$RUNNER_TEMP/fedc-home"
           TMP_DIR="${{ github.workspace }}/.fedc-certifi-tmp"
           mkdir -p "$FEDC_HOME" "$TMP_DIR"
           trap 'rm -rf "$TMP_DIR"' EXIT
 
-          CERTIFI_MANIFEST="$TMP_DIR/io.github.d3msudo.anura.certifi.json"
+          CERTIFI_MANIFEST="$TMP_DIR/io.github.d3m_sudo.anura.certifi.json"
 
           # Isolate certifi from the local manifest and run FEDC once. (The
           # release manifest is generated from the local one by
           # build-aux/release.sh and must never be a FEDC input/output here.)
-          python3 .github/scripts/fedc_certifi.py isolate "flatpak/io.github.d3msudo.anura.local.json" "$CERTIFI_MANIFEST"
+          python3 .github/scripts/fedc_certifi.py isolate "flatpak/io.github.d3m_sudo.anura.local.json" "$CERTIFI_MANIFEST"
 
           docker run --rm \
             --user $(id -u):$(id -g) \
@@ -159,15 +159,15 @@ jobs:
             -w /github/workspace \
             ghcr.io/flathub-infra/flatpak-external-data-checker:latest@sha256:ea7b3bf6c05ff4536b5450a1ef451d157be544b95fb6abf56a32a80da4819526 \
             --update --edit-only \
-            "/github/workspace/.fedc-certifi-tmp/io.github.d3msudo.anura.certifi.json"
+            "/github/workspace/.fedc-certifi-tmp/io.github.d3m_sudo.anura.certifi.json"
 
           # Apply updated certifi source to the local manifest. The release
           # manifest inherits it automatically the next time release.sh runs.
-          python3 .github/scripts/fedc_certifi.py replace "flatpak/io.github.d3msudo.anura.local.json" "$CERTIFI_MANIFEST"
+          python3 .github/scripts/fedc_certifi.py replace "flatpak/io.github.d3m_sudo.anura.local.json" "$CERTIFI_MANIFEST"
 
           echo "Certifi update completed for the local manifest. Resulting diff:"
           git diff --check
-          git diff -- flatpak/io.github.d3msudo.anura.local.json
+          git diff -- flatpak/io.github.d3m_sudo.anura.local.json
 
       - name: Create PR for certifi updates
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1

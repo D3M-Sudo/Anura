@@ -18,7 +18,7 @@ import pytest
 
 from anura.utils.validators import is_local_or_private_url
 
-_SCHEMA = Path("data/io.github.d3msudo.anura.gschema.xml")
+_SCHEMA = Path("data/io.github.d3m_sudo.anura.gschema.xml")
 
 
 def test_autolinks_defaults_to_false():

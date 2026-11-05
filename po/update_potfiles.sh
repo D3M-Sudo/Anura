@@ -6,7 +6,7 @@ set -euo pipefail
 # Technical script for Anura OCR to extract translatable strings.
 
 DOMAIN_EXTENSION="io.github"
-AUTHOR="d3msudo"
+AUTHOR="D3M-Sudo"
 APPNAME="anura"
 APPID="${DOMAIN_EXTENSION}.${AUTHOR}.${APPNAME}"
 

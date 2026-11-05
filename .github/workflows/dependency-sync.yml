@@ -82,7 +82,7 @@ jobs:
       - name: Commit and push sync changes
         run: |
           if ! git diff --quiet; then
-            git add uv.lock flatpak/io.github.d3msudo.anura.local.json
+            git add uv.lock flatpak/io.github.d3m_sudo.anura.local.json
             git commit -m "chore(deps): sync uv.lock and flatpak manifests"
             if [ "${{ github.event_name }}" = "pull_request" ]; then
               if [ -z "$PULL_REQUEST_HEAD_REF" ] || ! git check-ref-format --branch "$PULL_REQUEST_HEAD_REF" >/dev/null; then

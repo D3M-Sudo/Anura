@@ -18,11 +18,11 @@ def load_gresource_bundle() -> bool:
         return True
 
     possible_paths = [
-        Path("/app/share/anura/io.github.d3msudo.anura.gresource"),
-        Path("/usr/share/anura/io.github.d3msudo.anura.gresource"),
-        Path("/usr/local/share/anura/io.github.d3msudo.anura.gresource"),
-        Path.home() / ".local" / "share" / "anura" / "io.github.d3msudo.anura.gresource",
-        Path(__file__).parent.parent.parent / "data" / "io.github.d3msudo.anura.gresource",
+        Path("/app/share/anura/io.github.d3m_sudo.anura.gresource"),
+        Path("/usr/share/anura/io.github.d3m_sudo.anura.gresource"),
+        Path("/usr/local/share/anura/io.github.d3m_sudo.anura.gresource"),
+        Path.home() / ".local" / "share" / "anura" / "io.github.d3m_sudo.anura.gresource",
+        Path(__file__).parent.parent.parent / "data" / "io.github.d3m_sudo.anura.gresource",
     ]
 
     for path in possible_paths:

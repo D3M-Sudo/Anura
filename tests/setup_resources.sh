@@ -11,10 +11,10 @@ set -e
 DATA_DIR="data"
 
 # Compile resources using the correct application ID
-glib-compile-resources "$DATA_DIR/io.github.d3msudo.anura.gresource.xml" \
+glib-compile-resources "$DATA_DIR/io.github.d3m_sudo.anura.gresource.xml" \
     --sourcedir="$DATA_DIR" \
     --sourcedir="$DATA_DIR/ui" \
-    --target="$DATA_DIR/io.github.d3msudo.anura.gresource" \
+    --target="$DATA_DIR/io.github.d3m_sudo.anura.gresource" \
     --xml-stripblanks
 
-echo "Resources compiled successfully at $DATA_DIR/io.github.d3msudo.anura.gresource"
+echo "Resources compiled successfully at $DATA_DIR/io.github.d3m_sudo.anura.gresource"

@@ -17,7 +17,7 @@ from loguru import logger  # noqa: E402
 
 # Inline APP_ID to avoid circular import with config.py
 # This ensures settings can be imported independently
-APP_ID = "io.github.d3msudo.anura"
+APP_ID = "io.github.d3m_sudo.anura"
 
 
 class Settings(Gio.Settings):

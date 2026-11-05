@@ -60,7 +60,7 @@ class TestAnuraApplication:
         # We need a GResource for Anura to start, but we can mock it or just check init
         with patch("anura.main.Gio.Resource.load"):
             app = AnuraApplication()
-            assert app.get_application_id() == "io.github.d3msudo.anura"
+            assert app.get_application_id() == "io.github.d3m_sudo.anura"
 
 
 class TestAnuraWindow:

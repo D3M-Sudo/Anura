@@ -1,4 +1,4 @@
-app_id = 'io.github.d3msudo.anura'
+app_id = 'io.github.d3m_sudo.anura'
 
 desktop_file = i18n.merge_file(
   input: app_id + '.desktop.in',

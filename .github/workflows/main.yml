@@ -38,7 +38,7 @@ jobs:
       - name: Check code formatting
         # Configuration in pyproject.toml; Markdown is excluded because the
         # formatter would rewrite fenced code blocks in docs and agent rules.
-        run: uv run ruff format --check .
+        run: uv run ruff format --check --diff .
 
       - name: Run type checker
         # Non-strict by design (see [tool.mypy]); catches real regressions in
@@ -142,18 +142,18 @@ jobs:
       - name: Compile GResources
         # Bug fixed: previously compiled to `anura.gresource` in the repo
         # root, but _load_gresource_bundle() resolves the relative fallback
-        # path as `data/io.github.d3msudo.anura.gresource`.
+        # path as `data/io.github.d3m_sudo.anura.gresource`.
         run: |
           glib-compile-resources \
-            data/io.github.d3msudo.anura.gresource.xml \
+            data/io.github.d3m_sudo.anura.gresource.xml \
             --sourcedir=data \
             --sourcedir=data/ui \
-            --target=data/io.github.d3msudo.anura.gresource
+            --target=data/io.github.d3m_sudo.anura.gresource
 
       - name: Compile GSettings schema
         run: |
           mkdir -p builddir/data
-          cp data/io.github.d3msudo.anura.gschema.xml builddir/data/
+          cp data/io.github.d3m_sudo.anura.gschema.xml builddir/data/
           glib-compile-schemas builddir/data/
 
       - name: Start Wayland compositor (headless)
@@ -264,17 +264,39 @@ jobs:
           rm -rf builddir/
           echo "Caches purged. Proceeding with clean build."
 
-      - name: Validate Flatpak Manifest
+      - name: Generate release-style Flatpak manifest
         run: |
-          echo "=== Validating manifest syntax and permissions ==="
-          flatpak-builder --show-manifest flatpak/io.github.d3msudo.anura.local.json > /dev/null
-          echo "✓ Manifest validation passed"
+          VERSION="$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          # Lint the real submission shape (public repository URL + release tag).
+          python3 build-aux/generate_release_manifest.py \
+            --input flatpak/io.github.d3m_sudo.anura.local.json \
+            --output flatpak/.ci-release/io.github.d3m_sudo.anura.json \
+            --version "$VERSION"
+          # Build the exact checked-out source without a network Git fetch.
+          python3 build-aux/generate_release_manifest.py \
+            --input flatpak/io.github.d3m_sudo.anura.local.json \
+            --output flatpak/.ci-build/io.github.d3m_sudo.anura.json \
+            --version "$VERSION" \
+            --source-path ../.. \
+            --source-commit "$GITHUB_SHA"
+
+      - name: Validate local and generated release manifests
+        run: |
+          echo "=== Validating local manifest ==="
+          flatpak-builder --show-manifest flatpak/io.github.d3m_sudo.anura.local.json > /dev/null
+          echo "=== Comparing every shared release field ==="
+          python3 build-aux/check_manifest_consistency.py \
+            --local flatpak/io.github.d3m_sudo.anura.local.json \
+            --release flatpak/.ci-release/io.github.d3m_sudo.anura.json
+          echo "=== Running Flathub manifest lint ==="
+          flatpak-builder-lint manifest flatpak/.ci-release/io.github.d3m_sudo.anura.json
+          echo "✓ Local and generated release manifests validated"
 
       - name: Build Anura Flatpak
         uses: flatpak/flatpak-github-actions/flatpak-builder@79327416609af08178ad73b352877e51450790b3 # v6.7.0
         with:
-          bundle: io.github.d3msudo.anura.flatpak
-          manifest-path: flatpak/io.github.d3msudo.anura.local.json
+          bundle: io.github.d3m_sudo.anura.flatpak
+          manifest-path: flatpak/.ci-build/io.github.d3m_sudo.anura.json
           cache: false
           keep-build-dirs: true
           state-dir: .flatpak-builder
@@ -282,7 +304,7 @@ jobs:
       - name: Verify Blueprint and Resource Structure
         run: |
           echo "=== Verifying generated UI files ==="
-          GRESOURCE_XML="data/io.github.d3msudo.anura.gresource.xml"
+          GRESOURCE_XML="data/io.github.d3m_sudo.anura.gresource.xml"
           BUILD_ROOT=$(find .flatpak-builder/build -maxdepth 1 -type d -name 'anura*' | head -1)
           if [ -z "$BUILD_ROOT" ]; then
             echo "✗ ERROR: Build directory not found"
@@ -316,18 +338,18 @@ jobs:
         run: |
           echo "=== Installing bundle for smoke test ==="
           # Use --no-pull to avoid attempting to contact flathub during bundle install
-          flatpak install --user --noninteractive --no-pull --bundle io.github.d3msudo.anura.flatpak
+          flatpak install --user --noninteractive --no-pull --bundle io.github.d3m_sudo.anura.flatpak
           echo "=== Running smoke test ==="
           if ! xvfb-run -a flatpak run \
               --env=NO_AT_BRIDGE=1 \
               --env=GTK_A11Y=none \
               --env=AT_SPI_BUS_ADDRESS=disabled \
               --env=LIBGL_ALWAYS_SOFTWARE=1 \
-              io.github.d3msudo.anura --help; then
+              io.github.d3m_sudo.anura --help; then
             echo "✗ Smoke test failed"
             exit 1
           fi
-          if ! flatpak list --user | grep -q io.github.d3msudo.anura; then
+          if ! flatpak list --user | grep -q io.github.d3m_sudo.anura; then
             echo "✗ App not found in installation"
             exit 1
           fi
@@ -337,7 +359,7 @@ jobs:
         run: |
           echo "=== OCR su immagine valida dentro sandbox ==="
           flatpak override --user --filesystem="$PWD/data/screenshots:ro"
-          if ! timeout 120 xvfb-run -a flatpak run io.github.d3msudo.anura \
+          if ! timeout 120 xvfb-run -a flatpak run io.github.d3m_sudo.anura \
                -f "$PWD/data/screenshots/anura-welcome-page.png" --silent; then
             echo "✗ OCR failed inside the sandbox"; exit 1
           fi
@@ -348,7 +370,7 @@ jobs:
           echo "=== OCR negativo su file non immagine (.txt) ==="
           echo "non è un'immagine valida" > /tmp/notanimage.txt
           flatpak override --user --filesystem=/tmp:ro
-          if timeout 120 xvfb-run -a flatpak run io.github.d3msudo.anura \
+          if timeout 120 xvfb-run -a flatpak run io.github.d3m_sudo.anura \
                -f /tmp/notanimage.txt --silent; then
             echo "✗ OCR non dovrebbe avere successo su un .txt"; exit 1
           fi
@@ -357,7 +379,7 @@ jobs:
       - name: Locate the installed prefix
         id: prefix
         run: |
-          APP_DIR="$(flatpak info --user --show-location io.github.d3msudo.anura)"
+          APP_DIR="$(flatpak info --user --show-location io.github.d3m_sudo.anura)"
           if [ -z "$APP_DIR" ] || [ ! -d "$APP_DIR/files" ]; then
             echo "✗ Installed app files not found (flatpak info returned '$APP_DIR')"
             exit 1
@@ -370,9 +392,9 @@ jobs:
         # the Flathub submission, and the SDK ships both validators.
         run: |
           PREFIX="${{ steps.prefix.outputs.prefix }}"
-          desktop-file-validate "$PREFIX/share/applications/io.github.d3msudo.anura.desktop"
+          desktop-file-validate "$PREFIX/share/applications/io.github.d3m_sudo.anura.desktop"
           appstreamcli validate --no-net \
-            "$PREFIX/share/metainfo/io.github.d3msudo.anura.metainfo.xml"
+            "$PREFIX/share/metainfo/io.github.d3m_sudo.anura.metainfo.xml"
 
       - name: Check the licence inventory
         # Fails when a declared licence is missing or empty, and keeps the full
@@ -394,8 +416,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: io.github.d3msudo.anura-flatpak-${{ github.run_id }}
-          path: io.github.d3msudo.anura.flatpak
+          name: io.github.d3m_sudo.anura-flatpak-${{ github.run_id }}
+          path: io.github.d3m_sudo.anura.flatpak
           retention-days: 7
 
       - name: Build release notes from CHANGELOG
@@ -411,7 +433,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
-          files: io.github.d3msudo.anura.flatpak
+          files: io.github.d3m_sudo.anura.flatpak
           body_path: release-notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -39,9 +39,9 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-MANIFEST_FILE="$PROJECT_ROOT/flatpak/io.github.d3msudo.anura.json"
-MANIFEST_LOCAL="$PROJECT_ROOT/flatpak/io.github.d3msudo.anura.local.json"
-METAINFO_FILE="$PROJECT_ROOT/data/io.github.d3msudo.anura.metainfo.xml.in"
+MANIFEST_FILE="$PROJECT_ROOT/flatpak/io.github.d3m_sudo.anura.json"
+MANIFEST_LOCAL="$PROJECT_ROOT/flatpak/io.github.d3m_sudo.anura.local.json"
+METAINFO_FILE="$PROJECT_ROOT/data/io.github.d3m_sudo.anura.metainfo.xml.in"
 MESON_BUILD_FILE="$PROJECT_ROOT/meson.build"
 PYPROJECT_FILE="$PROJECT_ROOT/pyproject.toml"
 UV_LOCK_FILE="$PROJECT_ROOT/uv.lock"
@@ -180,20 +180,15 @@ else
     exit 1
 fi
 
-# Generate the release (Flathub) manifest from the local manifest.
-# $MANIFEST_FILE is never hand-edited: every module is copied verbatim from
-# $MANIFEST_LOCAL except the `anura` module's source (dir -> git+tag), and the
-# local-only top-level `branch` / `separate-locales` keys are dropped.
+# Generate the release (Flathub) manifest from the local source of truth.
+# The same helper is used by CI to build an ephemeral release-style manifest.
 echo ""
 echo "Generating $MANIFEST_FILE from $MANIFEST_LOCAL..."
 GENERATED_MANIFEST="${MANIFEST_FILE}.tmp"
-jq --indent 4 --arg VERSION "$VERSION" \
-  'del(.branch, ."separate-locales")
-   | .modules |= map(
-       if .name == "anura"
-       then .sources = [{"type": "git", "url": "https://github.com/D3M-Sudo/Anura.git", "tag": ("v" + $VERSION)}]
-       else . end)' \
-  "$MANIFEST_LOCAL" > "$GENERATED_MANIFEST"
+python3 "$SCRIPT_DIR/generate_release_manifest.py" \
+    --input "$MANIFEST_LOCAL" \
+    --output "$GENERATED_MANIFEST" \
+    --version "$VERSION"
 
 # Validate before replacing the real file.
 if ! jq empty "$GENERATED_MANIFEST" >/dev/null 2>&1; then
