@@ -324,7 +324,7 @@ def test_target_environment_rejects_unknown_architecture() -> None:
 
 def test_architecture_markers_are_evaluated_per_target(tmp_path: Path) -> None:
     """A marker-gated runtime dependency is included only for its target arch."""
-    pyproject, uv_lock, main, local = _base_files(tmp_path)
+    pyproject, uv_lock, _, _ = _base_files(tmp_path)
     patched = uv_lock.read_text().replace(
         '{ name = "urllib3" }',
         '{ name = "urllib3" },\n    { name = "arm-only-package", marker = "platform_machine == \'aarch64\'" }',
