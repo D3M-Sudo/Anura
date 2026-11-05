@@ -96,11 +96,23 @@ As of **v0.2.0**, Anura features an **Enterprise Clean Architecture** focused on
 
 ### Flatpak — Stable Release
 
-Download the `.flatpak` bundle from the [Releases](https://github.com/D3M-Sudo/Anura/releases/latest) page, then install:
+Download the bundle matching your system architecture from the [Releases](https://github.com/D3M-Sudo/Anura/releases/latest) page:
+
+| Architecture | Release asset |
+| --- | --- |
+| x86_64 (Intel/AMD 64-bit) | `io.github.d3m_sudo.anura-x86_64.flatpak` |
+| aarch64 (64-bit ARM) | `io.github.d3m_sudo.anura-aarch64.flatpak` |
+
+The release also includes `SHA256SUMS`. Download it alongside the bundle and, from the download directory, verify the selected asset before installing:
 
 ```bash
-flatpak install --user ~/Downloads/io.github.d3m_sudo.anura.flatpak
+sha256sum -c SHA256SUMS
+flatpak install --user ./io.github.d3m_sudo.anura-x86_64.flatpak
 ```
+
+On an ARM64 system, use `io.github.d3m_sudo.anura-aarch64.flatpak` in the install command instead. The checksum file lists both architecture-specific bundles; verification reports a missing file if you downloaded only one bundle, so either download both or verify the selected bundle with its matching checksum entry.
+
+The CI builds and validates x86_64 and aarch64 independently. See [Flatpak multi-architecture builds and releases](docs/reference/flatpak-multiarch-release.md) for the build, runtime and publication guarantees.
 
 ### Runtime requirements
 
