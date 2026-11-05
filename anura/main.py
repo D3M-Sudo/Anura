@@ -194,34 +194,15 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         self._runtime_services_initialized = True
 
     def _show_legacy_migration_prompt(self) -> None:
-        dialog = Adw.MessageDialog(
-            parent=self.get_active_window(),
-            heading=_("Import data from the previous Anura installation?"),
-            body=_(
-                "If you used the previous Flatpak version, you can import your "
-                "OCR history and downloaded language models. Choose the old data "
-                "folder in the next step (usually ~/.var/app/io.github.d3msudo.anura/data). "
-                "The old installation will not be modified."
-            ),
-        )
-        dialog.add_response("choose", _("Choose folder"))
-        dialog.add_response("later", _("Not now"))
-        dialog.set_default_response("choose")
-        dialog.connect("response", self._on_legacy_migration_prompt_response)
-        dialog.present()
-
-    def _on_legacy_migration_prompt_response(self, dialog, response: str) -> None:
-        dialog.close()
-        if response != "choose":
-            self._finish_legacy_migration()
-            return
-
+        # GtkFileChooserNative is portal-backed in Flatpak. A parent window is
+        # optional here because startup must wait for the selection before the
+        # normal application window (and OCR model discovery) is initialized.
         chooser = Gtk.FileChooserNative.new(
-            _("Select the previous Anura data folder"),
-            self.get_active_window(),
+            _("Select the previous Anura data folder to import history and OCR models"),
+            None,
             Gtk.FileChooserAction.SELECT_FOLDER,
             _("Import"),
-            _("Cancel"),
+            _("Not now"),
         )
         chooser.connect("response", self._on_legacy_migration_folder_response)
         chooser.show()
