@@ -107,11 +107,7 @@ def migrate_legacy_flatpak_data(
     if marker.is_file():
         return True
 
-    source_home = (
-        Path(old_data_dir)
-        if old_data_dir is not None
-        else Path.home() / ".var" / "app" / OLD_APP_ID / "data"
-    )
+    source_home = Path(old_data_dir) if old_data_dir is not None else Path.home() / ".var" / "app" / OLD_APP_ID / "data"
     source_app_data = source_home / "anura"
     if not source_app_data.is_dir():
         logger.info("Legacy Flatpak data directory not found; migration will be checked again on next launch.")
