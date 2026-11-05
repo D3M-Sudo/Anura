@@ -93,14 +93,11 @@ def _download_sha256(url: str, token: str | None, advertised_size: int) -> str:
                 received += len(chunk)
                 if received > advertised_size:
                     raise GeneratorError(
-                        f"Oversized stream from {url}: received {received} bytes, "
-                        f"advertised size is {advertised_size}"
+                        f"Oversized stream from {url}: received {received} bytes, advertised size is {advertised_size}"
                     )
                 hasher.update(chunk)
             if received != advertised_size:
-                raise IncompleteRead(
-                    b"", advertised_size - received
-                )
+                raise IncompleteRead(b"", advertised_size - received)
             return hasher.hexdigest()
         except GeneratorError:
             raise
