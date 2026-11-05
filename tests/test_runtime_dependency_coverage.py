@@ -327,9 +327,9 @@ def test_architecture_markers_are_evaluated_per_target(tmp_path: Path) -> None:
     pyproject, uv_lock, main, local = _base_files(tmp_path)
     patched = uv_lock.read_text().replace(
         '{ name = "urllib3" }',
-        '{ name = "urllib3" },\\n    { name = "arm-only-package", marker = "platform_machine == \'aarch64\'" }',
+        '{ name = "urllib3" },\n    { name = "arm-only-package", marker = "platform_machine == \'aarch64\'" }',
     )
-    patched += "\\n" + _pkg("arm-only-package", "1.0.0", []) + "\\n"
+    patched += "\n" + _pkg("arm-only-package", "1.0.0", []) + "\n"
     arm_lock = tmp_path / "uv_arm.lock"
     arm_lock.write_text(patched)
 
