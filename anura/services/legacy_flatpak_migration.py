@@ -24,18 +24,31 @@ MIGRATION_MARKER = ".anura-legacy-flatpak-migration-v1.json"
 PERSISTENT_SUBDIRECTORIES = ("history", "tessdata")
 
 
+def _ensure_destination_directory(path: Path) -> None:
+    """Create the destination path without traversing symlinks below XDG data."""
+    chain: list[Path] = []
+    current = path
+    while True:
+        chain.append(current)
+        if current.name == "anura":
+            break
+        if current.parent == current:
+            raise OSError(f"Destination is outside the Anura data directory: {path}")
+        current = current.parent
+
+    for directory in reversed(chain):
+        try:
+            mode = directory.lstat().st_mode
+        except FileNotFoundError:
+            directory.mkdir(mode=0o700)
+            continue
+        if not stat.S_ISDIR(mode):
+            raise OSError(f"Destination path contains a non-directory or symlink: {directory}")
+
+
 def _copy_file_without_overwrite(source: Path, destination: Path) -> bool:
     """Publish a complete copy atomically, never replacing an existing file."""
-    # Refuse to traverse a pre-existing symlink in the destination tree.
-    current = destination.parent
-    missing: list[Path] = []
-    while not current.exists() and not current.is_symlink():
-        missing.append(current)
-        current = current.parent
-    if current.is_symlink() or not current.is_dir():
-        raise OSError(f"Destination parent is not a real directory: {current}")
-    for directory in reversed(missing):
-        directory.mkdir(mode=0o700)
+    _ensure_destination_directory(destination.parent)
     if destination.exists() or destination.is_symlink():
         return False
 
@@ -71,7 +84,7 @@ def _copy_tree_without_overwrite(source: Path, destination: Path) -> tuple[int, 
     copied = 0
     errors: list[str] = []
     try:
-        destination.mkdir(parents=True, exist_ok=True, mode=0o700)
+        _ensure_destination_directory(destination)
         with os.scandir(source) as entries:
             for entry in entries:
                 src = Path(entry.path)
