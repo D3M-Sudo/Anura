@@ -1,0 +1,86 @@
+name: Generate tessdata SHA-256 manifest
+
+on:
+  push:
+    branches:
+      - fix/tessdata-sha256-577
+    paths:
+      - "build-aux/generate_tessdata_checksums.py"
+      - "anura/config.py"
+      - "anura/utils/tessdata_integrity.py"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tessdata-manifest-generation
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    name: Generate and commit all 489 raw-content digests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - name: Check out PR branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 1
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+
+      - name: Install generator runtime dependency
+        run: python -m pip install --disable-pip-version-check "loguru==0.7.3"
+
+      - name: Generate manifest from raw upstream model bytes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python build-aux/generate_tessdata_checksums.py
+
+      - name: Validate complete manifest and upstream inventories
+        run: |
+          python build-aux/check_tessdata_consistency.py
+          python - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+
+          path = Path("anura/data/tessdata_checksums.json")
+          manifest = json.loads(path.read_text(encoding="utf-8"))
+          assert manifest["version"] == 2
+          assert manifest["algorithm"] == "sha256"
+          expected = {"tessdata": 166, "tessdata_best": 161, "tessdata_fast": 162}
+          repositories = manifest["repositories"]
+          assert set(repositories) == set(expected), set(repositories)
+          total = 0
+          for name, count in expected.items():
+              files = repositories[name]["files"]
+              assert len(files) == count, (name, len(files), count)
+              for filename, entry in files.items():
+                  assert filename.endswith(".traineddata"), filename
+                  assert type(entry["size"]) is int and entry["size"] > 0, (name, filename)
+                  assert re.fullmatch(r"[0-9a-f]{64}", entry["sha256"]), (name, filename)
+                  assert set(entry) == {"size", "sha256"}, (name, filename, set(entry))
+              total += len(files)
+          assert total == 489, total
+          print(f"Validated {total} model entries across {len(expected)} repositories")
+          PY
+          git diff --check
+
+      - name: Commit generated manifest to the PR branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- anura/data/tessdata_checksums.json
+          git diff --cached --quiet && {
+            echo "Generated manifest is unchanged; no commit required."
+            exit 0
+          }
+          git commit -m "chore(tessdata): generate complete SHA-256 manifest"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
