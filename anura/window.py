@@ -385,12 +385,24 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
 
         try:
             temp_file = write_export_file(text)
+        except (OSError, RuntimeError, GLib.Error) as e:
+            logger.error(f"Failed to export text for external editor: {e}")
+            self.show_toast(_("Failed to open external editor"))
+            return
+        self._launch_external_editor_file(str(temp_file))
 
-            gfile = Gio.File.new_for_path(str(temp_file))
+    def _on_history_editor_file_ready(self, _controller: HistoryController, file_path: str) -> None:
+        """Launch the private export produced for a History entry."""
+        self._launch_external_editor_file(file_path)
+
+    def _launch_external_editor_file(self, file_path: str) -> None:
+        """Hand an existing text file to the desktop portal via Gtk.FileLauncher."""
+        try:
+            gfile = Gio.File.new_for_path(file_path)
             launcher = Gtk.FileLauncher.new(gfile)
             launcher.launch(self, None, self._on_external_editor_launched)
         except (OSError, RuntimeError, GLib.Error) as e:
-            logger.error(f"Failed to export or launch external editor: {e}")
+            logger.error(f"Failed to launch external editor: {e}")
             self.show_toast(_("Failed to open external editor"))
 
     def _on_external_editor_launched(self, launcher: Gtk.FileLauncher, result: Gio.AsyncResult) -> None:
@@ -454,6 +466,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
 
         # History Controller signals
         self.connect_tracked(self.history_controller, "copied", self._on_history_copied)
+        self.connect_tracked(self.history_controller, "editor-file-ready", self._on_history_editor_file_ready)
         self.connect_tracked(self.history_controller, "error-occurred", self._on_history_error)
 
     def _on_extraction_completed(self, _controller: OcrController, text: str, applied_name: str) -> None:

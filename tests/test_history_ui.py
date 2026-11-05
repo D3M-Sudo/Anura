@@ -147,15 +147,27 @@ def test_rows_are_expander_rows_with_a_copy_button_in_the_header(headless_gi_moc
 
     assert fake_adw.ExpanderRow.call_count == 2
     fake_row = fake_adw.ExpanderRow.return_value
-    assert fake_row.add_suffix.call_count == 2
+    assert fake_row.add_suffix.call_count == 4  # copy + editor, per row
 
-    # The button's own handler is "clicked"; the row only listens to its expansion.
     button_calls = fake_gtk.Button.return_value.connect.call_args_list
-    assert [c.args[0] for c in button_calls] == ["clicked", "clicked"]
-    assert [c.args[2] for c in button_calls] == ["second", "first"]  # newest first
+    assert [c.args[0] for c in button_calls] == ["clicked"] * 4
+    assert [c.args[1].__name__ for c in button_calls] == [
+        "_on_copy_clicked",
+        "_on_open_editor_clicked",
+        "_on_copy_clicked",
+        "_on_open_editor_clicked",
+    ]
+    assert [c.args[2] for c in button_calls] == ["second", "second", "first", "first"]
     row_calls = fake_row.connect.call_args_list
     assert [c.args[0] for c in row_calls] == ["notify::expanded", "notify::expanded"]
     assert [c.args[2] for c in row_calls] == ["second", "first"]
+
+
+def test_editor_button_delegates_full_stored_text(headless_gi_mocks, monkeypatch, tmp_path):
+    _fake_adw, fake_gtk, _fake_glib = _patch_ui(monkeypatch)
+    page, controller = _make_wired_page(headless_gi_mocks, tmp_path)
+    page._on_open_editor_clicked(fake_gtk.Button.return_value, "full stored text")
+    controller.open_entry_in_external_editor.assert_called_once_with("full stored text")
 
 
 def test_row_text_is_not_parsed_as_pango_markup(headless_gi_mocks, monkeypatch, tmp_path):
@@ -374,12 +386,12 @@ def test_clear_rows_cancels_timers_and_disconnects_row_handlers(headless_gi_mock
     fake_adw, fake_gtk, fake_glib = _patch_ui(monkeypatch)
     fake_button = fake_gtk.Button.return_value
     fake_row = fake_adw.ExpanderRow.return_value
-    fake_button.connect.side_effect = [11, 12, 13, 14]
+    fake_button.connect.side_effect = [11, 12, 13, 14, 15, 16, 17, 18]
     fake_row.connect.side_effect = [21, 22, 23, 24]
     service = HistoryService(base_dir=tmp_path)
     service.record("first", "eng")
     service.record("second", "eng")
-    page = _make_page(headless_gi_mocks, service)  # first refresh: buttons 11, 12; rows 21, 22
+    page = _make_page(headless_gi_mocks, service)  # first refresh: buttons 11-14; rows 21, 22
     controller = MagicMock()
     controller.copy_entry_text.return_value = True
 
@@ -389,15 +401,17 @@ def test_clear_rows_cancels_timers_and_disconnects_row_handlers(headless_gi_mock
     fake_button.disconnect.assert_any_call(12)
     fake_row.disconnect.assert_any_call(21)
     fake_row.disconnect.assert_any_call(22)
-    assert sorted(handler_id for _widget, handler_id in page._row_handlers) == [13, 14, 23, 24]
+    assert sorted(handler_id for _widget, handler_id in page._row_handlers) == [15, 16, 17, 18, 23, 24]
 
     page._on_copy_clicked(MagicMock(), "text")
     pending_id = next(iter(page._feedback_timers.values()))
     page._clear_rows()
 
     fake_glib.source_remove.assert_called_once_with(pending_id)
-    fake_button.disconnect.assert_any_call(13)
-    fake_button.disconnect.assert_any_call(14)
+    fake_button.disconnect.assert_any_call(15)
+    fake_button.disconnect.assert_any_call(16)
+    fake_button.disconnect.assert_any_call(17)
+    fake_button.disconnect.assert_any_call(18)
     fake_row.disconnect.assert_any_call(23)
     fake_row.disconnect.assert_any_call(24)
     assert page._feedback_timers == {}
@@ -416,7 +430,7 @@ def test_refresh_does_not_accumulate_tracked_connections(headless_gi_mocks, tmp_
         page.refresh()
 
     assert page.get_tracked_signal_count() == baseline
-    assert len(page._row_handlers) == 5 * 2  # copy button + expansion, per row
+    assert len(page._row_handlers) == 5 * 3  # copy + editor buttons + expansion, per row
 
 
 def test_teardown_all_cancels_pending_timers_and_drops_controller(headless_gi_mocks, monkeypatch, tmp_path):

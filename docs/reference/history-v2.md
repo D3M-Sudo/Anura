@@ -1,4 +1,4 @@
-# Anura — History V2, minimal cut: row interaction (current behaviour on `testing`)
+# Anura — History V2: row interaction (current behaviour on `feature`)
 
 This document is the **normative** reference for what History rows do since the
 History V2 minimal cut ([#434](https://github.com/D3M-Sudo/Anura/pull/434) copy button,
@@ -13,9 +13,10 @@ them are in [../planning/history-v2-interactive-rows.md](../planning/history-v2-
 - Activating the row header (Enter, Space or click) expands it and shows the **full
   stored text**.
 - A copy button in the row header copies the full stored text to the clipboard.
+- An external-editor button in the row header opens the full stored text through
+  the desktop portal, using a private temporary export file.
 
-Not provided in this cut: opening an entry in the external editor
-([#454](https://github.com/D3M-Sudo/Anura/issues/454)), TTS replay
+Not provided yet: TTS replay
 ([#455](https://github.com/D3M-Sudo/Anura/issues/455)), and row-level shortcuts.
 Re-OCR was considered and is **not planned** ([#456](https://github.com/D3M-Sudo/Anura/issues/456),
 closed as not planned): History stores extracted text, not source images, and that
@@ -65,6 +66,24 @@ versioning remain out of scope.
 - The text reaches other applications as plain text (`text/plain`) through
   `ClipboardService`.
 
+## External-editor action
+
+- The row button is labelled and exposed to assistive technology as
+  `Open in external editor`; it hands the full immutable `HistoryEntry.text` to
+  `HistoryController.open_entry_in_external_editor()`.
+- The controller writes the text through `write_export_file()` on the dedicated
+  `EXPORT_LANE` of `AtomicTaskManager`. The existing export helper uses a random
+  filename, file mode `0600`, and a per-user export directory with mode `0700`;
+  it prefers `$XDG_RUNTIME_DIR` and falls back to the per-user cache directory.
+- The controller emits `editor-file-ready` only after the background write succeeds.
+  `AnuraWindow` owns `Gtk.FileLauncher` and opens the file through the desktop
+  portal, keeping GTK and portal operations on the main thread.
+- Export or launch failures use the existing `error-occurred` signal and the
+  established `Failed to open external editor` toast. Successful portal completion
+  uses the existing `Opened in external editor` toast. Dismissing the portal chooser
+  remains a quiet cancellation.
+- The file is a hand-off copy; the persisted History entry is never edited.
+
 ## Architecture and lifecycle
 
 - `HistoryPage` is a UI shell; the action logic lives in
@@ -82,9 +101,9 @@ versioning remain out of scope.
 
 | File | Coverage |
 | --- | --- |
-| `tests/test_history_ui.py` (headless) | Rows are `ExpanderRow` with a header copy button, markup disabled, lazy text area, single open row, reset on refresh, full text, height estimate, handler and timer cleanup |
-| `tests/test_history_controller.py` (headless) | Copy outcomes and signals, typed error handling, registration and cleanup |
-| `tests/test_history_expansion_real.py` (GTK-marked) | Real `HistoryPage` and real widgets: initial state, full text, single open row, refresh, rendered height of long and short text, cost of a 300 KB text, copy with the row open |
+| `tests/test_history_ui.py` (headless) | Rows are `ExpanderRow` with copy and editor header actions, markup disabled, lazy text area, single open row, reset on refresh, full text, height estimate, handler and timer cleanup |
+| `tests/test_history_controller.py` (headless) | Copy and editor-export outcomes, background task dispatch, signals, typed error handling, registration and cleanup |
+| `tests/test_history_expansion_real.py` (GTK-marked) | Real `HistoryPage` and real widgets: initial state, full text, single open row, refresh, rendered height of long and short text, cost of a 300 KB text, copy and editor actions |
 | `tests/test_clipboard_service.py` (GTK-marked) | Text published as a plain string; read-back from the real clipboard |
 | `tests/test_pot_template.py` | The gettext template parses, has no duplicate msgids and contains the History strings |
 

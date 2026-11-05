@@ -66,6 +66,48 @@ def test_unexpected_errors_are_not_swallowed(headless_gi_mocks, monkeypatch):
     controller.emit.assert_not_called()
 
 
+def test_open_entry_exports_in_background_and_emits_file_ready(headless_gi_mocks, monkeypatch, tmp_path):
+    from pathlib import Path
+
+    import anura.controllers.history_controller as module
+
+    manager = MagicMock()
+    monkeypatch.setattr(module, "get_atomic_manager", lambda: manager)
+    monkeypatch.setattr(module, "write_export_file", lambda text: tmp_path / "history.txt")
+    controller, _window = _make_controller(monkeypatch, MagicMock())
+
+    assert controller.open_entry_in_external_editor("stored OCR text") is True
+    call = manager.execute_daemon.call_args
+    assert call.args[0] is module.write_export_file
+    assert call.args[1] == ("stored OCR text",)
+    assert call.kwargs["lane"] == module.EXPORT_LANE
+    call.kwargs["callback"](Path(tmp_path / "history.txt"))
+    controller.emit.assert_called_with("editor-file-ready", str(tmp_path / "history.txt"))
+
+
+def test_open_entry_rejects_empty_text_without_scheduling(headless_gi_mocks, monkeypatch):
+    import anura.controllers.history_controller as module
+
+    manager = MagicMock()
+    monkeypatch.setattr(module, "get_atomic_manager", lambda: manager)
+    controller, _window = _make_controller(monkeypatch, MagicMock())
+
+    assert controller.open_entry_in_external_editor("") is False
+    manager.execute_daemon.assert_not_called()
+    controller.emit.assert_called_once_with("error-occurred", "No text to open in external editor")
+
+
+def test_export_failure_reports_existing_editor_error(headless_gi_mocks, monkeypatch):
+    import anura.controllers.history_controller as module
+
+    manager = MagicMock()
+    monkeypatch.setattr(module, "get_atomic_manager", lambda: manager)
+    controller, _window = _make_controller(monkeypatch, MagicMock())
+    controller.open_entry_in_external_editor("stored OCR text")
+    manager.execute_daemon.call_args.kwargs["errorback"](OSError("disk full"), "traceback")
+    controller.emit.assert_called_with("error-occurred", "Failed to open external editor")
+
+
 def test_controller_registers_itself_for_window_teardown(headless_gi_mocks, monkeypatch):
     controller, window = _make_controller(monkeypatch, MagicMock())
 

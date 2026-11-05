@@ -1,6 +1,6 @@
 # Anura — History V2: Interactive History Rows (planning)
 
-**Status:** Minimal cut (copy button + expandable rows) implemented in #434 and #452. #456 (re-OCR) was closed as not planned; #454 (external editor) and #455 (TTS replay) remain separate planning items.  
+**Status:** Minimal cut (copy button + expandable rows) implemented in #434 and #452. External-editor support for #454 is implemented on `feat/history-v2-external-editor`; #455 (TTS replay) remains a separate follow-up. #456 (re-OCR) was closed as not planned.  
 **Target:** next major/minor release after History V1 stabilisation.  
 **Owning documents:** this file, `docs/reference/history-v1.md`, `docs/reference/history-v2.md`, `docs/README.md`.
 
@@ -96,7 +96,7 @@ replace, the suggestions in "Interaction model" above.
 | --- | --- |
 | Copy to clipboard from the row | Implemented ([#434](https://github.com/D3M-Sudo/Anura/pull/434)) |
 | Activatable, expandable rows | Implemented ([#452](https://github.com/D3M-Sudo/Anura/pull/452)) |
-| Open in external editor | Planning, [#454](https://github.com/D3M-Sudo/Anura/issues/454) |
+| Open in external editor | Implemented on `feat/history-v2-external-editor`, [#454](https://github.com/D3M-Sudo/Anura/issues/454) |
 | TTS replay | Planning, [#455](https://github.com/D3M-Sudo/Anura/issues/455) |
 | Re-OCR | Not planned; [#456](https://github.com/D3M-Sudo/Anura/issues/456) closed as not planned |
 
@@ -108,9 +108,10 @@ The behaviour that is implemented is documented in
 Make `HistoryPage` rows interactive. Candidates (in priority order):
 
 1. **Copy to clipboard** — copy the stored `text` to the system clipboard.
-2. **Open in external editor** — same handoff used by `ExtractedPage` for current
-   OCR results (`Gtk.FileLauncher` / portal `open-uri`, writing the stored text
-   to a temp export file first).
+2. **Open in external editor** — implemented through the same handoff used by
+   `ExtractedPage` for current OCR results (`Gtk.FileLauncher` / portal
+   `open-uri`), with stored text written asynchronously to the existing private
+   temporary-export directory.
 3. **TTS replay (optional)** — feed the stored text to the existing TTS pipeline
    (`TtsController.request_listen()`), reusing the same infrastructure.
 
