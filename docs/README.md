@@ -16,10 +16,10 @@ documentation lives in the root (`README.md`, `AGENTS.md`, `CONTRIBUTING.md`,
 
 ## Active planning
 
+Only plans with unfinished, currently relevant scope belong here. Completed plans are archived under `audit/legacy/reports/`.
+
 | Document | Status | Purpose |
 | --- | --- | --- |
-| [planning/history-v2-interactive-rows.md](planning/history-v2-interactive-rows.md) | **Active — minimal cut implemented; rest planning** | History V2: interactive history rows (copy and expansion done; external editor, TTS and re-OCR tracked in #454–#456) |
-| [planning/runtime-fixes-m1.md](planning/runtime-fixes-m1.md) | **Active — approved 2026-10-22** | Milestone 1: severity/batch plan for 36 runtime issues (security, reliability, state/UI, hygiene) |
 | [planning/flathub-readiness-m2.md](planning/flathub-readiness-m2.md) | **Historical plan — implementation status superseded by current CI and GitHub issues** | Original Milestone 2 sequencing; consult the issue tracker and normative Flatpak references for current status |
 
 ## Historical material (audit/legacy)
@@ -27,6 +27,8 @@ documentation lives in the root (`README.md`, `AGENTS.md`, `CONTRIBUTING.md`,
 | Document | Status | Purpose |
 | --- | --- | --- |
 | [audit/legacy/reports/history-v1-plan.md](audit/legacy/reports/history-v1-plan.md) | **Historical** | Pre-implementation History V1 plan (baseline `testing @ a52f4563`); superseded by the merged History V1 integration |
+| [audit/legacy/reports/history-v2-interactive-rows-plan.md](audit/legacy/reports/history-v2-interactive-rows-plan.md) | **Historical** | Completed History V2 design and implementation plan; current behaviour is in `reference/history-v2.md` |
+| [audit/legacy/reports/runtime-fixes-m1-plan.md](audit/legacy/reports/runtime-fixes-m1-plan.md) | **Historical** | Completed runtime-fixes Milestone 1 plan (36/36 scoped issues resolved) |
 | [audit/legacy/reports/diagnosis-vm-followup-2026-09-17.md](audit/legacy/reports/diagnosis-vm-followup-2026-09-17.md) | **Historical** | VM follow-up diagnosis (findings resolved at HEAD, re-verified by the 2026-09-20 audit) |
 | [audit/legacy/reports/diagnosis-full-test-tiers-2026-09-20.md](audit/legacy/reports/diagnosis-full-test-tiers-2026-09-20.md) | **Historical** | Full diagnostics and test-tier audit (`HEAD: aba2884`) |
 | [audit/legacy/reports/](audit/legacy/reports/) | **Historical** | Bug-hunt/QA/diagnosis reports, append-only (per-report index in `reports/README.md`) |
@@ -48,9 +50,7 @@ docs/
 │   ├── history-v2.md
 │   ├── dependencies.md
 │   └── tessdata-integrity.md
-├── planning/              ← active plans (History V2 minimal cut + M1/M2 fix plans)
-│   ├── history-v2-interactive-rows.md
-│   ├── runtime-fixes-m1.md
+├── planning/              ← active plans (currently Flathub M2)
 │   └── flathub-readiness-m2.md
 └── audit/                 ← QA/security audit material
     ├── README.md          ← audit root guide (root = active audits)
