@@ -231,9 +231,7 @@ def test_copy_button_still_copies_the_full_text_with_the_row_expanded(real_histo
     long_row = page._rows[1]
     long_row.set_expanded(True)
     (copy_button,) = [
-        button
-        for button in _find_all(long_row, Gtk.Button)
-        if button.get_tooltip_text() == "Copy text to clipboard"
+        button for button in _find_all(long_row, Gtk.Button) if button.get_tooltip_text() == "Copy text to clipboard"
     ]
 
     copy_button.emit("clicked")
