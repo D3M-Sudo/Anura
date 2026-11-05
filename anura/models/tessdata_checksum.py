@@ -37,7 +37,10 @@ class TessdataChecksum:
         size = data.get("size")
         if type(size) is not int:
             raise ValueError("size must be an integer")
-        return cls(filename=filename, size=size, sha256=data.get("sha256"))
+        sha256 = data.get("sha256")
+        if not isinstance(sha256, str):
+            raise ValueError("sha256 must be a string")
+        return cls(filename=filename, size=size, sha256=sha256)
 
     def __repr__(self) -> str:
         return f"<TessdataChecksum: {self.filename} ({self.size} bytes, {self.sha256[:12]}…)>"
