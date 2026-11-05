@@ -22,6 +22,7 @@ def small_expected_inventory(monkeypatch: pytest.MonkeyPatch) -> None:
         "EXPECTED_REPOSITORY_COUNTS",
         {"tessdata": 1, "tessdata_best": 1, "tessdata_fast": 1},
     )
+    monkeypatch.setattr(checker, "_fetch_upstream_model_names", lambda _url: {"eng.traineddata"})
 
 
 def _write_config(tmp_path: Path, *, alias: bool = True) -> Path:
@@ -175,6 +176,19 @@ class TestManifestValidation:
         errors = checker.check_checksums_manifest()
         assert any("exactly" in error for error in errors)
         assert any("invalid raw SHA-256" in error for error in errors)
+
+    def test_filename_inventory_must_match_upstream(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        config = _write_config(tmp_path)
+        repositories = _repositories()
+        repositories["tessdata"]["files"] = {
+            "ita.traineddata": {"size": 10, "sha256": "a" * 64}
+        }
+        manifest = _write_manifest(tmp_path, repositories)
+        _configure_checker(monkeypatch, config, manifest)
+        errors = checker.check_checksums_manifest()
+        assert any("model inventory differs from upstream" in error for error in errors)
 
     def test_nested_model_path_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
