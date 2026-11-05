@@ -14,7 +14,9 @@ from pathlib import Path
 import re
 import sys
 from typing import Any
+from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
+from urllib.request import Request, urlopen
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CONFIG_PY = REPO_ROOT / "anura" / "config.py"
@@ -113,6 +115,65 @@ def extract_tessdata_urls_from_config(config_path: Path) -> dict[str, str]:
         if repository.startswith("tessdata"):
             urls[repository] = value
     return urls
+
+
+def _fetch_upstream_model_names(base_url: str) -> set[str]:
+    """Fetch the pinned Git tree and return its exact flat traineddata inventory.
+
+    The checker fails closed on API errors or truncated trees: counts alone
+    cannot prove that a manifest contains the correct model filenames.
+    """
+    parsed = urlsplit(base_url)
+    parts = [part for part in parsed.path.split("/") if part]
+    if (
+        parsed.scheme != "https"
+        or parsed.netloc != "github.com"
+        or len(parts) != 4
+        or parts[0] != "tesseract-ocr"
+        or parts[2] != "raw"
+    ):
+        raise ValueError(f"Invalid pinned tessdata URL: {base_url!r}")
+    repository, ref = parts[1], parts[3]
+    api_url = (
+        f"https://api.github.com/repos/tesseract-ocr/{repository}/git/trees/{ref}?recursive=1"
+    )
+    request = Request(
+        api_url,
+        headers={
+            "Accept": "application/vnd.github+json",
+            "User-Agent": "Anura-tessdata-consistency-check/1.0",
+        },
+    )
+    try:
+        with urlopen(request, timeout=30) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except (HTTPError, URLError, OSError, ValueError) as error:
+        raise RuntimeError(f"Unable to verify upstream inventory for {repository}@{ref}: {error}") from error
+    if not isinstance(payload, dict) or payload.get("truncated") is not False:
+        raise RuntimeError(f"GitHub returned a malformed or truncated tree for {repository}@{ref}")
+    entries = payload.get("tree")
+    if not isinstance(entries, list):
+        raise RuntimeError(f"GitHub returned no valid tree entries for {repository}@{ref}")
+
+    names: set[str] = set()
+    for entry in entries:
+        if not isinstance(entry, dict):
+            raise RuntimeError(f"GitHub returned a malformed tree entry for {repository}@{ref}")
+        if entry.get("type") != "blob":
+            continue
+        filename = entry.get("path")
+        if not isinstance(filename, str):
+            raise RuntimeError(f"GitHub returned a tree entry without a path for {repository}@{ref}")
+        if not filename.endswith(".traineddata"):
+            continue
+        if filename != Path(filename).name or filename in {".", ".."} or "\\\\" in filename:
+            raise RuntimeError(f"Unsupported traineddata path in upstream tree: {filename!r}")
+        if filename in names:
+            raise RuntimeError(f"Duplicate traineddata path in upstream tree: {filename!r}")
+        names.add(filename)
+    if not names:
+        raise RuntimeError(f"No traineddata models found in upstream tree for {repository}@{ref}")
+    return names
 
 
 def _validate_checksum_entry(repo_name: str, filename: str, entry: Any) -> list[str]:
@@ -228,6 +289,19 @@ def check_checksums_manifest() -> list[str]:
             errors.append(
                 f"Repository '{repo_name}' must contain {expected_count} models; found {len(files)}"
             )
+        if isinstance(url, str) and actual_name == repo_name:
+            try:
+                upstream_names = _fetch_upstream_model_names(url)
+            except (RuntimeError, ValueError) as error:
+                errors.append(str(error))
+            else:
+                manifest_names = set(files)
+                if manifest_names != upstream_names:
+                    errors.append(
+                        f"Repository '{repo_name}' model inventory differs from upstream: "
+                        f"missing={sorted(upstream_names - manifest_names)}, "
+                        f"unexpected={sorted(manifest_names - upstream_names)}"
+                    )
         for filename, entry in files.items():
             if (
                 not isinstance(filename, str)
