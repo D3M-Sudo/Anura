@@ -351,8 +351,7 @@ def main() -> int:
         choices=SUPPORTED_ARCHES,
         action="append",
         dest="arches",
-        help="Target architecture to validate; repeat for multiple targets. "
-        "Defaults to both supported architectures.",
+        help="Target architecture to validate; repeat for multiple targets. Defaults to both supported architectures.",
     )
     parser.add_argument(
         "--manifest",
@@ -398,10 +397,7 @@ def main() -> int:
             for entry in result.errors:
                 print(f"  {entry}")
         else:
-            print(
-                f"\nPASS: all runtime Python dependencies are represented "
-                f"for {arch}"
-            )
+            print(f"\nPASS: all runtime Python dependencies are represented for {arch}")
 
     return 1 if failed else 0
 
