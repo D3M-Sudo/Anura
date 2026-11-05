@@ -25,12 +25,8 @@ MANIFEST_MAIN = REPO_ROOT / "flatpak" / "io.github.d3m_sudo.anura.json"
 MANIFEST_LOCAL = REPO_ROOT / "flatpak" / "io.github.d3m_sudo.anura.local.json"
 CHECKSUMS_MANIFEST = REPO_ROOT / "anura" / "data" / "tessdata_checksums.json"
 
-TESSDATA_URL_PATTERN = re.compile(
-    r"github\.com/tesseract-ocr/tessdata[^/]*/raw/([A-Za-z0-9._-]+)/"
-)
-CONFIG_TESSDATA_PATTERN = re.compile(
-    r"TESSDATA_BEST_URL\s*=\s*[\"']https?://[^\"']*/raw/([A-Za-z0-9._-]+)/"
-)
+TESSDATA_URL_PATTERN = re.compile(r"github\.com/tesseract-ocr/tessdata[^/]*/raw/([A-Za-z0-9._-]+)/")
+CONFIG_TESSDATA_PATTERN = re.compile(r"TESSDATA_BEST_URL\s*=\s*[\"']https?://[^\"']*/raw/([A-Za-z0-9._-]+)/")
 SHA256_DIGEST_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 
 # Inventory for the pinned upstream 4.1.0 trees.
@@ -135,9 +131,7 @@ def _fetch_upstream_model_names(base_url: str) -> set[str]:
     ):
         raise ValueError(f"Invalid pinned tessdata URL: {base_url!r}")
     repository, ref = parts[1], parts[3]
-    api_url = (
-        f"https://api.github.com/repos/tesseract-ocr/{repository}/git/trees/{ref}?recursive=1"
-    )
+    api_url = f"https://api.github.com/repos/tesseract-ocr/{repository}/git/trees/{ref}?recursive=1"
     request = Request(
         api_url,
         headers={
@@ -183,10 +177,7 @@ def _validate_checksum_entry(repo_name: str, filename: str, entry: Any) -> list[
     if not isinstance(entry, dict):
         return [f"Checksums manifest entry for '{label}' is not an object"]
     if set(entry) != EXPECTED_ENTRY_FIELDS:
-        errors.append(
-            f"Checksums manifest entry for '{label}' must contain exactly "
-            f"{sorted(EXPECTED_ENTRY_FIELDS)}"
-        )
+        errors.append(f"Checksums manifest entry for '{label}' must contain exactly {sorted(EXPECTED_ENTRY_FIELDS)}")
     size = entry.get("size")
     if type(size) is not int or size <= 0:
         errors.append(f"Checksums manifest entry for '{label}' has invalid size {size!r}")
@@ -243,15 +234,9 @@ def check_checksums_manifest() -> list[str]:
         return [f"Cannot parse tessdata URLs from {CONFIG_PY}: {error}"]
 
     if set(configured_urls) != set(EXPECTED_REPOSITORY_COUNTS):
-        errors.append(
-            "Configured tessdata repositories differ from the expected set: "
-            f"{sorted(configured_urls)}"
-        )
+        errors.append(f"Configured tessdata repositories differ from the expected set: {sorted(configured_urls)}")
     if set(repositories) != set(EXPECTED_REPOSITORY_COUNTS):
-        errors.append(
-            "Manifest repository keys differ from the expected set: "
-            f"{sorted(repositories)}"
-        )
+        errors.append(f"Manifest repository keys differ from the expected set: {sorted(repositories)}")
 
     for repo_name, repository in repositories.items():
         if repo_name not in EXPECTED_REPOSITORY_COUNTS:
@@ -261,25 +246,20 @@ def check_checksums_manifest() -> list[str]:
             continue
         if set(repository) != EXPECTED_REPOSITORY_FIELDS:
             errors.append(
-                f"Manifest repository '{repo_name}' must contain exactly "
-                f"{sorted(EXPECTED_REPOSITORY_FIELDS)}"
+                f"Manifest repository '{repo_name}' must contain exactly {sorted(EXPECTED_REPOSITORY_FIELDS)}"
             )
 
         url = repository.get("url")
         actual_name = _repository_name_from_url(url)
         if actual_name != repo_name:
-            errors.append(
-                f"Manifest repository key '{repo_name}' does not match URL repository {actual_name!r}"
-            )
+            errors.append(f"Manifest repository key '{repo_name}' does not match URL repository {actual_name!r}")
         if configured_urls.get(repo_name) != url:
             errors.append(f"Manifest URL for '{repo_name}' does not match anura/config.py")
         parsed = urlsplit(url) if isinstance(url, str) else None
         parts = [part for part in parsed.path.split("/") if part] if parsed else []
         expected_tag = parts[3] if len(parts) == 4 else None
         if repository.get("tag") != expected_tag or expected_tag is None:
-            errors.append(
-                f"Manifest tag for '{repo_name}' does not match its configured URL ref"
-            )
+            errors.append(f"Manifest tag for '{repo_name}' does not match its configured URL ref")
 
         files = repository.get("files")
         if not isinstance(files, dict):
@@ -287,9 +267,7 @@ def check_checksums_manifest() -> list[str]:
             continue
         expected_count = EXPECTED_REPOSITORY_COUNTS.get(repo_name)
         if expected_count is not None and len(files) != expected_count:
-            errors.append(
-                f"Repository '{repo_name}' must contain {expected_count} models; found {len(files)}"
-            )
+            errors.append(f"Repository '{repo_name}' must contain {expected_count} models; found {len(files)}")
         if isinstance(url, str) and actual_name == repo_name:
             try:
                 upstream_names = _fetch_upstream_model_names(url)
