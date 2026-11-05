@@ -498,10 +498,7 @@ jobs:
           merge-multiple: true
 
       - name: Validate bundle set and generate SHA-256 checksums
-        run: |
-          python3 build-aux/validate_release_artifacts.py \\
-            --directory release-assets \\
-            --checksum-file SHA256SUMS
+        run: python3 build-aux/validate_release_artifacts.py --directory release-assets --checksum-file SHA256SUMS
 
       - name: Upload release checksums
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
