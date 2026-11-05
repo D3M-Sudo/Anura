@@ -1,27 +1,31 @@
 # Security Policy
 
-> Anura OCR takes security seriously. OCR and QR decoding run entirely on your machine; the optional text-to-speech feature sends the selected text to Google (see [Data flows](#data-flows)).  
+> Anura OCR takes security seriously. OCR and QR decoding run locally. Optional text-to-speech sends selected text to Google, while sharing places selected text in a URI handed to the chosen external handler (see [Data flows](#data-flows)).  
 > If you find a vulnerability, please follow the responsible disclosure process below.
 
 ---
 
 ## Data flows
 
-Anura does not collect telemetry. Two features talk to the network, and only one
-sends user content:
+Anura does not collect telemetry. OCR and QR/barcode decoding run locally.
+Optional TTS and sharing are outbound, user-initiated flows that can include
+extracted text:
 
 | Flow | Direction | When | Notes |
 | ---- | --------- | ---- | ----- |
 | OCR, QR/barcode decoding, image processing | local only | always | Tesseract, zxing-cpp and Pillow run in the app and in an isolated worker process |
 | OCR model download | GitHub → disk | when you add a language | HTTPS; the model is verified against the pinned git-blob SHA-1 manifest before installation |
-| **Text-to-speech** | **selected text → Google** | only when you press *Listen* | gTTS uploads the text to Google Translate TTS and returns an MP3; the supported-language list is also requested from Google. Do not use TTS with text you do not want to send to a third party |
-| Extraction history | local only | opt-in | `$XDG_DATA_HOME/anura/history/`, directory `0700`, file `0600` |
+| **Text-to-speech** | **selected text → Google** | only when you press *Listen* | gTTS sends the selected text to Google Translate TTS and returns an MP3; the supported-language list is also requested from Google. Do not use TTS with text you do not want to send to a third party |
+| **External sharing** | **selected text → URI → external handler** | only when you choose a share provider | Anura URL-encodes the text into a provider-specific URI and validates it before handing it to the browser or registered desktop handler. This opens a prefilled compose/share surface; Anura does not submit or publish the content itself. Review the destination and content before submitting it there |
+| Extraction history | local only | opt-in | `$XDG_DATA_HOME/anura/history/`, directory `0700`, file `0600`; stored text remains on the device |
 | Logs | local only | always | rotary files under `$XDG_STATE_HOME/anura/logs/`, never transmitted |
-| Clipboard, sharing, external editor | local / user-initiated | on your action | sharing opens the provider you chose in your browser |
+| Clipboard | local / user-initiated | on your action | text is copied to the desktop clipboard |
+| External editor | local / user-initiated | on your action | text is exported to a private temporary file and opened with `Gtk.FileLauncher`; no remote upload is performed by Anura |
 | Telemetry, analytics, remote logging | — | never | not implemented |
 
-OCR is fully offline. TTS is the only feature that sends user content to a third
-party, and it is opt-in per request.
+OCR and QR/barcode decoding are offline. TTS sends selected text to Google.
+Sharing embeds selected text in a URI delivered to an external handler; any
+subsequent submission to the provider is a separate user action outside Anura.
 
 ## Reporting a Vulnerability
 
