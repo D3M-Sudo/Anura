@@ -89,13 +89,14 @@ FEDC_OWNED_PYPI: dict[str, str] = {
 # runtime closure member is genuinely shipped by the GNOME runtime.
 EXTERNALLY_PROVIDED_PYPI: frozenset[str] = frozenset()
 
-# Target environment used to evaluate dependency markers. This mirrors the
-# Flatpak build target: Linux, CPython, x86_64 (the CI runner hardware).
+# Marker evaluation uses the runner's Python implementation/version but an
+# explicit target architecture. Linux values model the Flatpak GNOME runtime.
+SUPPORTED_ARCHES = ("x86_64", "aarch64")
 TARGET_ENV: dict[str, str] = {
-    "os_name": os.name,
-    "sys_platform": sys.platform,
+    "os_name": "posix",
+    "sys_platform": "linux",
     "platform_machine": platform.machine(),
-    "platform_system": platform.system(),
+    "platform_system": "Linux",
     "platform_release": platform.release(),
     "platform_version": platform.version(),
     "python_version": ".".join(str(v) for v in sys.version_info[:2]),
@@ -103,6 +104,15 @@ TARGET_ENV: dict[str, str] = {
     "implementation_name": sys.implementation.name,
     "platform_python_implementation": platform.python_implementation(),
 }
+
+
+def target_environment(arch: str) -> dict[str, str]:
+    """Return a deterministic Linux/CPython marker environment for a target arch."""
+    if arch not in SUPPORTED_ARCHES:
+        raise ValueError(f"unsupported target architecture: {arch}")
+    env = dict(TARGET_ENV)
+    env["platform_machine"] = arch
+    return env
 
 
 @dataclass
@@ -168,7 +178,7 @@ def parse_uv_lock_graph(path: str) -> tuple[dict[str, str], dict[str, list[tuple
     return versions, edges
 
 
-def _eval_marker_ast(node, env: dict[str, str]) -> bool:
+def _eval_marker_ast(node, env: dict[str, str]) -> bool | str:
     """Evaluate a marker AST node against the target environment.
 
     Only constants, names, boolean ops, comparisons and ``not`` are allowed;
@@ -176,7 +186,7 @@ def _eval_marker_ast(node, env: dict[str, str]) -> bool:
     evaluator (``ast.literal_eval`` equivalent) restricted to markers.
     """
     if isinstance(node, ast.Constant):
-        return bool(node.value)
+        return node.value
     if isinstance(node, ast.Name):
         value = env.get(node.id)
         if value is None:
@@ -337,6 +347,13 @@ def _manifests_for_mode(mode: str) -> tuple:
 def main() -> int:
     parser = argparse.ArgumentParser(description="F-005 runtime dependency coverage check")
     parser.add_argument(
+        "--arch",
+        choices=SUPPORTED_ARCHES,
+        action="append",
+        dest="arches",
+        help="Target architecture to validate; repeat for multiple targets. Defaults to both supported architectures.",
+    )
+    parser.add_argument(
         "--manifest",
         choices=("local", "both"),
         default="both",
@@ -353,27 +370,36 @@ def main() -> int:
             return 2
 
     manifests = _manifests_for_mode(args.manifest)
-    result = check_runtime_coverage(PYPROJECT_TOML, UV_LOCK, manifests)
+    arches = args.arches or list(SUPPORTED_ARCHES)
+    failed = False
 
-    print(f"=== F-005 runtime dependency coverage ({args.manifest}) ===")
-    if result.good:
-        print("Good:")
-        for entry in sorted(result.good):
-            print(f"  {entry}")
-    if result.warnings:
-        print("\nWarnings (non-blocking):")
-        for entry in result.warnings:
-            print(f"  {entry}")
+    for arch in arches:
+        result = check_runtime_coverage(
+            PYPROJECT_TOML,
+            UV_LOCK,
+            manifests,
+            env=target_environment(arch),
+        )
+        print(f"=== F-005 runtime dependency coverage ({args.manifest}, {arch}) ===")
+        if result.good:
+            print("Good:")
+            for entry in sorted(result.good):
+                print(f"  {entry}")
+        if result.warnings:
+            print("\nWarnings (non-blocking):")
+            for entry in result.warnings:
+                print(f"  {entry}")
 
-    if not result.passed:
-        print("\nERROR: runtime dependency coverage incomplete")
-        print("Missing / unmapped Flatpak modules:")
-        for entry in result.errors:
-            print(f"  {entry}")
-        return 1
+        if not result.passed:
+            failed = True
+            print("\nERROR: runtime dependency coverage incomplete")
+            print("Missing / unmapped Flatpak modules:")
+            for entry in result.errors:
+                print(f"  {entry}")
+        else:
+            print(f"\nPASS: all runtime Python dependencies are represented for {arch}")
 
-    print("\nPASS: all runtime Python dependencies are represented in the Flatpak manifests")
-    return 0
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":
