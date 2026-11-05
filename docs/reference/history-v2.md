@@ -16,10 +16,14 @@ them are in [../planning/history-v2-interactive-rows.md](../planning/history-v2-
 
 Not provided in this cut: opening an entry in the external editor
 ([#454](https://github.com/D3M-Sudo/Anura/issues/454)), TTS replay
-([#455](https://github.com/D3M-Sudo/Anura/issues/455)), re-OCR
-([#456](https://github.com/D3M-Sudo/Anura/issues/456)), row-level shortcuts. Search,
-thumbnails, image archiving, database storage, sync, export/import, tags/folders,
-editing of historical entries and OCR result versioning remain out of scope.
+([#455](https://github.com/D3M-Sudo/Anura/issues/455)), and row-level shortcuts.
+Re-OCR was considered and is **not planned** ([#456](https://github.com/D3M-Sudo/Anura/issues/456),
+closed as not planned): History stores extracted text, not source images, and that
+text may already include transformer output. Reprocessing it would not perform a
+new OCR pass and has no sufficiently clear benefit over copying the text and using
+the existing transformers. Search, thumbnails, image archiving, database storage,
+sync, export/import, tags/folders, editing of historical entries and OCR result
+versioning remain out of scope.
 
 ## Row behaviour
 
