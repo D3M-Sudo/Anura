@@ -277,7 +277,7 @@ jobs:
             --input flatpak/io.github.d3m_sudo.anura.local.json \
             --output flatpak/.ci-build/io.github.d3m_sudo.anura.json \
             --version "$VERSION" \
-            --source-path .. \
+            --source-path ../.. \
             --source-commit "$GITHUB_SHA"
 
       - name: Validate local and generated release manifests
