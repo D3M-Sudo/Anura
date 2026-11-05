@@ -102,7 +102,8 @@ uv run ruff format anura/
 ## Branch & Commit Conventions
 
 - **Branch names**: `feature/short-description`, `fix/short-description`
-- **Base branch for integration work**: `testing` (Dependabot and FEDC automation target `testing`; see [docs/reference/dependencies.md](docs/reference/dependencies.md))
+- **Normal integration flow**: create `feature/*` or `fix/*` branches from `feature` and open pull requests targeting `feature`. After integration, changes are validated and promoted through `testing`, then `development`, and finally `main`.
+- **Automation exceptions**: dependency automation (including Dependabot and FEDC) may use its explicitly configured target; do not change those targets as part of ordinary feature development. See [docs/reference/dependencies.md](docs/reference/dependencies.md).
 - **Commit messages**: Use [Conventional Commits](https://www.conventionalcommits.org/).
 - Every change should be documented in `CHANGELOG.md` under `[Unreleased]`.
 
