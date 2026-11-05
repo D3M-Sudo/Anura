@@ -100,7 +100,6 @@ drift apart, so a new permission has to be justified here first (#498).
 | `--filesystem=xdg-download:ro` | Same, for Downloads |
 | `--filesystem=xdg-desktop:ro` | Same, for Desktop |
 | `--filesystem=xdg-documents:ro` | Same, for Documents |
-| `--filesystem=~/.var/app/io.github.d3msudo.anura/data:ro` | Temporary read-only source for the one-time migration of history and downloaded OCR models after the application ID change (#613) |
 | `--talk-name=org.a11y.Bus` | Screen-reader support (AT-SPI) |
 | `--talk-name=org.freedesktop.Notifications` | libnotify fallback when no notification portal is available |
 | `--env=TESSDATA_PREFIX=/app/share/tessdata` | Tells Tesseract where the bundled models live |
@@ -121,15 +120,22 @@ Notes:
 
 The application ID changed from `io.github.d3msudo.anura` to
 `io.github.d3m_sudo.anura`. Flatpak keeps per-application data in separate
-host directories, so the new installation cannot see the old data unless the
-old data directory is explicitly exposed.
+host directories, and an application cannot directly access another
+application's private data directory.
 
-For the migration window, both manifests grant read-only access only to
-`~/.var/app/io.github.d3msudo.anura/data`. At startup, Anura copies the
-persistent `anura/history` and `anura/tessdata` trees into the new
-`XDG_DATA_HOME`. Existing destination files are never overwritten; symbolic
-links and incomplete `.tmp` downloads are ignored. Files are published
-atomically, the source is never changed, and a completion marker makes the
-operation idempotent. A failed/incomplete migration is retried on the next
-launch. The temporary permission must be removed in a later release after the
-migration window; it is not intended as a permanent sandbox permission.
+On the first normal GUI launch, Anura offers an import from the previous
+installation. The user explicitly chooses the old data directory through
+GTK's native folder chooser, which uses the XDG Desktop Portal in the Flatpak
+sandbox. The expected folder is usually
+`~/.var/app/io.github.d3msudo.anura/data`; select that `data` directory,
+not its parent. Cancelling leaves the data untouched and the offer can be
+shown again on a later launch. Non-interactive CLI invocations never show the
+dialog.
+
+Anura copies only the persistent `anura/history` and `anura/tessdata` trees
+into the new `XDG_DATA_HOME`. Existing destination files are never
+overwritten; symbolic links and incomplete `.tmp` downloads are ignored.
+Files are published atomically, the source is never changed, and a completion
+marker makes the operation idempotent. An invalid selection or recoverable
+copy error does not create the completion marker, so the import can be retried.
+No extra filesystem permission is added to either manifest.
