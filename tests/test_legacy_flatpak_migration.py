@@ -99,3 +99,39 @@ def test_missing_legacy_directory_is_not_marked_complete(tmp_path):
     old, new, flatpak_info = _layout(tmp_path)
     assert not migrate_legacy_flatpak_data(old_data_dir=old, new_data_home=new, flatpak_info=flatpak_info)
     assert not (new / MIGRATION_MARKER).exists()
+
+
+
+def test_rejects_a_selected_directory_without_legacy_data(tmp_path):
+    old, new, flatpak_info = _layout(tmp_path)
+    (old / "anura").mkdir(parents=True)
+
+    assert not migrate_legacy_flatpak_data(old_data_dir=old, new_data_home=new, flatpak_info=flatpak_info)
+    assert not (new / MIGRATION_MARKER).exists()
+
+
+def test_rejects_symlinked_source_root(tmp_path):
+    old, new, flatpak_info = _layout(tmp_path)
+    real_source = tmp_path / "real-source"
+    (real_source / "anura/history").mkdir(parents=True)
+    (real_source / "anura/history/history.json").write_text("legacy", encoding="utf-8")
+    old.symlink_to(real_source, target_is_directory=True)
+
+    assert not migrate_legacy_flatpak_data(old_data_dir=old, new_data_home=new, flatpak_info=flatpak_info)
+    assert not (new / MIGRATION_MARKER).exists()
+
+
+def test_rejects_symlinked_destination_tree(tmp_path):
+    old, new, flatpak_info = _layout(tmp_path)
+    source = old / "anura/history/history.json"
+    source.parent.mkdir(parents=True)
+    source.write_text("legacy", encoding="utf-8")
+
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (new / "anura").parent.mkdir(parents=True, exist_ok=True)
+    (new / "anura").symlink_to(outside, target_is_directory=True)
+
+    assert not migrate_legacy_flatpak_data(old_data_dir=old, new_data_home=new, flatpak_info=flatpak_info)
+    assert not (outside / "history/history.json").exists()
+    assert not (new / MIGRATION_MARKER).exists()
