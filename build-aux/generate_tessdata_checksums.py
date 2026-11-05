@@ -3,8 +3,8 @@
 """Generate the pinned raw-content SHA-256 manifest for tessdata models."""
 
 import argparse
-from http.client import IncompleteRead
 import hashlib
+from http.client import IncompleteRead
 import json
 import os
 from pathlib import Path
