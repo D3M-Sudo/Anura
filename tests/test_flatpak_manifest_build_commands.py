@@ -9,6 +9,7 @@ moved its Python bindings from pybind11 to nanobind, which requires a
 """
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -16,9 +17,6 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_PATH = REPO_ROOT / "flatpak" / "io.github.d3m_sudo.anura.local.json"
-sys.path.insert(0, str(REPO_ROOT / "build-aux"))
-
-import sync_dependencies  # noqa: E402
 
 
 @pytest.fixture(scope="module")
@@ -91,8 +89,12 @@ def test_zxing_cpp_installs_the_sdist_it_declares(manifest: dict) -> None:
 
 def test_python_dependency_sources_match_uv_lock() -> None:
     """Every uv.lock-managed Python module must use the same pinned version."""
-    uv_packages = sync_dependencies.parse_uv_lock(sync_dependencies.UV_LOCK)
-    stats = sync_dependencies.sync_manifest(MANIFEST_PATH, uv_packages, check_only=True)
+    result = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "build-aux" / "sync_dependencies.py"), "--check"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        check=False,
+        text=True,
+    )
 
-    assert stats["DRIFT"] == 0
-    assert stats["ERROR"] == 0
+    assert result.returncode == 0, result.stdout + result.stderr
