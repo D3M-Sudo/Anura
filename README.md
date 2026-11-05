@@ -221,6 +221,8 @@ The test suite includes headless unit tests (logic without GTK dependencies), in
 - [docs/reference/tessdata-integrity.md](docs/reference/tessdata-integrity.md) — tessdata model integrity (checksum manifest, fail-closed verification)
 - [AGENTS.md](AGENTS.md) — canonical AI-assistant and architecture guide (`CLAUDE.md` is a thin pointer to it)
 - [CONTRIBUTING.md](CONTRIBUTING.md) — contributor and development workflow
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — community participation standards
+- [SUPPORT.md](SUPPORT.md) — support, bug reports, feature requests and security reporting
 
 ---
 

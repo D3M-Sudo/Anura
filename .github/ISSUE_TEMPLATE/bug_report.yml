@@ -1,0 +1,71 @@
+name: Bug report
+description: Report a reproducible problem in Anura.
+title: "[Bug]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search [existing issues](https://github.com/D3M-Sudo/Anura/issues) first.
+        Do not include extracted text, personal data, credentials or other sensitive information.
+        For security vulnerabilities, use [private Security Advisories](https://github.com/D3M-Sudo/Anura/security/advisories/new).
+  - type: input
+    id: version
+    attributes:
+      label: Anura version
+      description: Include the release version or commit, if applicable.
+      placeholder: "0.2.x"
+    validations:
+      required: true
+  - type: dropdown
+    id: install_method
+    attributes:
+      label: Installation method
+      options:
+        - Flatpak
+        - Built from source
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: desktop
+    attributes:
+      label: Desktop environment and session
+      description: Include desktop environment and whether the session is Wayland or X11.
+      placeholder: "GNOME on Wayland"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the observed behaviour and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Anura...
+        2. Select...
+        3. Observe...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or screenshots
+      description: Redact personal information, extracted text, file paths and secrets before attaching.
+      render: text
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues for duplicates.
+          required: true
+        - label: I removed sensitive information from this report.
+          required: true
