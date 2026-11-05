@@ -36,6 +36,8 @@ CLEANUP_LANE = "cleanup"
 # Image decoding for a clipboard paste: its own lane so a new paste supersedes
 # the previous decode without touching OCR or TTS work (#581).
 CLIPBOARD_LANE = "clipboard"
+# History exports must not supersede OCR, TTS or clipboard work.
+EXPORT_LANE = "export"
 
 
 class _Lane:
