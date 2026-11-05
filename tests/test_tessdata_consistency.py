@@ -174,13 +174,18 @@ class TestManifestValidation:
         errors = checker.check_checksums_manifest()
         assert any("model inventory differs from upstream" in error for error in errors)
 
-    def test_nested_model_path_rejected(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_nested_model_path_is_accepted(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         config = _write_config(tmp_path)
         repositories = _repositories()
-        repositories["tessdata"]["files"] = {"nested/eng.traineddata": {"size": 10, "sha256": "a" * 64}}
+        repositories["tessdata"]["files"] = {"script/Arabic.traineddata": {"size": 10, "sha256": "a" * 64}}
         manifest = _write_manifest(tmp_path, repositories)
         _configure_checker(monkeypatch, config, manifest)
-        assert any("Invalid tessdata model filename" in error for error in checker.check_checksums_manifest())
+        monkeypatch.setattr(
+            checker,
+            "_fetch_upstream_model_names",
+            lambda url: {"script/Arabic.traineddata"} if "/tessdata/raw/" in url else {"eng.traineddata"},
+        )
+        assert checker.check_checksums_manifest() == []
 
 
 class TestMainIntegration:
