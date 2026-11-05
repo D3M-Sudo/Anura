@@ -1,6 +1,14 @@
 name: Generate tessdata SHA-256 manifest
 
 on:
+  pull_request:
+    branches:
+      - feature
+    paths:
+      - "build-aux/generate_tessdata_checksums.py"
+      - "anura/config.py"
+      - "anura/utils/tessdata_integrity.py"
+      - ".github/workflows/tessdata-manifest-generation.yml"
   push:
     branches:
       - fix/tessdata-sha256-577
