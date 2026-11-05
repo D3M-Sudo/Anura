@@ -5,7 +5,7 @@ History V2 minimal cut ([#434](https://github.com/D3M-Sudo/Anura/pull/434) copy 
 [#452](https://github.com/D3M-Sudo/Anura/pull/452) expandable rows). Storage, settings,
 recorded fields and the clear action are unchanged and stay documented in
 [history-v1.md](history-v1.md). The design decisions and the measurements behind
-them are in [../planning/history-v2-interactive-rows.md](../planning/history-v2-interactive-rows.md).
+them are in [../audit/legacy/reports/history-v2-interactive-rows-plan.md](../audit/legacy/reports/history-v2-interactive-rows-plan.md).
 
 ## What History V2 provides
 
