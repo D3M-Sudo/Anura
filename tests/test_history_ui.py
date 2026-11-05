@@ -147,17 +147,16 @@ def test_rows_are_expander_rows_with_a_copy_button_in_the_header(headless_gi_moc
 
     assert fake_adw.ExpanderRow.call_count == 2
     fake_row = fake_adw.ExpanderRow.return_value
-    assert fake_row.add_suffix.call_count == 4  # copy + editor, per row
+    assert fake_row.add_suffix.call_count == 6  # copy + editor + TTS, per row
 
     button_calls = fake_gtk.Button.return_value.connect.call_args_list
-    assert [c.args[0] for c in button_calls] == ["clicked"] * 4
+    assert [c.args[0] for c in button_calls] == ["clicked"] * 6
     assert [c.args[1].__name__ for c in button_calls] == [
-        "_on_copy_clicked",
-        "_on_open_editor_clicked",
-        "_on_copy_clicked",
-        "_on_open_editor_clicked",
+        "_on_copy_clicked", "_on_open_editor_clicked", "_on_tts_clicked",
+        "_on_copy_clicked", "_on_open_editor_clicked", "_on_tts_clicked",
     ]
-    assert [c.args[2] for c in button_calls] == ["second", "second", "first", "first"]
+    assert [c.args[2] for c in button_calls] == ["second", "second", "second", "first", "first", "first"]
+    assert [c.args[3] for c in button_calls if c.args[1].__name__ == "_on_tts_clicked"] == ["eng", "eng"]
     row_calls = fake_row.connect.call_args_list
     assert [c.args[0] for c in row_calls] == ["notify::expanded", "notify::expanded"]
     assert [c.args[2] for c in row_calls] == ["second", "first"]
@@ -644,3 +643,35 @@ def test_history_page_no_longer_references_messagedialog():
     source = (Path(__file__).resolve().parents[1] / "anura" / "widgets" / "history_page.py").read_text()
     assert "MessageDialog" not in source
     assert "Adw.AlertDialog" in source
+
+
+def test_tts_action_uses_history_text_and_capture_language(headless_gi_mocks, monkeypatch, tmp_path):
+    _fake_adw, fake_gtk, _fake_glib = _patch_ui(monkeypatch)
+    service = HistoryService(base_dir=tmp_path)
+    service.record("stored OCR text", "ita")
+    history_controller = MagicMock()
+    tts_controller = MagicMock()
+    tts_controller.can_listen_for_language.return_value = True
+    page = _make_page(headless_gi_mocks)
+    page.setup(service, history_controller, tts_controller)
+
+    button = fake_gtk.Button.return_value
+    page._on_tts_clicked(button, "stored OCR text", "ita", service.get_entries()[0].id)
+
+    tts_controller.request_listen.assert_called_once_with("stored OCR text", ocr_lang="ita")
+    assert page._active_tts_entry_id == service.get_entries()[0].id
+    assert page._tts_state == "generating"
+
+
+def test_tts_action_is_disabled_when_language_cannot_be_resolved(headless_gi_mocks, monkeypatch, tmp_path):
+    _fake_adw, fake_gtk, _fake_glib = _patch_ui(monkeypatch)
+    service = HistoryService(base_dir=tmp_path)
+    service.record("stored OCR text", "unknown-language")
+    history_controller = MagicMock()
+    tts_controller = MagicMock()
+    tts_controller.can_listen_for_language.return_value = False
+    page = _make_page(headless_gi_mocks)
+    page.setup(service, history_controller, tts_controller)
+
+    fake_gtk.Button.return_value.set_sensitive.assert_any_call(False)
+    tts_controller.request_listen.assert_not_called()

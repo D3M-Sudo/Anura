@@ -15,9 +15,10 @@ them are in [../planning/history-v2-interactive-rows.md](../planning/history-v2-
 - A copy button in the row header copies the full stored text to the clipboard.
 - An external-editor button in the row header opens the full stored text through
   the desktop portal, using a private temporary export file.
+- A TTS button replays the full stored text using the OCR language recorded with
+  that entry (or the user's explicit TTS-language preference).
 
-Not provided yet: TTS replay
-([#455](https://github.com/D3M-Sudo/Anura/issues/455)), and row-level shortcuts.
+Row-level shortcuts are not provided.
 Re-OCR was considered and is **not planned** ([#456](https://github.com/D3M-Sudo/Anura/issues/456),
 closed as not planned): History stores extracted text, not source images, and that
 text may already include transformer output. Reprocessing it would not perform a
@@ -83,6 +84,21 @@ versioning remain out of scope.
   uses the existing `Opened in external editor` toast. Dismissing the portal chooser
   remains a quiet cancellation.
 - The file is a hand-off copy; the persisted History entry is never edited.
+
+## Text-to-speech replay
+
+- Each row exposes **Listen to text** only when the entry has a stored OCR language
+  and the shared TTS controller can resolve an effective speech language.
+- Replay passes `HistoryEntry.language` to `TtsController.request_listen()`; it does
+  not use the application's currently selected OCR language. An explicit TTS-language
+  preference continues to override the OCR-language fallback.
+- The action reuses the window-owned TTS controller, existing generation lane,
+  watchdog, playback service and toast/error signals. No second pipeline is created.
+- While the entry is playing, its action toggles pause/resume. Activating another
+  entry replaces the pending request through the existing TTS lane; clicking the
+  same entry while it is generating cancels that pending request.
+- Entries with no resolvable language have the TTS action disabled. History data
+  remains immutable; replay never writes back to the stored entry.
 
 ## Architecture and lifecycle
 

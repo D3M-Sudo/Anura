@@ -131,13 +131,13 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         # truncating at the old value).
         self.connect_tracked(self.settings, "changed::history-limit", self._on_history_limit_changed)
         self.history_controller = HistoryController(self)
-        self.history_page.setup(self.history_service, self.history_controller)
+        self.tts_controller = TtsController(self)
+        self.history_page.setup(self.history_service, self.history_controller, self.tts_controller)
         self.ocr_controller = OcrController(self, history_service=self.history_service)
 
         show_history_action = Gio.SimpleAction.new("show-history", None)
         self.connect_tracked(show_history_action, "activate", self._on_show_history)
         self.add_action(show_history_action)
-        self.tts_controller = TtsController(self)
         self.dnd_controller = DndController(self)
 
         self._setup_controller_signals()
@@ -531,6 +531,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     def _on_tts_state_changed(self, _controller: TtsController, state: str) -> None:
         """Mediate TTS state to the UI."""
         self.extracted_page.update_tts_state(state)
+        self.history_page.update_tts_state(state)
 
     def _on_tts_still_waiting(self, _controller: TtsController) -> None:
         """Surface a one-shot notice that generation is still pending."""
@@ -587,6 +588,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     def on_listen(self) -> None:
         """Trigger TTS playback."""
         text = self.extracted_page.get_active_text()
+        self.history_page.clear_tts_active()
         self.tts_controller.request_listen(text)
 
     def on_listen_cancel(self) -> None:

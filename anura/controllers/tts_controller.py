@@ -68,8 +68,12 @@ class TtsController(GObject.GObject, SignalManagerMixin):
         self.connect_tracked(self._tts_service, "paused", self._on_tts_paused)
         self.connect_tracked(self._tts_service, "error", self._on_tts_error)
 
-    def request_listen(self, text: str):
-        """Monopoly: initiate the TTS flow."""
+    def can_listen_for_language(self, ocr_lang: str) -> bool:
+        """Whether the stored OCR language (or explicit TTS override) is speakable."""
+        return bool(ocr_lang and self._tts_service.get_effective_language(ocr_lang))
+
+    def request_listen(self, text: str, ocr_lang: str | None = None):
+        """Monopoly: initiate TTS, optionally using the entry's capture-time OCR language."""
         if not text or not text.strip():
             return
 
@@ -85,7 +89,10 @@ class TtsController(GObject.GObject, SignalManagerMixin):
         self._current_text = text
         self.emit("state-changed", "generating")
 
-        ocr_lang = settings.get_string("active-language")
+        # Current-result callers retain the active-language default; History passes
+        # the language persisted with the immutable entry.
+        if ocr_lang is None:
+            ocr_lang = settings.get_string("active-language")
         tts_lang = self._tts_service.get_effective_language(ocr_lang)
 
         if not tts_lang:
