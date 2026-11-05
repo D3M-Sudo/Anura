@@ -24,13 +24,13 @@ MIGRATION_MARKER = ".anura-legacy-flatpak-migration-v1.json"
 PERSISTENT_SUBDIRECTORIES = ("history", "tessdata")
 
 
-def _ensure_destination_directory(path: Path) -> None:
+def _ensure_destination_directory(path: Path, app_data_root: Path) -> None:
     """Create the destination path without traversing symlinks below XDG data."""
     chain: list[Path] = []
     current = path
     while True:
         chain.append(current)
-        if current.name == "anura":
+        if current == app_data_root:
             break
         if current.parent == current:
             raise OSError(f"Destination is outside the Anura data directory: {path}")
@@ -46,45 +46,53 @@ def _ensure_destination_directory(path: Path) -> None:
             raise OSError(f"Destination path contains a non-directory or symlink: {directory}")
 
 
-def _copy_file_without_overwrite(source: Path, destination: Path) -> bool:
+def _copy_file_without_overwrite(source: Path, destination: Path, app_data_root: Path) -> bool:
     """Publish a complete copy atomically, never replacing an existing file."""
-    _ensure_destination_directory(destination.parent)
+    _ensure_destination_directory(destination.parent, app_data_root)
     if destination.exists() or destination.is_symlink():
         return False
 
-    source_stat = source.lstat()
-    if not stat.S_ISREG(source_stat.st_mode):
-        return False
-
-    fd, temporary_name = tempfile.mkstemp(
-        prefix=f".{destination.name}.migration-",
-        suffix=".tmp",
-        dir=destination.parent,
-    )
-    temporary = Path(temporary_name)
+    source_fd = os.open(source, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+    temporary_fd = -1
+    temporary: Path | None = None
     try:
-        with os.fdopen(fd, "wb") as output, source.open("rb") as input_file:
-            shutil.copyfileobj(input_file, output)
-            output.flush()
-            os.fsync(output.fileno())
-        os.chmod(temporary, stat.S_IMODE(source_stat.st_mode) & 0o600 or 0o600)
-        try:
-            # A hard link is an atomic no-replace publication on the same
-            # filesystem. If another process won the race, keep its file.
-            os.link(temporary, destination)
-        except FileExistsError:
-            return False
-        return True
+        with os.fdopen(source_fd, "rb") as input_file:
+            source_stat = os.fstat(input_file.fileno())
+            if not stat.S_ISREG(source_stat.st_mode):
+                return False
+
+            temporary_fd, temporary_name = tempfile.mkstemp(
+                prefix=f".{destination.name}.migration-",
+                suffix=".tmp",
+                dir=destination.parent,
+            )
+            temporary = Path(temporary_name)
+            with os.fdopen(temporary_fd, "wb") as output:
+                temporary_fd = -1
+                shutil.copyfileobj(input_file, output)
+                output.flush()
+                os.fsync(output.fileno())
+            os.chmod(temporary, stat.S_IMODE(source_stat.st_mode) & 0o600 or 0o600)
+            try:
+                # A hard link is an atomic no-replace publication on the same
+                # filesystem. If another process won the race, keep its file.
+                os.link(temporary, destination)
+            except FileExistsError:
+                return False
+            return True
     finally:
-        temporary.unlink(missing_ok=True)
+        if temporary_fd >= 0:
+            os.close(temporary_fd)
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
 
 
-def _copy_tree_without_overwrite(source: Path, destination: Path) -> tuple[int, list[str]]:
+def _copy_tree_without_overwrite(source: Path, destination: Path, app_data_root: Path) -> tuple[int, list[str]]:
     """Copy regular files recursively; ignore symlinks and transient downloads."""
     copied = 0
     errors: list[str] = []
     try:
-        _ensure_destination_directory(destination)
+        _ensure_destination_directory(destination, app_data_root)
         with os.scandir(source) as entries:
             for entry in entries:
                 src = Path(entry.path)
@@ -93,7 +101,7 @@ def _copy_tree_without_overwrite(source: Path, destination: Path) -> tuple[int, 
                     if entry.is_symlink():
                         continue
                     if entry.is_dir(follow_symlinks=False):
-                        child_count, child_errors = _copy_tree_without_overwrite(src, dst)
+                        child_count, child_errors = _copy_tree_without_overwrite(src, dst, app_data_root)
                         copied += child_count
                         errors.extend(child_errors)
                     elif entry.is_file(follow_symlinks=False):
@@ -101,7 +109,7 @@ def _copy_tree_without_overwrite(source: Path, destination: Path) -> tuple[int, 
                         # the old installation; it is not a completed model.
                         if src.suffix == ".tmp":
                             continue
-                        copied += int(_copy_file_without_overwrite(src, dst))
+                        copied += int(_copy_file_without_overwrite(src, dst, app_data_root))
                 except OSError as exc:
                     errors.append(f"{src}: {exc}")
     except OSError as exc:
@@ -154,9 +162,11 @@ def migrate_legacy_flatpak_data(
             errors.append(f"{source}: expected a real directory")
             continue
         found_persistent_tree = True
+        destination_app_data = destination_home / "anura"
         copied, copy_errors = _copy_tree_without_overwrite(
             source,
-            destination_home / "anura" / subdirectory,
+            destination_app_data / subdirectory,
+            destination_app_data,
         )
         total_copied += copied
         errors.extend(copy_errors)
