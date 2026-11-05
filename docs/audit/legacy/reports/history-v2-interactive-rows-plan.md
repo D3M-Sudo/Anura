@@ -96,12 +96,12 @@ replace, the suggestions in "Interaction model" above.
 | --- | --- |
 | Copy to clipboard from the row | Implemented ([#434](https://github.com/D3M-Sudo/Anura/pull/434)) |
 | Activatable, expandable rows | Implemented ([#452](https://github.com/D3M-Sudo/Anura/pull/452)) |
-| Open in external editor | Implemented and merged; see [History V2 reference](../../reference/history-v2.md) and [#454](https://github.com/D3M-Sudo/Anura/issues/454) |
-| TTS replay | Implemented and merged; see [History V2 reference](../../reference/history-v2.md) and [#455](https://github.com/D3M-Sudo/Anura/issues/455) |
+| Open in external editor | Implemented and merged; see [History V2 reference](../../../../../reference/history-v2.md) and [#454](https://github.com/D3M-Sudo/Anura/issues/454) |
+| TTS replay | Implemented and merged; see [History V2 reference](../../../../../reference/history-v2.md) and [#455](https://github.com/D3M-Sudo/Anura/issues/455) |
 | Re-OCR | Not planned; [#456](https://github.com/D3M-Sudo/Anura/issues/456) closed as not planned |
 
 The behaviour that is implemented is documented in
-[../reference/history-v2.md](../reference/history-v2.md).
+[../../../../reference/history-v2.md](../../../../reference/history-v2.md).
 
 ## Original proposed scope (historical)
 
