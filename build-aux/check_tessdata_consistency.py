@@ -11,7 +11,7 @@ It deliberately does not download upstream models.
 import ast
 from http.client import IncompleteRead
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import sys
 from typing import Any
@@ -161,7 +161,13 @@ def _fetch_upstream_model_names(base_url: str) -> set[str]:
             raise RuntimeError(f"GitHub returned a tree entry without a path for {repository}@{ref}")
         if not filename.endswith(".traineddata"):
             continue
-        if filename != Path(filename).name or filename in {".", ".."} or "\\" in filename:
+        model_path = PurePosixPath(filename)
+        if (
+            filename.startswith("/")
+            or str(model_path) != filename
+            or any(part in {"", ".", ".."} for part in model_path.parts)
+            or "\\" in filename
+        ):
             raise RuntimeError(f"Unsupported traineddata path in upstream tree: {filename!r}")
         if filename in names:
             raise RuntimeError(f"Duplicate traineddata path in upstream tree: {filename!r}")
@@ -284,9 +290,11 @@ def check_checksums_manifest() -> list[str]:
         for filename, entry in files.items():
             if (
                 not isinstance(filename, str)
-                or filename != Path(filename).name
-                or filename in {".", ".."}
                 or not filename.endswith(".traineddata")
+                or filename.startswith("/")
+                or str(PurePosixPath(filename)) != filename
+                or any(part in {"", ".", ".."} for part in PurePosixPath(filename).parts)
+                or "\\" in filename
             ):
                 errors.append(f"Invalid tessdata model filename in '{repo_name}': {filename!r}")
             errors.extend(_validate_checksum_entry(repo_name, filename, entry))
