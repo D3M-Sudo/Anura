@@ -301,3 +301,44 @@ def test_7_manifest_mode_selection() -> None:
     guaranteed to match it right after build-aux/release.sh regenerates it)."""
     assert checker._manifests_for_mode("local") == (checker.MANIFEST_LOCAL,)
     assert checker._manifests_for_mode("both") == (checker.MANIFEST_MAIN, checker.MANIFEST_LOCAL)
+
+
+
+def test_target_environment_selects_supported_architectures() -> None:
+    """Both supported Flatpak targets get explicit Linux marker environments."""
+    for arch in ("x86_64", "aarch64"):
+        env = checker.target_environment(arch)
+        assert env["platform_machine"] == arch
+        assert env["sys_platform"] == "linux"
+        assert env["platform_system"] == "Linux"
+        assert env["implementation_name"] == "cpython"
+
+
+def test_target_environment_rejects_unknown_architecture() -> None:
+    """Unknown targets must not silently inherit the runner architecture."""
+    import pytest
+
+    with pytest.raises(ValueError, match="unsupported target architecture"):
+        checker.target_environment("armv7l")
+
+
+def test_architecture_markers_are_evaluated_per_target(tmp_path: Path) -> None:
+    """A marker-gated runtime dependency is included only for its target arch."""
+    pyproject, uv_lock, main, local = _base_files(tmp_path)
+    patched = uv_lock.read_text().replace(
+        '{ name = "urllib3" }',
+        '{ name = "urllib3" },\\n    { name = "arm-only-package", marker = "platform_machine == \'aarch64\'" }',
+    )
+    patched += "\\n" + _pkg("arm-only-package", "1.0.0", []) + "\\n"
+    arm_lock = tmp_path / "uv_arm.lock"
+    arm_lock.write_text(patched)
+
+    x86_closure = checker.compute_runtime_closure(
+        pyproject, arm_lock, env=checker.target_environment("x86_64")
+    )
+    arm_closure = checker.compute_runtime_closure(
+        pyproject, arm_lock, env=checker.target_environment("aarch64")
+    )
+
+    assert "arm-only-package" not in x86_closure
+    assert "arm-only-package" in arm_closure
