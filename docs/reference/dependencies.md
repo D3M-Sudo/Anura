@@ -193,18 +193,38 @@ development workflow (`uv sync`) and are **not** a substitute for that manifest.
 
 How Anura satisfies it:
 
-- every Python module installs a pinned wheel or sdist with its `sha256`, in
-  build order (build backends first: `scikit-build-core`, `pybind11`,
-  `nanobind`, `packaging`, `pathspec`);
+- the main Flatpak manifest is also the Python dependency manifest: each Python
+  dependency is an explicit module with a pinned wheel or sdist URL and
+  `sha256`; there is no hand-maintained source submanifest;
+- Flathub's style guide says source submanifests should be used when generated
+  by external tooling or automatically; otherwise modules belong in the main
+  manifest. Anura maintains its modules directly, so a separate
+  `flatpak-pip-generator` output is not required for this layout;
+- build helpers are declared before their consumers
+  (`packaging`, `pathspec`, `scikit-build-core`, `pybind11`, `nanobind`);
+  build commands use `pip --no-deps --no-build-isolation`, so pip does not
+  resolve or download undeclared dependencies during compilation;
+- `build-aux/check_runtime_dependency_coverage.py` verifies that the complete
+  Linux runtime dependency closure from `pyproject.toml` and `uv.lock` has
+  corresponding modules in both manifests;
+- `build-aux/sync_dependencies.py --check` verifies that the versions of
+  uv.lock-managed Python modules match their pinned manifest source URLs.
+  Build-only modules and the FEDC-owned `certifi` source have separate,
+  explicit ownership rules;
 - native dependencies are pinned archives (`leptonica`, `tesseract`, `imlib2`,
   `scrot`, `libportal`) with checksums;
-- the OCR models are pinned URLs inside the `tessdata` module, and the runtime
+- OCR models are pinned URLs inside the `tessdata` module, and the runtime
   verifies their digest against `anura/data/tessdata_checksums.json`;
 - the release manifest (`flatpak/io.github.d3m_sudo.anura.json`) is generated from
   the local one by `build-aux/release.sh`, which rewrites the `anura` module's
   `dir` source into a `git` source at the release tag; for the Flathub submission
   repository, `build-aux/pin_source_commit.py` adds the tag's `commit` so a moved
   tag cannot change the sources.
+
+The local manifest intentionally uses a `dir` source for the working tree.
+Do not run the Flathub manifest linter against it: the linter rejects directory
+sources in submission manifests. Lint the generated release-style manifest,
+which uses the pinned Git source.
 
 `tests/test_flatpak_manifest_hygiene.py::test_every_source_is_pinned` enforces the
 checksum rule on every commit: a `file`/`archive` source without `sha256`, a git
@@ -214,15 +234,20 @@ source without tag/commit, or a `dir` source outside the app module fails the
 ### Checking a submission build
 
 ```bash
-# Flathub linter (run against the submission manifest, needs network for schema checks)
+# Lint the generated submission manifest (not the local dir-source manifest)
 flatpak-builder-lint manifest flatpak/io.github.d3m_sudo.anura.json
-flatpak-builder-lint appstream  <installed-prefix>/share/metainfo/io.github.d3m_sudo.anura.metainfo.xml
+flatpak-builder-lint appstream <installed-prefix>/share/metainfo/io.github.d3m_sudo.anura.metainfo.xml
 
-# Offline proof: the second build must not download anything
+# First pass: download and verify all declared sources, then build.
 flatpak-builder --force-clean --state-dir=.fb-state builddir flatpak/io.github.d3m_sudo.anura.local.json
-flatpak-builder --force-clean --disable-downloads --state-dir=.fb-state builddir flatpak/io.github.d3m_sudo.anura.local.json
+
+# Second pass: reuse the same source cache and forbid every source download.
+flatpak-builder --force-clean --disable-download --state-dir=.fb-state builddir flatpak/io.github.d3m_sudo.anura.local.json
 ```
 
-The `--state-dir` cache keeps the downloaded sources, so the second run proves
-the manifest is self-contained. Both commands are to be run where Flatpak is
-available; the CI sandbox only builds with network access (#504).
+Record the exact commit, `flatpak-builder` and `flatpak-builder-lint`
+versions, linter output/exit status, and both build exit statuses. The second
+pass is the offline reproducibility proof: `--disable-download` fails if any
+declared source is absent from the state directory. Keep the same
+`--state-dir` for both passes. CI currently validates and builds the generated
+release manifest, but does not yet execute this second no-download pass (#504).
