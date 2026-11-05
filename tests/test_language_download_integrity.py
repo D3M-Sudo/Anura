@@ -41,11 +41,6 @@ def _response(payloads, headers=None):
     return response
 
 
-def _git_blob_sha1(data: bytes) -> str:
-    """Mirror GitBlobHasher: SHA-1 over git's ``blob <size>`` framing."""
-    return hashlib.sha1(f"blob {len(data)}\x00".encode() + data, usedforsecurity=False).hexdigest()
-
-
 @pytest.fixture
 def stub_integrity(monkeypatch):
     """Pin a test payload in a synthetic integrity manifest.
@@ -59,7 +54,7 @@ def stub_integrity(monkeypatch):
         repository = {
             "url": base_url,
             "tag": ref_from_url(base_url),
-            "files": {filename: {"size": len(payload), "sha1": _git_blob_sha1(payload)}},
+            "files": {filename: {"size": len(payload), "sha256": hashlib.sha256(payload).hexdigest()}},
         }
         repo = repo_key_from_url(base_url)
         monkeypatch.setattr("anura.utils.tessdata_integrity.load_checksums", lambda: {repo: repository})

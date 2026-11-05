@@ -124,7 +124,7 @@ class TestLanguageManagerEnterprise:
         """Test successful download path.
 
         The download manager verifies both the announced Content-Length and
-        the streamed git-blob SHA-1 against the pinned manifest before
+        the streamed raw-content SHA-256 against the pinned manifest before
         installing (NEW-F1/F2, fail-closed). The mock body cannot match the
         real pinned ``fra.traineddata`` identity (14 MB upstream), so this
         test derives a synthetic pinned checksum from the mock body itself —
@@ -133,8 +133,11 @@ class TestLanguageManagerEnterprise:
         tests/test_tessdata_checksums.py.
         """
         body = b"anura-test-model\n" * 8
-        blob_sha1 = hashlib.sha1(b"blob %d\x00" % len(body) + body).hexdigest()
-        synthetic = TessdataChecksum(filename="fra.traineddata", size=len(body), sha1=blob_sha1)
+        synthetic = TessdataChecksum(
+            filename="fra.traineddata",
+            size=len(body),
+            sha256=hashlib.sha256(body).hexdigest(),
+        )
 
         mock_response = MagicMock()
         mock_response.status_code = 200

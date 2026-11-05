@@ -13,6 +13,10 @@ and that the committed integrity manifest
 anura/config.py — otherwise a re-pinned tag would ship with stale hashes and
 every runtime model download would be refused (fail closed).
 
+The integrity manifest must be format v2 (``version``: 2, ``algorithm``:
+"sha256") and every pinned entry must carry a valid positive size and a raw
+SHA-256 digest. Legacy git-blob SHA-1 fields are rejected.
+
 The tessdata module in the Flatpak manifests uses tessdata_fast URLs
 with a specific commit SHA that must match TESSDATA_BEST_URL in config.py.
 
@@ -23,6 +27,7 @@ import json
 from pathlib import Path
 import re
 import sys
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CONFIG_PY = REPO_ROOT / "anura" / "config.py"
@@ -84,20 +89,80 @@ def extract_urls_from_checksums_manifest(manifest_path: Path) -> set[str]:
     return {repo["url"] for repo in repositories.values() if isinstance(repo, dict) and "url" in repo}
 
 
+# Regex validating a raw-content SHA-256 digest (exactly 64 lowercase hex chars).
+SHA256_DIGEST_PATTERN = re.compile(r"^[0-9a-f]{64}$")
+
+
+def _validate_checksum_entry(repo_name: str, filename: str, entry: Any) -> list[str]:
+    """Validate a single manifest file entry.
+
+    Returns a list of human-readable error messages (empty when valid).
+    """
+    errors: list[str] = []
+    label = f"{repo_name}/{filename}"
+
+    if not isinstance(entry, dict):
+        return [f"Checksums manifest entry for '{label}' is not an object"]
+
+    # Legacy git-blob SHA-1 fields are not acceptable in the v2 manifest.
+    if "sha1" in entry:
+        errors.append(f"Checksums manifest entry for '{label}' uses legacy SHA-1; raw-content SHA-256 is required")
+
+    size = entry.get("size")
+    if type(size) is not int or size <= 0:
+        errors.append(f"Checksums manifest entry for '{label}' has invalid size {size!r} (positive integer required)")
+
+    digest = entry.get("sha256")
+    if not isinstance(digest, str) or not SHA256_DIGEST_PATTERN.fullmatch(digest):
+        errors.append(
+            f"Checksums manifest entry for '{label}' has invalid sha256 "
+            f"{digest!r} (exactly 64 hexadecimal characters required)"
+        )
+
+    return errors
+
+
 def check_checksums_manifest() -> list[str]:
-    """Verify the integrity manifest still matches the URLs in config.py.
+    """Verify the integrity manifest is format v2 and matches config.py.
 
     A re-pinned tag (or an added/removed repository) without regenerating
     anura/data/tessdata_checksums.json would make every runtime download fail
     closed, so this is a release blocker rather than a runtime surprise.
+
+    Every repository pinned in ``anura/config.py`` must be present in the
+    manifest with the same URL and tag, and every ``*.traineddata`` entry must
+    carry a valid positive size and a raw-content SHA-256 digest.
     """
+    errors: list[str] = []
+
     if not CHECKSUMS_MANIFEST.exists():
         return [f"Missing tessdata integrity manifest: {CHECKSUMS_MANIFEST}"]
 
     try:
-        manifest_urls = extract_urls_from_checksums_manifest(CHECKSUMS_MANIFEST)
+        manifest = json.loads(CHECKSUMS_MANIFEST.read_text(encoding="utf-8"))
     except (OSError, ValueError) as error:
         return [f"Cannot read tessdata integrity manifest {CHECKSUMS_MANIFEST}: {error}"]
+
+    if not isinstance(manifest, dict):
+        return [f"Tessdata integrity manifest {CHECKSUMS_MANIFEST} is not a JSON object"]
+
+    if manifest.get("version") != 2:
+        errors.append(
+            f"Tessdata integrity manifest {CHECKSUMS_MANIFEST} is not version 2 "
+            f"(got {manifest.get('version')!r}); regenerate it with "
+            "build-aux/generate_tessdata_checksums.py"
+        )
+
+    if manifest.get("algorithm") != "sha256":
+        errors.append(
+            f"Tessdata integrity manifest {CHECKSUMS_MANIFEST} does not declare "
+            f'algorithm "sha256" (got {manifest.get("algorithm")!r})'
+        )
+
+    repositories = manifest.get("repositories")
+    if not isinstance(repositories, dict):
+        errors.append(f"Tessdata integrity manifest {CHECKSUMS_MANIFEST} has no valid repositories object")
+        return errors
 
     try:
         config_urls = extract_tessdata_urls_from_config(CONFIG_PY)
@@ -107,15 +172,56 @@ def check_checksums_manifest() -> list[str]:
     if not config_urls:
         return [f"Could not extract tessdata URLs from {CONFIG_PY}"]
 
-    if manifest_urls != config_urls:
-        return [
-            "Tessdata integrity manifest is out of date:",
-            f"  config.py:  {sorted(config_urls)}",
-            f"  manifest:   {sorted(manifest_urls)}",
-            "  Regenerate it with build-aux/generate_tessdata_checksums.py",
-        ]
+    manifest_urls: set[str] = set()
+    for repo_name, repository in repositories.items():
+        if not isinstance(repository, dict):
+            errors.append(f"Tessdata integrity manifest repository '{repo_name}' is not an object")
+            continue
 
-    return []
+        url = repository.get("url")
+        tag = repository.get("tag")
+        if url not in config_urls:
+            errors.append(
+                f"Tessdata integrity manifest repository '{repo_name}' has URL {url!r} not pinned in anura/config.py"
+            )
+        else:
+            manifest_urls.add(url)
+
+        # The manifest tag must match the ref encoded in the configured URL.
+        expected_tag = None
+        for config_url in config_urls:
+            if config_url == url:
+                match = re.search(r"/raw/([A-Za-z0-9._-]+)/$", config_url)
+                if match:
+                    expected_tag = match.group(1)
+                break
+        if expected_tag is not None and tag != expected_tag:
+            errors.append(
+                f"Tessdata integrity manifest repository '{repo_name}' is pinned "
+                f"to tag {tag!r} but anura/config.py points at {expected_tag!r}"
+            )
+
+        files = repository.get("files")
+        if not isinstance(files, dict) or not files:
+            errors.append(f"Tessdata integrity manifest repository '{repo_name}' has no pinned *.traineddata files")
+            continue
+
+        for filename, entry in files.items():
+            if not isinstance(filename, str) or not filename.endswith(".traineddata"):
+                errors.append(
+                    f"Checksums manifest entry '{filename}' in '{repo_name}' is not a .traineddata model file"
+                )
+            errors.extend(_validate_checksum_entry(repo_name, filename, entry))
+
+    if manifest_urls != config_urls:
+        errors.append(
+            "Tessdata integrity manifest is out of date with anura/config.py:"
+            f"\n  config.py:  {sorted(config_urls)}"
+            f"\n  manifest:   {sorted(manifest_urls)}"
+            "\n  Regenerate it with build-aux/generate_tessdata_checksums.py"
+        )
+
+    return errors
 
 
 def main() -> int:
