@@ -209,6 +209,22 @@ def test_very_long_text_expands_without_blocking(real_history):
     assert time.monotonic() - started < 15
 
 
+def test_editor_button_delegates_the_full_stored_text(real_history):
+    from gi.repository import Gtk
+
+    page, _service, controller = real_history
+    row = page._rows[1]
+    editor_buttons = [
+        button for button in _find_all(row, Gtk.Button)
+        if button.get_tooltip_text() == "Open in external editor"
+    ]
+    assert len(editor_buttons) == 1
+
+    editor_buttons[0].emit("clicked")
+
+    controller.open_entry_in_external_editor.assert_called_once_with(LONG_TEXT)
+
+
 def test_copy_button_still_copies_the_full_text_with_the_row_expanded(real_history):
     from gi.repository import Gtk
 
