@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Flatpak: offer a portal-backed, user-selected migration of history and downloaded OCR models from the previous application ID; no cross-application filesystem permission is required (#613)
 
 ### Changed
+- OCR/tessdata: migrate all 489 pinned models across `tessdata`, `tessdata_fast` and `tessdata_best` to raw-content SHA-256 plus byte-size verification (manifest v2); validate complete upstream inventories and publish the manifest atomically, while runtime rejects legacy SHA-1 manifests and fails closed on integrity mismatches (#577)
+- Tests: cover mocked download, checksum verification and installation for `fast`, `standard` (Normale) and `best`, asserting each profile's repository URL and destination directory (#577)
 - Flatpak: migrate the application ID to `io.github.d3m_sudo.anura` while preserving the existing GSettings storage path; generate the release manifest from the local source-of-truth manifest and validate shared fields and exact-commit pinning in CI (#612)
 - Flatpak/dependencies: document the dependency-manifest ownership and add a repeatable no-download build using the populated Flatpak state cache; CI checks lockfile-managed Python module versions against `uv.lock` (#615)
 - Dependencies: update the development/runtime Python lockfile's Certifi version from 2026.4.22 to 2026.10.18; the separately FEDC-managed Flatpak source remains independently pinned (#616)
