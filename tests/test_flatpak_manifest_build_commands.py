@@ -9,9 +9,9 @@ moved its Python bindings from pybind11 to nanobind, which requires a
 """
 
 import json
+from pathlib import Path
 import subprocess
 import sys
-from pathlib import Path
 
 import pytest
 
