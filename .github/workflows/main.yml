@@ -475,13 +475,47 @@ jobs:
           retention-days: 7
 
 
+  # Verify that the artifact hand-off contains exactly one non-empty bundle
+  # for each supported architecture before any tag-triggered publication.
+  validate-release-artifacts:
+    name: Validate multi-architecture release artifacts
+    needs: flatpak-builder
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Download architecture-specific Flatpak bundles
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          pattern: anura-flatpak-${{ github.run_id }}-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Validate bundle set and generate SHA-256 checksums
+        run: python3 build-aux/validate_release_artifacts.py --directory release-assets --checksum-file SHA256SUMS
+
+      - name: Upload release checksums
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-checksums-${{ github.run_id }}
+          path: SHA256SUMS
+          retention-days: 30
+
+
   # Publish both architecture bundles together; parallel matrix jobs must not
   # race while attaching assets to the same GitHub Release.
   publish-release:
     if: startsWith(github.ref, 'refs/tags/')
-    needs: flatpak-builder
+    needs: [flatpak-builder, validate-release-artifacts]
     runs-on: ubuntu-24.04
     permissions:
+      actions: read
       contents: write
     steps:
       - name: Checkout Code
@@ -490,11 +524,17 @@ jobs:
           persist-credentials: false
 
       - name: Download architecture-specific Flatpak bundles
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           pattern: anura-flatpak-${{ github.run_id }}-*
           path: release-assets
           merge-multiple: true
+
+      - name: Download validated SHA-256 checksums
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: release-checksums-${{ github.run_id }}
+          path: release-checksums
 
       - name: Build release notes from CHANGELOG
         # Never publish a release with an empty body (#489).
@@ -506,7 +546,9 @@ jobs:
       - name: Upload Flatpak Bundles to Release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
-          files: release-assets/*.flatpak
+          files: |
+            release-assets/*.flatpak
+            release-checksums/SHA256SUMS
           body_path: release-notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
