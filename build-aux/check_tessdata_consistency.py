@@ -166,7 +166,7 @@ def _fetch_upstream_model_names(base_url: str) -> set[str]:
             raise RuntimeError(f"GitHub returned a tree entry without a path for {repository}@{ref}")
         if not filename.endswith(".traineddata"):
             continue
-        if filename != Path(filename).name or filename in {".", ".."} or "\\\\" in filename:
+        if filename != Path(filename).name or filename in {".", ".."} or "\\" in filename:
             raise RuntimeError(f"Unsupported traineddata path in upstream tree: {filename!r}")
         if filename in names:
             raise RuntimeError(f"Duplicate traineddata path in upstream tree: {filename!r}")
