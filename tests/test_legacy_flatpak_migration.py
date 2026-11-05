@@ -27,9 +27,7 @@ def test_migrates_history_and_all_model_profiles(tmp_path):
         directory.mkdir(parents=True)
         (directory / "ita.traineddata").write_bytes(profile.encode())
 
-    assert migrate_legacy_flatpak_data(
-        old_data_dir=old, new_data_home=new, flatpak_info=flatpak_info
-    )
+    assert migrate_legacy_flatpak_data(old_data_dir=old, new_data_home=new, flatpak_info=flatpak_info)
 
     assert (new / "anura/history/history.json").read_text(encoding="utf-8") == '[{"text":"old"}]'
     assert (new / "anura/history/history.json.corrupt-1").read_text(encoding="utf-8") == "damaged"
