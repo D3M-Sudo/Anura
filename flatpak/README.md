@@ -114,3 +114,28 @@ Notes:
 - Wayland and X11 (including the `scrot` fallback) still need a manual runtime
   test on a desktop session. The CI only runs `anura --help` inside the sandbox
   (#498, #500).
+
+
+## Legacy Flatpak data migration (#613)
+
+The application ID changed from `io.github.d3msudo.anura` to
+`io.github.d3m_sudo.anura`. Flatpak keeps per-application data in separate
+host directories, and an application cannot directly access another
+application's private data directory.
+
+On the first normal GUI launch, Anura offers an import from the previous
+installation. The user explicitly chooses the old data directory through
+GTK's native folder chooser, which uses the XDG Desktop Portal in the Flatpak
+sandbox. The expected folder is usually
+`~/.var/app/io.github.d3msudo.anura/data`; select that `data` directory,
+not its parent. Cancelling leaves the data untouched and the offer can be
+shown again on a later launch. Non-interactive CLI invocations never show the
+dialog.
+
+Anura copies only the persistent `anura/history` and `anura/tessdata` trees
+into the new `XDG_DATA_HOME`. Existing destination files are never
+overwritten; symbolic links and incomplete `.tmp` downloads are ignored.
+Files are published atomically, the source is never changed, and a completion
+marker makes the operation idempotent. An invalid selection or recoverable
+copy error does not create the completion marker, so the import can be retried.
+No extra filesystem permission is added to either manifest.

@@ -32,10 +32,10 @@ gi.require_version("Notify", "0.7")
 gi.require_version("Xdp", "1.0")
 gi.require_version("Gst", "1.0")
 
-from gi.repository import Adw, Gio, GLib
+from gi.repository import Adw, Gio, GLib, Gtk
 from loguru import logger
 
-from anura.config import APP_ID
+from anura.config import APP_ID, XDG_DATA_HOME
 from anura.core.resources import load_gresource_bundle
 
 # Load GResource before importing any widgets
@@ -48,6 +48,7 @@ from anura.core.dialogs import DialogManager
 from anura.core.silent_runner import SilentRunner
 from anura.services.clipboard_service import get_clipboard_service
 from anura.services.language_manager import get_language_manager
+from anura.services.legacy_flatpak_migration import MIGRATION_MARKER, migrate_legacy_flatpak_data
 from anura.services.notification_service import (
     HAS_LIBNOTIFY,
     get_notification_service,
@@ -69,6 +70,9 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         SignalManagerMixin.__init__(self)
         self.backend: ScreenshotService | None = None
         self.version = version
+        self._legacy_migration_pending = False
+        self._activate_after_legacy_migration = False
+        self._runtime_services_initialized = False
         self.settings = settings
         # Use the same singleton the controllers use (#537): OcrController
         # obtains notifications through get_notification_service(), so a
@@ -119,13 +123,22 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         self.connect_tracked(self.backend, "decoded", self.on_decoded)
         self.connect_tracked(self.backend, "error", self.on_error)
 
-        get_language_manager().init_tessdata()
         get_clipboard_service().init()
 
         ActionRegistry(self).setup_actions()
 
         GLib.set_application_name("Anura OCR")
         GLib.set_prgname(APP_ID)
+
+        # A Flatpak cannot inspect another app's private data directory. Offer
+        # a portal-backed folder selection on the first normal GUI launch.
+        # CLI/silent invocations remain non-interactive.
+        marker = Path(XDG_DATA_HOME) / MIGRATION_MARKER
+        if Path("/.flatpak-info").is_file() and len(sys.argv) == 1 and not marker.is_file():
+            self._legacy_migration_pending = True
+            self._show_legacy_migration_prompt()
+        else:
+            self._initialize_runtime_services()
 
     def do_shutdown(self, *args: object, **kwargs: object) -> None:
         if self.backend:
@@ -173,7 +186,54 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         except (AttributeError, RuntimeError, OSError) as e:
             logger.debug(f"Failed to clean up TTS service: {e}")
 
+    def _initialize_runtime_services(self) -> None:
+        """Initialize services that consume persistent OCR data, exactly once."""
+        if self._runtime_services_initialized:
+            return
+        get_language_manager().init_tessdata()
+        self._runtime_services_initialized = True
+
+    def _show_legacy_migration_prompt(self) -> None:
+        # GtkFileChooserNative is portal-backed in Flatpak. A parent window is
+        # optional here because startup must wait for the selection before the
+        # normal application window (and OCR model discovery) is initialized.
+        chooser = Gtk.FileChooserNative.new(
+            _("Select the previous Anura data folder to import history and OCR models"),
+            None,
+            Gtk.FileChooserAction.SELECT_FOLDER,
+            _("Import"),
+            _("Not now"),
+        )
+        chooser.connect("response", self._on_legacy_migration_folder_response)
+        chooser.show()
+
+    def _on_legacy_migration_folder_response(self, chooser, response: int) -> None:
+        if response == Gtk.ResponseType.ACCEPT:
+            selected = chooser.get_file()
+            selected_path = selected.get_path() if selected else None
+            if selected_path:
+                try:
+                    if not migrate_legacy_flatpak_data(old_data_dir=Path(selected_path)):
+                        logger.warning("Legacy Anura data was not imported. The migration prompt will be shown again.")
+                except (OSError, RuntimeError, ValueError) as exc:
+                    logger.exception(f"Legacy Anura data migration failed: {exc}")
+            else:
+                logger.warning("The selected legacy data folder has no local portal path.")
+        chooser.destroy()
+        self._finish_legacy_migration()
+
+    def _finish_legacy_migration(self) -> None:
+        self._legacy_migration_pending = False
+        self._initialize_runtime_services()
+        if self._activate_after_legacy_migration:
+            self._activate_after_legacy_migration = False
+            self.activate()
+
     def do_activate(self) -> None:
+        if self._legacy_migration_pending:
+            self._activate_after_legacy_migration = True
+            return
+
         win = self.props.active_window
         if not win:
             if self.backend is None:
