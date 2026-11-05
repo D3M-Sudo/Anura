@@ -408,7 +408,7 @@ def test_clear_rows_cancels_timers_and_disconnects_row_handlers(headless_gi_mock
     fake_button.disconnect.assert_any_call(16)
     fake_row.disconnect.assert_any_call(21)
     fake_row.disconnect.assert_any_call(22)
-    assert sorted(handler_id for _widget, handler_id in page._row_handlers) == [17, 18, 19, 20, 25, 26, 23, 24]
+    assert sorted(handler_id for _widget, handler_id in page._row_handlers) == [17, 18, 19, 20, 23, 24, 25, 26]
 
     page._on_copy_clicked(MagicMock(), "text")
     pending_id = next(iter(page._feedback_timers.values()))
