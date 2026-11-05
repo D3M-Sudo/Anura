@@ -16,7 +16,7 @@ Anura OCR is a GTK4/Libadwaita desktop application for GNOME that extracts text 
 - TTS via `gTTS` + GStreamer `playbin3`
 - Screenshots via XDG Desktop Portal (`libportal` / `Xdp`)
 - **Fallback**: Bundled `scrot` for X11 sessions when portal backends are missing
-- Distributed as Flatpak (`io.github.d3msudo.anura`) — GNOME 50 runtime
+- Distributed as Flatpak (`io.github.d3m_sudo.anura`) — GNOME 51 runtime
 - Internationalization with gettext: 25+ languages (see `po/LINGUAS`)
 - Build system: Meson ≥ 1.5.0
 - License: MIT
@@ -41,7 +41,7 @@ anura/
 │   ├── controllers/            Business Logic Controllers
 │   │   ├── ocr_controller.py   OCR coordination and signal handling
 │   │   ├── tts_controller.py   TTS lifecycle and UI state management
-│   │   ├── history_controller.py   History entry actions (copy) reported through signals
+│   │   ├── history_controller.py   History entry copy and asynchronous external-editor export actions, reported through signals
 │   │   └── dnd_controller.py   Asynchronous Drag-and-Drop coordination
 │   ├── services/
 │   │   ├── clipboard_service.py    Clipboard read/write (Gdk.Clipboard)
@@ -97,7 +97,7 @@ anura/
 │   │   └── validators.py          URI validation, security & text sanitization
 │   ├── widgets/
 │   │   ├── extracted_page.py       OCR result page: GtkSourceView 5 editor (native search, external editor handoff) + share/TTS actions
-│   │   ├── history_page.py         History page (expandable rows with copy action, clear action; see docs/reference/history-v2.md)
+│   │   ├── history_page.py         History V2 page (expandable rows with copy, external-editor and TTS actions; see docs/reference/history-v2.md)
 │   │   ├── language_popover.py     Language selector with search
 │   │   ├── language_popover_row.py Language row in popover
 │   │   ├── language_row.py         Language row in preferences page
