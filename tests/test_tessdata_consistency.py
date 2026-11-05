@@ -93,7 +93,7 @@ class TestConfigAliasResolution:
 
 
 class TestManifestValidation:
-    def test_complete_v2_manifest_passes( self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch ) -> None:
+    def test_complete_v2_manifest_passes(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         config = _write_config(tmp_path)
         manifest = _write_manifest(tmp_path, _repositories())
         _configure_checker(monkeypatch, config, manifest)
@@ -110,13 +110,13 @@ class TestManifestValidation:
         version: int,
         algorithm: str,
         message: str,
-    ) -> None:
+   ) -> None:
         config = _write_config(tmp_path)
         manifest = _write_manifest(tmp_path, _repositories(), version=version, algorithm=algorithm)
         _configure_checker(monkeypatch, config, manifest)
         assert any(message in error for error in checker.check_checksums_manifest())
 
-    def test_missing_repository_rejected( self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch ) -> None:
+    def test_missing_repository_rejected(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         config = _write_config(tmp_path)
         repositories = _repositories()
         repositories.pop("tessdata_fast")
@@ -124,7 +124,7 @@ class TestManifestValidation:
         _configure_checker(monkeypatch, config, manifest)
         assert any("repository keys" in error for error in checker.check_checksums_manifest())
 
-    def test_unexpected_repository_rejected( self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch ) -> None:
+    def test_unexpected_repository_rejected(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         config = _write_config(tmp_path)
         repositories = _repositories()
         repositories["unexpected"] = _repo("https://github.com/tesseract-ocr/unexpected/raw/4.1.0/")
@@ -132,7 +132,7 @@ class TestManifestValidation:
         _configure_checker(monkeypatch, config, manifest)
         assert any("Unexpected tessdata repository" in error for error in checker.check_checksums_manifest())
 
-    def test_repository_key_must_match_url( self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch ) -> None:
+    def test_repository_key_must_match_url(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         config = _write_config(tmp_path)
         repositories = _repositories()
         repositories["tessdata_best"]["url"] = "https://github.com/tesseract-ocr/tessdata_fast/raw/4.1.0/"
@@ -140,7 +140,7 @@ class TestManifestValidation:
         _configure_checker(monkeypatch, config, manifest)
         assert any("does not match URL repository" in error for error in checker.check_checksums_manifest())
 
-    def test_wrong_model_count_rejected( self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch ) -> None:
+    def test_wrong_model_count_rejected(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         config = _write_config(tmp_path)
         repositories = _repositories()
         repositories["tessdata"]["files"]["extra.traineddata"] = {
@@ -151,7 +151,7 @@ class TestManifestValidation:
         _configure_checker(monkeypatch, config, manifest)
         assert any("must contain 1 models" in error for error in checker.check_checksums_manifest())
 
-    def test_sha1_field_and_invalid_digest_rejected( self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch ) -> None:
+    def test_sha1_field_and_invalid_digest_rejected(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         config = _write_config(tmp_path)
         repositories = _repositories()
         repositories["tessdata"]["files"]["eng.traineddata"] = {
@@ -165,7 +165,7 @@ class TestManifestValidation:
         assert any("exactly" in error for error in errors)
         assert any("invalid raw SHA-256" in error for error in errors)
 
-    def test_filename_inventory_must_match_upstream( self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch ) -> None:
+    def test_filename_inventory_must_match_upstream(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         config = _write_config(tmp_path)
         repositories = _repositories()
         repositories["tessdata"]["files"] = {"ita.traineddata": {"size": 10, "sha256": "a" * 64}}
@@ -174,7 +174,7 @@ class TestManifestValidation:
         errors = checker.check_checksums_manifest()
         assert any("model inventory differs from upstream" in error for error in errors)
 
-    def test_nested_model_path_rejected( self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch ) -> None:
+    def test_nested_model_path_rejected(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         config = _write_config(tmp_path)
         repositories = _repositories()
         repositories["tessdata"]["files"] = {"nested/eng.traineddata": {"size": 10, "sha256": "a" * 64}}
@@ -184,7 +184,7 @@ class TestManifestValidation:
 
 
 class TestMainIntegration:
-    def test_consistent_flatpak_refs_pass( self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch ) -> None:
+    def test_consistent_flatpak_refs_pass(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         config = _write_config(tmp_path)
         flatpak = tmp_path / "flatpak.json"
         flatpak.write_text(
