@@ -10,6 +10,7 @@ It deliberately does not download upstream models.
 
 import ast
 import json
+from http.client import IncompleteRead
 from pathlib import Path
 import re
 import sys
@@ -147,7 +148,7 @@ def _fetch_upstream_model_names(base_url: str) -> set[str]:
     try:
         with urlopen(request, timeout=30) as response:
             payload = json.loads(response.read().decode("utf-8"))
-    except (HTTPError, URLError, OSError, ValueError) as error:
+    except (HTTPError, URLError, OSError, ValueError, IncompleteRead) as error:
         raise RuntimeError(f"Unable to verify upstream inventory for {repository}@{ref}: {error}") from error
     if not isinstance(payload, dict) or payload.get("truncated") is not False:
         raise RuntimeError(f"GitHub returned a malformed or truncated tree for {repository}@{ref}")
