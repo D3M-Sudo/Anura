@@ -75,14 +75,17 @@ class HistoryController(GObject.GObject, SignalManagerMixin):
         return True
 
     def open_entry_in_external_editor(self, text: str) -> bool:
-        '''Export stored text off the GTK thread and request an external-editor launch.'''
+        """Export stored text off the GTK thread and request an external-editor launch."""
         if not text:
             self.emit("error-occurred", _("No text to open in external editor"))
             return False
         try:
             self._active_export_task = get_atomic_manager().execute_daemon(
-                write_export_file, (text,), callback=self._on_editor_export_ready,
-                errorback=self._on_editor_export_error, lane=EXPORT_LANE,
+                write_export_file,
+                (text,),
+                callback=self._on_editor_export_ready,
+                errorback=self._on_editor_export_error,
+                lane=EXPORT_LANE,
             )
         except (AttributeError, RuntimeError, TypeError) as error:
             logger.exception(f"HistoryController: Could not start editor export: {error}")

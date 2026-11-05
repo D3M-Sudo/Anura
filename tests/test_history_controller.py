@@ -87,6 +87,7 @@ def test_open_entry_exports_in_background_and_emits_file_ready(headless_gi_mocks
 
 def test_open_entry_rejects_empty_text_without_scheduling(headless_gi_mocks, monkeypatch):
     import anura.controllers.history_controller as module
+
     manager = MagicMock()
     monkeypatch.setattr(module, "get_atomic_manager", lambda: manager)
     controller, _window = _make_controller(monkeypatch, MagicMock())
