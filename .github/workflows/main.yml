@@ -397,6 +397,18 @@ jobs:
           fi
           echo "✓ Smoke test passed"
 
+      - name: Validate GI typelibs and native runtime bindings
+        # Run the checks with the interpreter and libraries visible inside the
+        # installed Flatpak, not on the host runner. Xvfb supplies a display
+        # for GTK initialization while keeping the test independent of a
+        # physical desktop session.
+        run: |
+          xvfb-run -a flatpak run \
+            --command=python3 \
+            io.github.d3m_sudo.anura \
+            -c "$(cat build-aux/flatpak_runtime_smoke.py)" \
+            "${{ matrix.variant.arch }}"
+
       - name: Functional test - OCR in the sandbox
         run: |
           echo "=== OCR su immagine valida dentro sandbox ==="

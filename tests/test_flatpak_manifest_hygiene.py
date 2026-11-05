@@ -90,6 +90,7 @@ DOCUMENTED_FINISH_ARGS = {
     "--talk-name=org.a11y.Bus",
     "--talk-name=org.freedesktop.Notifications",
     "--env=TESSDATA_PREFIX=/app/share/tessdata",
+    "--env=GI_TYPELIB_PATH=/app/lib/girepository-1.0:/usr/lib/girepository-1.0",
 }
 
 

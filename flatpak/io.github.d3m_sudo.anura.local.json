@@ -19,6 +19,7 @@
         "--filesystem=xdg-documents:ro",
         "--talk-name=org.a11y.Bus",
         "--talk-name=org.freedesktop.Notifications",
+        "--env=GI_TYPELIB_PATH=/app/lib/girepository-1.0:/usr/lib/girepository-1.0",
         "--env=TESSDATA_PREFIX=/app/share/tessdata"
     ],
     "cleanup": [
