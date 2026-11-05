@@ -117,8 +117,8 @@ TESSDATA_SYSTEM_DIR = _get_tessdata_system_dir()
 # WHY: upstream tesseract-ocr repos periodically rewrite/compress their history
 # (large binary blobs), orphaning hardcoded commit SHAs -> downloads fail 404.
 # A release tag is stable and always reachable. Do NOT re-pin to commit SHAs
-# (see Bug #6, 2026-09). Hash-pinning for manifests is preserved via sha256
-# checks on the downloaded files.
+# (see Bug #6, 2026-09). Runtime model integrity is pinned by raw-content
+# SHA-256 digests in anura/data/tessdata_checksums.json.
 # Three distinct repositories with different accuracy/speed trade-offs:
 #   tessdata_fast → integerized LSTM models (fastest, lower accuracy)
 #   tessdata      → legacy + LSTM models (standard profile)

@@ -38,7 +38,7 @@ from anura.config import (  # noqa: E402
 )
 from anura.models.download_state import DownloadState  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
-from anura.utils.tessdata_integrity import GitBlobHasher, get_expected_checksum  # noqa: E402
+from anura.utils.tessdata_integrity import Sha256Hasher, get_expected_checksum  # noqa: E402
 
 
 class DownloadManager(GObject.GObject):
@@ -290,7 +290,7 @@ class DownloadManager(GObject.GObject):
                         return None
 
                     downloaded = 0
-                    hasher = GitBlobHasher(expected.size)
+                    hasher = Sha256Hasher()
 
                     # Throttle progress updates to prevent main loop saturation
                     last_progress_time = time.monotonic()
@@ -308,7 +308,13 @@ class DownloadManager(GObject.GObject):
                                 hasher.update(chunk)
                                 downloaded += len(chunk)
 
-                                # Security: Monitor cumulative downloaded bytes
+                                # Enforce the exact pin even when Content-Length is absent.
+                                if downloaded > expected.size:
+                                    logger.error(
+                                        f"Anura: Aborted oversized model stream for '{tessfile}': "
+                                        f"received more than the pinned {expected.size} bytes."
+                                    )
+                                    return None
                                 if downloaded > MAX_MODEL_SIZE_BYTES:
                                     logger.error(
                                         f"Anura: Aborted oversized model download (stream): {downloaded} bytes "
@@ -363,12 +369,11 @@ class DownloadManager(GObject.GObject):
                             f.flush()
                             os.fsync(f.fileno())
 
-                    # Security (NEW-F1): compare the streamed model with the
-                    # pinned git blob digest before it is installed.
+                    # Security (#577): verify raw-content SHA-256 before installation.
                     if not hasher.matches(expected):
                         logger.error(
                             f"Anura: Integrity check failed for '{tessfile}': received {hasher.received} "
-                            f"bytes, expected {expected.size} bytes with SHA-1 {expected.sha1}."
+                            f"bytes, expected {expected.size} bytes with SHA-256 {expected.sha256}."
                         )
                         return None
 

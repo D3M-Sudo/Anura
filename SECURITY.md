@@ -14,7 +14,7 @@ extracted text:
 | Flow | Direction | When | Notes |
 | ---- | --------- | ---- | ----- |
 | OCR, QR/barcode decoding, image processing | local only | always | Tesseract, zxing-cpp and Pillow run in the app and in an isolated worker process |
-| OCR model download | GitHub → disk | when you add a language | HTTPS; the model is verified against the pinned git-blob SHA-1 manifest before installation |
+| OCR model download | GitHub → disk | when you add a language | HTTPS; the model is verified against the pinned raw-content SHA-256 manifest before installation |
 | **Text-to-speech** | **selected text → Google** | only when you press *Listen* | gTTS sends the selected text to Google Translate TTS and returns an MP3; the supported-language list is also requested from Google. Do not use TTS with text you do not want to send to a third party |
 | **External sharing** | **selected text → URI → external handler** | only when you choose a share provider | Anura URL-encodes the text into a provider-specific URI and validates it before handing it to the browser or registered desktop handler. This opens a prefilled compose/share surface; Anura does not submit or publish the content itself. Review the destination and content before submitting it there |
 | Extraction history | local only | opt-in | `$XDG_DATA_HOME/anura/history/`, directory `0700`, file `0600`; stored text remains on the device |
@@ -77,7 +77,7 @@ subsequent submission to the provider is a separate user action outside Anura.
 | `anura/widgets/extracted_page.py` + `Gtk.FileLauncher` | External editor handoff — `external-editor` GSettings key (default `xed`) launches a desktop app with exported OCR text; validate the executable/app id before launch |
 | `anura/services/history_service.py` + `$XDG_DATA_HOME/anura/history/history.json` | Local extraction history — opt-in newest-first JSON store (`history-enabled`, `history-limit` keys); atomic writes, corruption quarantine, no image retention |
 | `anura/utils/export_files.py` | Hardened external-editor export files (F3): `$XDG_RUNTIME_DIR` location, mode `0600`, random names, boot-time cleanup of stale exports |
-| `anura/utils/tessdata_integrity.py` + `anura/data/tessdata_checksums.json` | Tessdata model integrity verification (F1): pinned git-blob SHA-1 manifest, fail-closed digest check before install — see `docs/reference/tessdata-integrity.md` |
+| `anura/utils/tessdata_integrity.py` + `anura/data/tessdata_checksums.json` | Tessdata model integrity verification (F1): pinned raw-content SHA-256 manifest, fail-closed digest check before install — see `docs/reference/tessdata-integrity.md` |
 | `anura/services/screenshot/legacy_provider.py` | Command building for the bundled `scrot` fallback, including group/world-writable binary rejection (F5) |
 
 ---
@@ -102,7 +102,7 @@ subsequent submission to the provider is a separate user action outside Anura.
 | **X11 Fallback Security** | Bundled `scrot` fallback used only when Portals fail on X11 (never on Wayland); self-contained in the sandbox, no host tools required. The provider rejects group/world-writable scrot binaries (F5) and cleans up leaked temporary screenshots on spawn failure (F4). |
 | **External Editor Handoff** | `Gtk.FileLauncher` opens exported text in the configured external editor (`external-editor` key); editor preferences (line numbers, highlight, wrap mode) stored in GSettings. |
 | **Local History Storage** | Opt-in extraction history in `$XDG_DATA_HOME/anura/history/` with atomic writes + `fsync`, corruption quarantine (`history.json.corrupt-*`), and bounded entry limit. |
-| **Atomic tessdata install (F1/F2)** | Downloads land in `*.tmp` files and are installed via atomic `os.replace()`, so a crash mid-install can never leave a truncated `*.traineddata`; before installation the model digest is verified against the pinned git-blob SHA-1 manifest (`anura/data/tessdata_checksums.json`) and a mismatch **fails closed** (model rejected). See `docs/reference/tessdata-integrity.md`. |
+| **Atomic tessdata install (F1/F2)** | Downloads land in `*.tmp` files and are installed via atomic `os.replace()`, so a crash mid-install can never leave a truncated `*.traineddata`; before installation the model digest is verified against the pinned raw-content SHA-256 manifest (`anura/data/tessdata_checksums.json`) and a mismatch **fails closed** (model rejected). See `docs/reference/tessdata-integrity.md`. |
 | **Flatpak sandbox** | Filesystem isolation with restricted XDG directory access. |
 | **Privacy by design** | No telemetry, tracking, or analytics of any kind. |
 

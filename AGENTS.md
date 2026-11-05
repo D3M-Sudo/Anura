@@ -74,7 +74,7 @@ anura/
 │   │   ├── history.py              Immutable HistoryEntry dataclass (History V1)
 │   │   ├── language_item.py        LanguageItem dataclass
 │   │   ├── ocr.py                  Immutable OcrResult and OcrWord dataclasses
-│   │   └── tessdata_checksum.py    Tessdata model integrity (git-blob SHA-1 verification)
+│   │   └── tessdata_checksum.py    Tessdata model integrity (raw-content SHA-256 verification)
 │   ├── transformers/          Semantic text transformers (Chain of Responsibility)
 │   │   ├── base_transformers.py Base implementations (SingleLine, Paragraph, etc.)
 │   │   ├── email_transformer.py Specialized email extraction & scoring
@@ -92,7 +92,7 @@ anura/
 │   │   ├── signal_manager.py      GLib signal management mixin
 │   │   ├── singleton.py           Thread-safe lazy singleton pattern
 │   │   ├── structural_reconstructor.py Paragraph/Layout spatial analysis
-│   │   ├── tessdata_integrity.py  Git-blob SHA-1 verification of tessdata models (F1)
+│   │   ├── tessdata_integrity.py  Raw-content SHA-256 verification of tessdata models (#577)
 │   │   ├── text_preprocessor.py   Image enhancement & text cleanup factory
 │   │   └── validators.py          URI validation, security & text sanitization
 │   ├── widgets/
@@ -108,7 +108,7 @@ anura/
 │   │   ├── shortcuts_overlay.py    Keyboard shortcuts cheat sheet widget
 │   │   └── welcome_page.py         Welcome page
 │   └── data/
-│       └── tessdata_checksums.json Pinned git-blob SHA-1 manifest for runtime model integrity (see docs/reference/tessdata-integrity.md)
+│       └── tessdata_checksums.json Pinned SHA-256 manifest for runtime model integrity (see docs/reference/tessdata-integrity.md)
 ├── data/
 │   ├── ui/                     Blueprint files (.blp) → compiled to .ui (incl. history_page.blp)
 │   ├── icons/                  Scalable SVG icons + symbolic variants
@@ -133,7 +133,7 @@ anura/
 │   ├── release.sh              Release script (bump version, pin tessdata ref,
 │   │                            generate release manifest from .local.json)
 │   ├── generate_release_notes.py CHANGELOG.md parser → _release_notes.py
-│   ├── generate_tessdata_checksums.py Tessdata integrity manifest (git-blob SHA-1) generator
+│   ├── generate_tessdata_checksums.py Tessdata integrity manifest (streamed SHA-256) generator
 │   ├── setup-gschema.sh        GSettings schema compilation for testing
 │   ├── sync_dependencies.py    uv.lock → local Flatpak manifest python3-* sync (excl. certifi)
 │   ├── check_manifest_consistency.py        Drift check: release vs local manifest (release-time self-check, see docs/reference/dependencies.md)
