@@ -306,7 +306,7 @@ jobs:
         # fresh build directory plus --disable-download proves every source
         # needed by the generated manifest is already declared and cached.
         run: |
-          flatpak-builder --force-clean --disable-download \
+          flatpak-builder --force-clean --disable-download --disable-rofiles-fuse \
             --state-dir=.flatpak-builder \
             builddir-offline \
             flatpak/.ci-build/io.github.d3m_sudo.anura.json
