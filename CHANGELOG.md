@@ -49,6 +49,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Development tooling: dropped the `safety` dev dependency (and its entry in the Dependabot `dev-deps` group). It was added by the one-off June 2026 audit (`ead78f1`) to produce `docs/audit/safety_scan.json`, which is no longer tracked; no workflow, test or build script invokes it, and dependency scanning is covered by Dependabot and CodeQL. The development graph drops from 72 to 39 packages (also losing `cryptography`, `httpx`, `h11`, `pydantic` and `nltk`, which came in through it); runtime dependencies and the Flatpak manifests are untouched. `bandit` is kept
 
 ### Fixed
+- CLI: resolve relative `--file` paths against the requesting client's working directory, rather than the application's process directory (#595)
+- Screenshots: remove temporary capture files on cancellation and error paths, not only after successful processing (#596)
+- CLI: report invalid image input through the normal error path without exposing an unnecessary traceback (#599)
+- Sharing: provide actionable feedback when opening a share target fails (#600)
+- Translations: preserve an existing valid POT catalogue when message extraction fails, instead of replacing it with incomplete output (#602)
+- Window: calculate initial dimensions against the available monitor work area so the application opens at an appropriate size (#603)
+- Downloads: restore a consistent download state after an unexpected worker failure, allowing the operation to be retried (#604)
+- Languages: validate language identifiers strictly before accepting them, rejecting malformed codes (#606)
+
 - Flatpak: use the fallback X11 socket alongside Wayland and preserve the App ID in temporary CI manifest filenames
 - Flatpak: update Nanobind and Certifi sources, keep GNOME 51 in the release manifest, and validate/build a generated release-style manifest in CI (#479, #556, #491, #484)
 - Share: Reddit sends extracted text in `selftext` only; LinkedIn and Discord are removed from text sharing because their URL endpoints do not prefill the extracted text (#579)
@@ -79,6 +88,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Clipboard: `hand_off_to_manager()` and `wait_until_replaced()` now refuse to iterate the default GLib main context when it is already running (an active GTK loop, or another thread owns it), logging a warning and returning `False` instead of re-entering the loop (AUDIT-001, #469)
 
 ### Security
+- Sharing: restrict generated share links to explicitly allowed URI schemes before handing them to an external handler (#594)
+- Sharing/URLs: normalize legacy IPv4 address representations before processing URLs, preventing alternate numeric forms from bypassing address checks (#598)
+
 - Privacy: shutting down a silent CLI run no longer constructs the TTS service. `_cleanup_services()` used the lazy `get_tts_service()` getter, which built `TTSService` — starting a Google language-catalog fetch — purely to call `cleanup()`; it now uses a non-initializing singleton lookup and only cleans up a service that was actually used (#536)
 - Notifications: the successful-extraction notification no longer includes the first 80 characters of the recognised text. Banners and notification history can be visible on the lock screen, and the text may be a private message or a credential; the body is now generic (#534)
 - Notifications: the application now uses the same `NotificationService` singleton as the controllers, so shutdown withdraws the portal notification IDs that OCR actually created instead of cleaning up an unrelated instance (#537)
