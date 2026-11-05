@@ -214,7 +214,9 @@ def test_editor_button_delegates_the_full_stored_text(real_history):
 
     page, _service, controller = real_history
     row = page._rows[1]
-    editor_buttons = [button for button in _find_all(row, Gtk.Button) if button.get_tooltip_text() == "Open in external editor"]
+    editor_buttons = [
+        button for button in _find_all(row, Gtk.Button) if button.get_tooltip_text() == "Open in external editor"
+    ]
     assert len(editor_buttons) == 1
 
     editor_buttons[0].emit("clicked")

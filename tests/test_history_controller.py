@@ -99,12 +99,14 @@ def test_open_entry_rejects_empty_text_without_scheduling(headless_gi_mocks, mon
 
 def test_export_failure_reports_existing_editor_error(headless_gi_mocks, monkeypatch):
     import anura.controllers.history_controller as module
+
     manager = MagicMock()
     monkeypatch.setattr(module, "get_atomic_manager", lambda: manager)
     controller, _window = _make_controller(monkeypatch, MagicMock())
     controller.open_entry_in_external_editor("stored OCR text")
     manager.execute_daemon.call_args.kwargs["errorback"](OSError("disk full"), "traceback")
     controller.emit.assert_called_with("error-occurred", "Failed to open external editor")
+
 
 def test_controller_registers_itself_for_window_teardown(headless_gi_mocks, monkeypatch):
     controller, window = _make_controller(monkeypatch, MagicMock())
