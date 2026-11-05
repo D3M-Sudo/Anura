@@ -1,8 +1,8 @@
-# Anura — History V2: Interactive History Rows (planning)
+# Anura — History V2: Interactive History Rows (historical plan)
 
-**Status:** Copy/expand (#434, #452), external editor (#454) and TTS replay (#455) are implemented on their respective feature branches/PRs. #456 (re-OCR) was closed as not planned.  
-**Target:** next major/minor release after History V1 stabilisation.  
-**Owning documents:** this file, `docs/reference/history-v1.md`, `docs/reference/history-v2.md`, `docs/README.md`.
+**Status:** Completed and superseded by the normative History V1/V2 references. Copy/expand, external editor and TTS replay are implemented on `feature`. #456 (re-OCR) was closed as not planned.  
+**Historical target:** next major/minor release after History V1 stabilisation.  
+**Current references:** `docs/reference/history-v1.md` and `docs/reference/history-v2.md`.
 
 ## Motivation
 
@@ -90,20 +90,20 @@ replace, the suggestions in "Interaction model" above.
   mutated; opening a row is a read-only action.
 - Row-level actions beyond Copy (external editor and TTS) remain out of this cut.
 
-## Implementation status
+## Implementation status at archival
 
 | Item | Status |
 | --- | --- |
 | Copy to clipboard from the row | Implemented ([#434](https://github.com/D3M-Sudo/Anura/pull/434)) |
 | Activatable, expandable rows | Implemented ([#452](https://github.com/D3M-Sudo/Anura/pull/452)) |
-| Open in external editor | Implemented on `feat/history-v2-external-editor`, [#454](https://github.com/D3M-Sudo/Anura/issues/454) |
-| TTS replay | Implemented in this PR, [#455](https://github.com/D3M-Sudo/Anura/issues/455) |
+| Open in external editor | Implemented and merged; see [History V2 reference](../../../reference/history-v2.md) and [#454](https://github.com/D3M-Sudo/Anura/issues/454) |
+| TTS replay | Implemented and merged; see [History V2 reference](../../../reference/history-v2.md) and [#455](https://github.com/D3M-Sudo/Anura/issues/455) |
 | Re-OCR | Not planned; [#456](https://github.com/D3M-Sudo/Anura/issues/456) closed as not planned |
 
 The behaviour that is implemented is documented in
-[../reference/history-v2.md](../reference/history-v2.md).
+[../../../reference/history-v2.md](../../../reference/history-v2.md).
 
-## Proposed scope (History V2)
+## Original proposed scope (historical)
 
 Make `HistoryPage` rows interactive. Candidates (in priority order):
 
@@ -124,7 +124,7 @@ no clear advantage over copying the text and using the existing transformers.
 Out of scope: search/filter, thumbnails, image archiving, database storage,
 cloud sync, export/import, tags/folders, editing of historical entries, OCR
 result versioning (future V3 and beyond).
-## Implementation constraints
+## Original implementation constraints
 
 Must follow the same architectural rules enforced in this codebase:
 
@@ -141,7 +141,7 @@ Must follow the same architectural rules enforced in this codebase:
 - **Security:** reuse existing sanitisation and file-export hardening; do not
   introduce new shared writable paths.
 
-## Risks and open questions
+## Original risks and open questions
 
 - **Conflict with V1 clear action.** Clear is destructive and global; interactive
   rows must not make it easy to click the wrong thing; placement and affordance

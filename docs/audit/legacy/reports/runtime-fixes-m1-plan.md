@@ -1,11 +1,11 @@
-# Anura — Milestone 1: Runtime Fixes (planning)
+# Anura — Milestone 1: Runtime Fixes (historical plan)
 
-**Status:** Active — approved 2026-10-22 (option A: Milestone 1 now, Milestone 2 later).
+**Status:** Completed — all 36 of 36 scoped issues resolved and integrated. Archived for traceability.
 **Baseline:** `feature @ bc165c3`.
 **Scope:** 36 open issues affecting application code (bugs, security, privacy,
 reliability, performance, hygiene). Packaging/Flathub work is tracked separately in
 `docs/planning/flathub-readiness-m2.md`.
-**Owning documents:** this file, `docs/README.md`.
+**Historical baseline:** `feature @ bc165c3`. This file records the original plan and execution notes; it is not current implementation guidance.
 
 ## Progress
 
@@ -186,7 +186,7 @@ GTK/toolkit paths (`#523`, `#532`, `#538`, `#539`, `#521`, `#529`) additionally
 need a smoke test on a real desktop session; the PR states which paths were
 verified manually.
 
-## Open blockers
+## Original open blockers (at the time of planning)
 
 - **#517 — workflow wiring:** the CI automation identity (`cline-cloud[bot]`) is a
   GitHub App without the `workflows` permission, so it cannot push changes to
@@ -194,7 +194,7 @@ verified manually.
   (`[tool.mypy]`, `[tool.bandit]`, format baseline, clean mypy); the workflow diff is
   posted on the issue for a maintainer to apply.
 
-## Out of scope
+## Original out-of-scope notes
 
 - Milestone 2 (packaging/Flathub, 31 issues): `docs/planning/flathub-readiness-m2.md`.
 - Milestone 3 (History V2 features #454–#456): requires an updated design document
