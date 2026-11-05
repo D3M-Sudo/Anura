@@ -152,8 +152,12 @@ def test_rows_are_expander_rows_with_a_copy_button_in_the_header(headless_gi_moc
     button_calls = fake_gtk.Button.return_value.connect.call_args_list
     assert [c.args[0] for c in button_calls] == ["clicked"] * 6
     assert [c.args[1].__name__ for c in button_calls] == [
-        "_on_copy_clicked", "_on_open_editor_clicked", "_on_tts_clicked",
-        "_on_copy_clicked", "_on_open_editor_clicked", "_on_tts_clicked",
+        "_on_copy_clicked",
+        "_on_open_editor_clicked",
+        "_on_tts_clicked",
+        "_on_copy_clicked",
+        "_on_open_editor_clicked",
+        "_on_tts_clicked",
     ]
     assert [c.args[2] for c in button_calls] == ["second", "second", "second", "first", "first", "first"]
     assert [c.args[3] for c in button_calls if c.args[1].__name__ == "_on_tts_clicked"] == ["eng", "eng"]
