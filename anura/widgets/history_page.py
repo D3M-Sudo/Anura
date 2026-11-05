@@ -32,6 +32,7 @@ if TYPE_CHECKING:
 
 _COPY_ICON = "edit-copy-symbolic"
 _COPIED_ICON = "object-select-symbolic"
+_EDITOR_ICON = "document-edit-symbolic"
 _COPY_FEEDBACK_SECONDS = 2
 # Tallest the expanded text area may grow; longer text scrolls inside it.
 _EXPANDED_TEXT_MAX_HEIGHT = 240
@@ -97,9 +98,8 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
     """Dedicated History page: list of persisted extractions.
 
     Each row can be expanded to show the full stored text (one row open at a time) and
-    has a copy action in its header. The page is a UI shell: copying is delegated to
-    ``HistoryController`` and only the visual feedback (icon, tooltip, accessible label)
-    lives here.
+    has copy and external-editor actions in its header. The page is a UI shell:
+    both operations are delegated to ``HistoryController``.
     """
 
     __gtype_name__ = "HistoryPage"
@@ -196,6 +196,16 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
         handler_id = copy_btn.connect("clicked", self._on_copy_clicked, entry.text)
         self._row_handlers.append((copy_btn, handler_id))
         row.add_suffix(copy_btn)
+
+        editor_label = _("Open in external editor")
+        editor_btn = Gtk.Button(icon_name=_EDITOR_ICON, valign=Gtk.Align.CENTER, tooltip_text=editor_label)
+        editor_btn.add_css_class("flat")
+        editor_btn.update_property([Gtk.AccessibleProperty.LABEL], [editor_label])
+        editor_btn.set_sensitive(bool(entry.text))
+        handler_id = editor_btn.connect("clicked", self._on_open_editor_clicked, entry.text)
+        self._row_handlers.append((editor_btn, handler_id))
+        row.add_suffix(editor_btn)
+
         expanded_handler_id = row.connect("notify::expanded", self._on_row_expanded, entry.text)
         self._row_handlers.append((row, expanded_handler_id))
         self.history_list.append(row)
@@ -252,6 +262,14 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
             return
         if controller.copy_entry_text(text):
             self._show_row_copy_feedback(button)
+
+    def _on_open_editor_clicked(self, _button: Gtk.Button, text: str) -> None:
+        """Delegate immutable history text export to the controller."""
+        controller = self._history_controller() if self._history_controller is not None else None
+        if controller is None:
+            logger.warning("HistoryPage: External-editor action requested but no HistoryController is wired")
+            return
+        controller.open_entry_in_external_editor(text)
 
     def _show_row_copy_feedback(self, button: Gtk.Button) -> None:
         if button in self._feedback_timers:
