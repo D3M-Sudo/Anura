@@ -23,8 +23,8 @@ def gsettings():
     """
     backend = Gio.memory_settings_backend_new()
     schema_source = Gio.SettingsSchemaSource.get_default()
-    schema = schema_source.lookup("io.github.d3msudo.anura", True)
-    s = Gio.Settings.new_with_backend("io.github.d3msudo.anura", backend)
+    schema = schema_source.lookup("io.github.d3m_sudo.anura", True)
+    s = Gio.Settings.new_with_backend("io.github.d3m_sudo.anura", backend)
     assert schema is not None
     yield s
     s.reset("history-enabled")
@@ -53,7 +53,7 @@ class TestHistorySettings:
         assert gsettings.get_int("history-limit") == 120
 
     def test_history_limit_respects_schema_range(self, gsettings):
-        schema = Gio.SettingsSchemaSource.get_default().lookup("io.github.d3msudo.anura", True)
+        schema = Gio.SettingsSchemaSource.get_default().lookup("io.github.d3m_sudo.anura", True)
         key = schema.get_key("history-limit")
         value_type = key.get_value_type()
         assert value_type.equal(GLib.VariantType.new("i"))
