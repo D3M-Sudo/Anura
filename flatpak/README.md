@@ -100,6 +100,7 @@ drift apart, so a new permission has to be justified here first (#498).
 | `--filesystem=xdg-download:ro` | Same, for Downloads |
 | `--filesystem=xdg-desktop:ro` | Same, for Desktop |
 | `--filesystem=xdg-documents:ro` | Same, for Documents |
+| `--filesystem=~/.var/app/io.github.d3msudo.anura/data:ro` | Temporary read-only source for the one-time migration of history and downloaded OCR models after the application ID change (#613) |
 | `--talk-name=org.a11y.Bus` | Screen-reader support (AT-SPI) |
 | `--talk-name=org.freedesktop.Notifications` | libnotify fallback when no notification portal is available |
 | `--env=TESSDATA_PREFIX=/app/share/tessdata` | Tells Tesseract where the bundled models live |
@@ -114,3 +115,21 @@ Notes:
 - Wayland and X11 (including the `scrot` fallback) still need a manual runtime
   test on a desktop session. The CI only runs `anura --help` inside the sandbox
   (#498, #500).
+
+
+## Legacy Flatpak data migration (#613)
+
+The application ID changed from `io.github.d3msudo.anura` to
+`io.github.d3m_sudo.anura`. Flatpak keeps per-application data in separate
+host directories, so the new installation cannot see the old data unless the
+old data directory is explicitly exposed.
+
+For the migration window, both manifests grant read-only access only to
+`~/.var/app/io.github.d3msudo.anura/data`. At startup, Anura copies the
+persistent `anura/history` and `anura/tessdata` trees into the new
+`XDG_DATA_HOME`. Existing destination files are never overwritten; symbolic
+links and incomplete `.tmp` downloads are ignored. Files are published
+atomically, the source is never changed, and a completion marker makes the
+operation idempotent. A failed/incomplete migration is retried on the next
+launch. The temporary permission must be removed in a later release after the
+migration window; it is not intended as a permanent sandbox permission.
