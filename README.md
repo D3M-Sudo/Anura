@@ -67,7 +67,7 @@ It also decodes **QR codes and Barcodes** in a single click using **zxing-cpp**,
 | ✏️ **Selection-Aware Actions** | Text statistics and actions based on selection in OCR results |
 | ↩️ **Undo/Redo** | Full undo/redo support in ExtractedPage for text editing workflow |
 | ✏️ **GtkSourceView Editor** | Native search bar, editor preferences, and "Open in External Editor" handoff in OCR results |
-| 🔒 **Privacy-first** | OCR runs locally — no telemetry or tracking. The optional text-to-speech sends the selected text to Google ([details](SECURITY.md#data-flows)) |
+| 🔒 **Privacy-first** | OCR runs locally — no telemetry or tracking. Optional TTS sends selected text to Google; sharing opens a prefilled external compose surface and does not publish automatically ([details](SECURITY.md#data-flows)) |
 | 🎨 **Native GTK4** | Designed for GNOME, built with Libadwaita, GtkSourceView and Blueprint |
 | 🚀 **Async D&D** | Smooth, non-blocking asynchronous drag-and-drop |
 | ♿ **Enhanced Accessibility** | Improved keyboard navigation, tooltips, and screen reader support |
@@ -75,8 +75,8 @@ It also decodes **QR codes and Barcodes** in a single click using **zxing-cpp**,
 | 🛡️ **Architectural Security** | Transactional worker isolation and OOM prevention guards |
 | 📜 **Offline Rotary Logs** | Secure, zero-telemetry local logging system |
 | ⌨️ **Keyboard Shortcuts** | Modern shortcut overlay with categorized searchable cheat sheet |
-| 🔗 **Share Anywhere** | Share to Telegram, Reddit, Mastodon, X, Email, Bluesky, Discord, LinkedIn, Threads |
-| 🕘 **Extraction History** | Opt-in local history of recent extractions (JSON, newest-first, with clear action) — see [docs/reference/history-v1.md](docs/reference/history-v1.md) |
+| 🔗 **Share Anywhere** | Open a prefilled share flow for Email, Mastodon, Reddit, Telegram, X, Bluesky or Threads |
+| 🕘 **Extraction History** | Opt-in local history with expandable entries, copy, external-editor and text-to-speech actions — see [History V1](docs/reference/history-v1.md) and [History V2](docs/reference/history-v2.md) |
 
 ---
 
@@ -85,7 +85,7 @@ It also decodes **QR codes and Barcodes** in a single click using **zxing-cpp**,
 As of **v0.2.0**, Anura features an **Enterprise Clean Architecture** focused on event-driven decoupling and memory safety:
 
 - **Core Services (`anura/core/`)**: Pure infrastructure logic. Includes `boot` (capability audit), `logger` (rotary logging), `atomic_task_manager` (isolated worker pool), and `resources`.
-- **Business Services (`anura/services/`)**: High-level I/O and resource management. Includes `language_manager` (Tessdata coordination), specialized language managers (DownloadManager, CacheManager, LanguageValidator), `screenshot` (multi-provider capture factory), `history_service` (opt-in local JSON history, see [docs/reference/history-v1.md](docs/reference/history-v1.md)), and `settings`.
+- **Business Services (`anura/services/`)**: High-level I/O and resource management. Includes `language_manager` (Tessdata coordination), specialized language managers (DownloadManager, CacheManager, LanguageValidator), `screenshot` (multi-provider capture factory), `history_service` (opt-in local JSON history, see [History V1](docs/reference/history-v1.md) and [History V2](docs/reference/history-v2.md)), and `settings`.
 - **Event-Driven Controllers (`anura/controllers/`)**: Logic-only components that emit GLib signals. `OcrController` (OCR + history recording gate), `TtsController`, and `DndController` are fully decoupled from UI side-effects, which are handled by the main application coordinator.
 - **Semantic Transformers (`anura/transformers/`)**: Implements the **Chain of Responsibility** pattern. The `MagicProcessor` dynamically selects the best `ITransformer` for structured data extraction.
 - **Memory Safety**: Uses `weakref.proxy` for View-Controller relationships and asynchronous native Gio APIs for non-blocking I/O.
@@ -214,7 +214,9 @@ The test suite includes headless unit tests (logic without GTK dependencies), in
 ## Documentation
 
 - [docs/README.md](docs/README.md) — documentation index
-- [docs/reference/history-v1.md](docs/reference/history-v1.md) — Extraction History V1 (current behaviour)
+- [docs/reference/history-v1.md](docs/reference/history-v1.md) — Extraction History V1 (storage and persistence)
+- [docs/reference/history-v2.md](docs/reference/history-v2.md) — Extraction History V2 (interactive history rows and actions)
+- [SECURITY.md](SECURITY.md) — security policy and outbound data flows
 - [docs/reference/dependencies.md](docs/reference/dependencies.md) — Python/Flatpak dependency workflow (uv.lock, sync, FEDC/certifi)
 - [docs/reference/tessdata-integrity.md](docs/reference/tessdata-integrity.md) — tessdata model integrity (checksum manifest, fail-closed verification)
 - [AGENTS.md](AGENTS.md) — canonical AI-assistant and architecture guide (`CLAUDE.md` is a thin pointer to it)
