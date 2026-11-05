@@ -8,7 +8,7 @@ below ends with applied fixes already merged on `testing`.
 
 - `reports/` — human-readable reports (bug hunts, QA summaries, VM/full
   diagnoses) plus the superseded pre-implementation plan
-  `reports/history-v1-plan.md` and its companion `bugs-observed.json` /
+  `reports/history-v1-plan.md`, completed History V2 and Runtime M1 plans, and its companion `bugs-observed.json` /
   `bugs-summary.md`. See `reports/README.md` for the per-report index.
 
 ## Rules
