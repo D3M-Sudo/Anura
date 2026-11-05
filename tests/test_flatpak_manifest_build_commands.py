@@ -10,11 +10,15 @@ moved its Python bindings from pybind11 to nanobind, which requires a
 
 import json
 from pathlib import Path
+import sys
 
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-MANIFEST_PATH = REPO_ROOT / "flatpak" / "io.github.d3msudo.anura.local.json"
+sys.path.insert(0, str(REPO_ROOT / "build-aux"))
+
+import sync_dependencies  # noqa: E402
+MANIFEST_PATH = REPO_ROOT / "flatpak" / "io.github.d3m_sudo.anura.local.json"
 
 
 @pytest.fixture(scope="module")
@@ -67,6 +71,8 @@ def test_build_time_helpers_precede_the_modules_that_import_them(manifest: dict)
     """Pillow imports pybind11 and zxing-cpp imports nanobind at build time."""
     order = {module["name"]: index for index, module in enumerate(manifest["modules"])}
 
+    assert order["python3-packaging"] < order["python3-scikit-build-core"]
+    assert order["python3-pathspec"] < order["python3-scikit-build-core"]
     assert order["python3-pybind11"] < order["python3-pillow"]
     assert order["python3-nanobind"] < order["python3-zxing-cpp"]
     assert order["python3-scikit-build-core"] < order["python3-zxing-cpp"]
@@ -81,3 +87,13 @@ def test_zxing_cpp_installs_the_sdist_it_declares(manifest: dict) -> None:
     assert any("pip3 install" in command and command.rstrip().endswith(".") for command in install_commands), (
         f"zxing-cpp build-command does not build the extracted sdist: {install_commands!r}"
     )
+
+
+
+def test_python_dependency_sources_match_uv_lock() -> None:
+    """Every uv.lock-managed Python module must use the same pinned version."""
+    uv_packages = sync_dependencies.parse_uv_lock(sync_dependencies.UV_LOCK)
+    stats = sync_dependencies.sync_manifest(MANIFEST_PATH, uv_packages, check_only=True)
+
+    assert stats["DRIFT"] == 0
+    assert stats["ERROR"] == 0
