@@ -48,6 +48,7 @@ from anura.core.dialogs import DialogManager
 from anura.core.silent_runner import SilentRunner
 from anura.services.clipboard_service import get_clipboard_service
 from anura.services.language_manager import get_language_manager
+from anura.services.legacy_flatpak_migration import migrate_legacy_flatpak_data
 from anura.services.notification_service import (
     HAS_LIBNOTIFY,
     get_notification_service,
@@ -119,6 +120,9 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         self.connect_tracked(self.backend, "decoded", self.on_decoded)
         self.connect_tracked(self.backend, "error", self.on_error)
 
+        # The old Flatpak ID had a separate per-app data directory. Copy its
+        # persistent user data before services scan history or OCR models.
+        migrate_legacy_flatpak_data()
         get_language_manager().init_tessdata()
         get_clipboard_service().init()
 
