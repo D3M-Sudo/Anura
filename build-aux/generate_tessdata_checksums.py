@@ -6,11 +6,11 @@ import argparse
 import hashlib
 import json
 import os
-from pathlib import Path
 import sys
 import tempfile
 import time
 from http.client import IncompleteRead
+from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
