@@ -491,7 +491,7 @@ jobs:
           persist-credentials: false
 
       - name: Download architecture-specific Flatpak bundles
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           pattern: anura-flatpak-${{ github.run_id }}-*
           path: release-assets
@@ -527,14 +527,14 @@ jobs:
           persist-credentials: false
 
       - name: Download architecture-specific Flatpak bundles
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           pattern: anura-flatpak-${{ github.run_id }}-*
           path: release-assets
           merge-multiple: true
 
       - name: Download validated SHA-256 checksums
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: release-checksums-${{ github.run_id }}
           path: release-checksums
