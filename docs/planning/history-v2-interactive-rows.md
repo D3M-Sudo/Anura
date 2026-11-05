@@ -1,6 +1,6 @@
 # Anura — History V2: Interactive History Rows (planning)
 
-**Status:** Minimal cut (copy button + expandable rows) implemented in #434 and #452; the remaining items are tracked as separate issues and are still planning.  
+**Status:** Minimal cut (copy button + expandable rows) implemented in #434 and #452. #456 (re-OCR) was closed as not planned; #454 (external editor) and #455 (TTS replay) remain separate planning items.  
 **Target:** next major/minor release after History V1 stabilisation.  
 **Owning documents:** this file, `docs/reference/history-v1.md`, `docs/reference/history-v2.md`, `docs/README.md`.
 
@@ -11,7 +11,6 @@ clear action, but historical OCR results are completely unactionable from the UI
 
 - a past entry cannot be copied to the clipboard,
 - a past entry cannot be opened in the external editor,
-- a past entry cannot be re-submitted to the OCR pipeline,
 - a past entry cannot be replayed through TTS.
 
 All these operations are available on **current** OCR results (`ExtractedPage`)
@@ -29,16 +28,14 @@ The minimal acceptable V2 cut is likely:
 - consistent with V1 empty/disabled/entries states,
 - no regressions to existing V1 behaviour (clear action, recording, settings).
 
-Everything beyond that (external editor, TTS replay, re-OCR, popover actions,
-shortcuts) is explicitly listed as optional and should be tracked separately when
-moved from planning to implementation.
+Everything beyond that (external editor, TTS replay, popover actions and shortcuts) is optional and must be tracked separately before implementation. Re-OCR was considered and is not planned: history stores extracted text, not source images, and the stored text may already contain transformer output.
 
 ## Behavioural requirements
 
 - History list remains **read-only** with respect to stored data: no inline
   editing, no reordering, no deletion except via the existing clear flow.
-- Row actions do not destroy the history entry (copy/open/re-OCR/TTS are
-  read-only consumers of a past result).
+- Row actions do not destroy the history entry (copy/open/TTS are read-only
+  consumers of a past result).
 - Error paths (clipboard failure, file-launcher failure, OCR failure, TTS
   failure) surfaced through the same mechanisms used for current-result
   equivalents (toasts / error signals).
@@ -55,7 +52,7 @@ Suggested approach, consistent with current `ExtractedPage` patterns:
 - One primary action per row (at least **Copy**), reachable via keyboard focus +
   Enter/Space as well as mouse click.
 - Optional secondary actions via an `Adw.Popover` or similar (Open in Editor,
-  TTS, Re-OCR) to avoid cluttering the row UI.
+  TTS) to avoid cluttering the row UI.
 - Keyboard shortcuts only if the design permits, subject to
   `test_shortcuts_consistency.py` anti-drift checks (new actions must appear in
   both the shortcuts overlay and `ActionRegistry`).
@@ -91,7 +88,7 @@ replace, the suggestions in "Interaction model" above.
   (`estimate_text_area_height`); without it the area stayed about 54 px tall.
 - **No new strings, no new GSettings keys, no new shortcuts.** `HistoryEntry` is not
   mutated; opening a row is a read-only action.
-- Row-level actions beyond Copy (external editor, TTS, Re-OCR) remain out of this cut.
+- Row-level actions beyond Copy (external editor and TTS) remain out of this cut.
 
 ## Implementation status
 
@@ -101,7 +98,7 @@ replace, the suggestions in "Interaction model" above.
 | Activatable, expandable rows | Implemented ([#452](https://github.com/D3M-Sudo/Anura/pull/452)) |
 | Open in external editor | Planning, [#454](https://github.com/D3M-Sudo/Anura/issues/454) |
 | TTS replay | Planning, [#455](https://github.com/D3M-Sudo/Anura/issues/455) |
-| Re-OCR | Needs design first, [#456](https://github.com/D3M-Sudo/Anura/issues/456) |
+| Re-OCR | Not planned; [#456](https://github.com/D3M-Sudo/Anura/issues/456) closed as not planned |
 
 The behaviour that is implemented is documented in
 [../reference/history-v2.md](../reference/history-v2.md).
@@ -114,11 +111,14 @@ Make `HistoryPage` rows interactive. Candidates (in priority order):
 2. **Open in external editor** — same handoff used by `ExtractedPage` for current
    OCR results (`Gtk.FileLauncher` / portal `open-uri`, writing the stored text
    to a temp export file first).
-3. **Re-OCR (optional)** — send the stored text back through the OCR pipeline as
-   a new extraction. This is more invasive because it duplicates the existing OCR
-   flow and needs its own UX design; treat as stretch goal.
-4. **TTS replay (optional)** — feed the stored text to the existing TTS pipeline
+3. **TTS replay (optional)** — feed the stored text to the existing TTS pipeline
    (`TtsController.request_listen()`), reusing the same infrastructure.
+
+Re-OCR was evaluated in [#456](https://github.com/D3M-Sudo/Anura/issues/456) and
+closed as not planned. History does not retain source images, so this would process
+text rather than perform OCR; that text may already be transformed. It would also
+need a separate raw-versus-applied-text contract and result lifecycle, while offering
+no clear advantage over copying the text and using the existing transformers.
 
 Out of scope: search/filter, thumbnails, image archiving, database storage,
 cloud sync, export/import, tags/folders, editing of historical entries, OCR
@@ -128,7 +128,7 @@ result versioning (future V3 and beyond).
 Must follow the same architectural rules enforced in this codebase:
 
 - **Controller–Composition:** `HistoryPage` stays a UI shell; interaction
-  coordination (clipboard, external editor, TTS, re-OCR) belongs in a dedicated
+  coordination (clipboard, external editor and TTS) belongs in a dedicated
   controller/service, not inline in the widget.
 - **Memory safety:** any long-lived connections (e.g. to TTS) use weak refs and
   a `.cleanup()` method wired to teardown.
@@ -150,10 +150,11 @@ Must follow the same architectural rules enforced in this codebase:
   mode `0600`, random names, stale cleanup) without breaking audit hardening.
 - **TTS availability.** TTS depends on language mapping; replaying an old entry
   may be unavailable if the capture-time language is not currently configured.
-- **"Re-OCR" semantics.** Re-OCR of already-cleaned historical text is
-  questionable (stored text may already be transformer output, not raw OCR).
-  If included, needs its own design: raw vs applied text, whether to re-run full
-  pipeline, and what to do with the new result.
+- **Re-OCR is not planned.** Historical entries contain extracted text, not source
+  images, and the stored text may already be transformer output rather than raw OCR.
+  Reprocessing it would not perform a new OCR pass and would require a separate
+  raw-versus-applied-text contract and result lifecycle without a sufficiently clear
+  user benefit. See [#456](https://github.com/D3M-Sudo/Anura/issues/456).
 - **Localisation.** New string surface area: row action labels, popover titles,
   tooltips, new error messages. Must go through the i18n pipeline once UI strings
   are added (`po/`, `update_potfiles.sh`).
