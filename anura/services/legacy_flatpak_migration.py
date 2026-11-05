@@ -148,6 +148,7 @@ def migrate_legacy_flatpak_data(
         logger.info("Legacy Anura data directory not found; migration will be checked again on next launch.")
         return False
 
+    destination_home.mkdir(parents=True, exist_ok=True, mode=0o700)
     total_copied = 0
     errors: list[str] = []
     found_persistent_tree = False
