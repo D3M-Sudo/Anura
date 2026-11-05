@@ -12,6 +12,7 @@ documentation lives in the root (`README.md`, `AGENTS.md`, `CONTRIBUTING.md`,
 | [reference/history-v2.md](reference/history-v2.md) | **Current / normative** | History V2 minimal cut: expandable rows, copy action, lifecycle, tests |
 | [reference/dependencies.md](reference/dependencies.md) | **Current / normative** | Python/Flatpak dependency workflow: uv.lock, sync, FEDC/certifi ownership, headless GTK testing |
 | [reference/tessdata-integrity.md](reference/tessdata-integrity.md) | **Current / normative** | Tessdata model integrity: checksum manifest, fail-closed verification, atomic install, anti-drift |
+| [reference/flatpak-multiarch-release.md](reference/flatpak-multiarch-release.md) | **Current / normative** | GNOME 51 Flatpak manifests, native x86_64/aarch64 CI, runtime checks, release artifacts and SHA-256 verification |
 
 ## Active planning
 
@@ -19,7 +20,7 @@ documentation lives in the root (`README.md`, `AGENTS.md`, `CONTRIBUTING.md`,
 | --- | --- | --- |
 | [planning/history-v2-interactive-rows.md](planning/history-v2-interactive-rows.md) | **Active — minimal cut implemented; rest planning** | History V2: interactive history rows (copy and expansion done; external editor, TTS and re-OCR tracked in #454–#456) |
 | [planning/runtime-fixes-m1.md](planning/runtime-fixes-m1.md) | **Active — approved 2026-10-22** | Milestone 1: severity/batch plan for 36 runtime issues (security, reliability, state/UI, hygiene) |
-| [planning/flathub-readiness-m2.md](planning/flathub-readiness-m2.md) | **Active — scheduled after M1** | Milestone 2: 31 packaging/CI/Flathub issues in four phases |
+| [planning/flathub-readiness-m2.md](planning/flathub-readiness-m2.md) | **Historical plan — implementation status superseded by current CI and GitHub issues** | Original Milestone 2 sequencing; consult the issue tracker and normative Flatpak references for current status |
 
 ## Historical material (audit/legacy)
 
