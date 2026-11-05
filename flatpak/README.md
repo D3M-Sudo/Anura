@@ -103,6 +103,7 @@ drift apart, so a new permission has to be justified here first (#498).
 | `--talk-name=org.a11y.Bus` | Screen-reader support (AT-SPI) |
 | `--talk-name=org.freedesktop.Notifications` | libnotify fallback when no notification portal is available |
 | `--env=TESSDATA_PREFIX=/app/share/tessdata` | Tells Tesseract where the bundled models live |
+| `--env=GI_TYPELIB_PATH=/app/lib/girepository-1.0:/usr/lib/girepository-1.0` | Adds the application and GNOME runtime GI typelib directories so PyGObject can load bundled libportal and runtime namespaces inside the sandbox |
 
 Notes:
 
