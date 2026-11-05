@@ -26,7 +26,16 @@ PERSISTENT_SUBDIRECTORIES = ("history", "tessdata")
 
 def _copy_file_without_overwrite(source: Path, destination: Path) -> bool:
     """Publish a complete copy atomically, never replacing an existing file."""
-    destination.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    # Refuse to traverse a pre-existing symlink in the destination tree.
+    current = destination.parent
+    missing: list[Path] = []
+    while not current.exists() and not current.is_symlink():
+        missing.append(current)
+        current = current.parent
+    if current.is_symlink() or not current.is_dir():
+        raise OSError(f"Destination parent is not a real directory: {current}")
+    for directory in reversed(missing):
+        directory.mkdir(mode=0o700)
     if destination.exists() or destination.is_symlink():
         return False
 
@@ -109,26 +118,39 @@ def migrate_legacy_flatpak_data(
         return True
 
     source_home = Path(old_data_dir)
+    if source_home.is_symlink() or not source_home.is_dir():
+        logger.warning("Selected legacy data source is not a real directory.")
+        return False
+
     source_app_data = source_home / "anura"
-    if not source_app_data.is_dir():
-        logger.info("Legacy Flatpak data directory not found; migration will be checked again on next launch.")
+    if source_app_data.is_symlink() or not source_app_data.is_dir():
+        logger.info("Legacy Anura data directory not found; migration will be checked again on next launch.")
         return False
 
     total_copied = 0
     errors: list[str] = []
+    found_persistent_tree = False
     for subdirectory in PERSISTENT_SUBDIRECTORIES:
         source = source_app_data / subdirectory
+        if source.is_symlink():
+            errors.append(f"{source}: symbolic-link directories are not accepted")
+            continue
         if not source.exists():
             continue
-        if source.is_symlink() or not source.is_dir():
+        if not source.is_dir():
             errors.append(f"{source}: expected a real directory")
             continue
+        found_persistent_tree = True
         copied, copy_errors = _copy_tree_without_overwrite(
             source,
             destination_home / "anura" / subdirectory,
         )
         total_copied += copied
         errors.extend(copy_errors)
+
+    if not found_persistent_tree and not errors:
+        logger.warning("Selected folder contains no legacy history or OCR model data.")
+        return False
 
     if errors:
         for error in errors:
