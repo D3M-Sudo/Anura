@@ -186,7 +186,7 @@ def _eval_marker_ast(node, env: dict[str, str]) -> bool:
     evaluator (``ast.literal_eval`` equivalent) restricted to markers.
     """
     if isinstance(node, ast.Constant):
-        return bool(node.value)
+        return node.value
     if isinstance(node, ast.Name):
         value = env.get(node.id)
         if value is None:
