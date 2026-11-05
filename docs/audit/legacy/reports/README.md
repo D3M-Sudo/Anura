@@ -17,5 +17,7 @@ merged on `testing`. Archival rules live in `../README.md`.
 | [bugs-summary.md](bugs-summary.md) | 2026-08-16 | QA summary | 8 bugs found / 8 fixed; tools: ruff, bandit, mypy, pytest, meson, flatpak-builder | Resolved |
 | [bugs-observed.json](bugs-observed.json) | 2026-08-16 | QA data | Structured bug data (companion of `bugs-summary.md`) | Resolved |
 | [history-v1-plan.md](history-v1-plan.md) | 2026-08 | Superseded plan | Pre-implementation History V1 plan (baseline `testing @ a52f4563`); normative reference is `docs/reference/history-v1.md` | Superseded |
+| [history-v2-interactive-rows-plan.md](history-v2-interactive-rows-plan.md) | 2026-10 | Completed feature plan | History V2 design decisions and completed implementation; normative behaviour is in `docs/reference/history-v2.md` | Completed |
+| [runtime-fixes-m1-plan.md](runtime-fixes-m1-plan.md) | 2026-10 | Completed milestone plan | Runtime remediation Milestone 1; all 36 scoped issues resolved | Completed |
 | [diagnosis-vm-followup-2026-09-17.md](diagnosis-vm-followup-2026-09-17.md) | 2026-09-17 | Follow-up diagnosis | VM findings: model-quality cache invalidation, screenshot spinner, match-case icon, external-editor portal | Resolved |
 | [diagnosis-full-test-tiers-2026-09-20.md](diagnosis-full-test-tiers-2026-09-20.md) | 2026-09-20 | Diagnostics / test audit | Full diagnostics and test-tier audit at `HEAD: aba2884` (5 skipped tests, dependency coverage) | Resolved |
