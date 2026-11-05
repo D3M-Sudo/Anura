@@ -110,7 +110,7 @@ class TestManifestValidation:
         version: int,
         algorithm: str,
         message: str,
-   ) -> None:
+    ) -> None:
         config = _write_config(tmp_path)
         manifest = _write_manifest(tmp_path, _repositories(), version=version, algorithm=algorithm)
         _configure_checker(monkeypatch, config, manifest)
