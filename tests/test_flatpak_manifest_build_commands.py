@@ -15,10 +15,10 @@ import sys
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+MANIFEST_PATH = REPO_ROOT / "flatpak" / "io.github.d3m_sudo.anura.local.json"
 sys.path.insert(0, str(REPO_ROOT / "build-aux"))
 
 import sync_dependencies  # noqa: E402
-MANIFEST_PATH = REPO_ROOT / "flatpak" / "io.github.d3m_sudo.anura.local.json"
 
 
 @pytest.fixture(scope="module")
@@ -87,7 +87,6 @@ def test_zxing_cpp_installs_the_sdist_it_declares(manifest: dict) -> None:
     assert any("pip3 install" in command and command.rstrip().endswith(".") for command in install_commands), (
         f"zxing-cpp build-command does not build the extracted sdist: {install_commands!r}"
     )
-
 
 
 def test_python_dependency_sources_match_uv_lock() -> None:
