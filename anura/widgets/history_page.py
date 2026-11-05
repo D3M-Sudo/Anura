@@ -36,6 +36,7 @@ _COPIED_ICON = "object-select-symbolic"
 _EDITOR_ICON = "document-edit-symbolic"
 _TTS_PLAY_ICON = "media-playback-start-symbolic"
 _TTS_PAUSE_ICON = "media-playback-pause-symbolic"
+_TTS_STOP_ICON = "process-stop-symbolic"
 _COPY_FEEDBACK_SECONDS = 2
 # Tallest the expanded text area may grow; longer text scrolls inside it.
 _EXPANDED_TEXT_MAX_HEIGHT = 240
@@ -221,9 +222,15 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
         row.add_suffix(editor_btn)
 
         tts_controller = self._tts_controller() if self._tts_controller is not None else None
-        tts_available = bool(entry.language and tts_controller and tts_controller.can_listen_for_language(entry.language))
+        tts_available = bool(
+            entry.language and tts_controller and tts_controller.can_listen_for_language(entry.language)
+        )
         tts_label = _("Listen to text")
-        tts_btn = Gtk.Button(icon_name=_TTS_PLAY_ICON, valign=Gtk.Align.CENTER, tooltip_text=tts_label)
+        tts_btn = Gtk.Button(
+            icon_name=_TTS_PLAY_ICON,
+            valign=Gtk.Align.CENTER,
+            tooltip_text=tts_label,
+        )
         tts_btn.add_css_class("flat")
         tts_btn.update_property([Gtk.AccessibleProperty.LABEL], [tts_label])
         tts_btn.set_sensitive(tts_available and bool(entry.text))
@@ -331,7 +338,17 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
     def _update_tts_button(self) -> None:
         active = self._tts_buttons.get(self._active_tts_entry_id) if self._active_tts_entry_id else None
         for button in self._tts_buttons.values():
-            button.set_icon_name(_TTS_PAUSE_ICON if button is active and self._tts_state == "playing" else _TTS_PLAY_ICON)
+            if button is active and self._tts_state == "generating":
+                icon, label = _TTS_STOP_ICON, _("Stop listening")
+            elif button is active and self._tts_state == "playing":
+                icon, label = _TTS_PAUSE_ICON, _("Pause/resume listening")
+            elif button is active and self._tts_state == "paused":
+                icon, label = _TTS_PLAY_ICON, _("Pause/resume listening")
+            else:
+                icon, label = _TTS_PLAY_ICON, _("Listen to text")
+            button.set_icon_name(icon)
+            button.set_tooltip_text(label)
+            button.update_property([Gtk.AccessibleProperty.LABEL], [label])
 
     def _show_row_copy_feedback(self, button: Gtk.Button) -> None:
         if button in self._feedback_timers:
