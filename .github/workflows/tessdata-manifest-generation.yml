@@ -8,6 +8,7 @@ on:
       - "build-aux/generate_tessdata_checksums.py"
       - "anura/config.py"
       - "anura/utils/tessdata_integrity.py"
+      - ".github/workflows/tessdata-manifest-generation.yml"
 
 permissions:
   contents: write
