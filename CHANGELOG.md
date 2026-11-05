@@ -7,9 +7,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- History: each stored entry now offers an **Open in external editor** action. The full immutable entry text is exported asynchronously to a private per-user file and handed off through `Gtk.FileLauncher` (#624)
+- CI/Flatpak: build Flatpak bundles on native x86_64 and aarch64 runners, producing architecture-specific bundles and license-inventory artifacts (#618)
+- CI/Flatpak: add sandbox-level runtime smoke checks on both architectures for GTK/GI typelibs, native Python bindings and the bundled Tesseract library (#619)
 - Flatpak: offer a portal-backed, user-selected migration of history and downloaded OCR models from the previous application ID; no cross-application filesystem permission is required (#613)
 
 ### Changed
+- Flatpak: migrate the application ID to `io.github.d3m_sudo.anura` while preserving the existing GSettings storage path; generate the release manifest from the local source-of-truth manifest and validate shared fields and exact-commit pinning in CI (#612)
+- Flatpak/dependencies: document the dependency-manifest ownership and add a repeatable no-download build using the populated Flatpak state cache; CI checks lockfile-managed Python module versions against `uv.lock` (#615)
+- Dependencies: update the development/runtime Python lockfile's Certifi version from 2026.4.22 to 2026.10.18; the separately FEDC-managed Flatpak source remains independently pinned (#616)
+- CI/Flatpak: validate runtime dependency coverage independently for x86_64 and aarch64, including architecture-specific dependency markers (#617)
 - Flatpak: dropped `--talk-name=org.freedesktop.portal.Desktop`. Portals are reachable through their API without a talk-name, and `flatpak-builder-lint` rejects any `--talk-name=org.freedesktop.portal.*` as an error (`finish-args-portal-talk-name`), which blocks the Flathub submission (#504)
 - Flatpak: every `finish-arg` is now mapped to the feature that needs it in `flatpak/README.md`, and `tests/test_flatpak_manifest_hygiene.py` fails when the manifest, the documentation or the source pinning drift apart (an unpinned `file`/`archive`/`git` source or an undocumented permission) (#498, #504)
 - Release: `generate_release_notes.py --markdown` produces the GitHub release body from the `CHANGELOG.md` section for the tag, so a release can no longer be published with an empty body (#489)
