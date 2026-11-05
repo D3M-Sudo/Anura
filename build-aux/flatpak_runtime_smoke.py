@@ -9,7 +9,6 @@
 from __future__ import annotations
 
 import ctypes
-import ctypes.util
 import os
 import platform
 import sys
@@ -27,16 +26,15 @@ def main() -> int:
 
     # These paths are configured by the Flatpak manifest. Verify that the
     # architecture-neutral locations exist inside the installed sandbox.
-    for variable, required in (
-        ("GI_TYPELIB_PATH", ("/app/lib/girepository-1.0", "/usr/lib/girepository-1.0")),
-        ("LD_LIBRARY_PATH", ("/app/lib",)),
-    ):
-        configured = os.environ.get(variable, "").split(os.pathsep)
-        for path in required:
-            if path not in configured:
-                raise RuntimeError(f"{variable} does not include {path}")
-            if not os.path.isdir(path):
-                raise RuntimeError(f"{variable} entry does not exist in sandbox: {path}")
+    typelib_paths = os.environ.get("GI_TYPELIB_PATH", "").split(os.pathsep)
+    library_paths = os.environ.get("LD_LIBRARY_PATH", "").split(os.pathsep)
+    if "/usr/lib/girepository-1.0" not in typelib_paths:
+        raise RuntimeError("GI_TYPELIB_PATH does not include the runtime typelib directory")
+    if "/app/lib" not in library_paths or not os.path.isdir("/app/lib"):
+        raise RuntimeError("LD_LIBRARY_PATH does not expose the application library directory")
+    for path in typelib_paths + library_paths:
+        if "x86_64-linux-gnu" in path or "aarch64-linux-gnu" in path:
+            raise RuntimeError(f"architecture-specific library path found: {path}")
 
     import gi
 
@@ -82,10 +80,8 @@ def main() -> int:
     if not hasattr(zxingcpp, "read_barcodes"):
         raise RuntimeError("zxing-cpp native binding is incomplete")
 
-    tesseract = ctypes.util.find_library("tesseract")
-    if not tesseract:
-        raise RuntimeError("libtesseract was not found in the Flatpak runtime")
-    ctypes.CDLL(tesseract)
+    # Tesseract 5.3.x ships the libtesseract.so.5 ABI in /app/lib.
+    ctypes.CDLL("libtesseract.so.5")
 
     print(
         "PASS: Flatpak runtime",
