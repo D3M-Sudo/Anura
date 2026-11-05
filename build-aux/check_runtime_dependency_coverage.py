@@ -178,7 +178,7 @@ def parse_uv_lock_graph(path: str) -> tuple[dict[str, str], dict[str, list[tuple
     return versions, edges
 
 
-def _eval_marker_ast(node, env: dict[str, str]) -> bool:
+def _eval_marker_ast(node, env: dict[str, str]) -> bool | str:
     """Evaluate a marker AST node against the target environment.
 
     Only constants, names, boolean ops, comparisons and ``not`` are allowed;
