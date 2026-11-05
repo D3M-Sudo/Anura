@@ -7,11 +7,12 @@ import hashlib
 from http.client import IncompleteRead
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import sys
 import tempfile
 import time
 from urllib.error import HTTPError, URLError
+from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -143,14 +144,20 @@ def collect_repository(base_url: str, token: str | None) -> dict:
             raise GeneratorError(f"GitHub returned a tree entry without a valid path for {repo}@{ref}")
         if not path.endswith(".traineddata"):
             continue
-        if path != Path(path).name or path in {".", ".."} or "\\" in path:
+        model_path = PurePosixPath(path)
+        if (
+            path.startswith("/")
+            or str(model_path) != path
+            or any(part in {"", ".", ".."} for part in model_path.parts)
+            or "\\" in path
+        ):
             raise GeneratorError(f"Unsupported tessdata model path from GitHub: {path!r}")
         advertised_size = entry.get("size")
         if type(advertised_size) is not int or advertised_size <= 0:
             raise GeneratorError(f"Invalid advertised size for {repo}/{path}: {advertised_size!r}")
         if path in files:
             raise GeneratorError(f"Duplicate tessdata model path in {repo}@{ref}: {path}")
-        digest = _download_sha256(f"{base_url}{path}", token, advertised_size)
+        digest = _download_sha256(f"{base_url}{quote(path, safe='/')}", token, advertised_size)
         files[path] = {"size": advertised_size, "sha256": digest}
 
     if not files:
