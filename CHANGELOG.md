@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
-- Flatpak: one-time, read-only migration of history and downloaded OCR models from the previous application ID; source data is preserved and existing destination files are not overwritten (#613)
+- Flatpak: offer a portal-backed, user-selected migration of history and downloaded OCR models from the previous application ID; no cross-application filesystem permission is required (#613)
 
 ### Changed
 - Flatpak: dropped `--talk-name=org.freedesktop.portal.Desktop`. Portals are reachable through their API without a talk-name, and `flatpak-builder-lint` rejects any `--talk-name=org.freedesktop.portal.*` as an error (`finish-args-portal-talk-name`), which blocks the Flathub submission (#504)
