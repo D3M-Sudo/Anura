@@ -250,4 +250,4 @@ versions, linter output/exit status, and both build exit statuses. The second
 pass is the offline reproducibility proof: `--disable-download` fails if any
 declared source is absent from the state directory. Keep the same
 `--state-dir` for both passes. CI currently validates and builds the generated
-release manifest, but does not yet execute this second no-download pass (#504).
+release manifest and then runs a second clean build with `--disable-download` against the generated local-source build manifest, reusing the same state directory (#504).
