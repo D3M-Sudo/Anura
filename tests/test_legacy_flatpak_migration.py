@@ -113,6 +113,7 @@ def test_rejects_a_selected_directory_without_legacy_data(tmp_path):
 def test_rejects_symlinked_source_root(tmp_path):
     old, new, flatpak_info = _layout(tmp_path)
     real_source = tmp_path / "real-source"
+    old.parent.mkdir(parents=True)
     (real_source / "anura/history").mkdir(parents=True)
     (real_source / "anura/history/history.json").write_text("legacy", encoding="utf-8")
     old.symlink_to(real_source, target_is_directory=True)
