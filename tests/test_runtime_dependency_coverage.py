@@ -303,7 +303,6 @@ def test_7_manifest_mode_selection() -> None:
     assert checker._manifests_for_mode("both") == (checker.MANIFEST_MAIN, checker.MANIFEST_LOCAL)
 
 
-
 def test_target_environment_selects_supported_architectures() -> None:
     """Both supported Flatpak targets get explicit Linux marker environments."""
     for arch in ("x86_64", "aarch64"):
@@ -333,12 +332,8 @@ def test_architecture_markers_are_evaluated_per_target(tmp_path: Path) -> None:
     arm_lock = tmp_path / "uv_arm.lock"
     arm_lock.write_text(patched)
 
-    x86_closure = checker.compute_runtime_closure(
-        pyproject, arm_lock, env=checker.target_environment("x86_64")
-    )
-    arm_closure = checker.compute_runtime_closure(
-        pyproject, arm_lock, env=checker.target_environment("aarch64")
-    )
+    x86_closure = checker.compute_runtime_closure(pyproject, arm_lock, env=checker.target_environment("x86_64"))
+    arm_closure = checker.compute_runtime_closure(pyproject, arm_lock, env=checker.target_environment("aarch64"))
 
     assert "arm-only-package" not in x86_closure
     assert "arm-only-package" in arm_closure
