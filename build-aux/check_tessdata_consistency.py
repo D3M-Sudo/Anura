@@ -10,10 +10,10 @@ It deliberately does not download upstream models.
 
 import ast
 import json
-from http.client import IncompleteRead
-from pathlib import Path
 import re
 import sys
+from http.client import IncompleteRead
+from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
