@@ -1,4 +1,4 @@
-# Anura — Extraction History V1 (current behaviour on `testing`)
+# Anura — Extraction History V1 (current behaviour on `feature`)
 
 This document is the **normative** reference for the completed History V1
 integration. The pre-implementation plan is preserved as historical material in
@@ -27,7 +27,7 @@ historical entries, or OCR result versioning.
 ## Persistence
 
 - Backend: `anura/services/history_service.py` (`HistoryService`).
-- Store: `$XDG_DATA_HOME/anura/history/history.json` (synchronous local JSON).
+- Store: `$XDG_DATA_HOME/anura/history/history.json` (local JSON).
 - Writes are atomic (temp file + `os.replace` with `fsync`); no temp files are
   left behind.
 - Corruption recovery: an unreadable/non-list JSON file is quarantined as
@@ -72,8 +72,9 @@ Notes:
   stored history.
 - `history-limit` is applied both when entries are recorded (oldest evicted)
   and when entries are loaded.
-- Changing the limit requires an application restart to re-wire the shared
-  `HistoryService` (the limit is read once at window construction).
+- `AnuraWindow` listens for `changed::history-limit` and calls
+  `HistoryService.set_limit()`; changes apply to the running application without
+  a restart. Shrinking the limit trims and persists the retained newest entries.
 
 ## UI behaviour
 
@@ -90,9 +91,13 @@ Notes:
 
 ## Lifecycle and boundaries
 
-- `HistoryService` is synchronous and runs on the GTK main thread; this is
-  acceptable for the small bounded JSON writes of V1.
-- No threading, no database, no image/thumbnail lifecycle in V1.
+- `record()` updates the in-memory snapshot and schedules a coalesced background
+  write through the service-owned writer thread. Serialisation and filesystem
+  writes do not block the GTK main thread.
+- `clear()` and `set_limit()` persist synchronously because they must preserve
+  their failure/rollback semantics. `flush()` writes pending state, and `close()`
+  stops the writer after attempting a final flush.
+- No database or image/thumbnail lifecycle.
 - Storage boundary: local user data only (`$XDG_DATA_HOME/anura/history/`),
   consistent with the zero-telemetry privacy model.
 
@@ -110,5 +115,5 @@ Notes:
 
 - No search or filtering.
 - No thumbnails or source-image retention.
-- Limit changes require restart.
-- Synchronous I/O on the main thread (bounded by the entry limit).
+- `clear()` and `set_limit()` perform bounded synchronous persistence; normal
+  recording uses coalesced background writes.
