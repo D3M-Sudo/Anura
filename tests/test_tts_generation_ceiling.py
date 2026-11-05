@@ -152,3 +152,9 @@ if __name__ == "__main__":
     import pytest
 
     pytest.main([__file__])
+
+
+def test_can_listen_requires_a_stored_language(monkeypatch):
+    _ctl_module, controller, _emitted, _scheduled = _make_controller(monkeypatch)
+    assert controller.can_listen_for_language("ita") is True
+    assert controller.can_listen_for_language("") is False

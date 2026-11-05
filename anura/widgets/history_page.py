@@ -26,6 +26,7 @@ from anura.utils.signal_manager import SignalManagerMixin  # noqa: E402
 
 if TYPE_CHECKING:
     from anura.controllers.history_controller import HistoryController
+    from anura.controllers.tts_controller import TtsController
     from anura.models.history import HistoryEntry
     from anura.services.history_service import HistoryService
 
@@ -33,6 +34,9 @@ if TYPE_CHECKING:
 _COPY_ICON = "edit-copy-symbolic"
 _COPIED_ICON = "object-select-symbolic"
 _EDITOR_ICON = "document-edit-symbolic"
+_TTS_PLAY_ICON = "media-playback-start-symbolic"
+_TTS_PAUSE_ICON = "media-playback-pause-symbolic"
+_TTS_STOP_ICON = "process-stop-symbolic"
 _COPY_FEEDBACK_SECONDS = 2
 # Tallest the expanded text area may grow; longer text scrolls inside it.
 _EXPANDED_TEXT_MAX_HEIGHT = 240
@@ -112,6 +116,10 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
         self._history_service = None  # type: "HistoryService | None"  # TYPE_CHECKING-only import
         # Weak reference: the window owns the controller, the page must not keep it alive.
         self._history_controller: weakref.ReferenceType[HistoryController] | None = None
+        self._tts_controller: weakref.ReferenceType[TtsController] | None = None
+        self._tts_buttons: dict[str, Gtk.Button] = {}
+        self._active_tts_entry_id: str | None = None
+        self._tts_state = "idle"
         self._rows: list[Gtk.Widget] = []
         # The expanded row (at most one) and the rows whose text area already exists:
         # the area is created on the first expansion, not when the page is populated.
@@ -132,10 +140,16 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
         # SignalManagerMixin.teardown_all() calls teardown() on registered controllers.
         self.register_controller(self)
 
-    def setup(self, history_service: "HistoryService", history_controller: "HistoryController | None" = None) -> None:
-        """Wire the shared HistoryService and HistoryController (injected by AnuraWindow)."""
+    def setup(
+        self,
+        history_service: "HistoryService",
+        history_controller: "HistoryController | None" = None,
+        tts_controller: "TtsController | None" = None,
+    ) -> None:
+        """Wire shared services/controllers; controllers remain owned by AnuraWindow."""
         self._history_service = history_service
         self._history_controller = weakref.ref(history_controller) if history_controller is not None else None
+        self._tts_controller = weakref.ref(tts_controller) if tts_controller is not None else None
         self.refresh()
 
     def teardown(self) -> None:
@@ -146,6 +160,7 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
         """Release row handlers, feedback timers and the controller reference."""
         self._clear_rows()
         self._history_controller = None
+        self._tts_controller = None
 
     def refresh(self) -> None:
         """Reload entries from the service and repopulate the list."""
@@ -205,6 +220,24 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
         handler_id = editor_btn.connect("clicked", self._on_open_editor_clicked, entry.text)
         self._row_handlers.append((editor_btn, handler_id))
         row.add_suffix(editor_btn)
+
+        tts_controller = self._tts_controller() if self._tts_controller is not None else None
+        tts_available = bool(
+            entry.language and tts_controller and tts_controller.can_listen_for_language(entry.language)
+        )
+        tts_label = _("Listen to text")
+        tts_btn = Gtk.Button(
+            icon_name=_TTS_PLAY_ICON,
+            valign=Gtk.Align.CENTER,
+            tooltip_text=tts_label,
+        )
+        tts_btn.add_css_class("flat")
+        tts_btn.update_property([Gtk.AccessibleProperty.LABEL], [tts_label])
+        tts_btn.set_sensitive(tts_available and bool(entry.text))
+        handler_id = tts_btn.connect("clicked", self._on_tts_clicked, entry.text, entry.language, entry.id)
+        self._row_handlers.append((tts_btn, handler_id))
+        self._tts_buttons[entry.id] = tts_btn
+        row.add_suffix(tts_btn)
 
         expanded_handler_id = row.connect("notify::expanded", self._on_row_expanded, entry.text)
         self._row_handlers.append((row, expanded_handler_id))
@@ -271,6 +304,52 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
             return
         controller.open_entry_in_external_editor(text)
 
+    def _on_tts_clicked(self, _button: Gtk.Button, text: str, ocr_lang: str, entry_id: str) -> None:
+        """Replay a stored entry, or pause/resume its currently active playback."""
+        controller = self._tts_controller() if self._tts_controller is not None else None
+        if controller is None:
+            logger.warning("HistoryPage: TTS requested but no TtsController is wired")
+            return
+        if self._active_tts_entry_id == entry_id:
+            if self._tts_state in {"playing", "paused"}:
+                controller.toggle_pause()
+                return
+            if self._tts_state == "generating":
+                controller.stop()
+                return
+        self._active_tts_entry_id = entry_id
+        self._tts_state = "generating"
+        self._update_tts_button()
+        controller.request_listen(text, ocr_lang=ocr_lang)
+
+    def update_tts_state(self, state: str) -> None:
+        """Reflect the shared TTS pipeline state in the active History row."""
+        self._tts_state = state
+        if state == "idle":
+            self._active_tts_entry_id = None
+        self._update_tts_button()
+
+    def clear_tts_active(self) -> None:
+        """Detach History row feedback when playback is started from current OCR text."""
+        self._active_tts_entry_id = None
+        self._tts_state = "idle"
+        self._update_tts_button()
+
+    def _update_tts_button(self) -> None:
+        active = self._tts_buttons.get(self._active_tts_entry_id) if self._active_tts_entry_id else None
+        for button in self._tts_buttons.values():
+            if button is active and self._tts_state == "generating":
+                icon, label = _TTS_STOP_ICON, _("Stop listening")
+            elif button is active and self._tts_state == "playing":
+                icon, label = _TTS_PAUSE_ICON, _("Pause/resume listening")
+            elif button is active and self._tts_state == "paused":
+                icon, label = _TTS_PLAY_ICON, _("Pause/resume listening")
+            else:
+                icon, label = _TTS_PLAY_ICON, _("Listen to text")
+            button.set_icon_name(icon)
+            button.set_tooltip_text(label)
+            button.update_property([Gtk.AccessibleProperty.LABEL], [label])
+
     def _show_row_copy_feedback(self, button: Gtk.Button) -> None:
         if button in self._feedback_timers:
             return  # Feedback already showing; the pending timer will restore the button.
@@ -308,6 +387,9 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
         self._row_handlers.clear()
         self._open_row = None
         self._content_built.clear()
+        self._tts_buttons.clear()
+        self._active_tts_entry_id = None
+        self._tts_state = "idle"
         for row in self._rows:
             with contextlib.suppress(RuntimeError):
                 self.history_list.remove(row)

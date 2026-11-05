@@ -1201,7 +1201,7 @@ msgstr "Sintesi vocale"
 
 #: anura/widgets/shortcuts_overlay.py:86
 msgid "Listen to text"
-msgstr ""
+msgstr "Ascolta il testo"
 
 #: anura/widgets/shortcuts_overlay.py:87
 msgid "Pause/resume listening"

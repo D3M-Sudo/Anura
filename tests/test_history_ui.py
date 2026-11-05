@@ -147,17 +147,20 @@ def test_rows_are_expander_rows_with_a_copy_button_in_the_header(headless_gi_moc
 
     assert fake_adw.ExpanderRow.call_count == 2
     fake_row = fake_adw.ExpanderRow.return_value
-    assert fake_row.add_suffix.call_count == 4  # copy + editor, per row
+    assert fake_row.add_suffix.call_count == 6  # copy + editor + TTS, per row
 
     button_calls = fake_gtk.Button.return_value.connect.call_args_list
-    assert [c.args[0] for c in button_calls] == ["clicked"] * 4
+    assert [c.args[0] for c in button_calls] == ["clicked"] * 6
     assert [c.args[1].__name__ for c in button_calls] == [
         "_on_copy_clicked",
         "_on_open_editor_clicked",
+        "_on_tts_clicked",
         "_on_copy_clicked",
         "_on_open_editor_clicked",
+        "_on_tts_clicked",
     ]
-    assert [c.args[2] for c in button_calls] == ["second", "second", "first", "first"]
+    assert [c.args[2] for c in button_calls] == ["second", "second", "second", "first", "first", "first"]
+    assert [c.args[3] for c in button_calls if c.args[1].__name__ == "_on_tts_clicked"] == ["eng", "eng"]
     row_calls = fake_row.connect.call_args_list
     assert [c.args[0] for c in row_calls] == ["notify::expanded", "notify::expanded"]
     assert [c.args[2] for c in row_calls] == ["second", "first"]
@@ -386,12 +389,12 @@ def test_clear_rows_cancels_timers_and_disconnects_row_handlers(headless_gi_mock
     fake_adw, fake_gtk, fake_glib = _patch_ui(monkeypatch)
     fake_button = fake_gtk.Button.return_value
     fake_row = fake_adw.ExpanderRow.return_value
-    fake_button.connect.side_effect = [11, 12, 13, 14, 15, 16, 17, 18]
+    fake_button.connect.side_effect = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 25, 26]
     fake_row.connect.side_effect = [21, 22, 23, 24]
     service = HistoryService(base_dir=tmp_path)
     service.record("first", "eng")
     service.record("second", "eng")
-    page = _make_page(headless_gi_mocks, service)  # first refresh: buttons 11-14; rows 21, 22
+    page = _make_page(headless_gi_mocks, service)  # first refresh: buttons 11-16; rows 21, 22
     controller = MagicMock()
     controller.copy_entry_text.return_value = True
 
@@ -399,19 +402,25 @@ def test_clear_rows_cancels_timers_and_disconnects_row_handlers(headless_gi_mock
 
     fake_button.disconnect.assert_any_call(11)
     fake_button.disconnect.assert_any_call(12)
+    fake_button.disconnect.assert_any_call(13)
+    fake_button.disconnect.assert_any_call(14)
+    fake_button.disconnect.assert_any_call(15)
+    fake_button.disconnect.assert_any_call(16)
     fake_row.disconnect.assert_any_call(21)
     fake_row.disconnect.assert_any_call(22)
-    assert sorted(handler_id for _widget, handler_id in page._row_handlers) == [15, 16, 17, 18, 23, 24]
+    assert sorted(handler_id for _widget, handler_id in page._row_handlers) == [17, 18, 19, 20, 23, 24, 25, 26]
 
     page._on_copy_clicked(MagicMock(), "text")
     pending_id = next(iter(page._feedback_timers.values()))
     page._clear_rows()
 
     fake_glib.source_remove.assert_called_once_with(pending_id)
-    fake_button.disconnect.assert_any_call(15)
-    fake_button.disconnect.assert_any_call(16)
     fake_button.disconnect.assert_any_call(17)
     fake_button.disconnect.assert_any_call(18)
+    fake_button.disconnect.assert_any_call(19)
+    fake_button.disconnect.assert_any_call(20)
+    fake_button.disconnect.assert_any_call(25)
+    fake_button.disconnect.assert_any_call(26)
     fake_row.disconnect.assert_any_call(23)
     fake_row.disconnect.assert_any_call(24)
     assert page._feedback_timers == {}
@@ -430,7 +439,7 @@ def test_refresh_does_not_accumulate_tracked_connections(headless_gi_mocks, tmp_
         page.refresh()
 
     assert page.get_tracked_signal_count() == baseline
-    assert len(page._row_handlers) == 5 * 3  # copy + editor buttons + expansion, per row
+    assert len(page._row_handlers) == 5 * 4  # copy + editor + TTS buttons + expansion, per row
 
 
 def test_teardown_all_cancels_pending_timers_and_drops_controller(headless_gi_mocks, monkeypatch, tmp_path):
@@ -529,7 +538,7 @@ def test_window_wires_history_page_and_navigation():
 
     window_src = (Path(__file__).resolve().parents[1] / "anura" / "window.py").read_text()
     assert "self.history_controller = HistoryController(self)" in window_src
-    assert "self.history_page.setup(self.history_service, self.history_controller)" in window_src
+    assert "self.history_page.setup(self.history_service, self.history_controller, self.tts_controller)" in window_src
     # Controller outcomes reach the user as toasts.
     assert 'self.connect_tracked(self.history_controller, "copied", self._on_history_copied)' in window_src
     assert 'self.connect_tracked(self.history_controller, "error-occurred", self._on_history_error)' in window_src
@@ -644,3 +653,35 @@ def test_history_page_no_longer_references_messagedialog():
     source = (Path(__file__).resolve().parents[1] / "anura" / "widgets" / "history_page.py").read_text()
     assert "MessageDialog" not in source
     assert "Adw.AlertDialog" in source
+
+
+def test_tts_action_uses_history_text_and_capture_language(headless_gi_mocks, monkeypatch, tmp_path):
+    _fake_adw, fake_gtk, _fake_glib = _patch_ui(monkeypatch)
+    service = HistoryService(base_dir=tmp_path)
+    service.record("stored OCR text", "ita")
+    history_controller = MagicMock()
+    tts_controller = MagicMock()
+    tts_controller.can_listen_for_language.return_value = True
+    page = _make_page(headless_gi_mocks)
+    page.setup(service, history_controller, tts_controller)
+
+    button = fake_gtk.Button.return_value
+    page._on_tts_clicked(button, "stored OCR text", "ita", service.get_entries()[0].id)
+
+    tts_controller.request_listen.assert_called_once_with("stored OCR text", ocr_lang="ita")
+    assert page._active_tts_entry_id == service.get_entries()[0].id
+    assert page._tts_state == "generating"
+
+
+def test_tts_action_is_disabled_when_language_cannot_be_resolved(headless_gi_mocks, monkeypatch, tmp_path):
+    _fake_adw, fake_gtk, _fake_glib = _patch_ui(monkeypatch)
+    service = HistoryService(base_dir=tmp_path)
+    service.record("stored OCR text", "unknown-language")
+    history_controller = MagicMock()
+    tts_controller = MagicMock()
+    tts_controller.can_listen_for_language.return_value = False
+    page = _make_page(headless_gi_mocks)
+    page.setup(service, history_controller, tts_controller)
+
+    fake_gtk.Button.return_value.set_sensitive.assert_any_call(False)
+    tts_controller.request_listen.assert_not_called()

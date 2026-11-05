@@ -1,6 +1,6 @@
 # Anura — History V2: Interactive History Rows (planning)
 
-**Status:** Minimal cut (copy button + expandable rows) implemented in #434 and #452. External-editor support for #454 is implemented on `feat/history-v2-external-editor`; #455 (TTS replay) remains a separate follow-up. #456 (re-OCR) was closed as not planned.  
+**Status:** Copy/expand (#434, #452), external editor (#454) and TTS replay (#455) are implemented on their respective feature branches/PRs. #456 (re-OCR) was closed as not planned.  
 **Target:** next major/minor release after History V1 stabilisation.  
 **Owning documents:** this file, `docs/reference/history-v1.md`, `docs/reference/history-v2.md`, `docs/README.md`.
 
@@ -97,7 +97,7 @@ replace, the suggestions in "Interaction model" above.
 | Copy to clipboard from the row | Implemented ([#434](https://github.com/D3M-Sudo/Anura/pull/434)) |
 | Activatable, expandable rows | Implemented ([#452](https://github.com/D3M-Sudo/Anura/pull/452)) |
 | Open in external editor | Implemented on `feat/history-v2-external-editor`, [#454](https://github.com/D3M-Sudo/Anura/issues/454) |
-| TTS replay | Planning, [#455](https://github.com/D3M-Sudo/Anura/issues/455) |
+| TTS replay | Implemented in this PR, [#455](https://github.com/D3M-Sudo/Anura/issues/455) |
 | Re-OCR | Not planned; [#456](https://github.com/D3M-Sudo/Anura/issues/456) closed as not planned |
 
 The behaviour that is implemented is documented in
