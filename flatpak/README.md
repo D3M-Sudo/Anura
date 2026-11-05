@@ -82,6 +82,48 @@ Two rules to keep in mind when editing the manifest:
 The inventory can be verified against a built prefix with
 `build-aux/check_license_inventory.py --root <prefix>` (see #493).
 
+## Multi-architecture builds and GitHub Releases
+
+The supported release bundle architectures are **x86_64** and **aarch64**. The
+GitHub Actions workflow builds them independently on native runners:
+
+| Flatpak architecture | Native GitHub runner |
+| --- | --- |
+| `x86_64` | `ubuntu-24.04` |
+| `aarch64` | `ubuntu-24.04-arm` |
+
+Each matrix job verifies `uname -m` against the requested Flatpak architecture,
+cleans previous build output, generates and validates the release-style
+manifest, builds offline, installs the bundle in the sandbox, and runs smoke,
+GI typelib/native-binding and positive/negative OCR checks. Desktop/AppStream
+metadata and the installed license inventory are checked independently for
+each architecture. The runtime and SDK are GNOME 51 in both the local and
+generated release manifests.
+
+The matrix uploads two distinct artifacts:
+
+- `io.github.d3m_sudo.anura-x86_64.flatpak`
+- `io.github.d3m_sudo.anura-aarch64.flatpak`
+
+A downstream `validate-release-artifacts` job downloads the artifacts from the
+same workflow run and requires exactly those two non-empty regular files. It
+rejects missing, unexpected, empty, or symlinked entries and generates
+`SHA256SUMS`. The tag-only `publish-release` job depends on this validation
+and attaches both bundles plus the checksum file to the GitHub Release.
+Pull-request and branch runs exercise artifact hand-off and checksum
+validation, but do not publish a release.
+
+This GitHub Release pipeline is separate from Flathub's submission/build
+process. The generated release manifest is validated and built in CI, while
+Flathub architecture compatibility must be assessed from the submission
+manifest and Flathub's own build results; a GitHub bundle is not evidence that
+Flathub has built every target architecture.
+
+For the user-facing download and checksum procedure, see
+[the installation section in the root README](../README.md#installation).
+The detailed CI contract and current verification boundaries are in
+[docs/reference/flatpak-multiarch-release.md](../docs/reference/flatpak-multiarch-release.md).
+
 ## Permissions (`finish-args`)
 
 Every static permission is mapped to the feature that needs it.

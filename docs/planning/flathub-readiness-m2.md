@@ -1,7 +1,12 @@
 # Anura — Milestone 2: Flathub Readiness (planning)
 
-**Status:** Approved 2026-10-22, scheduled after Milestone 1
-(`docs/planning/runtime-fixes-m1.md`).
+**Status:** Historical planning snapshot (created 2026-10-22). Its issue
+states and sequencing are not a current status report. The multi-architecture
+campaign subsequently implemented and verified GNOME 51, native x86_64/aarch64
+Flatpak builds, runtime validation and release-artifact checks on `feature`.
+Use the GitHub issue tracker and
+[`docs/reference/flatpak-multiarch-release.md`](../reference/flatpak-multiarch-release.md)
+for current implementation status and verification evidence.
 **Scope:** 31 open issues about the Flatpak manifests, CI, release tooling and
 Flathub submission prerequisites.
 **Constraint:** `flatpak-builder`, `meson` and the GNOME 51 SDK are not available in
