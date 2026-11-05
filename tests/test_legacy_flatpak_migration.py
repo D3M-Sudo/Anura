@@ -101,7 +101,6 @@ def test_missing_legacy_directory_is_not_marked_complete(tmp_path):
     assert not (new / MIGRATION_MARKER).exists()
 
 
-
 def test_rejects_a_selected_directory_without_legacy_data(tmp_path):
     old, new, flatpak_info = _layout(tmp_path)
     (old / "anura").mkdir(parents=True)
