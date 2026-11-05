@@ -115,4 +115,10 @@ no "install anyway" path.
   fail-closed semantics, headless), `tests/test_tessdata_consistency.py`
   (anti-drift checker, headless) and
   `tests/test_language_download_integrity.py` (atomic install and digest
-  verification, GTK-marked).
+  verification, GTK-marked). The latter also exercises the complete mocked
+  download, checksum-verification and installation path for all three
+  quality profiles: `fast` (`tessdata_fast/`), `standard` (`tessdata/`) and
+  `best` (`tessdata_best/`). Each case asserts the selected upstream
+  repository URL and confirms that the model is installed only in its
+  matching quality directory. Synthetic response bodies are used, so the
+  tests never fetch real upstream model files.
