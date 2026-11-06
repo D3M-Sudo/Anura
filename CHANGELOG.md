@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Fixed
+- AppImage: explicitly stage the architecture-matched `liblzo2.so.2` and `libEGL.so.1` runtime sonames into the AppDir after dependency resolution; include `libegl1` and verify both architectures through the clean-host ELF audit (#555)
+
+### Fixed
 - CI/AppImage: scope the clean-host ELF audit to Anura runtime payloads and explicit plugin paths, excluding only classified systemd/cryptsetup helper binaries and unused GL/visualisation plugins; keep GLib proxy backend resolution in the audit (#555)
 - CI/AppImage: remove nested single quotes from the Docker smoke-test script so the clean-host ELF audit parses correctly on x86_64 and aarch64 (#555)
 - CI/AppImage: fix shell quoting in the clean-host ELF dependency audit so the x86_64 and aarch64 smoke tests execute the audit instead of failing during Bash parsing (#555)
