@@ -491,6 +491,7 @@ jobs:
             apt_snapshot: 20261105T000000Z
             runner: ubuntu-24.04
             appimagetool_sha256: ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0
+            runtime_sha256: 2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d
           - arch: aarch64
             apt_arch: arm64
             apt_mirror: http://ports.ubuntu.com/ubuntu-ports/
@@ -498,6 +499,7 @@ jobs:
             apt_snapshot: 20261105T000000Z
             runner: ubuntu-24.04-arm
             appimagetool_sha256: f0837e7448a0c1e4e650a93bb3e85802546e60654ef287576f46c71c126a9158
+            runtime_sha256: 00cbdfcf917cc6c0ff6d3347d59e0ca1f7f45a6df1a428a0d6d8a78664d87444
     runs-on: ${{ matrix.variant.runner }}
     timeout-minutes: 90
     permissions:
@@ -528,6 +530,7 @@ jobs:
       - name: Install pinned AppImage tooling
         env:
           APPIMAGETOOL_SHA256: ${{ matrix.variant.appimagetool_sha256 }}
+          APPIMAGETOOL_RUNTIME_SHA256: ${{ matrix.variant.runtime_sha256 }}
           APPIMAGETOOL_ARCH: ${{ matrix.variant.arch }}
         run: |
           python3 -m venv --system-site-packages .appimage-tools
@@ -539,6 +542,13 @@ jobs:
           echo "$APPIMAGETOOL_SHA256  appimagetool" | sha256sum --check
           chmod +x appimagetool
           sudo install -m 0755 appimagetool /usr/local/bin/appimagetool
+          curl --fail --location --retry 3 \
+            "https://github.com/AppImage/type2-runtime/releases/download/20251108/runtime-${APPIMAGETOOL_ARCH}" \
+            -o appimage-runtime
+          echo "$APPIMAGETOOL_RUNTIME_SHA256  appimage-runtime" | sha256sum --check
+          chmod 0755 appimage-runtime
+          sudo install -m 0755 appimage-runtime /usr/local/lib/appimage-runtime
+          echo "APPIMAGETOOL_RUNTIME_FILE=/usr/local/lib/appimage-runtime" >> "$GITHUB_ENV"
           appimage-builder --version
           appimagetool --version
           uv --version
