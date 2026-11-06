@@ -7,8 +7,8 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import sys
 from pathlib import Path
+import sys
 
 ARCHITECTURES = ("x86_64", "aarch64")
 
