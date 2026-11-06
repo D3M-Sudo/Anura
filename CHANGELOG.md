@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Fixed
+- AppImage: bundle `liblzo2-2` and audit unresolved shared-library dependencies for every shipped ELF object on clean hosts for both architectures (#555)
 - AppImage: bundle `libxcb-render0`, required by GTK's dynamically loaded X11 backend on clean hosts (#555)
 - AppImage: explicitly bundle `libwayland-client0`, required by GTK's dynamically loaded Wayland backend on clean hosts (#555)
 - CI/AppImage: inspect embedded update metadata without `APPIMAGE_EXTRACT_AND_RUN`, which otherwise dispatches to AppRun and starts the payload (#555)
