@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-import runpy
 
 SCRIPT = Path(__file__).resolve().parents[1] / "build-aux" / "appimage" / "stage_runtime_libraries.sh"
 
