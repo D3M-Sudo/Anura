@@ -15,6 +15,8 @@ The dependency-complete AppDir is staged with the pinned appimage-builder 1.1.0 
 
 The bundle includes GTK4, Libadwaita, GtkSourceView, PyGObject/GI typelibs, libportal, notifications, GStreamer, Tesseract, the default English and Italian OCR models, GSettings schema, compiled Blueprint/GResource UI, gettext catalogs, desktop entry, icon, application license and the pinned AppImage runtime license. Ubuntu package copyright files are retained under usr/share/doc for the bundled native libraries.
 
+Before launch, the clean-host smoke test scans every ELF object under `usr/` with the AppDir library paths active. It fails with the affected object and unresolved soname whenever `ldd` reports `not found`; the test image installs `file` and `binutils` solely to perform this audit. The package manifest explicitly includes `liblzo2-2`, a transitive GTK/GI runtime dependency exposed by the clean Ubuntu 24.04 smoke test.
+
 ## Host boundary
 
 An AppImage cannot bundle kernel interfaces or graphics drivers. The host remains responsible for:
