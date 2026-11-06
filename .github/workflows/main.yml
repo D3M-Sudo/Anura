@@ -624,7 +624,7 @@ jobs:
               apt-get update -qq
               apt-get install -y --no-install-recommends xvfb xauth dbus-x11 ca-certificates
               NO_AT_BRIDGE=1 GTK_A11Y=none LIBGL_ALWAYS_SOFTWARE=1 \
-                timeout 90 dbus-run-session -- xvfb-run -a /opt/anura/AppRun --help
+                APPDIR=/opt/anura timeout 90 dbus-run-session -- xvfb-run -a /opt/anura/AppRun --help
             '
       - name: Upload AppImage and zsync CI artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
