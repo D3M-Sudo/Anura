@@ -647,7 +647,7 @@ jobs:
             -v "$PWD/squashfs-root:/opt/anura:ro" \
             ubuntu:24.04 bash -euxc '
               apt-get update -qq
-              apt-get install -y --no-install-recommends xvfb xauth dbus-x11 ca-certificates
+              apt-get install -y --no-install-recommends xvfb xauth dbus-x11 ca-certificates file binutils
               case "$(dpkg --print-architecture)" in
                 amd64) APP_LIBDIR=x86_64-linux-gnu ;;
                 arm64) APP_LIBDIR=aarch64-linux-gnu ;;
