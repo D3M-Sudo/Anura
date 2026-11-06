@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Flatpak: offer a portal-backed, user-selected migration of history and downloaded OCR models from the previous application ID; no cross-application filesystem permission is required (#613)
 
 ### Changed
+- Desktop integration: keep `Graphics` as the single main application-menu category and add the freedesktop `Scanning` and `OCR` additional categories, preventing duplicate menu entries while retaining precise OCR classification (#620)
 - OCR/tessdata: migrate all 489 pinned models across `tessdata`, `tessdata_fast` and `tessdata_best` to raw-content SHA-256 plus byte-size verification (manifest v2); validate complete upstream inventories and publish the manifest atomically, while runtime rejects legacy SHA-1 manifests and fails closed on integrity mismatches (#577)
 - Tests: cover mocked download, checksum verification and installation for `fast`, `standard` (Normale) and `best`, asserting each profile's repository URL and destination directory (#577)
 - Flatpak: migrate the application ID to `io.github.d3m_sudo.anura` while preserving the existing GSettings storage path; generate the release manifest from the local source-of-truth manifest and validate shared fields and exact-commit pinning in CI (#612)

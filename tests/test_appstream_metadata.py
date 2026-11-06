@@ -129,7 +129,10 @@ def test_desktop_entry_has_the_required_keys() -> None:
     assert entries["Icon"] == APP_ID
     assert entries["Exec"].split()[0] == "anura"
     assert entries["Terminal"] == "false"
-    assert set(entries["Categories"].rstrip(";").split(";")) >= {"Graphics", "Utility"}
+    categories = set(entries["Categories"].rstrip(";").split(";"))
+    # Graphics is the single main category; Scanning and OCR are additional
+    # freedesktop categories. Utility would introduce a second main category.
+    assert categories == {"Graphics", "Scanning", "OCR"}
 
 
 def test_every_declared_locale_has_a_catalogue() -> None:
