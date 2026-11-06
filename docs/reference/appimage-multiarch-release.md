@@ -13,7 +13,7 @@ The jobs verify the runner architecture before building. No artifact is cross-la
 
 The AppDir is assembled with the pinned appimage-builder recipe, AppImageKit appimagetool 1.9.1 and type2-runtime 20251108 (both architecture-specific binaries SHA-256 verified in CI). The runtime is passed through APPIMAGETOOL_RUNTIME_FILE so appimagetool cannot silently fetch the mutable continuous runtime. Native runtime packages come from the Ubuntu 24.04 archive snapshot 20261105T000000Z; update this snapshot only through a reviewed change and a full two-architecture CI run. Python runtime dependencies are exported from uv.lock with --locked, and the application source package plus generated release-notes module are copied into the AppDir. Dependencies are installed from the lock without re-resolving versions. Builds run natively so compiled extensions match the target architecture.
 
-The bundle includes GTK4, Libadwaita, GtkSourceView, PyGObject/GI typelibs, libportal, notifications, GStreamer, Tesseract, the default English and Italian OCR models, GSettings schema, compiled Blueprint/GResource UI, gettext catalogs, desktop entry, icon and application license.
+The bundle includes GTK4, Libadwaita, GtkSourceView, PyGObject/GI typelibs, libportal, notifications, GStreamer, Tesseract, the default English and Italian OCR models, GSettings schema, compiled Blueprint/GResource UI, gettext catalogs, desktop entry, icon, application license and the pinned AppImage runtime license. Ubuntu package copyright files are retained under usr/share/doc for the bundled native libraries.
 
 ## Host boundary
 

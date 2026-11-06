@@ -31,6 +31,8 @@ cp "$SOURCE_ROOT/data/io.github.d3m_sudo.anura.metainfo.xml.in" "$APPDIR/usr/sha
 cp "$SOURCE_ROOT/data/icons/io.github.d3m_sudo.anura.svg" "$APPDIR/usr/share/icons/hicolor/scalable/apps/"
 cp "$SOURCE_ROOT/data/icons/io.github.d3m_sudo.anura.svg" "$APPDIR/io.github.d3m_sudo.anura.svg"
 cp "$SOURCE_ROOT/LICENSE" "$APPDIR/usr/share/licenses/io.github.d3m_sudo.anura/LICENSE"
+cp "$SOURCE_ROOT/build-aux/appimage/licenses/type2-runtime-LICENSE" \
+  "$APPDIR/usr/share/licenses/io.github.d3m_sudo.anura/AppImage-type2-runtime-LICENSE"
 
 cd "$SOURCE_ROOT"
 uv export --locked --no-dev --no-emit-project --format requirements-txt \

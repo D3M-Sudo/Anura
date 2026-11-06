@@ -50,7 +50,6 @@ AppDir:
       - mesa-vulkan-drivers
   files:
     exclude:
-      - usr/share/doc
       - usr/share/man
       - usr/share/lintian
       - usr/share/locale-langpack
