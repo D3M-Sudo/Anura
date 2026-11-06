@@ -21,6 +21,7 @@ Only plans with unfinished, currently relevant scope belong here. Completed plan
 
 | Document | Status | Purpose |
 | --- | --- | --- |
+| [planning/appimage-zsync-release-plan.md](planning/appimage-zsync-release-plan.md) | **Active / planning** | AppImage architecture feasibility, packaging boundaries, zsync/Gear Lever update flow and tag-only release gates (#555) |
 | [planning/math-ocr-evaluation.md](planning/math-ocr-evaluation.md) | **Active / research** | Mathematical OCR engine evaluation, licensing/provenance gates, resource benchmarks and proposed LaTeX-first integration plan (#570) |
 
 ## Historical material (audit/legacy)
