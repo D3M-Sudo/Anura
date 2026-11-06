@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+- CI/AppImage: use the multi-architecture Ubuntu snapshot archive for amd64 and arm64, and compare Ubuntu package versions with dpkg semantics to avoid appimage-builder's PEP 440 parsing failure (#555)
+
 ### Added
 - Release/AppImage: add native x86_64 and aarch64 self-contained AppImage builds, embedded GitHub Releases zsync metadata, paired update files, strict release-asset validation and SHA-256 checksums (#555)
 - Docs/release: document AppImage runtime boundaries, downloads, checksums and Gear Lever-compatible zsync updates (#555)

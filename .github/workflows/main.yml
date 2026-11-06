@@ -486,17 +486,13 @@ jobs:
         variant:
           - arch: x86_64
             apt_arch: amd64
-            apt_mirror: http://archive.ubuntu.com/ubuntu/
-            apt_security_mirror: http://security.ubuntu.com/ubuntu/
-            apt_snapshot: 20261105T000000Z
+            apt_snapshot_url: https://snapshot.ubuntu.com/ubuntu/20261105T000000Z/
             runner: ubuntu-24.04
             appimagetool_sha256: ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0
             runtime_sha256: 2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d
           - arch: aarch64
             apt_arch: arm64
-            apt_mirror: http://ports.ubuntu.com/ubuntu-ports/
-            apt_security_mirror: http://ports.ubuntu.com/ubuntu-ports/
-            apt_snapshot: 20261105T000000Z
+            apt_snapshot_url: https://snapshot.ubuntu.com/ubuntu/20261105T000000Z/
             runner: ubuntu-24.04-arm
             appimagetool_sha256: f0837e7448a0c1e4e650a93bb3e85802546e60654ef287576f46c71c126a9158
             runtime_sha256: 00cbdfcf917cc6c0ff6d3347d59e0ca1f7f45a6df1a428a0d6d8a78664d87444
@@ -560,9 +556,7 @@ jobs:
           APP_VERSION: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
           APPIMAGE_ARCH: ${{ matrix.variant.arch }}
           APT_ARCH: ${{ matrix.variant.apt_arch }}
-          APT_MIRROR: ${{ matrix.variant.apt_mirror }}
-          APT_SECURITY_MIRROR: ${{ matrix.variant.apt_security_mirror }}
-          APT_SNAPSHOT: ${{ matrix.variant.apt_snapshot }}
+          APT_SNAPSHOT_URL: ${{ matrix.variant.apt_snapshot_url }}
         run: |
           . .appimage-tools/bin/activate
           if [ -z "$APP_VERSION" ]; then
@@ -570,22 +564,22 @@ jobs:
           else
             APP_VERSION="${APP_VERSION#v}"
           fi
-          export APP_VERSION APPIMAGE_ARCH APT_ARCH APT_MIRROR APT_SECURITY_MIRROR APT_SNAPSHOT
+          export APP_VERSION APPIMAGE_ARCH APT_ARCH APT_SNAPSHOT_URL
           GENERATED_RECIPE=build-aux/appimage/AppImageBuilder.ci.yml
           trap 'rm -f "$GENERATED_RECIPE"' EXIT
           sed \
             -e "s|{{APP_VERSION}}|$APP_VERSION|g" \
             -e "s|{{APPIMAGE_ARCH}}|$APPIMAGE_ARCH|g" \
             -e "s|{{APT_ARCH}}|$APT_ARCH|g" \
-            -e "s|{{APT_MIRROR}}|$APT_MIRROR|g" \
-            -e "s|{{APT_SECURITY_MIRROR}}|$APT_SECURITY_MIRROR|g" \
-            -e "s|{{APT_SNAPSHOT}}|$APT_SNAPSHOT|g" \
+            -e "s|{{APT_SNAPSHOT_URL}}|$APT_SNAPSHOT_URL|g" \
             build-aux/appimage/AppImageBuilder.yml > "$GENERATED_RECIPE"
           if grep -q '{{[A-Z_]*}}' "$GENERATED_RECIPE"; then
             echo "::error::Unresolved AppImage recipe variable"
             exit 1
           fi
-          APPIMAGE_EXTRACT_AND_RUN=1 appimage-builder \
+          python build-aux/appimage/appimage_builder_compat.py --self-test
+          APPIMAGE_EXTRACT_AND_RUN=1 python \
+            build-aux/appimage/appimage_builder_compat.py \
             --recipe "$GENERATED_RECIPE" --skip-test
           test -s "Anura-$APP_VERSION-$APPIMAGE_ARCH.AppImage"
           test -s "Anura-$APP_VERSION-$APPIMAGE_ARCH.AppImage.zsync"
