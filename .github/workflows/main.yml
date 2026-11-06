@@ -623,7 +623,7 @@ jobs:
           esac
           test -s "$IMAGE.zsync"
           UPDATE_INFORMATION="gh-releases-zsync|D3M-Sudo|Anura|latest|Anura-*-$EXPECTED_ARCH.AppImage.zsync"
-          APPIMAGE_EXTRACT_AND_RUN=1 "./$IMAGE" --appimage-updateinformation > update-information.txt
+          "./$IMAGE" --appimage-updateinformation > update-information.txt
           grep -Fxq "$UPDATE_INFORMATION" update-information.txt
           grep -q "Anura-$APP_VERSION-$EXPECTED_ARCH.AppImage" "$IMAGE.zsync"
       - name: Smoke test extracted AppImage on a clean Ubuntu host
