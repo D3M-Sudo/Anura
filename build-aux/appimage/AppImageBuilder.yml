@@ -8,8 +8,10 @@ AppDir:
     name: Anura
     icon: io.github.d3m_sudo.anura
     version: "{{APP_VERSION}}"
-    exec: usr/bin/anura
-    exec_args: $@
+    # AppRun2 requires an ELF executable. Launch the bundled Python ELF
+    # directly; the application entrypoint performs relocatable setup.
+    exec: usr/bin/python3
+    exec_args: usr/lib/anura/appimage_entrypoint.py $@
   apt:
     arch: "{{APT_ARCH}}"
     sources:
@@ -60,7 +62,9 @@ AppDir:
       PYTHONPATH: "${APPDIR}/usr/lib/python3.12/site-packages:${APPDIR}/usr/lib/python3/dist-packages"
       GSETTINGS_SCHEMA_DIR: "${APPDIR}/usr/share/glib-2.0/schemas"
       ANURA_LOCALE_DIR: "${APPDIR}/usr/share/locale"
+      ANURA_VERSION: "{{APP_VERSION}}"
       TESSDATA_PREFIX: "${APPDIR}/usr/share/tesseract-ocr/5/tessdata"
+      TESSDATA_PREFIX_SYSTEM: "${APPDIR}/usr/share/tesseract-ocr/5/tessdata"
 AppImage:
   arch: "{{APPIMAGE_ARCH}}"
   file_name: "Anura-{{APP_VERSION}}-{{APPIMAGE_ARCH}}.AppImage"
