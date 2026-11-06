@@ -7,7 +7,7 @@ is_non_runtime_elf() {
   local path="$1" root="$2" libdir="$3"
   case "$path" in
     "$root/usr/bin/systemd-"*|"$root/usr/bin/journalctl"|"$root/usr/bin/busctl"|"$root/usr/bin/networkctl"|"$root/usr/bin/localectl"|"$root/usr/bin/timedatectl"|"$root/usr/bin/hostnamectl"|"$root/usr/bin/loginctl"|"$root/usr/bin/kernel-install"|"$root/usr/bin/varlinkctl") return 0 ;;
-    "$root/usr/lib/systemd/"*|"$root/usr/lib/$libdir/systemd/"*|"$root/usr/lib/$libdir/cryptsetup/"*) return 0 ;;
+    "$root/usr/lib/systemd/"*|"$root/usr/lib/$libdir/systemd/libsystemd-core-"*|"$root/usr/lib/$libdir/systemd/libsystemd-shared-"*|"$root/usr/lib/$libdir/cryptsetup/libcryptsetup-token-systemd-"*) return 0 ;;
     # These are optional visualisation/GL plugins pulled in by APT, not used
     # by Anura's GTK UI or audio/TTS path. Other GStreamer plugins remain audited.
     "$root/usr/lib/$libdir/caca/libgl_plugin.so"*) return 0 ;;
@@ -36,7 +36,7 @@ APP_LIBDIR="${2:?usage: audit_elf_dependencies.sh APP_ROOT APP_LIBDIR}"
 [[ -d "$APP_ROOT/usr" ]] || { echo "::error::AppDir has no usr directory: $APP_ROOT"; exit 1; }
 # libproxy's backend and PulseAudio's private helper live in subdirectories;
 # add those exact runtime directories rather than suppressing their failures.
-export LD_LIBRARY_PATH="$APP_ROOT/usr/lib/$APP_LIBDIR:$APP_ROOT/usr/lib/$APP_LIBDIR/libproxy:$APP_ROOT/usr/lib/$APP_LIBDIR/pulseaudio:$APP_ROOT/usr/lib"
+export LD_LIBRARY_PATH="$APP_ROOT/usr/lib/$APP_LIBDIR:$APP_ROOT/usr/lib/$APP_LIBDIR/libproxy:$APP_ROOT/usr/lib/$APP_LIBDIR/pulseaudio:$APP_ROOT/usr/lib/$APP_LIBDIR/systemd:$APP_ROOT/usr/lib"
 
 missing=0
 audited=0
