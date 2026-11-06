@@ -27,7 +27,7 @@ import pytest
 
 pytest.importorskip("gi")
 
-from anura.config import MAX_MODEL_SIZE_BYTES, TESSDATA_URL
+from anura.config import MAX_MODEL_SIZE_BYTES, TESSDATA_BEST_URL, TESSDATA_FAST_URL, TESSDATA_URL
 from anura.services.language.download_manager import DownloadManager
 from anura.utils.tessdata_integrity import ref_from_url, repo_key_from_url
 
@@ -39,11 +39,6 @@ def _response(payloads, headers=None):
     response.iter_content = lambda chunk_size=8192: iter(payloads)
     response.raise_for_status = MagicMock()
     return response
-
-
-def _git_blob_sha1(data: bytes) -> str:
-    """Mirror GitBlobHasher: SHA-1 over git's ``blob <size>`` framing."""
-    return hashlib.sha1(f"blob {len(data)}\x00".encode() + data, usedforsecurity=False).hexdigest()
 
 
 @pytest.fixture
@@ -59,12 +54,68 @@ def stub_integrity(monkeypatch):
         repository = {
             "url": base_url,
             "tag": ref_from_url(base_url),
-            "files": {filename: {"size": len(payload), "sha1": _git_blob_sha1(payload)}},
+            "files": {filename: {"size": len(payload), "sha256": hashlib.sha256(payload).hexdigest()}},
         }
         repo = repo_key_from_url(base_url)
         monkeypatch.setattr("anura.utils.tessdata_integrity.load_checksums", lambda: {repo: repository})
 
     return _install
+
+
+@pytest.mark.parametrize(
+    ("quality", "expected_url", "relative_dir"),
+    [
+        ("fast", TESSDATA_FAST_URL, Path("tessdata_fast")),
+        ("standard", TESSDATA_URL, Path(".")),
+        ("best", TESSDATA_BEST_URL, Path("tessdata_best")),
+    ],
+)
+def test_each_quality_downloads_from_its_repository_into_its_directory(
+    tmp_path: Path,
+    stub_integrity,
+    quality: str,
+    expected_url: str,
+    relative_dir: Path,
+) -> None:
+    """Exercise the complete mocked install path for all three model profiles.
+
+    Each profile must request the matching upstream repository, resolve its
+    checksum from that repository's manifest namespace, and install only into
+    its designated quality directory. The payload and checksum are synthetic:
+    this test never downloads real tessdata models.
+    """
+    tessdata_dir = tmp_path / "tessdata"
+    tessdata_dir.mkdir()
+    payload = f"synthetic-{quality}-model".encode("ascii")
+    stub_integrity(expected_url, "fra.traineddata", payload)
+    response = _response([payload], {"content-length": str(len(payload))})
+    target_dir = tessdata_dir / relative_dir
+    final_path = target_dir / "fra.traineddata"
+
+    with (
+        patch("anura.services.language.download_manager.TESSDATA_DIR", str(tessdata_dir)),
+        patch("anura.services.language.download_manager.settings") as mock_settings,
+        patch("anura.services.language.download_manager.shutil.which", return_value="/usr/bin/tesseract"),
+    ):
+        mock_settings.get_string.return_value = quality
+        dm = DownloadManager()
+        with patch.object(dm.session, "get", return_value=response) as mock_get:
+            result = dm.download_begin("fra")
+
+    assert result == "fra"
+    mock_get.assert_called_once()
+    requested_url = mock_get.call_args.args[0]
+    assert requested_url == f"{expected_url}fra.traineddata"
+    assert final_path.read_bytes() == payload
+    assert response.close.called
+
+    for other_dir in (
+        tessdata_dir,
+        tessdata_dir / "tessdata_fast",
+        tessdata_dir / "tessdata_best",
+    ):
+        if other_dir != target_dir:
+            assert not (other_dir / "fra.traineddata").exists()
 
 
 @pytest.mark.gtk

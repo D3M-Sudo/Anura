@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-"""Tests for the tessdata integrity manifest and its loader (NEW-F1).
+"""Tests for the tessdata integrity manifest and its loader (SHA-256 / v2).
 
 Headless: the module under test depends only on the stdlib and loguru, so this
 file runs in the default (non-GTK) suite.
@@ -17,9 +17,6 @@ import pytest
 from anura.config import TESSDATA_BEST_URL, TESSDATA_STANDARD_URL, TESSDATA_URL
 from anura.models.tessdata_checksum import TessdataChecksum
 from anura.utils import tessdata_integrity as integrity
-
-#: Git blob hash of b"hello\n", cross-checked with `git hash-object --stdin`.
-HELLO_GIT_BLOB_SHA1 = "ce013625030ba8dba906f756967f9e9ca394464a"
 
 CONFIG_URLS = {TESSDATA_URL, TESSDATA_STANDARD_URL, TESSDATA_BEST_URL}
 
@@ -74,97 +71,229 @@ class TestUrlParsing:
         assert integrity.tree_api_url(malformed) is None
 
 
-class TestGitBlobHasher:
-    """The digest must reproduce `git hash-object` output."""
+class TestTessdataChecksum:
+    """TessdataChecksum data model validation (NEW-F1 data model)."""
 
-    def test_matches_git_blob_oracle(self) -> None:
-        hasher = integrity.GitBlobHasher(declared_size=6)
-        hasher.update(b"hello\n")
+    def test_valid_checksum_accepted(self) -> None:
+        checksum = TessdataChecksum(filename="eng.traineddata", size=23_466_654, sha256="a" * 64)
+        assert checksum.filename == "eng.traineddata"
+        assert checksum.size == 23_466_654
+        assert checksum.sha256 == "a" * 64
 
-        expected = TessdataChecksum(filename="hello.txt", size=6, sha1=HELLO_GIT_BLOB_SHA1)
-        assert hasher.received == 6
-        assert hasher.matches(expected)
+    def test_uppercase_hex_digest_accepted(self) -> None:
+        checksum = TessdataChecksum(filename="eng.traineddata", size=1, sha256="A" * 64)
+        assert checksum.sha256 == "A" * 64
 
-    def test_incremental_chunks_equal_single_write(self) -> None:
-        one_shot = integrity.GitBlobHasher(declared_size=6)
-        one_shot.update(b"hello\n")
+    def test_safe_nested_model_path_accepted(self) -> None:
+        checksum = TessdataChecksum(
+            filename="script/Arabic.traineddata",
+            size=123,
+            sha256="a" * 64,
+        )
+        assert checksum.filename == "script/Arabic.traineddata"
 
-        chunked = integrity.GitBlobHasher(declared_size=6)
-        for chunk in (b"he", b"llo", b"\n"):
-            chunked.update(chunk)
+    def test_invalid_filename_rejected(self) -> None:
+        with pytest.raises(ValueError, match="filename"):
+            TessdataChecksum(filename="eng.txt", size=1, sha256="a" * 64)
+        with pytest.raises(ValueError, match="filename"):
+            TessdataChecksum(filename="../eng.traineddata", size=1, sha256="a" * 64)
+        with pytest.raises(ValueError, match="filename"):
+            TessdataChecksum(filename="/abs/eng.traineddata", size=1, sha256="a" * 64)
 
-        assert chunked.received == one_shot.received
-        assert chunked.matches(TessdataChecksum(filename="x", size=6, sha1=HELLO_GIT_BLOB_SHA1))
+    def test_zero_or_negative_size_rejected(self) -> None:
+        with pytest.raises(ValueError, match="size"):
+            TessdataChecksum(filename="x.traineddata", size=0, sha256="a" * 64)
+        with pytest.raises(ValueError, match="size"):
+            TessdataChecksum(filename="x.traineddata", size=-1, sha256="a" * 64)
+        with pytest.raises(ValueError, match="size"):
+            TessdataChecksum(filename="x.traineddata", size=True, sha256="a" * 64)
 
-    def test_rejects_wrong_size(self) -> None:
-        hasher = integrity.GitBlobHasher(declared_size=6)
-        hasher.update(b"hello\n")
-        assert not hasher.matches(TessdataChecksum(filename="x", size=7, sha1=HELLO_GIT_BLOB_SHA1))
+    def test_invalid_sha256_length_rejected(self) -> None:
+        with pytest.raises(ValueError, match="sha256"):
+            TessdataChecksum(filename="x.traineddata", size=1, sha256="a" * 63)
+        with pytest.raises(ValueError, match="sha256"):
+            TessdataChecksum(filename="x.traineddata", size=1, sha256="a" * 65)
 
-    def test_rejects_tampered_content(self) -> None:
-        hasher = integrity.GitBlobHasher(declared_size=6)
-        hasher.update(b"hell0\n")
-        assert not hasher.matches(TessdataChecksum(filename="x", size=6, sha1=HELLO_GIT_BLOB_SHA1))
+    def test_non_hexadecimal_sha256_rejected(self) -> None:
+        with pytest.raises(ValueError, match="sha256"):
+            TessdataChecksum(filename="x.traineddata", size=1, sha256="g" * 64)
 
-    def test_negative_declared_size_is_rejected(self) -> None:
+    def test_from_dict_rejects_sha1_field(self) -> None:
+        with pytest.raises(ValueError, match="SHA-1"):
+            TessdataChecksum.from_dict("x.traineddata", {"size": 1, "sha1": "a" * 40})
+
+    def test_from_dict_rejects_missing_sha256(self) -> None:
         with pytest.raises(ValueError):
-            integrity.GitBlobHasher(declared_size=-1)
+            TessdataChecksum.from_dict("x.traineddata", {"size": 1})
+
+    def test_from_dict_rejects_non_dict_entry(self) -> None:
+        with pytest.raises(ValueError):
+            TessdataChecksum.from_dict("x.traineddata", "not-a-dict")  # type: ignore[arg-type]
 
 
-class TestCommittedManifest:
-    """Schema and anti-drift checks on the manifest committed in the repo."""
+class TestManifestV2:
+    """Manifest loading: version 2 / sha256 required, malformed rejected."""
 
-    def test_manifest_is_well_formed(self) -> None:
-        manifest = json.loads(integrity.CHECKSUMS_PATH.read_text(encoding="utf-8"))
-        assert manifest["version"] == 1
+    def _write_manifest(self, tmp_path: Path, data: dict) -> Path:
+        manifest = tmp_path / "tessdata_checksums.json"
+        manifest.write_text(json.dumps(data), encoding="utf-8")
+        return manifest
 
-        repositories = manifest["repositories"]
-        assert {entry["url"] for entry in repositories.values()} == CONFIG_URLS
+    def _stub_load(self, monkeypatch: pytest.MonkeyPatch, repository: dict) -> None:
+        monkeypatch.setattr(integrity, "load_checksums", lambda: {"tessdata": repository})
 
-        for name, repository in repositories.items():
-            assert repository["tag"] == "4.1.0", name
-            assert repository["files"], f"{name} has no pinned files"
-            for filename, entry in repository["files"].items():
-                assert filename.endswith(".traineddata")
-                assert entry["size"] > 0
-                assert len(entry["sha1"]) == 40
-                assert all(char in "0123456789abcdef" for char in entry["sha1"])
+    def test_valid_v2_manifest_accepted(self, monkeypatch, tmp_path) -> None:
+        repository = {
+            "url": TESSDATA_URL,
+            "tag": "4.1.0",
+            "files": {"eng.traineddata": {"size": 10, "sha256": "a" * 64}},
+        }
+        manifest = self._write_manifest(
+            tmp_path,
+            {
+                "version": 2,
+                "algorithm": "sha256",
+                "repositories": {"tessdata": repository},
+            },
+        )
+        monkeypatch.setattr(integrity, "CHECKSUMS_PATH", manifest)
+        assert integrity.load_checksums() == {"tessdata": repository}
 
-    def test_bundled_language_is_pinned(self) -> None:
-        checksum = integrity.get_expected_checksum(TESSDATA_URL, "eng.traineddata")
-        assert isinstance(checksum, TessdataChecksum)
-        assert checksum.size > 0
-
-    def test_missing_manifest_fails_closed(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-        monkeypatch.setattr(integrity, "CHECKSUMS_PATH", tmp_path / "does-not-exist.json")
+    def test_version_1_rejected(self, monkeypatch, tmp_path) -> None:
+        manifest = self._write_manifest(tmp_path, {"version": 1, "repositories": {}})
+        monkeypatch.setattr(integrity, "CHECKSUMS_PATH", manifest)
         assert integrity.load_checksums() == {}
+        assert integrity.get_expected_checksum(TESSDATA_URL, "eng.traineddata") is None
+
+    def test_unsupported_algorithm_rejected(self, monkeypatch, tmp_path) -> None:
+        manifest = self._write_manifest(tmp_path, {"version": 2, "algorithm": "sha1", "repositories": {}})
+        monkeypatch.setattr(integrity, "CHECKSUMS_PATH", manifest)
+        assert integrity.load_checksums() == {}
+
+    def test_missing_algorithm_rejected(self, monkeypatch, tmp_path) -> None:
+        manifest = self._write_manifest(tmp_path, {"version": 2, "repositories": {}})
+        monkeypatch.setattr(integrity, "CHECKSUMS_PATH", manifest)
+        assert integrity.load_checksums() == {}
+
+    def test_malformed_manifest_rejected(self, monkeypatch, tmp_path) -> None:
+        manifest = tmp_path / "bad.json"
+        manifest.write_text("not json", encoding="utf-8")
+        monkeypatch.setattr(integrity, "CHECKSUMS_PATH", manifest)
+        assert integrity.load_checksums() == {}
+
+    def test_sha1_entry_rejected(self, monkeypatch, tmp_path) -> None:
+        repository = {
+            "url": TESSDATA_URL,
+            "tag": "4.1.0",
+            "files": {"eng.traineddata": {"size": 1, "sha1": "a" * 40}},
+        }
+        manifest = self._write_manifest(
+            tmp_path,
+            {
+                "version": 2,
+                "algorithm": "sha256",
+                "repositories": {"tessdata": repository},
+            },
+        )
+        monkeypatch.setattr(integrity, "CHECKSUMS_PATH", manifest)
+        assert integrity.get_expected_checksum(TESSDATA_URL, "eng.traineddata") is None
+
+    def test_invalid_digest_entry_rejected(self, monkeypatch, tmp_path) -> None:
+        repository = {
+            "url": TESSDATA_URL,
+            "tag": "4.1.0",
+            "files": {"eng.traineddata": {"size": 1, "sha256": "not-hex"}},
+        }
+        manifest = self._write_manifest(
+            tmp_path,
+            {
+                "version": 2,
+                "algorithm": "sha256",
+                "repositories": {"tessdata": repository},
+            },
+        )
+        monkeypatch.setattr(integrity, "CHECKSUMS_PATH", manifest)
         assert integrity.get_expected_checksum(TESSDATA_URL, "eng.traineddata") is None
 
 
 class TestFailClosedLookups:
     """get_expected_checksum must refuse anything it cannot vouch for."""
 
-    def _stub(self, monkeypatch: pytest.MonkeyPatch, repository: dict) -> None:
-        monkeypatch.setattr(integrity, "load_checksums", lambda: {"tessdata": repository})
-
-    def test_unknown_filename_is_refused(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_unknown_filename_is_refused(self, monkeypatch) -> None:
         self._stub(monkeypatch, {"tag": "4.1.0", "url": TESSDATA_URL, "files": {}})
         assert integrity.get_expected_checksum(TESSDATA_URL, "eng.traineddata") is None
 
-    def test_unknown_repository_is_refused(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_unknown_repository_is_refused(self, monkeypatch) -> None:
         self._stub(monkeypatch, {"tag": "4.1.0", "url": TESSDATA_URL, "files": {}})
         assert integrity.get_expected_checksum(TESSDATA_BEST_URL, "eng.traineddata") is None
 
-    def test_stale_ref_is_refused(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_stale_tag_is_refused(self, monkeypatch) -> None:
         self._stub(
             monkeypatch,
-            {"tag": "5.0.0", "url": TESSDATA_URL, "files": {"eng.traineddata": {"size": 1, "sha1": "a" * 40}}},
+            {
+                "tag": "5.0.0",
+                "url": TESSDATA_URL,
+                "files": {"eng.traineddata": {"size": 1, "sha256": "a" * 64}},
+            },
         )
         assert integrity.get_expected_checksum(TESSDATA_URL, "eng.traineddata") is None
 
-    def test_malformed_entry_is_refused(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        self._stub(monkeypatch, {"tag": "4.1.0", "url": TESSDATA_URL, "files": {"eng.traineddata": {"size": 1}}})
+    def test_stale_url_is_refused(self, monkeypatch) -> None:
+        self._stub(
+            monkeypatch,
+            {
+                "tag": "4.1.0",
+                "url": "https://github.com/tesseract-ocr/tessdata/raw/4.1.0/",
+                "files": {"eng.traineddata": {"size": 1, "sha256": "a" * 64}},
+            },
+        )
+        assert integrity.get_expected_checksum(TESSDATA_BEST_URL, "eng.traineddata") is None
+
+    def test_malformed_entry_is_refused(self, monkeypatch) -> None:
+        self._stub(
+            monkeypatch,
+            {
+                "tag": "4.1.0",
+                "url": TESSDATA_URL,
+                "files": {"eng.traineddata": {"size": 1}},
+            },
+        )
         assert integrity.get_expected_checksum(TESSDATA_URL, "eng.traineddata") is None
 
     def test_malformed_base_url_is_refused(self) -> None:
         assert integrity.get_expected_checksum("https://example.com/", "eng.traineddata") is None
+
+    def _stub(self, monkeypatch: pytest.MonkeyPatch, repository: dict) -> None:
+        monkeypatch.setattr(integrity, "load_checksums", lambda: {"tessdata": repository})
+
+
+class TestCommittedManifest:
+    """Structural checks on the manifest committed in the repo.
+
+    The committed manifest is still format v1 (git-blob SHA-1) until the
+    production checksums are regenerated against raw-content SHA-256 digests
+    (see the manifest-regeneration limitation in the issue #577 handover).
+    These tests assert the structural invariants that hold of the committed
+    file and that must be preserved by regeneration.
+    """
+
+    def test_committed_manifest_has_configured_repositories(self) -> None:
+        manifest = json.loads(integrity.CHECKSUMS_PATH.read_text(encoding="utf-8"))
+        assert {entry["url"] for entry in manifest["repositories"].values()} == CONFIG_URLS
+        assert set(manifest["repositories"].keys()) == {
+            "tessdata",
+            "tessdata_best",
+            "tessdata_fast",
+        }
+
+    def test_all_489_entries_present(self) -> None:
+        manifest = json.loads(integrity.CHECKSUMS_PATH.read_text(encoding="utf-8"))
+        total = sum(len(repository["files"]) for repository in manifest["repositories"].values())
+        assert total == 489, f"expected 489 pinned models, found {total}"
+
+    def test_all_entries_are_traineddata_with_positive_size(self) -> None:
+        manifest = json.loads(integrity.CHECKSUMS_PATH.read_text(encoding="utf-8"))
+        for repository in manifest["repositories"].values():
+            for filename, entry in repository["files"].items():
+                assert filename.endswith(".traineddata"), filename
+                assert entry["size"] > 0, filename

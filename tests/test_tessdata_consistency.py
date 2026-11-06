@@ -1,14 +1,6 @@
 #!/usr/bin/env python3
 # tests/test_tessdata_consistency.py
-"""Tests for build-aux/check_tessdata_consistency.py
-
-Verifies that the tessdata consistency checker correctly detects:
-- Case A: Consistent state (PASS)
-- Case B: config.py different (FAIL)
-- Case C: Main manifest different (FAIL)
-- Case D: Local manifest different (FAIL)
-- Case E: Unrelated structural differences (PASS)
-"""
+"""Tests for build-aux/check_tessdata_consistency.py."""
 
 import json
 from pathlib import Path
@@ -16,311 +8,196 @@ import sys
 
 import pytest
 
-# Import the checker module
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "build-aux"))
 import check_tessdata_consistency as checker
 
-# Valid test commit SHAs (40 hex chars)
-VALID_SHA = "923915d4ced2a7235221788285785a29c4a42d4a"
-DIFFERENT_SHA = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+BASE_URL = "https://github.com/tesseract-ocr/tessdata_best/raw/4.1.0/"
 
 
-@pytest.fixture
-def temp_config(tmp_path: Path) -> Path:
-    """Create a temporary config.py with tessdata URLs."""
+@pytest.fixture(autouse=True)
+def small_expected_inventory(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Use a small synthetic inventory; production constants remain 489."""
+    monkeypatch.setattr(
+        checker,
+        "EXPECTED_REPOSITORY_COUNTS",
+        {"tessdata": 1, "tessdata_best": 1, "tessdata_fast": 1},
+    )
+    monkeypatch.setattr(checker, "_fetch_upstream_model_names", lambda _url: {"eng.traineddata"})
+
+
+def _write_config(tmp_path: Path, *, alias: bool = True) -> Path:
     config = tmp_path / "config.py"
+    fast_assignment = (
+        'TESSDATA_FAST_URL = "https://github.com/tesseract-ocr/tessdata_fast/raw/4.1.0/"\n'
+        "TESSDATA_STANDARD_URL = TESSDATA_FAST_URL"
+        if alias
+        else 'TESSDATA_STANDARD_URL = "https://github.com/tesseract-ocr/tessdata_fast/raw/4.1.0/"'
+    )
     config.write_text(
-        f"# tessdata configuration\n"
-        f'TESSDATA_BEST_URL = "https://github.com/tesseract-ocr/tessdata_best/raw/{VALID_SHA}/"\n'
+        'TESSDATA_URL = "https://github.com/tesseract-ocr/tessdata/raw/4.1.0/"\n'
+        f'TESSDATA_BEST_URL = "{BASE_URL}"\n'
+        f"{fast_assignment}\n",
+        encoding="utf-8",
     )
     return config
 
 
-@pytest.fixture
-def temp_manifest(tmp_path: Path) -> Path:
-    """Create a temporary Flatpak manifest with tessdata module."""
-    manifest = tmp_path / "manifest.json"
-    data = {
-        "app-id": "io.github.d3msudo.anura",
-        "modules": [
-            {
-                "name": "tessdata",
-                "buildsystem": "simple",
-                "build-commands": ["install -Dm0644 eng.traineddata /app/share/tessdata/eng.traineddata"],
-                "sources": [
-                    {
-                        "type": "file",
-                        "url": f"https://github.com/tesseract-ocr/tessdata_fast/raw/{VALID_SHA}/eng.traineddata",
-                        "sha256": "abc123",
-                    }
-                ],
-            }
-        ],
+def _write_manifest(
+    tmp_path: Path,
+    repositories: dict,
+    *,
+    version: int = 2,
+    algorithm: str = "sha256",
+) -> Path:
+    path = tmp_path / "checksums.json"
+    path.write_text(
+        json.dumps({"version": version, "algorithm": algorithm, "repositories": repositories}),
+        encoding="utf-8",
+    )
+    return path
+
+
+def _repo(url: str, files: dict | None = None, tag: str = "4.1.0") -> dict:
+    return {
+        "url": url,
+        "tag": tag,
+        "files": files if files is not None else {"eng.traineddata": {"size": 10, "sha256": "a" * 64}},
     }
-    manifest.write_text(json.dumps(data, indent=4))
-    return manifest
 
 
-@pytest.fixture
-def temp_checksums_manifest(tmp_path: Path):
-    """Build an integrity manifest whose pinned URL uses ``ref``."""
+def _repositories() -> dict:
+    return {
+        "tessdata": _repo("https://github.com/tesseract-ocr/tessdata/raw/4.1.0/"),
+        "tessdata_best": _repo(BASE_URL),
+        "tessdata_fast": _repo("https://github.com/tesseract-ocr/tessdata_fast/raw/4.1.0/"),
+    }
 
-    def _build(ref: str) -> Path:
-        manifest = tmp_path / f"tessdata_checksums_{ref}.json"
-        manifest.write_text(
-            json.dumps(
-                {
-                    "version": 1,
-                    "repositories": {
-                        "tessdata_best": {
-                            "url": f"https://github.com/tesseract-ocr/tessdata_best/raw/{ref}/",
-                            "tag": ref,
-                            "files": {},
-                        }
-                    },
-                }
-            )
+
+def _configure_checker(
+    monkeypatch: pytest.MonkeyPatch,
+    config: Path,
+    manifest: Path,
+) -> None:
+    monkeypatch.setattr(checker, "CONFIG_PY", config)
+    monkeypatch.setattr(checker, "CHECKSUMS_MANIFEST", manifest)
+
+
+class TestConfigAliasResolution:
+    def test_standard_alias_resolves_to_fast_repository(self, tmp_path: Path) -> None:
+        urls = checker.extract_tessdata_urls_from_config(_write_config(tmp_path))
+        assert urls == {
+            "tessdata": "https://github.com/tesseract-ocr/tessdata/raw/4.1.0/",
+            "tessdata_best": BASE_URL,
+            "tessdata_fast": "https://github.com/tesseract-ocr/tessdata_fast/raw/4.1.0/",
+        }
+
+
+class TestManifestValidation:
+    def test_complete_v2_manifest_passes(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        config = _write_config(tmp_path)
+        manifest = _write_manifest(tmp_path, _repositories())
+        _configure_checker(monkeypatch, config, manifest)
+        assert checker.check_checksums_manifest() == []
+
+    @pytest.mark.parametrize(
+        ("version", "algorithm", "message"),
+        [(1, "sha256", "version 2"), (2, "sha1", "sha256")],
+    )
+    def test_legacy_manifest_rejected(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        version: int,
+        algorithm: str,
+        message: str,
+    ) -> None:
+        config = _write_config(tmp_path)
+        manifest = _write_manifest(tmp_path, _repositories(), version=version, algorithm=algorithm)
+        _configure_checker(monkeypatch, config, manifest)
+        assert any(message in error for error in checker.check_checksums_manifest())
+
+    def test_missing_repository_rejected(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        config = _write_config(tmp_path)
+        repositories = _repositories()
+        repositories.pop("tessdata_fast")
+        manifest = _write_manifest(tmp_path, repositories)
+        _configure_checker(monkeypatch, config, manifest)
+        assert any("repository keys" in error for error in checker.check_checksums_manifest())
+
+    def test_unexpected_repository_rejected(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        config = _write_config(tmp_path)
+        repositories = _repositories()
+        repositories["unexpected"] = _repo("https://github.com/tesseract-ocr/unexpected/raw/4.1.0/")
+        manifest = _write_manifest(tmp_path, repositories)
+        _configure_checker(monkeypatch, config, manifest)
+        assert any("Unexpected tessdata repository" in error for error in checker.check_checksums_manifest())
+
+    def test_repository_key_must_match_url(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        config = _write_config(tmp_path)
+        repositories = _repositories()
+        repositories["tessdata_best"]["url"] = "https://github.com/tesseract-ocr/tessdata_fast/raw/4.1.0/"
+        manifest = _write_manifest(tmp_path, repositories)
+        _configure_checker(monkeypatch, config, manifest)
+        assert any("does not match URL repository" in error for error in checker.check_checksums_manifest())
+
+    def test_wrong_model_count_rejected(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        config = _write_config(tmp_path)
+        repositories = _repositories()
+        repositories["tessdata"]["files"]["extra.traineddata"] = {
+            "size": 11,
+            "sha256": "b" * 64,
+        }
+        manifest = _write_manifest(tmp_path, repositories)
+        _configure_checker(monkeypatch, config, manifest)
+        assert any("must contain 1 models" in error for error in checker.check_checksums_manifest())
+
+    def test_sha1_field_and_invalid_digest_rejected(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        config = _write_config(tmp_path)
+        repositories = _repositories()
+        repositories["tessdata"]["files"]["eng.traineddata"] = {
+            "size": 10,
+            "sha256": "invalid",
+            "sha1": "b" * 40,
+        }
+        manifest = _write_manifest(tmp_path, repositories)
+        _configure_checker(monkeypatch, config, manifest)
+        errors = checker.check_checksums_manifest()
+        assert any("exactly" in error for error in errors)
+        assert any("invalid raw SHA-256" in error for error in errors)
+
+    def test_filename_inventory_must_match_upstream(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        config = _write_config(tmp_path)
+        repositories = _repositories()
+        repositories["tessdata"]["files"] = {"ita.traineddata": {"size": 10, "sha256": "a" * 64}}
+        manifest = _write_manifest(tmp_path, repositories)
+        _configure_checker(monkeypatch, config, manifest)
+        errors = checker.check_checksums_manifest()
+        assert any("model inventory differs from upstream" in error for error in errors)
+
+    def test_nested_model_path_is_accepted(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        config = _write_config(tmp_path)
+        repositories = _repositories()
+        repositories["tessdata"]["files"] = {"script/Arabic.traineddata": {"size": 10, "sha256": "a" * 64}}
+        manifest = _write_manifest(tmp_path, repositories)
+        _configure_checker(monkeypatch, config, manifest)
+        monkeypatch.setattr(
+            checker,
+            "_fetch_upstream_model_names",
+            lambda url: {"script/Arabic.traineddata"} if "/tessdata/raw/" in url else {"eng.traineddata"},
         )
-        return manifest
-
-    return _build
+        assert checker.check_checksums_manifest() == []
 
 
-class TestExtractShaFromConfig:
-    """Tests for extract_sha_from_config function."""
-
-    def test_valid_config(self, temp_config: Path) -> None:
-        """Extract SHA from a valid config file."""
-        sha = checker.extract_sha_from_config(temp_config)
-        assert sha == VALID_SHA
-
-    def test_missing_tessdata_url(self, tmp_path: Path) -> None:
-        """Return None when TESSDATA_BEST_URL is missing."""
-        config = tmp_path / "config.py"
-        config.write_text("# No tessdata URL here\n")
-        sha = checker.extract_sha_from_config(config)
-        assert sha is None
-
-    def test_malformed_url(self, tmp_path: Path) -> None:
-        """Return None when URL doesn't match expected pattern."""
-        config = tmp_path / "config.py"
-        config.write_text('TESSDATA_BEST_URL = "https://example.com/invalid/"\n')
-        sha = checker.extract_sha_from_config(config)
-        assert sha is None
-
-
-class TestExtractShasFromManifest:
-    """Tests for extract_shas_from_manifest function."""
-
-    def test_valid_manifest(self, temp_manifest: Path) -> None:
-        """Extract SHAs from a valid manifest."""
-        shas = checker.extract_shas_from_manifest(temp_manifest)
-        assert shas == [VALID_SHA]
-
-    def test_multiple_sources(self, tmp_path: Path) -> None:
-        """Extract multiple SHAs from tessdata module."""
-        manifest = tmp_path / "manifest.json"
-        data = {
-            "modules": [
-                {
-                    "name": "tessdata",
-                    "sources": [
-                        {"url": f"https://github.com/tesseract-ocr/tessdata_fast/raw/{VALID_SHA}/eng.traineddata"},
-                        {"url": f"https://github.com/tesseract-ocr/tessdata_fast/raw/{VALID_SHA}/ita.traineddata"},
-                    ],
-                }
-            ]
-        }
-        manifest.write_text(json.dumps(data))
-        shas = checker.extract_shas_from_manifest(manifest)
-        assert shas == [VALID_SHA, VALID_SHA]
-
-    def test_no_tessdata_module(self, tmp_path: Path) -> None:
-        """Return empty list when no tessdata module exists."""
-        manifest = tmp_path / "manifest.json"
-        data = {"modules": [{"name": "other-module"}]}
-        manifest.write_text(json.dumps(data))
-        shas = checker.extract_shas_from_manifest(manifest)
-        assert shas == []
-
-
-class TestConsistencyScenarios:
-    """Integration tests for the full consistency check.
-
-    These tests use monkeypatching to point the checker at temporary files.
-    """
-
-    def test_case_a_consistent(
-        self,
-        temp_config: Path,
-        temp_manifest: Path,
-        temp_checksums_manifest,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        """Case A: All references consistent -> PASS."""
-        monkeypatch.setattr(checker, "CONFIG_PY", temp_config)
-        monkeypatch.setattr(checker, "MANIFEST_MAIN", temp_manifest)
-        monkeypatch.setattr(checker, "MANIFEST_LOCAL", temp_manifest)
-        monkeypatch.setattr(checker, "CHECKSUMS_MANIFEST", temp_checksums_manifest(VALID_SHA))
-
-        result = checker.main()
-        assert result == 0
-
-    def test_case_b_config_different(
-        self,
-        tmp_path: Path,
-        temp_manifest: Path,
-        temp_checksums_manifest,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        """Case B: config.py has different SHA -> FAIL."""
-        config = tmp_path / "config.py"
-        config.write_text(
-            f'TESSDATA_BEST_URL = "https://github.com/tesseract-ocr/tessdata_best/raw/{DIFFERENT_SHA}/"\n'
+class TestMainIntegration:
+    def test_consistent_flatpak_refs_pass(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        config = _write_config(tmp_path)
+        flatpak = tmp_path / "flatpak.json"
+        flatpak.write_text(
+            json.dumps({"modules": [{"name": "tessdata", "sources": [{"url": f"{BASE_URL}eng.traineddata"}]}]}),
+            encoding="utf-8",
         )
-        monkeypatch.setattr(checker, "CONFIG_PY", config)
-        monkeypatch.setattr(checker, "MANIFEST_MAIN", temp_manifest)
-        monkeypatch.setattr(checker, "MANIFEST_LOCAL", temp_manifest)
-        monkeypatch.setattr(checker, "CHECKSUMS_MANIFEST", temp_checksums_manifest(DIFFERENT_SHA))
-
-        result = checker.main()
-        assert result == 1
-
-    def test_case_c_main_manifest_different(
-        self,
-        tmp_path: Path,
-        temp_config: Path,
-        temp_manifest: Path,
-        temp_checksums_manifest,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        """Case C: Main manifest has different SHA -> FAIL."""
-        different_manifest = tmp_path / "different_manifest.json"
-        data = {
-            "modules": [
-                {
-                    "name": "tessdata",
-                    "sources": [
-                        {"url": f"https://github.com/tesseract-ocr/tessdata_fast/raw/{DIFFERENT_SHA}/eng.traineddata"}
-                    ],
-                }
-            ]
-        }
-        different_manifest.write_text(json.dumps(data))
-
-        monkeypatch.setattr(checker, "CONFIG_PY", temp_config)
-        monkeypatch.setattr(checker, "MANIFEST_MAIN", different_manifest)
-        monkeypatch.setattr(checker, "MANIFEST_LOCAL", temp_manifest)
-        monkeypatch.setattr(checker, "CHECKSUMS_MANIFEST", temp_checksums_manifest(VALID_SHA))
-
-        result = checker.main()
-        assert result == 1
-
-    def test_case_d_local_manifest_different(
-        self,
-        tmp_path: Path,
-        temp_config: Path,
-        temp_manifest: Path,
-        temp_checksums_manifest,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        """Case D: Local manifest has different SHA -> FAIL."""
-        different_manifest = tmp_path / "different_manifest.json"
-        data = {
-            "modules": [
-                {
-                    "name": "tessdata",
-                    "sources": [
-                        {"url": f"https://github.com/tesseract-ocr/tessdata_fast/raw/{DIFFERENT_SHA}/eng.traineddata"}
-                    ],
-                }
-            ]
-        }
-        different_manifest.write_text(json.dumps(data))
-
-        monkeypatch.setattr(checker, "CONFIG_PY", temp_config)
-        monkeypatch.setattr(checker, "MANIFEST_MAIN", temp_manifest)
-        monkeypatch.setattr(checker, "MANIFEST_LOCAL", different_manifest)
-        monkeypatch.setattr(checker, "CHECKSUMS_MANIFEST", temp_checksums_manifest(VALID_SHA))
-
-        result = checker.main()
-        assert result == 1
-
-    def test_case_e_unrelated_differences_pass(
-        self,
-        tmp_path: Path,
-        temp_config: Path,
-        temp_manifest: Path,
-        temp_checksums_manifest,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        """Case E: Unrelated structural differences -> PASS.
-
-        Differences in other modules should not cause false positives.
-        """
-        modified_manifest = tmp_path / "modified_manifest.json"
-        data = {
-            "modules": [
-                {
-                    "name": "leptonica",
-                    "sources": [{"type": "archive", "url": "https://example.com/leptonica.tar.gz"}],
-                },
-                {
-                    "name": "tessdata",
-                    "sources": [
-                        {"url": f"https://github.com/tesseract-ocr/tessdata_fast/raw/{VALID_SHA}/eng.traineddata"}
-                    ],
-                },
-                {
-                    "name": "extra-module",
-                    "sources": [{"type": "archive", "url": "https://example.com/extra.tar.gz"}],
-                },
-            ]
-        }
-        modified_manifest.write_text(json.dumps(data))
-
-        monkeypatch.setattr(checker, "CONFIG_PY", temp_config)
-        monkeypatch.setattr(checker, "MANIFEST_MAIN", modified_manifest)
-        monkeypatch.setattr(checker, "MANIFEST_LOCAL", temp_manifest)
-        monkeypatch.setattr(checker, "CHECKSUMS_MANIFEST", temp_checksums_manifest(VALID_SHA))
-
-        result = checker.main()
-        assert result == 0
-
-    def test_stale_checksums_manifest_fails(
-        self,
-        tmp_path: Path,
-        temp_config: Path,
-        temp_manifest: Path,
-        temp_checksums_manifest,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        """A re-pinned config.py without regenerating the integrity manifest -> FAIL.
-
-        This is the anti-drift guard added with the F1 integrity verification:
-        every runtime download would fail closed if the manifest were stale.
-        """
-        monkeypatch.setattr(checker, "CONFIG_PY", temp_config)
-        monkeypatch.setattr(checker, "MANIFEST_MAIN", temp_manifest)
-        monkeypatch.setattr(checker, "MANIFEST_LOCAL", temp_manifest)
-        # Manifest pinned to a stale ref while config.py points at VALID_SHA
-        monkeypatch.setattr(checker, "CHECKSUMS_MANIFEST", temp_checksums_manifest(DIFFERENT_SHA))
-
-        result = checker.main()
-        assert result == 1
-
-    def test_missing_checksums_manifest_fails(
-        self,
-        tmp_path: Path,
-        temp_config: Path,
-        temp_manifest: Path,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        """A deleted integrity manifest -> FAIL (fail closed)."""
-        monkeypatch.setattr(checker, "CONFIG_PY", temp_config)
-        monkeypatch.setattr(checker, "MANIFEST_MAIN", temp_manifest)
-        monkeypatch.setattr(checker, "MANIFEST_LOCAL", temp_manifest)
-        monkeypatch.setattr(checker, "CHECKSUMS_MANIFEST", tmp_path / "nonexistent.json")
-
-        result = checker.main()
-        assert result == 1
+        manifest = _write_manifest(tmp_path, _repositories())
+        _configure_checker(monkeypatch, config, manifest)
+        monkeypatch.setattr(checker, "MANIFEST_MAIN", flatpak)
+        monkeypatch.setattr(checker, "MANIFEST_LOCAL", flatpak)
+        assert checker.main() == 0
