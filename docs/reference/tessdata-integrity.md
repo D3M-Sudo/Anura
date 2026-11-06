@@ -122,3 +122,73 @@ no "install anyway" path.
   repository URL and confirms that the model is installed only in its
   matching quality directory. Synthetic response bodies are used, so the
   tests never fetch real upstream model files.
+
+## Manifest maintenance procedure
+
+The manifest generator is a **manual maintenance operation**, not part of
+normal CI or application builds. It transfers and hashes every model in
+the three configured upstream repositories (currently about 3.9 GB).
+Do not run it on a developer workstation with constrained bandwidth,
+storage or memory.
+
+### Before starting an update
+
+1. Confirm that an upstream model release or pinned ref actually needs to
+   change. Do not regenerate merely to refresh timestamps.
+2. Start from the current `feature` branch and create a disposable branch
+   named `chore/tessdata-<description>` or
+   `maintenance/tessdata-<description>`.
+3. Update the three repository URLs/tags in `anura/config.py` as needed.
+   Keep the profile-to-repository mapping unchanged unless the application
+   code and tests are deliberately being changed too.
+4. Update the expected inventory counts in
+   `build-aux/check_tessdata_consistency.py` and in the generation
+   workflow's validation step when upstream model inventories change.
+   These are deliberate drift guards: derive the new counts from the
+   complete upstream trees, not from the previous manifest.
+
+### Run the generator on GitHub Actions
+
+1. Open **Actions → Generate tessdata SHA-256 manifest → Run workflow**.
+2. Select the temporary maintenance branch as the workflow ref. The
+   workflow accepts only branch names beginning with `chore/tessdata-`
+   or `maintenance/tessdata-`; it refuses to run on protected or
+   unrelated refs.
+3. Allow the run to finish. It installs the pinned generator dependency,
+   streams each raw model into SHA-256, validates the manifest and exact
+   upstream inventories, then commits the generated JSON only to the
+   selected temporary branch.
+4. If the generated manifest is unchanged, the workflow exits without
+   creating an empty commit.
+
+GitHub exposes `workflow_dispatch` for a workflow only after that workflow
+file is present on the repository's default branch. This repository's
+default branch is currently `development`; therefore the workflow must
+first reach `development` through the normal
+`feature → testing → development` promotion flow before the Actions UI
+can dispatch it. The selected execution ref remains the temporary branch.
+
+### Review and integrate
+
+1. Inspect the generated manifest diff: repository URLs and tags must match
+   `anura/config.py`; every entry must contain only a positive integer
+   `size` and a 64-character lowercase SHA-256 digest.
+2. Run `python build-aux/check_tessdata_consistency.py` and the relevant
+   tessdata tests. Ordinary tests must continue to use fixtures/mocks and
+   must not download upstream models.
+3. Open a Pull Request from the temporary branch into `feature`. Include
+   the manifest, pin/inventory changes and this documentation if any of
+   those changed. Require the normal CI checks and review before merging.
+4. Delete the temporary branch after the PR is merged. Do not keep a
+   permanent hash-maintenance branch and do not push generated data
+   directly to `feature`, `testing`, `development` or `main`.
+
+The generation workflow intentionally has no scheduled full-generation
+trigger. A periodic check that downloads the models would waste several
+gigabytes when nothing changed. A future lightweight upstream-change
+detector may be added separately, but it should compare small GitHub
+metadata (release/tag/tree identity) and start the full generation only
+after a confirmed change. No such detector is enabled today: the three
+upstream repositories do not currently provide a sufficiently established
+release signal for Anura to treat an automated "latest" value as a safe
+replacement for reviewed pins.
