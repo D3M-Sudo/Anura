@@ -1,29 +1,40 @@
 name: Generate tessdata SHA-256 manifest
 
 on:
-  push:
-    branches:
-      - fix/tessdata-sha256-577
-    paths:
-      - "build-aux/generate_tessdata_checksums.py"
-      - "anura/config.py"
-      - "anura/utils/tessdata_integrity.py"
-      - ".github/workflows/tessdata-manifest-generation.yml"
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: tessdata-manifest-generation
+  group: tessdata-manifest-generation-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   generate:
-    name: Generate and commit all 489 raw-content digests
+    name: Generate and validate the complete tessdata manifest
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     steps:
-      - name: Check out PR branch
+      - name: Require a temporary tessdata maintenance branch
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [[ "$REF_TYPE" != "branch" ]]; then
+            echo "::error::Manifest generation must run on a branch."
+            exit 1
+          fi
+          case "$REF_NAME" in
+            chore/tessdata-*|maintenance/tessdata-*)
+              ;;
+            *)
+              echo "::error::Use a temporary branch named chore/tessdata-* or maintenance/tessdata-*."
+              exit 1
+              ;;
+          esac
+
+      - name: Check out the selected maintenance branch
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           ref: ${{ github.ref }}
@@ -72,7 +83,7 @@ jobs:
           PY
           git diff --check
 
-      - name: Commit generated manifest to the PR branch
+      - name: Commit generated manifest to the temporary branch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -83,5 +94,5 @@ jobs:
             echo "Generated manifest is unchanged; no commit required."
             exit 0
           }
-          git commit -m "chore(tessdata): generate complete SHA-256 manifest"
+          git commit -m "chore(tessdata): refresh SHA-256 manifest"
           git push origin "HEAD:${GITHUB_REF_NAME}"
