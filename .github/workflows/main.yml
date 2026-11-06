@@ -645,6 +645,7 @@ jobs:
           test -s squashfs-root/usr/share/doc/tesseract-ocr/copyright
           docker run --rm \
             -v "$PWD/squashfs-root:/opt/anura:ro" \
+            -v "$PWD/build-aux/appimage/audit_elf_dependencies.sh:/usr/local/bin/audit_elf_dependencies.sh:ro" \
             ubuntu:24.04 bash -euxc '
               apt-get update -qq
               apt-get install -y --no-install-recommends xvfb xauth dbus-x11 ca-certificates file binutils
@@ -654,24 +655,9 @@ jobs:
                 *) echo "::error::Unexpected smoke-test architecture"; exit 1 ;;
               esac
               export LD_LIBRARY_PATH="/opt/anura/usr/lib/$APP_LIBDIR:/opt/anura/usr/lib"
-              echo "=== Auditing every bundled ELF dependency in the clean host ==="
-              missing=0
-              while IFS= read -r -d "" elf; do
-                if file -b "$elf" | grep -q "^ELF "; then
-                  deps="$(ldd "$elf" 2>&1 || true)"
-                  unresolved="$(printf "%s\\n" "$deps" | grep "not found" || true)"
-                  if [ -n "$unresolved" ]; then
-                    echo "::error file=$elf::Unresolved bundled ELF dependencies:"
-                    printf "%s\\n" "$unresolved"
-                    missing=1
-                  fi
-                fi
-              done < <(find /opt/anura/usr -type f -print0)
-              if [ "$missing" -ne 0 ]; then
-                echo "::error::AppDir contains unresolved shared-library dependencies"
-                exit 1
-              fi
-              echo "All bundled ELF dependencies resolve in the clean-host baseline."
+              echo "=== Auditing the declared Anura runtime ELF dependency scope ==="
+              bash /usr/local/bin/audit_elf_dependencies.sh --self-test
+              bash /usr/local/bin/audit_elf_dependencies.sh /opt/anura "$APP_LIBDIR"
               NO_AT_BRIDGE=1 GTK_A11Y=none LIBGL_ALWAYS_SOFTWARE=1 \
                 APPDIR=/opt/anura timeout 90 dbus-run-session -- xvfb-run -a /opt/anura/AppRun --help
             '
