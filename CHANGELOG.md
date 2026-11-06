@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- Docs: add the public project roadmap, documenting approved near-term priorities, longer-term directions and roadmap maintenance policy (#632)
 - History: each stored entry now offers an **Open in external editor** action. The full immutable entry text is exported asynchronously to a private per-user file and handed off through `Gtk.FileLauncher` (#624)
 - History: each stored entry now offers a **Text-to-Speech replay** action, reusing the shared TTS pipeline and the OCR language stored with the entry while respecting the explicit TTS-language preference (#626)
 - CI/Flatpak: build Flatpak bundles on native x86_64 and aarch64 runners, producing architecture-specific bundles and license-inventory artifacts (#618)
