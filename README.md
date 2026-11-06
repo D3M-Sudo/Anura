@@ -185,6 +185,8 @@ Valid levels: `TRACE`, `DEBUG`, `INFO` (default), `WARNING`, `ERROR`, `CRITICAL`
 | gettext | latest |
 | uv | latest |
 
+The `5.3.4` entry identifies the **Tesseract OCR engine**, not the language-model data version. Anura pins the downloadable `.traineddata` files separately to the upstream data-repository ref `4.1.0`; these model files are compatible with Tesseract 5.x. See [Tessdata Model Integrity](docs/reference/tessdata-integrity.md#engine-and-traineddata-versions-are-independent) for the distinction and model provenance.
+
 **Ubuntu / Linux Mint / Debian:**
 
 ```bash
