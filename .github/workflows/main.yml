@@ -591,7 +591,8 @@ jobs:
           sed "s|{{APP_VERSION}}|$APP_VERSION|g" build-aux/appimage/AppRun > squashfs-root/AppRun
           chmod 0755 squashfs-root/AppRun
           rm -f "$IMAGE" "$IMAGE.zsync"
-          appimagetool --no-appstream squashfs-root "$IMAGE"
+          UPDATE_INFORMATION="gh-releases-zsync|D3M-Sudo|Anura|latest|Anura-*-$APPIMAGE_ARCH.AppImage.zsync"
+          appimagetool --no-appstream --updateinformation "$UPDATE_INFORMATION" squashfs-root "$IMAGE"
           test -s "$IMAGE"
           # Generate the control file from the final, repackaged AppImage.
           # Keep the asset URL relative because both files ship side-by-side
@@ -621,7 +622,9 @@ jobs:
             aarch64) readelf -h "$IMAGE" | grep -q 'AArch64' ;;
           esac
           test -s "$IMAGE.zsync"
-          grep -a -q 'gh-releases-zsync|D3M-Sudo|Anura|latest|Anura-' "$IMAGE"
+          UPDATE_INFORMATION="gh-releases-zsync|D3M-Sudo|Anura|latest|Anura-*-$EXPECTED_ARCH.AppImage.zsync"
+          APPIMAGE_EXTRACT_AND_RUN=1 "./$IMAGE" --appimage-updateinformation > update-information.txt
+          grep -Fxq "$UPDATE_INFORMATION" update-information.txt
           grep -q "Anura-$APP_VERSION-$EXPECTED_ARCH.AppImage" "$IMAGE.zsync"
       - name: Smoke test extracted AppImage on a clean Ubuntu host
         env:
