@@ -593,7 +593,13 @@ jobs:
           rm -f "$IMAGE" "$IMAGE.zsync"
           appimagetool --no-appstream squashfs-root "$IMAGE"
           test -s "$IMAGE"
+          # Generate the control file from the final, repackaged AppImage.
+          # Keep the asset URL relative because both files ship side-by-side
+          # in the same GitHub Release.
+          zsyncmake -e -C -u "$IMAGE" -o "$IMAGE.zsync" "$IMAGE"
           test -s "$IMAGE.zsync"
+          grep -q "^Filename: $IMAGE$" "$IMAGE.zsync"
+          grep -q "^URL: $IMAGE$" "$IMAGE.zsync"
           # Ensure the final image contains our shell entrypoint, not AppRun2.
           rm -rf squashfs-root
           APPIMAGE_EXTRACT_AND_RUN=1 "./$IMAGE" --appimage-extract >/dev/null
