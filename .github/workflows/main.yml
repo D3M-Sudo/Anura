@@ -241,7 +241,7 @@ jobs:
   # JOB 2: Flatpak build and optional release
   flatpak-builder:
     name: Flatpak build (${{ matrix.variant.arch }})
-    needs: python-quality
+    needs: [python-quality, gtk-tests]
     strategy:
       fail-fast: false
       matrix:
@@ -479,7 +479,7 @@ jobs:
   # Native self-contained AppImage builds; artifacts never cross architectures.
   appimage-builder:
     name: AppImage build (${{ matrix.variant.arch }})
-    needs: [python-quality, gtk-tests]
+    needs: python-quality
     strategy:
       fail-fast: false
       matrix:
