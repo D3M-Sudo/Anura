@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Fixed
+- CI/AppImage: generate each `.zsync` control file from the final repackaged AppImage with `zsyncmake`; the intermediate appimage-builder image's control file is discarded (#555)
 - CI/AppImage: use appimage-builder only to stage the dependency-complete AppDir, then replace its AppRun2 launcher and repackage with the pinned appimagetool runtime to avoid the known glibc compatibility-runtime startup failure (#555)
 - CI/AppImage: use the multi-architecture Ubuntu snapshot archive for amd64 and arm64, and compare Ubuntu package versions with dpkg semantics to avoid appimage-builder's PEP 440 parsing failure (#555)
 
