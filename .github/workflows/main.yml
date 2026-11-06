@@ -241,7 +241,7 @@ jobs:
   # JOB 2: Flatpak build and optional release
   flatpak-builder:
     name: Flatpak build (${{ matrix.variant.arch }})
-    needs: [python-quality, gtk-tests]
+    needs: python-quality
     strategy:
       fail-fast: false
       matrix:
