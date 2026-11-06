@@ -595,6 +595,7 @@ jobs:
           test -s "$IMAGE"
           test -s "$IMAGE.zsync"
           # Ensure the final image contains our shell entrypoint, not AppRun2.
+          rm -rf squashfs-root
           APPIMAGE_EXTRACT_AND_RUN=1 "./$IMAGE" --appimage-extract >/dev/null
           head -n 1 squashfs-root/AppRun | grep -q '^#!/bin/sh
       - name: Verify AppImage architecture and embedded update metadata
