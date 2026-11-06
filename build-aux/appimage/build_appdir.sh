@@ -45,34 +45,49 @@ python3 "$SOURCE_ROOT/build-aux/generate_release_notes.py" \
 
 cat > "$APPDIR/usr/lib/anura/appimage_entrypoint.py" <<'PY'
 from __future__ import annotations
+
 import os
 from pathlib import Path
-from gi.repository import Gio
+import sys
+
 appdir = Path(os.environ["APPDIR"])
+python_paths = (
+    appdir / "usr/lib/python3.12/site-packages",
+    appdir / "usr/lib/python3/dist-packages",
+)
+os.environ["PYTHONPATH"] = os.pathsep.join(map(str, python_paths))
+os.environ["GSETTINGS_SCHEMA_DIR"] = str(appdir / "usr/share/glib-2.0/schemas")
+os.environ["ANURA_LOCALE_DIR"] = str(appdir / "usr/share/locale")
+os.environ["TESSDATA_PREFIX"] = str(appdir / "usr/share/tesseract-ocr/5/tessdata")
+os.environ["TESSDATA_PREFIX_SYSTEM"] = os.environ["TESSDATA_PREFIX"]
+
+lib_dirs = [path for path in (appdir / "usr/lib").glob("*-linux-gnu") if path.is_dir()]
+lib_dirs.append(appdir / "usr/lib")
+typelib_dirs = [str(path) for path in appdir.glob("usr/lib/**/girepository-1.0") if path.is_dir()]
+if typelib_dirs:
+    os.environ["GI_TYPELIB_PATH"] = os.pathsep.join(typelib_dirs)
+gst_dirs = [path for path in lib_dirs if (path / "gstreamer-1.0").is_dir()]
+os.environ["GST_PLUGIN_PATH"] = os.pathsep.join(str(path / "gstreamer-1.0") for path in gst_dirs)
+
+sys.path[:0] = [str(path) for path in python_paths]
+from gi.repository import Gio  # noqa: E402
+
 resource_path = appdir / "usr/share/anura/io.github.d3m_sudo.anura.gresource"
 Gio.resources_register(Gio.Resource.load(str(resource_path)))
+
 from anura import main  # noqa: E402
+
 raise SystemExit(main.main(os.environ["ANURA_VERSION"]))
 PY
 
+# Keep the conventional command available for shells and desktop integrations
+# that invoke "anura" directly; AppRun itself uses the ELF Python interpreter.
 cat > "$APPDIR/usr/bin/anura" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
 : "${APPDIR:?AppImage runtime did not set APPDIR}"
-export PYTHONPATH="$APPDIR/usr/lib/python3.12/site-packages:$APPDIR/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
-export GSETTINGS_SCHEMA_DIR="$APPDIR/usr/share/glib-2.0/schemas"
-export ANURA_LOCALE_DIR="$APPDIR/usr/share/locale"
-export TESSDATA_PREFIX="$APPDIR/usr/share/tesseract-ocr/5/tessdata"
-export TESSDATA_PREFIX_SYSTEM="$TESSDATA_PREFIX"
-export ANURA_VERSION="__APP_VERSION__"
-export GST_PLUGIN_PATH="$APPDIR/usr/lib/gstreamer-1.0:$APPDIR/usr/lib/x86_64-linux-gnu/gstreamer-1.0:$APPDIR/usr/lib/aarch64-linux-gnu/gstreamer-1.0"
-mapfile -t typelib_dirs < <(find "$APPDIR/usr/lib" -type d -name girepository-1.0 -print)
-if ((${#typelib_dirs[@]})); then
-  export GI_TYPELIB_PATH="$(IFS=:; echo "${typelib_dirs[*]}")"
-fi
 exec "$APPDIR/usr/bin/python3" "$APPDIR/usr/lib/anura/appimage_entrypoint.py" "$@"
 SH
-sed -i "s/__APP_VERSION__/$APP_VERSION/" "$APPDIR/usr/bin/anura"
 chmod 0755 "$APPDIR/usr/bin/anura"
 
 desktop-file-validate "$APPDIR/usr/share/applications/io.github.d3m_sudo.anura.desktop"
