@@ -558,8 +558,22 @@ jobs:
             APP_VERSION="${APP_VERSION#v}"
           fi
           export APP_VERSION APPIMAGE_ARCH APT_ARCH APT_MIRROR APT_SECURITY_MIRROR APT_SNAPSHOT
+          GENERATED_RECIPE=build-aux/appimage/AppImageBuilder.ci.yml
+          trap 'rm -f "$GENERATED_RECIPE"' EXIT
+          sed \
+            -e "s|{{APP_VERSION}}|$APP_VERSION|g" \
+            -e "s|{{APPIMAGE_ARCH}}|$APPIMAGE_ARCH|g" \
+            -e "s|{{APT_ARCH}}|$APT_ARCH|g" \
+            -e "s|{{APT_MIRROR}}|$APT_MIRROR|g" \
+            -e "s|{{APT_SECURITY_MIRROR}}|$APT_SECURITY_MIRROR|g" \
+            -e "s|{{APT_SNAPSHOT}}|$APT_SNAPSHOT|g" \
+            build-aux/appimage/AppImageBuilder.yml > "$GENERATED_RECIPE"
+          if grep -q '{{[A-Z_]*}}' "$GENERATED_RECIPE"; then
+            echo "::error::Unresolved AppImage recipe variable"
+            exit 1
+          fi
           APPIMAGE_EXTRACT_AND_RUN=1 appimage-builder \
-            --recipe build-aux/appimage/AppImageBuilder.yml --skip-test
+            --recipe "$GENERATED_RECIPE" --skip-test
           test -s "Anura-$APP_VERSION-$APPIMAGE_ARCH.AppImage"
           test -s "Anura-$APP_VERSION-$APPIMAGE_ARCH.AppImage.zsync"
       - name: Verify AppImage architecture and embedded update metadata
