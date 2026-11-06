@@ -37,9 +37,9 @@ uv export --locked --no-dev --no-emit-project --format requirements-txt \
   --output-file "$APPDIR/.requirements.txt"
 uv pip install --python "$(command -v python3)" --target "$PYTHON_SITE" \
   --requirement "$APPDIR/.requirements.txt"
-uv build --wheel --no-sources --out-dir "$APPDIR/.wheelhouse"
-uv pip install --python "$(command -v python3)" --target "$PYTHON_SITE" \
-  --no-deps "$APPDIR"/.wheelhouse/*.whl
+cp -a "$SOURCE_ROOT/anura" "$PYTHON_SITE/"
+python3 "$SOURCE_ROOT/build-aux/generate_release_notes.py" \
+  "$SOURCE_ROOT/CHANGELOG.md" "$PYTHON_SITE/anura/_release_notes.py" "$APP_VERSION"
 
 cat > "$APPDIR/usr/lib/anura/appimage_entrypoint.py" <<'PY'
 from __future__ import annotations
@@ -78,5 +78,5 @@ desktop-file-validate "$APPDIR/io.github.d3m_sudo.anura.desktop"
 test -s "$APPDIR/usr/share/anura/io.github.d3m_sudo.anura.gresource"
 test -s "$APPDIR/usr/share/glib-2.0/schemas/gschemas.compiled"
 test -d "$PYTHON_SITE/anura"
-rm -rf "$APPDIR/.blueprint-ui" "$APPDIR/.wheelhouse" "$APPDIR/.requirements.txt"
+rm -rf "$APPDIR/.blueprint-ui" "$APPDIR/.requirements.txt"
 echo "Prepared relocatable AppDir for $APPIMAGE_ARCH ($APP_VERSION)"
