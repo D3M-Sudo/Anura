@@ -3,6 +3,7 @@
 # Copyright (C) 2026 D3M-Sudo (Anura)
 # SPDX-License-Identifier: MIT
 """Validate a complete pair of AppImage and zsync assets for each architecture."""
+
 from __future__ import annotations
 
 import argparse
@@ -14,11 +15,7 @@ ARCHITECTURES = ("x86_64", "aarch64")
 
 
 def expected_assets(version: str) -> set[str]:
-    return {
-        f"Anura-{version}-{arch}{suffix}"
-        for arch in ARCHITECTURES
-        for suffix in (".AppImage", ".AppImage.zsync")
-    }
+    return {f"Anura-{version}-{arch}{suffix}" for arch in ARCHITECTURES for suffix in (".AppImage", ".AppImage.zsync")}
 
 
 def validate_appimage_artifacts(directory: Path, version: str) -> list[tuple[str, int, str]]:

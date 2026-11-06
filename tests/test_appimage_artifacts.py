@@ -6,18 +6,14 @@ import runpy
 
 import pytest
 
-VALIDATOR = runpy.run_path(
-    str(Path(__file__).resolve().parents[1] / "build-aux" / "validate_appimage_artifacts.py")
-)
+VALIDATOR = runpy.run_path(str(Path(__file__).resolve().parents[1] / "build-aux" / "validate_appimage_artifacts.py"))
 validate_appimage_artifacts = VALIDATOR["validate_appimage_artifacts"]
 
 
 def make_assets(directory: Path, version: str = "0.2.1") -> None:
     for arch in ("x86_64", "aarch64"):
         (directory / f"Anura-{version}-{arch}.AppImage").write_bytes(f"image-{arch}".encode())
-        (directory / f"Anura-{version}-{arch}.AppImage.zsync").write_text(
-            f"zsync-{arch}", encoding="utf-8"
-        )
+        (directory / f"Anura-{version}-{arch}.AppImage.zsync").write_text(f"zsync-{arch}", encoding="utf-8")
 
 
 def test_validates_exact_appimage_and_zsync_pairs(tmp_path: Path) -> None:
