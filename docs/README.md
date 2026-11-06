@@ -13,6 +13,7 @@ documentation lives in the root (`README.md`, `AGENTS.md`, `CONTRIBUTING.md`,
 | [reference/dependencies.md](reference/dependencies.md) | **Current / normative** | Python/Flatpak dependency workflow: uv.lock, sync, FEDC/certifi ownership, headless GTK testing |
 | [reference/tessdata-integrity.md](reference/tessdata-integrity.md) | **Current / normative** | Tessdata model integrity: checksum manifest, fail-closed verification, atomic install, anti-drift |
 | [reference/flatpak-multiarch-release.md](reference/flatpak-multiarch-release.md) | **Current / normative** | GNOME 51 Flatpak manifests, native x86_64/aarch64 CI, runtime checks, release artifacts and SHA-256 verification |
+| [reference/tagged-release-verification.md](reference/tagged-release-verification.md) | **Current / operational** | First real tag-triggered verification of pinned download-artifact, native Flatpak artifacts, SHA-256 checksums and GitHub Release publication (#592) |
 
 ## Active planning
 
@@ -20,7 +21,6 @@ Only plans with unfinished, currently relevant scope belong here. Completed plan
 
 | Document | Status | Purpose |
 | --- | --- | --- |
-| [planning/appimage-zsync-release-plan.md](planning/appimage-zsync-release-plan.md) | **Active / planning** | AppImage architecture feasibility, packaging boundaries, zsync/Gear Lever update flow and tag-only release gates (#555) |
 | [planning/math-ocr-evaluation.md](planning/math-ocr-evaluation.md) | **Active / research** | Mathematical OCR engine evaluation, licensing/provenance gates, resource benchmarks and proposed LaTeX-first integration plan (#570) |
 
 ## Historical material (audit/legacy)
