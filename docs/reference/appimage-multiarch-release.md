@@ -11,7 +11,7 @@ The release pipeline builds one native AppImage per architecture on a matching G
 
 The jobs verify the runner architecture before building. No artifact is cross-labelled or reused between architectures.
 
-The AppDir is assembled with the pinned appimage-builder recipe and the pinned AppImageKit appimagetool 1.9.1 binaries (SHA-256 verified in CI). The recipe resolves native runtime package dependencies from Ubuntu 24.04 repositories. The application and its Python dependencies are installed into the AppDir on the native runner, so compiled extensions match the target architecture.
+The AppDir is assembled with the pinned appimage-builder recipe and the pinned AppImageKit appimagetool 1.9.1 binaries (SHA-256 verified in CI). Native runtime packages come from the Ubuntu 24.04 archive snapshot 20261105T000000Z; update this snapshot only through a reviewed change and a full two-architecture CI run. Python runtime dependencies are exported from uv.lock with --locked, and the application wheel is installed without re-resolving dependencies. Builds run natively so compiled extensions match the target architecture.
 
 The bundle includes GTK4, Libadwaita, GtkSourceView, PyGObject/GI typelibs, libportal, notifications, GStreamer, Tesseract, the default English and Italian OCR models, GSettings schema, compiled Blueprint/GResource UI, gettext catalogs, desktop entry, icon and application license.
 

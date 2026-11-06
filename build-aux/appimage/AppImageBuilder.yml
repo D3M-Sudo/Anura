@@ -13,11 +13,11 @@ AppDir:
   apt:
     arch: "{{APT_ARCH}}"
     sources:
-      - sourceline: "deb [arch={{APT_ARCH}}] {{APT_MIRROR}} noble main universe"
+      - sourceline: "deb [arch={{APT_ARCH}} snapshot={{APT_SNAPSHOT}}] {{APT_MIRROR}} noble main universe"
         key_url: "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x871920D1991BC93C"
-      - sourceline: "deb [arch={{APT_ARCH}}] {{APT_MIRROR}} noble-updates main universe"
+      - sourceline: "deb [arch={{APT_ARCH}} snapshot={{APT_SNAPSHOT}}] {{APT_MIRROR}} noble-updates main universe"
         key_url: "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x871920D1991BC93C"
-      - sourceline: "deb [arch={{APT_ARCH}}] {{APT_SECURITY_MIRROR}} noble-security main universe"
+      - sourceline: "deb [arch={{APT_ARCH}} snapshot={{APT_SNAPSHOT}}] {{APT_SECURITY_MIRROR}} noble-security main universe"
         key_url: "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x871920D1991BC93C"
     include:
       - python3

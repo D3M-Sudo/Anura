@@ -33,7 +33,13 @@ cp "$SOURCE_ROOT/data/icons/io.github.d3m_sudo.anura.svg" "$APPDIR/io.github.d3m
 cp "$SOURCE_ROOT/LICENSE" "$APPDIR/usr/share/licenses/io.github.d3m_sudo.anura/LICENSE"
 
 cd "$SOURCE_ROOT"
-uv pip install --python "$(command -v python3)" --target "$PYTHON_SITE" .
+uv export --locked --no-dev --no-emit-project --format requirements-txt \
+  --output-file "$APPDIR/.requirements.txt"
+uv pip install --python "$(command -v python3)" --target "$PYTHON_SITE" \
+  --requirement "$APPDIR/.requirements.txt"
+uv build --wheel --no-sources --out-dir "$APPDIR/.wheelhouse"
+uv pip install --python "$(command -v python3)" --target "$PYTHON_SITE" \
+  --no-deps "$APPDIR"/.wheelhouse/*.whl
 
 cat > "$APPDIR/usr/lib/anura/appimage_entrypoint.py" <<'PY'
 from __future__ import annotations
@@ -72,5 +78,5 @@ desktop-file-validate "$APPDIR/io.github.d3m_sudo.anura.desktop"
 test -s "$APPDIR/usr/share/anura/io.github.d3m_sudo.anura.gresource"
 test -s "$APPDIR/usr/share/glib-2.0/schemas/gschemas.compiled"
 test -d "$PYTHON_SITE/anura"
-rm -rf "$APPDIR/.blueprint-ui"
+rm -rf "$APPDIR/.blueprint-ui" "$APPDIR/.wheelhouse" "$APPDIR/.requirements.txt"
 echo "Prepared relocatable AppDir for $APPIMAGE_ARCH ($APP_VERSION)"
