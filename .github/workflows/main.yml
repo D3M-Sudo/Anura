@@ -475,6 +475,172 @@ jobs:
           retention-days: 7
 
 
+
+  # Native self-contained AppImage builds; artifacts never cross architectures.
+  appimage-builder:
+    name: AppImage build (\${{ matrix.variant.arch }})
+    needs: [python-quality, gtk-tests]
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+          - arch: x86_64
+            apt_arch: amd64
+            apt_mirror: http://archive.ubuntu.com/ubuntu/
+            apt_security_mirror: http://security.ubuntu.com/ubuntu/
+            runner: ubuntu-24.04
+            appimagetool_sha256: ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0
+          - arch: aarch64
+            apt_arch: arm64
+            apt_mirror: http://ports.ubuntu.com/ubuntu-ports/
+            apt_security_mirror: http://ports.ubuntu.com/ubuntu-ports/
+            runner: ubuntu-24.04-arm
+            appimagetool_sha256: f0837e7448a0c1e4e650a93bb3e85802546e60654ef287576f46c71c126a9158
+    runs-on: \${{ matrix.variant.runner }}
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify native runner architecture and install build tools
+        env:
+          EXPECTED_ARCH: \${{ matrix.variant.arch }}
+        run: |
+          case "$(uname -m)" in
+            x86_64) ACTUAL_ARCH=x86_64 ;;
+            aarch64|arm64) ACTUAL_ARCH=aarch64 ;;
+            *) echo "::error::Unsupported runner architecture: $(uname -m)"; exit 1 ;;
+          esac
+          test "$ACTUAL_ARCH" = "$EXPECTED_ARCH" || {
+            echo "::error::Expected native $EXPECTED_ARCH runner, got $ACTUAL_ARCH"
+            exit 1
+          }
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            python3-venv python3-dev python3-apt python3-gi \
+            blueprint-compiler desktop-file-utils gettext \
+            libglib2.0-bin zsync xvfb xauth file binutils libfuse2t64 curl
+      - name: Install pinned AppImage tooling
+        env:
+          APPIMAGETOOL_SHA256: \${{ matrix.variant.appimagetool_sha256 }}
+          APPIMAGETOOL_ARCH: \${{ matrix.variant.arch }}
+        run: |
+          python3 -m venv --system-site-packages .appimage-tools
+          . .appimage-tools/bin/activate
+          python -m pip install "appimage-builder==1.1.0" "uv==0.13.5"
+          curl --fail --location --retry 3 \
+            "https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-\${APPIMAGETOOL_ARCH}.AppImage" \
+            -o appimagetool
+          echo "$APPIMAGETOOL_SHA256  appimagetool" | sha256sum --check
+          chmod +x appimagetool
+          sudo install -m 0755 appimagetool /usr/local/bin/appimagetool
+          appimage-builder --version
+          appimagetool --version
+          uv --version
+      - name: Build architecture-specific AppImage
+        env:
+          APP_VERSION: \${{ github.ref_type == 'tag' && github.ref_name || '' }}
+          APPIMAGE_ARCH: \${{ matrix.variant.arch }}
+          APT_ARCH: \${{ matrix.variant.apt_arch }}
+          APT_MIRROR: \${{ matrix.variant.apt_mirror }}
+          APT_SECURITY_MIRROR: \${{ matrix.variant.apt_security_mirror }}
+        run: |
+          . .appimage-tools/bin/activate
+          if [ -z "$APP_VERSION" ]; then
+            APP_VERSION="$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          else
+            APP_VERSION="\${APP_VERSION#v}"
+          fi
+          export APP_VERSION APPIMAGE_ARCH APT_ARCH APT_MIRROR APT_SECURITY_MIRROR
+          APPIMAGE_EXTRACT_AND_RUN=1 appimage-builder \
+            --recipe build-aux/appimage/AppImageBuilder.yml --skip-test
+          test -s "Anura-$APP_VERSION-$APPIMAGE_ARCH.AppImage"
+          test -s "Anura-$APP_VERSION-$APPIMAGE_ARCH.AppImage.zsync"
+      - name: Verify AppImage architecture and embedded update metadata
+        env:
+          EXPECTED_ARCH: \${{ matrix.variant.arch }}
+          APP_VERSION: \${{ github.ref_type == 'tag' && github.ref_name || '' }}
+        run: |
+          if [ -z "$APP_VERSION" ]; then
+            APP_VERSION="$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          else
+            APP_VERSION="\${APP_VERSION#v}"
+          fi
+          IMAGE="Anura-$APP_VERSION-$EXPECTED_ARCH.AppImage"
+          case "$EXPECTED_ARCH" in
+            x86_64) readelf -h "$IMAGE" | grep -q 'Advanced Micro Devices X86-64' ;;
+            aarch64) readelf -h "$IMAGE" | grep -q 'AArch64' ;;
+          esac
+          test -s "$IMAGE.zsync"
+          grep -a -q 'gh-releases-zsync|D3M-Sudo|Anura|latest|Anura-' "$IMAGE"
+          grep -q "Anura-$APP_VERSION-$EXPECTED_ARCH.AppImage" "$IMAGE.zsync"
+      - name: Smoke test extracted AppImage on a clean Ubuntu host
+        env:
+          APP_VERSION: \${{ github.ref_type == 'tag' && github.ref_name || '' }}
+          APPIMAGE_ARCH: \${{ matrix.variant.arch }}
+        run: |
+          if [ -z "$APP_VERSION" ]; then
+            APP_VERSION="$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          else
+            APP_VERSION="\${APP_VERSION#v}"
+          fi
+          IMAGE="Anura-$APP_VERSION-$APPIMAGE_ARCH.AppImage"
+          chmod +x "$IMAGE"
+          APPIMAGE_EXTRACT_AND_RUN=1 "./$IMAGE" --appimage-extract >/dev/null
+          test -x squashfs-root/AppRun
+          docker run --rm \
+            -v "$PWD/squashfs-root:/opt/anura:ro" \
+            ubuntu:24.04 bash -euxc '
+              apt-get update -qq
+              apt-get install -y --no-install-recommends xvfb xauth dbus-x11 ca-certificates
+              NO_AT_BRIDGE=1 GTK_A11Y=none LIBGL_ALWAYS_SOFTWARE=1 \
+                timeout 90 dbus-run-session -- xvfb-run -a /opt/anura/AppRun --help
+            '
+      - name: Upload AppImage and zsync CI artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: anura-appimage-\${{ github.run_id }}-\${{ matrix.variant.arch }}
+          path: |
+            Anura-*.AppImage
+            Anura-*.AppImage.zsync
+          if-no-files-found: error
+          retention-days: 14
+
+  validate-appimage-artifacts:
+    name: Validate complete AppImage release set
+    needs: appimage-builder
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Download architecture-specific AppImages and zsync files
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          pattern: anura-appimage-\${{ github.run_id }}-*
+          path: release-appimages
+          merge-multiple: true
+      - name: Validate exact AppImage/zsync pairs and generate checksums
+        run: |
+          VERSION="$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then VERSION="\${GITHUB_REF_NAME#v}"; fi
+          python3 build-aux/validate_appimage_artifacts.py \
+            --directory release-appimages --version "$VERSION" \
+            --checksum-file SHA256SUMS-appimage
+      - name: Upload validated AppImage checksums
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-appimage-checksums-\${{ github.run_id }}
+          path: SHA256SUMS-appimage
+          retention-days: 30
+
   # Verify that the artifact hand-off contains exactly one non-empty bundle
   # for each supported architecture before any tag-triggered publication.
   validate-release-artifacts:
@@ -512,7 +678,7 @@ jobs:
   # race while attaching assets to the same GitHub Release.
   publish-release:
     if: startsWith(github.ref, 'refs/tags/')
-    needs: [flatpak-builder, validate-release-artifacts]
+    needs: [flatpak-builder, validate-release-artifacts, appimage-builder, validate-appimage-artifacts]
     runs-on: ubuntu-24.04
     permissions:
       actions: read
@@ -536,6 +702,18 @@ jobs:
           name: release-checksums-${{ github.run_id }}
           path: release-checksums
 
+      - name: Download architecture-specific AppImages and zsync files
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          pattern: anura-appimage-\${{ github.run_id }}-*
+          path: release-assets
+          merge-multiple: true
+      - name: Download validated AppImage SHA-256 checksums
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: release-appimage-checksums-\${{ github.run_id }}
+          path: release-checksums-appimage
+
       - name: Build release notes from CHANGELOG
         # Never publish a release with an empty body (#489).
         run: |
@@ -549,6 +727,9 @@ jobs:
           files: |
             release-assets/*.flatpak
             release-checksums/SHA256SUMS
+            release-assets/*.AppImage
+            release-assets/*.AppImage.zsync
+            release-checksums-appimage/SHA256SUMS-appimage
           body_path: release-notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

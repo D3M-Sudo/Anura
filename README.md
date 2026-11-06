@@ -114,6 +114,29 @@ On an ARM64 system, use `io.github.d3m_sudo.anura-aarch64.flatpak` in the instal
 
 The CI builds and validates x86_64 and aarch64 independently. See [Flatpak multi-architecture builds and releases](docs/reference/flatpak-multiarch-release.md) for the build, runtime and publication guarantees.
 
+### AppImage — Stable Release
+
+Anura also publishes a self-contained AppImage for each supported architecture:
+
+| Architecture | Release asset |
+| --- | --- |
+| x86_64 (Intel/AMD 64-bit) | `Anura-<version>-x86_64.AppImage` |
+| aarch64 (64-bit ARM) | `Anura-<version>-aarch64.AppImage` |
+
+Download the matching AppImage and its `.zsync` companion from [GitHub Releases](https://github.com/D3M-Sudo/Anura/releases/latest). The checksum inventory covers both architectures; verify the pair for your architecture with:
+
+```bash
+grep 'Anura-<version>-x86_64' SHA256SUMS-appimage | sha256sum -c -
+chmod +x Anura-<version>-x86_64.AppImage
+./Anura-<version>-x86_64.AppImage
+```
+
+Replace `x86_64` with `aarch64` on 64-bit ARM systems.
+
+The AppImage bundles the application runtime (GTK4, Libadwaita, GtkSourceView, PyGObject, GStreamer, Tesseract and the default English/Italian OCR models). The host still provides the Linux kernel, graphics/display drivers and an XDG Desktop Portal backend for secure screenshot capture. Additional OCR language models are downloaded on demand. Text-to-speech continues to use the external Google TTS service when explicitly invoked.
+
+Compatible managers such as Gear Lever can use the embedded GitHub Releases zsync metadata and the matching `.zsync` file for differential updates. Keep the AppImage and its companion file together when mirroring a release. See [AppImage multi-architecture builds and updates](docs/reference/appimage-multiarch-release.md) for packaging, validation and compatibility details.
+
 ### Runtime requirements
 
 Anura captures screenshots through the **XDG Desktop Portal**. The portal frontend is shipped with `xdg-desktop-portal`, but it needs a *backend* matching your desktop session.

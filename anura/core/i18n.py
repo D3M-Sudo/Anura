@@ -5,6 +5,7 @@
 
 import gettext
 import locale
+import os
 from pathlib import Path
 
 from loguru import logger
@@ -36,7 +37,8 @@ def _glib_bindtextdomain(domain: str, localedir: str) -> None:
 def setup_i18n():
     """Initialize localization."""
     project_name = APP_ID
-    possible_localedirs = [
+    configured_localedir = os.environ.get("ANURA_LOCALE_DIR")
+    possible_localedirs = ([Path(configured_localedir)] if configured_localedir else []) + [
         Path("/app/share/locale"),
         Path(__file__).parent.parent.parent / "builddir" / "po",
         Path(__file__).parent.parent.parent / "po",

@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- Release/AppImage: add native x86_64 and aarch64 self-contained AppImage builds, embedded GitHub Releases zsync metadata, paired update files, strict release-asset validation and SHA-256 checksums (#555)
+- Docs/release: document AppImage runtime boundaries, downloads, checksums and Gear Lever-compatible zsync updates (#555)
 - Docs/Flatpak: add a maintainer-operated Flathub submission readiness checklist covering current policy, architecture, manifest, licensing, permissions and validation boundaries (#494)
 - Docs/release: add an operational checklist for the first real tag-triggered verification of pinned artifact download, multiarch Flatpak publication and SHA-256 assets (#592)
 - Docs/release: add an AppImage multi-architecture and zsync planning baseline, keeping the proposed packaging path separate from the existing Flatpak release gate (#555)
@@ -20,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Flatpak: offer a portal-backed, user-selected migration of history and downloaded OCR models from the previous application ID; no cross-application filesystem permission is required (#613)
 
 ### Changed
+- Localization: allow packaged AppImage builds to select their bundled gettext catalog directory through ANURA_LOCALE_DIR (#555)
 - Desktop integration: keep `Graphics` as the single main application-menu category and add the freedesktop `Scanning` and `OCR` additional categories, preventing duplicate menu entries while retaining precise OCR classification (#620)
 - OCR/tessdata: migrate all 489 pinned models across `tessdata`, `tessdata_fast` and `tessdata_best` to raw-content SHA-256 plus byte-size verification (manifest v2); validate complete upstream inventories and publish the manifest atomically, while runtime rejects legacy SHA-1 manifests and fails closed on integrity mismatches (#577)
 - Tests: cover mocked download, checksum verification and installation for `fast`, `standard` (Normale) and `best`, asserting each profile's repository URL and destination directory (#577)
