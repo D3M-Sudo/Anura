@@ -588,7 +588,7 @@ jobs:
           test -s "$IMAGE"
           APPIMAGE_EXTRACT_AND_RUN=1 "./$IMAGE" --appimage-extract >/dev/null
           test -d squashfs-root/usr
-          cp build-aux/appimage/AppRun squashfs-root/AppRun
+          sed "s|{{APP_VERSION}}|$APP_VERSION|g" build-aux/appimage/AppRun > squashfs-root/AppRun
           chmod 0755 squashfs-root/AppRun
           rm -f "$IMAGE" "$IMAGE.zsync"
           appimagetool --no-appstream squashfs-root "$IMAGE"
