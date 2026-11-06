@@ -131,7 +131,7 @@ chmod +x Anura-<version>-x86_64.AppImage
 ./Anura-<version>-x86_64.AppImage
 ```
 
-Replace `x86_64` with `aarch64` on 64-bit ARM systems.
+Replace `<version>` with the version in the downloaded filename, and replace `x86_64` with `aarch64` on 64-bit ARM systems.
 
 The AppImage bundles the application runtime (GTK4, Libadwaita, GtkSourceView, PyGObject, GStreamer, Tesseract and the default English/Italian OCR models). The host still provides the Linux kernel, graphics/display drivers and an XDG Desktop Portal backend for secure screenshot capture. Additional OCR language models are downloaded on demand. Text-to-speech continues to use the external Google TTS service when explicitly invoked.
 

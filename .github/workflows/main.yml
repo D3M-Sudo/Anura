@@ -618,6 +618,9 @@ jobs:
           chmod +x "$IMAGE"
           APPIMAGE_EXTRACT_AND_RUN=1 "./$IMAGE" --appimage-extract >/dev/null
           test -x squashfs-root/AppRun
+          test -s squashfs-root/usr/share/licenses/io.github.d3m_sudo.anura/AppImage-type2-runtime-LICENSE
+          test -s squashfs-root/usr/share/doc/libgtk-4-1/copyright
+          test -s squashfs-root/usr/share/doc/tesseract-ocr/copyright
           docker run --rm \
             -v "$PWD/squashfs-root:/opt/anura:ro" \
             ubuntu:24.04 bash -euxc '
