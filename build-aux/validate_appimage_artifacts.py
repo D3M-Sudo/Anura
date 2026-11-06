@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: MIT
 """Validate a complete pair of AppImage and zsync assets for each architecture."""
 from __future__ import annotations
+
 import argparse
 import hashlib
 import sys
