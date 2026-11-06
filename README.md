@@ -213,6 +213,7 @@ The test suite includes headless unit tests (logic without GTK dependencies), in
 
 ## Documentation
 
+- [ROADMAP.md](ROADMAP.md) — public project direction and priorities
 - [docs/README.md](docs/README.md) — documentation index
 - [docs/reference/history-v1.md](docs/reference/history-v1.md) — Extraction History V1 (storage and persistence)
 - [docs/reference/history-v2.md](docs/reference/history-v2.md) — Extraction History V2 (interactive history rows and actions)
