@@ -657,9 +657,9 @@ jobs:
               echo "=== Auditing every bundled ELF dependency in the clean host ==="
               missing=0
               while IFS= read -r -d "" elf; do
-                if file -b "$elf" | grep -q '^ELF '; then
+                if file -b "$elf" | grep -q "^ELF "; then
                   deps="$(ldd "$elf" 2>&1 || true)"
-                  unresolved="$(printf '%s\\n' "$deps" | grep 'not found' || true)"
+                  unresolved="$(printf '%s\\n' "$deps" | grep "not found" || true)"
                   if [ -n "$unresolved" ]; then
                     printf '::error file=%s::Unresolved bundled ELF dependencies:\\n%s\\n' "$elf" "$unresolved"
                     missing=1
