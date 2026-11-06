@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Fixed
+- CI/AppImage: remove nested single quotes from the Docker smoke-test script so the clean-host ELF audit parses correctly on x86_64 and aarch64 (#555)
 - CI/AppImage: fix shell quoting in the clean-host ELF dependency audit so the x86_64 and aarch64 smoke tests execute the audit instead of failing during Bash parsing (#555)
 - AppImage: bundle `liblzo2-2` and audit unresolved shared-library dependencies for every shipped ELF object on clean hosts for both architectures (#555)
 - AppImage: bundle `libxcb-render0`, required by GTK's dynamically loaded X11 backend on clean hosts (#555)
