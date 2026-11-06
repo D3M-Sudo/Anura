@@ -36,6 +36,8 @@ AppDir:
       - libgtk-4-1
       # GTK's Wayland backend is dlopen'ed at runtime and must be bundled explicitly.
       - libwayland-client0
+      # GTK's X11 backend also dlopen's the XCB render extension.
+      - libxcb-render0
       - libadwaita-1-0
       - libgtksourceview-5-0
       - libportal1
