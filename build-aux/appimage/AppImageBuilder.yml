@@ -36,6 +36,8 @@ AppDir:
       - libgtk-4-1
       # Required by the GTK/GI runtime dependency closure on clean hosts.
       - liblzo2-2
+      # GTK/GSK's EGL loader dependency; explicitly include its GLVND soname.
+      - libegl1
       # GTK's Wayland backend is dlopen'ed at runtime and must be bundled explicitly.
       - libwayland-client0
       # GTK's X11 backend also dlopen's the XCB render extension.
