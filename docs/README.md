@@ -20,6 +20,7 @@ Only plans with unfinished, currently relevant scope belong here. Completed plan
 
 | Document | Status | Purpose |
 | --- | --- | --- |
+| [planning/math-ocr-evaluation.md](planning/math-ocr-evaluation.md) | **Active / research** | Mathematical OCR engine evaluation, licensing/provenance gates, resource benchmarks and proposed LaTeX-first integration plan (#570) |
 
 ## Historical material (audit/legacy)
 
