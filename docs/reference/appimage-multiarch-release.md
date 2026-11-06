@@ -1,0 +1,65 @@
+# AppImage multi-architecture builds and updates
+
+## Packaging contract
+
+The release pipeline builds one native AppImage per architecture on a matching GitHub-hosted runner:
+
+| AppImage | Runner | Ubuntu package architecture |
+| --- | --- | --- |
+| x86_64 | ubuntu-24.04 | amd64 |
+| aarch64 | ubuntu-24.04-arm | arm64 |
+
+The jobs verify the runner architecture before building. No artifact is cross-labelled or reused between architectures.
+
+The dependency-complete AppDir is staged with the pinned appimage-builder 1.1.0 recipe, but its generated AppRun2 launcher and intermediate AppImage are not shipped. CI extracts the staged filesystem, installs Anura's reviewed shell AppRun entrypoint, and repackages it with AppImageKit appimagetool 1.9.1 and the pinned type2-runtime 20251108 (both architecture-specific binaries SHA-256 verified in CI). The final repackaging explicitly passes the architecture-specific `gh-releases-zsync` update-information string through appimagetool's `--updateinformation` option; this is required because metadata embedded in the discarded intermediate image is not carried into the rebuilt image. The runtime is passed through APPIMAGETOOL_RUNTIME_FILE so appimagetool cannot silently fetch the mutable continuous runtime. This deliberately avoids AppRun2's known glibc compatibility-runtime startup defect. The resulting image uses the host's glibc; Ubuntu 24.04 (glibc 2.39) is the current build baseline, so hosts must provide a compatible glibc. Native runtime packages for both architectures come from the same multi-architecture Ubuntu 24.04 archive snapshot URL, 20261105T000000Z. The snapshot service exposes both amd64 and arm64 package indices, avoiding the unsupported snapshot option on ports.ubuntu.com; update this snapshot only through a reviewed change and a full two-architecture CI run. The pinned appimage-builder 1.1.0 has a Debian-version parsing defect when comparing Ubuntu package versions; the CI compatibility launcher uses apt_pkg.version_compare (dpkg semantics) for that comparison and self-tests the workaround before each build. Python runtime dependencies are exported from uv.lock with --locked, and the application source package plus generated release-notes module are copied into the AppDir. Dependencies are installed from the lock without re-resolving versions. Builds run natively so compiled extensions match the target architecture.
+
+The bundle includes GTK4, Libadwaita, GtkSourceView, PyGObject/GI typelibs, libportal, notifications, GStreamer, Tesseract, the default English and Italian OCR models, GSettings schema, compiled Blueprint/GResource UI, gettext catalogs, desktop entry, icon, application license and the pinned AppImage runtime license. Ubuntu package copyright files are retained under usr/share/doc for the bundled native libraries. The native build step also installs `liblzo2-2` and `libegl1` on the matching runner, then explicitly stages the `liblzo2.so.2` and `libEGL.so.1` ABI sonames into the architecture-specific AppDir library directory. This compensates for appimage-builder 1.1.0's incomplete symlink staging observed in clean-host audits; the staging script dereferences package symlinks and fails closed if either native library is absent or has the wrong file type. The clean-host ELF audit remains authoritative and must resolve both sonames.
+
+Before launch, the clean-host smoke test audits the ELF runtime scope through `build-aux/appimage/audit_elf_dependencies.sh`. It checks ELF objects under `usr/` with the AppDir library paths active, including the architecture-specific `libproxy` backend directory and PulseAudio's private helper directory. The audit reports the affected object and unresolved soname whenever `ldd` reports `not found`. It explicitly classifies APT-closure systemd utilities/services, systemd cryptsetup token modules, and unused GL visualisation plugins as non-runtime payloads; this classification is covered by a self-test. GTK, Python extensions, GIO modules (including `libgiolibproxy.so`), Tesseract and the remaining application-relevant plugin dependencies continue to be audited. In particular, GLib proxy support is retained: `libpxbackend-1.0.so` is resolved from the bundled `libproxy` directory rather than suppressed or removed. The test image installs `file` and `binutils` solely to perform this audit. The package manifest explicitly includes `liblzo2-2`, a transitive GTK/GI runtime dependency exposed by the clean Ubuntu 24.04 smoke test.
+
+## Host boundary
+
+An AppImage cannot bundle kernel interfaces or graphics drivers. The host remains responsible for:
+
+- Linux kernel and compatible glibc baseline;
+- GPU/display drivers and the active X11 or Wayland compositor;
+- a running XDG Desktop Portal frontend and a backend implementing Screenshot for screen capture;
+- desktop/session services such as D-Bus and the notification daemon.
+
+The portal client libraries and introspection data are bundled, but the portal service itself must run on the host. On X11, screenshot fallback behaviour remains subject to the application's existing implementation. Wayland screenshot capture requires the portal.
+
+The AppImage includes English and Italian Tesseract models. Other OCR models are downloaded by Anura through its existing model manager. TTS requests continue to send selected text to Google when the user invokes that feature.
+
+## Release assets and checksums
+
+Each GitHub Release must contain, for both architectures:
+
+- Anura-<version>-<arch>.AppImage;
+- Anura-<version>-<arch>.AppImage.zsync.
+
+The validation job rejects missing, empty, symlinked or unexpected assets and emits SHA256SUMS-appimage. The release publisher waits for both architecture builds and the exact asset-set validation before attaching any AppImage assets. Flatpak artifacts and their checksum inventory remain independently validated by the existing Flatpak jobs.
+
+## zsync and Gear Lever
+
+The AppImage embeds this update transport:
+
+    gh-releases-zsync|D3M-Sudo|Anura|latest|Anura-*-<arch>.AppImage.zsync
+
+The matching `.zsync` control file is generated after repackaging by `zsyncmake` from the final AppImage (`-e` enforces exact-file reconstruction, `-C` avoids compression instructions, and `-u` records the sibling AppImage filename as a relative URL). It is published beside its AppImage. This lets compatible clients resolve the latest GitHub Release and request changed blocks rather than downloading the full image.
+
+The pipeline reads the embedded value back through the runtime's `--appimage-updateinformation` interface (without setting `APPIMAGE_EXTRACT_AND_RUN`, which would execute the payload instead of returning runtime metadata) and compares it exactly with the expected architecture-specific transport string; it also verifies that a non-empty companion `.zsync` asset names the matching AppImage. These checks establish publication consistency; they do not replace a real end-to-end differential update from an older public release. The first tagged release containing AppImages must be followed by a Gear Lever update test from a previous AppImage version before advertising that end-to-end behaviour as validated.
+
+## CI validation
+
+For each architecture, CI:
+
+1. verifies the native runner architecture;
+2. builds the AppDir and resolves Ubuntu runtime dependencies;
+3. generates the final AppImage with appimagetool and then creates its matching `.zsync` control file with `zsyncmake`;
+4. checks the AppImage ELF architecture, verifies the custom shell AppRun entrypoint survived repackaging, and checks embedded update metadata;
+5. extracts the image without requiring host FUSE and runs a headless --help smoke test inside a clean Ubuntu 24.04 container without GTK/GI packages installed;
+6. uploads the AppImage pair as a CI artifact.
+
+A separate validation job requires exactly four versioned AppImage/zsync assets (two per architecture) and writes their SHA-256 checksums. Tag publication is blocked unless both architecture builds, Flatpak release validation and AppImage asset validation succeed.
+
+The CI smoke test is not a substitute for testing desktop integration on a clean Mint/Cinnamon, GNOME and KDE host. In particular, screenshot portal behaviour, native notifications, theme integration and Gear Lever's actual update flow require post-build runtime validation.

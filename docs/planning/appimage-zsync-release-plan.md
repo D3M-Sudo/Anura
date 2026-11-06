@@ -1,6 +1,6 @@
 # AppImage multi-architecture and zsync release plan
 
-**Status:** planning only; GitHub Releases with architecture-specific `gh-releases-zsync` metadata is the approved update-distribution direction; toolchain and runtime support remain unselected  
+**Status:** implementation in PR #643; native x86_64/aarch64 AppDir builds, AppImage Type 2 repackaging and GitHub Releases `gh-releases-zsync` metadata are implemented in CI; runtime and real update acceptance remain pending  
 **Scope:** issue [#555](https://github.com/D3M-Sudo/Anura/issues/555)  
 **Baseline:** `feature`  
 **Relationship to Flatpak:** complementary distribution path; does not replace or duplicate issue #494
@@ -11,7 +11,7 @@ Define a reproducible Linux AppImage distribution path for Anura, initially eval
 
 An architecture must not be advertised until its AppImage can be built, inspected, launched and tested on a representative target environment. A successful package job on one architecture is not evidence for another.
 
-This document is a planning baseline. It does not add packaging dependencies, modify CI, create an AppImage, configure zsync, or authorize a release.
+This document records the original plan and decision gates. The current implementation is tracked in [PR #643](https://github.com/D3M-Sudo/Anura/pull/643); successful CI artifacts are not a release authorization or evidence of a completed Gear Lever differential update.
 
 ## 2. Existing release boundary
 
@@ -149,3 +149,10 @@ At each gate, report blockers and measured results before proceeding. Decisions 
 - Claiming compatibility with every Linux distribution or desktop session.
 - Publishing AppImages before native build, clean-host and update tests pass.
 - Changing application runtime dependencies as part of this planning document.
+
+
+## 11. Implementation status (PR #643)
+
+The current branch implements native builds on `ubuntu-24.04` and `ubuntu-24.04-arm`, stages the dependency-complete AppDir with the pinned appimage-builder recipe, replaces the generated AppRun2 with the project's shell entrypoint, and repackages the extracted filesystem using the pinned AppImageKit appimagetool and architecture-specific type2-runtime. The intermediate AppRun2 launcher is not shipped. Each build generates the `.zsync` control file from the final repackaged AppImage using `zsyncmake`, with a relative URL to the sibling release asset and exact-file reconstruction enabled. Each build checks the resulting ELF architecture, custom AppRun, embedded GitHub Releases update metadata and matching zsync file; CI then runs a headless smoke test in a clean Ubuntu 24.04 container.
+
+This implementation remains subject to CI validation and clean-host runtime review. The AppImage uses the host glibc rather than AppRun2's compatibility layer, so Ubuntu 24.04 is the current build baseline and the minimum supported glibc must be documented from the actual binary/runtime dependency audit. A real Gear Lever update from an earlier published AppImage and desktop-session integration checks remain release acceptance gates.

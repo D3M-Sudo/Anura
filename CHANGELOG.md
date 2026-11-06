@@ -6,7 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+- AppImage: explicitly stage the architecture-matched `liblzo2.so.2` and `libEGL.so.1` runtime sonames into the AppDir after dependency resolution; include `libegl1` and verify both architectures through the clean-host ELF audit (#555)
+
+### Fixed
+- CI/AppImage: scope the clean-host ELF audit to Anura runtime payloads and explicit plugin paths, excluding only classified systemd/cryptsetup helper binaries and unused GL/visualisation plugins; keep GLib proxy backend resolution in the audit (#555)
+- CI/AppImage: remove nested single quotes from the Docker smoke-test script so the clean-host ELF audit parses correctly on x86_64 and aarch64 (#555)
+- CI/AppImage: fix shell quoting in the clean-host ELF dependency audit so the x86_64 and aarch64 smoke tests execute the audit instead of failing during Bash parsing (#555)
+- AppImage: bundle `liblzo2-2` and audit unresolved shared-library dependencies for every shipped ELF object on clean hosts for both architectures (#555)
+- AppImage: bundle `libxcb-render0`, required by GTK's dynamically loaded X11 backend on clean hosts (#555)
+- AppImage: explicitly bundle `libwayland-client0`, required by GTK's dynamically loaded Wayland backend on clean hosts (#555)
+- CI/AppImage: inspect embedded update metadata without `APPIMAGE_EXTRACT_AND_RUN`, which otherwise dispatches to AppRun and starts the payload (#555)
+- CI/AppImage: explicitly re-embed architecture-specific GitHub Releases update information when repackaging the staged AppDir, and verify it through the runtime inspection interface (#555)
+- CI/AppImage: generate each `.zsync` control file from the final repackaged AppImage with `zsyncmake`; the intermediate appimage-builder image's control file is discarded (#555)
+- CI/AppImage: use appimage-builder only to stage the dependency-complete AppDir, then replace its AppRun2 launcher and repackage with the pinned appimagetool runtime to avoid the known glibc compatibility-runtime startup failure (#555)
+- CI/AppImage: use the multi-architecture Ubuntu snapshot archive for amd64 and arm64, and compare Ubuntu package versions with dpkg semantics to avoid appimage-builder's PEP 440 parsing failure (#555)
+
 ### Added
+- Release/AppImage: add native x86_64 and aarch64 self-contained AppImage builds, embedded GitHub Releases zsync metadata, paired update files, strict release-asset validation and SHA-256 checksums (#555)
+- Docs/release: document AppImage runtime boundaries, downloads, checksums and Gear Lever-compatible zsync updates (#555)
 - Docs/Flatpak: add a maintainer-operated Flathub submission readiness checklist covering current policy, architecture, manifest, licensing, permissions and validation boundaries (#494)
 - Docs/release: add an operational checklist for the first real tag-triggered verification of pinned artifact download, multiarch Flatpak publication and SHA-256 assets (#592)
 - Docs/release: add an AppImage multi-architecture and zsync planning baseline, keeping the proposed packaging path separate from the existing Flatpak release gate (#555)
@@ -20,6 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Flatpak: offer a portal-backed, user-selected migration of history and downloaded OCR models from the previous application ID; no cross-application filesystem permission is required (#613)
 
 ### Changed
+- Localization: allow packaged AppImage builds to select their bundled gettext catalog directory through ANURA_LOCALE_DIR (#555)
 - Desktop integration: keep `Graphics` as the single main application-menu category and add the freedesktop `Scanning` and `OCR` additional categories, preventing duplicate menu entries while retaining precise OCR classification (#620)
 - OCR/tessdata: migrate all 489 pinned models across `tessdata`, `tessdata_fast` and `tessdata_best` to raw-content SHA-256 plus byte-size verification (manifest v2); validate complete upstream inventories and publish the manifest atomically, while runtime rejects legacy SHA-1 manifests and fails closed on integrity mismatches (#577)
 - Tests: cover mocked download, checksum verification and installation for `fast`, `standard` (Normale) and `best`, asserting each profile's repository URL and destination directory (#577)

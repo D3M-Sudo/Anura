@@ -1,0 +1,29 @@
+#!/bin/sh
+# AppImage entrypoint for Anura. Keep this independent of AppRun2.
+set -eu
+
+APPDIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+export APPDIR
+export PATH="$APPDIR/usr/bin:$PATH"
+export PYTHONPATH="$APPDIR/usr/lib/python3.12/site-packages:$APPDIR/usr/lib/python3/dist-packages"
+export GSETTINGS_SCHEMA_DIR="$APPDIR/usr/share/glib-2.0/schemas"
+export ANURA_LOCALE_DIR="$APPDIR/usr/share/locale"
+export ANURA_VERSION="${ANURA_VERSION:-{{APP_VERSION}}}"
+export TESSDATA_PREFIX="$APPDIR/usr/share/tesseract-ocr/5/tessdata"
+export TESSDATA_PREFIX_SYSTEM="$TESSDATA_PREFIX"
+
+# Keep bundled native libraries ahead of host copies while retaining host
+# libraries for desktop/session services that are intentionally not bundled.
+ARCH="$(uname -m)"
+case "$ARCH" in
+  x86_64) LIBDIR="$APPDIR/usr/lib/x86_64-linux-gnu" ;;
+  aarch64) LIBDIR="$APPDIR/usr/lib/aarch64-linux-gnu" ;;
+  *) echo "Unsupported AppImage architecture: $ARCH" >&2; exit 1 ;;
+esac
+if [ -d "$LIBDIR" ]; then
+  export LD_LIBRARY_PATH="$LIBDIR:$APPDIR/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+else
+  export LD_LIBRARY_PATH="$APPDIR/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+fi
+
+exec "$APPDIR/usr/bin/python3" "$APPDIR/usr/lib/anura/appimage_entrypoint.py" "$@"
