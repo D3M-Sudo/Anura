@@ -37,8 +37,7 @@ def _self_test() -> None:
         actual = Package("test", left, "amd64") > Package("test", right, "amd64")
         if actual is not expected:
             raise SystemExit(
-                f"Debian version comparison failed: {left!r} > {right!r} "
-                f"was {actual}, expected {expected}"
+                f"Debian version comparison failed: {left!r} > {right!r} was {actual}, expected {expected}"
             )
     print("AppImage builder Debian version compatibility: OK")
 
