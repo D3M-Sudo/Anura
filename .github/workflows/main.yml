@@ -648,6 +648,29 @@ jobs:
             ubuntu:24.04 bash -euxc '
               apt-get update -qq
               apt-get install -y --no-install-recommends xvfb xauth dbus-x11 ca-certificates
+              case "$(dpkg --print-architecture)" in
+                amd64) APP_LIBDIR=x86_64-linux-gnu ;;
+                arm64) APP_LIBDIR=aarch64-linux-gnu ;;
+                *) echo "::error::Unexpected smoke-test architecture"; exit 1 ;;
+              esac
+              export LD_LIBRARY_PATH="/opt/anura/usr/lib/$APP_LIBDIR:/opt/anura/usr/lib"
+              echo "=== Auditing every bundled ELF dependency in the clean host ==="
+              missing=0
+              while IFS= read -r -d "" elf; do
+                if file -b "$elf" | grep -q '^ELF '; then
+                  deps="$(ldd "$elf" 2>&1 || true)"
+                  unresolved="$(printf '%s\\n' "$deps" | grep 'not found' || true)"
+                  if [ -n "$unresolved" ]; then
+                    printf '::error file=%s::Unresolved bundled ELF dependencies:\\n%s\\n' "$elf" "$unresolved"
+                    missing=1
+                  fi
+                fi
+              done < <(find /opt/anura/usr -type f -print0)
+              if [ "$missing" -ne 0 ]; then
+                echo "::error::AppDir contains unresolved shared-library dependencies"
+                exit 1
+              fi
+              echo "All bundled ELF dependencies resolve in the clean-host baseline."
               NO_AT_BRIDGE=1 GTK_A11Y=none LIBGL_ALWAYS_SOFTWARE=1 \
                 APPDIR=/opt/anura timeout 90 dbus-run-session -- xvfb-run -a /opt/anura/AppRun --help
             '
