@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- Docs/release: add an AppImage multi-architecture and zsync planning baseline, keeping the proposed packaging path separate from the existing Flatpak release gate (#555)
+- Docs/release: select GitHub Releases with architecture-specific `gh-releases-zsync` update metadata as the approved AppImage update-discovery direction (#555)
 - Docs/OCR: add a research and evaluation plan for mathematical OCR, covering Pix2Text/pix2tex/Mathpix, model provenance and licensing risks, CPU/Flatpak resource gates, LaTeX-first output and a separate Typst conversion decision (#570)
 - Docs: add the public project roadmap, documenting approved near-term priorities, longer-term directions and roadmap maintenance policy (#632)
 - History: each stored entry now offers an **Open in external editor** action. The full immutable entry text is exported asynchronously to a private per-user file and handed off through `Gtk.FileLauncher` (#624)
