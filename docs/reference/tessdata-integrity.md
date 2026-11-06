@@ -6,6 +6,43 @@ This document describes how Anura guarantees the integrity of Tesseract
 language models (`*.traineddata`) downloaded at runtime from the three
 upstream tessdata repositories pinned in `anura/config.py`:
 
+## Engine and traineddata versions are independent
+
+The version of the **Tesseract OCR engine** and the version/ref of its
+**language data** are separate identifiers:
+
+- The Flatpak manifest builds the Tesseract engine from tag `5.3.4`.
+- Runtime model downloads use the `4.1.0` refs of the three data
+  repositories listed above. The Flatpak's bundled English and Italian
+  defaults also come from `tessdata_fast` at ref `4.1.0`.
+- The number `4.1.0` is a tag in the data repositories; it is not a
+  requirement to run Tesseract 4. The official Tesseract documentation
+  states that the `4.0.0` traineddata sets are usable with Tesseract
+  `5.x.x`.
+
+The model files do have older training provenance. For example, the
+upstream metadata for the `tessdata_fast` English and Italian models
+identifies them as `4.00.00alpha` models trained from
+`synth20170629`. This is the model's training/version metadata, not the
+version of the Tesseract executable that loads it.
+
+As checked in November 2026, `4.1.0` is still the latest official release
+tag in each of the three upstream data repositories. Comparing those
+tags with the current upstream `main` trees showed no changed binary
+weights for the existing language models: the relevant differences were
+the `frk` → `deu_latf` filename rename and the addition of the special
+`equ` model to `tessdata_best`. The existing language-model blobs
+remain identical. Therefore, moving the download URLs to `main` or
+changing `4.1.0` to `5.3.4` would not provide a newer general-language
+model generation and would weaken the reviewed, reproducible pinning
+without improving the model weights.
+
+This does **not** claim that 2017-trained models are optimal for every
+language or workload. Any future replacement should be based on an
+upstream model update or a separately evaluated model source, with
+licensing, provenance, quality, inventory and SHA-256 review before
+changing the pins.
+
 | Repository | Profile | Pinned ref |
 |------------|---------|------------|
 | `tessdata` | standard (legacy + LSTM) | `4.1.0` |
