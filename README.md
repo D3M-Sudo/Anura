@@ -126,7 +126,7 @@ Anura also publishes a self-contained AppImage for each supported architecture:
 Download the matching AppImage and its `.zsync` companion from [GitHub Releases](https://github.com/D3M-Sudo/Anura/releases/latest). The checksum inventory covers both architectures; verify the pair for your architecture with:
 
 ```bash
-grep 'Anura-<version>-x86_64' SHA256SUMS-appimage | sha256sum -c -
+grep 'Anura-.*-x86_64' SHA256SUMS-appimage | sha256sum -c -
 chmod +x Anura-<version>-x86_64.AppImage
 ./Anura-<version>-x86_64.AppImage
 ```
