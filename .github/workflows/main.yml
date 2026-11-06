@@ -5,7 +5,7 @@ permissions:
 
 on:
   push:
-    branches: [ "main", "development", "testing", "feature" ]
+    branches: [ "main", "development", "testing", "feature", "fix/555-appimage-zsync-multiarch" ]
     tags: [ "v*" ]
   pull_request:
     branches: [ "main", "development", "testing", "feature" ]
