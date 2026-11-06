@@ -659,9 +659,10 @@ jobs:
               while IFS= read -r -d "" elf; do
                 if file -b "$elf" | grep -q "^ELF "; then
                   deps="$(ldd "$elf" 2>&1 || true)"
-                  unresolved="$(printf '%s\\n' "$deps" | grep "not found" || true)"
+                  unresolved="$(printf "%s\\n" "$deps" | grep "not found" || true)"
                   if [ -n "$unresolved" ]; then
-                    printf '::error file=%s::Unresolved bundled ELF dependencies:\\n%s\\n' "$elf" "$unresolved"
+                    echo "::error file=$elf::Unresolved bundled ELF dependencies:"
+                    printf "%s\\n" "$unresolved"
                     missing=1
                   fi
                 fi
