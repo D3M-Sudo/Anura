@@ -18,7 +18,7 @@ from anura.utils.cleanup import cleanup_orphaned_resources, get_cache_info
 
 class TestCleanupEnterprise:
     """
-    Enterprise-grade unit tests for cleanup utilities.
+    Cleanup behaviour tests for cleanup utilities.
     """
 
     @pytest.fixture
