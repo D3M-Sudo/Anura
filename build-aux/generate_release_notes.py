@@ -99,6 +99,7 @@ def markdown_release_notes(changelog_path: Path, version: str, date: str) -> str
     The section is copied verbatim (headings and bullets), so the published
     release and the changelog cannot disagree (#489).
     """
+    date = release_date(changelog_path, version)
     content = changelog_path.read_text(encoding="utf-8")
     pattern = (
         r"^## \[" + re.escape(version) + r"\] - \d{4}-\d{2}-\d{2}\n"
