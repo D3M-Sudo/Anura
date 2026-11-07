@@ -77,9 +77,7 @@ def test_markdown_release_notes_come_from_the_changelog():
 
     assert body.startswith("## Anura v0.2.1 — 2026-10-20")
     # The date comes from the changelog, not the caller or CI runner clock.
-    assert generator.markdown_release_notes(CHANGELOG, "0.2.1", "2099-01-01").startswith(
-        "## Anura v0.2.1 — 2026-10-20"
-    )
+    assert generator.markdown_release_notes(CHANGELOG, "0.2.1", "2099-01-01").startswith("## Anura v0.2.1 — 2026-10-20")
     assert "### Added" in body
     assert "tests/test_history_expansion_real.py" in body
 
