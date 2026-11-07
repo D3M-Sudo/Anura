@@ -5,9 +5,8 @@
 # SPDX-License-Identifier: MIT
 
 import contextlib
-from gettext import gettext as _
 
-from gi.repository import Adw, Gio, GLib, Gtk
+from gi.repository import Adw, Gio, Gtk
 from loguru import logger
 
 from anura.config import RESOURCE_PREFIX
