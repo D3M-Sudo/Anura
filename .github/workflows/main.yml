@@ -5,7 +5,7 @@ permissions:
 
 on:
   push:
-    branches: [ "main", "development", "testing", "feature", "fix/555-appimage-zsync-multiarch" ]
+    branches: [ "main", "development", "testing", "feature" ]
     tags: [ "v*" ]
   pull_request:
     branches: [ "main", "development", "testing", "feature" ]
@@ -395,11 +395,18 @@ jobs:
           echo "=== OCR negativo su file non immagine (.txt) ==="
           echo "non è un'immagine valida" > /tmp/notanimage.txt
           flatpak override --user --filesystem=/tmp:ro
+          OCR_LOG=/tmp/anura-ocr-negative.log
           if timeout 120 xvfb-run -a flatpak run io.github.d3m_sudo.anura \
-               -f /tmp/notanimage.txt --silent; then
+               -f /tmp/notanimage.txt --silent >"$OCR_LOG" 2>&1; then
+            cat "$OCR_LOG"
             echo "✗ OCR non dovrebbe avere successo su un .txt"; exit 1
           fi
-          echo "✓ OCR negativo correttamente fallito"
+          if grep -q "Traceback (most recent call last)" "$OCR_LOG"; then
+            cat "$OCR_LOG"
+            echo "::error::Invalid OCR input produced an uncaught Python traceback"
+            exit 1
+          fi
+          echo "✓ OCR negativo correttamente fallito senza traceback"
 
       - name: Locate the installed prefix
         id: prefix

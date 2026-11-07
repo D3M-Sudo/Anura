@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "main", "development", "testing", "feature" ]
   pull_request:
-    branches: [ "testing" ]
+    branches: [ "feature", "testing", "development", "main" ]
   schedule:
     - cron: '0 12 * * 1'  # Settimanale, lunedì alle 12:00 UTC
   workflow_dispatch:
