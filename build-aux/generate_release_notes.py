@@ -80,12 +80,23 @@ def parse_changelog(changelog_path: Path) -> dict:
     return releases
 
 
+def release_date(changelog_path: Path, version: str) -> str:
+    """Return the canonical YYYY-MM-DD date for a versioned changelog section."""
+    content = changelog_path.read_text(encoding="utf-8")
+    pattern = r"^## \[" + re.escape(version) + r"\] - (?P<date>\d{4}-\d{2}-\d{2})\n"
+    match = re.search(pattern, content, re.MULTILINE)
+    if match is None:
+        sys.exit(f"CHANGELOG.md has no dated [{version}] section")
+    return match.group("date")
+
+
 def markdown_release_notes(changelog_path: Path, version: str, date: str) -> str:
     """Return the GitHub release body for *version*, taken from CHANGELOG.md.
 
     The section is copied verbatim (headings and bullets), so the published
     release and the changelog cannot disagree (#489).
     """
+    date = release_date(changelog_path, version)
     content = changelog_path.read_text(encoding="utf-8")
     pattern = (
         r"^## \[" + re.escape(version) + r"\] - \d{4}-\d{2}-\d{2}\n"
@@ -134,6 +145,7 @@ def metainfo_release_entry(changelog_path: Path, version: str, date: str) -> str
     Fails instead of writing a placeholder: a release must never publish
     "TODO" or a bare "Release x.y.z." description (#485).
     """
+    date = release_date(changelog_path, version)
     sections = _metainfo_sections(changelog_path, version)
     if not sections:
         sys.exit(f"CHANGELOG.md has no [{version}] section with entries: add the release notes before releasing")
@@ -201,6 +213,16 @@ if __name__ == "__main__":
 
     # Release helper: print the AppStream entry for the version being released.
     #   generate_release_notes.py --metainfo <changelog.md> <version> <date>
+    if arguments and arguments[0] == "--date":
+        if len(arguments) != 3:
+            print(f"Usage: {sys.argv[0]} --date <changelog.md> <version>", file=sys.stderr)
+            sys.exit(1)
+        changelog, version = Path(arguments[1]), arguments[2]
+        if not validate_version(version):
+            sys.exit(f"Error: Invalid version format: {version}")
+        print(release_date(changelog, version))
+        sys.exit(0)
+
     if arguments and arguments[0] == "--markdown":
         if len(arguments) != 4:
             print(

@@ -1,50 +1,53 @@
 # Tagged release verification checklist
 
-**Status:** operational checklist; the first real tag-triggered publication is still pending  
-**Related issue:** [#592](https://github.com/D3M-Sudo/Anura/issues/592)  
+**Status:** operational checklist; first real tag-triggered publication still requires end-to-end evidence  
+**Related issues:** [#592](https://github.com/D3M-Sudo/Anura/issues/592), [#555](https://github.com/D3M-Sudo/Anura/issues/555)  
 **Workflow:** `.github/workflows/main.yml`  
-**Scope:** verify the existing pinned-action and multi-architecture artifact hand-off; this document does not create tags or publish releases.
+**Normative process:** [release-process.md](release-process.md)
 
 ## 1. Purpose and evidence boundary
 
-Pull-request CI verifies the release-artifact hand-off and checksum generation, but the publication job is intentionally skipped unless the workflow ref is a `v*` tag. A green PR run therefore does not prove that GitHub Release assets were uploaded successfully.
+Pull-request CI verifies release builds, artifact hand-off and checksum generation, but the publication job runs only for `v*` tags. A green PR run does not prove that GitHub Release assets were uploaded successfully.
 
-Issue #592's action-pinning requirement is implemented on `feature`:
+Issue #592's reviewed `actions/download-artifact` pin is:
 
 ```yaml
 uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
 ```
 
-The SHA must remain a full 40-character commit reference with a version comment. Do not replace it with a moving major-version tag.
+Keep third-party actions pinned to full 40-character commit SHAs with readable version comments.
 
 ## 2. Pre-release checks
 
-Before a maintainer creates or pushes a release tag:
+Before creating or pushing a release tag:
 
-- [ ] Confirm the intended release commit contains the approved changes and release notes in `CHANGELOG.md`.
+- [ ] Confirm the approved release commit contains the complete, reviewed version section in `CHANGELOG.md`.
+- [ ] Confirm the version heading uses `## [X.Y.Z] - YYYY-MM-DD`; this date is canonical for GitHub and AppStream release notes.
 - [ ] Confirm `.github/workflows/main.yml` still triggers on `v*` tags.
 - [ ] Confirm every third-party `uses:` reference is pinned to a full commit SHA and has a readable version comment.
-- [ ] Confirm the `actions/download-artifact` pin is still the reviewed v7.0.0 commit above, or review and document any deliberate upgrade.
-- [ ] Confirm the architecture matrix declares the expected native runners for `x86_64` and `aarch64`.
-- [ ] Confirm the artifact validation job requires exactly the expected two Flatpak bundle files and generates `SHA256SUMS`.
-- [ ] Confirm the tag-only publication job depends on both the architecture build matrix and artifact validation.
-- [ ] Confirm the workflow has the minimum permissions needed to read artifacts and publish release contents.
+- [ ] Confirm the architecture matrices use native `x86_64` and `aarch64` runners.
+- [ ] Confirm Flatpak validation requires exactly the expected two bundles and generates `SHA256SUMS`.
+- [ ] Confirm AppImage validation requires both architecture-specific AppImage/`.zsync` pairs and generates `SHA256SUMS-appimage`.
+- [ ] Confirm the tag-only publication job depends on both build matrices and both artifact-validation jobs.
+- [ ] Confirm the publication job has only the permissions needed to read artifacts and publish release contents.
 
-A pull-request run can validate the build and artifact hand-off, but cannot replace the tag-triggered publication check below.
+Follow [release-process.md](release-process.md) for changelog editorial rules, release-script invocation and tag preparation.
 
 ## 3. Tag-triggered workflow checks
 
-After the maintainer creates/pushes the approved version tag, inspect the workflow run associated with that exact tag and commit.
+Inspect the workflow run associated with the exact tag and commit:
 
-- [ ] The run's ref is the expected `refs/tags/vX.Y.Z`.
+- [ ] The run ref is the expected `refs/tags/vX.Y.Z`.
 - [ ] Python quality and all required test jobs complete successfully.
-- [ ] The native `x86_64` Flatpak build completes successfully.
-- [ ] The native `aarch64` Flatpak build completes successfully.
-- [ ] The artifact validation job downloads artifacts from the same workflow run.
-- [ ] Validation accepts exactly the expected architecture-specific bundles and rejects missing, unexpected, empty or unsafe entries.
-- [ ] `SHA256SUMS` is generated from the validated release bundle set.
+- [ ] Native `x86_64` and `aarch64` Flatpak builds complete successfully.
+- [ ] Native `x86_64` and `aarch64` AppImage builds complete successfully.
+- [ ] The two artifact-validation jobs download artifacts from the same workflow run.
+- [ ] Flatpak validation accepts exactly the expected bundles and rejects missing, unexpected, empty or unsafe entries.
+- [ ] AppImage validation accepts exactly the expected versioned AppImage/`.zsync` pairs and rejects missing, unexpected, empty or unsafe entries.
+- [ ] `SHA256SUMS` and `SHA256SUMS-appimage` are generated from their respective validated asset sets.
 - [ ] The tag-only publication job starts only after all required jobs succeed.
-- [ ] The publication job uploads both bundles and the checksum file without an API or asset-upload error.
+- [ ] The generated release body is non-empty and uses the date and entries from the matching `CHANGELOG.md` version section.
+- [ ] The publication job uploads all validated assets without an API or asset-upload error.
 
 Expected published assets:
 
@@ -52,44 +55,43 @@ Expected published assets:
 | --- | --- |
 | `io.github.d3m_sudo.anura-x86_64.flatpak` | x86_64 Flatpak bundle |
 | `io.github.d3m_sudo.anura-aarch64.flatpak` | aarch64 Flatpak bundle |
-| `SHA256SUMS` | Checksums for the published bundles |
+| `SHA256SUMS` | SHA-256 inventory for Flatpak bundles |
+| `Anura-X.Y.Z-x86_64.AppImage` | x86_64 AppImage |
+| `Anura-X.Y.Z-x86_64.AppImage.zsync` | x86_64 update control file |
+| `Anura-X.Y.Z-aarch64.AppImage` | aarch64 AppImage |
+| `Anura-X.Y.Z-aarch64.AppImage.zsync` | aarch64 update control file |
+| `SHA256SUMS-appimage` | SHA-256 inventory for AppImage and zsync files |
 
-The workflow artifact names may include the run ID and architecture; the table above describes the filenames expected inside the release, not the temporary CI artifact names.
+Workflow artifact names may include run IDs and architecture suffixes. The table describes the filenames expected inside the public GitHub Release.
 
 ## 4. Verify the actual GitHub Release
 
-Do not close #592 based only on a green workflow run. Inspect the release page/API after publication and verify:
+Do not close #592 or #555 based only on a green workflow run. Inspect the actual release page/API:
 
-- [ ] The release tag and target commit match the workflow run.
-- [ ] Both expected Flatpak assets are present exactly once.
-- [ ] `SHA256SUMS` is present exactly once.
-- [ ] Asset sizes are non-zero and downloads complete.
-- [ ] The checksum file contains the expected filenames and valid SHA-256 values.
-- [ ] Downloaded assets pass checksum verification.
-- [ ] Release notes are non-empty and correspond to the version's changelog section.
-- [ ] No temporary/debug artifact or wrong-architecture bundle was published.
+- [ ] Release title, tag and target commit are correct.
+- [ ] Release body is non-empty and matches the corresponding version section in `CHANGELOG.md`, including canonical date, headings and bullets.
+- [ ] Both Flatpak assets are present exactly once and are non-empty.
+- [ ] `SHA256SUMS` is present and verifies the downloaded Flatpak bundles.
+- [ ] Both AppImage assets and both matching `.zsync` files are present exactly once.
+- [ ] `SHA256SUMS-appimage` is present and verifies the downloaded AppImage and zsync files.
+- [ ] No temporary/debug artifact, duplicate or wrong-architecture bundle was published.
+- [ ] AppImage embedded update metadata is correct and a real Gear Lever differential update is tested from a previous public version before advertising that path as validated.
+- [ ] Desktop integration acceptance checks are recorded separately from CI smoke-test evidence.
 
-Record the release URL, tag, commit SHA, workflow run URL, asset filenames/sizes and checksum verification result in the issue.
+Record the release URL, tag, commit SHA, workflow run URL, asset filenames/sizes and checksum verification results in the relevant issue.
 
 ## 5. Failure handling
 
 If a required build, validation or publication step fails:
 
 1. Do not treat the release as complete.
-2. Preserve the failed workflow run and relevant job logs as evidence.
-3. Determine whether the failure is in architecture build, artifact transfer, exact-set validation, checksum generation or GitHub Release upload.
-4. Correct the cause through the normal reviewed branch/PR workflow.
-5. Re-run the appropriate checks and repeat the tag-triggered publication verification under maintainer control.
+2. Preserve the failed workflow run and relevant job logs.
+3. Identify whether the failure is in architecture build, artifact transfer, exact-set validation, checksum generation or GitHub Release upload.
+4. Correct the cause through the normal reviewed branch/PR process.
+5. Re-run the appropriate checks and repeat tag-triggered publication verification under maintainer control.
 
-Do not silently replace or delete release assets to make a partial release appear complete. Any tag movement, release replacement or re-publication must follow the repository's release policy and be explicitly approved by the maintainer.
+Do not silently replace or delete release assets to make a partial release appear complete. Moving a tag, replacing a release or re-publishing assets requires explicit maintainer approval and a documented reason.
 
-## 6. Completion rule for issue #592
+## 6. Completion rule
 
-Issue #592 can be closed only after one real tag-triggered release demonstrates the complete hand-off:
-
-- pinned action is used by the release workflow;
-- both architecture bundles are validated and published;
-- `SHA256SUMS` is published and verifies the downloaded assets;
-- the release page contains the expected assets and correct version metadata.
-
-Until that evidence exists, keep the issue open and report the PR/branch CI result separately from the real release result.
+Close the release-publication acceptance issues only when a real tag-triggered release demonstrates the complete hand-off: both Flatpak bundles, both AppImage/`.zsync` pairs, both checksum inventories, correct release metadata and verified downloads. Keep desktop integration and real updater acceptance gates open until separately demonstrated.

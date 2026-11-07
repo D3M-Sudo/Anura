@@ -40,6 +40,8 @@ def test_release_script_has_the_preflight_guards():
     assert 'git -C "$PROJECT_ROOT" status --porcelain' in source
     assert "refs/tags/v$VERSION" in source
     assert "RELEASE_BRANCH" in source
+    assert 'DATE="$(python3 "$SCRIPT_DIR/generate_release_notes.py" --date' in source
+    assert "git push origin $EXPECTED_BRANCH --tags" in source
 
 
 def test_release_script_no_longer_writes_placeholder_notes():
@@ -57,6 +59,7 @@ def test_generator_emits_a_valid_release_entry():
     assert release is not None
     assert release.get("version") == "0.2.1"
     assert release.get("date") == "2026-10-20"
+    assert generator.release_date(CHANGELOG, "0.2.1") == "2026-10-20"
     assert release.find("description") is not None
     assert "TODO" not in entry
     # Snake_case identifiers must survive (the HTML variant strips underscores).
@@ -73,6 +76,8 @@ def test_markdown_release_notes_come_from_the_changelog():
     body = generator.markdown_release_notes(CHANGELOG, "0.2.1", "2026-10-20")
 
     assert body.startswith("## Anura v0.2.1 — 2026-10-20")
+    # The date comes from the changelog, not the caller or CI runner clock.
+    assert generator.markdown_release_notes(CHANGELOG, "0.2.1", "2099-01-01").startswith("## Anura v0.2.1 — 2026-10-20")
     assert "### Added" in body
     assert "tests/test_history_expansion_real.py" in body
 

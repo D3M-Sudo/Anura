@@ -781,7 +781,8 @@ jobs:
         # Never publish a release with an empty body (#489).
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          python3 build-aux/generate_release_notes.py --markdown CHANGELOG.md "$VERSION" "$(date -u +%F)" > release-notes.md
+          DATE="$(python3 build-aux/generate_release_notes.py --date CHANGELOG.md "$VERSION")"
+          python3 build-aux/generate_release_notes.py --markdown CHANGELOG.md "$VERSION" "$DATE" > release-notes.md
           test -s release-notes.md
 
       - name: Upload Flatpak Bundles to Release

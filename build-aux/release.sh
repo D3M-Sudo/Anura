@@ -45,7 +45,7 @@ METAINFO_FILE="$PROJECT_ROOT/data/io.github.d3m_sudo.anura.metainfo.xml.in"
 MESON_BUILD_FILE="$PROJECT_ROOT/meson.build"
 PYPROJECT_FILE="$PROJECT_ROOT/pyproject.toml"
 UV_LOCK_FILE="$PROJECT_ROOT/uv.lock"
-DATE=$(date +%Y-%m-%d)
+DATE=""
 
 # --- Preflight (#487) -------------------------------------------------------
 # Nothing below this point is safe to run twice or on a dirty tree: the script
@@ -74,6 +74,7 @@ fi
 # exits when the section is missing or still a placeholder, so a release can
 # never publish "TODO" metadata (#485).
 echo "Reading release notes for $VERSION from CHANGELOG.md..."
+DATE="$(python3 "$SCRIPT_DIR/generate_release_notes.py" --date "$PROJECT_ROOT/CHANGELOG.md" "$VERSION")"
 RELEASE_ENTRY="$(python3 "$SCRIPT_DIR/generate_release_notes.py" --metainfo "$PROJECT_ROOT/CHANGELOG.md" "$VERSION" "$DATE")"
 
 echo "=== Anura Release $VERSION ==="
@@ -258,7 +259,7 @@ echo "=== Release v$VERSION prepared successfully ==="
 echo ""
 echo "Next steps:"
 echo "  1. Review the commit: git show HEAD"
-echo "  2. Push to remote: git push origin main --tags"
+echo "  2. Push to remote: git push origin $EXPECTED_BRANCH --tags"
 echo "  3. Wait for the tag-triggered CI run and verify native Flatpak and AppImage"
 echo "     builds, artifact validation, and publication jobs."
 echo "  4. The publish-release job creates the GitHub Release with notes generated"
@@ -269,4 +270,4 @@ echo "  5. Verify published assets and release notes against"
 echo "     docs/reference/tagged-release-verification.md."
 echo ""
 echo "To push now, run:"
-echo "  git push origin main --tags"
+echo "  git push origin $EXPECTED_BRANCH --tags"
