@@ -20,7 +20,7 @@ on:
   workflow_dispatch:
   pull_request:
     types: [opened, synchronize]
-    branches: [testing, development]
+    branches: [feature, testing, development]
     paths:
       - "pyproject.toml"
 
@@ -30,12 +30,16 @@ concurrency:
 
 jobs:
   sync:
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.user.login == 'dependabot[bot]'
+    # PR runs update only the Dependabot PR head. Manual runs must use a
+    # working branch and must never push to a protected branch.
+    if: >-
+      (github.event_name == 'pull_request' && github.event.pull_request.user.login == 'dependabot[bot]') ||
+      (github.event_name == 'workflow_dispatch' && !contains(fromJSON('["feature","testing","development","main"]'), github.ref_name))
     runs-on: ubuntu-latest
     permissions:
       contents: write
     env:
-      UV_VERSION: "0.8.14"
+      UV_VERSION: "0.13.5"
       PULL_REQUEST_HEAD_REF: ${{ github.event.pull_request.head.ref }}
     steps:
       - name: Checkout PR branch

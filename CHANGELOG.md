@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Fixed
+- CI/Flatpak: strengthen the invalid-input OCR regression check to require a non-zero exit without an uncaught Python traceback (#589).
+
+### Changed
+- CI/governance: align Dependabot and certifi automation with `feature`, run CodeQL on PRs to all protected promotion branches, guard manual dependency-sync dispatch from protected branches, and document the single-maintainer PR/CI policy.
+- Release tooling: correct the release script post-tag instructions to describe generated CHANGELOG notes and the current multi-architecture Flatpak/AppImage publication flow.
+
+### Fixed
 - AudioPlayer: extend `_cleanup_lock` scope to cover `play()` and `stop()` to prevent races with concurrent cleanup (F19)
 - MagicProcessor: protect `register_transformer()` with `_lock` for thread safety (F21)
 - OcrResult: add `slots=True` and retain cached layout statistics through an explicit private slot (F22)

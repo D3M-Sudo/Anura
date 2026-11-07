@@ -17,6 +17,7 @@ documentation lives in the root (`README.md`, `AGENTS.md`, `CONTRIBUTING.md`,
 | [reference/flathub-submission-checklist.md](reference/flathub-submission-checklist.md) | **Current / operational** | Maintainer checklist for Flathub policy, manifest, architecture, licensing, permissions, validation and manual submission (#494) |
 | [reference/tagged-release-verification.md](reference/tagged-release-verification.md) | **Current / operational** | First real tag-triggered verification of pinned download-artifact, native Flatpak artifacts, SHA-256 checksums and GitHub Release publication (#592) |
 | [reference/code-commenting.md](reference/code-commenting.md) | **Current / normative** | Technical comment policy and Google-style Python docstring conventions |
+| [reference/repository-governance.md](reference/repository-governance.md) | **Current / operational** | Single-maintainer branch promotion, PR, CI and branch-protection policy |
 
 ## Active planning
 
