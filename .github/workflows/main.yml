@@ -11,6 +11,25 @@ on:
     branches: [ "main", "development", "testing", "feature" ]
 
 jobs:
+  changelog-integrity:
+    name: Changelog integrity
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout base and pull request history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Reject undocumented Unreleased entry removals
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 build-aux/check_changelog_integrity.py \
+            --base-ref "$BASE_SHA" \
+            --head-ref "$HEAD_SHA"
+
   # JOB 1: Python code analysis and linting
   python-quality:
     runs-on: ubuntu-latest

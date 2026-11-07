@@ -7,13 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Fixed
+- Changelog: consolidate duplicate `[Unreleased]` category headings and add a CI guard against undocumented removal of existing entries.
 - CI/Flatpak: strengthen the invalid-input OCR regression check to require a non-zero exit without an uncaught Python traceback (#589).
 
-### Changed
-- CI/governance: align Dependabot and certifi automation with `feature`, run CodeQL on PRs to all protected promotion branches, guard manual dependency-sync dispatch from protected branches, and document the single-maintainer PR/CI policy.
-- Release tooling: correct the release script post-tag instructions to describe generated CHANGELOG notes and the current multi-architecture Flatpak/AppImage publication flow.
-
-### Fixed
 - AudioPlayer: extend `_cleanup_lock` scope to cover `play()` and `stop()` to prevent races with concurrent cleanup (F19)
 - MagicProcessor: protect `register_transformer()` with `_lock` for thread safety (F21)
 - OcrResult: add `slots=True` and retain cached layout statistics through an explicit private slot (F22)
@@ -70,30 +66,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Flatpak: automated certifi updates no longer break the build — the FEDC update now rewrites the certifi filename referenced by the module's `build-commands` (the 2026.10.18 bump made `pip3 install` look for the previous 2026.7.22 tarball). Covered by `tests/test_fedc_certifi.py`
 - Clipboard: `hand_off_to_manager()` and `wait_until_replaced()` now refuse to iterate the default GLib main context when it is already running (an active GTK loop, or another thread owns it), logging a warning and returning `False` instead of re-entering the loop (AUDIT-001, #469)
 
-### Documentation
-- Docs/release: distinguish the currently published v0.2.1 assets from the implemented multi-architecture Flatpak/AppImage release pipeline; document AppImage's first-release, desktop-integration and real Gear Lever update acceptance gates (#555).
-- Docs/roadmap: move the implemented AppImage build pipeline out of future work and record the remaining post-release acceptance criteria (#555).
-- Docs/agents: align the canonical assistant guide with the current multi-format release jobs, publication dependencies and artifact checks.
-- Refresh repository guidance and technical comments to match the current code: lane-based task execution, Tesseract language-code validation, GNOME 51, portal backend setup, and current test/build behaviour.
-- Docs/OCR: distinguish the Tesseract engine version from upstream traineddata refs and record the model training provenance and compatibility findings (#642)
-- Docs/Flatpak: reflect completed static verification of `GI_TYPELIB_PATH` for the GNOME 51 runtime; verification plan and closure recorded for #623
-
-### Added
-- Release/AppImage: add native x86_64 and aarch64 self-contained AppImage builds, embedded GitHub Releases zsync metadata, paired update files, strict release-asset validation and SHA-256 checksums (#555)
-- Docs/release: document AppImage runtime boundaries, downloads, checksums and Gear Lever-compatible zsync updates (#555)
-- Docs/Flatpak: add a maintainer-operated Flathub submission readiness checklist covering current policy, architecture, manifest, licensing, permissions and validation boundaries (#494)
-- Docs/release: add an operational checklist for the first real tag-triggered verification of pinned artifact download, multiarch Flatpak publication and SHA-256 assets (#592)
-- Docs/release: add an AppImage multi-architecture and zsync planning baseline, keeping the proposed packaging path separate from the existing Flatpak release gate (#555)
-- Docs/release: select GitHub Releases with architecture-specific `gh-releases-zsync` update metadata as the approved AppImage update-discovery direction (#555)
-- Docs/OCR: add a research and evaluation plan for mathematical OCR, covering Pix2Text/pix2tex/Mathpix, model provenance and licensing risks, CPU/Flatpak resource gates, LaTeX-first output and a separate Typst conversion decision (#570)
-- Docs: add the public project roadmap, documenting approved near-term priorities, longer-term directions and roadmap maintenance policy (#632)
-- History: each stored entry now offers an **Open in external editor** action. The full immutable entry text is exported asynchronously to a private per-user file and handed off through `Gtk.FileLauncher` (#624)
-- History: each stored entry now offers a **Text-to-Speech replay** action, reusing the shared TTS pipeline and the OCR language stored with the entry while respecting the explicit TTS-language preference (#626)
-- CI/Flatpak: build Flatpak bundles on native x86_64 and aarch64 runners, producing architecture-specific bundles and license-inventory artifacts (#618)
-- CI/Flatpak: add sandbox-level runtime smoke checks on both architectures for GTK/GI typelibs, native Python bindings and the bundled Tesseract library (#619)
-- Flatpak: offer a portal-backed, user-selected migration of history and downloaded OCR models from the previous application ID; no cross-application filesystem permission is required (#613)
-
 ### Changed
+- CI/governance: align Dependabot and certifi automation with `feature`, run CodeQL on PRs to all protected promotion branches, guard manual dependency-sync dispatch from protected branches, and document the single-maintainer PR/CI policy.
+- Release tooling: correct the release script post-tag instructions to describe generated CHANGELOG notes and the current multi-architecture Flatpak/AppImage publication flow.
+
 - Code quality: clarify technical comments, remove obsolete implementation notes, and standardize selected Python docstrings; add contributor guidance for comment and Google-style docstring conventions.
 - Localization: allow packaged AppImage builds to select their bundled gettext catalog directory through ANURA_LOCALE_DIR (#555)
 - Desktop integration: keep `Graphics` as the single main application-menu category and add the freedesktop `Scanning` and `OCR` additional categories, preventing duplicate menu entries while retaining precise OCR classification (#620)
@@ -130,6 +106,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Flatpak: zxing-cpp 3.1 builds its Python wheel with nanobind instead of pybind11, so `python3-nanobind` 2.11.0 was added and the zxing build no longer sets `pybind11_DIR`. `pybind11` stays (updated to 3.1.0) because Pillow 13 now imports `pybind11.setup_helpers` at build time
 - Flatpak: scikit-build-core is installed from its `1.1.1` wheel; FEDC's proposed sdist could not be installed by the module's `--no-build-isolation` build command, which referenced the old wheel by filename. The `x-checker-data` now pins `packagetype: bdist_wheel`, and `tests/test_flatpak_manifest_build_commands.py` guards wheel modules against the same mismatch
 
+### Documentation
+- Docs/release: distinguish the currently published v0.2.1 assets from the implemented multi-architecture Flatpak/AppImage release pipeline; document AppImage's first-release, desktop-integration and real Gear Lever update acceptance gates (#555).
+- Docs/roadmap: move the implemented AppImage build pipeline out of future work and record the remaining post-release acceptance criteria (#555).
+- Docs/agents: align the canonical assistant guide with the current multi-format release jobs, publication dependencies and artifact checks.
+- Refresh repository guidance and technical comments to match the current code: lane-based task execution, Tesseract language-code validation, GNOME 51, portal backend setup, and current test/build behaviour.
+- Docs/OCR: distinguish the Tesseract engine version from upstream traineddata refs and record the model training provenance and compatibility findings (#642)
+- Docs/Flatpak: reflect completed static verification of `GI_TYPELIB_PATH` for the GNOME 51 runtime; verification plan and closure recorded for #623
+
+### Added
+- Release/AppImage: add native x86_64 and aarch64 self-contained AppImage builds, embedded GitHub Releases zsync metadata, paired update files, strict release-asset validation and SHA-256 checksums (#555)
+- Docs/release: document AppImage runtime boundaries, downloads, checksums and Gear Lever-compatible zsync updates (#555)
+- Docs/Flatpak: add a maintainer-operated Flathub submission readiness checklist covering current policy, architecture, manifest, licensing, permissions and validation boundaries (#494)
+- Docs/release: add an operational checklist for the first real tag-triggered verification of pinned artifact download, multiarch Flatpak publication and SHA-256 assets (#592)
+- Docs/release: add an AppImage multi-architecture and zsync planning baseline, keeping the proposed packaging path separate from the existing Flatpak release gate (#555)
+- Docs/release: select GitHub Releases with architecture-specific `gh-releases-zsync` update metadata as the approved AppImage update-discovery direction (#555)
+- Docs/OCR: add a research and evaluation plan for mathematical OCR, covering Pix2Text/pix2tex/Mathpix, model provenance and licensing risks, CPU/Flatpak resource gates, LaTeX-first output and a separate Typst conversion decision (#570)
+- Docs: add the public project roadmap, documenting approved near-term priorities, longer-term directions and roadmap maintenance policy (#632)
+- History: each stored entry now offers an **Open in external editor** action. The full immutable entry text is exported asynchronously to a private per-user file and handed off through `Gtk.FileLauncher` (#624)
+- History: each stored entry now offers a **Text-to-Speech replay** action, reusing the shared TTS pipeline and the OCR language stored with the entry while respecting the explicit TTS-language preference (#626)
+- CI/Flatpak: build Flatpak bundles on native x86_64 and aarch64 runners, producing architecture-specific bundles and license-inventory artifacts (#618)
+- CI/Flatpak: add sandbox-level runtime smoke checks on both architectures for GTK/GI typelibs, native Python bindings and the bundled Tesseract library (#619)
+- Flatpak: offer a portal-backed, user-selected migration of history and downloaded OCR models from the previous application ID; no cross-application filesystem permission is required (#613)
+
 ### Removed
 - Development tooling: dropped the `safety` dev dependency (and its entry in the Dependabot `dev-deps` group). It was added by the one-off June 2026 audit (`ead78f1`) to produce `docs/audit/safety_scan.json`, which is no longer tracked; no workflow, test or build script invokes it, and dependency scanning is covered by Dependabot and CodeQL. The development graph drops from 72 to 39 packages (also losing `cryptography`, `httpx`, `h11`, `pydantic` and `nltk`, which came in through it); runtime dependencies and the Flatpak manifests are untouched. `bandit` is kept
 
@@ -149,6 +148,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Dependabot #49, #50, #51: `urllib3` 2.7.0 → 2.8.0, fixing the unbounded chunk-size line buffered by `HTTPResponse.stream()`/`read_chunked()`, the HTTPS proxy TLS configuration that could be ignored or overridden, and the infinite loop on chunked deflate streaming. The Flatpak `python3-urllib3` module was resynced by `build-aux/sync_dependencies.py` (wheel 2.8.0 + sha256)
 - Dependabot #47, #48 (`anyio`): no longer in the dependency graph. `anyio` was only reachable through `httpx`, which was required exclusively by the `safety` dev tool removed above; `uv.lock` now has no `anyio` entry, so the IDNA 2003 host-name encoding in `TLSStream` (TLS certificate spoofing) and the process-pool workers blocked on undrained stderr no longer apply
 - Dependabot #32 (`nltk`): no longer in the dependency graph. The direct dev dependency was unused (never imported by the application, the tests or the build scripts), and dropping `safety` removes the only transitive path (`safety 3.8.1` requires `nltk>=3.9`), so NLTK's unfixed model-artifact path traversal cannot be reached from this project at all. NLTK was never shipped in the Flatpak
+
+
 ## [0.2.1] - 2026-10-20
 
 ### Added
