@@ -9,7 +9,7 @@ import threading
 
 from gettext import gettext as _
 
-from gi.repository import Adw, Gio, GLib, Gtk
+from gi.repository import Adw, Gio, GLib, GObject, Gtk
 from loguru import logger
 
 from anura.config import RESOURCE_PREFIX
@@ -38,7 +38,7 @@ class PreferencesVoicePage(Adw.PreferencesPage, SignalManagerMixin):
         self._updating_tts_combo = False
         self._disposed = False
 
-        self.settings.bind(
+        self.settings.bind_with_mapping(
             "tts-volume",
             self.volume_row,
             "value",
@@ -57,14 +57,15 @@ class PreferencesVoicePage(Adw.PreferencesPage, SignalManagerMixin):
     # --- Volume transform functions: GSettings stores 0.0-1.0, UI shows 0-100 ---
 
     @staticmethod
-    def _tts_volume_transform_in(_settings, _key, value) -> float:
-        """Convert normalized GSettings value (0.0-1.0) to percentage (0-100)."""
-        return float(value) * 100.0
+    def _tts_volume_transform_in(value: GObject.Value, variant: GLib.Variant) -> bool:
+        """Map normalized GSettings volume (0.0-1.0) to the UI percentage (0-100)."""
+        value.set_double(variant.get_double() * 100.0)
+        return True
 
     @staticmethod
-    def _tts_volume_transform_out(_settings, _key, value) -> float:
-        """Convert percentage (0-100) to normalized GSettings value (0.0-1.0)."""
-        return float(value) / 100.0
+    def _tts_volume_transform_out(value: GObject.Value, _expected_type: GLib.VariantType) -> GLib.Variant:
+        """Map the UI percentage (0-100) to normalized GSettings volume (0.0-1.0)."""
+        return GLib.Variant.new_double(value.get_double() / 100.0)
 
     def _setup_tts_volume(self) -> None:
         """Setup TTS volume spin row with percentage display (0-100)."""
@@ -114,12 +115,28 @@ class PreferencesVoicePage(Adw.PreferencesPage, SignalManagerMixin):
         self._tts_catalog_loading = True
 
         def _worker() -> None:
-            supported = get_tts_service().get_supported_languages()
-            GLib.idle_add(self._on_tts_catalog_ready, supported)
+            try:
+                supported = get_tts_service().get_supported_languages()
+            except Exception:
+                logger.exception("Anura: failed to refresh the TTS language catalog")
+                supported = None
 
-        threading.Thread(target=_worker, daemon=True, name="AnuraTtsCatalogRefresh").start()
+            try:
+                GLib.idle_add(self._on_tts_catalog_ready, supported)
+            except Exception:
+                # The main loop may already be shutting down. Do not leave the
+                # page's loading state stuck if the callback cannot be queued.
+                logger.exception("Anura: could not schedule the TTS catalog result")
+                self._tts_catalog_loading = False
 
-    def _on_tts_catalog_ready(self, supported: dict) -> bool:
+        worker = threading.Thread(target=_worker, daemon=True, name="AnuraTtsCatalogRefresh")
+        try:
+            worker.start()
+        except RuntimeError:
+            self._tts_catalog_loading = False
+            logger.exception("Anura: could not start the TTS catalog worker")
+
+    def _on_tts_catalog_ready(self, supported: dict | None) -> bool:
         """Apply a freshly fetched catalog to the combo (main thread)."""
         self._tts_catalog_loading = False
         if supported and not self._disposed:
@@ -136,7 +153,12 @@ class PreferencesVoicePage(Adw.PreferencesPage, SignalManagerMixin):
             self.settings.set_string("tts-language", "")  # Auto
         else:
             # Cached-only: a UI callback must never trigger a network fetch.
-            supported = get_tts_service().get_cached_supported_languages() or {}
+            try:
+                supported = get_tts_service().get_cached_supported_languages() or {}
+            except Exception:
+                logger.exception("Anura: could not read the cached TTS language catalog")
+                return
+
             supported_keys = list(supported.keys())
             if idx - 1 < len(supported_keys):
                 lang_code = supported_keys[idx - 1]  # -1 for "Auto"
