@@ -91,7 +91,8 @@ Pushing a `v*` tag triggers `.github/workflows/main.yml`. Merging a PR alone doe
 The workflow builds and validates the release assets for both supported architectures. The publication job runs only after the Flatpak and AppImage build matrices and their artifact-validation jobs succeed. It generates the GitHub Release body with:
 
 ```bash
-python3 build-aux/generate_release_notes.py --markdown CHANGELOG.md X.Y.Z
+DATE="$(python3 build-aux/generate_release_notes.py --date CHANGELOG.md X.Y.Z)"
+python3 build-aux/generate_release_notes.py --markdown CHANGELOG.md X.Y.Z "$DATE"
 ```
 
 The action publishes the generated body and attaches the validated assets. The expected asset set is:

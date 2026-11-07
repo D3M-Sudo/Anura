@@ -63,6 +63,7 @@ docs/
 │   ├── flatpak-multiarch-release.md
 │   ├── appimage-multiarch-release.md
 │   ├── release-process.md
+│   ├── changelog-integrity.md
 │   ├── flathub-submission-checklist.md
 │   ├── tagged-release-verification.md
 │   ├── code-commenting.md
