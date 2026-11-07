@@ -147,6 +147,7 @@ def metainfo_release_entry(changelog_path: Path, version: str, date: str) -> str
     Fails instead of writing a placeholder: a release must never publish
     "TODO" or a bare "Release x.y.z." description (#485).
     """
+    date = release_date(changelog_path, version)
     sections = _metainfo_sections(changelog_path, version)
     if not sections:
         sys.exit(f"CHANGELOG.md has no [{version}] section with entries: add the release notes before releasing")
