@@ -53,7 +53,6 @@ class FakeSettings:
 # ---------------------------------------------------------------------------
 # GeneralPage
 # ---------------------------------------------------------------------------
-
 def _make_general_page(monkeypatch, tts_raises: Exception | None = None):
     """Build PreferencesGeneralPage with mocked collaborators."""
     import anura.widgets.preferences_general_page as mod
@@ -99,7 +98,6 @@ def test_general_history_limit_changed_persists(monkeypatch, headless_gi_mocks):
 # ---------------------------------------------------------------------------
 # VoicePage
 # ---------------------------------------------------------------------------
-
 def _make_voice_page(monkeypatch, tts_raises: Exception | None = None):
     """Build PreferencesVoicePage with mocked collaborators."""
     import anura.widgets.preferences_voice_page as mod
