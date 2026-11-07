@@ -286,6 +286,8 @@ here from `CLAUDE.md`, which is now a thin pointer to this file.
 - `data/ui/*.ui` (generated from `.blp` files)
 - `builddir/` (build artifacts)
 - `CHANGELOG.md` (maintained via Keep a Changelog — add entries under `[Unreleased]`, never rewrite history)
+  - Preserve every existing `[Unreleased]` bullet. Do not delete or reword entries silently; intentional removals require exact-text authorization, rationale and issue/PR reference in `.github/changelog-removals.json`.
+  - Reuse the existing category heading; do not add duplicate `###` headings within `[Unreleased]`.
 
 ### Lint & Dependencies
 

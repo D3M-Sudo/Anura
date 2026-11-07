@@ -106,6 +106,8 @@ uv run ruff format anura/
 - **Automation exceptions**: dependency automation (including Dependabot and FEDC) may use its explicitly configured target; do not change those targets as part of ordinary feature development. See [docs/reference/dependencies.md](docs/reference/dependencies.md).
 - **Commit messages**: Use [Conventional Commits](https://www.conventionalcommits.org/).
 - Every change should be documented in `CHANGELOG.md` under `[Unreleased]`.
+- Keep one heading per Keep a Changelog category within `[Unreleased]`; append bullets to the existing category.
+- CI blocks removal of existing `[Unreleased]` bullets unless the exact original text, a substantive rationale and a verifiable issue/PR reference are recorded in `.github/changelog-removals.json`. Rewording counts as removal plus addition.
 
 ## Security Checklist (before every PR)
 
