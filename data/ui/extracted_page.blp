@@ -41,136 +41,14 @@ template $ExtractedPage : Adw.NavigationPage {
         styles ["anura-button"]
       }
 
-      [start]
-      Button undo_btn {
-        tooltip-text: C_("Extracted screen", "Undo (Ctrl+Z)");
-        accessibility {
-          label: C_("Extracted screen", "Undo");
-        }
-        icon-name: "edit-undo-symbolic";
-        styles ["anura-button"]
-      }
-
-      [start]
-      Button redo_btn {
-        tooltip-text: C_("Extracted screen", "Redo (Ctrl+Shift+Z)");
-        accessibility {
-          label: C_("Extracted screen", "Redo");
-        }
-        icon-name: "edit-redo-symbolic";
-        styles ["anura-button"]
-      }
-
-      [start]
-      ToggleButton search_button {
-        tooltip-text: C_("Extracted screen", "Search Text (Ctrl+F)");
-        accessibility {
-          label: C_("Extracted screen", "Search text");
-        }
-        icon-name: "edit-find-symbolic";
-        styles ["anura-button"]
-      }
-
-      [start]
-      Stack listen_stack {
-        transition-type: crossfade;
-
-        StackPage {
-          name: "button";
-          child: Button listen_btn {
-            action-name: "app.listen";
-            tooltip-text: C_("Extracted screen", "Listen to Text (Ctrl+L)");
-            accessibility {
-              label: C_("Extracted screen", "Listen to text");
-            }
-            icon-name: "audio-speakers-symbolic";
-            styles ["anura-button"]
-          };
-        }
-
-        StackPage {
-          name: "cancel";
-          child: Button listen_cancel_btn {
-            action-name: "app.listen_cancel";
-            tooltip-text: C_("Extracted screen", "Stop listening (Ctrl+Shift+L)");
-            accessibility {
-              label: C_("Extracted screen", "Stop listening");
-            }
-            icon-name: "media-playback-stop-symbolic";
-            styles ["anura-button"]
-          };
-        }
-
-        StackPage {
-          name: "spinner";
-          child: Gtk.Spinner listen_spinner {
-            halign: center;
-            valign: center;
-            accessibility {
-              label: _("Generating audio");
-            }
-          };
-        }
-
-        StackPage {
-          name: "pause";
-          child: Box {
-            styles ["linked"]
-
-            Button listen_pause_btn {
-              action-name: "app.listen_pause";
-              tooltip-text: C_("Extracted screen", "Pause/Resume listening (Ctrl+Alt+L)");
-              accessibility {
-                label: C_("Extracted screen", "Pause or resume listening");
-              }
-              icon-name: "media-playback-pause-symbolic";
-              styles ["anura-button"]
-            }
-
-            Button {
-              action-name: "app.listen_cancel";
-              tooltip-text: C_("Extracted screen", "Stop listening (Ctrl+Shift+L)");
-              accessibility {
-                label: C_("Extracted screen", "Stop listening");
-              }
-              icon-name: "media-playback-stop-symbolic";
-              styles ["anura-button"]
-            }
-          };
-        }
-      }
-
       [end]
-      MenuButton {
+      MenuButton menu_btn {
         icon-name: "open-menu-symbolic";
         tooltip-text: C_("Extracted screen", "Open menu");
         accessibility {
           label: C_("Extracted screen", "Open menu");
         }
         menu-model: primary_menu;
-      }
-
-      [end]
-      MenuButton share_button {
-        icon-name: "emblem-shared-symbolic";
-        tooltip-text: C_("Extracted screen", "Share To");
-        accessibility {
-          label: C_("Extracted screen", "Share text to other applications");
-        }
-        popover: Popover {
-
-          styles ["menu"]
-
-          child: ListBox share_list_box {
-            accessibility {
-              label: _("Share providers");
-            }
-            margin-end: 4;
-            margin-top: 4;
-            margin-start: 4;
-            margin-bottom: 4;
-          };
-        };
       }
     }
 
@@ -258,6 +136,131 @@ template $ExtractedPage : Adw.NavigationPage {
     [bottom]
     Box {
       styles ["footer"]
+
+      Box {
+        styles ["linked"]
+        margin-start: 12;
+        margin-end: 12;
+        margin-top: 6;
+        margin-bottom: 6;
+
+        Button undo_btn {
+          tooltip-text: C_("Extracted screen", "Undo (Ctrl+Z)");
+          accessibility {
+            label: C_("Extracted screen", "Undo");
+          }
+          icon-name: "edit-undo-symbolic";
+          styles ["anura-button"]
+        }
+
+        Button redo_btn {
+          tooltip-text: C_("Extracted screen", "Redo (Ctrl+Shift+Z)");
+          accessibility {
+            label: C_("Extracted screen", "Redo");
+          }
+          icon-name: "edit-redo-symbolic";
+          styles ["anura-button"]
+        }
+
+        ToggleButton search_button {
+          tooltip-text: C_("Extracted screen", "Search Text (Ctrl+F)");
+          accessibility {
+            label: C_("Extracted screen", "Search text");
+          }
+          icon-name: "edit-find-symbolic";
+          styles ["anura-button"]
+        }
+
+        Stack listen_stack {
+          transition-type: crossfade;
+
+          StackPage {
+            name: "button";
+            child: Button listen_btn {
+              action-name: "app.listen";
+              tooltip-text: C_("Extracted screen", "Listen to Text (Ctrl+L)");
+              accessibility {
+                label: C_("Extracted screen", "Listen to text");
+              }
+              icon-name: "audio-speakers-symbolic";
+              styles ["anura-button"]
+            };
+          }
+
+          StackPage {
+            name: "cancel";
+            child: Button listen_cancel_btn {
+              action-name: "app.listen_cancel";
+              tooltip-text: C_("Extracted screen", "Stop listening (Ctrl+Shift+L)");
+              accessibility {
+                label: C_("Extracted screen", "Stop listening");
+              }
+              icon-name: "media-playback-stop-symbolic";
+              styles ["anura-button"]
+            };
+          }
+
+          StackPage {
+            name: "spinner";
+            child: Gtk.Spinner listen_spinner {
+              halign: center;
+              valign: center;
+              accessibility {
+                label: _("Generating audio");
+              }
+            };
+          }
+
+          StackPage {
+            name: "pause";
+            child: Box {
+              styles ["linked"]
+
+              Button listen_pause_btn {
+                action-name: "app.listen_pause";
+                tooltip-text: C_("Extracted screen", "Pause/Resume listening (Ctrl+Alt+L)");
+                accessibility {
+                  label: C_("Extracted screen", "Pause or resume listening");
+                }
+                icon-name: "media-playback-pause-symbolic";
+                styles ["anura-button"]
+              }
+
+              Button {
+                action-name: "app.listen_cancel";
+                tooltip-text: C_("Extracted screen", "Stop listening (Ctrl+Shift+L)");
+                accessibility {
+                  label: C_("Extracted screen", "Stop listening");
+                }
+                icon-name: "media-playback-stop-symbolic";
+                styles ["anura-button"]
+              }
+            };
+          }
+        }
+      }
+
+      MenuButton share_button {
+        icon-name: "emblem-shared-symbolic";
+        tooltip-text: C_("Extracted screen", "Share To");
+        accessibility {
+          label: C_("Extracted screen", "Share text to other applications");
+        }
+        popover: Popover {
+
+          styles ["menu"]
+
+          child: ListBox share_list_box {
+            accessibility {
+              label: _("Share providers");
+            }
+            margin-end: 4;
+            margin-top: 4;
+            margin-start: 4;
+            margin-bottom: 4;
+          };
+        };
+      }
 
       Label transformer_label {
         halign: start;

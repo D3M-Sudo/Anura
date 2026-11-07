@@ -1,7 +1,22 @@
+/* Anura brand accent — fixed teal, intentionally overrides the
+   GNOME system accent color so the app keeps a consistent identity
+   regardless of the user's Adwaita accent preference. */
+@define-color accent_color #1D9E75;
+@define-color accent_bg_color #1D9E75;
+@define-color accent_fg_color #ffffff;
 
 .downloaded label {
     font-weight: bold;
-    color: #3584e4;
+    color: @accent_color;
+}
+
+/* History page empty/disabled states: teal-tinted circle behind the
+   symbolic icon, consistent with the rest of the modernized UI. */
+.history-empty-state image.icon {
+    background-color: alpha(@accent_color, 0.12);
+    color: @accent_color;
+    border-radius: 9999px;
+    padding: 20px;
 }
 
 .language_popover_row {
@@ -80,8 +95,9 @@
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 1; }
+    0% { opacity: 1; }
     50% { opacity: 0.7; }
+    100% { opacity: 1; }
 }
 
 /* Enhanced extracted page styling */
@@ -189,11 +205,14 @@
 }
 
 @keyframes readyPulse {
-    0%, 100% {
+    0% {
         box-shadow: 0 0 0 0 alpha(@accent_color, 0.4);
     }
     50% {
         box-shadow: 0 0 0 8px alpha(@accent_color, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 alpha(@accent_color, 0.4);
     }
 }
 

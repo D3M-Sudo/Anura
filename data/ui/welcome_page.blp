@@ -79,60 +79,66 @@ template $WelcomePage : Adw.NavigationPage {
               };
             }
 
-            Button {
-              action-name: "app.open_image";
-              tooltip-text: C_("Welcome screen", "Open Image (Ctrl+O)");
-              accessibility {
-                label: C_("Welcome screen", "Open Image");
-              }
-              styles ["pill", "anura-button"]
-
-              child: Box {
-                halign: center;
-                spacing: 6;
-                Image { icon-name: "folder-open-symbolic"; }
-                Label {
-                  label: _("_Open Image");
-                  use-underline: true;
-                }
-              };
-            }
+            Box {
+              orientation: horizontal;
+              spacing: 12;
+              halign: center;
 
              Button {
-              action-name: "app.paste_from_clipboard";
-              tooltip-text: C_("Welcome screen", "Paste Image from Clipboard (Ctrl+V)");
-              accessibility {
-                label: C_("Welcome screen", "Paste Image");
-              }
-              styles ["pill", "anura-button"]
+               action-name: "app.open_image";
+               tooltip-text: C_("Welcome screen", "Open Image (Ctrl+O)");
+               accessibility {
+                 label: C_("Welcome screen", "Open Image");
+               }
+               styles ["pill", "anura-button"]
+ 
+               child: Box {
+                 halign: center;
+                 spacing: 6;
+                 Image { icon-name: "folder-open-symbolic"; }
+                 Label {
+                   label: _("_Open Image");
+                   use-underline: true;
+                 }
+               };
+             }
 
-              child: Box {
-                halign: center;
-                spacing: 6;
-                Image { icon-name: "edit-paste-symbolic"; }
-                Label {
-                  label: _("_Paste Image");
-                  use-underline: true;
-                }
-              };
-            }
+              Button {
+               action-name: "app.paste_from_clipboard";
+               tooltip-text: C_("Welcome screen", "Paste Image from Clipboard (Ctrl+V)");
+               accessibility {
+                 label: C_("Welcome screen", "Paste Image");
+               }
+               styles ["pill", "anura-button"]
+ 
+               child: Box {
+                 halign: center;
+                 spacing: 6;
+                 Image { icon-name: "edit-paste-symbolic"; }
+                 Label {
+                   label: _("_Paste Image");
+                   use-underline: true;
+                 }
+               };
+             }
 
-            Button drop_button {
-              tooltip-text: C_("Welcome screen", "Drop image here");
-              accessibility {
-                label: C_("Welcome screen", "Drop image here");
-              }
-              styles ["pill", "anura-button"]
-
-              child: Box {
-                halign: center;
-                spacing: 6;
-                Image { icon-name: "folder-drag-accept-symbolic"; }
-                Label {
-                  label: _("_Drop Image");
-                  use-underline: true;
-                }
-              };
+             Button drop_button {
+               tooltip-text: C_("Welcome screen", "Drop image here");
+               accessibility {
+                 label: C_("Welcome screen", "Drop image here");
+               }
+               styles ["pill", "anura-button"]
+ 
+               child: Box {
+                 halign: center;
+                 spacing: 6;
+                 Image { icon-name: "folder-drag-accept-symbolic"; }
+                 Label {
+                   label: _("_Drop Image");
+                   use-underline: true;
+                 }
+               };
+             }
             }
 
             Revealer drop_revealer {
