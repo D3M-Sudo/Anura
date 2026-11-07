@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - AudioPlayer: extend `_cleanup_lock` scope to cover `play()` and `stop()` to prevent races with concurrent cleanup (F19)
 - MagicProcessor: protect `register_transformer()` with `_lock` for thread safety (F21)
-- OcrResult: add `slots=True` for consistency with other dataclasses (F22)
+- OcrResult: add `slots=True` and retain cached layout statistics through an explicit private slot (F22)
 - OcrResult.from_tesseract_dict: wrap `float()` conversion in try/except for robustness (F23)
 - ExportFiles: reject symlinked export directories and enforce mode on creation (F5)
 - AppImage: explicitly stage the architecture-matched `liblzo2.so.2` and `libEGL.so.1` runtime sonames into the AppDir after dependency resolution; include `libegl1` and verify both architectures through the clean-host ELF audit (#555)
