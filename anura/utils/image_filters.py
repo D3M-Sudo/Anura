@@ -101,10 +101,8 @@ class ContrastEnhancementFilter(ImageFilterBase):
         elif light_pixels > 0.8:
             contrast_factor = 1.68
 
-        # Optimization: Calculate the image mean directly from the existing histogram
-        # instead of using ImageStat.Stat(image). This avoids an extra full-image
-        # pixel traversal pass, yielding a ~2x speedup on this specific step for
-        # high-resolution images.
+        # Reuse the histogram already computed above instead of traversing the
+        # image again to calculate its mean.
         mean = sum(i * count for i, count in enumerate(histogram)) / total_pixels
 
         factor = brightness_factor * contrast_factor
