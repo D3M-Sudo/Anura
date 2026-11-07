@@ -231,7 +231,7 @@ PYTHONPATH=".:$SP" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/
   GSETTINGS_SCHEMA_DIR="builddir/data" /usr/bin/python3 -m pytest tests/ -v
 ```
 
-The test suite includes headless unit tests (logic without GTK dependencies), integration tests (GTK/GLib environment), security/hardening tests (DoS prevention, URI validation, sanitization), and reliability/enterprise tests (performance benchmarks, concurrency, lifecycle). History V1 behaviour is covered by `tests/test_history_storage.py`, `tests/test_history_controller_integration.py`, `tests/test_history_ui.py`, `tests/test_history_settings.py` (GTK-marked) and `tests/test_preferences_page_resilience.py` (history/TTS wiring regression). Shortcuts overlay consistency is guarded by `tests/test_shortcuts_consistency.py` — see [docs/reference/dependencies.md](docs/reference/dependencies.md) for the headless GTK testing approach.
+The test suite includes headless unit tests (logic without GTK dependencies), integration tests (GTK/GLib environment), security/hardening tests (DoS prevention, URI validation, sanitization), and reliability tests (performance benchmarks, concurrency, lifecycle). History V1 behaviour is covered by `tests/test_history_storage.py`, `tests/test_history_controller_integration.py`, `tests/test_history_ui.py`, `tests/test_history_settings.py` (GTK-marked) and `tests/test_preferences_page_resilience.py` (history/TTS wiring regression). Shortcuts overlay consistency is guarded by `tests/test_shortcuts_consistency.py` — see [docs/reference/dependencies.md](docs/reference/dependencies.md) for the headless GTK testing approach.
 
 ---
 
