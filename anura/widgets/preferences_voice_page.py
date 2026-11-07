@@ -5,8 +5,8 @@
 # SPDX-License-Identifier: MIT
 
 import contextlib
-import threading
 from gettext import gettext as _
+import threading
 
 from gi.repository import Adw, Gio, GLib, GObject, Gtk
 from loguru import logger
