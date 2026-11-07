@@ -16,7 +16,8 @@ Anura OCR is a GTK4/Libadwaita desktop application for GNOME that extracts text 
 - TTS via `gTTS` + GStreamer `playbin3`
 - Screenshots via XDG Desktop Portal (`libportal` / `Xdp`)
 - **Fallback**: Bundled `scrot` for X11 sessions when portal backends are missing
-- Distributed as Flatpak (`io.github.d3m_sudo.anura`) — GNOME 51 runtime
+- Distributed through GitHub Releases as architecture-specific Flatpak bundles and AppImages (x86_64 and aarch64); Flatpak uses the GNOME 51 runtime
+- AppImage packaging and release contract: `docs/reference/appimage-multiarch-release.md`; real Gear Lever update and representative desktop integration remain post-release acceptance items
 - Internationalization with gettext: 25+ languages (see `po/LINGUAS`)
 - Build system: Meson ≥ 1.5.0
 - License: MIT
@@ -121,8 +122,11 @@ anura/
 ├── docs/
 │   ├── README.md               Documentation index (normative / planning / audit)
 │   ├── reference/              Current (normative) references:
-│   │                            history-v1.md, history-v2.md, dependencies.md, tessdata-integrity.md
-│   ├── planning/               Active (not yet implemented) plans (recreated when needed)
+│   │                            history-v1.md, history-v2.md, dependencies.md, tessdata-integrity.md,
+│   │                            flatpak-multiarch-release.md, appimage-multiarch-release.md,
+│   │                            flathub-submission-checklist.md, tagged-release-verification.md,
+│   │                            code-commenting.md
+│   ├── planning/               Active plans and post-implementation acceptance records
 │   └── audit/                  QA/security audit material:
 │                                README.md (root = active audits) + legacy/ (append-only: reports/)
 ├── flatpak/
@@ -145,7 +149,7 @@ anura/
 ├── po/                         Gettext translations (26 languages)
 ├── .github/
 │   ├── workflows/
-│   │   ├── main.yml                    CI build and smoke tests
+│   │   ├── main.yml                    Python/GTK CI, native Flatpak + AppImage builds, artifact validation and tag-only publication
 │   │   ├── dependency-sync.yml         Dependabot PRs: pyproject → uv.lock → manifests
 │   │   └── flatpak-dependencies.yml    Weekly FEDC + auto-PR certifi
 │   ├── scripts/
@@ -208,8 +212,11 @@ flatpak-builder --run builddir flatpak/io.github.d3m_sudo.anura.local.json anura
    write placeholders. For the Flathub submission manifest, run
    `build-aux/pin_source_commit.py --tag v<version>` after tagging to pin the
    tag's commit.
-2. Wait for the tag's CI run to complete (`gh run watch <run-id>`): the
-   release is created only when the `flatpak-builder` job finishes.
+2. Wait for the tag's CI run to complete (`gh run watch <run-id>`): publication
+   requires both native Flatpak builds, Flatpak artifact validation, both native
+   AppImage builds and AppImage artifact validation. The `publish-release` job
+   attaches both formats and their separate checksum inventories only after all
+   dependencies succeed.
 3. Verify the generated body (it comes from `CHANGELOG.md`, the single source of
    truth, so the release and the changelog cannot disagree):
    ```bash
@@ -219,8 +226,12 @@ flatpak-builder --run builddir flatpak/io.github.d3m_sudo.anura.local.json anura
      with the CHANGELOG entry.
    - Only edit the body by fixing `CHANGELOG.md` and re-running the step; never
      hand-write notes that are not in the changelog.
-4. Final check: `gh release view v<version>` — asset
-   the expected Flatpak and AppImage assets for each supported architecture are attached, notes are complete, and the release is marked `Latest`.
+4. Final check: `gh release view v<version>` — verify both architecture-specific
+   Flatpak bundles, `SHA256SUMS`, both AppImage/.zsync pairs and
+   `SHA256SUMS-appimage` are attached, notes are complete, and the release is
+   marked `Latest`. Then follow the post-release checks in
+   `docs/reference/appimage-multiarch-release.md`; CI artifact validation alone
+   does not prove desktop integration or a real Gear Lever differential update.
 
 ## Dependency Management
 
