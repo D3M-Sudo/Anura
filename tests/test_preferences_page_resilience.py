@@ -140,7 +140,7 @@ def test_voice_volume_mapping_converts_both_directions(monkeypatch, headless_gi_
     """GSettings stores a normalized double while the SpinRow displays a percentage."""
     import anura.widgets.preferences_voice_page as mod
 
-    page, fake_settings = _make_voice_page(monkeypatch, tts_raises=AttributeError("catalog unavailable"))
+    _page, fake_settings = _make_voice_page(monkeypatch, tts_raises=AttributeError("catalog unavailable"))
     get_mapping, set_mapping = fake_settings.mapping_callbacks["tts-volume"]
 
     class Value:
