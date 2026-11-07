@@ -42,8 +42,7 @@ if compile_schemas.found()
   )
 endif
 
-# tessdata install_data removed here to avoid build failures when the file is not in the git repo.
-# Tesseract model download and installation is handled by the Flatpak manifest instead.
+# Tesseract traineddata is managed by the application at runtime; Meson does not install model files.
 
 # Distribute the Apache-2.0 license for the bundled tessdata_fast OCR models.
 install_data('licenses/tessdata_fast/LICENSE',

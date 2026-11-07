@@ -76,9 +76,7 @@ class PreferencesDialog(Adw.PreferencesDialog, SignalManagerMixin):
             self.general_page._setup_extra_languages()
 
     def on_language_download_failed(self, code: str) -> None:
-        """Handle language download failure - show user feedback."""
-        # Could show error notification or update UI state
-        # For now, just ensure UI remains responsive
+        """Handle a failed language download without changing dialog state."""
         pass
 
     def do_destroy(self) -> None:

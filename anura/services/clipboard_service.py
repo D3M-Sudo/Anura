@@ -229,31 +229,10 @@ class ClipboardService(GObject.GObject):
         return True
 
     def _on_read_texture(self, _sender: GObject.GObject, result: Gio.AsyncResult) -> None:
-        """
-        Primary callback for texture reading from clipboard.
+        """Complete a texture read and start the URI-list fallback when needed.
 
-        Triggered by clipboard.read_texture_async() initiated from read_texture()
-        or _fallback_to_texture_read(). Handles successful texture reads and
-        coordinates fallback to URI-list reading on failure.
-
-        State reads:
-            - _state_lock: Guards access to _fallback_attempted and _cancellable
-            - _cancellable: Shared cancellable for the async operation
-            - _fallback_attempted: Guard flag preventing infinite fallback loops
-
-        State mutates:
-            - Sets _fallback_attempted = True on first failure before delegating
-            - Clears _cancellable only if it still belongs to this texture read
-              (a fallback started from this callback owns a newer one, #525)
-
-        Hand-off:
-            - Calls _fallback_to_uri_list_read() on texture read failure
-            - Emits "paste_from_clipboard" signal on success
-            - Emits "error" signal when fallback already attempted
-
-        References:
-            - BUG-043: Timeout handling (uses _stop_timeout(), not _clear_active_timeout())
-            - BUG-H-005: Cancellable race condition protection via _state_lock
+        Preserve cancellable ownership so a fallback started by this callback
+        remains cancellable by its watchdog and during teardown.
         """
         # Capture timeout ID under lock, remove the source outside the lock.
         # BUG-043: We must NOT call _clear_active_timeout() here because it
@@ -304,7 +283,7 @@ class ClipboardService(GObject.GObject):
                     self._fallback_to_uri_list_read()
                     return
                 except (ValueError, RuntimeError) as e:
-                    # Technical rigor: log error for X11/Wayland clipboard synchronization issues
+                    # Log backend or synchronization failures before attempting the URI-list fallback.
                     with self._state_lock:
                         if self._fallback_attempted:
                             logger.error(f"Anura Clipboard Error: {e}; fallback already attempted.")
@@ -817,12 +796,6 @@ class ClipboardService(GObject.GObject):
     def _on_image_decode_superseded(self, _task_id: str) -> None:
         """A newer paste replaced this decode: drop the result silently."""
         logger.debug("Anura Clipboard: image decode superseded by a newer paste.")
-
-    # Note: read_text() and _on_text_read() have been removed as they were dead code.
-    # The method read clipboard text but never emitted a signal or called a callback,
-    # making it a no-op for consumers. If text reading from clipboard is needed in
-    # the future, implement it following the pattern used by paste_from_clipboard()
-    # which correctly emits the "paste_from_clipboard" signal.
 
     def _on_clipboard_timeout(self, cancellable: Gio.Cancellable) -> bool:
         """Thread-safe timeout handler with atomic state management."""

@@ -36,8 +36,7 @@ def monitor_resources():
     for i in range(iterations):
         print(f"Iteration {i + 1}/{iterations}...")
         runner = SilentRunner(app, sample_image)
-        # We need to mock the actual OCR call if Tesseract isn't available or we want it fast
-        # but let's see if it works as is.
+        # Run the configured OCR workload to exercise task execution and cleanup.
         runner.run()
 
         current_mem = process.memory_info().rss / 1024 / 1024

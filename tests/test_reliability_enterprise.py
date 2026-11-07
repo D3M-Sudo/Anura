@@ -64,8 +64,7 @@ class TestReliabilityEnterprise:
 
     def test_language_manager_corrupted_download(self, lang_manager, tmp_path):
         """Test recovery when a download is interrupted/corrupted."""
-        # The LanguageManager init_tessdata uses TESSDATA_DIR constant.
-        # We need to ensure the test's lang_manager uses the tmp_path.
+        # Redirect each module-level TESSDATA_DIR reference to the isolated test directory.
         with (
             patch("anura.config.TESSDATA_DIR", str(tmp_path)),
             patch("anura.services.language_manager.TESSDATA_DIR", str(tmp_path), create=True),

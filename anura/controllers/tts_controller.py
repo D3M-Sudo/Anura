@@ -27,10 +27,7 @@ _TTS_STILL_WAITING_DELAY_S = 8
 
 
 class TtsController(GObject.GObject, SignalManagerMixin):
-    """
-    Decoupled controller for Text-to-Speech operations.
-    Detains absolute monopoly over TTS logic and state.
-    """
+    """Coordinate text-to-speech requests, playback state, and lifecycle."""
 
     __gsignals__: ClassVar[dict[str, tuple]] = {
         # 'idle', 'generating', 'playing', 'paused'
@@ -73,7 +70,7 @@ class TtsController(GObject.GObject, SignalManagerMixin):
         return bool(ocr_lang and self._tts_service.get_effective_language(ocr_lang))
 
     def request_listen(self, text: str, ocr_lang: str | None = None):
-        """Monopoly: initiate TTS, optionally using the entry's capture-time OCR language."""
+        """Start speech generation, using the entry's OCR language when provided."""
         if not text or not text.strip():
             return
 

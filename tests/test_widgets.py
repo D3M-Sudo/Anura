@@ -14,7 +14,7 @@ from unittest.mock import MagicMock, patch
 import gi
 from gi.repository import Adw, Gio
 
-# We need to register resources and initialize Adw before importing widgets that use templates
+# Register GResources and initialize Adw before importing template-backed widgets.
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
