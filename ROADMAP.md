@@ -78,6 +78,7 @@ Related issue: #570.
 
 - Migrated tessdata integrity verification to SHA-256 and documented the associated manifest maintenance workflow (#577, #634).
 - Established native multi-architecture Flatpak build and artifact-validation coverage (#494; distribution follow-ups remain tracked separately).
+- Completed static verification of the Flatpak `GI_TYPELIB_PATH` configuration for the GNOME 51 runtime: manifest entries, documentation and hygiene tests are consistent; `build-aux/flatpak_runtime_smoke.py` covers all required namespaces and native bindings on both x86_64 and aarch64 (#623). Runtime verification inside the sandbox follows the manual verification plan in the issue.
 
 ## Exploratory ideas
 

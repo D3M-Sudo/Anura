@@ -88,7 +88,7 @@ For every `finish-arg`:
 - [ ] Reconcile the manifest with `flatpak/README.md` and `tests/test_flatpak_manifest_hygiene.py`.
 - [ ] Include the permission rationale in the maintainer-authored Flathub submission description.
 
-The four read-only XDG directory permissions and the GI runtime path still have separate local/runtime verification work tracked by #490 and #623. Do not claim those runtime checks are complete until their evidence is recorded. Explain the remaining test boundary honestly in the submission materials if it is still relevant at submission time.
+The four read-only XDG directory permissions still have separate local/runtime verification work tracked by #490. The GI runtime path (`GI_TYPELIB_PATH`) has been statically verified: the manifest entries, documentation and hygiene tests are consistent, and `build-aux/flatpak_runtime_smoke.py` covers all required namespaces (Gtk 4.0, Adw 1, Notify 0.7, Xdp 1.0, Gst 1.0, GtkSource 5) plus native bindings (Pillow, psutil, zxing-cpp, libtesseract) on both x86_64 and aarch64. Runtime verification inside the GNOME 51 sandbox is tracked by the manual verification plan in the issue; do not claim it complete until the smoke test evidence is recorded. Explain the remaining test boundary honestly in the submission materials if it is still relevant at submission time.
 
 ## 8. Required validation before submission
 
