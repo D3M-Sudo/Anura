@@ -6,70 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-### Fixed
-- Changelog: consolidate duplicate `[Unreleased]` category headings and add a CI guard against undocumented removal of existing entries.
-- CI/Flatpak: strengthen the invalid-input OCR regression check to require a non-zero exit without an uncaught Python traceback (#589).
+### Added
 
-- AudioPlayer: extend `_cleanup_lock` scope to cover `play()` and `stop()` to prevent races with concurrent cleanup (F19)
-- MagicProcessor: protect `register_transformer()` with `_lock` for thread safety (F21)
-- OcrResult: add `slots=True` and retain cached layout statistics through an explicit private slot (F22)
-- OcrResult.from_tesseract_dict: wrap `float()` conversion in try/except for robustness (F23)
-- ExportFiles: reject symlinked export directories and enforce mode on creation (F5)
-- AppImage: explicitly stage the architecture-matched `liblzo2.so.2` and `libEGL.so.1` runtime sonames into the AppDir after dependency resolution; include `libegl1` and verify both architectures through the clean-host ELF audit (#555)
-- CI/AppImage: scope the clean-host ELF audit to Anura runtime payloads and explicit plugin paths, excluding only classified systemd/cryptsetup helper binaries and unused GL/visualisation plugins; keep GLib proxy backend resolution in the audit (#555)
-- CI/AppImage: remove nested single quotes from the Docker smoke-test script so the clean-host ELF audit parses correctly on x86_64 and aarch64 (#555)
-- CI/AppImage: fix shell quoting in the clean-host ELF dependency audit so the x86_64 and aarch64 smoke tests execute the audit instead of failing during Bash parsing (#555)
-- AppImage: bundle `liblzo2-2` and audit unresolved shared-library dependencies for every shipped ELF object on clean hosts for both architectures (#555)
-- AppImage: bundle `libxcb-render0`, required by GTK's dynamically loaded X11 backend on clean hosts (#555)
-- AppImage: explicitly bundle `libwayland-client0`, required by GTK's dynamically loaded Wayland backend on clean hosts (#555)
-- CI/AppImage: inspect embedded update metadata without `APPIMAGE_EXTRACT_AND_RUN`, which otherwise dispatches to AppRun and starts the payload (#555)
-- CI/AppImage: explicitly re-embed architecture-specific GitHub Releases update information when repackaging the staged AppDir, and verify it through the runtime inspection interface (#555)
-- CI/AppImage: generate each `.zsync` control file from the final repackaged AppImage with `zsyncmake`; the intermediate appimage-builder image's control file is discarded (#555)
-- CI/AppImage: use appimage-builder only to stage the dependency-complete AppDir, then replace its AppRun2 launcher and repackage with the pinned appimagetool runtime to avoid the known glibc compatibility-runtime startup failure (#555)
-- CI/AppImage: use the multi-architecture Ubuntu snapshot archive for amd64 and arm64, and compare Ubuntu package versions with dpkg semantics to avoid appimage-builder's PEP 440 parsing failure (#555)
-
-- CLI: resolve relative `--file` paths against the requesting client's working directory, rather than the application's process directory (#595)
-- Screenshots: remove temporary capture files on cancellation and error paths, not only after successful processing (#596)
-- CLI: report invalid image input through the normal error path without exposing an unnecessary traceback (#599)
-- Sharing: provide actionable feedback when opening a share target fails (#600)
-- Translations: preserve an existing valid POT catalogue when message extraction fails, instead of replacing it with incomplete output (#602)
-- Window: calculate initial dimensions against the available monitor work area so the application opens at an appropriate size (#603)
-- Downloads: restore a consistent download state after an unexpected worker failure, allowing the operation to be retried (#604)
-- Languages: validate language identifiers strictly before accepting them, rejecting malformed codes (#606)
-
-- Flatpak: use the fallback X11 socket alongside Wayland and preserve the App ID in temporary CI manifest filenames
-- Flatpak: update Nanobind and Certifi sources, keep GNOME 51 in the release manifest, and validate/build a generated release-style manifest in CI (#479, #556, #491, #484)
-- Share: Reddit sends extracted text in `selftext` only; LinkedIn and Discord are removed from text sharing because their URL endpoints do not prefill the extracted text (#579)
-- OCR: `fast`, `standard` and `best` now select `tessdata_fast`, legacy `tessdata` and `tessdata_best` respectively; cache discovery follows the same profile directories (#571)
-- Clipboard: decoding an image copied as a file URI no longer blocks the GTK main thread. The PIL decode and PNG re-encode run in the clipboard lane of the task manager, and only the cheap `Gdk.Texture` creation happens on the main loop; a newer paste supersedes an in-flight decode (#581)
-- OCR/tessdata: startup cleanup no longer deletes shared top-level models or directories owned by a live process. Task pool directories carry an `owner.pid` lease written when the pool is created, and cleanup removes a directory only when its owner is dead or, for legacy directories without a lease, when it is older than a day. The previous rules removed every model that did not match the active language and every directory older than an hour, which could pull the models out from under a concurrent OCR task or a second instance (#521)
-- OCR: a stale `BrokenProcessPool` callback can no longer tear down a healthy replacement pool. The teardown now runs only when the executor that failed is still the current one, instead of resetting whichever pool happens to be installed (#526)
-- TTS/shutdown: a generation blocked in gTTS no longer delays application exit. TTS now runs on a dedicated daemon thread (`execute_daemon`, same lane and versioning semantics) instead of the shared `ThreadPoolExecutor`, whose workers CPython joins at interpreter exit; `shutdown()` also cancels every lane and no longer waits for the running task (#506)
-- TTS: the generation watchdog is now proportional to the text (30 s base + 1.5 s per 100-character gTTS fragment, capped at 5 min) instead of a fixed 35 s, and on expiry the TTS lane is cancelled so a late result is discarded instead of arriving after the UI already gave up (#508)
-- Tasks: `AtomicTaskManager` now keeps one slot per task kind (`ocr`, `tts`, `cleanup`) instead of a single global one. A screenshot, an OCR run or the post-OCR file cleanup no longer cancels an in-flight TTS generation (and vice versa); only a newer task in the same lane supersedes the previous one, and a superseded task reports through the new `on_superseded` hook — used by the TTS controller to drop its pending state — instead of having its result discarded silently (#507)
-- TTS: opening Preferences no longer freezes the window while the gTTS language catalog is fetched. On a cold cache the combo is filled from the cached catalog only and the catalog is refreshed on a worker thread, applied via `GLib.idle_add`; programmatic repopulation does not write the setting back, and a failed fetch is no longer cached permanently so a later retry can succeed (#532)
-- Downloads: `shutdown()` now sets a manager-owned signal and closes the active HTTP response, so an in-flight model download stops instead of streaming until the request and retry timeouts expire. New download requests are refused once shutdown has begun, so the process can exit while the window is closing (#531)
-- Preferences: language-download signals now schedule their refresh through a tracked idle source. The source id is remembered and removed in `do_destroy()`, and the wrapper re-checks a disposed flag, so a download that finishes while the dialog is closing can no longer refresh destroyed child pages (#539)
-- Drag and drop: the cancellable is now carried through the async chain and cleared only by the callback that owns it. A delayed callback from a cancelled drop could clear the newest drop's cancellable, leaving the active read uncancellable by the next drop or by `do_destroy()` (#538)
-- Clipboard: the texture read clears its cancellable only when it still owns it. When texture decoding failed and the URI-list fallback started, the outer `finally` erased the *fallback's* cancellable, so the 10-second watchdog treated its timeout as stale and `cancel_pending_operations()` could no longer cancel the pending read (#525)
-- History: a failed clear no longer empties the view. The in-memory cache is replaced only after the empty state is persisted and is restored when the write fails, and the failure is reported with a toast. Previously the list looked cleared while `history.json` still held every entry, which then "came back" after a restart (#540)
-- History: changing `history-limit` in Preferences now applies immediately. The window reacts to `changed::history-limit` and updates the live service, which trims and persists when the limit shrinks; previously the value was read only at startup (#510)
-- Screenshot (X11/scrot fallback): the file-ready wait no longer runs inside the async process callback. The old `wait_for_file()` loop slept on the GTK main thread for up to ~5 s after every capture; it is now a `GLib.timeout_add` poll with the same retry policy, and the unused blocking method was removed (#523)
-- OCR: `pytesseract.image_to_data()` now runs with a 120 s budget (`OCR_TIMEOUT_SECONDS`) in both the isolated worker and the synchronous path. pytesseract kills the Tesseract child when the budget expires, so a pathological image can no longer keep the single OCR worker busy indefinitely (and cancellation, which is only checked before/after the call, cannot be held hostage). A timeout is reported as an OCR error instead of a silent empty result (#533)
-- Downloads: the streamed HTTP response is now closed on every exit path of a model download (oversized `Content-Length`, size mismatch with the pinned model, cancellation, oversized stream, I/O error and success). An unread stream kept its connection and socket alive, and repeated failures could starve the session pool (#520)
-- URL transformer: TLD detection now parses the candidate instead of requiring `/` right after the TLD, so URLs followed by a query string, a fragment or an explicit port (`https://example.com?next=/x`, `…#section`, `…:8443/path`) are no longer discarded; one-character, numeric and non-ASCII TLDs, host-less URLs and malformed ports are still rejected (#530)
-- TTS: playback builds a real `file://` URI instead of concatenating the prefix with the path, so a cache directory containing spaces, `#`, `?`, `%` or non-ASCII characters no longer makes a successful generation fail to play (#528)
-- TTS: a stale or unsupported speech language no longer breaks the failure path. The gTTS constructor runs inside the guard, so its `ValueError` (and `gTTSError` from the API) map to the normal empty-path result the pipeline already handles, and any partial MP3 is removed (#547)
-- History: the clear-confirmation callback now re-checks the history service before using it, so a window teardown between opening the dialog and the user response can no longer raise `AttributeError` (#514)
-- UI: `ShortcutsOverlay.shortcuts_data` is typed with `TypedDict` entries, so category and shortcut lookups are checked instead of being inferred as `Collection[str]` (#515)
-- Types: the headless `GObject` fallback used when PyGObject is unavailable is now marked as an intentional redefinition, keeping `mypy` clean in CI (#516)
-- Flatpak: automated certifi updates no longer break the build — the FEDC update now rewrites the certifi filename referenced by the module's `build-commands` (the 2026.10.18 bump made `pip3 install` look for the previous 2026.7.22 tarball). Covered by `tests/test_fedc_certifi.py`
-- Clipboard: `hand_off_to_manager()` and `wait_until_replaced()` now refuse to iterate the default GLib main context when it is already running (an active GTK loop, or another thread owns it), logging a warning and returning `False` instead of re-entering the loop (AUDIT-001, #469)
+- Release/AppImage: add native x86_64 and aarch64 self-contained AppImage builds, embedded GitHub Releases zsync metadata, paired update files, strict release-asset validation and SHA-256 checksums (#555)
+- Docs/release: document AppImage runtime boundaries, downloads, checksums and Gear Lever-compatible zsync updates (#555)
+- Docs/Flatpak: add a maintainer-operated Flathub submission readiness checklist covering current policy, architecture, manifest, licensing, permissions and validation boundaries (#494)
+- Docs/release: add an operational checklist for the first real tag-triggered verification of pinned artifact download, multiarch Flatpak publication and SHA-256 assets (#592)
+- Docs/release: add an AppImage multi-architecture and zsync planning baseline, keeping the proposed packaging path separate from the existing Flatpak release gate (#555)
+- Docs/release: select GitHub Releases with architecture-specific `gh-releases-zsync` update metadata as the approved AppImage update-discovery direction (#555)
+- Docs/OCR: add a research and evaluation plan for mathematical OCR, covering Pix2Text/pix2tex/Mathpix, model provenance and licensing risks, CPU/Flatpak resource gates, LaTeX-first output and a separate Typst conversion decision (#570)
+- Docs: add the public project roadmap, documenting approved near-term priorities, longer-term directions and roadmap maintenance policy (#632)
+- History: each stored entry now offers an **Open in external editor** action. The full immutable entry text is exported asynchronously to a private per-user file and handed off through `Gtk.FileLauncher` (#624)
+- History: each stored entry now offers a **Text-to-Speech replay** action, reusing the shared TTS pipeline and the OCR language stored with the entry while respecting the explicit TTS-language preference (#626)
+- CI/Flatpak: build Flatpak bundles on native x86_64 and aarch64 runners, producing architecture-specific bundles and license-inventory artifacts (#618)
+- CI/Flatpak: add sandbox-level runtime smoke checks on both architectures for GTK/GI typelibs, native Python bindings and the bundled Tesseract library (#619)
+- Flatpak: offer a portal-backed, user-selected migration of history and downloaded OCR models from the previous application ID; no cross-application filesystem permission is required (#613)
 
 ### Changed
+
 - CI/governance: align Dependabot and certifi automation with `feature`, run CodeQL on PRs to all protected promotion branches, guard manual dependency-sync dispatch from protected branches, and document the single-maintainer PR/CI policy.
 - Release tooling: correct the release script post-tag instructions to describe generated CHANGELOG notes and the current multi-architecture Flatpak/AppImage publication flow.
-
 - Code quality: clarify technical comments, remove obsolete implementation notes, and standardize selected Python docstrings; add contributor guidance for comment and Google-style docstring conventions.
 - Localization: allow packaged AppImage builds to select their bundled gettext catalog directory through ANURA_LOCALE_DIR (#555)
 - Desktop integration: keep `Graphics` as the single main application-menu category and add the freedesktop `Scanning` and `OCR` additional categories, preventing duplicate menu entries while retaining precise OCR classification (#620)
@@ -105,8 +61,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Flatpak: updated the Python modules requested by FEDC in #427 — zxing-cpp 3.0.0 → 3.1.1, Pillow 12.3.0 → 13.0.0 (security release), charset-normalizer 3.4.7 → 3.5.2, libportal 0.9.1 → 0.11.0 and scikit-build-core 1.0.1 → 1.1.1. `pyproject.toml` now requires `pillow>=13.0.0` and `zxing-cpp>=3.1.1`, with `uv.lock` regenerated so `sync_dependencies.py --check` stays green
 - Flatpak: zxing-cpp 3.1 builds its Python wheel with nanobind instead of pybind11, so `python3-nanobind` 2.11.0 was added and the zxing build no longer sets `pybind11_DIR`. `pybind11` stays (updated to 3.1.0) because Pillow 13 now imports `pybind11.setup_helpers` at build time
 - Flatpak: scikit-build-core is installed from its `1.1.1` wheel; FEDC's proposed sdist could not be installed by the module's `--no-build-isolation` build command, which referenced the old wheel by filename. The `x-checker-data` now pins `packagetype: bdist_wheel`, and `tests/test_flatpak_manifest_build_commands.py` guards wheel modules against the same mismatch
-
-### Documentation
 - Docs/release: distinguish the currently published v0.2.1 assets from the implemented multi-architecture Flatpak/AppImage release pipeline; document AppImage's first-release, desktop-integration and real Gear Lever update acceptance gates (#555).
 - Docs/roadmap: move the implemented AppImage build pipeline out of future work and record the remaining post-release acceptance criteria (#555).
 - Docs/agents: align the canonical assistant guide with the current multi-format release jobs, publication dependencies and artifact checks.
@@ -114,28 +68,72 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Docs/OCR: distinguish the Tesseract engine version from upstream traineddata refs and record the model training provenance and compatibility findings (#642)
 - Docs/Flatpak: reflect completed static verification of `GI_TYPELIB_PATH` for the GNOME 51 runtime; verification plan and closure recorded for #623
 
-### Added
-- Release/AppImage: add native x86_64 and aarch64 self-contained AppImage builds, embedded GitHub Releases zsync metadata, paired update files, strict release-asset validation and SHA-256 checksums (#555)
-- Docs/release: document AppImage runtime boundaries, downloads, checksums and Gear Lever-compatible zsync updates (#555)
-- Docs/Flatpak: add a maintainer-operated Flathub submission readiness checklist covering current policy, architecture, manifest, licensing, permissions and validation boundaries (#494)
-- Docs/release: add an operational checklist for the first real tag-triggered verification of pinned artifact download, multiarch Flatpak publication and SHA-256 assets (#592)
-- Docs/release: add an AppImage multi-architecture and zsync planning baseline, keeping the proposed packaging path separate from the existing Flatpak release gate (#555)
-- Docs/release: select GitHub Releases with architecture-specific `gh-releases-zsync` update metadata as the approved AppImage update-discovery direction (#555)
-- Docs/OCR: add a research and evaluation plan for mathematical OCR, covering Pix2Text/pix2tex/Mathpix, model provenance and licensing risks, CPU/Flatpak resource gates, LaTeX-first output and a separate Typst conversion decision (#570)
-- Docs: add the public project roadmap, documenting approved near-term priorities, longer-term directions and roadmap maintenance policy (#632)
-- History: each stored entry now offers an **Open in external editor** action. The full immutable entry text is exported asynchronously to a private per-user file and handed off through `Gtk.FileLauncher` (#624)
-- History: each stored entry now offers a **Text-to-Speech replay** action, reusing the shared TTS pipeline and the OCR language stored with the entry while respecting the explicit TTS-language preference (#626)
-- CI/Flatpak: build Flatpak bundles on native x86_64 and aarch64 runners, producing architecture-specific bundles and license-inventory artifacts (#618)
-- CI/Flatpak: add sandbox-level runtime smoke checks on both architectures for GTK/GI typelibs, native Python bindings and the bundled Tesseract library (#619)
-- Flatpak: offer a portal-backed, user-selected migration of history and downloaded OCR models from the previous application ID; no cross-application filesystem permission is required (#613)
-
 ### Removed
+
 - Development tooling: dropped the `safety` dev dependency (and its entry in the Dependabot `dev-deps` group). It was added by the one-off June 2026 audit (`ead78f1`) to produce `docs/audit/safety_scan.json`, which is no longer tracked; no workflow, test or build script invokes it, and dependency scanning is covered by Dependabot and CodeQL. The development graph drops from 72 to 39 packages (also losing `cryptography`, `httpx`, `h11`, `pydantic` and `nltk`, which came in through it); runtime dependencies and the Flatpak manifests are untouched. `bandit` is kept
 
+### Fixed
+
+- Changelog: consolidate duplicate `[Unreleased]` category headings and add a CI guard against undocumented removal of existing entries.
+- CI/Flatpak: strengthen the invalid-input OCR regression check to require a non-zero exit without an uncaught Python traceback (#589).
+- AudioPlayer: extend `_cleanup_lock` scope to cover `play()` and `stop()` to prevent races with concurrent cleanup (F19)
+- MagicProcessor: protect `register_transformer()` with `_lock` for thread safety (F21)
+- OcrResult: add `slots=True` and retain cached layout statistics through an explicit private slot (F22)
+- OcrResult.from_tesseract_dict: wrap `float()` conversion in try/except for robustness (F23)
+- ExportFiles: reject symlinked export directories and enforce mode on creation (F5)
+- AppImage: explicitly stage the architecture-matched `liblzo2.so.2` and `libEGL.so.1` runtime sonames into the AppDir after dependency resolution; include `libegl1` and verify both architectures through the clean-host ELF audit (#555)
+- CI/AppImage: scope the clean-host ELF audit to Anura runtime payloads and explicit plugin paths, excluding only classified systemd/cryptsetup helper binaries and unused GL/visualisation plugins; keep GLib proxy backend resolution in the audit (#555)
+- CI/AppImage: remove nested single quotes from the Docker smoke-test script so the clean-host ELF audit parses correctly on x86_64 and aarch64 (#555)
+- CI/AppImage: fix shell quoting in the clean-host ELF dependency audit so the x86_64 and aarch64 smoke tests execute the audit instead of failing during Bash parsing (#555)
+- AppImage: bundle `liblzo2-2` and audit unresolved shared-library dependencies for every shipped ELF object on clean hosts for both architectures (#555)
+- AppImage: bundle `libxcb-render0`, required by GTK's dynamically loaded X11 backend on clean hosts (#555)
+- AppImage: explicitly bundle `libwayland-client0`, required by GTK's dynamically loaded Wayland backend on clean hosts (#555)
+- CI/AppImage: inspect embedded update metadata without `APPIMAGE_EXTRACT_AND_RUN`, which otherwise dispatches to AppRun and starts the payload (#555)
+- CI/AppImage: explicitly re-embed architecture-specific GitHub Releases update information when repackaging the staged AppDir, and verify it through the runtime inspection interface (#555)
+- CI/AppImage: generate each `.zsync` control file from the final repackaged AppImage with `zsyncmake`; the intermediate appimage-builder image's control file is discarded (#555)
+- CI/AppImage: use appimage-builder only to stage the dependency-complete AppDir, then replace its AppRun2 launcher and repackage with the pinned appimagetool runtime to avoid the known glibc compatibility-runtime startup failure (#555)
+- CI/AppImage: use the multi-architecture Ubuntu snapshot archive for amd64 and arm64, and compare Ubuntu package versions with dpkg semantics to avoid appimage-builder's PEP 440 parsing failure (#555)
+- CLI: resolve relative `--file` paths against the requesting client's working directory, rather than the application's process directory (#595)
+- Screenshots: remove temporary capture files on cancellation and error paths, not only after successful processing (#596)
+- CLI: report invalid image input through the normal error path without exposing an unnecessary traceback (#599)
+- Sharing: provide actionable feedback when opening a share target fails (#600)
+- Translations: preserve an existing valid POT catalogue when message extraction fails, instead of replacing it with incomplete output (#602)
+- Window: calculate initial dimensions against the available monitor work area so the application opens at an appropriate size (#603)
+- Downloads: restore a consistent download state after an unexpected worker failure, allowing the operation to be retried (#604)
+- Languages: validate language identifiers strictly before accepting them, rejecting malformed codes (#606)
+- Flatpak: use the fallback X11 socket alongside Wayland and preserve the App ID in temporary CI manifest filenames
+- Flatpak: update Nanobind and Certifi sources, keep GNOME 51 in the release manifest, and validate/build a generated release-style manifest in CI (#479, #556, #491, #484)
+- Share: Reddit sends extracted text in `selftext` only; LinkedIn and Discord are removed from text sharing because their URL endpoints do not prefill the extracted text (#579)
+- OCR: `fast`, `standard` and `best` now select `tessdata_fast`, legacy `tessdata` and `tessdata_best` respectively; cache discovery follows the same profile directories (#571)
+- Clipboard: decoding an image copied as a file URI no longer blocks the GTK main thread. The PIL decode and PNG re-encode run in the clipboard lane of the task manager, and only the cheap `Gdk.Texture` creation happens on the main loop; a newer paste supersedes an in-flight decode (#581)
+- OCR/tessdata: startup cleanup no longer deletes shared top-level models or directories owned by a live process. Task pool directories carry an `owner.pid` lease written when the pool is created, and cleanup removes a directory only when its owner is dead or, for legacy directories without a lease, when it is older than a day. The previous rules removed every model that did not match the active language and every directory older than an hour, which could pull the models out from under a concurrent OCR task or a second instance (#521)
+- OCR: a stale `BrokenProcessPool` callback can no longer tear down a healthy replacement pool. The teardown now runs only when the executor that failed is still the current one, instead of resetting whichever pool happens to be installed (#526)
+- TTS/shutdown: a generation blocked in gTTS no longer delays application exit. TTS now runs on a dedicated daemon thread (`execute_daemon`, same lane and versioning semantics) instead of the shared `ThreadPoolExecutor`, whose workers CPython joins at interpreter exit; `shutdown()` also cancels every lane and no longer waits for the running task (#506)
+- TTS: the generation watchdog is now proportional to the text (30 s base + 1.5 s per 100-character gTTS fragment, capped at 5 min) instead of a fixed 35 s, and on expiry the TTS lane is cancelled so a late result is discarded instead of arriving after the UI already gave up (#508)
+- Tasks: `AtomicTaskManager` now keeps one slot per task kind (`ocr`, `tts`, `cleanup`) instead of a single global one. A screenshot, an OCR run or the post-OCR file cleanup no longer cancels an in-flight TTS generation (and vice versa); only a newer task in the same lane supersedes the previous one, and a superseded task reports through the new `on_superseded` hook — used by the TTS controller to drop its pending state — instead of having its result discarded silently (#507)
+- TTS: opening Preferences no longer freezes the window while the gTTS language catalog is fetched. On a cold cache the combo is filled from the cached catalog only and the catalog is refreshed on a worker thread, applied via `GLib.idle_add`; programmatic repopulation does not write the setting back, and a failed fetch is no longer cached permanently so a later retry can succeed (#532)
+- Downloads: `shutdown()` now sets a manager-owned signal and closes the active HTTP response, so an in-flight model download stops instead of streaming until the request and retry timeouts expire. New download requests are refused once shutdown has begun, so the process can exit while the window is closing (#531)
+- Preferences: language-download signals now schedule their refresh through a tracked idle source. The source id is remembered and removed in `do_destroy()`, and the wrapper re-checks a disposed flag, so a download that finishes while the dialog is closing can no longer refresh destroyed child pages (#539)
+- Drag and drop: the cancellable is now carried through the async chain and cleared only by the callback that owns it. A delayed callback from a cancelled drop could clear the newest drop's cancellable, leaving the active read uncancellable by the next drop or by `do_destroy()` (#538)
+- Clipboard: the texture read clears its cancellable only when it still owns it. When texture decoding failed and the URI-list fallback started, the outer `finally` erased the *fallback's* cancellable, so the 10-second watchdog treated its timeout as stale and `cancel_pending_operations()` could no longer cancel the pending read (#525)
+- History: a failed clear no longer empties the view. The in-memory cache is replaced only after the empty state is persisted and is restored when the write fails, and the failure is reported with a toast. Previously the list looked cleared while `history.json` still held every entry, which then "came back" after a restart (#540)
+- History: changing `history-limit` in Preferences now applies immediately. The window reacts to `changed::history-limit` and updates the live service, which trims and persists when the limit shrinks; previously the value was read only at startup (#510)
+- Screenshot (X11/scrot fallback): the file-ready wait no longer runs inside the async process callback. The old `wait_for_file()` loop slept on the GTK main thread for up to ~5 s after every capture; it is now a `GLib.timeout_add` poll with the same retry policy, and the unused blocking method was removed (#523)
+- OCR: `pytesseract.image_to_data()` now runs with a 120 s budget (`OCR_TIMEOUT_SECONDS`) in both the isolated worker and the synchronous path. pytesseract kills the Tesseract child when the budget expires, so a pathological image can no longer keep the single OCR worker busy indefinitely (and cancellation, which is only checked before/after the call, cannot be held hostage). A timeout is reported as an OCR error instead of a silent empty result (#533)
+- Downloads: the streamed HTTP response is now closed on every exit path of a model download (oversized `Content-Length`, size mismatch with the pinned model, cancellation, oversized stream, I/O error and success). An unread stream kept its connection and socket alive, and repeated failures could starve the session pool (#520)
+- URL transformer: TLD detection now parses the candidate instead of requiring `/` right after the TLD, so URLs followed by a query string, a fragment or an explicit port (`https://example.com?next=/x`, `…#section`, `…:8443/path`) are no longer discarded; one-character, numeric and non-ASCII TLDs, host-less URLs and malformed ports are still rejected (#530)
+- TTS: playback builds a real `file://` URI instead of concatenating the prefix with the path, so a cache directory containing spaces, `#`, `?`, `%` or non-ASCII characters no longer makes a successful generation fail to play (#528)
+- TTS: a stale or unsupported speech language no longer breaks the failure path. The gTTS constructor runs inside the guard, so its `ValueError` (and `gTTSError` from the API) map to the normal empty-path result the pipeline already handles, and any partial MP3 is removed (#547)
+- History: the clear-confirmation callback now re-checks the history service before using it, so a window teardown between opening the dialog and the user response can no longer raise `AttributeError` (#514)
+- UI: `ShortcutsOverlay.shortcuts_data` is typed with `TypedDict` entries, so category and shortcut lookups are checked instead of being inferred as `Collection[str]` (#515)
+- Types: the headless `GObject` fallback used when PyGObject is unavailable is now marked as an intentional redefinition, keeping `mypy` clean in CI (#516)
+- Flatpak: automated certifi updates no longer break the build — the FEDC update now rewrites the certifi filename referenced by the module's `build-commands` (the 2026.10.18 bump made `pip3 install` look for the previous 2026.7.22 tarball). Covered by `tests/test_fedc_certifi.py`
+- Clipboard: `hand_off_to_manager()` and `wait_until_replaced()` now refuse to iterate the default GLib main context when it is already running (an active GTK loop, or another thread owns it), logging a warning and returning `False` instead of re-entering the loop (AUDIT-001, #469)
+
 ### Security
+
 - Sharing: restrict generated share links to explicitly allowed URI schemes before handing them to an external handler (#594)
 - Sharing/URLs: normalize legacy IPv4 address representations before processing URLs, preventing alternate numeric forms from bypassing address checks (#598)
-
 - Privacy: shutting down a silent CLI run no longer constructs the TTS service. `_cleanup_services()` used the lazy `get_tts_service()` getter, which built `TTSService` — starting a Google language-catalog fetch — purely to call `cleanup()`; it now uses a non-initializing singleton lookup and only cleans up a service that was actually used (#536)
 - Notifications: the successful-extraction notification no longer includes the first 80 characters of the recognised text. Banners and notification history can be visible on the lock screen, and the text may be a private message or a credential; the body is now generic (#534)
 - Notifications: the application now uses the same `NotificationService` singleton as the controllers, so shutdown withdraws the portal notification IDs that OCR actually created instead of cleaning up an unrelated instance (#537)
@@ -149,316 +147,327 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Dependabot #47, #48 (`anyio`): no longer in the dependency graph. `anyio` was only reachable through `httpx`, which was required exclusively by the `safety` dev tool removed above; `uv.lock` now has no `anyio` entry, so the IDNA 2003 host-name encoding in `TLSStream` (TLS certificate spoofing) and the process-pool workers blocked on undrained stderr no longer apply
 - Dependabot #32 (`nltk`): no longer in the dependency graph. The direct dev dependency was unused (never imported by the application, the tests or the build scripts), and dropping `safety` removes the only transitive path (`safety 3.8.1` requires `nltk>=3.9`), so NLTK's unfixed model-artifact path traversal cannot be reached from this project at all. NLTK was never shipped in the Flatpak
 
-
 ## [0.2.1] - 2026-10-20
 
 ### Added
-- History: rows now expand (Enter, Space or click on the row) to show the full extracted text in a scrollable area of limited height; one row is open at a time and all rows start collapsed every time the page is opened. The copy button stays in the row header. The text area is created on the first expansion, so a long history with large entries opens as fast as before (History V2, minimal cut). Tests: `tests/test_history_expansion_real.py` runs the real page and real widgets
-- History: each row of the History page now has a copy button that copies the stored text to the clipboard, with icon and toast feedback (History V2, minimal cut). Row activation is intentionally not bound to any action yet. The action logic lives in the new `HistoryController`, which reports outcomes through signals, so `HistoryPage` stays a UI shell
-- Tests: `tests/test_pot_template.py` validates the gettext template with the checks that apply to a template (it parses, no duplicate msgids, the History strings are extracted). `msgfmt -c` is not one of them: it rejects the placeholder header xgettext writes, and is meant for the translated `.po` files
+
+- History: rows now expand (Enter, Space or click on the row) to show the full extracted text in a scrollable area of limited height; one row is open at a time and all rows start collapsed every time the page is opened. The copy button stays in the row header. The text area is created on the first expansion, so a long history with large entries opens as fast as before (History V2, minimal cut). Tests: `tests/test_history_expansion_real.py` runs the real page and real widgets.
+- History: each row of the History page now has a copy button that copies the stored text to the clipboard, with icon and toast feedback (History V2, minimal cut). Row activation is intentionally not bound to any action yet. The action logic lives in the new `HistoryController`, which reports outcomes through signals, so `HistoryPage` stays a UI shell.
+- Tests: `tests/test_pot_template.py` validates the gettext template with the checks that apply to a template (it parses, no duplicate msgids, the History strings are extracted). `msgfmt -c` is not one of them: it rejects the placeholder header xgettext writes, and is meant for the translated `.po` files.
 
 ### Changed
-- History: the Clear button is insensitive while there are no entries, so it can no longer open an empty confirmation dialog
+
+- History: the Clear button is insensitive while there are no entries, so it can no longer open an empty confirmation dialog.
 
 ### Fixed
-- History: row titles and subtitles were parsed as Pango markup, so extracted text containing `&` or `<` (for example "R&D" or code such as `if (a<b)`) produced an empty row title and `<b>`-style text lost its tags
-- Clipboard: copying text (extracted text, QR URL, History rows) did not reach other applications, so it could not be pasted anywhere. `ClipboardService.set()` wrapped the text in a `GLib.Variant`, which GTK publishes only as the unreadable `GVariant` format; it now publishes a plain string (`text/plain`). Present since the change that replaced `Gdk.Clipboard.set_text()` (v0.1.5, v0.2.0)
-- Silent CLI mode (`--silent`) never ran the OCR and then hung: the runner called `GLib.MainContext.push()`/`pop()`, which do not exist in PyGObject (`push_thread_default()`/`pop_thread_default()` do; `AttributeError`), and its main-loop callbacks took no arguments while PyGObject passes the source `user_data`, so every callback raised `TypeError` and not even the 60 s timeout could end the loop. Found on PyGObject 3.48.2; the only test mocked the whole runner
-- Silent CLI mode (`--silent`): the copied text could not be pasted once the process exited, because the clipboard belongs to the process that set it. The text is now handed to the desktop clipboard manager when there is one; otherwise the process keeps serving the clipboard for up to 30 seconds, or until another application copies something, and then exits. Checked on X11 with and without a clipboard manager; on Wayland the backend cannot hand content to a manager, so only the wait applies
-- CLI: `anura --file <image>` (with or without `--silent`) crashed with a `TypeError` before processing anything. The file name comes from GLib as a bytestring, `unpack()` turns it into a list of integers and `Path()` rejects that; it is now decoded to a string, non-ASCII names included. The test that covered this fed a plain string, which GLib never delivers. Found on PyGObject 3.48.2 / GLib 2.80
+
+- History: row titles and subtitles were parsed as Pango markup, so extracted text containing `&` or `<` (for example "R&D" or code such as `if (a<b)`) produced an empty row title and `<b>`-style text lost its tags.
+- Clipboard: copying text (extracted text, QR URL, History rows) did not reach other applications, so it could not be pasted anywhere. `ClipboardService.set()` wrapped the text in a `GLib.Variant`, which GTK publishes only as the unreadable `GVariant` format; it now publishes a plain string (`text/plain`). Present since the change that replaced `Gdk.Clipboard.set_text()` (v0.1.5, v0.2.0).
+- Silent CLI mode (`--silent`) never ran the OCR and then hung: the runner called `GLib.MainContext.push()`/`pop()`, which do not exist in PyGObject (`push_thread_default()`/`pop_thread_default()` do; `AttributeError`), and its main-loop callbacks took no arguments while PyGObject passes the source `user_data`, so every callback raised `TypeError` and not even the 60 s timeout could end the loop. Found on PyGObject 3.48.2; the only test mocked the whole runner.
+- Silent CLI mode (`--silent`): the copied text could not be pasted once the process exited, because the clipboard belongs to the process that set it. The text is now handed to the desktop clipboard manager when there is one; otherwise the process keeps serving the clipboard for up to 30 seconds, or until another application copies something, and then exits. Checked on X11 with and without a clipboard manager; on Wayland the backend cannot hand content to a manager, so only the wait applies.
+- CLI: `anura --file <image>` (with or without `--silent`) crashed with a `TypeError` before processing anything. The file name comes from GLib as a bytestring, `unpack()` turns it into a list of integers and `Path()` rejects that; it is now decoded to a string, non-ASCII names included. The test that covered this fed a plain string, which GLib never delivers. Found on PyGObject 3.48.2 / GLib 2.80.
 
 ## [0.2.0] - 2026-09-21
 
 ### Added
-- Added undo/redo buttons to the OCR result editor, synced with the shortcuts overlay
-- Tessdata model integrity verification (defensive audit F1): build-time manifest `anura/data/tessdata_checksums.json` with pinned git-blob SHA-1 hashes (generated by `build-aux/generate_tessdata_checksums.py`), verified by `anura/utils/tessdata_integrity.py` before a downloaded model is installed; anti-drift check extended in `build-aux/check_tessdata_consistency.py`
-- Eliminated manual dual-maintenance of the Flatpak manifests: the release manifest is now generated by `build-aux/release.sh` from the local manifest (never hand-edited) with release-time self-checks
-- Synchronized the keyboard shortcuts overlay with the actions actually registered in the app: new Editor category (select all, copy, undo, redo, search, external editor), Text-to-Speech category with pause/resume (`<Primary><Alt>L`), and previously undocumented accelerators (`<Primary>comma` documented, duplicate aliases deduplicated)
-- Added `tests/test_shortcuts_consistency.py`: bidirectional anti-drift test (headless-safe, per `docs/reference/dependencies.md`) ensuring the shortcuts overlay and `ActionRegistry` accelerators stay in sync, with a documented whitelist for native widget bindings (select-all, undo, redo, Escape)
-- Migrated the OCR result text editor to **GtkSourceView 5** (`GtkSource.View`/`GtkSource.Buffer`) with native search bar (`<Primary>f`), editor preferences (line numbers, current line highlight, wrapping), and an "Open in External Editor" action (`<Primary><Shift>E`) with safe `Gtk.FileLauncher` handoff
 
-### Fixed
-- Fixed conftest.py: pytest collection/setup errors (reported under the 'error' key in terminalreporter.stats) are now printed alongside test failures ('failed' key) before os._exit() in pytest_sessionfinish, instead of being silently invisible in CI output
-- Fixed screenshot fallback (BUG-004): trigger the bundled scrot fallback on any non-None portal error on X11 sessions
-- Made tessdata downloads fully atomic (defensive audit F2): models are downloaded to `*.tmp` files and installed via `os.replace()`, so a crash mid-install can never leave a truncated `*.traineddata` in place
-- Hardened OCR external-editor export files (defensive audit F3): exports now go to `$XDG_RUNTIME_DIR/anura/exports` (per-user, per-session) instead of the shared `/tmp/anura_exports`, created via `tempfile.mkstemp()` with mode `0600` and random names; stale export files are cleaned on boot
-- Fixed leaked temporary screenshot file when the scrot spawn fails in the legacy X11 provider (defensive audit F4)
-- Hardened the legacy scrot provider to reject group/world-writable binaries (defensive audit F5)
-- Fixed dead next/prev search navigation in the OCR editor (defensive audit F6): PyGObject exposes `forward()`/`backward()` (the old `forward2`/`backward2` names do not exist on this binding), so the previous hasattr guards silently disabled navigation
-- Enabled wrap-around in search (defensive audit F7): `GtkSource.SearchSettings` defaults to `wrap_around=FALSE`, so search stopped at the last/first match; wrap-around is now enabled at init
-- Hardened preferences dialog init so TTS failures cannot break history binding
-- Silenced isolated OCR worker terminal log flood
-- Removed stale/incorrect shortcut entries from the shortcuts overlay (`<Primary>?`, `<Primary>/`, `<Primary><Shift>O`, `F1`, `F10`, `Tab`/`Shift+Tab`) and deduplicated accelerator aliases both in the overlay and `ActionRegistry` (`<Primary>F1`/`<Primary>K`/`<Primary>W`/`<Primary>Period` removed in favour of `<Primary>H`/`<Primary>Q`/`<Primary>Comma`)
-- Repinned orphaned tessdata commit SHAs to release tag 4.1.0 in `anura/config.py` and both Flatpak manifests (Bug #6)
-- Exposed cached language list and pause state on `TTSService` for correct TTS UI state synchronization
+- Added undo/redo buttons to the OCR result editor, synced with the shortcuts overlay.
+- Tessdata model integrity verification (defensive audit F1): build-time manifest `anura/data/tessdata_checksums.json` with pinned git-blob SHA-1 hashes (generated by `build-aux/generate_tessdata_checksums.py`), verified by `anura/utils/tessdata_integrity.py` before a downloaded model is installed; anti-drift check extended in `build-aux/check_tessdata_consistency.py`.
+- Eliminated manual dual-maintenance of the Flatpak manifests: the release manifest is now generated by `build-aux/release.sh` from the local manifest (never hand-edited) with release-time self-checks.
+- Synchronized the keyboard shortcuts overlay with the actions actually registered in the app: new Editor category (select all, copy, undo, redo, search, external editor), Text-to-Speech category with pause/resume (`<Primary><Alt>L`), and previously undocumented accelerators (`<Primary>comma` documented, duplicate aliases deduplicated).
+- Added `tests/test_shortcuts_consistency.py`: bidirectional anti-drift test (headless-safe, per `docs/reference/dependencies.md`) ensuring the shortcuts overlay and `ActionRegistry` accelerators stay in sync, with a documented whitelist for native widget bindings (select-all, undo, redo, Escape).
+- Migrated the OCR result text editor to **GtkSourceView 5** (`GtkSource.View`/`GtkSource.Buffer`) with native search bar (`<Primary>f`), editor preferences (line numbers, current line highlight, wrapping), and an "Open in External Editor" action (`<Primary><Shift>E`) with safe `Gtk.FileLauncher` handoff.
 
 ### Changed
-- Regenerated and reorganized translation catalogs
-- Documented the GTK/PyGObject headless testing approach (system `python3-gi` + venv site-packages via `PYTHONPATH`) in `docs/reference/dependencies.md`
-- CI: added `gir1.2-gtksource-5` system dependency to the GTK integration test workflow
-- Updated documentation screenshots (welcome, extracted, history, preferences) in `README.md` and the AppStream metainfo
-- Reorganized the `docs/` tree: normative references moved to `docs/reference/`, the active plan kept in `docs/planning/`, and resolved audit reports archived under `docs/audit/legacy/reports/` with consistent kebab-case names; added `docs/audit/README.md` and updated all cross-references
-- Removed the stale `docs/audit/legacy/raw/` tool outputs (clean/empty bandit+ruff runs, environmental mypy noise, outdated vulture listings)
+
+- Regenerated and reorganized translation catalogs.
+- Documented the GTK/PyGObject headless testing approach (system `python3-gi` + venv site-packages via `PYTHONPATH`) in `docs/reference/dependencies.md`.
+- CI: added `gir1.2-gtksource-5` system dependency to the GTK integration test workflow.
+- Updated documentation screenshots (welcome, extracted, history, preferences) in `README.md` and the AppStream metainfo.
+- Reorganized the `docs/` tree: normative references moved to `docs/reference/`, the active plan kept in `docs/planning/`, and resolved audit reports archived under `docs/audit/legacy/reports/` with consistent kebab-case names; added `docs/audit/README.md` and updated all cross-references.
+- Removed the stale `docs/audit/legacy/raw/` tool outputs (clean/empty bandit+ruff runs, environmental mypy noise, outdated vulture listings).
+
+### Fixed
+
+- Fixed conftest.py: pytest collection/setup errors (reported under the 'error' key in terminalreporter.stats) are now printed alongside test failures ('failed' key) before os._exit() in pytest_sessionfinish, instead of being silently invisible in CI output.
+- Fixed screenshot fallback (BUG-004): trigger the bundled scrot fallback on any non-None portal error on X11 sessions.
+- Made tessdata downloads fully atomic (defensive audit F2): models are downloaded to `*.tmp` files and installed via `os.replace()`, so a crash mid-install can never leave a truncated `*.traineddata` in place.
+- Hardened OCR external-editor export files (defensive audit F3): exports now go to `$XDG_RUNTIME_DIR/anura/exports` (per-user, per-session) instead of the shared `/tmp/anura_exports`, created via `tempfile.mkstemp()` with mode `0600` and random names; stale export files are cleaned on boot.
+- Fixed leaked temporary screenshot file when the scrot spawn fails in the legacy X11 provider (defensive audit F4).
+- Hardened the legacy scrot provider to reject group/world-writable binaries (defensive audit F5).
+- Fixed dead next/prev search navigation in the OCR editor (defensive audit F6): PyGObject exposes `forward()`/`backward()` (the old `forward2`/`backward2` names do not exist on this binding), so the previous hasattr guards silently disabled navigation.
+- Enabled wrap-around in search (defensive audit F7): `GtkSource.SearchSettings` defaults to `wrap_around=FALSE`, so search stopped at the last/first match; wrap-around is now enabled at init.
+- Hardened preferences dialog init so TTS failures cannot break history binding.
+- Silenced isolated OCR worker terminal log flood.
+- Removed stale/incorrect shortcut entries from the shortcuts overlay (`<Primary>?`, `<Primary>/`, `<Primary><Shift>O`, `F1`, `F10`, `Tab`/`Shift+Tab`) and deduplicated accelerator aliases both in the overlay and `ActionRegistry` (`<Primary>F1`/`<Primary>K`/`<Primary>W`/`<Primary>Period` removed in favour of `<Primary>H`/`<Primary>Q`/`<Primary>Comma`).
+- Repinned orphaned tessdata commit SHAs to release tag 4.1.0 in `anura/config.py` and both Flatpak manifests (Bug #6).
+- Exposed cached language list and pause state on `TTSService` for correct TTS UI state synchronization.
 
 ## [0.1.5] - 2026-09-11
 
 ### Added
-- Implemented Extraction History V1 (opt-in local history of recent OCR extractions, newest-first JSON persistence with atomic writes and corruption recovery, HistoryPage with clear action, `history-enabled`/`history-limit` GSettings keys, `win.show-history` navigation) — see `docs/history-v1.md`
-- Added F-005 runtime dependency coverage check (`build-aux/check_runtime_dependency_coverage.py`) enforcing that every uv.lock runtime dependency is represented in both Flatpak manifests
-- Implemented UI theme selector with System, Light, and Dark options using `Adw.StyleManager`
-- Added `color-scheme` GSettings key for persistent theme preference storage
-- Implemented selection-aware text statistics and actions on OCR results page (Palette)
-- Added Undo/Redo functionality to ExtractedPage for improved text editing workflow
-- Enhanced accessibility with keyboard navigation improvements and better drop button tooltips
-- Implemented NormCap-inspired UX improvements for better user experience
-- Added comprehensive accessibility enhancements to WelcomePage and LanguagePopover
-- Implemented dynamic copy button tooltip and accessibility feedback in Palette
-- Added manual workflow execution capability for dependency sync in CI/CD
-- Configured Dependabot for automated dependency updates on testing branch
-- Added comprehensive docstrings, type hints, and integration tests for ClipboardService fallback paths
-- Implemented six-pillar CI hardening framework for improved test reliability
-- Added enhanced diagnostic logging for host screenshot operations
 
-### Fixed
-- Resolved `AtomicTaskManager` deadlock and child process hang issues
-- Fixed GTK integration test suite hanging with comprehensive multi-step fix (atexit, os._exit(), Weston cleanup, signal sourcing)
-- Eliminated clipboard infinite fallback loop and stale source_remove warnings
-- Fixed TTS play/pause/stop state desynchronization in extracted_page (5 bugs)
-- Resolved X11 screenshot fallback issues in testing branch
-- Added `BrokenProcessPool` recovery to `AtomicTaskManager` for enhanced error handling (CRIT-01)
-- Fixed OcrController weak references against ReferenceError during window destruction
-- Fixed static type-checking and path concatenation issues
-- Fixed flatpak pybind11 cmake path resolution during zxing build
-- Resolved clipboard spinner stuck and source_remove warnings (BUG-PASTE + BUG-032)
-- Fixed path mocking in tests (Path.exists instead of os.path.exists)
-- Caught PermissionError from Path.exists() for inaccessible parent directories
-- Released _state_lock before ProcessPoolExecutor.shutdown() to prevent deadlock
-- Fixed test assertion to use GTK4 set_content() instead of removed set_text()
-- Resolved GObject metaclass conflicts and TESSDATA_DIR patching in tests
-- Fixed ruff linting violations (F841 unused variable, I001 import sorting, B028, SIM910)
-- Fixed CI workflow SHA resolution errors and image pull failures
-- Fixed undefined HTML variable and unused import in CI workflow
-- Hardened CI/CD workflows with immutable action pinning and credential protection
-- Resolved 4 bugs from debug session 2026-05-25
-- Fixed 7 bugs identified by automated Kimi analysis (2026-05-26)
-- Reset fallback flag in clipboard service and enhanced portal error logging
-- Remediated GTK integration test failures and GTK4 regressions
-- Fixed Python-quality CI failures
-- Removed complex async callback tests that fail in CI
-- Fixed failing integration tests by simplifying test logic
-- Terminated child processes to prevent GHA limbo hangs
-- Resolved structural test mismatches and cleaned TTS debt
-- Restored missing TTSService facade export
-- Fixed DialogManager import in AnuraWindow
-- Fixed ruff style checks and import ordering across services
+- Implemented Extraction History V1 (opt-in local history of recent OCR extractions, newest-first JSON persistence with atomic writes and corruption recovery, HistoryPage with clear action, `history-enabled`/`history-limit` GSettings keys, `win.show-history` navigation) — see `docs/history-v1.md`.
+- Added F-005 runtime dependency coverage check (`build-aux/check_runtime_dependency_coverage.py`) enforcing that every uv.lock runtime dependency is represented in both Flatpak manifests.
+- Implemented UI theme selector with System, Light, and Dark options using `Adw.StyleManager`.
+- Added `color-scheme` GSettings key for persistent theme preference storage.
+- Implemented selection-aware text statistics and actions on OCR results page (Palette).
+- Added Undo/Redo functionality to ExtractedPage for improved text editing workflow.
+- Enhanced accessibility with keyboard navigation improvements and better drop button tooltips.
+- Implemented NormCap-inspired UX improvements for better user experience.
+- Added comprehensive accessibility enhancements to WelcomePage and LanguagePopover.
+- Implemented dynamic copy button tooltip and accessibility feedback in Palette.
+- Added manual workflow execution capability for dependency sync in CI/CD.
+- Configured Dependabot for automated dependency updates on testing branch.
+- Added comprehensive docstrings, type hints, and integration tests for ClipboardService fallback paths.
+- Implemented six-pillar CI hardening framework for improved test reliability.
+- Added enhanced diagnostic logging for host screenshot operations.
 
 ### Changed
-- Decomposed LanguageManager into specialized managers (DownloadManager, CacheManager, LanguageValidator) in anura/services/language/
-- Optimized OCR layout parsing and structural reconstruction (Bolt optimization)
-- Optimized image mean calculation in ContrastEnhancementFilter
-- Restructured and modernized CI/CD pipeline with comprehensive GTK integration test fixes
-- Performed systematic bug hunting and modernization sweep across the codebase
-- Technical remediation for Flatpak, Pathlib, and Safety patterns
-- Rewrote AI-generated comments for clarity and professionalism
-- Translated project documentation from Italian to English
-- Updated flatpak-dependencies.yml workflow
-- Moved audit-related files (bugs-observed.json, bugs-summary.md) into dedicated docs/audit/ directory
-- Exposed loading_languages and finalized test suite alignment
-- Style fixes: import ordering and typing annotations across services
-- Audit-driven stability hardening and build fixes
-- Updated Flatpak dependencies: Leptonica 1.87.0, imlib2 1.12.6
-- Updated dependency versions: ruff ≥0.15.21, meson ≥1.11.2, pytest ≥9.1.1, pillow ≥12.3.0
-- Enhanced error handling and logging throughout the application
-- Improved portal environment diagnostics and user guidance
-- Unified GI mock injection to resolve metaclass conflict in non-CI mode
-- Synced CI ignore lists and added ANURA_CI_TEST_MODE to python-quality job
 
-### Security
-- **HIGH**: Fixed Pango markup injection in notifications (hardened against markup attacks)
-- **HIGH**: Fixed hierarchical ID collision and OCR pipeline instability
-- **HIGH**: Fixed Config Layer Leakage and enhanced lifecycle safety
-- Hardened local data storage permissions for sensitive data
-- Hardened sanitize_text by stripping Private Use (Co) and Surrogate (Cs) Unicode categories
-- Hardened is_safe_url_string to reject mixed-script homograph attacks
-- Hardened image resource validation for DoS prevention (MAX_IMAGE_SIZE_BYTES enforcement)
-- Remediated architectural resource leaks across core services (v2/v3)
-- Completed Phase 2 forensics and remediated logic flaws across the codebase
-- Installed Claude Bug Bounty toolkit and required security scanners for ongoing auditing
-- Implemented dynamic URI scheme validation in ShareService (BUG-035 remediation)
+- Decomposed LanguageManager into specialized managers (DownloadManager, CacheManager, LanguageValidator) in anura/services/language/.
+- Optimized OCR layout parsing and structural reconstruction (Bolt optimization).
+- Optimized image mean calculation in ContrastEnhancementFilter.
+- Restructured and modernized CI/CD pipeline with comprehensive GTK integration test fixes.
+- Codebase: completed a systematic bug-fixing and modernization review.
+- Platform and dependencies: addressed Flatpak integration, pathlib usage and dependency-safety issues.
+- Code quality: revised generated comments for technical clarity and consistency.
+- Translated project documentation from Italian to English.
+- Updated flatpak-dependencies.yml workflow.
+- Moved audit-related files (bugs-observed.json, bugs-summary.md) into dedicated docs/audit/ directory.
+- Exposed loading_languages and finalized test suite alignment.
+- Style fixes: import ordering and typing annotations across services.
+- Stability and build: applied audit-driven hardening and corrected build issues.
+- Updated Flatpak dependencies: Leptonica 1.87.0, imlib2 1.12.6.
+- Updated dependency versions: ruff ≥0.15.21, meson ≥1.11.2, pytest ≥9.1.1, pillow ≥12.3.0.
+- Enhanced error handling and logging throughout the application.
+- Improved portal environment diagnostics and user guidance.
+- Unified GI mock injection to resolve metaclass conflict in non-CI mode.
+- Synced CI ignore lists and added ANURA_CI_TEST_MODE to python-quality job.
 
 ### Removed
-- Deleted CHANGELOG_REMEDIATION.md
 
-## [0.1.4.3] - 2026-05-16 {version-0.1.4.3}
+- Deleted CHANGELOG_REMEDIATION.md.
+
+### Fixed
+
+- Resolved `AtomicTaskManager` deadlock and child process hang issues.
+- Fixed GTK integration test suite hanging with comprehensive multi-step fix (atexit, os._exit(), Weston cleanup, signal sourcing).
+- Eliminated clipboard infinite fallback loop and stale source_remove warnings.
+- Fixed TTS play/pause/stop state desynchronization in extracted_page (5 bugs).
+- Resolved X11 screenshot fallback issues in testing branch.
+- Added `BrokenProcessPool` recovery to `AtomicTaskManager` for enhanced error handling (CRIT-01).
+- Fixed OcrController weak references against ReferenceError during window destruction.
+- Fixed static type-checking and path concatenation issues.
+- Fixed flatpak pybind11 cmake path resolution during zxing build.
+- Resolved clipboard spinner stuck and source_remove warnings (BUG-PASTE + BUG-032).
+- Fixed path mocking in tests (Path.exists instead of os.path.exists).
+- Caught PermissionError from Path.exists() for inaccessible parent directories.
+- Released _state_lock before ProcessPoolExecutor.shutdown() to prevent deadlock.
+- Fixed test assertion to use GTK4 set_content() instead of removed set_text().
+- Resolved GObject metaclass conflicts and TESSDATA_DIR patching in tests.
+- Fixed ruff linting violations (F841 unused variable, I001 import sorting, B028, SIM910).
+- Fixed CI workflow SHA resolution errors and image pull failures.
+- Fixed undefined HTML variable and unused import in CI workflow.
+- Hardened CI/CD workflows with immutable action pinning and credential protection.
+- Resolved 4 bugs from debug session 2026-05-25.
+- Fixed 7 bugs identified by automated Kimi analysis (2026-05-26).
+- Reset fallback flag in clipboard service and enhanced portal error logging.
+- Remediated GTK integration test failures and GTK4 regressions.
+- Fixed Python-quality CI failures.
+- Removed complex async callback tests that fail in CI.
+- Fixed failing integration tests by simplifying test logic.
+- Terminated child processes to prevent GHA limbo hangs.
+- Resolved structural test mismatches and cleaned TTS debt.
+- Restored missing TTSService facade export.
+- Fixed DialogManager import in AnuraWindow.
+- Fixed ruff style checks and import ordering across services.
+
+### Security
+
+- **HIGH**: Fixed Pango markup injection in notifications (hardened against markup attacks).
+- **HIGH**: Fixed hierarchical ID collision and OCR pipeline instability.
+- **HIGH**: Fixed Config Layer Leakage and enhanced lifecycle safety.
+- Hardened local data storage permissions for sensitive data.
+- Hardened sanitize_text by stripping Private Use (Co) and Surrogate (Cs) Unicode categories.
+- Hardened is_safe_url_string to reject mixed-script homograph attacks.
+- Hardened image resource validation for DoS prevention (MAX_IMAGE_SIZE_BYTES enforcement).
+- Remediated architectural resource leaks across core services (v2/v3).
+- Completed Phase 2 forensics and remediated logic flaws across the codebase.
+- Installed Claude Bug Bounty toolkit and required security scanners for ongoing auditing.
+- Implemented dynamic URI scheme validation in ShareService (BUG-035 remediation).
+
+## [0.1.4.3] - 2026-05-16
 
 ### Added
 
-- Advanced TextPreprocessor utility with intelligent image enhancement and OCR text cleanup
-- Smart text preprocessing including common OCR error correction, whitespace normalization, and punctuation fixing
-- Structured data extraction from OCR text (emails, URLs, phone numbers, dates)
-- Adaptive image enhancement based on brightness/contrast analysis for better OCR accuracy
-- Modern ShortcutsOverlay widget with live search and categorized keyboard shortcuts
-- Enhanced keyboard shortcuts overlay with search functionality and elegant Adw.Window-based interface
-- Configurable logging level via `ANURA_LOG_LEVEL` environment variable for debugging
-- Host screenshot fallback system using `flatpak-spawn --host` for missing portal backends
-- Persistent install-hint banner when screenshot portal backend is missing
-- Desktop-aware portal advice messages with environment-specific guidance
-- Enhanced diagnostic logging for host screenshot operations
-- Comprehensive drag-and-drop functionality with visual feedback and proper lifecycle management
-- Complete drag-and-drop event handlers (enter, leave, motion, drop) with CSS styling for hover states
-- Enhanced AboutDialog with complete legal information for Flathub compliance
-- Full copyright and MIT license text for transparency
-- Open source dependencies attribution in legal information
-- Complete legal information ensuring Flathub compliance requirements
-- Asynchronous Drag-and-Drop implementation to prevent UI freezes, especially in VM environments
-- Fallback for URI list on clipboard texture read failure
-- Optimized image thresholding using Look-Up Tables (LUT) for performance
-- Enhanced accessibility and Micro-UX improvements for the OCR results page
-- Persistent Drag-and-Drop controller for better stability
-- Clickable QR URL notifications via XDG Desktop Portal (Flatpak-safe)
-- Autocopy for QR-detected URLs with improved toast feedback
-- Pattern-based file filters for image selection dialog
-- Real-time word count status bar in OCR results page
-- Standardized localization infrastructure and Application ID
-
-### Fixed
-
-- Fixed notification service cleanup by removing incorrect underscore reference
-- Fixed URI validator function call in window.py for proper URL validation
-- Fixed dialog response handling for browser launch failures with proper error management
-- Fixed extra language combo signal connection to ensure it's always connected regardless of settings
-- Fixed modal property removal from shortcuts window for better user experience
-- Fixed keyboard shortcuts test to match correct method signature with _param parameter
-- Fixed five UI/runtime bugs from Flatpak debug log
-- Fixed three additional bugs (release notes parse, TTS AttributeError, screenshot diagnostic)
-- Fixed Gio.Subprocess.wait() method usage instead of wait_sync()
-- Fixed host screenshot file existence check with retry loop
-- Fixed designer credit and share-row action prefix corrections
-- Fixed incomplete URL substring sanitization (security fix)
-- Resolved multiple critical runtime bugs, memory leaks, and signal leaks across core services
-- Fixed X11 Drag-and-Drop deadlocks and portal file transfer freezes
-- Corrected Text-to-Speech (TTS) state transitions, visual feedback, and "zombie audio" issues
-- Fixed localization initialization and updated Italian translations
-- Fixed broken status window in "Legal Information" page
-- Resolved GTK navigation warnings and ruff linting violations (E501, W292)
-- Fixed About dialog property names and legal information display
-- Improved error handling for browser launch and file filters
-- Fixed UI spinner animations and state management
-- Fixed missing trailing newline in anura/window.py
-- Fixed path traversal vulnerability in LanguageManager.remove_language (HIGH severity)
-- Fixed URL userinfo spoofing in uri_validator (security fix)
-- Fixed URL truncation during QR code extraction and hand-off
-- Fixed clipboard infinite fallback loop on image read failures
-- Fixed callback exception handling in clipboard service
-- Fixed Gio.Notification API usage for XDG Portal compatibility
-- Fixed i18n bindings in Flatpak and globalized autocopy behavior
-- Fixed Flatpak hybrid UI regression (i18n)
-- Fixed localization issues and cleaned up UI code
-- Fixed broken state warning on Acknowledgements page
-- Fixed navigation focus race condition
-- Removed compiled gresource from git tracking and updated .gitignore
-- Fixed line length violation in notification service tests
+- Advanced TextPreprocessor utility with intelligent image enhancement and OCR text cleanup.
+- Smart text preprocessing including common OCR error correction, whitespace normalization, and punctuation fixing.
+- Structured data extraction from OCR text (emails, URLs, phone numbers, dates).
+- Adaptive image enhancement based on brightness/contrast analysis for better OCR accuracy.
+- ShortcutsOverlay: add a searchable, categorized keyboard-shortcuts window built with Adw.Window.
+- Configurable logging level via `ANURA_LOG_LEVEL` environment variable for debugging.
+- Host screenshot fallback system using `flatpak-spawn --host` for missing portal backends.
+- Persistent install-hint banner when screenshot portal backend is missing.
+- Desktop-aware portal advice messages with environment-specific guidance.
+- Enhanced diagnostic logging for host screenshot operations.
+- Drag-and-drop: add complete enter, leave, motion and drop handlers with CSS hover feedback and lifecycle management.
+- AboutDialog: added complete Flathub legal disclosures, including copyright and MIT license text and open-source dependency attributions.
+- Asynchronous Drag-and-Drop implementation to prevent UI freezes, especially in VM environments.
+- Fallback for URI list on clipboard texture read failure.
+- Optimized image thresholding using Look-Up Tables (LUT) for performance.
+- Enhanced accessibility and Micro-UX improvements for the OCR results page.
+- Persistent Drag-and-Drop controller for better stability.
+- Clickable QR URL notifications via XDG Desktop Portal (Flatpak-safe).
+- Autocopy for QR-detected URLs with improved toast feedback.
+- Pattern-based file filters for image selection dialog.
+- Real-time word count status bar in OCR results page.
+- Standardized localization infrastructure and Application ID.
 
 ### Changed
 
-- Enhanced screenshot service with host fallback capabilities
-- Improved error handling and logging throughout the application
-- Better portal environment diagnostics and user guidance
-- Updated release notes generation logic with hybrid GitHub link display
-- Lower threshold for GitHub link from 15 to 12 items for better UX
-- Enhanced drag-and-drop drop target attachment to welcome page widget
-- Improved release notes generation with tracking for truncated sections
-- Refactored Drag-and-Drop system for improved reliability
-- Optimized Flatpak build and updated dependencies (urllib3)
-- Improved OCR pipeline and image processing performance
-- Deep codebase audit and concurrency hardening across all services
-- Pre-compiled regex patterns and optimized PIL thresholding for performance
-- Optimized URI validation performance with compiled regex
-- Optimized image enhancement pipeline
-- Optimized QR code detection by restricting symbol scan
-- i18n: full audit and fixed hardcoded UI strings across the application
-- i18n: stabilized infrastructure and synchronized translations (Phase 1A)
-- i18n: finalized Italian localization and fixed navigation focus (Phase 1B)
-- Palette: UX and accessibility improvements across ExtractedPage
-- Refactored language API, removed dead code, improved test coverage
-- Standardized loading spinner size across the application
-- Updated testing documentation
-
-## [0.1.4.2] - 2026-05-05 {version-0.1.4.2}
+- Enhanced screenshot service with host fallback capabilities.
+- Improved error handling and logging throughout the application.
+- Better portal environment diagnostics and user guidance.
+- Updated release notes generation logic with hybrid GitHub link display.
+- Lower threshold for GitHub link from 15 to 12 items for better UX.
+- Enhanced drag-and-drop drop target attachment to welcome page widget.
+- Improved release notes generation with tracking for truncated sections.
+- Refactored Drag-and-Drop system for improved reliability.
+- Optimized Flatpak build and updated dependencies (urllib3).
+- Improved OCR pipeline and image processing performance.
+- Deep codebase audit and concurrency hardening across all services.
+- Pre-compiled regex patterns and optimized PIL thresholding for performance.
+- Optimized URI validation performance with compiled regex.
+- Optimized image enhancement pipeline.
+- Optimized QR code detection by restricting symbol scan.
+- i18n: full audit and fixed hardcoded UI strings across the application.
+- i18n: stabilized infrastructure and synchronized translations (Phase 1A).
+- i18n: finalized Italian localization and fixed navigation focus (Phase 1B).
+- Palette: UX and accessibility improvements across ExtractedPage.
+- Refactored language API, removed dead code, improved test coverage.
+- Standardized loading spinner size across the application.
+- Updated testing documentation.
 
 ### Fixed
 
-- Fixed `__slots__` conflict in ClipboardService - missing `_cancellable` in declaration causing AttributeError
-- Fixed ruff linting errors across codebase including import sorting and code style issues
-- Fixed concurrency issues in TTS and clipboard services against race conditions
-- Fixed memory leaks and added structural robustness throughout application
-- Fixed API contract, thread safety, and race condition issues in core services
-- Fixed Flatpak manifest warnings by removing `_comment` properties
+- Fixed notification service cleanup by removing incorrect underscore reference.
+- Fixed URI validator function call in window.py for proper URL validation.
+- Fixed dialog response handling for browser launch failures with proper error management.
+- Fixed extra language combo signal connection to ensure it's always connected regardless of settings.
+- Fixed modal property removal from shortcuts window for better user experience.
+- Fixed keyboard shortcuts test to match correct method signature with _param parameter.
+- Fixed five UI/runtime bugs from Flatpak debug log.
+- Fixed three additional bugs (release notes parse, TTS AttributeError, screenshot diagnostic).
+- Fixed Gio.Subprocess.wait() method usage instead of wait_sync().
+- Fixed host screenshot file existence check with retry loop.
+- Fixed designer credit and share-row action prefix corrections.
+- Resolved multiple critical runtime bugs, memory leaks, and signal leaks across core services.
+- Fixed X11 Drag-and-Drop deadlocks and portal file transfer freezes.
+- Corrected Text-to-Speech (TTS) state transitions, visual feedback, and "zombie audio" issues.
+- Fixed localization initialization and updated Italian translations.
+- Fixed broken status window in "Legal Information" page.
+- Resolved GTK navigation warnings and ruff linting violations (E501, W292).
+- Fixed About dialog property names and legal information display.
+- Improved error handling for browser launch and file filters.
+- Fixed UI spinner animations and state management.
+- Fixed missing trailing newline in anura/window.py.
+- Fixed URL truncation during QR code extraction and hand-off.
+- Fixed clipboard infinite fallback loop on image read failures.
+- Fixed callback exception handling in clipboard service.
+- Fixed Gio.Notification API usage for XDG Portal compatibility.
+- Fixed i18n bindings in Flatpak and globalized autocopy behavior.
+- Fixed Flatpak hybrid UI regression (i18n).
+- Fixed localization issues and cleaned up UI code.
+- Fixed broken state warning on Acknowledgements page.
+- Fixed navigation focus race condition.
+- Removed compiled gresource from git tracking and updated .gitignore.
+- Fixed line length violation in notification service tests.
+
+### Security
+
+- Fixed incomplete URL substring sanitization (security fix).
+- Fixed path traversal vulnerability in LanguageManager.remove_language (HIGH severity).
+- Fixed URL userinfo spoofing in uri_validator (security fix).
+
+## [0.1.4.2] - 2026-05-05
 
 ### Changed
 
-- Extracted URI validation to utils module and relaxed IP/localhost restrictions
-- Improved code quality with comprehensive type hints and cleanup
-- Implemented atomic cancellation for Clipboard and thread-safe signal emission for TTS GStreamer bus
-- Enhanced thread safety patterns across all services
-- Added comprehensive unit tests for core services
-- Resolved all remaining linting errors and line length issues
-
-## [0.1.4.1] - 2026-05-02 {version-0.1.4.1}
+- Extracted URI validation to utils module and relaxed IP/localhost restrictions.
+- Improved code quality with comprehensive type hints and cleanup.
+- Implemented atomic cancellation for Clipboard and thread-safe signal emission for TTS GStreamer bus.
+- Enhanced thread safety patterns across all services.
+- Added comprehensive unit tests for core services.
+- Resolved all remaining linting errors and line length issues.
 
 ### Fixed
 
-- Fixed missing `Adw.init()` call causing "greyed out UI" on some systems
-- Fixed GResource bundle loading to properly exit on failure instead of continuing with broken UI
-- Fixed notification portal API to use proper GLib.Variant format (a{sv}) for XDG Portal compatibility
-- Fixed notification import consistency with absolute imports throughout main.py
-- Fixed HTML escaping in release notes generation to prevent XSS vulnerabilities
+- Fixed `__slots__` conflict in ClipboardService - missing `_cancellable` in declaration causing AttributeError.
+- Fixed ruff linting errors across codebase including import sorting and code style issues.
+- Fixed concurrency issues in TTS and clipboard services against race conditions.
+- Fixed memory leaks and added structural robustness throughout application.
+- Fixed API contract, thread safety, and race condition issues in core services.
+- Fixed Flatpak manifest warnings by removing `_comment` properties.
+
+## [0.1.4.1] - 2026-05-02
 
 ### Changed
 
-- Added CHANGELOG.md as source of truth for release notes
-- Added translate URL to metainfo for Weblate integration
-
-## [0.1.4] - 2026-05-01 {version-0.1.4}
+- Added CHANGELOG.md as source of truth for release notes.
+- Added translate URL to metainfo for Weblate integration.
 
 ### Fixed
 
-- Fixed critical thread-safety issues and race conditions in language manager and screenshot service
-- Fixed memory leaks in widget lifecycle management and GStreamer bus watch
-- Fixed all Flatpak manifest dependencies (requests, urllib3, certifi, hatchling, pyzbar)
-- Fixed blueprint compiler output directory for Flatpak builds
-- Fixed gresource bundle loading with correct UI file paths
-- Fixed filesystem permissions for Open Image and Drag & Drop in sandbox
-- Fixed silent CLI mode to properly exit without opening UI window
-- Fixed CLI exit code to return 0 on success instead of 1
-- Fixed code quality issues: lint errors, import sorting, gettext shadowing
-- Fixed Telegram share URL to send text as message instead of URL
+- Fixed missing `Adw.init()` call causing "greyed out UI" on some systems.
+- Fixed GResource bundle loading to properly exit on failure instead of continuing with broken UI.
+- Fixed notification portal API to use proper GLib.Variant format (a{sv}) for XDG Portal compatibility.
+- Fixed notification import consistency with absolute imports throughout main.py.
+
+### Security
+
+- Fixed HTML escaping in release notes generation to prevent XSS vulnerabilities.
+
+## [0.1.4] - 2026-05-01
 
 ### Changed
 
-- Updated OARS content rating for Flathub compliance
-- Improved CI/CD workflow with smoke tests and build verification
-- Updated tessdata-fast to pinned commit SHA for reproducible builds
-
-## [0.1.3] - 2026-04-25 {version-0.1.3}
+- Updated OARS content rating for Flathub compliance.
+- Improved CI/CD workflow with smoke tests and build verification.
+- Updated tessdata-fast to pinned commit SHA for reproducible builds.
 
 ### Fixed
 
-- Fixed import error in screenshot service (tessdata_config casing)
-- Fixed missing init_tessdata() method in LanguageManager
-- Fixed settings module path mismatch (moved to anura/services/settings.py)
-- Fixed blueprint-compiler GIRepository compatibility with GNOME Platform 49
+- Fixed critical thread-safety issues and race conditions in language manager and screenshot service.
+- Fixed memory leaks in widget lifecycle management and GStreamer bus watch.
+- Fixed all Flatpak manifest dependencies (requests, urllib3, certifi, hatchling, pyzbar).
+- Fixed blueprint compiler output directory for Flatpak builds.
+- Fixed gresource bundle loading with correct UI file paths.
+- Fixed filesystem permissions for Open Image and Drag & Drop in sandbox.
+- Fixed silent CLI mode to properly exit without opening UI window.
+- Fixed CLI exit code to return 0 on success instead of 1.
+- Fixed code quality issues: lint errors, import sorting, gettext shadowing.
+- Fixed Telegram share URL to send text as message instead of URL.
+
+## [0.1.3] - 2026-04-25
 
 ### Changed
 
-- Improved TTS cache file location (XDG_CACHE_HOME)
+- Improved TTS cache file location (XDG_CACHE_HOME).
 
-## [0.1.0] - 2026-04-23 {version-0.1.0}
+### Fixed
+
+- Fixed import error in screenshot service (tessdata_config casing).
+- Fixed missing init_tessdata() method in LanguageManager.
+- Fixed settings module path mismatch (moved to anura/services/settings.py).
+- Fixed blueprint-compiler GIRepository compatibility with GNOME Platform 49.
+
+## [0.1.0] - 2026-04-23
 
 ### Added
 
-- Initial release of Anura (fork of Frog)
-- Complete rebranding to Anura
-- Removed all telemetry and PostHog tracking for total privacy
-- Optimized sharing service: added X (formerly Twitter) and Instagram
-- Updated dependencies for modern Linux distributions
+- Initial release of Anura (fork of Frog).
+- Complete rebranding to Anura.
+- Removed all telemetry and PostHog tracking for total privacy.
+- Optimized sharing service: added X (formerly Twitter) and Instagram.
+- Updated dependencies for modern Linux distributions.
