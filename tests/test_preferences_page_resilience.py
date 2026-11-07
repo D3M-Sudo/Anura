@@ -161,13 +161,8 @@ def test_voice_volume_mapping_converts_both_directions(monkeypatch, headless_gi_
     assert get_mapping(target, Variant()) is True
     assert target.get_double() == 75.0
 
-    class VariantFactory:
-        @staticmethod
-        def new_double(number):
-            return number
-
-    monkeypatch.setattr(mod.GLib, "Variant", VariantFactory)
-    assert set_mapping(Value(25.0), None) == 0.25
+    mapped = set_mapping(Value(25.0), mod.GLib.VariantType.new("d"))
+    assert mapped.get_double() == 0.25
 
 
 def test_voice_catalog_worker_failure_resets_loading_state(monkeypatch, headless_gi_mocks):
