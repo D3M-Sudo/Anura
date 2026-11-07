@@ -41,7 +41,7 @@ def test_release_script_has_the_preflight_guards():
     assert "refs/tags/v$VERSION" in source
     assert "RELEASE_BRANCH" in source
     assert 'DATE="$(python3 "$SCRIPT_DIR/generate_release_notes.py" --date' in source
-    assert 'git push origin $EXPECTED_BRANCH --tags' in source
+    assert "git push origin $EXPECTED_BRANCH --tags" in source
 
 
 def test_release_script_no_longer_writes_placeholder_notes():
