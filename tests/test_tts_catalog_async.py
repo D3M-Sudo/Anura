@@ -89,7 +89,7 @@ def test_failed_fetch_is_not_cached_and_can_retry(monkeypatch):
 
 
 def _page_source() -> str:
-    return Path("anura/widgets/preferences_general_page.py").read_text(encoding="utf-8")
+    return Path("anura/widgets/preferences_voice_page.py").read_text(encoding="utf-8")
 
 
 def _method_body(name: str, source: str) -> str:
