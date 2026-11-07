@@ -186,7 +186,7 @@ GSETTINGS_SCHEMA_DIR=builddir/data python3 -m anura.main
 flatpak-builder --force-clean builddir flatpak/io.github.d3m_sudo.anura.local.json
 
 # Run the build
-flatpak-builder --run builddir flatpak/io.github.d3msudo.anura.local.json anura
+flatpak-builder --run builddir flatpak/io.github.d3m_sudo.anura.local.json anura
 ```
 
 
@@ -220,8 +220,7 @@ flatpak-builder --run builddir flatpak/io.github.d3msudo.anura.local.json anura
    - Only edit the body by fixing `CHANGELOG.md` and re-running the step; never
      hand-write notes that are not in the changelog.
 4. Final check: `gh release view v<version>` — asset
-   `io.github.d3msudo.anura.flatpak` attached, notes complete, `Latest`
-   flag on the new release.
+   the expected Flatpak and AppImage assets for each supported architecture are attached, notes are complete, and the release is marked `Latest`.
 
 ## Dependency Management
 
