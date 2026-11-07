@@ -27,12 +27,18 @@ Apply these settings to `feature`, `testing`, `development` and `main`:
 - Do not grant routine bypass to automation identities; keep workflow write permissions scoped to the jobs that need them.
 - Where supported, enforce rules for administrators too, while retaining zero required approvals. Confirm a compliant PR remains mergeable before relying on the ruleset.
 
-| Branch | Expected PR source | Gate |
+| Branch | Expected PR source | Branch-specific protection |
 | --- | --- | --- |
-| `feature` | Topic/fix branches; automation PRs | Full integration CI and CodeQL |
-| `testing` | `feature` | Full promotion CI and CodeQL |
-| `development` | `testing` | Full stabilization CI and CodeQL |
-| `main` | `development` | Full CI and CodeQL; release-tag verification remains a separate gate |
+| `feature` | Topic/fix branches; approved automation PRs | Require the full Python, GTK, Flatpak x86_64/aarch64, AppImage x86_64/aarch64, artifact-validation and CodeQL checks. This is the primary integration gate. |
+| `testing` | `feature` | Require the same full CI and CodeQL checks, and require the PR branch to be up to date before merge. This is the first promotion gate. |
+| `development` | `testing` | Require the same full CI and CodeQL checks and an up-to-date PR branch. Treat merges as stabilization candidates; do not bypass a failed architecture job. |
+| `main` | `development` | Require the same full CI and CodeQL checks and an up-to-date PR branch. Keep tag-triggered release verification as a separate maintainer-controlled gate; a PR CI pass does not prove release publication. |
+
+GitHub's ordinary branch rules can require checks and PRs, but cannot reliably
+enforce the expected *source branch* shown above. Verify that source manually
+during the single-maintainer review. The exact required-check names must be
+selected from successful PR runs; do not guess check names or require a check
+that is not emitted for that branch.
 
 ## Automation boundaries
 
