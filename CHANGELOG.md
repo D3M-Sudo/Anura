@@ -64,6 +64,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Clipboard: `hand_off_to_manager()` and `wait_until_replaced()` now refuse to iterate the default GLib main context when it is already running (an active GTK loop, or another thread owns it), logging a warning and returning `False` instead of re-entering the loop (AUDIT-001, #469)
 
 ### Documentation
+- Refresh repository guidance and technical comments to match the current code: lane-based task execution, Tesseract language-code validation, GNOME 51, portal backend setup, and current test/build behaviour.
 - Docs/OCR: distinguish the Tesseract engine version from upstream traineddata refs and record the model training provenance and compatibility findings (#642)
 - Docs/Flatpak: reflect completed static verification of `GI_TYPELIB_PATH` for the GNOME 51 runtime; verification plan and closure recorded for #623
 
