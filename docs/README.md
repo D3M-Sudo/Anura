@@ -24,7 +24,7 @@ Only plans with unfinished, currently relevant scope belong here. Completed plan
 
 | Document | Status | Purpose |
 | --- | --- | --- |
-| [planning/appimage-zsync-release-plan.md](planning/appimage-zsync-release-plan.md) | **Active / planning** | AppImage architecture feasibility, packaging boundaries, zsync/Gear Lever update flow and tag-only release gates (#555) |
+| [planning/appimage-zsync-release-plan.md](planning/appimage-zsync-release-plan.md) | **Active / planning** | AppImage implementation record and remaining first-release, Gear Lever update and desktop-integration acceptance gates (#555) |
 | [planning/math-ocr-evaluation.md](planning/math-ocr-evaluation.md) | **Active / research** | Mathematical OCR engine evaluation, licensing/provenance gates, resource benchmarks and proposed LaTeX-first integration plan (#570) |
 
 ## Historical material (audit/legacy)
@@ -75,9 +75,10 @@ docs/
 
 - Filenames use `kebab-case-lowercase.md`.
 - Current/normative feature references live under `reference/`.
-- Active (not yet implemented) plans belong in `planning/`, recreated when
-  needed; once implemented they move to `audit/legacy/reports/` and are marked
-  historical.
+- Active plans with unfinished scope or post-implementation acceptance gates
+  belong in `planning/`. Archive a plan only when all of its tracked work and
+  acceptance criteria are complete; do not archive it merely because the main
+  implementation has merged.
 - Historical audit material belongs in `audit/legacy/` (append-only: add dated
   reports, never rewrite or delete).
 - Resolved/closed audit reports are archived into `audit/legacy/reports/`;
