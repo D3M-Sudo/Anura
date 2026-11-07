@@ -20,14 +20,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - AppImage: bundle `libxcb-render0`, required by GTK's dynamically loaded X11 backend on clean hosts (#555)
 - AppImage: explicitly bundle `libwayland-client0`, required by GTK's dynamically loaded Wayland backend on clean hosts (#555)
 - CI/AppImage: inspect embedded update metadata without `APPIMAGE_EXTRACT_AND_RUN`, which otherwise dispatches to AppRun and starts the payload (#555)
-
-### Documentation
-- Docs/OCR: distinguish the Tesseract engine version from upstream traineddata refs and record the model training provenance and compatibility findings (#642)
-- Docs/Flatpak: reflect completed static verification of `GI_TYPELIB_PATH` for the GNOME 51 runtime; verification plan and closure recorded for #623
 - CI/AppImage: explicitly re-embed architecture-specific GitHub Releases update information when repackaging the staged AppDir, and verify it through the runtime inspection interface (#555)
 - CI/AppImage: generate each `.zsync` control file from the final repackaged AppImage with `zsyncmake`; the intermediate appimage-builder image's control file is discarded (#555)
 - CI/AppImage: use appimage-builder only to stage the dependency-complete AppDir, then replace its AppRun2 launcher and repackage with the pinned appimagetool runtime to avoid the known glibc compatibility-runtime startup failure (#555)
 - CI/AppImage: use the multi-architecture Ubuntu snapshot archive for amd64 and arm64, and compare Ubuntu package versions with dpkg semantics to avoid appimage-builder's PEP 440 parsing failure (#555)
+
+### Documentation
+- Docs/OCR: distinguish the Tesseract engine version from upstream traineddata refs and record the model training provenance and compatibility findings (#642)
+- Docs/Flatpak: reflect completed static verification of `GI_TYPELIB_PATH` for the GNOME 51 runtime; verification plan and closure recorded for #623
 
 ### Added
 - Release/AppImage: add native x86_64 and aarch64 self-contained AppImage builds, embedded GitHub Releases zsync metadata, paired update files, strict release-asset validation and SHA-256 checksums (#555)
