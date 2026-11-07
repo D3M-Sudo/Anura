@@ -96,9 +96,11 @@ class AtomicTaskResult:
 
 class AtomicTaskManager:
     """
-    Atomic Task Manager for Anura.
-    Handles single-slot execution with task versioning to prevent race conditions
-    and UI micro-stutters.
+    Coordinate background work across independent execution lanes.
+
+    Thread and process executors handle their respective task types; UUID-based
+    lane ownership prevents superseded or cancelled work from dispatching stale
+    results to the UI.
     """
 
     def __init__(self) -> None:
