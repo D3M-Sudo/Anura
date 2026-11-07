@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- UI/UX: split Preferences in 4 pagine dedicate (Generale, Editor, Voce, Lingue) con nuove classi `PreferencesEditorPage` e `PreferencesVoicePage`; TTS catalog loading asincrono per non bloccare l'inizializzazione UI (#448)
 - Release/AppImage: add native x86_64 and aarch64 self-contained AppImage builds, embedded GitHub Releases zsync metadata, paired update files, strict release-asset validation and SHA-256 checksums (#555)
 - Docs/release: document AppImage runtime boundaries, downloads, checksums and Gear Lever-compatible zsync updates (#555)
 - Docs/Flatpak: add a maintainer-operated Flathub submission readiness checklist covering current policy, architecture, manifest, licensing, permissions and validation boundaries (#494)
@@ -78,21 +79,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Docs/OCR: distinguish the Tesseract engine version from upstream traineddata refs and record the model training provenance and compatibility findings (#642)
 - Docs/Flatpak: reflect completed static verification of `GI_TYPELIB_PATH` for the GNOME 51 runtime; verification plan and closure recorded for #623
 
-### Added
-- UI/UX: split Preferences in 4 pagine dedicate (Generale, Editor, Voce, Lingue) con nuove classi `PreferencesEditorPage` e `PreferencesVoicePage`; TTS catalog loading asincrono per non bloccare l'inizializzazione UI (#448)
-- Docs/release: document AppImage runtime boundaries, downloads, checksums and Gear Lever-compatible zsync updates (#555)
-- Docs/Flatpak: add a maintainer-operated Flathub submission readiness checklist covering current policy, architecture, manifest, licensing, permissions and validation boundaries (#494)
-- Docs/release: add an operational checklist for the first real tag-triggered verification of pinned artifact download, multiarch Flatpak publication and SHA-256 assets (#592)
-- Docs/release: add an AppImage multi-architecture and zsync planning baseline, keeping the proposed packaging path separate from the existing Flatpak release gate (#555)
-- Docs/release: select GitHub Releases with architecture-specific `gh-releases-zsync` update metadata as the approved AppImage update-discovery direction (#555)
-- Docs/OCR: add a research and evaluation plan for mathematical OCR, covering Pix2Text/pix2tex/Mathpix, model provenance and licensing risks, CPU/Flatpak resource gates, LaTeX-first output and a separate Typst conversion decision (#570)
-- Docs: add the public project roadmap, documenting approved near-term priorities, longer-term directions and roadmap maintenance policy (#632)
-- History: each stored entry now offers an **Open in external editor** action. The full immutable entry text is exported asynchronously to a private per-user file and handed off through `Gtk.FileLauncher` (#624)
-- History: each stored entry now offers a **Text-to-Speech replay** action, reusing the shared TTS pipeline and the OCR language stored with the entry while respecting the explicit TTS-language preference (#626)
-- CI/Flatpak: build Flatpak bundles on native x86_64 and aarch64 runners, producing architecture-specific bundles and license-inventory artifacts (#618)
-- CI/Flatpak: add sandbox-level runtime smoke checks on both architectures for GTK/GI typelibs, native Python bindings and the bundled Tesseract library (#619)
-- Flatpak: offer a portal-backed, user-selected migration of history and downloaded OCR models from the previous application ID; no cross-application filesystem permission is required (#613)
-
 ### Changed
 
 - CI/governance: align Dependabot and certifi automation with `feature`, run CodeQL on PRs to all protected promotion branches, guard manual dependency-sync dispatch from protected branches, and document the single-maintainer PR/CI policy.
@@ -147,6 +133,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- CSS: fix `@keyframes pulse` e `@keyframes readyPulse` con selettore combinato `0%, 100%` non supportato da GTK4 CssProvider; separati in selettori `0%` e `100%` distinti (#448)
 - Changelog: consolidate duplicate `[Unreleased]` category headings and add a CI guard against undocumented removal of existing entries.
 - CI/Flatpak: strengthen the invalid-input OCR regression check to require a non-zero exit without an uncaught Python traceback (#589).
 - AudioPlayer: extend `_cleanup_lock` scope to cover `play()` and `stop()` to prevent races with concurrent cleanup (F19)
