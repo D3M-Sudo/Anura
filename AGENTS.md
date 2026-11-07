@@ -18,7 +18,7 @@ Anura OCR is a GTK4/Libadwaita desktop application for GNOME that extracts text 
 - **Fallback**: Bundled `scrot` for X11 sessions when portal backends are missing
 - Distributed through GitHub Releases as architecture-specific Flatpak bundles and AppImages (x86_64 and aarch64); Flatpak uses the GNOME 51 runtime
 - AppImage packaging and release contract: `docs/reference/appimage-multiarch-release.md`; real Gear Lever update and representative desktop integration remain post-release acceptance items
-- Internationalization with gettext: 25+ languages (see `po/LINGUAS`)
+- Internationalization with gettext: 26 languages (see `po/LINGUAS`)
 - Build system: Meson ≥ 1.5.0
 - License: MIT
 
