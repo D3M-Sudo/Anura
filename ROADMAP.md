@@ -42,23 +42,7 @@ Related issue: #592.
 
 These activities represent planned technical directions. Their implementation remains subject to feasibility, validation and maintainer approval.
 
-### 4. AppImage multi-architecture distribution
-
-Evaluate and develop an AppImage distribution strategy for x86_64 and aarch64.
-
-Areas of work include:
-
-- Dependency bundling and runtime compatibility.
-- Independent architecture-specific builds.
-- Update distribution using zsync.
-- Compatibility with supported AppImage update managers.
-- Validation on representative Linux environments.
-
-The packaging and update strategy must be validated before support is declared.
-
-Related issue: #555.
-
-### 5. Mathematical OCR research
+### 4. Mathematical OCR research
 
 Explore possible improvements to mathematical expression recognition.
 
@@ -78,7 +62,12 @@ Related issue: #570.
 - Completed the desktop menu/category review and removed the duplicate main-category declaration (#620).
 - Migrated tessdata integrity verification to SHA-256 and documented the associated manifest maintenance workflow (#577, #634).
 - Established native multi-architecture Flatpak build and artifact-validation coverage (#494; distribution follow-ups remain tracked separately).
+- Implemented native x86_64/aarch64 AppImage builds, embedded GitHub Releases zsync metadata, companion-file generation and release-artifact validation in CI (#555). The first public AppImage release, real Gear Lever differential-update test and representative desktop-integration checks remain pending.
 - Completed static verification of the Flatpak `GI_TYPELIB_PATH` configuration for the GNOME 51 runtime: manifest entries, documentation and hygiene tests are consistent; `build-aux/flatpak_runtime_smoke.py` covers all required namespaces and native bindings on both x86_64 and aarch64 (#623). Runtime verification inside the sandbox follows the manual verification plan in the issue.
+
+## Remaining release acceptance
+
+The AppImage packaging pipeline is implemented, but issue #555 remains open until a tagged release has published the architecture-specific assets and the post-release update and desktop-integration checks have been completed. CI artifact validation alone is not evidence of a completed public release or a successful differential update.
 
 ## Exploratory ideas
 

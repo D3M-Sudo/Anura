@@ -43,7 +43,7 @@
     <img src="https://img.shields.io/badge/translations-Weblate-orange?style=flat-square" alt="Translation status" />
   </a>
   <a href="https://github.com/D3M-Sudo/Anura/releases/latest">
-    <img src="https://img.shields.io/badge/distribution-Flatpak-4A90D9?style=flat-square&logo=flatpak" alt="Flatpak" />
+    <img src="https://img.shields.io/badge/distribution-Flatpak%20%2B%20AppImage-4A90D9?style=flat-square" alt="Flatpak and AppImage" />
   </a>
 </p>
 
@@ -82,7 +82,7 @@ It also decodes **QR codes and Barcodes** in a single click using **zxing-cpp**,
 
 ## Architecture
 
-As of **v0.2.0**, Anura features an **Enterprise Clean Architecture** focused on event-driven decoupling and memory safety:
+The current application is organized around event-driven coordination, explicit service boundaries and asynchronous resource management:
 
 - **Core Services (`anura/core/`)**: Pure infrastructure logic. Includes `boot` (capability audit), `logger` (rotary logging), `atomic_task_manager` (isolated worker pool), and `resources`.
 - **Business Services (`anura/services/`)**: High-level I/O and resource management. Includes `language_manager` (Tessdata coordination), specialized language managers (DownloadManager, CacheManager, LanguageValidator), `screenshot` (multi-provider capture factory), `history_service` (opt-in local JSON history, see [History V1](docs/reference/history-v1.md) and [History V2](docs/reference/history-v2.md)), and `settings`.
@@ -94,36 +94,37 @@ As of **v0.2.0**, Anura features an **Enterprise Clean Architecture** focused on
 
 ## Installation
 
-### Flatpak — Stable Release
+### Flatpak
 
-Download the bundle matching your system architecture from the [Releases](https://github.com/D3M-Sudo/Anura/releases/latest) page:
+The latest published GitHub Release is [v0.2.1](https://github.com/D3M-Sudo/Anura/releases/tag/v0.2.1). It contains the legacy bundle `io.github.d3msudo.anura.flatpak`; it does **not** yet contain the architecture-specific bundles or `SHA256SUMS` described by the current multi-architecture release pipeline.
+
+The current CI pipeline builds and validates separate bundles for x86_64 and aarch64. Once a release is produced by that pipeline, its assets are expected to be:
 
 | Architecture | Release asset |
 | --- | --- |
 | x86_64 (Intel/AMD 64-bit) | `io.github.d3m_sudo.anura-x86_64.flatpak` |
 | aarch64 (64-bit ARM) | `io.github.d3m_sudo.anura-aarch64.flatpak` |
 
-The release also includes `SHA256SUMS`. Download it alongside the bundle and, from the download directory, verify the selected asset before installing:
+For the currently published v0.2.1 bundle, install the legacy asset with:
 
 ```bash
-sha256sum -c SHA256SUMS
-flatpak install --user ./io.github.d3m_sudo.anura-x86_64.flatpak
+flatpak install --user ./io.github.d3msudo.anura.flatpak
 ```
 
-On an ARM64 system, use `io.github.d3m_sudo.anura-aarch64.flatpak` in the install command instead. The checksum file lists both architecture-specific bundles; verification reports a missing file if you downloaded only one bundle, so either download both or verify the selected bundle with its matching checksum entry.
+For a future multi-architecture release, download the matching bundle and `SHA256SUMS` from the same release, then verify the downloaded files before installing. The checksum inventory lists both architecture-specific bundles; either download both or verify only the selected bundle's matching checksum entry. See [Flatpak multi-architecture builds and releases](docs/reference/flatpak-multiarch-release.md) for the CI and publication contract.
 
-The CI builds and validates x86_64 and aarch64 independently. See [Flatpak multi-architecture builds and releases](docs/reference/flatpak-multiarch-release.md) for the build, runtime and publication guarantees.
+### AppImage — Release status
 
-### AppImage — Stable Release
+Native x86_64 and aarch64 AppImage builds, architecture checks, clean-container smoke tests, embedded GitHub Releases update metadata and matching `.zsync` generation are implemented in CI. However, the latest published release (v0.2.1) predates this pipeline and contains **no AppImage assets**. Do not treat CI artifacts as downloadable release packages.
 
-Anura also publishes a self-contained AppImage for each supported architecture:
+The next eligible tag-triggered release is expected to publish these assets after both architecture builds and the complete release validation gate succeed:
 
-| Architecture | Release asset |
+| Architecture | Release assets |
 | --- | --- |
-| x86_64 (Intel/AMD 64-bit) | `Anura-<version>-x86_64.AppImage` |
-| aarch64 (64-bit ARM) | `Anura-<version>-aarch64.AppImage` |
+| x86_64 (Intel/AMD 64-bit) | `Anura-<version>-x86_64.AppImage` and matching `.zsync` |
+| aarch64 (64-bit ARM) | `Anura-<version>-aarch64.AppImage` and matching `.zsync` |
 
-Download the matching AppImage and its `.zsync` companion from [GitHub Releases](https://github.com/D3M-Sudo/Anura/releases/latest). The checksum inventory covers both architectures; verify the pair for your architecture with:
+The release also generates `SHA256SUMS-appimage`. Once those assets appear in a GitHub Release, download the matching AppImage, `.zsync` companion and checksum inventory. For example, verify the x86_64 image with:
 
 ```bash
 grep 'Anura-.*-x86_64' SHA256SUMS-appimage | sha256sum -c -
@@ -131,11 +132,9 @@ chmod +x Anura-<version>-x86_64.AppImage
 ./Anura-<version>-x86_64.AppImage
 ```
 
-Replace `<version>` with the version in the downloaded filename, and replace `x86_64` with `aarch64` on 64-bit ARM systems.
+Replace `<version>` with the published version and `x86_64` with `aarch64` on 64-bit ARM systems. The bundle includes GTK4, Libadwaita, GtkSourceView, PyGObject/GI typelibs, GStreamer, Tesseract and the default English/Italian OCR models. The host still provides the Linux kernel, compatible glibc, graphics/display drivers and an XDG Desktop Portal backend for secure screenshot capture. Additional OCR language models are downloaded on demand; TTS continues to use the external Google TTS service when explicitly invoked.
 
-The AppImage bundles the application runtime (GTK4, Libadwaita, GtkSourceView, PyGObject, GStreamer, Tesseract and the default English/Italian OCR models). The host still provides the Linux kernel, graphics/display drivers and an XDG Desktop Portal backend for secure screenshot capture. Additional OCR language models are downloaded on demand. Text-to-speech continues to use the external Google TTS service when explicitly invoked.
-
-Compatible managers such as Gear Lever can use the embedded GitHub Releases zsync metadata and the matching `.zsync` file for differential updates. Keep the AppImage and its companion file together when mirroring a release. See [AppImage multi-architecture builds and updates](docs/reference/appimage-multiarch-release.md) for packaging, validation and compatibility details.
+The embedded GitHub Releases zsync metadata and matching `.zsync` file are intended for differential updates through compatible managers such as Gear Lever. A real update from a previous public AppImage release and desktop integration checks on representative hosts remain pending; see [AppImage multi-architecture builds and updates](docs/reference/appimage-multiarch-release.md) and issue [#555](https://github.com/D3M-Sudo/Anura/issues/555).
 
 ### Runtime requirements
 
@@ -145,7 +144,7 @@ Anura captures screenshots through the **XDG Desktop Portal**. The portal fronte
 | --- | --- | --- |
 | GNOME / Ubuntu Desktop | already installed | Uses `xdg-desktop-portal-gnome` |
 | KDE Plasma / Kubuntu | already installed | Uses `xdg-desktop-portal-kde` |
-| **LXQt / Lubuntu** | `sudo apt install xdg-desktop-portal-gtk` | Uses `xdg-desktop-portal-gtk` (legacy) or `xdg-desktop-portal-kde` |
+| **LXQt / Lubuntu** | `sudo apt install xdg-desktop-portal-kde` | The GTK portal (`xdg-desktop-portal-gtk`) does not provide Screenshot on current Ubuntu releases; configure the KDE backend below |
 | Xfce / MATE | `sudo apt install xdg-desktop-portal-gnome` | Backend needed for Screenshot interface |
 | wlroots (Sway, Hyprland) | `sudo apt install xdg-desktop-portal-wlr` | Requires screencast support |
 
@@ -232,7 +231,7 @@ PYTHONPATH=".:$SP" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/
   GSETTINGS_SCHEMA_DIR="builddir/data" /usr/bin/python3 -m pytest tests/ -v
 ```
 
-The test suite includes headless unit tests (logic without GTK dependencies), integration tests (GTK/GLib environment), security/hardening tests (DoS prevention, URI validation, sanitization), and reliability/enterprise tests (performance benchmarks, concurrency, lifecycle). History V1 behaviour is covered by `tests/test_history_storage.py`, `tests/test_history_controller_integration.py`, `tests/test_history_ui.py`, `tests/test_history_settings.py` (GTK-marked) and `tests/test_preferences_page_resilience.py` (history/TTS wiring regression). Shortcuts overlay consistency is guarded by `tests/test_shortcuts_consistency.py` — see [docs/reference/dependencies.md](docs/reference/dependencies.md) for the headless GTK testing approach.
+The test suite includes headless unit tests (logic without GTK dependencies), integration tests (GTK/GLib environment), security/hardening tests (DoS prevention, URI validation, sanitization), and reliability tests (performance benchmarks, concurrency, lifecycle). History V1 behaviour is covered by `tests/test_history_storage.py`, `tests/test_history_controller_integration.py`, `tests/test_history_ui.py`, `tests/test_history_settings.py` (GTK-marked) and `tests/test_preferences_page_resilience.py` (history/TTS wiring regression). Shortcuts overlay consistency is guarded by `tests/test_shortcuts_consistency.py` — see [docs/reference/dependencies.md](docs/reference/dependencies.md) for the headless GTK testing approach.
 
 ---
 
@@ -245,6 +244,9 @@ The test suite includes headless unit tests (logic without GTK dependencies), in
 - [SECURITY.md](SECURITY.md) — security policy and outbound data flows
 - [docs/reference/dependencies.md](docs/reference/dependencies.md) — Python/Flatpak dependency workflow (uv.lock, sync, FEDC/certifi)
 - [docs/reference/tessdata-integrity.md](docs/reference/tessdata-integrity.md) — tessdata model integrity (checksum manifest, fail-closed verification)
+- [docs/reference/flatpak-multiarch-release.md](docs/reference/flatpak-multiarch-release.md) — Flatpak x86_64/aarch64 CI and release contract
+- [docs/reference/appimage-multiarch-release.md](docs/reference/appimage-multiarch-release.md) — AppImage packaging, zsync metadata and post-release acceptance boundaries
+- [docs/reference/code-commenting.md](docs/reference/code-commenting.md) — technical comment and Google-style docstring conventions
 - [AGENTS.md](AGENTS.md) — canonical AI-assistant and architecture guide (`CLAUDE.md` is a thin pointer to it)
 - [CONTRIBUTING.md](CONTRIBUTING.md) — contributor and development workflow
 - [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — community participation standards

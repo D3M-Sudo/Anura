@@ -16,6 +16,7 @@ documentation lives in the root (`README.md`, `AGENTS.md`, `CONTRIBUTING.md`,
 | [reference/appimage-multiarch-release.md](reference/appimage-multiarch-release.md) | **Current / normative** | Self-contained native x86_64/aarch64 AppImages, bundled GTK/GI/OCR runtime, zsync metadata, CI validation and host integration boundaries |
 | [reference/flathub-submission-checklist.md](reference/flathub-submission-checklist.md) | **Current / operational** | Maintainer checklist for Flathub policy, manifest, architecture, licensing, permissions, validation and manual submission (#494) |
 | [reference/tagged-release-verification.md](reference/tagged-release-verification.md) | **Current / operational** | First real tag-triggered verification of pinned download-artifact, native Flatpak artifacts, SHA-256 checksums and GitHub Release publication (#592) |
+| [reference/code-commenting.md](reference/code-commenting.md) | **Current / normative** | Technical comment policy and Google-style Python docstring conventions |
 
 ## Active planning
 
@@ -23,7 +24,7 @@ Only plans with unfinished, currently relevant scope belong here. Completed plan
 
 | Document | Status | Purpose |
 | --- | --- | --- |
-| [planning/appimage-zsync-release-plan.md](planning/appimage-zsync-release-plan.md) | **Active / planning** | AppImage architecture feasibility, packaging boundaries, zsync/Gear Lever update flow and tag-only release gates (#555) |
+| [planning/appimage-zsync-release-plan.md](planning/appimage-zsync-release-plan.md) | **Active / planning** | AppImage implementation record and remaining first-release, Gear Lever update and desktop-integration acceptance gates (#555) |
 | [planning/math-ocr-evaluation.md](planning/math-ocr-evaluation.md) | **Active / research** | Mathematical OCR engine evaluation, licensing/provenance gates, resource benchmarks and proposed LaTeX-first integration plan (#570) |
 
 ## Historical material (audit/legacy)
@@ -74,9 +75,10 @@ docs/
 
 - Filenames use `kebab-case-lowercase.md`.
 - Current/normative feature references live under `reference/`.
-- Active (not yet implemented) plans belong in `planning/`, recreated when
-  needed; once implemented they move to `audit/legacy/reports/` and are marked
-  historical.
+- Active plans with unfinished scope or post-implementation acceptance gates
+  belong in `planning/`. Archive a plan only when all of its tracked work and
+  acceptance criteria are complete; do not archive it merely because the main
+  implementation has merged.
 - Historical audit material belongs in `audit/legacy/` (append-only: add dated
   reports, never rewrite or delete).
 - Resolved/closed audit reports are archived into `audit/legacy/reports/`;

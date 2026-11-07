@@ -94,7 +94,8 @@ markers = [
     "gtk: tests that require a live GTK/Wayland display",
     "network: tests that require network access",
 ]
-# Skip GTK tests in CI unless DISPLAY or WAYLAND_DISPLAY is set
+# The default test invocation excludes display-dependent integration modules.
+# CI jobs select the appropriate headless or display-backed test tier.
 addopts = "-v --tb=short --ignore=tests/test_clipboard_service.py --ignore=tests/test_screenshot_service.py --ignore=tests/test_share_service.py --ignore=tests/test_tts_service.py --ignore=tests/test_notification_service.py --ignore=tests/test_language_manager.py --ignore=tests/test_tts_initialization.py --ignore=tests/test_app_lifecycle.py --ignore=tests/test_widgets.py --ignore=tests/test_audit_app_logic.py --ignore=tests/test_integration_cli_enterprise.py --ignore=tests/test_security_download_limit.py"
 
 [dependency-groups]

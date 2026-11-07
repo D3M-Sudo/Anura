@@ -181,13 +181,9 @@ def run_ocr_pipeline(
             # any .tmp or log files created by Tesseract are automatically cleaned
             # up when the context manager exits.
             #
-            # BUG-003 fix: ProcessPoolExecutor reuses worker processes across tasks,
-            # so mutations to os.environ persist into future invocations.  Save the
-            # original values and restore them in a finally block to keep the worker
-            # environment clean for the next task (or for any other code that reads
-            # TMPDIR/TEMP/TMP in the same process).
-            # BUG-003: save original env values; restore in finally so the
-            # reused worker process is not contaminated for future tasks.
+            # ProcessPoolExecutor workers are reused across tasks, so restore these
+            # environment variables after each invocation to prevent state leaking
+            # into later tasks in the same worker.
             _ENV_KEYS = ("TMPDIR", "TEMP", "TMP")
             _saved_env = {k: os.environ.get(k) for k in _ENV_KEYS}
             try:

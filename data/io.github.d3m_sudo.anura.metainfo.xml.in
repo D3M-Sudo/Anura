@@ -34,14 +34,14 @@
       not want to send to an external service.
     </p>
     <p>
-      Screenshot capture uses the XDG Desktop Portal interface, which
-      requires a portal backend to be installed on the host. GNOME and KDE
-      typically ship one by default (xdg-desktop-portal-gnome /
-      xdg-desktop-portal-kde). On other desktops you may need to install
-      a backend explicitly: xdg-desktop-portal-gtk on LXQt / Xfce / MATE,
-      xdg-desktop-portal-wlr on wlroots-based compositors. Without a
-      backend the system cannot grant Anura access to the screen and the
-      "Take a screenshot" action will fail.
+      Screenshot capture uses the XDG Desktop Portal Screenshot interface and
+      requires a compatible backend on the host. GNOME and KDE sessions
+      typically provide one through xdg-desktop-portal-gnome or
+      xdg-desktop-portal-kde. On LXQt, the GTK portal may not expose Screenshot
+      on current Ubuntu releases; Anura's documented setup routes Screenshot
+      to the KDE backend. Xfce and MATE users may need a GNOME or KDE backend,
+      while wlroots-based compositors use xdg-desktop-portal-wlr. Without a
+      compatible backend, the portal cannot grant screen capture access.
     </p>
     <p>
       On X11 sessions, if the portal Screenshot interface is unavailable or

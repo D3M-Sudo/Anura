@@ -54,11 +54,9 @@ try:
     _registered = _adw_app.register()
     if not _registered:
         raise RuntimeError("register() returned False (D-Bus unavailable?)")
-    # CRITICAL: register() starts internal GLib/GDBus threads that are
-    # non-daemon.  Python cannot exit while they are alive, causing a ~120s
-    # hang after pytest finishes (until the workflow `timeout 120s` kills it).
-    # Fix: call quit() via atexit so the GLib main context is stopped and
-    # those threads are released before Python begins its shutdown sequence.
+    # Application registration starts GLib/GDBus threads that can keep the
+    # test process alive during interpreter shutdown. Stop the application
+    # through atexit so those threads can exit cleanly.
     atexit.register(_adw_app.quit)
 except Exception as _register_exc:
     warnings.warn(f"Adw.Application.register() failed: {_register_exc}. Falling back to Gtk.init().", stacklevel=2)

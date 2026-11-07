@@ -16,9 +16,9 @@ _VALID_LOG_LEVELS = {"TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
 LOG_LEVEL: str = _LOG_LEVEL if _LOG_LEVEL in _VALID_LOG_LEVELS else "INFO"
 RESOURCE_PREFIX = "/io/github/d3msudo/anura"
 
-# Language code validation pattern (ISO 639-2, 2-18 alphanumeric chars with plus and underscore)
-# Plus character allows multi-language OCR codes like "eng+ita"
-# Underscore allowed for Tesseract codes like "chi_sim" (Chinese Simplified)
+# Accepted Tesseract language-code syntax (2-18 ASCII letters, digits, plus signs or underscores).
+# Plus signs allow multi-language OCR requests such as "eng+ita"; underscores support
+# model identifiers such as "chi_sim". This is a format check, not full ISO 639 validation.
 LANG_CODE_PATTERN = r"^[a-zA-Z0-9+_]{2,18}$"
 
 # XDG Base Directory specification compliance
@@ -114,10 +114,9 @@ TESSDATA_SYSTEM_DIR = _get_tessdata_system_dir()
 
 # Tesseract OCR Repository URLs
 # Pinned to release tags (e.g. "4.1.0") instead of commit SHAs.
-# WHY: upstream tesseract-ocr repos periodically rewrite/compress their history
-# (large binary blobs), orphaning hardcoded commit SHAs -> downloads fail 404.
-# A release tag is stable and always reachable. Do NOT re-pin to commit SHAs
-# (see Bug #6, 2026-09). Runtime model integrity is pinned by raw-content
+# WHY: upstream tesseract-ocr repositories may rewrite or compress history,
+# which can make previously pinned commit SHAs unavailable. Release tags avoid
+# coupling downloads to those commit IDs. Runtime model integrity is pinned by raw-content
 # SHA-256 digests in anura/data/tessdata_checksums.json.
 # Three distinct repositories with different accuracy/speed trade-offs:
 #   tessdata_fast → integerized LSTM models (fastest, lower accuracy)

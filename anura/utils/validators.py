@@ -177,14 +177,12 @@ def _check_hostname_homograph(hostname: str) -> bool:
     if not hostname:
         return True
 
-    # 1. Normalize Punycode hostnames back to Unicode for analysis (SENTINEL-FIX).
-    # This ensures that homograph attacks cannot bypass security filters by being
-    # pre-encoded as Punycode.
+    # Decode IDN labels before script checks so ACE/Punycode encoding cannot hide
+    # Unicode characters used in mixed-script homograph attacks.
     effective_hostname = hostname
     if hostname.isascii() and "xn--" in hostname.lower():
         try:
-            # Use 'idna' codec to decode Punycode labels back to Unicode.
-            # This allows the homograph detector to see the real characters.
+            # Decode ACE labels so the detector evaluates the Unicode hostname.
             effective_hostname = hostname.encode("ascii").decode("idna")
         except (UnicodeError, ValueError):
             # Malformed Punycode — treat as unsafe to be conservative.

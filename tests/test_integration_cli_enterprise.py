@@ -156,7 +156,7 @@ class TestCLIIntegrationEnterprise:
         """Test application-level on_decoded when no GUI window is present."""
         from gi.repository import GLib
 
-        # active-window is a read-only GObject property, we need to mock the props object
+        # GObject exposes active-window as read-only; replace the props proxy for this test.
         with patch.object(app, "props") as mock_props:
             mock_props.active_window = None
 

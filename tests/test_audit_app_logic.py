@@ -57,7 +57,7 @@ class TestLanguageManager:
 class TestAnuraApplication:
     @pytest.mark.gtk
     def test_app_init(self):
-        # We need a GResource for Anura to start, but we can mock it or just check init
+        # Isolate resource loading so this test covers application initialization only.
         with patch("anura.main.Gio.Resource.load"):
             app = AnuraApplication()
             assert app.get_application_id() == "io.github.d3m_sudo.anura"

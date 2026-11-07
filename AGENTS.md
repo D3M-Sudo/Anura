@@ -16,8 +16,9 @@ Anura OCR is a GTK4/Libadwaita desktop application for GNOME that extracts text 
 - TTS via `gTTS` + GStreamer `playbin3`
 - Screenshots via XDG Desktop Portal (`libportal` / `Xdp`)
 - **Fallback**: Bundled `scrot` for X11 sessions when portal backends are missing
-- Distributed as Flatpak (`io.github.d3m_sudo.anura`) — GNOME 51 runtime
-- Internationalization with gettext: 25+ languages (see `po/LINGUAS`)
+- Distributed through GitHub Releases as architecture-specific Flatpak bundles and AppImages (x86_64 and aarch64); Flatpak uses the GNOME 51 runtime
+- AppImage packaging and release contract: `docs/reference/appimage-multiarch-release.md`; real Gear Lever update and representative desktop integration remain post-release acceptance items
+- Internationalization with gettext: 26 languages (see `po/LINGUAS`)
 - Build system: Meson ≥ 1.5.0
 - License: MIT
 
@@ -30,7 +31,7 @@ anura/
 │   ├── window.py               AnuraWindow — Core UI shell (Composition-based)
 │   ├── config.py               Constants APP_ID, tessdata URL, lang_code validation
 │   ├── core/                   Modular Core Services
-│   │   ├── atomic_task_manager.py  Single-slot thread pool with UUID versioning
+│   │   ├── atomic_task_manager.py  Lane-scoped task execution with UUID versioning
 │   │   ├── boot.py             Hardware bootstrap, Capability Audit
 │   │   ├── logger.py           Rotary Logging logic
 │   │   ├── i18n.py             Hybrid C/Python/GLib Localization
@@ -49,7 +50,7 @@ anura/
 │   │   ├── language/               Specialized language managers
 │   │   │   ├── cache_manager.py    Tessdata caching logic
 │   │   │   ├── download_manager.py Tessdata download coordination
-│   │   │   └── language_validator.py Language code validation
+│   │   │   └── validator.py Language code validation
 │   │   ├── notification_service.py Notifications: XDG Portal → libnotify fallback
 │   │   ├── result_dispatcher.py    Post-OCR coordination (Clipboard, URLs, Notifications)
 │   │   ├── screenshot/             Abstract Factory Screenshot providers
@@ -121,8 +122,11 @@ anura/
 ├── docs/
 │   ├── README.md               Documentation index (normative / planning / audit)
 │   ├── reference/              Current (normative) references:
-│   │                            history-v1.md, history-v2.md, dependencies.md, tessdata-integrity.md
-│   ├── planning/               Active (not yet implemented) plans (recreated when needed)
+│   │                            history-v1.md, history-v2.md, dependencies.md, tessdata-integrity.md,
+│   │                            flatpak-multiarch-release.md, appimage-multiarch-release.md,
+│   │                            flathub-submission-checklist.md, tagged-release-verification.md,
+│   │                            code-commenting.md
+│   ├── planning/               Active plans and post-implementation acceptance records
 │   └── audit/                  QA/security audit material:
 │                                README.md (root = active audits) + legacy/ (append-only: reports/)
 ├── flatpak/
@@ -145,7 +149,7 @@ anura/
 ├── po/                         Gettext translations (26 languages)
 ├── .github/
 │   ├── workflows/
-│   │   ├── main.yml                    CI build and smoke tests
+│   │   ├── main.yml                    Python/GTK CI, native Flatpak + AppImage builds, artifact validation and tag-only publication
 │   │   ├── dependency-sync.yml         Dependabot PRs: pyproject → uv.lock → manifests
 │   │   └── flatpak-dependencies.yml    Weekly FEDC + auto-PR certifi
 │   ├── scripts/
@@ -183,10 +187,10 @@ GSETTINGS_SCHEMA_DIR=builddir/data python3 -m anura.main
 
 ```bash
 # Full build
-flatpak-builder --force-clean builddir flatpak/io.github.d3msudo.anura.local.json
+flatpak-builder --force-clean builddir flatpak/io.github.d3m_sudo.anura.local.json
 
 # Run the build
-flatpak-builder --run builddir flatpak/io.github.d3msudo.anura.local.json anura
+flatpak-builder --run builddir flatpak/io.github.d3m_sudo.anura.local.json anura
 ```
 
 
@@ -208,8 +212,11 @@ flatpak-builder --run builddir flatpak/io.github.d3msudo.anura.local.json anura
    write placeholders. For the Flathub submission manifest, run
    `build-aux/pin_source_commit.py --tag v<version>` after tagging to pin the
    tag's commit.
-2. Wait for the tag's CI run to complete (`gh run watch <run-id>`): the
-   release is created only when the `flatpak-builder` job finishes.
+2. Wait for the tag's CI run to complete (`gh run watch <run-id>`): publication
+   requires both native Flatpak builds, Flatpak artifact validation, both native
+   AppImage builds and AppImage artifact validation. The `publish-release` job
+   attaches both formats and their separate checksum inventories only after all
+   dependencies succeed.
 3. Verify the generated body (it comes from `CHANGELOG.md`, the single source of
    truth, so the release and the changelog cannot disagree):
    ```bash
@@ -219,9 +226,12 @@ flatpak-builder --run builddir flatpak/io.github.d3msudo.anura.local.json anura
      with the CHANGELOG entry.
    - Only edit the body by fixing `CHANGELOG.md` and re-running the step; never
      hand-write notes that are not in the changelog.
-4. Final check: `gh release view v<version>` — asset
-   `io.github.d3msudo.anura.flatpak` attached, notes complete, `Latest`
-   flag on the new release.
+4. Final check: `gh release view v<version>` — verify both architecture-specific
+   Flatpak bundles, `SHA256SUMS`, both AppImage/.zsync pairs and
+   `SHA256SUMS-appimage` are attached, notes are complete, and the release is
+   marked `Latest`. Then follow the post-release checks in
+   `docs/reference/appimage-multiarch-release.md`; CI artifact validation alone
+   does not prove desktop integration or a real Gear Lever differential update.
 
 ## Dependency Management
 
@@ -259,7 +269,7 @@ Instead, it is owned exclusively by FEDC (flatpak-external-data-checker) via
 This means:
 - `uv.lock` certifi version may differ from Flatpak manifest certifi version
 - `sync_dependencies.py` intentionally excludes certifi from its mapping
-- FEDC updates certifi in `io.github.d3msudo.anura.local.json` only — the
+- FEDC updates certifi in `io.github.d3m_sudo.anura.local.json` only — the
   release manifest inherits it automatically the next time `release.sh` runs
 - This divergence is intentional and not a drift issue
 
@@ -326,7 +336,7 @@ get_atomic_manager().execute(
 )
 ```
 
-`AtomicTaskManager` manages a single-worker `ThreadPoolExecutor` and uses UUIDs to discard results from stale/cancelled tasks.
+`AtomicTaskManager` coordinates lane-scoped tasks through dedicated thread and process executors. UUID-based task ownership prevents stale or superseded results from reaching callbacks.
 
 **Lock Scope Rule:** When a service uses a lock to protect mutable state, every method that reads or writes that state MUST acquire the same lock — including `play()`, `stop()`, and `cleanup()`. Partial locking (e.g. only in `cleanup()`) leaves races between `play()` and `stop()` on different threads (see F19). Prefer a single `threading.Lock` (or `RLock` when re-entrancy is needed) over multiple locks with inconsistent ordering.
 

@@ -122,9 +122,9 @@ class LanguageMapper:
         "uzb_cyrl": "uz",
         "yid": "yi",
         "yor": "yo",
-        # Historical/specialty variants (fallback to modern equivalent)
+        # Historical/specialty OCR models use an available modern-language TTS voice.
         "lat": "la",
-        "grc": "el",  # Ancient Greek → Modern Greek
+        "grc": "el",  # Ancient Greek OCR → Modern Greek TTS voice fallback
         "enm": "en",
         "frm": "fr",  # Middle English/French → Modern
         # Vertical/special variants
