@@ -16,7 +16,7 @@ _VALID_LOG_LEVELS = {"TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
 LOG_LEVEL: str = _LOG_LEVEL if _LOG_LEVEL in _VALID_LOG_LEVELS else "INFO"
 RESOURCE_PREFIX = "/io/github/d3msudo/anura"
 
-# Accepted Tesseract language-code syntax (2–18 ASCII letters, digits, plus signs or underscores).
+# Accepted Tesseract language-code syntax (2-18 ASCII letters, digits, plus signs or underscores).
 # Plus signs allow multi-language OCR requests such as "eng+ita"; underscores support
 # model identifiers such as "chi_sim". This is a format check, not full ISO 639 validation.
 LANG_CODE_PATTERN = r"^[a-zA-Z0-9+_]{2,18}$"
