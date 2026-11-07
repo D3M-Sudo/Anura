@@ -37,7 +37,7 @@ class ExtractionResult:
     is_primary_url: bool = False
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class OcrResult:
     """Immutable encapsulation of recognized text and layout information."""
 
@@ -62,7 +62,10 @@ class OcrResult:
             if not text or not text.strip():
                 continue
 
-            conf = float(ocr_data["conf"][i])
+            try:
+                conf = float(ocr_data["conf"][i])
+            except (ValueError, TypeError):
+                conf = 0.0
             word = OcrWord(
                 text=text,
                 left=int(ocr_data["left"][i]),

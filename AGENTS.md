@@ -328,6 +328,8 @@ get_atomic_manager().execute(
 
 `AtomicTaskManager` manages a single-worker `ThreadPoolExecutor` and uses UUIDs to discard results from stale/cancelled tasks.
 
+**Lock Scope Rule:** When a service uses a lock to protect mutable state, every method that reads or writes that state MUST acquire the same lock — including `play()`, `stop()`, and `cleanup()`. Partial locking (e.g. only in `cleanup()`) leaves races between `play()` and `stop()` on different threads (see F19). Prefer a single `threading.Lock` (or `RLock` when re-entrancy is needed) over multiple locks with inconsistent ordering.
+
 ### Immutable Data Models
 
 **Rule:** OCR recognized data should be encapsulated in immutable `frozen` dataclasses (`OcrResult`, `OcrWord`) to ensure data integrity across the transformation pipeline.

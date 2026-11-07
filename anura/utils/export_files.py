@@ -29,10 +29,17 @@ from loguru import logger
 def _enforce_private_dir(path: Path) -> Path:
     """Create ``path`` (and parents) and enforce ``0700`` on it.
 
-    Raises on any filesystem error so callers fail closed instead of
-    silently exporting text into an unsafe location.
+    Uses ``os.mkdir`` with an explicit mode so the directory is never created
+    world-readable, even under a permissive umask.  A post-creation ``chmod``
+    guarantees the mode regardless of umask.  Symlink targets are rejected to
+    prevent directory-traversal attacks (F5).
     """
-    path.mkdir(parents=True, exist_ok=True)
+    # Reject symlink targets to prevent traversal.
+    if path.exists() and path.is_symlink():
+        raise RuntimeError(f"Refusing to use symlinked export directory: {path}")
+
+    path.mkdir(parents=True, exist_ok=True, mode=0o700)
+    # Ensure mode regardless of umask (idempotent, safe on existing dirs).
     os.chmod(path, stat.S_IRWXU)  # 0700 — owner only
     return path
 

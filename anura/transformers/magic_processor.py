@@ -50,7 +50,8 @@ class MagicProcessor:
 
     def register_transformer(self, transformer: ITransformer) -> None:
         """Register a new transformer in the chain."""
-        self._transformers.append(transformer)
+        with self._lock:
+            self._transformers.append(transformer)
         logger.debug(f"MagicProcessor: Registered transformer {type(transformer).__name__}")
 
     def process(self, ocr_data: OcrData, task_id: str | None = None) -> tuple[str, float, str]:
