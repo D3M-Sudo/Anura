@@ -3,8 +3,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-from dataclasses import dataclass
-from functools import cached_property
+from dataclasses import dataclass, field
 from typing import Any
 
 
@@ -37,13 +36,14 @@ class ExtractionResult:
     is_primary_url: bool = False
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class OcrResult:
     """Immutable encapsulation of recognized text and layout information."""
 
     words: tuple[OcrWord, ...]
     raw_text: str = ""
     avg_confidence: float = 0.0
+    _layout_stats_cache: dict[str, int] | None = field(default=None, init=False, repr=False, compare=False)
 
     @classmethod
     def from_tesseract_dict(cls, ocr_data: dict[str, list[Any]]) -> "OcrResult":
@@ -62,7 +62,10 @@ class OcrResult:
             if not text or not text.strip():
                 continue
 
-            conf = float(ocr_data["conf"][i])
+            try:
+                conf = float(ocr_data["conf"][i])
+            except (ValueError, TypeError):
+                conf = 0.0
             word = OcrWord(
                 text=text,
                 left=int(ocr_data["left"][i]),
@@ -118,12 +121,16 @@ class OcrResult:
 
         return min_x, min_y, max_x - min_x, max_y - min_y
 
-    @cached_property
+    @property
     def _layout_stats(self) -> dict[str, int]:
         """
         Calculate layout statistics in a single pass and cache the result.
         Reduces complexity from 3 * O(N) to 1 * O(N) for Magic/Structural analysis.
         """
+        cached = self._layout_stats_cache
+        if cached is not None:
+            return cached
+
         blocks: set[int] = set()
         pars: set[tuple[int, int]] = set()
         lines: set[tuple[int, int, int]] = set()
@@ -133,11 +140,15 @@ class OcrResult:
             pars.add((w.block_num, w.par_num))
             lines.add((w.block_num, w.par_num, w.line_num))
 
-        return {
+        stats = {
             "block_num": len(blocks),
             "par_num": len(pars),
             "line_num": len(lines),
         }
+        # Preserve cached-property semantics without relying on __dict__,
+        # which is unavailable on a frozen, slotted dataclass.
+        object.__setattr__(self, "_layout_stats_cache", stats)
+        return stats
 
     @property
     def num_lines(self) -> int:

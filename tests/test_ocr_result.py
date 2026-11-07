@@ -43,11 +43,19 @@ class TestOcrDataModel(unittest.TestCase):
 
     def test_slots_presence(self):
         result = OcrResult.from_tesseract_dict(self.raw_data)
-        # OcrResult: removed slots=True to allow __dict__ for @cached_property
-        self.assertTrue(hasattr(result, "__dict__"))
-        # OcrWord: still has slots=True (immutable per-word data)
+        # Both immutable OCR models use slots; OcrResult caches layout stats
+        # in an explicit private slot rather than relying on __dict__.
+        self.assertFalse(hasattr(result, "__dict__"))
         word = result.words[0]
         self.assertFalse(hasattr(word, "__dict__"))
+
+    def test_layout_stats_are_cached_with_slots(self):
+        result = OcrResult.from_tesseract_dict(self.raw_data)
+        first = result._layout_stats
+        second = result._layout_stats
+
+        self.assertIs(first, second)
+        self.assertEqual(first, {"block_num": 1, "par_num": 1, "line_num": 1})
 
     def test_geometric_helpers(self):
         result = OcrResult.from_tesseract_dict(self.raw_data)

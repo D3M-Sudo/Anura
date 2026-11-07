@@ -222,7 +222,7 @@ All sources below were consulted on 2026-11-06. Upstream status and model artifa
 - [Pix2Text #202 — request for PyTorch MFR weights](https://github.com/breezedeus/Pix2Text/issues/202) — reported ONNX decoder performance concern.
 - [pix2tex on PyPI](https://pypi.org/project/pix2tex/) and [installation documentation](https://pix2tex.readthedocs.io/en/latest/installation.html) — formula-only behavior, PyTorch requirement, automatic checkpoint download, package license.
 - [Typst guide for LaTeX users](https://typst.app/docs/guides/for-latex-users/) and [Typst math reference](https://typst.app/docs/reference/math/) — distinct syntax and math model.
-- [Anura dependency and Flatpak workflow](dependencies.md) — repository-local packaging, dependency, and license constraints.
+- [Anura dependency and Flatpak workflow](../reference/dependencies.md) — repository-local packaging, dependency, and license constraints.
 
 ---
 

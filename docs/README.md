@@ -43,26 +43,31 @@ Other normative references outside `docs/`:
 | Document | Purpose |
 | --- | --- |
 | [../flatpak/README.md](../flatpak/README.md) | Flatpak manifests: local (edit) vs release (generated) |
-| [../data/io.github.d3msudo.anura.metainfo.xml.in](../data/io.github.d3msudo.anura.metainfo.xml.in) | Flathub user-facing description and release notes |
+| [../data/io.github.d3m_sudo.anura.metainfo.xml.in](../data/io.github.d3m_sudo.anura.metainfo.xml.in) | Flathub user-facing description and release notes |
 
 ## Structure
 
 ```text
 docs/
 ├── README.md              ← this index
-├── reference/             ← current (normative) references
+├── reference/             ← current and operational references
 │   ├── history-v1.md
 │   ├── history-v2.md
 │   ├── dependencies.md
-│   └── tessdata-integrity.md
-├── planning/              ← planning records (including historical snapshots)
-│   └── flathub-readiness-m2.md
+│   ├── tessdata-integrity.md
+│   ├── flatpak-multiarch-release.md
+│   ├── appimage-multiarch-release.md
+│   ├── flathub-submission-checklist.md
+│   └── tagged-release-verification.md
+├── planning/              ← active and historical planning records
+│   ├── appimage-zsync-release-plan.md
+│   ├── math-ocr-evaluation.md
+│   └── flathub-readiness-m2.md (historical)
 └── audit/                 ← QA/security audit material
     ├── README.md          ← audit root guide (root = active audits)
-    └── legacy/            ← historical archive (append-only, see legacy/README.md)
-        └── reports/       Human-readable reports (bug hunts, diagnoses,
-                           superseded plans) + bugs-observed.json / bugs-summary.md
-                           (per-report index in reports/README.md)
+    └── legacy/            ← historical archive (append-only)
+        ├── README.md
+        └── reports/       Human-readable reports and per-report index
 ```
 
 ## Conventions

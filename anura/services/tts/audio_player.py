@@ -58,24 +58,27 @@ class AudioPlayer(GObject.GObject):
             volume: Volume level (0.0 to 1.0)
             generation_id: Generation ID from PipelineManager (included in signals)
         """
-        # Cleanup previous playback completely
-        self.cleanup()
+        # Acquire lock for the entire play+cleanup sequence to prevent races
+        # with concurrent stop()/cleanup() calls (F19).
+        with self._cleanup_lock:
+            # Cleanup previous playback completely
+            self._cleanup_resources()
 
-        self.player = Gst.ElementFactory.make("playbin3", "player")
-        if not self.player:
-            logger.error("Anura AudioPlayer: Failed to create GStreamer playbin.")
-            self.emit("error", generation_id, "Failed to create GStreamer playbin")
-            return
+            self.player = Gst.ElementFactory.make("playbin3", "player")
+            if not self.player:
+                logger.error("Anura AudioPlayer: Failed to create GStreamer playbin.")
+                self.emit("error", generation_id, "Failed to create GStreamer playbin")
+                return
 
-        self.player.set_property("uri", file_uri(filepath))
-        self.player.set_property("volume", max(0.0, min(1.0, volume)))
+            self.player.set_property("uri", file_uri(filepath))
+            self.player.set_property("volume", max(0.0, min(1.0, volume)))
 
-        # Setup bus before starting playback
-        self._bus = self.player.get_bus()
-        self._setup_bus_watch(generation_id)
+            # Setup bus before starting playback
+            self._bus = self.player.get_bus()
+            self._setup_bus_watch(generation_id)
 
-        logger.info("Anura AudioPlayer: Setting state to PLAYING")
-        self.player.set_state(Gst.State.PLAYING)
+            logger.info("Anura AudioPlayer: Setting state to PLAYING")
+            self.player.set_state(Gst.State.PLAYING)
 
     def _setup_bus_watch(self, generation_id: int) -> bool:
         """Setup GStreamer bus signal watch with generation_id captured in closure."""
@@ -142,9 +145,10 @@ class AudioPlayer(GObject.GObject):
 
     def stop(self) -> None:
         """Stop playback."""
-        if self.player:
-            logger.info("Anura AudioPlayer: Stopping playback")
-            self.cleanup()
+        with self._cleanup_lock:
+            if self.player:
+                logger.info("Anura AudioPlayer: Stopping playback")
+                self._cleanup_resources()
 
     def pause(self) -> None:
         """Pause playback."""

@@ -12,11 +12,10 @@ These priorities focus on consolidating the current application and its distribu
 
 Improve and verify Anura's integration with Linux desktop environments.
 
-- Complete the remaining desktop menu and category verification.
 - Validate filesystem access restrictions and XDG portal permissions in representative desktop environments.
 - Investigate and verify runtime behaviour where CI cannot fully reproduce a real desktop session.
 
-Related issues: #620, #623, #490.
+Related issue: #490.
 
 ### 2. Flatpak distribution
 
@@ -76,6 +75,7 @@ Related issue: #570.
 
 ## Recently completed
 
+- Completed the desktop menu/category review and removed the duplicate main-category declaration (#620).
 - Migrated tessdata integrity verification to SHA-256 and documented the associated manifest maintenance workflow (#577, #634).
 - Established native multi-architecture Flatpak build and artifact-validation coverage (#494; distribution follow-ups remain tracked separately).
 - Completed static verification of the Flatpak `GI_TYPELIB_PATH` configuration for the GNOME 51 runtime: manifest entries, documentation and hygiene tests are consistent; `build-aux/flatpak_runtime_smoke.py` covers all required namespaces and native bindings on both x86_64 and aarch64 (#623). Runtime verification inside the sandbox follows the manual verification plan in the issue.

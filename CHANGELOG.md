@@ -6,14 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-### Documentation
-- Docs/OCR: distinguish the Tesseract engine version from upstream traineddata refs and record the model training provenance and compatibility findings (#642)
-- Docs/Flatpak: reflect completed static verification of `GI_TYPELIB_PATH` for the GNOME 51 runtime; verification plan and closure recorded for #623
-
 ### Fixed
+- AudioPlayer: extend `_cleanup_lock` scope to cover `play()` and `stop()` to prevent races with concurrent cleanup (F19)
+- MagicProcessor: protect `register_transformer()` with `_lock` for thread safety (F21)
+- OcrResult: add `slots=True` and retain cached layout statistics through an explicit private slot (F22)
+- OcrResult.from_tesseract_dict: wrap `float()` conversion in try/except for robustness (F23)
+- ExportFiles: reject symlinked export directories and enforce mode on creation (F5)
 - AppImage: explicitly stage the architecture-matched `liblzo2.so.2` and `libEGL.so.1` runtime sonames into the AppDir after dependency resolution; include `libegl1` and verify both architectures through the clean-host ELF audit (#555)
-
-### Fixed
 - CI/AppImage: scope the clean-host ELF audit to Anura runtime payloads and explicit plugin paths, excluding only classified systemd/cryptsetup helper binaries and unused GL/visualisation plugins; keep GLib proxy backend resolution in the audit (#555)
 - CI/AppImage: remove nested single quotes from the Docker smoke-test script so the clean-host ELF audit parses correctly on x86_64 and aarch64 (#555)
 - CI/AppImage: fix shell quoting in the clean-host ELF dependency audit so the x86_64 and aarch64 smoke tests execute the audit instead of failing during Bash parsing (#555)
@@ -25,6 +24,48 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - CI/AppImage: generate each `.zsync` control file from the final repackaged AppImage with `zsyncmake`; the intermediate appimage-builder image's control file is discarded (#555)
 - CI/AppImage: use appimage-builder only to stage the dependency-complete AppDir, then replace its AppRun2 launcher and repackage with the pinned appimagetool runtime to avoid the known glibc compatibility-runtime startup failure (#555)
 - CI/AppImage: use the multi-architecture Ubuntu snapshot archive for amd64 and arm64, and compare Ubuntu package versions with dpkg semantics to avoid appimage-builder's PEP 440 parsing failure (#555)
+
+- CLI: resolve relative `--file` paths against the requesting client's working directory, rather than the application's process directory (#595)
+- Screenshots: remove temporary capture files on cancellation and error paths, not only after successful processing (#596)
+- CLI: report invalid image input through the normal error path without exposing an unnecessary traceback (#599)
+- Sharing: provide actionable feedback when opening a share target fails (#600)
+- Translations: preserve an existing valid POT catalogue when message extraction fails, instead of replacing it with incomplete output (#602)
+- Window: calculate initial dimensions against the available monitor work area so the application opens at an appropriate size (#603)
+- Downloads: restore a consistent download state after an unexpected worker failure, allowing the operation to be retried (#604)
+- Languages: validate language identifiers strictly before accepting them, rejecting malformed codes (#606)
+
+- Flatpak: use the fallback X11 socket alongside Wayland and preserve the App ID in temporary CI manifest filenames
+- Flatpak: update Nanobind and Certifi sources, keep GNOME 51 in the release manifest, and validate/build a generated release-style manifest in CI (#479, #556, #491, #484)
+- Share: Reddit sends extracted text in `selftext` only; LinkedIn and Discord are removed from text sharing because their URL endpoints do not prefill the extracted text (#579)
+- OCR: `fast`, `standard` and `best` now select `tessdata_fast`, legacy `tessdata` and `tessdata_best` respectively; cache discovery follows the same profile directories (#571)
+- Clipboard: decoding an image copied as a file URI no longer blocks the GTK main thread. The PIL decode and PNG re-encode run in the clipboard lane of the task manager, and only the cheap `Gdk.Texture` creation happens on the main loop; a newer paste supersedes an in-flight decode (#581)
+- OCR/tessdata: startup cleanup no longer deletes shared top-level models or directories owned by a live process. Task pool directories carry an `owner.pid` lease written when the pool is created, and cleanup removes a directory only when its owner is dead or, for legacy directories without a lease, when it is older than a day. The previous rules removed every model that did not match the active language and every directory older than an hour, which could pull the models out from under a concurrent OCR task or a second instance (#521)
+- OCR: a stale `BrokenProcessPool` callback can no longer tear down a healthy replacement pool. The teardown now runs only when the executor that failed is still the current one, instead of resetting whichever pool happens to be installed (#526)
+- TTS/shutdown: a generation blocked in gTTS no longer delays application exit. TTS now runs on a dedicated daemon thread (`execute_daemon`, same lane and versioning semantics) instead of the shared `ThreadPoolExecutor`, whose workers CPython joins at interpreter exit; `shutdown()` also cancels every lane and no longer waits for the running task (#506)
+- TTS: the generation watchdog is now proportional to the text (30 s base + 1.5 s per 100-character gTTS fragment, capped at 5 min) instead of a fixed 35 s, and on expiry the TTS lane is cancelled so a late result is discarded instead of arriving after the UI already gave up (#508)
+- Tasks: `AtomicTaskManager` now keeps one slot per task kind (`ocr`, `tts`, `cleanup`) instead of a single global one. A screenshot, an OCR run or the post-OCR file cleanup no longer cancels an in-flight TTS generation (and vice versa); only a newer task in the same lane supersedes the previous one, and a superseded task reports through the new `on_superseded` hook — used by the TTS controller to drop its pending state — instead of having its result discarded silently (#507)
+- TTS: opening Preferences no longer freezes the window while the gTTS language catalog is fetched. On a cold cache the combo is filled from the cached catalog only and the catalog is refreshed on a worker thread, applied via `GLib.idle_add`; programmatic repopulation does not write the setting back, and a failed fetch is no longer cached permanently so a later retry can succeed (#532)
+- Downloads: `shutdown()` now sets a manager-owned signal and closes the active HTTP response, so an in-flight model download stops instead of streaming until the request and retry timeouts expire. New download requests are refused once shutdown has begun, so the process can exit while the window is closing (#531)
+- Preferences: language-download signals now schedule their refresh through a tracked idle source. The source id is remembered and removed in `do_destroy()`, and the wrapper re-checks a disposed flag, so a download that finishes while the dialog is closing can no longer refresh destroyed child pages (#539)
+- Drag and drop: the cancellable is now carried through the async chain and cleared only by the callback that owns it. A delayed callback from a cancelled drop could clear the newest drop's cancellable, leaving the active read uncancellable by the next drop or by `do_destroy()` (#538)
+- Clipboard: the texture read clears its cancellable only when it still owns it. When texture decoding failed and the URI-list fallback started, the outer `finally` erased the *fallback's* cancellable, so the 10-second watchdog treated its timeout as stale and `cancel_pending_operations()` could no longer cancel the pending read (#525)
+- History: a failed clear no longer empties the view. The in-memory cache is replaced only after the empty state is persisted and is restored when the write fails, and the failure is reported with a toast. Previously the list looked cleared while `history.json` still held every entry, which then "came back" after a restart (#540)
+- History: changing `history-limit` in Preferences now applies immediately. The window reacts to `changed::history-limit` and updates the live service, which trims and persists when the limit shrinks; previously the value was read only at startup (#510)
+- Screenshot (X11/scrot fallback): the file-ready wait no longer runs inside the async process callback. The old `wait_for_file()` loop slept on the GTK main thread for up to ~5 s after every capture; it is now a `GLib.timeout_add` poll with the same retry policy, and the unused blocking method was removed (#523)
+- OCR: `pytesseract.image_to_data()` now runs with a 120 s budget (`OCR_TIMEOUT_SECONDS`) in both the isolated worker and the synchronous path. pytesseract kills the Tesseract child when the budget expires, so a pathological image can no longer keep the single OCR worker busy indefinitely (and cancellation, which is only checked before/after the call, cannot be held hostage). A timeout is reported as an OCR error instead of a silent empty result (#533)
+- Downloads: the streamed HTTP response is now closed on every exit path of a model download (oversized `Content-Length`, size mismatch with the pinned model, cancellation, oversized stream, I/O error and success). An unread stream kept its connection and socket alive, and repeated failures could starve the session pool (#520)
+- URL transformer: TLD detection now parses the candidate instead of requiring `/` right after the TLD, so URLs followed by a query string, a fragment or an explicit port (`https://example.com?next=/x`, `…#section`, `…:8443/path`) are no longer discarded; one-character, numeric and non-ASCII TLDs, host-less URLs and malformed ports are still rejected (#530)
+- TTS: playback builds a real `file://` URI instead of concatenating the prefix with the path, so a cache directory containing spaces, `#`, `?`, `%` or non-ASCII characters no longer makes a successful generation fail to play (#528)
+- TTS: a stale or unsupported speech language no longer breaks the failure path. The gTTS constructor runs inside the guard, so its `ValueError` (and `gTTSError` from the API) map to the normal empty-path result the pipeline already handles, and any partial MP3 is removed (#547)
+- History: the clear-confirmation callback now re-checks the history service before using it, so a window teardown between opening the dialog and the user response can no longer raise `AttributeError` (#514)
+- UI: `ShortcutsOverlay.shortcuts_data` is typed with `TypedDict` entries, so category and shortcut lookups are checked instead of being inferred as `Collection[str]` (#515)
+- Types: the headless `GObject` fallback used when PyGObject is unavailable is now marked as an intentional redefinition, keeping `mypy` clean in CI (#516)
+- Flatpak: automated certifi updates no longer break the build — the FEDC update now rewrites the certifi filename referenced by the module's `build-commands` (the 2026.10.18 bump made `pip3 install` look for the previous 2026.7.22 tarball). Covered by `tests/test_fedc_certifi.py`
+- Clipboard: `hand_off_to_manager()` and `wait_until_replaced()` now refuse to iterate the default GLib main context when it is already running (an active GTK loop, or another thread owns it), logging a warning and returning `False` instead of re-entering the loop (AUDIT-001, #469)
+
+### Documentation
+- Docs/OCR: distinguish the Tesseract engine version from upstream traineddata refs and record the model training provenance and compatibility findings (#642)
+- Docs/Flatpak: reflect completed static verification of `GI_TYPELIB_PATH` for the GNOME 51 runtime; verification plan and closure recorded for #623
 
 ### Added
 - Release/AppImage: add native x86_64 and aarch64 self-contained AppImage builds, embedded GitHub Releases zsync metadata, paired update files, strict release-asset validation and SHA-256 checksums (#555)
@@ -80,45 +121,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Removed
 - Development tooling: dropped the `safety` dev dependency (and its entry in the Dependabot `dev-deps` group). It was added by the one-off June 2026 audit (`ead78f1`) to produce `docs/audit/safety_scan.json`, which is no longer tracked; no workflow, test or build script invokes it, and dependency scanning is covered by Dependabot and CodeQL. The development graph drops from 72 to 39 packages (also losing `cryptography`, `httpx`, `h11`, `pydantic` and `nltk`, which came in through it); runtime dependencies and the Flatpak manifests are untouched. `bandit` is kept
 
-### Fixed
-- CLI: resolve relative `--file` paths against the requesting client's working directory, rather than the application's process directory (#595)
-- Screenshots: remove temporary capture files on cancellation and error paths, not only after successful processing (#596)
-- CLI: report invalid image input through the normal error path without exposing an unnecessary traceback (#599)
-- Sharing: provide actionable feedback when opening a share target fails (#600)
-- Translations: preserve an existing valid POT catalogue when message extraction fails, instead of replacing it with incomplete output (#602)
-- Window: calculate initial dimensions against the available monitor work area so the application opens at an appropriate size (#603)
-- Downloads: restore a consistent download state after an unexpected worker failure, allowing the operation to be retried (#604)
-- Languages: validate language identifiers strictly before accepting them, rejecting malformed codes (#606)
-
-- Flatpak: use the fallback X11 socket alongside Wayland and preserve the App ID in temporary CI manifest filenames
-- Flatpak: update Nanobind and Certifi sources, keep GNOME 51 in the release manifest, and validate/build a generated release-style manifest in CI (#479, #556, #491, #484)
-- Share: Reddit sends extracted text in `selftext` only; LinkedIn and Discord are removed from text sharing because their URL endpoints do not prefill the extracted text (#579)
-- OCR: `fast`, `standard` and `best` now select `tessdata_fast`, legacy `tessdata` and `tessdata_best` respectively; cache discovery follows the same profile directories (#571)
-- Clipboard: decoding an image copied as a file URI no longer blocks the GTK main thread. The PIL decode and PNG re-encode run in the clipboard lane of the task manager, and only the cheap `Gdk.Texture` creation happens on the main loop; a newer paste supersedes an in-flight decode (#581)
-- OCR/tessdata: startup cleanup no longer deletes shared top-level models or directories owned by a live process. Task pool directories carry an `owner.pid` lease written when the pool is created, and cleanup removes a directory only when its owner is dead or, for legacy directories without a lease, when it is older than a day. The previous rules removed every model that did not match the active language and every directory older than an hour, which could pull the models out from under a concurrent OCR task or a second instance (#521)
-- OCR: a stale `BrokenProcessPool` callback can no longer tear down a healthy replacement pool. The teardown now runs only when the executor that failed is still the current one, instead of resetting whichever pool happens to be installed (#526)
-- TTS/shutdown: a generation blocked in gTTS no longer delays application exit. TTS now runs on a dedicated daemon thread (`execute_daemon`, same lane and versioning semantics) instead of the shared `ThreadPoolExecutor`, whose workers CPython joins at interpreter exit; `shutdown()` also cancels every lane and no longer waits for the running task (#506)
-- TTS: the generation watchdog is now proportional to the text (30 s base + 1.5 s per 100-character gTTS fragment, capped at 5 min) instead of a fixed 35 s, and on expiry the TTS lane is cancelled so a late result is discarded instead of arriving after the UI already gave up (#508)
-- Tasks: `AtomicTaskManager` now keeps one slot per task kind (`ocr`, `tts`, `cleanup`) instead of a single global one. A screenshot, an OCR run or the post-OCR file cleanup no longer cancels an in-flight TTS generation (and vice versa); only a newer task in the same lane supersedes the previous one, and a superseded task reports through the new `on_superseded` hook — used by the TTS controller to drop its pending state — instead of having its result discarded silently (#507)
-- TTS: opening Preferences no longer freezes the window while the gTTS language catalog is fetched. On a cold cache the combo is filled from the cached catalog only and the catalog is refreshed on a worker thread, applied via `GLib.idle_add`; programmatic repopulation does not write the setting back, and a failed fetch is no longer cached permanently so a later retry can succeed (#532)
-- Downloads: `shutdown()` now sets a manager-owned signal and closes the active HTTP response, so an in-flight model download stops instead of streaming until the request and retry timeouts expire. New download requests are refused once shutdown has begun, so the process can exit while the window is closing (#531)
-- Preferences: language-download signals now schedule their refresh through a tracked idle source. The source id is remembered and removed in `do_destroy()`, and the wrapper re-checks a disposed flag, so a download that finishes while the dialog is closing can no longer refresh destroyed child pages (#539)
-- Drag and drop: the cancellable is now carried through the async chain and cleared only by the callback that owns it. A delayed callback from a cancelled drop could clear the newest drop's cancellable, leaving the active read uncancellable by the next drop or by `do_destroy()` (#538)
-- Clipboard: the texture read clears its cancellable only when it still owns it. When texture decoding failed and the URI-list fallback started, the outer `finally` erased the *fallback's* cancellable, so the 10-second watchdog treated its timeout as stale and `cancel_pending_operations()` could no longer cancel the pending read (#525)
-- History: a failed clear no longer empties the view. The in-memory cache is replaced only after the empty state is persisted and is restored when the write fails, and the failure is reported with a toast. Previously the list looked cleared while `history.json` still held every entry, which then "came back" after a restart (#540)
-- History: changing `history-limit` in Preferences now applies immediately. The window reacts to `changed::history-limit` and updates the live service, which trims and persists when the limit shrinks; previously the value was read only at startup (#510)
-- Screenshot (X11/scrot fallback): the file-ready wait no longer runs inside the async process callback. The old `wait_for_file()` loop slept on the GTK main thread for up to ~5 s after every capture; it is now a `GLib.timeout_add` poll with the same retry policy, and the unused blocking method was removed (#523)
-- OCR: `pytesseract.image_to_data()` now runs with a 120 s budget (`OCR_TIMEOUT_SECONDS`) in both the isolated worker and the synchronous path. pytesseract kills the Tesseract child when the budget expires, so a pathological image can no longer keep the single OCR worker busy indefinitely (and cancellation, which is only checked before/after the call, cannot be held hostage). A timeout is reported as an OCR error instead of a silent empty result (#533)
-- Downloads: the streamed HTTP response is now closed on every exit path of a model download (oversized `Content-Length`, size mismatch with the pinned model, cancellation, oversized stream, I/O error and success). An unread stream kept its connection and socket alive, and repeated failures could starve the session pool (#520)
-- URL transformer: TLD detection now parses the candidate instead of requiring `/` right after the TLD, so URLs followed by a query string, a fragment or an explicit port (`https://example.com?next=/x`, `…#section`, `…:8443/path`) are no longer discarded; one-character, numeric and non-ASCII TLDs, host-less URLs and malformed ports are still rejected (#530)
-- TTS: playback builds a real `file://` URI instead of concatenating the prefix with the path, so a cache directory containing spaces, `#`, `?`, `%` or non-ASCII characters no longer makes a successful generation fail to play (#528)
-- TTS: a stale or unsupported speech language no longer breaks the failure path. The gTTS constructor runs inside the guard, so its `ValueError` (and `gTTSError` from the API) map to the normal empty-path result the pipeline already handles, and any partial MP3 is removed (#547)
-- History: the clear-confirmation callback now re-checks the history service before using it, so a window teardown between opening the dialog and the user response can no longer raise `AttributeError` (#514)
-- UI: `ShortcutsOverlay.shortcuts_data` is typed with `TypedDict` entries, so category and shortcut lookups are checked instead of being inferred as `Collection[str]` (#515)
-- Types: the headless `GObject` fallback used when PyGObject is unavailable is now marked as an intentional redefinition, keeping `mypy` clean in CI (#516)
-- Flatpak: automated certifi updates no longer break the build — the FEDC update now rewrites the certifi filename referenced by the module's `build-commands` (the 2026.10.18 bump made `pip3 install` look for the previous 2026.7.22 tarball). Covered by `tests/test_fedc_certifi.py`
-- Clipboard: `hand_off_to_manager()` and `wait_until_replaced()` now refuse to iterate the default GLib main context when it is already running (an active GTK loop, or another thread owns it), logging a warning and returning `False` instead of re-entering the loop (AUDIT-001, #469)
-
 ### Security
 - Sharing: restrict generated share links to explicitly allowed URI schemes before handing them to an external handler (#594)
 - Sharing/URLs: normalize legacy IPv4 address representations before processing URLs, preventing alternate numeric forms from bypassing address checks (#598)
@@ -135,7 +137,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Dependabot #49, #50, #51: `urllib3` 2.7.0 → 2.8.0, fixing the unbounded chunk-size line buffered by `HTTPResponse.stream()`/`read_chunked()`, the HTTPS proxy TLS configuration that could be ignored or overridden, and the infinite loop on chunked deflate streaming. The Flatpak `python3-urllib3` module was resynced by `build-aux/sync_dependencies.py` (wheel 2.8.0 + sha256)
 - Dependabot #47, #48 (`anyio`): no longer in the dependency graph. `anyio` was only reachable through `httpx`, which was required exclusively by the `safety` dev tool removed above; `uv.lock` now has no `anyio` entry, so the IDNA 2003 host-name encoding in `TLSStream` (TLS certificate spoofing) and the process-pool workers blocked on undrained stderr no longer apply
 - Dependabot #32 (`nltk`): no longer in the dependency graph. The direct dev dependency was unused (never imported by the application, the tests or the build scripts), and dropping `safety` removes the only transitive path (`safety 3.8.1` requires `nltk>=3.9`), so NLTK's unfixed model-artifact path traversal cannot be reached from this project at all. NLTK was never shipped in the Flatpak
-
 ## [0.2.1] - 2026-10-20
 
 ### Added
