@@ -57,9 +57,7 @@ class PreferencesEditorPage(Adw.PreferencesPage, SignalManagerMixin):
         idx = mapping.get(mode, 0)
         self.editor_wrap_mode_combo.set_selected(idx)
 
-        self.connect_tracked(
-            self.editor_wrap_mode_combo, "notify::selected", self._on_editor_wrap_mode_changed
-        )
+        self.connect_tracked(self.editor_wrap_mode_combo, "notify::selected", self._on_editor_wrap_mode_changed)
 
     def _on_editor_wrap_mode_changed(self, combo: Adw.ComboRow, _param: object) -> None:
         """Persist the selected wrap mode to settings."""
