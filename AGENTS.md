@@ -258,7 +258,7 @@ Instead, it is owned exclusively by FEDC (flatpak-external-data-checker) via
 This means:
 - `uv.lock` certifi version may differ from Flatpak manifest certifi version
 - `sync_dependencies.py` intentionally excludes certifi from its mapping
-- FEDC updates certifi in `io.github.d3msudo.anura.local.json` only — the
+- FEDC updates certifi in `io.github.d3m_sudo.anura.local.json` only — the
   release manifest inherits it automatically the next time `release.sh` runs
 - This divergence is intentional and not a drift issue
 
