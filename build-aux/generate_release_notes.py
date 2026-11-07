@@ -80,13 +80,10 @@ def parse_changelog(changelog_path: Path) -> dict:
     return releases
 
 
-
 def release_date(changelog_path: Path, version: str) -> str:
     """Return the canonical YYYY-MM-DD date for a versioned changelog section."""
     content = changelog_path.read_text(encoding="utf-8")
-    pattern = (
-        r"^## \[" + re.escape(version) + r"\] - (?P<date>\d{4}-\d{2}-\d{2})\n"
-    )
+    pattern = r"^## \[" + re.escape(version) + r"\] - (?P<date>\d{4}-\d{2}-\d{2})\n"
     match = re.search(pattern, content, re.MULTILINE)
     if match is None:
         sys.exit(f"CHANGELOG.md has no dated [{version}] section")
