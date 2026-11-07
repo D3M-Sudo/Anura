@@ -12,15 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - OcrResult: add `slots=True` for consistency with other dataclasses (F22)
 - OcrResult.from_tesseract_dict: wrap `float()` conversion in try/except for robustness (F23)
 - ExportFiles: reject symlinked export directories and enforce mode on creation (F5)
-
-### Documentation
-- Docs/OCR: distinguish the Tesseract engine version from upstream traineddata refs and record the model training provenance and compatibility findings (#642)
-- Docs/Flatpak: reflect completed static verification of `GI_TYPELIB_PATH` for the GNOME 51 runtime; verification plan and closure recorded for #623
-
-### Fixed
 - AppImage: explicitly stage the architecture-matched `liblzo2.so.2` and `libEGL.so.1` runtime sonames into the AppDir after dependency resolution; include `libegl1` and verify both architectures through the clean-host ELF audit (#555)
-
-### Fixed
 - CI/AppImage: scope the clean-host ELF audit to Anura runtime payloads and explicit plugin paths, excluding only classified systemd/cryptsetup helper binaries and unused GL/visualisation plugins; keep GLib proxy backend resolution in the audit (#555)
 - CI/AppImage: remove nested single quotes from the Docker smoke-test script so the clean-host ELF audit parses correctly on x86_64 and aarch64 (#555)
 - CI/AppImage: fix shell quoting in the clean-host ELF dependency audit so the x86_64 and aarch64 smoke tests execute the audit instead of failing during Bash parsing (#555)
@@ -28,6 +20,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - AppImage: bundle `libxcb-render0`, required by GTK's dynamically loaded X11 backend on clean hosts (#555)
 - AppImage: explicitly bundle `libwayland-client0`, required by GTK's dynamically loaded Wayland backend on clean hosts (#555)
 - CI/AppImage: inspect embedded update metadata without `APPIMAGE_EXTRACT_AND_RUN`, which otherwise dispatches to AppRun and starts the payload (#555)
+
+### Documentation
+- Docs/OCR: distinguish the Tesseract engine version from upstream traineddata refs and record the model training provenance and compatibility findings (#642)
+- Docs/Flatpak: reflect completed static verification of `GI_TYPELIB_PATH` for the GNOME 51 runtime; verification plan and closure recorded for #623
 - CI/AppImage: explicitly re-embed architecture-specific GitHub Releases update information when repackaging the staged AppDir, and verify it through the runtime inspection interface (#555)
 - CI/AppImage: generate each `.zsync` control file from the final repackaged AppImage with `zsyncmake`; the intermediate appimage-builder image's control file is discarded (#555)
 - CI/AppImage: use appimage-builder only to stage the dependency-complete AppDir, then replace its AppRun2 launcher and repackage with the pinned appimagetool runtime to avoid the known glibc compatibility-runtime startup failure (#555)
