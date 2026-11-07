@@ -192,9 +192,8 @@ def test_voice_catalog_worker_failure_resets_loading_state(monkeypatch, headless
     monkeypatch.setattr(mod.threading, "Thread", InlineThread)
     monkeypatch.setattr(mod.GLib, "idle_add", lambda callback, *args: callback(*args))
 
-    page, _fake_settings = _make_voice_page(monkeypatch, tts_raises=AttributeError("initial service unavailable"))
-    # Reconfigure the getter after construction so the worker can exercise its
-    # failure path without triggering a synchronous catalog lookup.
-    page._refresh_tts_catalog_async()
+    fake_settings = FakeSettings()
+    monkeypatch.setattr(mod, "settings", fake_settings)
+    page = mod.PreferencesVoicePage()
 
     assert page._tts_catalog_loading is False
