@@ -120,11 +120,7 @@ jobs:
             weston xwayland
 
       - name: Install Python dependencies (with system site-packages)
-        # Bug fixed: plain `uv sync --dev` creates an isolated venv that
-        # cannot see python3-gi / libadwaita installed by apt above.
-        # `uv venv --system-site-packages` creates a venv that inherits the
-        # system's site-packages first, then `uv sync --dev` layers the dev
-        # dependencies on top.
+        # The venv must inherit apt-installed PyGObject and Libadwaita modules.
         run: |
           pip install uv
           uv venv --system-site-packages .venv
@@ -140,9 +136,7 @@ jobs:
           echo "Compiled $(find data/ui -maxdepth 1 -name '*.ui' | wc -l) .ui file(s)"
 
       - name: Compile GResources
-        # Bug fixed: previously compiled to `anura.gresource` in the repo
-        # root, but _load_gresource_bundle() resolves the relative fallback
-        # path as `data/io.github.d3m_sudo.anura.gresource`.
+        # Write the bundle to the path resolved by the application's resource loader.
         run: |
           glib-compile-resources \
             data/io.github.d3m_sudo.anura.gresource.xml \
@@ -157,16 +151,7 @@ jobs:
           glib-compile-schemas builddir/data/
 
       - name: Start Wayland compositor (headless)
-        # Bug fixed (round 2): the previous version used `trap cleanup EXIT`
-        # inside this step's run script.  In GitHub Actions, each `run:` block
-        # is executed in its own bash process.  When that process exits at the
-        # end of the step, the EXIT trap fires and kills weston — before the
-        # test step ever starts.
-        #
-        # Fix: launch weston with `nohup` so it is detached from this shell's
-        # process group and immune to HUP/TERM on session exit.  The PID is
-        # written to /tmp/weston.pid so the test step can clean up after itself.
-        # No trap is set here; cleanup belongs in the step that uses weston.
+        # Keep Weston running across workflow steps; the GTK test step owns cleanup.
         run: |
           mkdir -p "$XDG_RUNTIME_DIR"
           chmod 700 "$XDG_RUNTIME_DIR"
@@ -218,23 +203,9 @@ jobs:
           }
           trap cleanup EXIT
 
-          # Root cause of the previous ~115-second hang (now fixed):
-          #
-          # Adw.Application.register() in test_audit_ui_widgets.py registers
-          # the app on D-Bus and starts internal GLib/GDBus threads.  These
-          # threads are non-daemon, so Python cannot exit while they are alive.
-          # pytest_sessionfinish never called _adw_app.quit(), so Python blocked
-          # after printing "324 passed" until this shell's `timeout 120s` killed
-          # it with SIGTERM (exit code 124), causing the job to fail.
-          #
-          # Fix applied in test_audit_ui_widgets.py:
-          #   atexit.register(_adw_app.quit)
-          # This stops the GLib main context when Python begins shutdown,
-          # releasing the internal threads and allowing the process to exit in <1 s.
-          #
-          # The `timeout 120s ... || exit 1` wrapper is therefore removed:
-          # it was treating a successful-but-hanging pytest run as a failure.
-          # The job-level timeout-minutes: 15 is the proper safety net.
+          # GTK tests register Adw.Application instances on D-Bus. Their shutdown
+          # hooks must quit the applications so GLib/GDBus threads do not keep
+          # the pytest process alive after the test session completes.
           uv run pytest tests/ -m gtk -v --timeout=30 \
             --override-ini "addopts=-v --tb=short"
 
@@ -442,8 +413,7 @@ jobs:
           echo "Using prefix: $APP_DIR/files"
 
       - name: Validate desktop file and AppStream metadata
-        # Mandatory since #483: a broken launcher or an invalid metainfo blocks
-        # the Flathub submission, and the SDK ships both validators.
+        # Validate the installed launcher and AppStream metadata before publication.
         run: |
           PREFIX="${{ steps.prefix.outputs.prefix }}"
           desktop-file-validate "$PREFIX/share/applications/io.github.d3m_sudo.anura.desktop"

@@ -261,9 +261,8 @@ def test_window_tracks_portal_banner_handler_id() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Security: AnuraWindow.process_file() must use os.path.getsize() which
-# follows symlinks, instead of os.lstat() which doesn't, to correctly
-# enforce the 50MB file size limit.
+# Security: process_file() delegates image validation and resource limits to
+# validate_image_resource(), including checks on the resolved file target.
 # ---------------------------------------------------------------------------
 
 

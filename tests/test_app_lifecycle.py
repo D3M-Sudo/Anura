@@ -17,7 +17,7 @@ from anura.main import AnuraApplication
 
 class TestAppLifecycleEnterprise:
     """
-    Enterprise-grade unit tests for AnuraApplication lifecycle and handlers.
+    Application lifecycle tests for AnuraApplication lifecycle and handlers.
     Safe for VM/headless.
     """
 

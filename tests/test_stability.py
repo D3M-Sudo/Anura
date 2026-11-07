@@ -72,10 +72,8 @@ def test_rescale_allowed_on_high_memory():
     mock_mem.percent = 50.0  # 50% free
 
     with patch("psutil.virtual_memory", return_value=mock_mem):
-        # We don't want it to actually resize if it doesn't need to (size < 1000 check)
-        # but here we just want to see it didn't trigger the Guard.
-        # RescaleFilter resizes if width or height < 1000.
-        # Since 5000 > 1000, it should return the original image if NO guard is triggered.
+        # Both dimensions exceed the resize threshold, so this isolates the
+        # memory guard: with sufficient memory, the original image is retained.
         result = rescale_filter.apply(large_img)
         assert result is large_img
 

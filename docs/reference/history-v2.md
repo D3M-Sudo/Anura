@@ -63,7 +63,7 @@ versioning remain out of scope.
 - On success the button shows `object-select-symbolic` and the tooltip/accessible
   label change for 2 s, then return to normal. A failed copy shows no success
   feedback. `emblem-ok-symbolic` is deliberately not used: it does not exist in the
-  `org.gnome.Platform//50` icon theme.
+  `org.gnome.Platform//51` icon theme.
 - The text reaches other applications as plain text (`text/plain`) through
   `ClipboardService`.
 

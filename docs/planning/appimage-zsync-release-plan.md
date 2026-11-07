@@ -1,9 +1,11 @@
 # AppImage multi-architecture and zsync release plan
 
-**Status:** implementation in PR #643; native x86_64/aarch64 AppDir builds, AppImage Type 2 repackaging and GitHub Releases `gh-releases-zsync` metadata are implemented in CI; runtime and real update acceptance remain pending  
+**Status:** implementation merged via PR [#643](https://github.com/D3M-Sudo/Anura/pull/643); native x86_64/aarch64 AppImage builds, Type 2 repackaging, GitHub Releases `gh-releases-zsync` metadata, companion `.zsync` generation and release-artifact validation are implemented in CI. First public release, real differential-update and representative desktop-integration acceptance remain pending.  
 **Scope:** issue [#555](https://github.com/D3M-Sudo/Anura/issues/555)  
 **Baseline:** `feature`  
 **Relationship to Flatpak:** complementary distribution path; does not replace or duplicate issue #494
+
+> **Document status:** This file preserves the original feasibility and implementation plan. Sections describing proposed tool selection, packaging gates and release integration are historical design context where they conflict with the merged implementation. The current operational contract is [AppImage multi-architecture builds and updates](../reference/appimage-multiarch-release.md). Keep this plan active only for the post-implementation acceptance work tracked in #555.
 
 ## 1. Objective
 
@@ -15,9 +17,9 @@ This document records the original plan and decision gates. The current implemen
 
 ## 2. Existing release boundary
 
-The current GitHub Release workflow builds architecture-specific Flatpak bundles on native runners, validates the exact artifact set, generates `SHA256SUMS`, and publishes the bundles only for a `v*` tag. That path is documented in [Flatpak multi-architecture builds and releases](../reference/flatpak-multiarch-release.md).
+The release workflow now has separate native Flatpak and AppImage build paths. Flatpak bundles and AppImage/zsync pairs are validated independently; tag publication is gated on the required architecture builds and artifact checks. The normative details are maintained in [Flatpak multi-architecture builds and releases](../reference/flatpak-multiarch-release.md) and [AppImage multi-architecture builds and updates](../reference/appimage-multiarch-release.md).
 
-The AppImage work must remain a separate packaging path with its own AppDir, architecture-specific outputs, validation and update metadata. It must not weaken the Flatpak release gate or reuse a binary artifact across architectures.
+The two formats remain separate packaging paths with independent architecture-specific outputs and validation. Neither path may reuse a binary artifact across architectures.
 
 The following existing work remains independently owned:
 
@@ -129,7 +131,7 @@ For every architecture claimed as supported, retain CI evidence for:
 
 The release-level test must inspect the actual published GitHub Release assets, not only workflow artifacts. Record the AppImage and zsync filenames, architecture, sizes, checksums and update-test result.
 
-## 9. Proposed sequence and decision gates
+## 9. Original proposed sequence and decision gates (superseded by implementation)
 
 1. **Runtime inventory:** document bundled versus host-provided dependencies and identify unresolved packaging constraints.
 2. **Toolchain spike:** build a minimal Anura AppDir on x86_64; do not yet publish it.
@@ -151,8 +153,8 @@ At each gate, report blockers and measured results before proceeding. Decisions 
 - Changing application runtime dependencies as part of this planning document.
 
 
-## 11. Implementation status (PR #643)
+## 11. Implementation status (PR #643, merged)
 
 The current branch implements native builds on `ubuntu-24.04` and `ubuntu-24.04-arm`, stages the dependency-complete AppDir with the pinned appimage-builder recipe, replaces the generated AppRun2 with the project's shell entrypoint, and repackages the extracted filesystem using the pinned AppImageKit appimagetool and architecture-specific type2-runtime. The intermediate AppRun2 launcher is not shipped. Each build generates the `.zsync` control file from the final repackaged AppImage using `zsyncmake`, with a relative URL to the sibling release asset and exact-file reconstruction enabled. Each build checks the resulting ELF architecture, custom AppRun, embedded GitHub Releases update metadata and matching zsync file; CI then runs a headless smoke test in a clean Ubuntu 24.04 container.
 
-This implementation remains subject to CI validation and clean-host runtime review. The AppImage uses the host glibc rather than AppRun2's compatibility layer, so Ubuntu 24.04 is the current build baseline and the minimum supported glibc must be documented from the actual binary/runtime dependency audit. A real Gear Lever update from an earlier published AppImage and desktop-session integration checks remain release acceptance gates.
+The implementation has been merged. CI validation is performed by the current workflow; clean-host runtime review remains outstanding. The AppImage uses the host glibc rather than AppRun2's compatibility layer, so Ubuntu 24.04 is the current build baseline and the minimum supported glibc must be documented from the actual binary/runtime dependency audit. A real Gear Lever update from an earlier published AppImage and desktop-session integration checks remain release acceptance gates.

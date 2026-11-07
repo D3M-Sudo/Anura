@@ -1,5 +1,10 @@
 # AppImage multi-architecture builds and updates
 
+**Status:** Implemented in CI; first public AppImage release and post-release acceptance checks pending  
+**Applies to:** tag-triggered GitHub Releases built from the current release workflow
+
+As of this revision, the latest published release is v0.2.1 and contains only the legacy Flatpak asset. AppImage CI artifacts are not public release assets. The first tagged release produced by the current workflow must be inspected before these download and update paths are described as publicly available.
+
 ## Packaging contract
 
 The release pipeline builds one native AppImage per architecture on a matching GitHub-hosted runner:
@@ -62,4 +67,4 @@ For each architecture, CI:
 
 A separate validation job requires exactly four versioned AppImage/zsync assets (two per architecture) and writes their SHA-256 checksums. Tag publication is blocked unless both architecture builds, Flatpak release validation and AppImage asset validation succeed.
 
-The CI smoke test is not a substitute for testing desktop integration on a clean Mint/Cinnamon, GNOME and KDE host. In particular, screenshot portal behaviour, native notifications, theme integration and Gear Lever's actual update flow require post-build runtime validation.
+The CI smoke test is not a substitute for testing desktop integration on a clean Mint/Cinnamon, GNOME and KDE host. In particular, screenshot portal behaviour, native notifications, theme integration and Gear Lever's actual update flow require post-build runtime validation. Issue #555 remains open until the first public AppImage release has been checked for the expected assets and a real differential update has succeeded from a previous public version.

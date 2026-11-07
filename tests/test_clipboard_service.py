@@ -16,7 +16,7 @@ from anura.services.clipboard_service import ClipboardService
 
 class TestClipboardServiceEnterprise:
     """
-    Enterprise-grade unit tests for ClipboardService.
+    Clipboard service tests for ClipboardService.
     Safe for VM/headless by mocking Gdk.Clipboard.
     """
 
