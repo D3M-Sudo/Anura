@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Documentation
 - Docs/OCR: distinguish the Tesseract engine version from upstream traineddata refs and record the model training provenance and compatibility findings (#642)
+- Docs/Flatpak: reflect completed static verification of `GI_TYPELIB_PATH` for the GNOME 51 runtime; verification plan and closure recorded for #623
 
 ### Fixed
 - AppImage: explicitly stage the architecture-matched `liblzo2.so.2` and `libEGL.so.1` runtime sonames into the AppDir after dependency resolution; include `libegl1` and verify both architectures through the clean-host ELF audit (#555)
