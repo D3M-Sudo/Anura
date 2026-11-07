@@ -20,17 +20,20 @@ and could freeze/abort UI initialization (#532)).
 
 from unittest.mock import MagicMock
 
-from anura.services.settings import settings
-
 
 class FakeSettings:
     """Records GSettings calls made by the page under test."""
 
     def __init__(self):
         self.bound_keys: list[str] = []
+        self.mapping_callbacks: dict[str, tuple[object, object]] = {}
 
     def bind(self, key, *_args, **_kwargs):
         self.bound_keys.append(key)
+
+    def bind_with_mapping(self, key, _obj, _prop, _flags, get_mapping, set_mapping):
+        self.bound_keys.append(key)
+        self.mapping_callbacks[key] = (get_mapping, set_mapping)
 
     def get_int(self, key):
         if key != "history-limit":
@@ -126,8 +129,72 @@ def test_voice_page_volume_bound_when_tts_language_fails(monkeypatch, headless_g
 
 def test_voice_page_init_completes_normally(monkeypatch, headless_gi_mocks):
     """Happy path: volume row and language combo are present."""
-    page, fake_settings = _make_voice_page(monkeypatch, tts_raises=None)
+    page, fake_settings = _make_voice_page(monkeypatch, tts_raises=AttributeError("catalog unavailable"))
 
     assert page.volume_row is not None
     assert page.tts_language_combo is not None
     assert "tts-volume" in fake_settings.bound_keys
+
+
+def test_voice_volume_mapping_converts_both_directions(monkeypatch, headless_gi_mocks):
+    """GSettings stores a normalized double while the SpinRow displays a percentage."""
+    import anura.widgets.preferences_voice_page as mod
+
+    page, fake_settings = _make_voice_page(monkeypatch, tts_raises=AttributeError("catalog unavailable"))
+    get_mapping, set_mapping = fake_settings.mapping_callbacks["tts-volume"]
+
+    class Value:
+        def __init__(self, number=0.0):
+            self.number = number
+
+        def set_double(self, number):
+            self.number = number
+
+        def get_double(self):
+            return self.number
+
+    class Variant:
+        def get_double(self):
+            return 0.75
+
+    target = Value()
+    assert get_mapping(target, Variant()) is True
+    assert target.get_double() == 75.0
+
+    class VariantFactory:
+        @staticmethod
+        def new_double(number):
+            return number
+
+    monkeypatch.setattr(mod.GLib, "Variant", VariantFactory)
+    assert set_mapping(Value(25.0), None) == 0.25
+
+
+def test_voice_catalog_worker_failure_resets_loading_state(monkeypatch, headless_gi_mocks):
+    """A failed asynchronous catalog fetch must not leave the page loading forever."""
+    import anura.widgets.preferences_voice_page as mod
+
+    class Service:
+        def get_cached_supported_languages(self):
+            return None
+
+        def get_supported_languages(self):
+            raise RuntimeError("network unavailable")
+
+    class InlineThread:
+        def __init__(self, target, **_kwargs):
+            self.target = target
+
+        def start(self):
+            self.target()
+
+    monkeypatch.setattr(mod, "get_tts_service", lambda: Service())
+    monkeypatch.setattr(mod.threading, "Thread", InlineThread)
+    monkeypatch.setattr(mod.GLib, "idle_add", lambda callback, *args: callback(*args))
+
+    page, _fake_settings = _make_voice_page(monkeypatch, tts_raises=AttributeError("initial service unavailable"))
+    # Reconfigure the getter after construction so the worker can exercise its
+    # failure path without triggering a synchronous catalog lookup.
+    page._refresh_tts_catalog_async()
+
+    assert page._tts_catalog_loading is False
