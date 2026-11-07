@@ -3,18 +3,24 @@
 #
 # SPDX-License-Identifier: MIT
 
-"""Headless regression tests for PreferencesGeneralPage __init__ resilience.
+"""Headless regression tests for Preferences pages resilience.
 
-Regression (History V1): a failure in `_setup_tts_language()` (e.g. the
-pre-ad5f49d `get_supported_gtts_languages()` AttributeError) used to abort
-`__init__` before `_setup_history()` ran, leaving the `history-enabled`
-switch unbound to GSettings and its value never persisted.
+Tests that Preferences page __init__ always completes and settings bindings
+are registered, even when optional subsystems (TTS catalog, language manager)
+fail.
 
-The __init__ must therefore isolate the TTS-dependent setup so that the
-history settings binding always executes.
+GeneralPage: history settings binding must always execute (regression for
+History V1 where a TTS failure aborted __init__ before _setup_history()).
+
+VoicePage: volume row setup must not be skipped/aborted by a later TTS
+language catalog failure (regression for PR #448 Phase 3 split, where the
+original PreferencesVoicePage called get_supported_languages() synchronously
+and could freeze/abort UI initialization (#532)).
 """
 
 from unittest.mock import MagicMock
+
+from anura.services.settings import settings
 
 
 class FakeSettings:
@@ -41,8 +47,12 @@ class FakeSettings:
         return 0.5
 
 
-def _make_page(monkeypatch, tts_raises: Exception | None):
-    """Build the page with mocked collaborators; returns (page, settings)."""
+# ---------------------------------------------------------------------------
+# GeneralPage
+# ---------------------------------------------------------------------------
+
+def _make_general_page(monkeypatch, tts_raises: Exception | None = None):
+    """Build PreferencesGeneralPage with mocked collaborators."""
     import anura.widgets.preferences_general_page as mod
 
     fake_settings = FakeSettings()
@@ -51,35 +61,22 @@ def _make_page(monkeypatch, tts_raises: Exception | None):
     fake_lang_manager = MagicMock()
     monkeypatch.setattr(mod, "get_language_manager", lambda: fake_lang_manager)
 
-    if tts_raises is not None:
-
-        def _boom():
-            raise tts_raises
-
-        monkeypatch.setattr(mod, "get_tts_service", _boom)
-
     page = mod.PreferencesGeneralPage()
     return page, fake_settings
 
 
-def test_history_bound_when_tts_language_fails(monkeypatch, headless_gi_mocks):
-    """A TTS setup failure must not prevent the history GSettings binding."""
-    _page, fake_settings = _make_page(monkeypatch, tts_raises=AttributeError("boom"))
-
-    assert "history-enabled" in fake_settings.bound_keys
-
-
-def test_init_completes_normally(monkeypatch, headless_gi_mocks):
-    """Happy path: all expected keys are bound when TTS setup succeeds."""
-    _page, fake_settings = _make_page(monkeypatch, tts_raises=None)
+def test_general_init_completes_normally(monkeypatch, headless_gi_mocks):
+    """Happy path: all expected keys are bound."""
+    _page, fake_settings = _make_general_page(monkeypatch)
 
     assert "autocopy" in fake_settings.bound_keys
+    assert "magic-processor-enabled" in fake_settings.bound_keys
     assert "history-enabled" in fake_settings.bound_keys
 
 
-def test_history_limit_changed_persists(monkeypatch, headless_gi_mocks):
+def test_general_history_limit_changed_persists(monkeypatch, headless_gi_mocks):
     """The SpinRow change handler persists the limit as an int."""
-    page, _fake_settings = _make_page(monkeypatch, tts_raises=None)
+    page, _fake_settings = _make_general_page(monkeypatch)
 
     spin_row = MagicMock()
     spin_row.get_value.return_value = 120.0
@@ -94,3 +91,43 @@ def test_history_limit_changed_persists(monkeypatch, headless_gi_mocks):
     page._on_history_limit_changed(spin_row, None)
 
     assert persisted == [("history-limit", 120)]
+
+
+# ---------------------------------------------------------------------------
+# VoicePage
+# ---------------------------------------------------------------------------
+
+def _make_voice_page(monkeypatch, tts_raises: Exception | None = None):
+    """Build PreferencesVoicePage with mocked collaborators."""
+    import anura.widgets.preferences_voice_page as mod
+
+    fake_settings = FakeSettings()
+    monkeypatch.setattr(mod, "settings", fake_settings)
+
+    if tts_raises is not None:
+
+        def _boom():
+            raise tts_raises
+
+        monkeypatch.setattr(mod, "get_tts_service", _boom)
+
+    page = mod.PreferencesVoicePage()
+    return page, fake_settings
+
+
+def test_voice_page_volume_bound_when_tts_language_fails(monkeypatch, headless_gi_mocks):
+    """A TTS-language setup failure must not prevent the volume row setup."""
+    page, _fake_settings = _make_voice_page(monkeypatch, tts_raises=AttributeError("boom"))
+
+    # _setup_tts_volume() ran and connected the volume_row signal,
+    # proving it wasn't skipped/aborted by the later TTS-language failure.
+    assert page.volume_row is not None
+
+
+def test_voice_page_init_completes_normally(monkeypatch, headless_gi_mocks):
+    """Happy path: volume row and language combo are present."""
+    page, fake_settings = _make_voice_page(monkeypatch, tts_raises=None)
+
+    assert page.volume_row is not None
+    assert page.tts_language_combo is not None
+    assert "tts-volume" in fake_settings.bound_keys

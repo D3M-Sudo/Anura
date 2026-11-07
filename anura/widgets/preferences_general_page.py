@@ -6,7 +6,6 @@
 
 import contextlib
 from gettext import gettext as _
-import threading
 
 from gi.repository import Adw, Gio, GLib, Gtk
 from loguru import logger
@@ -14,7 +13,6 @@ from loguru import logger
 from anura.config import RESOURCE_PREFIX
 from anura.services.language_manager import get_language_manager
 from anura.services.settings import settings
-from anura.services.tts import get_tts_service
 from anura.utils.signal_manager import SignalManagerMixin
 
 
@@ -27,13 +25,8 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
     magic_processor_switch: Adw.SwitchRow = Gtk.Template.Child()
     autocopy_switch: Adw.SwitchRow = Gtk.Template.Child()
     autolinks_switch: Adw.SwitchRow = Gtk.Template.Child()
-    volume_row: Adw.SpinRow = Gtk.Template.Child()
-    tts_language_combo: Adw.ComboRow = Gtk.Template.Child()
     history_switch: Adw.SwitchRow = Gtk.Template.Child()
     history_limit_row: Adw.SpinRow = Gtk.Template.Child()
-    editor_line_numbers_switch: Adw.SwitchRow = Gtk.Template.Child()
-    editor_highlight_line_switch: Adw.SwitchRow = Gtk.Template.Child()
-    editor_wrap_mode_combo: Adw.ComboRow = Gtk.Template.Child()
 
     def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
@@ -41,10 +34,6 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
 
         self.settings = settings
 
-        # #532: TTS catalog state. The combo is filled from the cache and a
-        # cold cache is refreshed off the GTK main thread.
-        self._tts_catalog_loading = False
-        self._updating_tts_combo = False
         self._disposed = False
 
         self.settings.bind("autocopy", self.autocopy_switch, "active", Gio.SettingsBindFlags.DEFAULT)
@@ -52,29 +41,13 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
         self.settings.bind(
             "magic-processor-enabled", self.magic_processor_switch, "active", Gio.SettingsBindFlags.DEFAULT
         )
-        self.settings.bind(
-            "editor-show-line-numbers", self.editor_line_numbers_switch, "active", Gio.SettingsBindFlags.DEFAULT
-        )
-        self.settings.bind(
-            "editor-highlight-current-line",
-            self.editor_highlight_line_switch,
-            "active",
-            Gio.SettingsBindFlags.DEFAULT,
-        )
 
         self._setup_color_scheme()
-        self._setup_editor_wrap_mode()
         self._setup_extra_languages()
 
         self.connect_tracked(get_language_manager(), "downloaded", self._on_language_changed)
         self.connect_tracked(get_language_manager(), "removed", self._on_language_changed)
 
-        self._setup_tts_volume()
-        # TTS language setup depends on the (possibly network-backed) TTS
-        # service; a failure there must not abort __init__ or any later
-        # settings binding (e.g. history-enabled would never be bound).
-        with contextlib.suppress(Exception):
-            self._setup_tts_language()
         self._setup_history()
 
     def _setup_history(self) -> None:
@@ -90,27 +63,6 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
         value = int(spin_row.get_value())
         self.settings.set_int("history-limit", value)
         logger.debug(f"Anura: History size limit set to {value}")
-
-    def _setup_editor_wrap_mode(self) -> None:
-        from gettext import pgettext
-
-        modes = [
-            pgettext("wrap-mode", "Words"),
-            pgettext("wrap-mode", "Characters"),
-            pgettext("wrap-mode", "Disabled"),
-        ]
-        self.editor_wrap_mode_combo.set_model(Gtk.StringList.new(modes))
-        mode = self.settings.get_string("editor-wrap-mode")
-        mapping = {"word": 0, "char": 1, "none": 2}
-        idx = mapping.get(mode, 0)
-        self.editor_wrap_mode_combo.set_selected(idx)
-        self.connect_tracked(self.editor_wrap_mode_combo, "notify::selected", self._on_editor_wrap_mode_changed)
-
-    def _on_editor_wrap_mode_changed(self, combo: Adw.ComboRow, _param: object) -> None:
-        idx = combo.get_selected()
-        mapping = {0: "word", 1: "char", 2: "none"}
-        mode = mapping.get(idx, "word")
-        self.settings.set_string("editor-wrap-mode", mode)
 
     def _setup_color_scheme(self) -> None:
         """Initialize color scheme selector from settings."""
@@ -188,103 +140,6 @@ class PreferencesGeneralPage(Adw.PreferencesPage, SignalManagerMixin):
                     emitter.disconnect(hid)
             self._signal_connections[emitter].clear()
         self._setup_extra_languages()
-
-    def _setup_tts_volume(self) -> None:
-        """Setup TTS volume spin row with percentage display (0-100)."""
-        volume_normalized = self.settings.get_double("tts-volume")
-        self.volume_row.set_value(volume_normalized * 100)
-
-        # Update subtitle to show current value with %
-        self._update_volume_subtitle(volume_normalized * 100)
-
-        # Connect to changes and convert back to 0.0-1.0 for GSettings
-        self.connect_tracked(self.volume_row, "notify::value", self._on_volume_changed)
-
-    def _update_volume_subtitle(self, percentage: float) -> None:
-        """Update the volume row subtitle to show the percentage."""
-        self.volume_row.set_subtitle(_("TTS playback volume level: {percentage:.0f}%").format(percentage=percentage))
-
-    def _on_volume_changed(self, spin_row: Adw.SpinRow, _param: object) -> None:
-        """Convert percentage (0-100) to normalized value (0.0-1.0) for GSettings."""
-        percentage = spin_row.get_value()
-        normalized = percentage / 100.0
-        self.settings.set_double("tts-volume", normalized)
-        self._update_volume_subtitle(percentage)
-        logger.debug(f"Anura: TTS volume set to {percentage:.0f}% ({normalized:.2f})")
-
-    def _setup_tts_language(self) -> None:
-        """Populate the TTS combo from the cached catalog, refreshing in background.
-
-        This used to call ``get_supported_languages()`` synchronously, which on
-        a cold cache performed a network request on the GTK main thread and
-        froze the whole Preferences dialog until it finished (#532).
-        """
-        supported = get_tts_service().get_cached_supported_languages()
-        self._set_tts_languages(supported or {})
-
-        self.connect_tracked(self.tts_language_combo, "notify::selected", self._on_tts_language_changed)
-
-        if supported is None:
-            self._refresh_tts_catalog_async()
-
-    def _set_tts_languages(self, supported: dict) -> None:
-        """Rebuild the combo model without writing the setting back."""
-        # The model/selection changes below emit notify::selected; guard the
-        # handler so a background refresh cannot overwrite the user's choice.
-        self._updating_tts_combo = True
-        try:
-            lang_names = [_("Auto (follow OCR language)"), *list(supported.values())]
-            self.tts_language_combo.set_model(Gtk.StringList.new(lang_names))
-
-            current = self.settings.get_string("tts-language")
-            idx = 0
-            if current:
-                try:
-                    idx = list(supported.keys()).index(current) + 1  # +1 for "Auto"
-                except ValueError:
-                    idx = 0
-            self.tts_language_combo.set_selected(idx)
-        finally:
-            self._updating_tts_combo = False
-
-    def _refresh_tts_catalog_async(self) -> None:
-        """Fetch the gTTS catalog on a worker thread and apply it via idle."""
-        if self._tts_catalog_loading or self._disposed:
-            return
-        self._tts_catalog_loading = True
-
-        def _worker() -> None:
-            supported = get_tts_service().get_supported_languages()
-            GLib.idle_add(self._on_tts_catalog_ready, supported)
-
-        threading.Thread(target=_worker, daemon=True, name="AnuraTtsCatalogRefresh").start()
-
-    def _on_tts_catalog_ready(self, supported: dict) -> bool:
-        """Apply a freshly fetched catalog to the combo (main thread)."""
-        self._tts_catalog_loading = False
-        if supported and not self._disposed:
-            self._set_tts_languages(supported)
-        return GLib.SOURCE_REMOVE
-
-    def _on_tts_language_changed(self, combo: Adw.ComboRow, _param: object) -> None:
-        if self._updating_tts_combo:
-            return
-
-        idx = combo.get_selected()
-        if idx == 0:
-            self.settings.set_string("tts-language", "")  # Auto
-        else:
-            # Cached-only: a UI callback must never trigger a network fetch.
-            supported = get_tts_service().get_cached_supported_languages() or {}
-            supported_keys = list(supported.keys())
-            # Bounds check to prevent IndexError
-            if idx - 1 < len(supported_keys):
-                lang_code = supported_keys[idx - 1]  # -1 for "Auto"
-                self.settings.set_string("tts-language", lang_code)
-                logger.debug(f"Anura: TTS language set to {lang_code}")
-            else:
-                logger.warning(f"Anura: TTS language index {idx} out of bounds, falling back to Auto")
-                self.settings.set_string("tts-language", "")
 
     def do_destroy(self) -> None:
         """Clean up all tracked signal handlers to prevent memory leaks."""
