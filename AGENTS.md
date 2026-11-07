@@ -30,7 +30,7 @@ anura/
 │   ├── window.py               AnuraWindow — Core UI shell (Composition-based)
 │   ├── config.py               Constants APP_ID, tessdata URL, lang_code validation
 │   ├── core/                   Modular Core Services
-│   │   ├── atomic_task_manager.py  Single-slot thread pool with UUID versioning
+│   │   ├── atomic_task_manager.py  Lane-scoped task execution with UUID versioning
 │   │   ├── boot.py             Hardware bootstrap, Capability Audit
 │   │   ├── logger.py           Rotary Logging logic
 │   │   ├── i18n.py             Hybrid C/Python/GLib Localization
@@ -49,7 +49,7 @@ anura/
 │   │   ├── language/               Specialized language managers
 │   │   │   ├── cache_manager.py    Tessdata caching logic
 │   │   │   ├── download_manager.py Tessdata download coordination
-│   │   │   └── language_validator.py Language code validation
+│   │   │   └── validator.py Language code validation
 │   │   ├── notification_service.py Notifications: XDG Portal → libnotify fallback
 │   │   ├── result_dispatcher.py    Post-OCR coordination (Clipboard, URLs, Notifications)
 │   │   ├── screenshot/             Abstract Factory Screenshot providers
@@ -183,7 +183,7 @@ GSETTINGS_SCHEMA_DIR=builddir/data python3 -m anura.main
 
 ```bash
 # Full build
-flatpak-builder --force-clean builddir flatpak/io.github.d3msudo.anura.local.json
+flatpak-builder --force-clean builddir flatpak/io.github.d3m_sudo.anura.local.json
 
 # Run the build
 flatpak-builder --run builddir flatpak/io.github.d3msudo.anura.local.json anura
@@ -326,7 +326,7 @@ get_atomic_manager().execute(
 )
 ```
 
-`AtomicTaskManager` manages a single-worker `ThreadPoolExecutor` and uses UUIDs to discard results from stale/cancelled tasks.
+`AtomicTaskManager` coordinates lane-scoped tasks through dedicated thread and process executors. UUID-based task ownership prevents stale or superseded results from reaching callbacks.
 
 **Lock Scope Rule:** When a service uses a lock to protect mutable state, every method that reads or writes that state MUST acquire the same lock — including `play()`, `stop()`, and `cleanup()`. Partial locking (e.g. only in `cleanup()`) leaves races between `play()` and `stop()` on different threads (see F19). Prefer a single `threading.Lock` (or `RLock` when re-entrancy is needed) over multiple locks with inconsistent ordering.
 
