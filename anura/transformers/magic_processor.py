@@ -59,9 +59,6 @@ class MagicProcessor:
         Process OcrData and return transformed text,
         average confidence score, and the name of the applied transformer.
         """
-        # Eliminated redundant data conversion: use OcrWord objects directly.
-        # OcrResult in anura/transformers/models.py has been updated to handle
-        # both dicts and objects via a helper.
         result = OcrResult(words=list(ocr_data.words), text=ocr_data.raw_text)
         avg_conf = ocr_data.avg_confidence
 
