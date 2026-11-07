@@ -145,7 +145,7 @@ Anura captures screenshots through the **XDG Desktop Portal**. The portal fronte
 | --- | --- | --- |
 | GNOME / Ubuntu Desktop | already installed | Uses `xdg-desktop-portal-gnome` |
 | KDE Plasma / Kubuntu | already installed | Uses `xdg-desktop-portal-kde` |
-| **LXQt / Lubuntu** | `sudo apt install xdg-desktop-portal-kde` | Configure `org.freedesktop.impl.portal.Screenshot=kde` in `lxqt-portals.conf` as described below |
+| **LXQt / Lubuntu** | `sudo apt install xdg-desktop-portal-kde` | The GTK portal (`xdg-desktop-portal-gtk`) does not provide Screenshot on current Ubuntu releases; configure the KDE backend below |
 | Xfce / MATE | `sudo apt install xdg-desktop-portal-gnome` | Backend needed for Screenshot interface |
 | wlroots (Sway, Hyprland) | `sudo apt install xdg-desktop-portal-wlr` | Requires screencast support |
 
