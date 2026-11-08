@@ -53,7 +53,9 @@ def test_share_icon_inventory_matches_active_providers_and_resources():
     assert actual_files == expected_files
 
     expected_resources = {f"icons/scalable/actions/{filename}" for filename in expected_files}
-    with open(_repository_root() / "data" / "io.github.d3m_sudo.anura.gresource.xml", encoding="utf-8") as manifest_file:
+    with open(
+        _repository_root() / "data" / "io.github.d3m_sudo.anura.gresource.xml", encoding="utf-8"
+    ) as manifest_file:
         manifest = manifest_file.read()
     actual_resources = {
         entry.split("</file>", 1)[0]
