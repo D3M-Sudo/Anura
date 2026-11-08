@@ -334,6 +334,8 @@ class ScreenshotService(GObject.GObject):
             self.cancelable: Gio.Cancellable = Gio.Cancellable.new()
         self._env_diagnostics_logged = False
         self._is_capturing = False
+        # Window-owned generation token. Every UI OCR request replaces it.
+        self.active_operation_id: int | None = None
 
         # Configure Tesseract path for Flatpak environment
         _configure_tesseract_path()
@@ -360,8 +362,9 @@ class ScreenshotService(GObject.GObject):
             self.fallback_provider.cancel()
         self._is_capturing = False
 
-    def capture(self, lang: str, copy: bool = False) -> None:
-        """Requests a screenshot from the primary provider."""
+    def capture(self, lang: str, copy: bool = False, operation_id: int | None = None) -> None:
+        """Requests a screenshot for the current UI operation."""
+        operation_id = self.active_operation_id if operation_id is None else operation_id
         # Prevent concurrent capture requests
         if self._is_capturing:
             logger.warning("Anura Screenshot: Capture already in progress, ignoring request.")
@@ -370,6 +373,10 @@ class ScreenshotService(GObject.GObject):
         self._is_capturing = True
 
         def _on_capture_result(success, uri, error, already_attempted_fallback=False):
+            # A superseded portal callback must never start OCR or mutate UI state.
+            if operation_id != self.active_operation_id:
+                logger.debug("Anura Screenshot: Ignoring superseded capture callback")
+                return
             # Track the most recent task ID for navigation interlock (NEW-008).
             # This is cleared when the capture finishes or fails.
             self._current_task_id = None
@@ -377,11 +384,11 @@ class ScreenshotService(GObject.GObject):
                 # The capture phase is over: a URI was handed to the OCR
                 # pipeline. Notify consumers (e.g. the window can restore
                 # itself) well before the OCR result arrives.
-                self._emit_capture_finished(True)
+                self._emit_capture_finished(True, operation_id)
                 # Move URI parsing and file existence check to background thread
                 task_id = get_atomic_manager().execute(
                     self._handle_portal_uri_background,
-                    (lang, uri, copy),
+                    (lang, uri, copy, operation_id),
                     pass_task_id=True,
                     lane=OCR_LANE,
                 )
@@ -410,11 +417,11 @@ class ScreenshotService(GObject.GObject):
                     except (GLib.Error, RuntimeError, AttributeError) as e:
                         self._is_capturing = False
                         logger.error(f"Anura Screenshot: Fallback provider raised: {e}")
-                        self._emit_capture_finished(False)
-                        self._emit_decode_error(_("Screenshot failed: {reason}").format(reason=str(e)))
+                        self._emit_capture_finished(False, operation_id)
+                        self._emit_decode_error(_("Screenshot failed: {reason}").format(reason=str(e)), operation_id)
                 else:
                     self._is_capturing = False
-                    self._emit_capture_finished(False)
+                    self._emit_capture_finished(False, operation_id)
                     if not self.fallback_provider:
                         # True portal-missing case: keep the environment diagnostic dump
                         # and the desktop-specific advice banner/error message.
@@ -423,22 +430,26 @@ class ScreenshotService(GObject.GObject):
                     else:
                         # The fallback was attempted and failed with a real error of its
                         # own (no further fallback possible).
-                        self._emit_decode_error(_("Screenshot failed: {reason}").format(reason=error))
+                        self._emit_decode_error(_("Screenshot failed: {reason}").format(reason=error), operation_id)
             else:
                 # Cancelled by user (providers signal this with error=None)
                 self._is_capturing = False
-                self._emit_capture_finished(False)
+                self._emit_capture_finished(False, operation_id)
 
         try:
             self.provider.capture(lang, copy, _on_capture_result)
         except (GLib.Error, RuntimeError) as e:
             self._is_capturing = False
             logger.error(f"Anura Screenshot: Provider capture call failed: {e}")
-            self._emit_capture_finished(False)
-            self._emit_decode_error(_("Failed to initiate screenshot capture."))
+            self._emit_capture_finished(False, operation_id)
+            self._emit_decode_error(_("Failed to initiate screenshot capture."), operation_id)
 
-    def _handle_portal_uri_background(self, lang: str, uri: str, copy: bool, task_id: str | None = None) -> bool:
+    def _handle_portal_uri_background(
+        self, lang: str, uri: str, copy: bool, operation_id: int | None = None, task_id: str | None = None
+    ) -> bool:
         """Background worker to parse Portal URI and trigger OCR."""
+        if operation_id != self.active_operation_id:
+            return False
         try:
             if uri.startswith("file://") and len(uri) > len("file://"):
                 filename = url2pathname(uri[len("file://") :])
@@ -446,11 +457,14 @@ class ScreenshotService(GObject.GObject):
                 filename = GLib.Uri.unescape_string(uri)
         except (ValueError, GLib.Error) as e:
             logger.error(f"Anura Screenshot: Failed to parse URI '{mask_url(uri)}': {e}")
-            self._emit_decode_error(_("Can't take a screenshot."))
+            self._emit_decode_error(_("Can't take a screenshot."), operation_id)
             return False
 
         # Check for cancellation before I/O. Portal/scrot capture files are temporary
         # sources and must be removed even when cancellation prevents OCR from starting.
+        if operation_id != self.active_operation_id:
+            get_atomic_manager().execute(Path(filename).unlink, (), lane=CLEANUP_LANE)
+            return False
         if task_id and get_atomic_manager().is_cancelled(task_id):
             get_atomic_manager().execute(Path(filename).unlink, (), lane=CLEANUP_LANE)
             return False
@@ -458,15 +472,23 @@ class ScreenshotService(GObject.GObject):
         # Validate the extracted filename before processing (on background thread)
         if not filename or not Path(filename).exists():
             logger.error(f"Anura Screenshot: Invalid or non-existent file path: {filename}")
-            self._emit_decode_error(_("Can't take a screenshot."))
+            self._emit_decode_error(_("Can't take a screenshot."), operation_id)
             return False
 
-        return self.decode_image(lang, filename, copy, remove_source=True, task_id=task_id)
+        return self.decode_image(
+            lang, filename, copy, remove_source=True, task_id=task_id, operation_id=operation_id
+        )
 
-    def _emit_capture_finished(self, success: bool) -> None:
-        """Helper to emit capture-finished signal on the main thread."""
+    def _is_operation_current(self, operation_id: int | None) -> bool:
+        """Return whether a queued UI callback still belongs to the active operation."""
+        return operation_id is None or operation_id == self.active_operation_id
+
+    def _emit_capture_finished(self, success: bool, operation_id: int | None = None) -> None:
+        """Helper to emit capture-finished only for its owning operation."""
 
         def _on_capture_finished_idle():
+            if not self._is_operation_current(operation_id):
+                return GLib.SOURCE_REMOVE
             try:
                 self.emit("capture-finished", success)
             except (RuntimeError, TypeError) as e:
@@ -475,10 +497,12 @@ class ScreenshotService(GObject.GObject):
 
         GLib.idle_add(_on_capture_finished_idle)
 
-    def _emit_decode_error(self, message: str) -> None:
-        """Helper to emit error signal on the main thread."""
+    def _emit_decode_error(self, message: str, operation_id: int | None = None) -> None:
+        """Helper to emit errors only while their operation still owns the UI."""
 
         def _on_error_idle():
+            if not self._is_operation_current(operation_id):
+                return GLib.SOURCE_REMOVE
             try:
                 self.emit("error", message)
             except (RuntimeError, TypeError) as e:
@@ -487,10 +511,15 @@ class ScreenshotService(GObject.GObject):
 
         GLib.idle_add(_on_error_idle, priority=GLib.PRIORITY_DEFAULT)
 
-    def _emit_decoded(self, text: str, copy: bool, ocr_result: OcrResult | None, applied_name: str) -> None:
-        """Helper to emit decoded signal on the main thread."""
+    def _emit_decoded(
+        self, text: str, copy: bool, ocr_result: OcrResult | None, applied_name: str,
+        operation_id: int | None = None,
+    ) -> None:
+        """Helper to emit decoded only while its operation still owns the UI."""
 
         def _on_decoded_idle():
+            if not self._is_operation_current(operation_id):
+                return GLib.SOURCE_REMOVE
             try:
                 self.emit("decoded", text, copy, ocr_result, applied_name)
             except (RuntimeError, TypeError) as e:
@@ -499,10 +528,12 @@ class ScreenshotService(GObject.GObject):
 
         GLib.idle_add(_on_decoded_idle, priority=GLib.PRIORITY_DEFAULT)
 
-    def _emit_status(self, status_msg: str) -> None:
-        """Helper to emit status-changed signal on the main thread."""
+    def _emit_status(self, status_msg: str, operation_id: int | None = None) -> None:
+        """Helper to emit status only while its operation still owns the UI."""
 
         def _on_status_idle():
+            if not self._is_operation_current(operation_id):
+                return GLib.SOURCE_REMOVE
             try:
                 self.emit("status-changed", status_msg)
             except (RuntimeError, TypeError) as e:
@@ -517,10 +548,13 @@ class ScreenshotService(GObject.GObject):
         file: str,
         copy: bool = False,
         remove_source: bool = False,
+        operation_id: int | None = None,
     ) -> None:
         """Triggers isolated OCR pipeline execution to bypass GIL."""
+        if operation_id != self.active_operation_id:
+            return
         mode = settings.get_string("ocr-preprocessing")
-        self._emit_status(_("Extracting text..."))
+        self._emit_status(_("Extracting text..."), operation_id)
 
         def _on_isolated_complete(result_tuple):
             # FIX BUG-H-003: unpack 5-tuple — run_ocr_pipeline now returns applied_name
@@ -529,23 +563,23 @@ class ScreenshotService(GObject.GObject):
                 result_tuple if len(result_tuple) == 5 else (*result_tuple, "")
             )
             if success:
-                self._emit_decoded(extracted, copy, ocr_result, applied_name)
+                self._emit_decoded(extracted, copy, ocr_result, applied_name, operation_id)
             elif error_message:
-                self._emit_decode_error(error_message)
+                self._emit_decode_error(error_message, operation_id)
             else:
-                self._emit_decode_error("")
+                self._emit_decode_error("", operation_id)
 
             if remove_source:
                 get_atomic_manager().execute(Path(file).unlink, (), lane=CLEANUP_LANE)
 
         def _on_isolated_error(error, _traceback_str):
             logger.error(f"Anura OCR (Isolated): Process error: {error}")
-            self._emit_decode_error(_("OCR processing failed. Please try again."))
+            self._emit_decode_error(_("OCR processing failed. Please try again."), operation_id)
             if remove_source:
                 get_atomic_manager().execute(Path(file).unlink, (), lane=CLEANUP_LANE)
 
         def _on_isolated_status(status_msg):
-            self._emit_status(status_msg)
+            self._emit_status(status_msg, operation_id)
 
         # BUG-nav-block: clear _current_task_id now so backend.current_task_id returns
         # None, causing _navigate_to_extracted_page to skip the guard and
@@ -888,20 +922,25 @@ class ScreenshotService(GObject.GObject):
         copy: bool = False,
         remove_source: bool = False,
         task_id: str | None = None,
+        operation_id: int | None = None,
     ) -> bool:
         """
         Asynchronously decodes the image and emits GObject signals.
         Wraps decode_image_sync() for use with GUI mode.
         """
+        operation_id = self.active_operation_id if operation_id is None else operation_id
+        if not self._is_operation_current(operation_id):
+            return False
+
         # Validate language code before processing
         if not lang or not re.fullmatch(LANG_CODE_PATTERN, lang):
             logger.error(f"Anura: Invalid language code '{lang}' for OCR")
-            self._emit_decode_error(_("Invalid language code specified."))
+            self._emit_decode_error(_("Invalid language code specified."), operation_id)
             return False
 
         # If it's a physical file, we can use process isolation to bypass the GIL
         if isinstance(file, str) and Path(file).exists():
-            self._decode_image_isolated(lang, file, copy, remove_source)
+            self._decode_image_isolated(lang, file, copy, remove_source, operation_id)
             return True
 
         success, extracted, error_message, ocr_result, applied_name = self.decode_image_sync(
@@ -910,14 +949,14 @@ class ScreenshotService(GObject.GObject):
 
         if success:
             if extracted is not None:
-                self._emit_decoded(extracted, copy, ocr_result, applied_name)
+                self._emit_decoded(extracted, copy, ocr_result, applied_name, operation_id)
             else:
-                self._emit_decode_error(_("No text found."))
+                self._emit_decode_error(_("No text found."), operation_id)
         else:
             if error_message is not None:
-                self._emit_decode_error(error_message)
+                self._emit_decode_error(error_message, operation_id)
             else:
-                self._emit_decode_error(_("Failed to decode image."))
+                self._emit_decode_error(_("Failed to decode image."), operation_id)
 
         return False
 
