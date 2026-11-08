@@ -69,7 +69,7 @@ The authoritative source for the full historical patch is the original PR diff: 
 - Open a new PR targeting `feature` in **Draft** state.
 - PR #448 is closed as superseded by PR #648; its original diff remains the historical source record.
 - Retain the fixed teal brand identity while separating the darker suggested-action background color from text accents; use theme-aware text colors for light and dark surfaces.
-- Produce updated screenshots and visual documentation for all relevant windows and major states.
+- Complete the visual review across relevant windows and major states. Updated screenshots and visual documentation are deferred to the next release cycle as agreed.
 - Remediate all findings from the prior audit, including architecture, accessibility, responsiveness, interactions, and maintainability.
 - Functional changes are allowed when justified and verified; document invasive behavior changes and regression coverage.
 - Plan comprehensive validation: pytest, Blueprint compiler, GTK/Gtk.Builder/Gtk.Template and resource integration, accessibility, interactions, lifecycle/cleanup, translations, Flatpak build and runtime, and visual checks.
@@ -108,7 +108,7 @@ These are integration constraints, not a claim that the current branch has alrea
 2. Build a per-file migration matrix: adopt, adapt, redesign, or reject each old change, with rationale.
 3. Implement the accepted changes only on `fix/ui-modernization-aligned`.
 4. Add/update regression tests, including the current async TTS, History V2, Preferences lifecycle, Welcome accessibility, and resource/translation paths.
-5. Complete the visual review and capture the agreed screenshots; cover empty, populated, loading, error, confirmation, and disabled states where applicable.
+5. Complete the visual review; cover empty, populated, loading, error, confirmation, and disabled states where applicable. Screenshot capture remains deferred to the next release cycle as agreed.
 6. Update documentation and CHANGELOG, then validate internal links and cross-references.
 7. Run the complete available test/build/runtime matrix and record exact commands, results, and environment limitations.
 8. Update the Draft PR with the implementation, migration rationale, screenshots, and evidence.
