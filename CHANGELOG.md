@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - OCR/UI: make the most recently started file, clipboard, screenshot or drag-and-drop request the sole owner of OCR results and spinner state; discard superseded capture, decode, status, error and navigation callbacks, and isolate screenshot URI dispatch from the OCR task lane (#648)
+- Sharing: align the bundled symbolic icon inventory exactly with the seven active providers, remove unused Discord/LinkedIn assets, and load icons through Gtk.IconTheme for light/dark theme recoloring (#648)
 
 ### Changed
 
