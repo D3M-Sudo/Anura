@@ -24,6 +24,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Flatpak: offer a portal-backed, user-selected migration of history and downloaded OCR models from the previous application ID; no cross-application filesystem permission is required (#613)
 - Flatpak: keep the first-run migration chooser alive until the user responds, persist an explicit skip/close decision, and start with clean data without modifying the legacy installation (#613)
 
+### Fixed
+
+- OCR/UI: make the most recently started file, clipboard, screenshot or drag-and-drop request the sole owner of OCR results and spinner state; discard superseded capture, decode, status, error and navigation callbacks, and isolate screenshot URI dispatch from the OCR task lane (#648)
+
 ### Changed
 
 - Preferences: reorganize settings into four dedicated pages (General, Editor, Voice and Languages); move the existing Editor controls and TTS volume/language controls into their respective pages while retaining asynchronous TTS catalog loading (#648)
