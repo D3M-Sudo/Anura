@@ -528,17 +528,17 @@ msgctxt "Extracted screen"
 msgid "Resume listening"
 msgstr ""
 
-#: ../anura/widgets/preferences_general_page.py:91
+#: ../anura/widgets/preferences_editor_page.py:49
 msgctxt "wrap-mode"
 msgid "Words"
 msgstr ""
 
-#: ../anura/widgets/preferences_general_page.py:92
+#: ../anura/widgets/preferences_editor_page.py:50
 msgctxt "wrap-mode"
 msgid "Characters"
 msgstr ""
 
-#: ../anura/widgets/preferences_general_page.py:93
+#: ../anura/widgets/preferences_editor_page.py:51
 msgctxt "wrap-mode"
 msgid "Disabled"
 msgstr ""
@@ -563,7 +563,7 @@ msgstr ""
 msgid "TTS playback volume level: {percentage:.0f}%"
 msgstr ""
 
-#: ../anura/widgets/preferences_general_page.py:213
+#: ../anura/widgets/preferences_voice_page.py:86
 msgid "Auto (follow OCR language)"
 msgstr ""
 
@@ -597,7 +597,7 @@ msgstr ""
 msgid "Paste image from clipboard"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:72
+#: ../anura/widgets/shortcuts_overlay.py:72 ../data/ui/preferences_editor.blp:13 ../data/ui/preferences_editor.blp:18
 msgid "Editor"
 msgstr ""
 
@@ -621,7 +621,7 @@ msgstr ""
 msgid "Open in external editor"
 msgstr ""
 
-#: ../anura/widgets/shortcuts_overlay.py:84
+#: ../anura/widgets/shortcuts_overlay.py:84 ../data/ui/preferences_voice.blp:18
 msgid "Text-to-Speech"
 msgstr ""
 
@@ -1554,6 +1554,11 @@ msgid ""
 "extracted texts."
 msgstr ""
 
+
+#: ../data/ui/preferences_voice.blp:13
+msgid "Voice"
+msgstr ""
+
 #: ../data/ui/preferences_general.blp:13
 msgid "_General"
 msgstr ""
@@ -1628,43 +1633,43 @@ msgstr ""
 msgid "Maximum number of entries kept in history"
 msgstr ""
 
-#: ../data/ui/preferences_general.blp:86
+#: ../data/ui/preferences_editor.blp:21
 msgid "Show Line Numbers"
 msgstr ""
 
-#: ../data/ui/preferences_general.blp:87
+#: ../data/ui/preferences_editor.blp:22
 msgid "Display line numbers along the edge of the editor"
 msgstr ""
 
-#: ../data/ui/preferences_general.blp:91
+#: ../data/ui/preferences_editor.blp:26
 msgid "Highlight Current Line"
 msgstr ""
 
-#: ../data/ui/preferences_general.blp:92
+#: ../data/ui/preferences_editor.blp:27
 msgid "Highlight the active line containing cursor"
 msgstr ""
 
-#: ../data/ui/preferences_general.blp:96
+#: ../data/ui/preferences_editor.blp:31
 msgid "Word Wrap Mode"
 msgstr ""
 
-#: ../data/ui/preferences_general.blp:97
+#: ../data/ui/preferences_editor.blp:32
 msgid "Policy for wrapping long lines of text"
 msgstr ""
 
-#: ../data/ui/preferences_general.blp:105
+#: ../data/ui/preferences_voice.blp:21
 msgid "Volume"
 msgstr ""
 
-#: ../data/ui/preferences_general.blp:106
+#: ../data/ui/preferences_voice.blp:22
 msgid "TTS playback volume level (0-100%)"
 msgstr ""
 
-#: ../data/ui/preferences_general.blp:115
+#: ../data/ui/preferences_voice.blp:31
 msgid "TTS Language"
 msgstr ""
 
-#: ../data/ui/preferences_general.blp:116
+#: ../data/ui/preferences_voice.blp:32
 msgid "Language for speech synthesis. Uses OCR language if not set."
 msgstr ""
 
