@@ -461,7 +461,7 @@ class ScreenshotService(GObject.GObject):
 
         # Check for cancellation before I/O. Portal/scrot capture files are temporary
         # sources and must be removed even when cancellation prevents OCR from starting.
-        if operation_id != self.active_operation_id:
+        if operation_id != getattr(self, "active_operation_id", None):
             if filename:
                 Path(filename).unlink(missing_ok=True)
             return None
@@ -482,7 +482,7 @@ class ScreenshotService(GObject.GObject):
         """Start isolated OCR on the GTK thread after parser-lane validation."""
         if not filename:
             return
-        if operation_id != self.active_operation_id:
+        if operation_id != getattr(self, "active_operation_id", None):
             get_atomic_manager().execute(Path(filename).unlink, (), lane=CLEANUP_LANE)
             return
         self._decode_image_isolated(lang, filename, copy, remove_source=True, operation_id=operation_id)
@@ -563,7 +563,7 @@ class ScreenshotService(GObject.GObject):
         operation_id: int | None = None,
     ) -> None:
         """Triggers isolated OCR pipeline execution to bypass GIL."""
-        if operation_id != self.active_operation_id:
+        if operation_id != getattr(self, "active_operation_id", None):
             return
         mode = settings.get_string("ocr-preprocessing")
         self._emit_status(_("Extracting text..."), operation_id)
@@ -942,7 +942,7 @@ class ScreenshotService(GObject.GObject):
         Asynchronously decodes the image and emits GObject signals.
         Wraps decode_image_sync() for use with GUI mode.
         """
-        operation_id = self.active_operation_id if operation_id is None else operation_id
+        operation_id = getattr(self, "active_operation_id", None) if operation_id is None else operation_id
         if not self._is_operation_current(operation_id):
             return False
 
