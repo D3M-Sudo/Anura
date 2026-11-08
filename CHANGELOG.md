@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- Preferences: split settings into four dedicated pages (General, Editor, Voice and Languages), adding `PreferencesEditorPage` and `PreferencesVoicePage`; load the TTS catalog asynchronously to avoid blocking UI initialization (#448)
+- Preferences: reorganize settings into four dedicated pages (General, Editor, Voice and Languages); move the existing Editor controls and TTS volume/language controls into their respective pages while retaining asynchronous TTS catalog loading (#648)
 
 - Release/AppImage: add native x86_64 and aarch64 self-contained AppImage builds, embedded GitHub Releases zsync metadata, paired update files, strict release-asset validation and SHA-256 checksums (#555)
 - Docs/release: document AppImage runtime boundaries, downloads, checksums and Gear Lever-compatible zsync updates (#555)
@@ -28,7 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Welcome: restore the emphasized Hero sizing and the equal-width, vertically stacked flat secondary actions (Open Image, Paste Image and Drop Image) while retaining Screenshot as the primary action (#648)
 
-- UI/UX: modernize the Extracted page with a reduced Screenshot/Copy/Menu header and a bottom Undo/Redo/Search/Listen/Share action bar; make Screenshot the primary Welcome-page action with Open/Paste/Drop as secondary actions; style History and Shortcuts as boxed lists/cards with teal empty states and a consistent brand accent (#448)
+- UI/UX: align the Extracted, Welcome, History and Shortcuts interfaces with the modernized action hierarchy, boxed-list presentation and teal brand accent; preserve existing Welcome accessibility and interaction behavior (#648)
 
 - CI/governance: align Dependabot and certifi automation with `feature`, run CodeQL on PRs to all protected promotion branches, guard manual dependency-sync dispatch from protected branches, and document the single-maintainer PR/CI policy.
 - Release tooling: correct the release script post-tag instructions to describe generated CHANGELOG notes and the current multi-architecture Flatpak/AppImage publication flow.
