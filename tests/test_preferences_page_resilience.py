@@ -26,14 +26,12 @@ class FakeSettings:
 
     def __init__(self):
         self.bound_keys: list[str] = []
-        self.mapping_callbacks: dict[str, tuple[object, object]] = {}
+        self.values = {"tts-volume": 0.5}
+        self.handlers: dict[int, tuple[str, object]] = {}
+        self._next_handler = 1
 
     def bind(self, key, *_args, **_kwargs):
         self.bound_keys.append(key)
-
-    def bind_with_mapping(self, key, _obj, _prop, _flags, get_mapping, set_mapping):
-        self.bound_keys.append(key)
-        self.mapping_callbacks[key] = (get_mapping, set_mapping)
 
     def get_int(self, key):
         if key != "history-limit":
@@ -46,8 +44,23 @@ class FakeSettings:
     def get_string(self, _key):
         return ""
 
-    def get_double(self, _key):
-        return 0.5
+    def get_double(self, key):
+        return self.values[key]
+
+    def set_double(self, key, value):
+        self.values[key] = value
+        for _signal, callback in list(self.handlers.values()):
+            if _signal == f"changed::{key}":
+                callback(self, key)
+
+    def connect(self, signal, callback):
+        handler_id = self._next_handler
+        self._next_handler += 1
+        self.handlers[handler_id] = (signal, callback)
+        return handler_id
+
+    def disconnect(self, handler_id):
+        self.handlers.pop(handler_id, None)
 
 
 # ---------------------------------------------------------------------------
@@ -142,54 +155,25 @@ def test_voice_volume_initial_value_uses_saved_setting(monkeypatch, headless_gi_
     assert page.volume_row.set_value.call_args_list[0].args == (50.0,)
 
 
-def test_voice_volume_mapping_converts_both_directions(monkeypatch, headless_gi_mocks):
-    """GSettings stores a normalized double while the SpinRow displays a percentage."""
-    import anura.widgets.preferences_voice_page as mod
+def test_voice_volume_change_persists_normalized_setting(monkeypatch, headless_gi_mocks):
+    """A percentage change is persisted as a normalized GSettings double."""
+    page, fake_settings = _make_voice_page(monkeypatch, tts_raises=AttributeError("catalog unavailable"))
 
-    _page, fake_settings = _make_voice_page(monkeypatch, tts_raises=AttributeError("catalog unavailable"))
-    get_mapping, set_mapping = fake_settings.mapping_callbacks["tts-volume"]
+    page.volume_row.get_value.return_value = 30.0
+    page._on_volume_changed(page.volume_row, None)
 
-    class Value:
-        def __init__(self, number=0.0):
-            self.number = number
+    assert fake_settings.get_double("tts-volume") == 0.3
 
-        def set_double(self, number):
-            self.number = number
 
-        def get_double(self):
-            return self.number
+def test_external_volume_setting_change_updates_row(monkeypatch, headless_gi_mocks):
+    """External GSettings changes update the row without a feedback write."""
+    page, fake_settings = _make_voice_page(monkeypatch, tts_raises=AttributeError("catalog unavailable"))
 
-    class Variant:
-        def get_double(self):
-            return 0.75
+    page.volume_row.get_value.return_value = 50.0
+    page.volume_row.set_value.reset_mock()
+    fake_settings.set_double("tts-volume", 0.3)
 
-    target = Value()
-    assert get_mapping(target, Variant()) is True
-    assert target.get_double() == 75.0
-
-    from types import SimpleNamespace
-
-    created_variants = []
-
-    class FakeVariant:
-        def __init__(self, number):
-            self.number = number
-
-        def get_double(self):
-            return self.number
-
-    class VariantFactory:
-        @staticmethod
-        def new_double(number):
-            variant = FakeVariant(number)
-            created_variants.append(variant)
-            return variant
-
-    monkeypatch.setattr(mod, "GLib", SimpleNamespace(Variant=VariantFactory))
-    mapped = set_mapping(Value(25.0), object())
-
-    assert len(created_variants) == 1
-    assert mapped.get_double() == 0.25
+    page.volume_row.set_value.assert_called_once_with(30.0)
 
 
 def test_voice_catalog_worker_failure_resets_loading_state(monkeypatch, headless_gi_mocks):
