@@ -108,7 +108,9 @@ def test_new_operation_is_published_before_previous_capture_is_cancelled():
     from anura.window import AnuraWindow
 
     backend = SimpleNamespace(active_operation_id=1)
-    backend.cancel = MagicMock(side_effect=lambda: setattr(backend, "observed_operation_id", backend.active_operation_id))
+    backend.cancel = MagicMock(
+        side_effect=lambda: setattr(backend, "observed_operation_id", backend.active_operation_id)
+    )
     welcome = SimpleNamespace(show_spinner=MagicMock())
     window = SimpleNamespace(
         _ocr_operation_id=1,
