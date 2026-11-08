@@ -4,7 +4,7 @@
 
 This document transfers the context required to continue the UI modernization work originally proposed in [PR #448](https://github.com/D3M-Sudo/Anura/pull/448), adapting it to the current `feature` branch rather than applying the old branch wholesale.
 
-This handover is a tracking and continuity artifact. **It does not mean that the implementation from PR #448 has been migrated.**
+This handover records the adapted implementation and its remaining validation. The modernization work is now present on `fix/ui-modernization-aligned`; it was adapted against `feature` rather than copied wholesale from PR #448.
 
 ## Current Git state
 
@@ -12,7 +12,7 @@ This handover is a tracking and continuity artifact. **It does not mean that the
 - Working branch: `fix/ui-modernization-aligned`
 - Target branch: `feature`
 - Branch creation base: `894ca811a58302c8a6322a8207c04f77af00e5e9`
-- At branch creation, `fix/ui-modernization-aligned` was identical to `feature` (zero commits ahead, zero behind, no changed files).
+- The branch was initially created from the then-current `feature` baseline; the PR targets `feature` and carries the adapted modernization plus subsequent remediation commits.
 - `feature` must remain untouched by this work until an explicit authorization changes that constraint.
 - No merge is authorized.
 - Original PR #448 must remain open and unchanged until its implementation has been recovered/adapted, reviewed, and its replacement contents are demonstrably present in the new PR.
@@ -67,7 +67,7 @@ The authoritative source for the full historical patch is the original PR diff: 
 - Work from the current `feature` baseline on `fix/ui-modernization-aligned`; do not blindly cherry-pick the old PR.
 - Preserve `feature`; do not commit to or otherwise modify it.
 - Open a new PR targeting `feature` in **Draft** state.
-- Keep PR #448 open and unchanged until the replacement contains the necessary implementation and evidence.
+- Keep PR #448 open and unchanged until the replacement implementation and its validation evidence have been reviewed; closure is a separate decision requiring explicit authorization.
 - Evaluate fixed teal against the GNOME/system accent before deciding; do not assume either choice.
 - Produce updated screenshots and visual documentation for all relevant windows and major states.
 - Remediate all findings from the prior audit, including architecture, accessibility, responsiveness, interactions, and maintainability.
@@ -111,10 +111,10 @@ These are integration constraints, not a claim that the current branch has alrea
 - PR #448 changed-file inventory: retrieved (16 paths).
 - PR #448 issue comments, review submissions, and inline review threads: none returned by the connector at handover.
 - Local repository checkout and GTK/Blueprint/Flatpak runtime environment: unavailable in the session used to create this handover.
-- No implementation files have yet been migrated to this branch.
+- The adapted implementation is present on this branch, including the Preferences page split, extracted/welcome layout changes, History and Shortcuts styling, resource registration, translation extraction entries and regression tests.
 - No pytest, Blueprint, GTK, accessibility, translation, Flatpak, runtime, or screenshot validation is claimed as completed.
 - No merge has been performed.
 
 ## Closure rationale for the original PR
 
-**Do not close PR #448 at this stage.** The new branch and Draft PR currently carry this handover only; they do not contain the original UI modernization code. The original PR remains the sole GitHub PR containing that proposed implementation. Reassess closure only after the new PR contains the adapted implementation and the migration is verifiably complete.
+**Do not close PR #448 at this stage.** The aligned PR now contains the adapted modernization implementation, but current-head CI, real desktop interaction/accessibility validation, packaging checks and final diff review remain outstanding. Reassess closure only after those gates pass and the replacement is demonstrably complete; closing #448 still requires explicit authorization.
