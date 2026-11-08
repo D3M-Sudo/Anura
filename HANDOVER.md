@@ -110,9 +110,9 @@ These are integration constraints, not a claim that the current branch has alrea
 - PR #448 metadata and full diff: retrieved; its changed-file inventory contains 16 paths.
 - The maintainer supplied a local validation report for head `90391da9ee5ac198869753744d3cfb1552868627`: all 14 Blueprint files compiled; GResource and GSettings schema validation passed; Ruff check/format and changelog integrity passed; headless pytest reported 595 passed, 5 skipped and 238 deselected; GTK tests under Weston reported 382 passed, 5 skipped and 600 deselected when `ANURA_CI_TEST_MODE` was unset.
 - The same report exposed the PyGObject 3.48.2 incompatibility with `Gio.Settings.bind_with_mapping`. The implementation now uses explicit `get_double`/`set_double` synchronization, with reverse updates for external GSettings changes.
-- Regression tests now exercise normalized volume persistence and external setting changes. A new GTK integration test instantiates the real PreferencesDialog using a memory-backed Gio.Settings backend; neither the updated tests nor this integration test has yet been run in the current session.
+- Regression tests exercise normalized volume persistence and external setting changes. The real PreferencesDialog integration test with a memory-backed Gio.Settings backend passed in the current-head GTK Integration Tests job.
 - The original teal's reported contrast failures were addressed by separating the darker suggested-action background from theme-aware text accents. Contrast calculations support the selected values, but a real light/dark desktop visual check remains outstanding.
-- Current-head CI, real GNOME desktop accessibility/keyboard checks, Flatpak/AppImage builds and aarch64 validation remain outstanding and must be checked before the PR leaves Draft.
+- Current-head quality, changelog-integrity and GTK Integration Tests jobs passed; CodeQL passed. AppImage x86_64/aarch64 and Flatpak x86_64/aarch64 jobs were still running at the last check. Real GNOME desktop accessibility/keyboard checks and visual sign-off remain outstanding; keep the PR Draft until every gate is complete.
 - No merge has been performed.
 
 ## Closure rationale for the original PR
