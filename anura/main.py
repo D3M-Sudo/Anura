@@ -27,12 +27,13 @@ import gi
 
 # Set GTK version requirements before imports
 gi.require_version("Gtk", "4.0")
+gi.require_version("GtkSource", "5")
 gi.require_version("Adw", "1")
 gi.require_version("Notify", "0.7")
 gi.require_version("Xdp", "1.0")
 gi.require_version("Gst", "1.0")
 
-from gi.repository import Adw, Gio, GLib, Gtk
+from gi.repository import Adw, Gio, GLib, Gtk, GtkSource
 from loguru import logger
 
 from anura.config import APP_ID, XDG_DATA_HOME
@@ -115,6 +116,9 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
 
     def do_startup(self, *args: object, **kwargs: object) -> None:
         Adw.init()
+        # GtkSourceView must register its widget GTypes before Gtk.Template
+        # instantiates ExtractedPage from the compiled Blueprint resource.
+        GtkSource.init()
         Adw.Application.do_startup(self)
 
         self._apply_color_scheme()

@@ -160,6 +160,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Dependabot #47, #48 (`anyio`): no longer in the dependency graph. `anyio` was only reachable through `httpx`, which was required exclusively by the `safety` dev tool removed above; `uv.lock` now has no `anyio` entry, so the IDNA 2003 host-name encoding in `TLSStream` (TLS certificate spoofing) and the process-pool workers blocked on undrained stderr no longer apply
 - Dependabot #32 (`nltk`): no longer in the dependency graph. The direct dev dependency was unused (never imported by the application, the tests or the build scripts), and dropping `safety` removes the only transitive path (`safety 3.8.1` requires `nltk>=3.9`), so NLTK's unfixed model-artifact path traversal cannot be reached from this project at all. NLTK was never shipped in the Flatpak
 
+### Fixed
+
+- GTK: initialize GtkSourceView after GTK/Libadwaita startup so its widget GTypes are registered before the ExtractedPage Blueprint template is instantiated; set the first-run window size to 900 × 600 px with monitor-aware clamping (#648)
+
 ## [0.2.1] - 2026-10-20
 
 ### Added
