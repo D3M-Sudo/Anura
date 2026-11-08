@@ -78,4 +78,3 @@ def test_preferences_dialog_uses_real_gsettings_for_voice_volume(monkeypatch):
     real_settings.set_double("tts-volume", 0.65)
     assert dialog.voice_page.volume_row.get_value() == pytest.approx(65.0)
 
-    dialog.do_destroy()
