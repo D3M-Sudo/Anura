@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-import os
 from pathlib import Path
 from unittest.mock import MagicMock
 
