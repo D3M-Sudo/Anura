@@ -83,6 +83,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - CSS: split the combined `0%, 100%` selectors in the `pulse` and `readyPulse` keyframes into separate `0%` and `100%` selectors for GTK4 CssProvider compatibility (#448)
 
+- Welcome: close the nested ScrolledWindow and template declarations correctly so Blueprint compilation succeeds with the responsive 360px layout (#648)
+- Translations: restore neutral POT template metadata and update source references for the split Editor and Voice Preferences pages (#648)
+
 - Changelog: consolidate duplicate `[Unreleased]` category headings and add a CI guard against undocumented removal of existing entries.
 - CI/Flatpak: strengthen the invalid-input OCR regression check to require a non-zero exit without an uncaught Python traceback (#589).
 - AudioPlayer: extend `_cleanup_lock` scope to cover `play()` and `stop()` to prevent races with concurrent cleanup (F19)
