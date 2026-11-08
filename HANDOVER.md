@@ -15,7 +15,7 @@ This handover records the adapted implementation and its remaining validation. T
 - The branch was initially created from the then-current `feature` baseline; the PR targets `feature` and carries the adapted modernization plus subsequent remediation commits.
 - `feature` must remain untouched by this work until an explicit authorization changes that constraint.
 - No merge is authorized.
-- Original PR #448 must remain open and unchanged until its implementation has been recovered/adapted, reviewed, and its replacement contents are demonstrably present in the new PR.
+- Original PR #448 has been closed as superseded by PR #648 after confirming that its relevant implementation was adapted and transferred. Keep the original diff as historical reference; do not reopen it without explicit authorization.
 
 ## Original PR #448: source record
 
@@ -67,7 +67,7 @@ The authoritative source for the full historical patch is the original PR diff: 
 - Work from the current `feature` baseline on `fix/ui-modernization-aligned`; do not blindly cherry-pick the old PR.
 - Preserve `feature`; do not commit to or otherwise modify it.
 - Open a new PR targeting `feature` in **Draft** state.
-- Keep PR #448 open and unchanged until the replacement implementation and its validation evidence have been reviewed; closure is a separate decision requiring explicit authorization.
+- PR #448 is closed as superseded by PR #648; its original diff remains the historical source record.
 - Retain the fixed teal brand identity while separating the darker suggested-action background color from text accents; use theme-aware text colors for light and dark surfaces.
 - Produce updated screenshots and visual documentation for all relevant windows and major states.
 - Remediate all findings from the prior audit, including architecture, accessibility, responsiveness, interactions, and maintainability.
@@ -77,6 +77,16 @@ The authoritative source for the full historical patch is the original PR diff: 
 - User is the sole maintainer; do not impose an external second-maintainer approval requirement.
 - No merge without explicit authorization.
 
+
+## OCR request ownership and spinner lifecycle
+
+The agreed concurrency policy is **latest operation started wins**. Starting a new file, clipboard, screenshot or drag-and-drop request immediately invalidates the previous request, including work still loading input or waiting for screenshot capture. The window assigns a monotonically increasing operation ID and publishes it to the screenshot backend before cancelling prior work, so even synchronous cancellation callbacks from the previous provider are already stale.
+
+- File loading and clipboard OCR propagate the operation ID through `AtomicTaskManager`; in-memory decoding publishes GObject signals only from a lane-validated callback.
+- Screenshot capture callbacks, portal URI resolution, isolated OCR results, status/errors and queued navigation all check the active operation ID. URI parsing runs outside `OCR_LANE`; isolated OCR starts on the GTK thread only after the parser-lane callback is validated, avoiding nested tasks superseding one another in the same lane.
+- Drag-and-drop claims ownership at the initial drop event, carries the ID through both asynchronous stream callbacks, and ignores stale read failures/results. Starting any other OCR request cancels a pending DnD stream read.
+- Spinner visibility is released only by the active operation. DnD visual reset is separate from spinner ownership; clipboard and invalid-drop errors cannot hide another request's spinner.
+- Regression coverage includes stale capture callbacks, queued signal delivery, superseded spinner cleanup, generation publication before cancellation, DnD token propagation and screenshot service cancellation/fallback behavior.
 ## Integration risks already identified
 
 The old PR predates important changes now present on `feature`. Its implementation must be reviewed against the current code rather than copied over.
@@ -102,7 +112,7 @@ These are integration constraints, not a claim that the current branch has alrea
 6. Update documentation and CHANGELOG, then validate internal links and cross-references.
 7. Run the complete available test/build/runtime matrix and record exact commands, results, and environment limitations.
 8. Update the Draft PR with the implementation, migration rationale, screenshots, and evidence.
-9. Only after confirming that the replacement PR contains the required implementation and supporting context should PR #448 be considered for closure. Closing it requires an explicit, evidence-based replacement rationale; do not close it merely because this handover exists.
+9. Keep PR #648 as the active continuation. PR #448 has already been closed with the explicit replacement rationale recorded in PR #648; do not reopen or merge either PR without authorization.
 
 ## Validation status at handover
 
@@ -117,4 +127,4 @@ These are integration constraints, not a claim that the current branch has alrea
 
 ## Closure rationale for the original PR
 
-**Do not close PR #448 at this stage.** The aligned PR now contains the adapted modernization implementation, but current-head CI, real desktop interaction/accessibility validation, packaging checks and final diff review remain outstanding. Reassess closure only after those gates pass and the replacement is demonstrably complete; closing #448 still requires explicit authorization.
+**PR #448 is closed as superseded by PR #648.** The relevant modernization work was adapted to the current `feature` baseline and transferred to `fix/ui-modernization-aligned`, preserving later functionality and lifecycle protections. PR #648 remains the active Draft continuation; its remaining CI, packaging, baseline synchronization and real-desktop validation gates are independent of the closure of #448.
