@@ -57,7 +57,10 @@ template $WelcomePage : Adw.NavigationPage {
 
         Adw.Clamp {
           maximum-size: 240;
-          child: Box {
+          child: Gtk.ScrolledWindow {
+            hscrollbar-policy: automatic;
+            vscrollbar-policy: automatic;
+            child: Box {
             orientation: vertical;
             spacing: 12;
 
