@@ -289,6 +289,13 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
 
         self._process_dropped_path(local_path, operation_id)
 
+    def cancel_pending_drop(self) -> None:
+        """Cancel an asynchronous URI-list read when another OCR request starts."""
+        cancellable = self._drop_cancellable
+        self._drop_cancellable = None
+        if cancellable is not None:
+            cancellable.cancel()
+
     def _is_drop_operation_current(self, operation_id: int | None) -> bool:
         """Reject late asynchronous DnD callbacks after a newer OCR request starts."""
         if operation_id is None:
@@ -323,6 +330,8 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
 
     def _show_error_toast(self, message: str, operation_id: int | None = None) -> None:
         """Show a DnD error without disturbing a newer operation's UI state."""
+        if operation_id is not None and not self._is_drop_operation_current(operation_id):
+            return
         window = self.get_root()
         if window and hasattr(window, "show_toast"):
             window.show_toast(message)
