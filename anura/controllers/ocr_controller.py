@@ -228,9 +228,7 @@ class OcrController(GObject.GObject, SignalManagerMixin):
         except ReferenceError:
             logger.debug("OcrController: Window was already destroyed, skipping portal banner dismissal.")
 
-    def _navigate_to_extracted_page(
-        self, task_id: str | None = None, operation_id: int | None = None
-    ) -> int:
+    def _navigate_to_extracted_page(self, task_id: str | None = None, operation_id: int | None = None) -> int:
         # A newer UI request invalidates queued navigation from an older result.
         if operation_id is not None and not self._window._is_current_ocr_operation(operation_id):
             return GLib.SOURCE_REMOVE
