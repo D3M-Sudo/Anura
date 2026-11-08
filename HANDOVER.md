@@ -114,6 +114,7 @@ These are integration constraints, not a claim that the current branch has alrea
 - The original teal's reported contrast failures were addressed by separating the darker suggested-action background from theme-aware text accents. Contrast calculations support the selected values, but a real light/dark desktop visual check remains outstanding.
 - Current-head CI, real GNOME desktop accessibility/keyboard checks, Flatpak/AppImage builds and aarch64 validation remain outstanding and must be checked before the PR leaves Draft.
 - No merge has been performed.
+
 ## Closure rationale for the original PR
 
 **Do not close PR #448 at this stage.** The aligned PR now contains the adapted modernization implementation, but current-head CI, real desktop interaction/accessibility validation, packaging checks and final diff review remain outstanding. Reassess closure only after those gates pass and the replacement is demonstrably complete; closing #448 still requires explicit authorization.
