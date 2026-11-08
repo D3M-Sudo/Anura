@@ -28,7 +28,7 @@ from PIL import Image  # noqa: E402
 import pytesseract  # noqa: E402
 
 from anura.config import LANG_CODE_PATTERN, OCR_TIMEOUT_SECONDS  # noqa: E402
-from anura.core.atomic_task_manager import CLEANUP_LANE, OCR_LANE, get_atomic_manager  # noqa: E402
+from anura.core.atomic_task_manager import CLEANUP_LANE, DEFAULT_LANE, OCR_LANE, get_atomic_manager  # noqa: E402
 from anura.models.ocr import OcrResult  # noqa: E402
 from anura.services.language_manager import get_tesseract_config  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
@@ -390,7 +390,7 @@ class ScreenshotService(GObject.GObject):
                     self._handle_portal_uri_background,
                     (lang, uri, copy, operation_id),
                     pass_task_id=True,
-                    lane=OCR_LANE,
+                    lane=DEFAULT_LANE,
                 )
                 self._current_task_id = task_id
                 self._is_capturing = False
@@ -426,7 +426,7 @@ class ScreenshotService(GObject.GObject):
                         # True portal-missing case: keep the environment diagnostic dump
                         # and the desktop-specific advice banner/error message.
                         self._log_portal_environment()
-                        self._emit_portal_failure()
+                        self._emit_portal_failure(operation_id)
                     else:
                         # The fallback was attempted and failed with a real error of its
                         # own (no further fallback possible).
@@ -628,7 +628,7 @@ class ScreenshotService(GObject.GObject):
             f"Anura Screenshot diagnostics: in_flatpak={in_flatpak}, {snapshot}",
         )
 
-    def _emit_portal_failure(self) -> None:
+    def _emit_portal_failure(self, operation_id: int | None = None) -> None:
         """Emit the user-facing failure UI for a missing portal backend.
 
         Centralised so both portal and fallback can call it consistently.
@@ -638,6 +638,8 @@ class ScreenshotService(GObject.GObject):
         user_message = advice.long_message
 
         def _on_failure_idle():
+            if not self._is_operation_current(operation_id):
+                return GLib.SOURCE_REMOVE
             try:
                 self.emit("portal-backend-missing")
                 self.emit("error", user_message)
