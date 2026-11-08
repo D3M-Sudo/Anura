@@ -65,6 +65,8 @@ def test_share_icons_use_a_uniform_theme_aware_symbolic_format():
         assert root.attrib["width"] == "24"
         assert root.attrib["height"] == "24"
         assert root.attrib["viewBox"] == "0 0 24 24"
-        source = icon_path.read_text(encoding="utf-8")
-        assert "currentColor" in source
-        assert "#bebebe" not in source.lower()
+        paths = list(root)
+        assert paths
+        assert all(path.tag.endswith("path") for path in paths)
+        assert all(path.attrib.get("class") == "foreground" for path in paths)
+        assert all("d" in path.attrib for path in paths)
