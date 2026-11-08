@@ -84,3 +84,26 @@ if __name__ == "__main__":
     import pytest
 
     pytest.main([__file__])
+
+
+def test_stale_operation_cannot_hide_current_spinner():
+    """A completion from an older request must not reset the current spinner."""
+    self_fake = _make_self()
+    self_fake._ocr_operation_id = 2
+    self_fake._is_current_ocr_operation = lambda operation_id: operation_id == self_fake._ocr_operation_id
+
+    _get_handler("_finish_ocr_operation")(self_fake, 1)
+
+    self_fake.welcome_page.reset_drop_area_visual_state.assert_not_called()
+    self_fake.welcome_page.hide_spinner.assert_not_called()
+
+
+def test_current_operation_resets_spinner_and_drop_visuals():
+    self_fake = _make_self()
+    self_fake._ocr_operation_id = 2
+    self_fake._is_current_ocr_operation = lambda operation_id: operation_id == self_fake._ocr_operation_id
+
+    _get_handler("_finish_ocr_operation")(self_fake, 2)
+
+    self_fake.welcome_page.reset_drop_area_visual_state.assert_called_once_with()
+    self_fake.welcome_page.hide_spinner.assert_called_once_with()
