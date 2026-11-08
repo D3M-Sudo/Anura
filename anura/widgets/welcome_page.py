@@ -297,9 +297,9 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
             self._show_error_toast(_("Failed to process dropped file"))
             return
 
+        operation_id = window._begin_ocr_operation()
         self._set_drop_area_processing_state(True)
-        self.show_spinner()
-        window.dnd_controller.process_dnd_file_sync(local_path)
+        window.dnd_controller.process_dnd_file_sync(local_path, operation_id)
 
     def _show_error_toast(self, message: str) -> None:
         """Show error toast to user."""
@@ -307,7 +307,6 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         if window and hasattr(window, "show_toast"):
             window.show_toast(message)
         self._set_drop_area_processing_state(False)
-        self.hide_spinner()
 
     def _set_drop_area_processing_state(self, processing: bool) -> None:
         """Set the drop area visual state to indicate processing (OCR in progress)."""
@@ -322,16 +321,20 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
                 self.drop_area_label.set_label(_("Drop image file here"))
             self.drop_area.update_property([Gtk.AccessibleProperty.LABEL], [_("Image drop zone")])
 
-    def reset_drop_area_state(self) -> None:
-        """Reset the drop area to its initial state (called after OCR completes)."""
+    def reset_drop_area_visual_state(self) -> None:
+        """Reset DnD visuals without taking ownership of the shared OCR spinner."""
         self._set_drop_area_processing_state(False)
-        self.hide_spinner()
         self.drop_revealer.set_reveal_child(False)
         self.drop_button.remove_css_class("suggested-action")
         self.drop_button.set_tooltip_text(_("Drop image here"))
         self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [False])
         self.drop_button.update_property([Gtk.AccessibleProperty.LABEL], [_("Drop image here")])
         self.welcome.set_description(_("Extract text from anywhere"))
+
+    def reset_drop_area_state(self) -> None:
+        """Backward-compatible full reset for callers that own OCR completion."""
+        self.reset_drop_area_visual_state()
+        self.hide_spinner()
 
     def set_status(self, status_msg: str) -> None:
         """Update the status label during processing."""
