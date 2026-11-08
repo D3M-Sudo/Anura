@@ -36,7 +36,8 @@ class ShareService(GObject.GObject):
 
     __gtype_name__ = "ShareService"
 
-    __gsignals__: ClassVar[dict[str, tuple]] = {"share": (GObject.SignalFlags.RUN_LAST, None, (bool,))}
+    __gsignals__: ClassVar[dict[str, tuple]] = {"share": (GObject.SignalFlags.RUN_LAST, None, (bool,)),
+        "share-too-long": (GObject.SignalFlags.RUN_LAST, None, (str,))}
 
     def __init__(self) -> None:
         super().__init__()
@@ -117,6 +118,7 @@ class ShareService(GObject.GObject):
             # Validate URL length before attempting to launch
             if len(share_link) > self.MAX_URL_LENGTH:
                 logger.warning(f"Anura Share: URL too long ({len(share_link)} chars, max {self.MAX_URL_LENGTH})")
+                self.emit("share-too-long", text)
                 self.emit("share", False)
                 return
 
@@ -146,6 +148,7 @@ class ShareService(GObject.GObject):
             logger.warning(
                 f"Anura Share: Mastodon URL too long ({len(mastodon_url)} chars, max {self.MAX_URL_LENGTH})",
             )
+            self.emit("share-too-long", text)
 
             def _on_share_idle(res):
                 try:
