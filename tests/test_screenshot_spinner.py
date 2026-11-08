@@ -76,14 +76,8 @@ def test_ocr_error_hides_spinner():
     # Empty message -> early return after the UI reset (no dialog/toast branch).
     _get_handler("_on_ocr_error")(self_fake, MagicMock(), "")
 
-    self_fake.welcome_page.reset_drop_area_state.assert_called_once_with()
+    self_fake._finish_ocr_operation.assert_called_once_with(1)
     self_fake.show_toast.assert_not_called()
-
-
-if __name__ == "__main__":
-    import pytest
-
-    pytest.main([__file__])
 
 
 def test_stale_operation_cannot_hide_current_spinner():
@@ -131,3 +125,9 @@ def test_new_operation_is_published_before_previous_capture_is_cancelled():
     assert backend.active_operation_id == 2
     manager.return_value.cancel_lane.assert_called_once()
     welcome.show_spinner.assert_called_once_with()
+
+
+if __name__ == "__main__":
+    import pytest
+
+    pytest.main([__file__])
