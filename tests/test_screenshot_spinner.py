@@ -111,7 +111,7 @@ def test_new_operation_is_published_before_previous_capture_is_cancelled():
     backend.cancel = MagicMock(
         side_effect=lambda: setattr(backend, "observed_operation_id", backend.active_operation_id)
     )
-    welcome = SimpleNamespace(show_spinner=MagicMock())
+    welcome = SimpleNamespace(show_spinner=MagicMock(), cancel_pending_drop=MagicMock())
     window = SimpleNamespace(
         _ocr_operation_id=1,
         _screenshot_timeout_id=None,
