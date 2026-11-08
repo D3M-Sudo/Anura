@@ -26,6 +26,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Welcome: restore the emphasized Hero sizing and the equal-width, vertically stacked flat secondary actions (Open Image, Paste Image and Drop Image) while retaining Screenshot as the primary action (#648)
+
 - UI/UX: modernize the Extracted page with a reduced Screenshot/Copy/Menu header and a bottom Undo/Redo/Search/Listen/Share action bar; make Screenshot the primary Welcome-page action with Open/Paste/Drop as secondary actions; style History and Shortcuts as boxed lists/cards with teal empty states and a consistent brand accent (#448)
 
 - CI/governance: align Dependabot and certifi automation with `feature`, run CodeQL on PRs to all protected promotion branches, guard manual dependency-sync dispatch from protected branches, and document the single-maintainer PR/CI policy.
