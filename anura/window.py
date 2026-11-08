@@ -117,6 +117,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         # Use shared singleton instance
         self.share_service = get_share_service()
         self.connect_tracked(self.share_service, "share", self._on_share_status)
+        self.connect_tracked(self.share_service, "share-too-long", self._on_share_too_long)
         share_action = Gio.SimpleAction.new("share", GLib.VariantType.new("s"))
         self.connect_tracked(share_action, "activate", self._on_share)
         self.add_action(share_action)
@@ -568,11 +569,19 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     def _on_share(self, _action: Gio.SimpleAction, variant: GLib.Variant) -> None:
         """Dispatch share action to the correct provider."""
         provider: str = variant.get_string()
+        selection = self.extracted_page.buffer.get_selection_bounds()
         text: str = self.extracted_page.get_active_text()
         if not text:
             self.show_toast(_("No text to share."))
             return
+        if selection or not self.settings.get_boolean("autocopy"):
+            get_clipboard_service().set(text)
         self.share_service.share(provider, text)
+
+    def _on_share_too_long(self, _service: object, text: str) -> None:
+        """Copy full share text when a provider URL cannot carry it."""
+        get_clipboard_service().set(text)
+        self.show_toast(_("The text is too long for this service. It was copied to the clipboard; paste it manually."))
 
     def _on_share_status(self, _service: object, success: bool) -> None:
         """Report asynchronous share success or failure to the user."""
