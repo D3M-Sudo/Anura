@@ -217,8 +217,8 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
             _("Not now"),
         )
         chooser.connect("response", self._on_legacy_migration_folder_response)
-        chooser.show()
         self._legacy_migration_chooser = chooser
+        chooser.show()
 
     def _on_legacy_migration_folder_response(self, chooser, response: int) -> None:
         if not self._legacy_migration_pending:
@@ -230,9 +230,7 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
                 selected_path = selected.get_path() if selected else None
                 if selected_path:
                     if not migrate_legacy_flatpak_data(old_data_dir=Path(selected_path)):
-                        logger.warning(
-                            "Legacy Anura data was not imported. The migration prompt will be shown again."
-                        )
+                        logger.warning("Legacy Anura data was not imported. The migration prompt will be shown again.")
                 else:
                     logger.warning("The selected legacy data folder has no local portal path.")
             else:
