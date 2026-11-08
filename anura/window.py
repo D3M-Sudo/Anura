@@ -113,6 +113,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
 
         # Safety timeout for portal screenshot (prevents hidden window on D-Bus hang)
         self._screenshot_timeout_id = None
+        self._ocr_operation_id = 0
 
         # Use shared singleton instance
         self.share_service = get_share_service()
@@ -123,6 +124,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         self.add_action(share_action)
 
         self.backend = backend  # type: ignore[assignment]
+        self.backend.active_operation_id = self._ocr_operation_id
         # History V1: one HistoryService wired once with the configured limit;
         # recording itself is gated by the history-enabled setting at OCR time.
         self.history_service = HistoryService(limit=self.settings.get_int("history-limit"))
@@ -215,12 +217,38 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         lang_setting: str = self.settings.get_string("active-language")
         return lang_setting or language_manager_instance.active_language.code
 
+    def _begin_ocr_operation(self) -> int:
+        """Make a new OCR request the sole owner of OCR work and related UI state."""
+        self._ocr_operation_id += 1
+        operation_id = self._ocr_operation_id
+        if self._screenshot_timeout_id is not None:
+            GLib.source_remove(self._screenshot_timeout_id)
+            self._screenshot_timeout_id = None
+            self.present()
+        # Cancel both a running capture and any queued/running OCR from the prior request.
+        self.backend.cancel()
+        get_atomic_manager().cancel_lane(OCR_LANE)
+        self.backend.active_operation_id = operation_id
+        self.welcome_page.show_spinner()
+        return operation_id
+
+    def _is_current_ocr_operation(self, operation_id: int) -> bool:
+        return operation_id == self._ocr_operation_id
+
+    def _finish_ocr_operation(self, operation_id: int) -> None:
+        """Release UI state only when the completing request still owns it."""
+        if not self._is_current_ocr_operation(operation_id):
+            return
+        self.welcome_page.reset_drop_area_visual_state()
+        self.welcome_page.hide_spinner()
+
     def _on_screenshot_timeout(self) -> bool:
         """Restore window if portal screenshot doesn't respond within 30s."""
         self._screenshot_timeout_id = None
-        # BUG-031: Cancel active capture to prevent UI interference and reset state
+        operation_id = self._ocr_operation_id
         if self.backend:
             self.backend.cancel()
+        self._finish_ocr_operation(operation_id)
         self.present()
         self.show_toast(_("Screenshot timed out. Please try again."))
         logger.warning("Anura: Screenshot portal timeout — restoring window.")
@@ -229,14 +257,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     def get_screenshot(self, copy: bool = False) -> None:
         """Capture screenshot and process it for OCR."""
         lang: str = self.get_language()
-
-        # Check if backend is already capturing BEFORE hiding the window
-        # BUG-040: Use public is_busy property instead of private _is_capturing
-        if self.backend.is_busy:
-            logger.warning("Anura: Capture already in progress.")
-            self.show_toast(_("Capture already in progress"))
-            return
-
+        operation_id = self._begin_ocr_operation()
         self.hide()
 
         # Safety timeout: if portal doesn't respond within 30s, restore window
@@ -247,12 +268,13 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         self._screenshot_timeout_id = GLib.timeout_add_seconds(30, self._on_screenshot_timeout)
 
         try:
-            self.backend.capture(lang, copy)
+            self.backend.capture(lang, copy, operation_id)
         except (GLib.Error, RuntimeError, OSError) as e:
             # Clean up timeout and restore window on error
             if self._screenshot_timeout_id is not None:
                 GLib.source_remove(self._screenshot_timeout_id)
                 self._screenshot_timeout_id = None
+            self._finish_ocr_operation(operation_id)
             self.present()
             logger.error(f"Anura: Screenshot capture failed: {e}")
             self.show_toast(_("Failed to capture screenshot"))
@@ -261,6 +283,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         """Process an image file asynchronously."""
         if not file_path:
             return
+        operation_id = self._begin_ocr_operation()
 
         # #509: validate from filesystem metadata (is_file + stat) before
         # reading anything. load_contents_async() would otherwise load the
@@ -269,36 +292,56 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         # The byte check in the callback stays as defence in depth.
         is_valid, _size, error = validate_image_resource(file_path)
         if not is_valid:
+            self._finish_ocr_operation(operation_id)
             self.show_toast(_(error) if error else _("Invalid image file"))
             return
 
         gfile: Gio.File = Gio.File.new_for_path(file_path)
-        self.welcome_page.show_spinner()
 
         def _on_contents_loaded(gfile: Gio.File, result: Gio.AsyncResult) -> None:
+            if not self._is_current_ocr_operation(operation_id):
+                return
             try:
                 ok, contents, _etag = gfile.load_contents_finish(result)
                 if ok:
                     is_valid, _size, error = validate_image_resource(contents)
                     if not is_valid:
-                        self.welcome_page.spinner.set_visible(False)
+                        self._finish_ocr_operation(operation_id)
                         self.show_toast(_(error) if error else _("Invalid image file"))
                         return
 
                     get_atomic_manager().execute(
-                        self.backend.decode_image,
+                        self.backend.decode_image_sync,
                         (self.get_language(), BytesIO(contents)),
+                        callback=lambda result: self._on_in_memory_ocr_complete(result, operation_id),
+                        errorback=lambda error, _traceback: self._on_in_memory_ocr_error(error, operation_id),
+                        pass_task_id=True,
                         lane=OCR_LANE,
                     )
                 else:
-                    self.welcome_page.hide_spinner()
+                    self._finish_ocr_operation(operation_id)
                     self.show_toast(_("Failed to load image file"))
             except (GLib.Error, RuntimeError) as e:
                 logger.error(f"Anura Window: Async load failed: {e}")
-                self.welcome_page.hide_spinner()
+                self._finish_ocr_operation(operation_id)
                 self.show_toast(_("Error loading file"))
 
         gfile.load_contents_async(None, _on_contents_loaded)
+
+    def _on_in_memory_ocr_complete(self, result: tuple, operation_id: int) -> None:
+        """Publish an in-memory OCR result after AtomicTaskManager validates lane ownership."""
+        if not self._is_current_ocr_operation(operation_id):
+            return
+        success, extracted, error_message, ocr_result, applied_name = result
+        if success and extracted:
+            self.backend._emit_decoded(extracted, False, ocr_result, applied_name, operation_id)
+        else:
+            self.backend._emit_decode_error(error_message or _("Failed to decode image."), operation_id)
+
+    def _on_in_memory_ocr_error(self, error: Exception, operation_id: int) -> None:
+        if self._is_current_ocr_operation(operation_id):
+            logger.error(f"Anura: In-memory OCR task failed: {error}")
+            self.backend._emit_decode_error(_("OCR processing failed. Please try again."), operation_id)
 
     def _do_copy_to_clipboard(self) -> None:
         text: str = self.extracted_page.get_active_text()
@@ -314,17 +357,20 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
             self.show_toast(_("No text to copy"))
 
     def _on_paste_from_clipboard_texture(self, _service: GObject.GObject, texture: Gdk.Texture) -> None:
-        self.welcome_page.show_spinner()
+        operation_id = self._begin_ocr_operation()
         png_bytes: BytesIO = BytesIO(texture.save_to_png_bytes().get_data())
         get_atomic_manager().execute(
-            self.backend.decode_image,
+            self.backend.decode_image_sync,
             (self.get_language(), png_bytes),
+            callback=lambda result: self._on_in_memory_ocr_complete(result, operation_id),
+            errorback=lambda error, _traceback: self._on_in_memory_ocr_error(error, operation_id),
+            pass_task_id=True,
             lane=OCR_LANE,
         )
 
     def _on_clipboard_error(self, _service: GObject.GObject, message: str) -> None:
         """Handle clipboard service errors."""
-        self.welcome_page.spinner.set_visible(False)
+        # Clipboard read failures are independent of an already-running OCR request.
         if message:
             self.show_toast(message)
 
@@ -472,14 +518,16 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
 
     def _on_extraction_completed(self, _controller: OcrController, text: str, applied_name: str) -> None:
         """Mediate OCR result to the UI."""
+        operation_id = self._ocr_operation_id
         self._cleanup_screenshot_state()
-        self.welcome_page.reset_drop_area_state()
+        self._finish_ocr_operation(operation_id)
         self.extracted_page.set_extracted_text(text, applied_name)
 
     def _on_ocr_error(self, _controller: OcrController, message: str) -> None:
         """Handle OCR error signal."""
+        operation_id = self._ocr_operation_id
         self._cleanup_screenshot_state()
-        self.welcome_page.reset_drop_area_state()
+        self._finish_ocr_operation(operation_id)
         if not message:
             return
         # For total capture failure with no fallback available, show a fatal
@@ -507,9 +555,10 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     def _on_capture_finished(self, _controller: OcrController, success: bool) -> None:
         """Restore the window as soon as capture settles (OCR still running)."""
         if success:
-            # The window is visible again while OCR runs, so mirror the
-            # file/clipboard entry points and spin during the wait (VM bug #3).
+            # The window is visible again while OCR runs; ownership remains unchanged.
             self.welcome_page.show_spinner()
+        else:
+            self._finish_ocr_operation(self._ocr_operation_id)
         self._cleanup_screenshot_state()
 
     def _on_portal_missing(self, _controller: OcrController, message: str) -> None:
@@ -525,7 +574,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
 
     def _on_dnd_error(self, _controller: DndController, message: str) -> None:
         """Handle DnD error signal."""
-        self.welcome_page.reset_drop_area_state()
+        self._finish_ocr_operation(self._ocr_operation_id)
         if message:
             self.show_toast(message)
 
