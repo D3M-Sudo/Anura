@@ -27,6 +27,10 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
     spinner: Gtk.Spinner = Gtk.Template.Child()
     welcome: Adw.StatusPage = Gtk.Template.Child()
     screenshot_button: Gtk.Button = Gtk.Template.Child()
+    more_options_button: Gtk.MenuButton = Gtk.Template.Child()
+    more_options_popover: Gtk.Popover = Gtk.Template.Child()
+    open_image_button: Gtk.Button = Gtk.Template.Child()
+    paste_image_button: Gtk.Button = Gtk.Template.Child()
     lang_combo: Gtk.MenuButton = Gtk.Template.Child()
     language_popover: LanguagePopover = Gtk.Template.Child()
     drop_button: Gtk.Button = Gtk.Template.Child()
@@ -50,6 +54,8 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         self.lang_combo.set_label(current_lang_title)
         self._update_lang_combo_accessibility(current_lang_title)
 
+        self.connect_tracked(self.open_image_button, "clicked", self._on_more_options_action_clicked)
+        self.connect_tracked(self.paste_image_button, "clicked", self._on_more_options_action_clicked)
         self.connect_tracked(self.drop_button, "clicked", self._on_drop_button_clicked)
         self._setup_drop_target()
 
@@ -76,7 +82,7 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
             self.drop_button.set_tooltip_text(_("Drop image here"))
             self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [False])
             self.drop_button.update_property([Gtk.AccessibleProperty.LABEL], [_("Drop image here")])
-            GLib.idle_add(lambda: (self.drop_button.grab_focus(), GLib.SOURCE_REMOVE)[1])
+            GLib.idle_add(lambda: (self.more_options_button.grab_focus(), GLib.SOURCE_REMOVE)[1])
             return True
         return False
 
@@ -111,9 +117,14 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
 
         self.add_controller(self._drop_target)
 
+    def _on_more_options_action_clicked(self, _button: Gtk.Button) -> None:
+        """Close the image-actions popover after choosing an action."""
+        self.more_options_popover.popdown()
+
     def _on_drop_button_clicked(self, _button: Gtk.Button) -> None:
-        """Toggle the visibility of the dedicated drop area."""
+        """Close the actions menu and toggle the dedicated drop area."""
         try:
+            self.more_options_popover.popdown()
             is_revealed = self.drop_revealer.get_reveal_child()
             new_revealed = not is_revealed
             self.drop_revealer.set_reveal_child(new_revealed)
@@ -130,7 +141,7 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
                 self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [False])
                 self.drop_button.update_property([Gtk.AccessibleProperty.LABEL], [_("Drop image here")])
                 # Shift focus back to the toggle button asynchronously
-                GLib.idle_add(lambda: (self.drop_button.grab_focus(), GLib.SOURCE_REMOVE)[1])
+                GLib.idle_add(lambda: (self.more_options_button.grab_focus(), GLib.SOURCE_REMOVE)[1])
         except Exception as e:
             logger.exception(f"Anura: Failed to handle drop button click: {e}")
 
@@ -163,6 +174,10 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         drop.finish() MUST be called in the final callback (Xdnd protocol requirement).
         """
         self.drop_area.remove_css_class("drag-hover")
+        window = self.get_root()
+        operation_id = window._begin_ocr_operation() if window and hasattr(window, "_begin_ocr_operation") else None
+        if operation_id is not None:
+            self._set_drop_area_processing_state(True)
 
         if self._drop_cancellable:
             self._drop_cancellable.cancel()
@@ -177,7 +192,7 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
             GLib.PRIORITY_DEFAULT,
             cancellable,
             self._on_drop_stream_ready,
-            (drop, cancellable),
+            (drop, cancellable, operation_id),
         )
         return True  # Accept the drop; finish() will be called in _on_drop_bytes_ready
 
@@ -192,12 +207,17 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         source_object is the Gdk.Drop that initiated read_async (not an InputStream).
         We immediately start read_bytes_async — no blocking calls here.
         """
-        drop, cancellable = user_data
+        drop, cancellable, operation_id = user_data
         try:
             input_stream, _mime_type = source_object.read_finish(result)
         except GLib.Error as e:
             logger.error(f"DnD: Failed to open drop stream: {e}")
             drop.finish(Gdk.DragAction.COPY)  # Always finish, even on error
+            self._show_error_toast(_("Failed to read dropped file"), operation_id)
+            return
+
+        if not self._is_drop_operation_current(operation_id):
+            drop.finish(Gdk.DragAction.COPY)
             return
 
         input_stream.read_bytes_async(
@@ -205,7 +225,7 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
             GLib.PRIORITY_DEFAULT,
             cancellable,
             self._on_drop_bytes_ready,
-            (input_stream, drop, cancellable),
+            (input_stream, drop, cancellable, operation_id),
         )
 
     def _on_drop_bytes_ready(
@@ -219,13 +239,14 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         This is the end of the async chain. We call drop.finish() here (required),
         then process the first valid local image path.
         """
-        stream, drop, cancellable = user_data
+        stream, drop, cancellable, operation_id = user_data
 
         try:
             gbytes = stream.read_bytes_finish(result)
         except GLib.Error as e:
             logger.error(f"DnD: Failed to read drop bytes: {e}")
             drop.finish(Gdk.DragAction.COPY)
+            self._show_error_toast(_("Failed to read dropped file"), operation_id)
             return
         finally:
             # #538: only release the cancellable this callback owns; a newer
@@ -235,11 +256,13 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
 
         # Xdnd protocol: always call finish BEFORE processing
         drop.finish(Gdk.DragAction.COPY)
+        if not self._is_drop_operation_current(operation_id):
+            return
 
         raw = gbytes.get_data() if gbytes else None
         if not raw:
             logger.error("DnD: Received empty data from drop stream")
-            self._show_error_toast(_("No file data received from drop"))
+            self._show_error_toast(_("No file data received from drop"), operation_id)
             return
 
         try:
@@ -252,7 +275,7 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
 
         if not uris:
             logger.error("DnD: No valid URIs found in drop data")
-            self._show_error_toast(_("No valid file found in drop"))
+            self._show_error_toast(_("No valid file found in drop"), operation_id)
             return
 
         # Anura processes one image at a time — take the first URI
@@ -261,42 +284,63 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
 
         if not local_path:
             logger.error(f"DnD: URI has no local path: {mask_url(uris[0])}")
-            self._show_error_toast(_("Only local files can be dropped"))
+            self._show_error_toast(_("Only local files can be dropped"), operation_id)
             return
 
-        self._process_dropped_path(local_path)
+        self._process_dropped_path(local_path, operation_id)
 
-    def _process_dropped_path(self, local_path: str) -> None:
+    def cancel_pending_drop(self) -> None:
+        """Cancel an asynchronous URI-list read when another OCR request starts."""
+        cancellable = self._drop_cancellable
+        self._drop_cancellable = None
+        if cancellable is not None:
+            cancellable.cancel()
+
+    def _is_drop_operation_current(self, operation_id: int | None) -> bool:
+        """Reject late asynchronous DnD callbacks after a newer OCR request starts."""
+        if operation_id is None:
+            return True
+        window = self.get_root()
+        return bool(window and window._is_current_ocr_operation(operation_id))
+
+    def _process_dropped_path(self, local_path: str, operation_id: int | None = None) -> None:
         """Common logic for processing a verified local path from any DnD format."""
         if not Path(local_path).exists():
             logger.error(f"DnD: File not accessible: {local_path}")
-            self._show_error_toast(_("File not accessible. Ensure Anura has permission to access this location."))
+            self._show_error_toast(
+                _("File not accessible. Ensure Anura has permission to access this location."), operation_id
+            )
             return
 
         (mimetype, _encoding) = guess_type(local_path)
         logger.debug(f"DnD: Dropped file ({mimetype}): {local_path}")
 
         if not mimetype or not mimetype.startswith("image"):
-            self._show_error_toast(_("Only images can be processed that way."))
+            self._show_error_toast(_("Only images can be processed that way."), operation_id)
             return
 
         window = self.get_root()
         if not window or not hasattr(window, "dnd_controller"):
             logger.error("DnD: Root window missing process_dnd_file_sync")
-            self._show_error_toast(_("Failed to process dropped file"))
+            self._show_error_toast(_("Failed to process dropped file"), operation_id)
             return
 
+        if not self._is_drop_operation_current(operation_id):
+            return
         self._set_drop_area_processing_state(True)
-        self.show_spinner()
-        window.dnd_controller.process_dnd_file_sync(local_path)
+        window.dnd_controller.process_dnd_file_sync(local_path, operation_id)
 
-    def _show_error_toast(self, message: str) -> None:
-        """Show error toast to user."""
+    def _show_error_toast(self, message: str, operation_id: int | None = None) -> None:
+        """Show a DnD error without disturbing a newer operation's UI state."""
+        if operation_id is not None and not self._is_drop_operation_current(operation_id):
+            return
         window = self.get_root()
         if window and hasattr(window, "show_toast"):
             window.show_toast(message)
-        self._set_drop_area_processing_state(False)
-        self.hide_spinner()
+        if operation_id is not None and window and hasattr(window, "_finish_ocr_operation"):
+            window._finish_ocr_operation(operation_id)
+        elif operation_id is None:
+            self._set_drop_area_processing_state(False)
 
     def _set_drop_area_processing_state(self, processing: bool) -> None:
         """Set the drop area visual state to indicate processing (OCR in progress)."""
@@ -311,16 +355,20 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
                 self.drop_area_label.set_label(_("Drop image file here"))
             self.drop_area.update_property([Gtk.AccessibleProperty.LABEL], [_("Image drop zone")])
 
-    def reset_drop_area_state(self) -> None:
-        """Reset the drop area to its initial state (called after OCR completes)."""
+    def reset_drop_area_visual_state(self) -> None:
+        """Reset DnD visuals without taking ownership of the shared OCR spinner."""
         self._set_drop_area_processing_state(False)
-        self.hide_spinner()
         self.drop_revealer.set_reveal_child(False)
         self.drop_button.remove_css_class("suggested-action")
         self.drop_button.set_tooltip_text(_("Drop image here"))
         self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [False])
         self.drop_button.update_property([Gtk.AccessibleProperty.LABEL], [_("Drop image here")])
         self.welcome.set_description(_("Extract text from anywhere"))
+
+    def reset_drop_area_state(self) -> None:
+        """Backward-compatible full reset for callers that own OCR completion."""
+        self.reset_drop_area_visual_state()
+        self.hide_spinner()
 
     def set_status(self, status_msg: str) -> None:
         """Update the status label during processing."""

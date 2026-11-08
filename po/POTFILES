@@ -18,7 +18,9 @@ anura/widgets/history_page.py
 anura/widgets/language_popover.py
 anura/widgets/language_popover_row.py
 anura/widgets/language_row.py
+anura/widgets/preferences_editor_page.py
 anura/widgets/preferences_general_page.py
+anura/widgets/preferences_voice_page.py
 anura/widgets/preferences_languages_page.py
 anura/widgets/share_row.py
 anura/widgets/shortcuts_overlay.py
@@ -31,7 +33,9 @@ data/ui/history_page.blp
 data/ui/language_popover.blp
 data/ui/language_row.blp
 data/ui/preferences_dialog.blp
+data/ui/preferences_editor.blp
 data/ui/preferences_general.blp
+data/ui/preferences_voice.blp
 data/ui/preferences_languages.blp
 data/ui/shortcuts_overlay.blp
 data/ui/welcome_page.blp

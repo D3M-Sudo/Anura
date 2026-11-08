@@ -5,6 +5,7 @@ from pathlib import Path
 
 from anura.services.legacy_flatpak_migration import (
     MIGRATION_MARKER,
+    mark_legacy_flatpak_migration_skipped,
     migrate_legacy_flatpak_data,
 )
 
@@ -134,4 +135,31 @@ def test_rejects_symlinked_destination_tree(tmp_path):
 
     assert not migrate_legacy_flatpak_data(old_data_dir=old, new_data_home=new, flatpak_info=flatpak_info)
     assert not (outside / "history/history.json").exists()
+    assert not (new / MIGRATION_MARKER).exists()
+
+
+def test_skip_decision_is_persisted_without_touching_legacy_data(tmp_path):
+    old, new, flatpak_info = _layout(tmp_path)
+    legacy_history = old / "anura/history/history.json"
+    legacy_history.parent.mkdir(parents=True)
+    legacy_history.write_text("legacy", encoding="utf-8")
+
+    assert mark_legacy_flatpak_migration_skipped(new_data_home=new, flatpak_info=flatpak_info)
+
+    marker = json.loads((new / MIGRATION_MARKER).read_text(encoding="utf-8"))
+    assert marker["status"] == "skipped"
+    assert marker["completed"] is False
+    assert marker["copied_files"] == 0
+    assert legacy_history.read_text(encoding="utf-8") == "legacy"
+    assert not (new / "anura/history/history.json").exists()
+    assert mark_legacy_flatpak_migration_skipped(new_data_home=new, flatpak_info=flatpak_info)
+
+
+def test_skip_decision_is_not_recorded_outside_flatpak(tmp_path):
+    _, new, _ = _layout(tmp_path)
+
+    assert not mark_legacy_flatpak_migration_skipped(
+        new_data_home=new,
+        flatpak_info=tmp_path / "missing-flatpak-info",
+    )
     assert not (new / MIGRATION_MARKER).exists()

@@ -27,13 +27,17 @@ import gi
 
 # Set GTK version requirements before imports
 gi.require_version("Gtk", "4.0")
+gi.require_version("GtkSource", "5")
 gi.require_version("Adw", "1")
 gi.require_version("Notify", "0.7")
 gi.require_version("Xdp", "1.0")
 gi.require_version("Gst", "1.0")
 
-from gi.repository import Adw, Gio, GLib, Gtk
+from gi.repository import Adw, Gio, GLib, Gtk, GtkSource
 from loguru import logger
+
+# Register GtkSourceView widget GTypes before loading resources and importing templates.
+GtkSource.init()
 
 from anura.config import APP_ID, XDG_DATA_HOME
 from anura.core.resources import load_gresource_bundle
@@ -48,7 +52,11 @@ from anura.core.dialogs import DialogManager
 from anura.core.silent_runner import SilentRunner
 from anura.services.clipboard_service import get_clipboard_service
 from anura.services.language_manager import get_language_manager
-from anura.services.legacy_flatpak_migration import MIGRATION_MARKER, migrate_legacy_flatpak_data
+from anura.services.legacy_flatpak_migration import (
+    MIGRATION_MARKER,
+    mark_legacy_flatpak_migration_skipped,
+    migrate_legacy_flatpak_data,
+)
 from anura.services.notification_service import (
     HAS_LIBNOTIFY,
     get_notification_service,
@@ -72,6 +80,8 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         self.version = version
         self._legacy_migration_pending = False
         self._activate_after_legacy_migration = False
+        self._legacy_migration_hold = False
+        self._legacy_migration_chooser: Gtk.FileChooserNative | None = None
         self._runtime_services_initialized = False
         self.settings = settings
         # Use the same singleton the controllers use (#537): OcrController
@@ -136,7 +146,13 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         marker = Path(XDG_DATA_HOME) / MIGRATION_MARKER
         if Path("/.flatpak-info").is_file() and len(sys.argv) == 1 and not marker.is_file():
             self._legacy_migration_pending = True
-            self._show_legacy_migration_prompt()
+            self.hold()
+            self._legacy_migration_hold = True
+            try:
+                self._show_legacy_migration_prompt()
+            except (GLib.Error, RuntimeError) as exc:
+                logger.exception(f"Could not show the legacy data migration prompt: {exc}")
+                self._finish_legacy_migration()
         else:
             self._initialize_runtime_services()
 
@@ -205,29 +221,47 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
             _("Not now"),
         )
         chooser.connect("response", self._on_legacy_migration_folder_response)
+        self._legacy_migration_chooser = chooser
         chooser.show()
 
     def _on_legacy_migration_folder_response(self, chooser, response: int) -> None:
-        if response == Gtk.ResponseType.ACCEPT:
-            selected = chooser.get_file()
-            selected_path = selected.get_path() if selected else None
-            if selected_path:
-                try:
+        if not self._legacy_migration_pending:
+            return
+
+        try:
+            if response == Gtk.ResponseType.ACCEPT:
+                selected = chooser.get_file()
+                selected_path = selected.get_path() if selected else None
+                if selected_path:
                     if not migrate_legacy_flatpak_data(old_data_dir=Path(selected_path)):
                         logger.warning("Legacy Anura data was not imported. The migration prompt will be shown again.")
-                except (OSError, RuntimeError, ValueError) as exc:
-                    logger.exception(f"Legacy Anura data migration failed: {exc}")
+                else:
+                    logger.warning("The selected legacy data folder has no local portal path.")
             else:
-                logger.warning("The selected legacy data folder has no local portal path.")
-        chooser.destroy()
-        self._finish_legacy_migration()
+                if not mark_legacy_flatpak_migration_skipped():
+                    logger.warning("Could not persist the decision to skip legacy data migration.")
+        except (GLib.Error, OSError, RuntimeError, ValueError) as exc:
+            logger.exception(f"Legacy Flatpak data migration decision failed: {exc}")
+        finally:
+            try:
+                chooser.destroy()
+            finally:
+                self._legacy_migration_chooser = None
+                self._finish_legacy_migration()
 
     def _finish_legacy_migration(self) -> None:
+        if not self._legacy_migration_pending:
+            return
         self._legacy_migration_pending = False
-        self._initialize_runtime_services()
-        if self._activate_after_legacy_migration:
-            self._activate_after_legacy_migration = False
-            self.activate()
+        try:
+            self._initialize_runtime_services()
+            if self._activate_after_legacy_migration:
+                self._activate_after_legacy_migration = False
+                self.activate()
+        finally:
+            if self._legacy_migration_hold:
+                self._legacy_migration_hold = False
+                self.release()
 
     def do_activate(self) -> None:
         if self._legacy_migration_pending:

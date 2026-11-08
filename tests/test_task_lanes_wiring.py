@@ -23,8 +23,9 @@ def test_ocr_tasks_use_the_ocr_lane():
 
     # Two synchronous decode paths in the window.
     assert window.count("lane=OCR_LANE") == 2
-    # The portal follow-up and the isolated pipeline.
-    assert screenshot.count("lane=OCR_LANE") == 2
+    # The portal URI dispatcher is separate from OCR; only the isolated pipeline owns OCR_LANE.
+    assert screenshot.count("lane=OCR_LANE") == 1
+    assert "lane=DEFAULT_LANE" in screenshot
 
 
 def test_file_cleanup_uses_its_own_lane():
@@ -53,3 +54,14 @@ def test_manager_exposes_the_lane_api():
     assert "DEFAULT_LANE = " in manager
     assert "def _begin_lane_locked" in manager
     assert "on_superseded" in manager
+
+
+def test_dnd_claims_operation_before_async_uri_read():
+    welcome = _source("anura/widgets/welcome_page.py")
+    window = _source("anura/window.py")
+
+    assert "operation_id = window._begin_ocr_operation()" in welcome
+    assert "(drop, cancellable, operation_id)" in welcome
+    assert "_is_drop_operation_current(operation_id)" in welcome
+    assert "window._finish_ocr_operation(operation_id)" in welcome
+    assert "self.welcome_page.cancel_pending_drop()" in window

@@ -13,52 +13,58 @@ template $WelcomePage : Adw.NavigationPage {
   title: _("Welcome");
 
   Adw.ToolbarView {
-      [top]
-      Adw.HeaderBar {
-        visible: true;
-        
-        [title]
-        Adw.WindowTitle {
-          title: _("Anura");
-        }
+    [top]
+    Adw.HeaderBar {
+      visible: true;
 
-        [start]
-        MenuButton lang_combo {
-          label: _("_Language");
-          use-underline: true;
-          tooltip-text: _("Select language to extract");
-          popover: $LanguagePopover language_popover {};
-        }
+      [title]
+      Adw.WindowTitle {
+        title: _("Anura");
+      }
 
-        [start]
-        Gtk.Spinner spinner {
-          visible: false;
-          accessibility {
-            label: _("Extracting text");
-          }
-        }
+      [start]
+      MenuButton lang_combo {
+        label: _("_Language");
+        use-underline: true;
+        tooltip-text: _("Select language to extract");
+        popover: $LanguagePopover language_popover {};
+      }
 
-        [end]
-        MenuButton {
-          icon-name: "open-menu-symbolic";
-          menu-model: primary_menu;
-          tooltip-text: _("Open menu");
-          accessibility {
-            label: _("Open menu");
-          }
+      [start]
+      Gtk.Spinner spinner {
+        visible: false;
+        accessibility {
+          label: _("Extracting text");
         }
       }
 
-      Adw.StatusPage welcome {
-        title: _("Anura");
-        description: _("Extract text from anywhere");
-        icon-name: "io.github.d3msudo.anura";
+      [end]
+      MenuButton {
+        icon-name: "open-menu-symbolic";
+        menu-model: primary_menu;
+        tooltip-text: _("Open menu");
+        accessibility {
+          label: _("Open menu");
+        }
+      }
+    }
 
-        Adw.Clamp {
-          maximum-size: 240;
+    Adw.StatusPage welcome {
+      title: _("Anura");
+      description: _("Extract text from anywhere");
+      icon-name: "io.github.d3m_sudo.anura";
+      styles ["welcome-hero"]
+
+      Adw.Clamp {
+        maximum-size: 420;
+        child: Gtk.ScrolledWindow {
+          hscrollbar-policy: never;
+          vscrollbar-policy: automatic;
+          propagate-natural-height: true;
           child: Box {
             orientation: vertical;
             spacing: 12;
+            hexpand: true;
 
             Button screenshot_button {
               action-name: "app.get_screenshot";
@@ -66,8 +72,10 @@ template $WelcomePage : Adw.NavigationPage {
               accessibility {
                 label: C_("Welcome screen", "Take a Screenshot");
               }
+              hexpand: true;
+              halign: fill;
               styles ["pill", "suggested-action", "anura-button"]
-              
+
               child: Box {
                 halign: center;
                 spacing: 6;
@@ -79,59 +87,91 @@ template $WelcomePage : Adw.NavigationPage {
               };
             }
 
-            Button {
-              action-name: "app.open_image";
-              tooltip-text: C_("Welcome screen", "Open Image (Ctrl+O)");
-              accessibility {
-                label: C_("Welcome screen", "Open Image");
-              }
-              styles ["pill", "anura-button"]
+            MenuButton more_options_button {
+              label: _("More options");
+              tooltip-text: _("More options");
+              hexpand: true;
+              halign: fill;
+              styles ["pill", "anura-button", "flat"]
 
-              child: Box {
-                halign: center;
-                spacing: 6;
-                Image { icon-name: "folder-open-symbolic"; }
-                Label {
-                  label: _("_Open Image");
-                  use-underline: true;
-                }
-              };
-            }
+              popover: Gtk.Popover more_options_popover {
+                child: Box {
+                  orientation: vertical;
+                  spacing: 6;
+                  width-request: 260;
+                  margin-top: 6;
+                  margin-bottom: 6;
+                  margin-start: 6;
+                  margin-end: 6;
 
-             Button {
-              action-name: "app.paste_from_clipboard";
-              tooltip-text: C_("Welcome screen", "Paste Image from Clipboard (Ctrl+V)");
-              accessibility {
-                label: C_("Welcome screen", "Paste Image");
-              }
-              styles ["pill", "anura-button"]
+                  Button open_image_button {
+                    action-name: "app.open_image";
+                    tooltip-text: C_("Welcome screen", "Open Image (Ctrl+O)");
+                    accessibility {
+                      label: C_("Welcome screen", "Open Image");
+                    }
+                    styles ["flat"]
+                    child: Box {
+                      spacing: 12;
+                      margin-top: 6;
+                      margin-bottom: 6;
+                      margin-start: 8;
+                      margin-end: 8;
+                      Image { icon-name: "folder-open-symbolic"; }
+                      Label {
+                        label: _("_Open Image");
+                        use-underline: true;
+                        xalign: 0;
+                        hexpand: true;
+                      }
+                    };
+                  }
 
-              child: Box {
-                halign: center;
-                spacing: 6;
-                Image { icon-name: "edit-paste-symbolic"; }
-                Label {
-                  label: _("_Paste Image");
-                  use-underline: true;
-                }
-              };
-            }
+                  Button paste_image_button {
+                    action-name: "app.paste_from_clipboard";
+                    tooltip-text: C_("Welcome screen", "Paste Image from Clipboard (Ctrl+V)");
+                    accessibility {
+                      label: C_("Welcome screen", "Paste Image");
+                    }
+                    styles ["flat"]
+                    child: Box {
+                      spacing: 12;
+                      margin-top: 6;
+                      margin-bottom: 6;
+                      margin-start: 8;
+                      margin-end: 8;
+                      Image { icon-name: "edit-paste-symbolic"; }
+                      Label {
+                        label: _("_Paste Image");
+                        use-underline: true;
+                        xalign: 0;
+                        hexpand: true;
+                      }
+                    };
+                  }
 
-            Button drop_button {
-              tooltip-text: C_("Welcome screen", "Drop image here");
-              accessibility {
-                label: C_("Welcome screen", "Drop image here");
-              }
-              styles ["pill", "anura-button"]
-
-              child: Box {
-                halign: center;
-                spacing: 6;
-                Image { icon-name: "folder-drag-accept-symbolic"; }
-                Label {
-                  label: _("_Drop Image");
-                  use-underline: true;
-                }
+                  Button drop_button {
+                    tooltip-text: C_("Welcome screen", "Drop image here");
+                    accessibility {
+                      label: C_("Welcome screen", "Drop image here");
+                    }
+                    styles ["flat"]
+                    child: Box {
+                      spacing: 12;
+                      margin-top: 6;
+                      margin-bottom: 6;
+                      margin-start: 8;
+                      margin-end: 8;
+                      Image { icon-name: "folder-drag-accept-symbolic"; }
+                      Label {
+                        label: _("_Drop Image");
+                        use-underline: true;
+                        xalign: 0;
+                        hexpand: true;
+                      }
+                    };
+                  }
+                };
               };
             }
 
@@ -160,8 +200,9 @@ template $WelcomePage : Adw.NavigationPage {
               }
             }
           };
-        }
+        };
       }
+    }
   }
 }
 
