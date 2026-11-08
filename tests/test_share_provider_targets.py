@@ -9,15 +9,14 @@
 headless gate rather than the GTK tier.
 """
 
-import xml.etree.ElementTree as ET
-from pathlib import Path
+import os
 
 from anura.services.share_providers import PROVIDERS, generate_share_link
 
 
-REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-SHARE_ICON_DIRECTORY = REPOSITORY_ROOT / "data/icons/scalable/actions"
-GRESOURCE_MANIFEST = REPOSITORY_ROOT / "data/io.github.d3m_sudo.anura.gresource.xml"
+REPOSITORY_ROOT = os.path.dirname(os.path.dirname(__file__))
+SHARE_ICON_DIRECTORY = os.path.join(REPOSITORY_ROOT, "data", "icons", "scalable", "actions")
+GRESOURCE_MANIFEST = os.path.join(REPOSITORY_ROOT, "data", "io.github.d3m_sudo.anura.gresource.xml")
 
 
 def test_reddit_does_not_duplicate_the_text():
@@ -46,21 +45,26 @@ def test_every_provider_produces_a_link_for_its_own_text():
 def test_share_icon_inventory_matches_active_providers_and_resources():
     provider_ids = {provider.id for provider in PROVIDERS}
     expected_files = {f"share-{provider_id}-symbolic.svg" for provider_id in provider_ids}
-    actual_files = {path.name for path in SHARE_ICON_DIRECTORY.glob("*.svg")}
+    actual_files = {name for name in os.listdir(SHARE_ICON_DIRECTORY) if name.endswith(".svg")}
     assert actual_files == expected_files
 
     expected_resources = {f"icons/scalable/actions/{filename}" for filename in expected_files}
-    manifest = ET.parse(GRESOURCE_MANIFEST).getroot()
+    manifest = open(GRESOURCE_MANIFEST, encoding="utf-8").read()
     actual_resources = {
-        entry.text
-        for entry in manifest.findall(".//file")
-        if entry.text and entry.text.startswith("icons/scalable/actions/")
+        entry.split("</file>", 1)[0]
+        for entry in manifest.split("<file>")[1:]
+        if entry.startswith("icons/scalable/actions/")
     }
     assert actual_resources == expected_resources
 
 
 def test_share_icons_use_a_uniform_theme_aware_symbolic_format():
-    for icon_path in SHARE_ICON_DIRECTORY.glob("*.svg"):
+    import xml.etree.ElementTree as ET
+
+    for filename in os.listdir(SHARE_ICON_DIRECTORY):
+        if not filename.endswith(".svg"):
+            continue
+        icon_path = os.path.join(SHARE_ICON_DIRECTORY, filename)
         root = ET.parse(icon_path).getroot()
         assert root.attrib["width"] == "24"
         assert root.attrib["height"] == "24"
