@@ -133,7 +133,7 @@ class TestScreenshotServiceEnterprise:
         ScreenshotService.capture(service, "eng", False)
 
         service.fallback_provider.capture.assert_not_called()
-        service._emit_capture_finished.assert_called_once_with(False)
+        service._emit_capture_finished.assert_called_once_with(False, None)
         assert service._is_capturing is False
 
     def test_screenshot_fallback_unavailable_emits_portal_failure(self, service):
@@ -154,7 +154,7 @@ class TestScreenshotServiceEnterprise:
         ScreenshotService.capture(service, "eng", False)  # must not raise
 
         service._log_portal_environment.assert_called_once()
-        service._emit_portal_failure.assert_called_once()
+        service._emit_portal_failure.assert_called_once_with(None)
         service._emit_capture_finished.assert_called_once_with(False)
         service._emit_decode_error.assert_not_called()
         assert service._is_capturing is False
@@ -226,12 +226,12 @@ class TestScreenshotServiceEnterprise:
         manager.execute.side_effect = lambda fn, args, **kwargs: fn(*args)
         with patch("anura.services.screenshot_service.get_atomic_manager", return_value=manager):
             result = ScreenshotService._handle_portal_uri_background(
-                service, "eng", temp_file.as_uri(), False, task_id="cancelled-task"
+                service, "eng", temp_file.as_uri(), operation_id=None, task_id="cancelled-task"
             )
 
-        assert result is False
+        assert result is None
         assert not temp_file.exists()
-        manager.execute.assert_called_once()
+        manager.execute.assert_not_called()
 
     def test_cleanup_temporary_file(self, service, tmp_path):
         """Test cleanup logic for source files."""
