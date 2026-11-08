@@ -155,7 +155,7 @@ class TestScreenshotServiceEnterprise:
 
         service._log_portal_environment.assert_called_once()
         service._emit_portal_failure.assert_called_once_with(None)
-        service._emit_capture_finished.assert_called_once_with(False)
+        service._emit_capture_finished.assert_called_once_with(False, None)
         service._emit_decode_error.assert_not_called()
         assert service._is_capturing is False
 
@@ -178,7 +178,7 @@ class TestScreenshotServiceEnterprise:
 
         assert service.provider.capture.call_count == 1
         assert service.fallback_provider.capture.call_count == 1
-        service._emit_capture_finished.assert_called_once_with(False)
+        service._emit_capture_finished.assert_called_once_with(False, None)
         service._emit_decode_error.assert_called_once()
         assert service._is_capturing is False
 
