@@ -16,8 +16,6 @@ importable here (real or stubbed).
 
 from unittest.mock import MagicMock, patch
 
-from gi.repository import GLib
-
 from anura.services.screenshot_service import ScreenshotService
 
 
