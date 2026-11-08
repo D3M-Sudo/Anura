@@ -364,7 +364,7 @@ class ScreenshotService(GObject.GObject):
 
     def capture(self, lang: str, copy: bool = False, operation_id: int | None = None) -> None:
         """Requests a screenshot for the current UI operation."""
-        operation_id = self.active_operation_id if operation_id is None else operation_id
+        operation_id = getattr(self, "active_operation_id", None) if operation_id is None else operation_id
         # Prevent concurrent capture requests
         if self._is_capturing:
             logger.warning("Anura Screenshot: Capture already in progress, ignoring request.")
@@ -374,7 +374,7 @@ class ScreenshotService(GObject.GObject):
 
         def _on_capture_result(success, uri, error, already_attempted_fallback=False):
             # A superseded portal callback must never start OCR or mutate UI state.
-            if operation_id != self.active_operation_id:
+            if operation_id != getattr(self, "active_operation_id", None):
                 logger.debug("Anura Screenshot: Ignoring superseded capture callback")
                 return
             # Track the most recent task ID for navigation interlock (NEW-008).
@@ -489,7 +489,7 @@ class ScreenshotService(GObject.GObject):
 
     def _is_operation_current(self, operation_id: int | None) -> bool:
         """Return whether a queued UI callback still belongs to the active operation."""
-        return operation_id is None or operation_id == self.active_operation_id
+        return operation_id is None or operation_id == getattr(self, "active_operation_id", None)
 
     def _emit_capture_finished(self, success: bool, operation_id: int | None = None) -> None:
         """Helper to emit capture-finished only for its owning operation."""
