@@ -11,7 +11,7 @@ from anura.window import _initial_window_size
 
 
 def test_first_run_uses_reasonable_default_size() -> None:
-    assert _initial_window_size(-1, -1, 1920, 1080) == (1000, 700)
+    assert _initial_window_size(-1, -1, 1920, 1080) == (900, 600)
 
 
 def test_first_run_size_is_clamped_for_small_screen() -> None:

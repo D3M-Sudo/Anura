@@ -45,8 +45,8 @@ from anura.widgets.preferences_dialog import PreferencesDialog  # noqa: E402
 from anura.widgets.welcome_page import WelcomePage  # noqa: E402
 
 
-_DEFAULT_WINDOW_WIDTH = 1000
-_DEFAULT_WINDOW_HEIGHT = 700
+_DEFAULT_WINDOW_WIDTH = 900
+_DEFAULT_WINDOW_HEIGHT = 600
 
 
 def _initial_window_size(saved_width: int, saved_height: int, screen_width: int, screen_height: int) -> tuple[int, int]:
