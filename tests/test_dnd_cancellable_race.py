@@ -28,12 +28,12 @@ def _method_body(name: str, source: str) -> str:
 def test_cancellable_is_carried_through_the_async_chain():
     source = _source()
 
-    assert "(drop, cancellable)" in source
-    assert "(input_stream, drop, cancellable)" in source
+    assert "(drop, cancellable, operation_id)" in source
+    assert "(input_stream, drop, cancellable, operation_id)" in source
 
 
 def test_bytes_callback_clears_only_its_own_cancellable():
     body = _method_body("_on_drop_bytes_ready", _source())
 
-    assert "stream, drop, cancellable = user_data" in body
+    assert "stream, drop, cancellable, operation_id = user_data" in body
     assert "if self._drop_cancellable is cancellable:" in body
