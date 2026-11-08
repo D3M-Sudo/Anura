@@ -5,6 +5,20 @@
 @define-color accent_bg_color #1D9E75;
 @define-color accent_fg_color #ffffff;
 
+/* Welcome page hero: bigger icon/title than the Adwaita StatusPage
+   default (measured default icon size: 128px), more breathing room. */
+.welcome-hero {
+    padding-top: 4px;
+}
+.welcome-hero image.icon {
+    min-width: 136px;
+    min-height: 136px;
+    -gtk-icon-size: 136px;
+}
+.welcome-hero label.title-1 {
+    font-size: 1.15em;
+}
+
 .downloaded label {
     font-weight: bold;
     color: @accent_color;
