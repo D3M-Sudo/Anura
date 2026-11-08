@@ -13,7 +13,7 @@ both OCR success and OCR error.
 """
 
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 
 def _get_handler(name: str):
@@ -107,3 +107,27 @@ def test_current_operation_resets_spinner_and_drop_visuals():
 
     self_fake.welcome_page.reset_drop_area_visual_state.assert_called_once_with()
     self_fake.welcome_page.hide_spinner.assert_called_once_with()
+
+
+def test_new_operation_is_published_before_previous_capture_is_cancelled():
+    """Synchronous cancellation callbacks from the previous capture are stale immediately."""
+    from anura.window import AnuraWindow
+
+    backend = SimpleNamespace(active_operation_id=1)
+    backend.cancel = MagicMock(side_effect=lambda: setattr(backend, "observed_operation_id", backend.active_operation_id))
+    welcome = SimpleNamespace(show_spinner=MagicMock())
+    window = SimpleNamespace(
+        _ocr_operation_id=1,
+        _screenshot_timeout_id=None,
+        backend=backend,
+        welcome_page=welcome,
+    )
+
+    with patch("anura.window.get_atomic_manager") as manager:
+        operation_id = AnuraWindow._begin_ocr_operation(window)
+
+    assert operation_id == 2
+    assert backend.observed_operation_id == 2
+    assert backend.active_operation_id == 2
+    manager.return_value.cancel_lane.assert_called_once()
+    welcome.show_spinner.assert_called_once_with()
