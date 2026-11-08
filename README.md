@@ -64,6 +64,7 @@ It also decodes **QR codes and Barcodes** in a single click using **zxing-cpp**,
 | 🌍 **Multi-language** | Supports 100+ Tesseract models with pooling for simultaneous multi-lang OCR |
 | 🔊 **Text-to-Speech** | Read extracted text aloud via gTTS + GStreamer `playbin3` |
 | 🎨 **Theme Selector** | Choose between System, Light, or Dark theme via Adw.StyleManager |
+| ⚙️ **Organized Preferences** | Dedicated General, Editor, Voice and Languages pages for application behaviour, editor options, TTS controls and OCR language management |
 | ✏️ **Selection-Aware Actions** | Text statistics and actions based on selection in OCR results |
 | ↩️ **Undo/Redo** | Full undo/redo support in ExtractedPage for text editing workflow |
 | ✏️ **GtkSourceView Editor** | Native search bar, editor preferences, and "Open in External Editor" handoff in OCR results |
