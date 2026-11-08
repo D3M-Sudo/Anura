@@ -134,6 +134,14 @@ def test_voice_page_init_completes_normally(monkeypatch, headless_gi_mocks):
     assert "tts-volume" in fake_settings.bound_keys
 
 
+def test_voice_volume_initial_value_uses_saved_setting(monkeypatch, headless_gi_mocks):
+    """The SpinRow is initialized from the saved normalized GSettings value."""
+    page, _fake_settings = _make_voice_page(monkeypatch, tts_raises=AttributeError("catalog unavailable"))
+
+    # FakeSettings returns 0.5; the UI must display the equivalent 50 percent.
+    page.volume_row.set_value.assert_called_once_with(50.0)
+
+
 def test_voice_volume_mapping_converts_both_directions(monkeypatch, headless_gi_mocks):
     """GSettings stores a normalized double while the SpinRow displays a percentage."""
     import anura.widgets.preferences_voice_page as mod
