@@ -4,7 +4,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-import contextlib
 from gettext import gettext as _
 import threading
 
