@@ -35,7 +35,9 @@ gi.require_version("Gst", "1.0")
 
 from gi.repository import Adw, Gio, GLib, Gtk, GtkSource
 from loguru import logger
-\n# Register GtkSourceView widget GTypes before loading resources and importing templates.\nGtkSource.init()\n
+# Register GtkSourceView widget GTypes before loading resources and importing templates.
+GtkSource.init()
+
 from anura.config import APP_ID, XDG_DATA_HOME
 from anura.core.resources import load_gresource_bundle
 
