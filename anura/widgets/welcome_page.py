@@ -307,7 +307,9 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         """Common logic for processing a verified local path from any DnD format."""
         if not Path(local_path).exists():
             logger.error(f"DnD: File not accessible: {local_path}")
-            self._show_error_toast(_("File not accessible. Ensure Anura has permission to access this location."), operation_id)
+            self._show_error_toast(
+                _("File not accessible. Ensure Anura has permission to access this location."), operation_id
+            )
             return
 
         (mimetype, _encoding) = guess_type(local_path)
