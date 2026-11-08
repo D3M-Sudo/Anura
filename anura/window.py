@@ -124,7 +124,6 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         self.add_action(share_action)
 
         self.backend = backend  # type: ignore[assignment]
-        self.backend.active_operation_id = self._ocr_operation_id
         # History V1: one HistoryService wired once with the configured limit;
         # recording itself is gated by the history-enabled setting at OCR time.
         self.history_service = HistoryService(limit=self.settings.get_int("history-limit"))
@@ -149,6 +148,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
             self.backend = get_screenshot_service()
         else:
             self.backend = backend
+        self.backend.active_operation_id = self._ocr_operation_id
 
         self.connect_tracked(self.extracted_page, "go-back", self.show_welcome_page)  # type: ignore[arg-type]
         self._clipboard_service = None
