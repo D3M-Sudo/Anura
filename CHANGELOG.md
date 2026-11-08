@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - CI/Flatpak: build Flatpak bundles on native x86_64 and aarch64 runners, producing architecture-specific bundles and license-inventory artifacts (#618)
 - CI/Flatpak: add sandbox-level runtime smoke checks on both architectures for GTK/GI typelibs, native Python bindings and the bundled Tesseract library (#619)
 - Flatpak: offer a portal-backed, user-selected migration of history and downloaded OCR models from the previous application ID; no cross-application filesystem permission is required (#613)
+- Flatpak: keep the first-run migration chooser alive until the user responds, persist an explicit skip/close decision, and start with clean data without modifying the legacy installation (#613)
 
 ### Changed
 
