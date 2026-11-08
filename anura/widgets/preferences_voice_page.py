@@ -8,7 +8,7 @@ import contextlib
 from gettext import gettext as _
 import threading
 
-from gi.repository import Adw, Gio, GLib, GObject, Gtk
+from gi.repository import Adw, Gio, GLib, Gtk
 from loguru import logger
 
 from anura.config import RESOURCE_PREFIX
@@ -37,15 +37,6 @@ class PreferencesVoicePage(Adw.PreferencesPage, SignalManagerMixin):
         self._updating_tts_combo = False
         self._disposed = False
 
-        self.settings.bind_with_mapping(
-            "tts-volume",
-            self.volume_row,
-            "value",
-            Gio.SettingsBindFlags.DEFAULT,
-            self._tts_volume_transform_in,
-            self._tts_volume_transform_out,
-        )
-
         self._setup_tts_volume()
         # TTS language setup depends on the (possibly network-backed) TTS
         # service; a failure there must not abort __init__ or any later
@@ -53,29 +44,27 @@ class PreferencesVoicePage(Adw.PreferencesPage, SignalManagerMixin):
         with contextlib.suppress(Exception):
             self._setup_tts_language()
 
-    # --- Volume transform functions: GSettings stores 0.0-1.0, UI shows 0-100 ---
-
-    @staticmethod
-    def _tts_volume_transform_in(value: GObject.Value, variant: GLib.Variant) -> bool:
-        """Map normalized GSettings volume (0.0-1.0) to the UI percentage (0-100)."""
-        value.set_double(variant.get_double() * 100.0)
-        return True
-
-    @staticmethod
-    def _tts_volume_transform_out(value: GObject.Value, _expected_type: GLib.VariantType) -> GLib.Variant:
-        """Map the UI percentage (0-100) to normalized GSettings volume (0.0-1.0)."""
-        return GLib.Variant.new_double(value.get_double() / 100.0)
+    # --- Volume (GSettings stores 0.0-1.0, UI shows 0-100) ---
 
     def _setup_tts_volume(self) -> None:
-        """Setup TTS volume spin row with percentage display (0-100)."""
-        volume_normalized = self.settings.get_double("tts-volume")
-        self.volume_row.set_value(volume_normalized * 100)
+        """Initialize and synchronize the TTS volume percentage with GSettings."""
+        self.volume_row.set_value(self.settings.get_double("tts-volume") * 100.0)
         self.connect_tracked(self.volume_row, "notify::value", self._on_volume_changed)
+        self.connect_tracked(self.settings, "changed::tts-volume", self._on_tts_volume_setting_changed)
 
     def _on_volume_changed(self, spin_row: Adw.SpinRow, _param: object) -> None:
-        """Persist volume changes to GSettings (via transform_out binding)."""
+        """Persist the UI percentage as a normalized GSettings double."""
         percentage = spin_row.get_value()
+        normalized = percentage / 100.0
+        if abs(self.settings.get_double("tts-volume") - normalized) > 1e-9:
+            self.settings.set_double("tts-volume", normalized)
         logger.debug(f"Anura: TTS volume set to {percentage:.0f}%")
+
+    def _on_tts_volume_setting_changed(self, _settings: Gio.Settings, _key: str) -> None:
+        """Reflect external GSettings changes in the volume row without signal loops."""
+        percentage = self.settings.get_double("tts-volume") * 100.0
+        if abs(self.volume_row.get_value() - percentage) > 1e-6:
+            self.volume_row.set_value(percentage)
 
     # --- TTS language (async catalog loading, never blocks UI) ---
 
