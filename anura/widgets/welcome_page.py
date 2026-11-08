@@ -27,6 +27,10 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
     spinner: Gtk.Spinner = Gtk.Template.Child()
     welcome: Adw.StatusPage = Gtk.Template.Child()
     screenshot_button: Gtk.Button = Gtk.Template.Child()
+    more_options_button: Gtk.MenuButton = Gtk.Template.Child()
+    more_options_popover: Gtk.Popover = Gtk.Template.Child()
+    open_image_button: Gtk.Button = Gtk.Template.Child()
+    paste_image_button: Gtk.Button = Gtk.Template.Child()
     lang_combo: Gtk.MenuButton = Gtk.Template.Child()
     language_popover: LanguagePopover = Gtk.Template.Child()
     drop_button: Gtk.Button = Gtk.Template.Child()
@@ -50,6 +54,8 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         self.lang_combo.set_label(current_lang_title)
         self._update_lang_combo_accessibility(current_lang_title)
 
+        self.connect_tracked(self.open_image_button, "clicked", self._on_more_options_action_clicked)
+        self.connect_tracked(self.paste_image_button, "clicked", self._on_more_options_action_clicked)
         self.connect_tracked(self.drop_button, "clicked", self._on_drop_button_clicked)
         self._setup_drop_target()
 
@@ -76,7 +82,7 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
             self.drop_button.set_tooltip_text(_("Drop image here"))
             self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [False])
             self.drop_button.update_property([Gtk.AccessibleProperty.LABEL], [_("Drop image here")])
-            GLib.idle_add(lambda: (self.drop_button.grab_focus(), GLib.SOURCE_REMOVE)[1])
+            GLib.idle_add(lambda: (self.more_options_button.grab_focus(), GLib.SOURCE_REMOVE)[1])
             return True
         return False
 
@@ -111,9 +117,14 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
 
         self.add_controller(self._drop_target)
 
+    def _on_more_options_action_clicked(self, _button: Gtk.Button) -> None:
+        """Close the image-actions popover after choosing an action."""
+        self.more_options_popover.popdown()
+
     def _on_drop_button_clicked(self, _button: Gtk.Button) -> None:
-        """Toggle the visibility of the dedicated drop area."""
+        """Close the actions menu and toggle the dedicated drop area."""
         try:
+            self.more_options_popover.popdown()
             is_revealed = self.drop_revealer.get_reveal_child()
             new_revealed = not is_revealed
             self.drop_revealer.set_reveal_child(new_revealed)

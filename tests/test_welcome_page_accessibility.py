@@ -51,3 +51,32 @@ def test_welcome_page_on_language_changed_updates_accessibility(headless_gi_mock
     prop_args = page.lang_combo.update_property.call_args[0]
     assert prop_args[1] == ["OCR language: Italian (click to change)"]
     page.settings.set_string.assert_called_with("active-language", "ita")
+
+
+def test_more_options_action_closes_the_popover(headless_gi_mocks):
+    from anura.widgets.welcome_page import WelcomePage
+
+    page = WelcomePage()
+    page.more_options_popover = MagicMock()
+
+    page._on_more_options_action_clicked(MagicMock())
+
+    page.more_options_popover.popdown.assert_called_once()
+
+
+def test_drop_action_closes_popover_and_reveals_drop_area(headless_gi_mocks):
+    from anura.widgets.welcome_page import WelcomePage
+
+    page = WelcomePage()
+    page.more_options_popover = MagicMock()
+    page.drop_revealer = MagicMock()
+    page.drop_revealer.get_reveal_child.return_value = False
+    page.drop_button = MagicMock()
+    page.drop_area = MagicMock()
+    page.more_options_button = MagicMock()
+
+    page._on_drop_button_clicked(MagicMock())
+
+    page.more_options_popover.popdown.assert_called_once()
+    page.drop_revealer.set_reveal_child.assert_called_once_with(True)
+    page.drop_button.add_css_class.assert_called_once_with("suggested-action")

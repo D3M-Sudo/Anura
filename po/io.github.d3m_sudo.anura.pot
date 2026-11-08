@@ -2632,3 +2632,8 @@ msgstr ""
 #: ../data/io.github.d3m_sudo.anura.metainfo.xml.in:274
 msgid "tesseract"
 msgstr ""
+
+
+#: ../data/ui/welcome_page.blp
+msgid "More options"
+msgstr ""
