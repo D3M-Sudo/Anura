@@ -36,8 +36,10 @@ class ShareService(GObject.GObject):
 
     __gtype_name__ = "ShareService"
 
-    __gsignals__: ClassVar[dict[str, tuple]] = {"share": (GObject.SignalFlags.RUN_LAST, None, (bool,)),
-        "share-too-long": (GObject.SignalFlags.RUN_LAST, None, (str,))}
+    __gsignals__: ClassVar[dict[str, tuple]] = {
+        "share": (GObject.SignalFlags.RUN_LAST, None, (bool,)),
+        "share-too-long": (GObject.SignalFlags.RUN_LAST, None, (str,)),
+    }
 
     def __init__(self) -> None:
         super().__init__()
