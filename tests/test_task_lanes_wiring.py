@@ -23,8 +23,9 @@ def test_ocr_tasks_use_the_ocr_lane():
 
     # Two synchronous decode paths in the window.
     assert window.count("lane=OCR_LANE") == 2
-    # The portal follow-up and the isolated pipeline.
-    assert screenshot.count("lane=OCR_LANE") == 2
+    # The portal URI dispatcher is separate from OCR; only the isolated pipeline owns OCR_LANE.
+    assert screenshot.count("lane=OCR_LANE") == 1
+    assert "lane=DEFAULT_LANE" in screenshot
 
 
 def test_file_cleanup_uses_its_own_lane():
