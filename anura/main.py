@@ -35,7 +35,7 @@ gi.require_version("Gst", "1.0")
 
 from gi.repository import Adw, Gio, GLib, Gtk, GtkSource
 from loguru import logger
-
+\n# Register GtkSourceView widget GTypes before loading resources and importing templates.\nGtkSource.init()\n
 from anura.config import APP_ID, XDG_DATA_HOME
 from anura.core.resources import load_gresource_bundle
 
@@ -116,9 +116,6 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
 
     def do_startup(self, *args: object, **kwargs: object) -> None:
         Adw.init()
-        # GtkSourceView must register its widget GTypes before Gtk.Template
-        # instantiates ExtractedPage from the compiled Blueprint resource.
-        GtkSource.init()
         Adw.Application.do_startup(self)
 
         self._apply_color_scheme()
