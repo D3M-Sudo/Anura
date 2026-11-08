@@ -144,7 +144,7 @@ def test_voice_page_init_completes_normally(monkeypatch, headless_gi_mocks):
 
     assert page.volume_row is not None
     assert page.tts_language_combo is not None
-    assert "tts-volume" in fake_settings.bound_keys
+    assert any(signal == "changed::tts-volume" for signal, _callback in fake_settings.handlers.values())
 
 
 def test_voice_volume_initial_value_uses_saved_setting(monkeypatch, headless_gi_mocks):
