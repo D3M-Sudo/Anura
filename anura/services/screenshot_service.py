@@ -388,7 +388,7 @@ class ScreenshotService(GObject.GObject):
                 # Move URI parsing and file existence check to background thread
                 task_id = get_atomic_manager().execute(
                     self._handle_portal_uri_background,
-                    (lang, uri, copy, operation_id),
+                    (lang, uri, operation_id),
                     callback=lambda filename: self._on_portal_uri_resolved(filename, lang, copy, operation_id),
                     pass_task_id=True,
                     lane=DEFAULT_LANE,
@@ -446,11 +446,9 @@ class ScreenshotService(GObject.GObject):
             self._emit_decode_error(_("Failed to initiate screenshot capture."), operation_id)
 
     def _handle_portal_uri_background(
-        self, lang: str, uri: str, copy: bool, operation_id: int | None = None, task_id: str | None = None
+        self, lang: str, uri: str, operation_id: int | None = None, task_id: str | None = None
     ) -> str | None:
         """Resolve and validate the portal URI off the GTK main thread."""
-        if operation_id != self.active_operation_id:
-            return None
         try:
             if uri.startswith("file://") and len(uri) > len("file://"):
                 filename = url2pathname(uri[len("file://") :])
