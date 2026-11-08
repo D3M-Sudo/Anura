@@ -68,7 +68,7 @@ The authoritative source for the full historical patch is the original PR diff: 
 - Preserve `feature`; do not commit to or otherwise modify it.
 - Open a new PR targeting `feature` in **Draft** state.
 - Keep PR #448 open and unchanged until the replacement implementation and its validation evidence have been reviewed; closure is a separate decision requiring explicit authorization.
-- Evaluate fixed teal against the GNOME/system accent before deciding; do not assume either choice.
+- Retain the fixed teal brand identity while separating the darker suggested-action background color from text accents; use theme-aware text colors for light and dark surfaces.
 - Produce updated screenshots and visual documentation for all relevant windows and major states.
 - Remediate all findings from the prior audit, including architecture, accessibility, responsiveness, interactions, and maintainability.
 - Functional changes are allowed when justified and verified; document invasive behavior changes and regression coverage.
