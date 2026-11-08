@@ -141,7 +141,7 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
                 self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [False])
                 self.drop_button.update_property([Gtk.AccessibleProperty.LABEL], [_("Drop image here")])
                 # Shift focus back to the toggle button asynchronously
-                GLib.idle_add(lambda: (self.drop_button.grab_focus(), GLib.SOURCE_REMOVE)[1])
+                GLib.idle_add(lambda: (self.more_options_button.grab_focus(), GLib.SOURCE_REMOVE)[1])
         except Exception as e:
             logger.exception(f"Anura: Failed to handle drop button click: {e}")
 
