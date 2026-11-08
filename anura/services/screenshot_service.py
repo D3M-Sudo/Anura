@@ -476,9 +476,7 @@ class ScreenshotService(GObject.GObject):
 
         return filename
 
-    def _on_portal_uri_resolved(
-        self, filename: str | None, lang: str, copy: bool, operation_id: int | None
-    ) -> None:
+    def _on_portal_uri_resolved(self, filename: str | None, lang: str, copy: bool, operation_id: int | None) -> None:
         """Start isolated OCR on the GTK thread after parser-lane validation."""
         if not filename:
             return
@@ -520,7 +518,11 @@ class ScreenshotService(GObject.GObject):
         GLib.idle_add(_on_error_idle, priority=GLib.PRIORITY_DEFAULT)
 
     def _emit_decoded(
-        self, text: str, copy: bool, ocr_result: OcrResult | None, applied_name: str,
+        self,
+        text: str,
+        copy: bool,
+        ocr_result: OcrResult | None,
+        applied_name: str,
         operation_id: int | None = None,
     ) -> None:
         """Helper to emit decoded only while its operation still owns the UI."""
