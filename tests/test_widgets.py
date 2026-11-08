@@ -12,7 +12,7 @@ from gettext import gettext as _
 from unittest.mock import MagicMock, patch
 
 import gi
-from gi.repository import Adw, Gio
+from gi.repository import Adw, Gio, Gtk
 
 # Register GResources and initialize Adw before importing template-backed widgets.
 
@@ -300,6 +300,21 @@ class TestAccessibilityEnhancementsEnterprise:
         row = ShareRow(provider_name="email")
         assert row.get_tooltip_text() == "Share via Email"
         assert row.provider_name == "email"
+
+
+    @pytest.mark.gtk
+    def test_share_row_resolves_all_provider_icons_from_the_resource_theme(self):
+        """Every active share provider must resolve to a bundled symbolic icon."""
+        from anura.services.share_providers import PROVIDERS
+        from anura.widgets.share_row import ShareRow
+
+        rows = [ShareRow(provider.id) for provider in PROVIDERS]
+        icon_theme = Gtk.IconTheme.get_for_display(rows[0].get_display())
+
+        for provider, row in zip(PROVIDERS, rows, strict=True):
+            icon_name = f"share-{provider.id}-symbolic"
+            assert row.image.get_icon_name() == icon_name
+            assert icon_theme.has_icon(icon_name)
 
     @pytest.mark.gtk
     def test_language_row_context_accessibility(self):
