@@ -41,8 +41,10 @@ class PreferencesVoicePage(Adw.PreferencesPage, SignalManagerMixin):
         # TTS language setup depends on the (possibly network-backed) TTS
         # service; a failure there must not abort __init__ or any later
         # settings binding.
-        with contextlib.suppress(Exception):
+        try:
             self._setup_tts_language()
+        except Exception:
+            logger.exception("Anura: could not initialize the TTS language selector")
 
     # --- Volume (GSettings stores 0.0-1.0, UI shows 0-100) ---
 
