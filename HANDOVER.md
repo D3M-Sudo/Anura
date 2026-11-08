@@ -73,7 +73,7 @@ The authoritative source for the full historical patch is the original PR diff: 
 - Remediate all findings from the prior audit, including architecture, accessibility, responsiveness, interactions, and maintainability.
 - Functional changes are allowed when justified and verified; document invasive behavior changes and regression coverage.
 - Plan comprehensive validation: pytest, Blueprint compiler, GTK/Gtk.Builder/Gtk.Template and resource integration, accessibility, interactions, lifecycle/cleanup, translations, Flatpak build and runtime, and visual checks.
-- Update all affected documentation, including README, CHANGELOG, guides, technical documentation, cross-links, screenshots, and translation catalogs.
+- Update all affected documentation, including README, CHANGELOG, guides, technical documentation, cross-links and translation catalogs. Screenshot assets remain deferred to the next release cycle.
 - User is the sole maintainer; do not impose an external second-maintainer approval requirement.
 - No merge without explicit authorization.
 
@@ -111,7 +111,7 @@ These are integration constraints, not a claim that the current branch has alrea
 5. Complete the visual review; cover empty, populated, loading, error, confirmation, and disabled states where applicable. Screenshot capture remains deferred to the next release cycle as agreed.
 6. Update documentation and CHANGELOG, then validate internal links and cross-references.
 7. Run the complete available test/build/runtime matrix and record exact commands, results, and environment limitations.
-8. Update the Draft PR with the implementation, migration rationale, screenshots, and evidence.
+8. Update the Draft PR with the implementation, migration rationale and validation evidence; screenshot assets remain deferred as agreed.
 9. Keep PR #648 as the active continuation. PR #448 has already been closed with the explicit replacement rationale recorded in PR #648; do not reopen or merge either PR without authorization.
 
 ## Validation status at handover
