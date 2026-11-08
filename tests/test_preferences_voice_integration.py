@@ -43,11 +43,11 @@ def test_preferences_dialog_uses_real_gsettings_for_voice_volume(monkeypatch):
     manager.get_cached_supported_languages.return_value = {"en": "English"}
     manager.get_language_item.return_value = None
 
+    import anura.widgets.preferences_dialog as dialog_module
     import anura.widgets.preferences_editor_page as editor_module
     import anura.widgets.preferences_general_page as general_module
     import anura.widgets.preferences_languages_page as languages_module
     import anura.widgets.preferences_voice_page as voice_module
-    import anura.widgets.preferences_dialog as dialog_module
 
     for module in (general_module, editor_module, languages_module, voice_module):
         monkeypatch.setattr(module, "settings", real_settings)
