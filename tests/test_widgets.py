@@ -301,7 +301,6 @@ class TestAccessibilityEnhancementsEnterprise:
         assert row.get_tooltip_text() == "Share via Email"
         assert row.provider_name == "email"
 
-
     @pytest.mark.gtk
     def test_share_row_resolves_all_provider_icons_from_the_resource_theme(self):
         """Every active share provider must resolve to a bundled symbolic icon."""
