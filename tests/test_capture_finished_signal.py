@@ -25,6 +25,7 @@ def _make_service():
         s.provider = MagicMock()
         s.fallback_provider = MagicMock()
         s._is_capturing = False
+        s.active_operation_id = None
         s._current_task_id = None
         s._emit_decode_error = MagicMock()
         s._log_portal_environment = MagicMock()
@@ -46,7 +47,7 @@ def test_capture_success_emits_capture_finished_true():
     with patch("anura.services.screenshot_service.get_atomic_manager"):
         ScreenshotService.capture(svc, "eng", False)
 
-    svc._emit_capture_finished.assert_called_once_with(True)
+    svc._emit_capture_finished.assert_called_once_with(True, None)
 
 
 def test_user_cancel_emits_capture_finished_false_no_fallback():
@@ -60,7 +61,7 @@ def test_user_cancel_emits_capture_finished_false_no_fallback():
     ScreenshotService.capture(svc, "eng", False)
 
     svc.fallback_provider.capture.assert_not_called()
-    svc._emit_capture_finished.assert_called_once_with(False)
+    svc._emit_capture_finished.assert_called_once_with(False, None)
 
 
 def test_fallback_failure_emits_capture_finished_false_once():
