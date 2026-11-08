@@ -139,7 +139,7 @@ def test_voice_volume_initial_value_uses_saved_setting(monkeypatch, headless_gi_
     page, _fake_settings = _make_voice_page(monkeypatch, tts_raises=AttributeError("catalog unavailable"))
 
     # FakeSettings returns 0.5; the UI must display the equivalent 50 percent.
-    page.volume_row.set_value.assert_called_once_with(50.0)
+    assert page.volume_row.set_value.call_args_list[0].args == (50.0,)
 
 
 def test_voice_volume_mapping_converts_both_directions(monkeypatch, headless_gi_mocks):
