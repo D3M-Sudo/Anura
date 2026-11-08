@@ -228,6 +228,8 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         # Publish the new generation before cancellation: providers may invoke
         # their old callback synchronously from cancel().
         self.backend.active_operation_id = operation_id
+        # Stop any pending asynchronous URI-list read from a superseded drop.
+        self.welcome_page.cancel_pending_drop()
         # Cancel both a running capture and any queued/running OCR from the prior request.
         self.backend.cancel()
         get_atomic_manager().cancel_lane(OCR_LANE)
