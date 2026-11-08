@@ -225,10 +225,12 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
             GLib.source_remove(self._screenshot_timeout_id)
             self._screenshot_timeout_id = None
             self.present()
+        # Publish the new generation before cancellation: providers may invoke
+        # their old callback synchronously from cancel().
+        self.backend.active_operation_id = operation_id
         # Cancel both a running capture and any queued/running OCR from the prior request.
         self.backend.cancel()
         get_atomic_manager().cancel_lane(OCR_LANE)
-        self.backend.active_operation_id = operation_id
         self.welcome_page.show_spinner()
         return operation_id
 
@@ -246,9 +248,12 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         """Restore window if portal screenshot doesn't respond within 30s."""
         self._screenshot_timeout_id = None
         operation_id = self._ocr_operation_id
+        self._finish_ocr_operation(operation_id)
+        # Invalidate before cancelling; a late portal success must not start OCR.
+        self._ocr_operation_id += 1
+        self.backend.active_operation_id = self._ocr_operation_id
         if self.backend:
             self.backend.cancel()
-        self._finish_ocr_operation(operation_id)
         self.present()
         self.show_toast(_("Screenshot timed out. Please try again."))
         logger.warning("Anura: Screenshot portal timeout — restoring window.")
