@@ -80,7 +80,7 @@ def test_fallback_failure_emits_capture_finished_false_once():
 
     assert svc.provider.capture.call_count == 1
     assert svc.fallback_provider.capture.call_count == 1
-    svc._emit_capture_finished.assert_called_once_with(False)
+    svc._emit_capture_finished.assert_called_once_with(False, None)
 
 
 def test_fallback_started_does_not_emit_yet():
