@@ -25,9 +25,20 @@ Adw.init()
 def test_preferences_dialog_uses_real_gsettings_for_voice_volume(monkeypatch):
     """Instantiate the real PreferencesDialog and verify bidirectional GSettings sync."""
     repo_root = Path(__file__).resolve().parents[1]
-    resource_file = repo_root / "data" / "io.github.d3msudo.anura.gresource"
-    if not resource_file.exists():
-        pytest.skip("Built GResource bundle is unavailable")
+    resource_name = "io.github.d3msudo.anura.gresource"
+    resource_file = next(
+        (
+            candidate
+            for candidate in (
+                repo_root / "builddir" / "data" / resource_name,
+                repo_root / "data" / resource_name,
+            )
+            if candidate.is_file()
+        ),
+        None,
+    )
+    if resource_file is None:
+        pytest.skip("Built GResource bundle is unavailable in builddir/data or data")
     Gio.Resource.load(str(resource_file))._register()
 
     schema_source = Gio.SettingsSchemaSource.get_default()
