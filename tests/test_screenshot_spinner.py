@@ -23,11 +23,18 @@ def _get_handler(name: str):
 
 
 def _make_self():
-    welcome = SimpleNamespace(show_spinner=MagicMock(), reset_drop_area_state=MagicMock())
+    welcome = SimpleNamespace(
+        show_spinner=MagicMock(),
+        reset_drop_area_state=MagicMock(),
+        reset_drop_area_visual_state=MagicMock(),
+        hide_spinner=MagicMock(),
+    )
     return SimpleNamespace(
         welcome_page=welcome,
         extracted_page=SimpleNamespace(set_extracted_text=MagicMock()),
         _cleanup_screenshot_state=MagicMock(),
+        _ocr_operation_id=1,
+        _finish_ocr_operation=MagicMock(),
         show_toast=MagicMock(),
     )
 
@@ -58,7 +65,7 @@ def test_extraction_completed_hides_spinner():
 
     _get_handler("_on_extraction_completed")(self_fake, MagicMock(), "text", "Name")
 
-    self_fake.welcome_page.reset_drop_area_state.assert_called_once_with()
+    self_fake._finish_ocr_operation.assert_called_once_with(1)
     self_fake.extracted_page.set_extracted_text.assert_called_once_with("text", "Name")
 
 
