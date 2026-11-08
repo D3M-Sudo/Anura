@@ -462,10 +462,12 @@ class ScreenshotService(GObject.GObject):
         # Check for cancellation before I/O. Portal/scrot capture files are temporary
         # sources and must be removed even when cancellation prevents OCR from starting.
         if operation_id != self.active_operation_id:
-            get_atomic_manager().execute(Path(filename).unlink, (), lane=CLEANUP_LANE)
+            if filename:
+                get_atomic_manager().execute(lambda: Path(filename).unlink(missing_ok=True), (), lane=CLEANUP_LANE)
             return None
         if task_id and get_atomic_manager().is_cancelled(task_id):
-            get_atomic_manager().execute(Path(filename).unlink, (), lane=CLEANUP_LANE)
+            if filename:
+                get_atomic_manager().execute(lambda: Path(filename).unlink(missing_ok=True), (), lane=CLEANUP_LANE)
             return None
 
         # Validate the extracted filename before processing (on background thread)
