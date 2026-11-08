@@ -29,7 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Welcome: restore the emphasized Hero sizing and the equal-width, vertically stacked flat secondary actions (Open Image, Paste Image and Drop Image) while retaining Screenshot as the primary action (#648)
 
-- UI/UX: align the Extracted, Welcome, History and Shortcuts interfaces with the modernized action hierarchy, boxed-list presentation and teal brand accent; preserve existing Welcome accessibility and interaction behavior (#648)
+- UI/UX: align the Extracted, Welcome, History and Shortcuts interfaces with the modernized action hierarchy, boxed-list presentation and fixed teal brand accent; use a darker teal background with white foreground for suggested-action controls to meet WCAG AA normal-text contrast, and scheme-aware teal text for light/dark surfaces; preserve existing Welcome accessibility and interaction behavior (#648)
 
 - CI/governance: align Dependabot and certifi automation with `feature`, run CodeQL on PRs to all protected promotion branches, guard manual dependency-sync dispatch from protected branches, and document the single-maintainer PR/CI policy.
 - Release tooling: correct the release script post-tag instructions to describe generated CHANGELOG notes and the current multi-architecture Flatpak/AppImage publication flow.
