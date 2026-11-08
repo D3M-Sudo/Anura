@@ -25,7 +25,7 @@ Adw.init()
 def test_preferences_dialog_uses_real_gsettings_for_voice_volume(monkeypatch):
     """Instantiate the real PreferencesDialog and verify bidirectional GSettings sync."""
     repo_root = Path(__file__).resolve().parents[1]
-    resource_name = "io.github.d3msudo.anura.gresource"
+    resource_name = "io.github.d3m_sudo.anura.gresource"
     resource_file = next(
         (
             candidate
