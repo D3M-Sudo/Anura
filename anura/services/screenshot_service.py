@@ -463,11 +463,11 @@ class ScreenshotService(GObject.GObject):
         # sources and must be removed even when cancellation prevents OCR from starting.
         if operation_id != self.active_operation_id:
             if filename:
-                get_atomic_manager().execute(lambda: Path(filename).unlink(missing_ok=True), (), lane=CLEANUP_LANE)
+                Path(filename).unlink(missing_ok=True)
             return None
         if task_id and get_atomic_manager().is_cancelled(task_id):
             if filename:
-                get_atomic_manager().execute(lambda: Path(filename).unlink(missing_ok=True), (), lane=CLEANUP_LANE)
+                Path(filename).unlink(missing_ok=True)
             return None
 
         # Validate the extracted filename before processing (on background thread)
