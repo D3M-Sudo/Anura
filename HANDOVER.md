@@ -106,15 +106,14 @@ These are integration constraints, not a claim that the current branch has alrea
 
 ## Validation status at handover
 
-- Branch creation and initial equality with `feature`: verified at branch creation.
-- PR #448 metadata and full diff: retrieved.
-- PR #448 changed-file inventory: retrieved (16 paths).
-- PR #448 issue comments, review submissions, and inline review threads: none returned by the connector at handover.
-- Local repository checkout and GTK/Blueprint/Flatpak runtime environment: unavailable in the session used to create this handover.
-- The adapted implementation is present on this branch, including the Preferences page split, extracted/welcome layout changes, History and Shortcuts styling, resource registration, translation extraction entries and regression tests.
-- No pytest, Blueprint, GTK, accessibility, translation, Flatpak, runtime, or screenshot validation is claimed as completed.
+- Branch creation and initial equality with `feature`: verified at branch creation; current comparison is recorded in PR #648.
+- PR #448 metadata and full diff: retrieved; its changed-file inventory contains 16 paths.
+- The maintainer supplied a local validation report for head `90391da9ee5ac198869753744d3cfb1552868627`: all 14 Blueprint files compiled; GResource and GSettings schema validation passed; Ruff check/format and changelog integrity passed; headless pytest reported 595 passed, 5 skipped and 238 deselected; GTK tests under Weston reported 382 passed, 5 skipped and 600 deselected when `ANURA_CI_TEST_MODE` was unset.
+- The same report exposed the PyGObject 3.48.2 incompatibility with `Gio.Settings.bind_with_mapping`. The implementation now uses explicit `get_double`/`set_double` synchronization, with reverse updates for external GSettings changes.
+- Regression tests now exercise normalized volume persistence and external setting changes. A new GTK integration test instantiates the real PreferencesDialog using a memory-backed Gio.Settings backend; neither the updated tests nor this integration test has yet been run in the current session.
+- The original teal's reported contrast failures were addressed by separating the darker suggested-action background from theme-aware text accents. Contrast calculations support the selected values, but a real light/dark desktop visual check remains outstanding.
+- Current-head CI, real GNOME desktop accessibility/keyboard checks, Flatpak/AppImage builds and aarch64 validation remain outstanding and must be checked before the PR leaves Draft.
 - No merge has been performed.
-
 ## Closure rationale for the original PR
 
 **Do not close PR #448 at this stage.** The aligned PR now contains the adapted modernization implementation, but current-head CI, real desktop interaction/accessibility validation, packaging checks and final diff review remain outstanding. Reassess closure only after those gates pass and the replacement is demonstrably complete; closing #448 still requires explicit authorization.
