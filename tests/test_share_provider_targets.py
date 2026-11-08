@@ -49,7 +49,8 @@ def test_share_icon_inventory_matches_active_providers_and_resources():
     assert actual_files == expected_files
 
     expected_resources = {f"icons/scalable/actions/{filename}" for filename in expected_files}
-    manifest = open(GRESOURCE_MANIFEST, encoding="utf-8").read()
+    with open(GRESOURCE_MANIFEST, encoding="utf-8") as manifest_file:
+        manifest = manifest_file.read()
     actual_resources = {
         entry.split("</file>", 1)[0]
         for entry in manifest.split("<file>")[1:]
