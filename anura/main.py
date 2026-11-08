@@ -35,6 +35,7 @@ gi.require_version("Gst", "1.0")
 
 from gi.repository import Adw, Gio, GLib, Gtk, GtkSource
 from loguru import logger
+
 # Register GtkSourceView widget GTypes before loading resources and importing templates.
 GtkSource.init()
 
