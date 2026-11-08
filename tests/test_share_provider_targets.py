@@ -20,7 +20,6 @@ SHARE_ICON_DIRECTORY = REPOSITORY_ROOT / "data/icons/scalable/actions"
 GRESOURCE_MANIFEST = REPOSITORY_ROOT / "data/io.github.d3m_sudo.anura.gresource.xml"
 
 
-
 def test_reddit_does_not_duplicate_the_text():
     link = generate_share_link("reddit", "short text")
 
@@ -44,7 +43,6 @@ def test_every_provider_produces_a_link_for_its_own_text():
         assert " " not in link, f"{provider.id} left an unescaped space: {link}"
 
 
-
 def test_share_icon_inventory_matches_active_providers_and_resources():
     provider_ids = {provider.id for provider in PROVIDERS}
     expected_files = {f"share-{provider_id}-symbolic.svg" for provider_id in provider_ids}
@@ -66,7 +64,7 @@ def test_share_icons_use_a_uniform_theme_aware_symbolic_format():
         root = ET.parse(icon_path).getroot()
         assert root.attrib["width"] == "24"
         assert root.attrib["height"] == "24"
-        assert root.attrib["viewBox"] == "0 0 32 32"
+        assert root.attrib["viewBox"] == "0 0 24 24"
         source = icon_path.read_text(encoding="utf-8")
         assert "currentColor" in source
         assert "#bebebe" not in source.lower()
