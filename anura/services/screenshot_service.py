@@ -389,6 +389,7 @@ class ScreenshotService(GObject.GObject):
                 task_id = get_atomic_manager().execute(
                     self._handle_portal_uri_background,
                     (lang, uri, copy, operation_id),
+                    callback=lambda filename: self._on_portal_uri_resolved(filename, lang, copy, operation_id),
                     pass_task_id=True,
                     lane=DEFAULT_LANE,
                 )
@@ -446,10 +447,10 @@ class ScreenshotService(GObject.GObject):
 
     def _handle_portal_uri_background(
         self, lang: str, uri: str, copy: bool, operation_id: int | None = None, task_id: str | None = None
-    ) -> bool:
-        """Background worker to parse Portal URI and trigger OCR."""
+    ) -> str | None:
+        """Resolve and validate the portal URI off the GTK main thread."""
         if operation_id != self.active_operation_id:
-            return False
+            return None
         try:
             if uri.startswith("file://") and len(uri) > len("file://"):
                 filename = url2pathname(uri[len("file://") :])
@@ -458,26 +459,35 @@ class ScreenshotService(GObject.GObject):
         except (ValueError, GLib.Error) as e:
             logger.error(f"Anura Screenshot: Failed to parse URI '{mask_url(uri)}': {e}")
             self._emit_decode_error(_("Can't take a screenshot."), operation_id)
-            return False
+            return None
 
         # Check for cancellation before I/O. Portal/scrot capture files are temporary
         # sources and must be removed even when cancellation prevents OCR from starting.
         if operation_id != self.active_operation_id:
             get_atomic_manager().execute(Path(filename).unlink, (), lane=CLEANUP_LANE)
-            return False
+            return None
         if task_id and get_atomic_manager().is_cancelled(task_id):
             get_atomic_manager().execute(Path(filename).unlink, (), lane=CLEANUP_LANE)
-            return False
+            return None
 
         # Validate the extracted filename before processing (on background thread)
         if not filename or not Path(filename).exists():
             logger.error(f"Anura Screenshot: Invalid or non-existent file path: {filename}")
             self._emit_decode_error(_("Can't take a screenshot."), operation_id)
-            return False
+            return None
 
-        return self.decode_image(
-            lang, filename, copy, remove_source=True, task_id=task_id, operation_id=operation_id
-        )
+        return filename
+
+    def _on_portal_uri_resolved(
+        self, filename: str | None, lang: str, copy: bool, operation_id: int | None
+    ) -> None:
+        """Start isolated OCR on the GTK thread after parser-lane validation."""
+        if not filename:
+            return
+        if operation_id != self.active_operation_id:
+            get_atomic_manager().execute(Path(filename).unlink, (), lane=CLEANUP_LANE)
+            return
+        self._decode_image_isolated(lang, filename, copy, remove_source=True, operation_id=operation_id)
 
     def _is_operation_current(self, operation_id: int | None) -> bool:
         """Return whether a queued UI callback still belongs to the active operation."""
