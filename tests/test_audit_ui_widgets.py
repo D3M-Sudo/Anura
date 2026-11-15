@@ -268,9 +268,7 @@ def test_welcome_focus_moves_from_more_options_to_primary_when_layout_expands():
     ("screen_width", "screen_height"),
     [(360, 600), (640, 480), (900, 600), (1280, 800)],
 )
-def test_welcome_responsive_layout_uses_allocated_viewport(
-    screen_width: int, screen_height: int
-) -> None:
+def test_welcome_responsive_layout_uses_allocated_viewport(screen_width: int, screen_height: int) -> None:
     """Exercise the real GTK allocation and responsive breakpoint per M2-B viewport."""
     from gi.repository import Gtk
 
@@ -300,8 +298,10 @@ def test_welcome_responsive_layout_uses_allocated_viewport(
 
         assert page.secondary_actions.get_visible() is wide
         assert page.more_options_button.get_visible() is (not wide)
-        assert all(button.get_parent() is (page.secondary_actions if wide else page.compact_actions)
-                   for button in page.action_buttons)
+        assert all(
+            button.get_parent() is (page.secondary_actions if wide else page.compact_actions)
+            for button in page.action_buttons
+        )
         assert len({id(button) for button in page.action_buttons}) == 3
 
         scroller = page.action_clamp.get_child()
