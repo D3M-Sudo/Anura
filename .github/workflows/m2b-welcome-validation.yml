@@ -49,6 +49,8 @@ jobs:
 
       - name: Install project and development dependencies
         run: |
+          python3 -m pip install --user uv
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           uv venv --system-site-packages
           uv sync --dev
 
