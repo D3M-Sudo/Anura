@@ -40,11 +40,11 @@
 - Consumes: LanguageRow.item, LanguageRow.late_update(), LanguageManager downloading, downloaded, and download-failed signals.
 - Produces: a progress bar named with translated language context; native fraction remains the progress value.
 
-- [ ] Write tests test_progress_bar_accessible_name_includes_language, test_download_announcements_skip_percentage_updates, and test_download_completion_and_failure_are_announced.
-- [ ] Run uv run pytest tests/test_language_row_accessibility.py -q; expected RED on missing accessible naming/announcement behavior.
-- [ ] Set Gtk.AccessibleProperty.LABEL to a translated Download {language} label when the row item is assigned.
-- [ ] Announce download start once, and completion/failure once; never announce each percentage.
-- [ ] Re-run the focused test file; expected GREEN.
+- [x] Write tests test_progress_bar_accessible_name_includes_language, test_download_announcements_skip_percentage_updates, and test_download_completion_and_failure_are_announced.
+- [x] CI test-first run failed on the expected missing accessible naming/announcement behavior.
+- [x] Set Gtk.AccessibleProperty.LABEL to a translated Download {language} label when the row item is assigned.
+- [x] Announce download start once, and completion/failure once; never announce each percentage.
+- [x] Re-run the focused test file; expected GREEN in the final Python-quality CI run.
 
 ### Task 2: OCR, TTS and search status announcements (A2)
 
@@ -60,11 +60,11 @@
 - Produces: announce_accessible(widget, message, priority); no-op for empty/unmapped targets.
 - OCR announces only changed status text; TTS announces generating/playing/paused transitions on the visible navigation page; search announces settled result counts after a debounce.
 
-- [ ] Write tests test_ocr_status_announces_only_changed_messages, test_tts_announces_state_transitions_without_idle_noise, and test_search_result_announcement_is_debounced.
-- [ ] Run uv run pytest tests/test_accessible_status_announcements.py -q; expected RED.
-- [ ] Implement the GTK announcement helper and semantic state transitions.
-- [ ] Cancel pending search announcement sources on query clear and widget destruction.
-- [ ] Re-run the focused test file; expected GREEN.
+- [x] Write tests test_ocr_status_announces_only_changed_messages, test_tts_announces_state_transitions_without_idle_noise, and test_search_result_announcement_is_debounced.
+- [x] CI test-first run failed on the expected missing announcement behavior.
+- [x] Implement the GTK announcement helper and semantic state transitions.
+- [x] Cancel pending search announcement sources on query clear and widget destruction.
+- [x] Re-run the focused test file; expected GREEN in the final Python-quality CI run.
 
 ### Task 3: Focus traversal and responsive restoration tests (A3)
 
@@ -77,10 +77,10 @@
 - Consumes: WelcomePage._set_action_layout(), _focus_more_options_idle(), _focus_widget_idle(), and the actual GTK widget tree.
 - Produces: display-backed regression coverage for initial tab traversal, wide/compact focus order and focus restoration after reparenting.
 
-- [ ] Write GTK tests test_welcome_initial_tab_focus_is_language_selector, test_welcome_wide_action_focus_order, test_welcome_compact_action_focus_order, and test_welcome_focus_restores_after_responsive_reparenting, and test_welcome_focus_moves_from_more_options_to_primary_when_layout_expands.
-- [ ] Run the focused tests in the existing Weston-backed GTK CI tier; expected RED for any uncovered behavior.
-- [ ] Make only the smallest behavior correction required by a reproduced failure.
-- [ ] Re-run the focused GTK tests; expected GREEN.
+- [x] Write GTK tests test_welcome_initial_tab_focus_is_language_selector, test_welcome_wide_action_focus_order, test_welcome_compact_action_focus_order, and test_welcome_focus_restores_after_responsive_reparenting, and test_welcome_focus_moves_from_more_options_to_primary_when_layout_expands.
+- [x] Run the focus regressions in the existing Weston-backed GTK CI tier; all passed in the final run (416 GTK tests passed overall).
+- [x] No production focus correction was required; replaced the local-box focus traversal assertion with window-level GTK traversal after diagnosing the test assumption.
+- [x] Re-run the focused GTK tests; expected GREEN in the final Weston-backed GTK CI run.
 
 ### Task 4: Reduced-motion preference support (A4)
 
@@ -93,9 +93,9 @@
 - Produces: a reduced-motion CSS class on the application window, synchronized with GTK settings.
 - Prefer gtk-interface-reduced-motion when the property exists; otherwise respect gtk-enable-animations. Never write to either global setting.
 
-- [ ] Write tests test_reduced_motion_uses_interface_preference_when_available, test_reduced_motion_falls_back_to_enable_animations, test_reduced_motion_class_tracks_setting_changes, and test_reduced_motion_css_disables_custom_motion.
-- [ ] Run uv run pytest tests/test_reduced_motion.py -q; expected RED.
-- [ ] Implement the setting adapter, signal lifecycle and CSS overrides for Anura-authored transitions/keyframes.
+- [x] Write tests test_reduced_motion_uses_interface_preference_when_available, test_reduced_motion_falls_back_to_enable_animations, test_reduced_motion_class_tracks_setting_changes, and test_reduced_motion_css_disables_custom_motion.
+- [x] CI test-first run failed on the expected missing reduced-motion support.
+- [x] Implement the setting adapter, signal lifecycle and CSS overrides for Anura-authored transitions/keyframes.
 - [ ] Re-run the focused tests; expected GREEN.
 
 ### Task 5: Expanded contrast and theme-role coverage (A5)
@@ -108,10 +108,10 @@
 - Consumes: existing palette helpers and CSS selectors for downloaded, focus, disabled, processing and custom UI states.
 - Produces: a contrast matrix for application-controlled foreground/background pairs, plus assertions that secondary and disabled text remain theme-managed.
 
-- [ ] Add tests for focus-indicator contrast on light/dark surfaces, downloaded text, suggested-action text, processing-state semantics, secondary text and disabled controls.
-- [ ] Run uv run pytest tests/test_ui_palette.py -q; expected RED for missing coverage or an actual contrast defect.
-- [ ] Correct only application-controlled colors that fail the relevant 3:1 graphical or 4.5:1 normal-text threshold.
-- [ ] Re-run the focused test file; expected GREEN.
+- [x] Add tests for focus-indicator contrast on light/dark surfaces, downloaded text, suggested-action text, processing-state semantics, secondary text and disabled controls.
+- [x] CI test-first run failed on the expected focus/history contrast gaps.
+- [x] Correct only application-controlled colors that fail the relevant 3:1 graphical or 4.5:1 normal-text threshold.
+- [x] Re-run the focused test file; expected GREEN in the final Python-quality CI run.
 
 ### Task 6: Documentation and final verification
 
@@ -120,10 +120,10 @@
 - Modify: HANDOVER.md
 - Update: this plan with completion/evidence notes.
 
-- [ ] Record A1–A5 implementation, exact commits and CI run URLs/results.
+- [x] Record A1–A5 implementation, exact commits and CI run URLs/results in HANDOVER.md.
 - [ ] Run the full existing PR CI matrix on the final branch head; read each job conclusion.
-- [ ] Re-check PR #648 state/head/base and compare feature with fix/ui-modernization-aligned.
-- [ ] Confirm protected branch SHAs are unchanged and PR remains open/Draft/unmerged.
+- [x] Re-check PR #648 state/head/base and compare feature with fix/ui-modernization-aligned; PR remains open/Draft, 263 ahead and 0 behind.
+- [x] Confirm protected branch SHAs are unchanged and PR remains open/Draft/unmerged.
 - [ ] Run a final whole-branch self-review; no subagent reviewer is available in this environment.
 
 ## Verification Commands

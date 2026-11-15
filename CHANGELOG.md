@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Accessibility: give language-download progress bars translated language context; announce download start/completion/failure and concise OCR, TTS and debounced search status transitions without percentage-level announcement noise (#648)
 - Release/AppImage: add native x86_64 and aarch64 self-contained AppImage builds, embedded GitHub Releases zsync metadata, paired update files, strict release-asset validation and SHA-256 checksums (#555)
 - Docs/release: document AppImage runtime boundaries, downloads, checksums and Gear Lever-compatible zsync updates (#555)
 - Docs/Flatpak: add a maintainer-operated Flathub submission readiness checklist covering current policy, architecture, manifest, licensing, permissions and validation boundaries (#494)
@@ -25,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Accessibility: respect the GTK reduced-motion preference with an application-scoped CSS policy; use gtk-interface-reduced-motion when available and fall back to gtk-enable-animations on older GTK versions (#648)
 - Preferences: reorganize settings into four dedicated pages (General, Editor, Voice and Languages); move the existing Editor controls and TTS volume/language controls into their respective pages while retaining asynchronous TTS catalog loading (#648)
 - Welcome: retain Screenshot as the primary action; show Open Image, Paste Image and Drop Image as equal-width horizontal secondary actions when their measured natural widths fit, and group the same controls in More options when compact; preserve the page-wide drop target and focus behavior (#648)
 - UI/UX: align the Extracted, Welcome, History and Shortcuts interfaces with the modernized action hierarchy, boxed-list presentation and fixed green brand palette; use a darker green background with white foreground for suggested-action controls to meet WCAG AA normal-text contrast, and scheme-aware green text for light/dark surfaces; preserve existing Welcome accessibility and interaction behavior (#648)
@@ -78,6 +80,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Accessibility: use scheme-aware focus indicators and History empty-state icon colors with verified contrast, while retaining theme-managed secondary and disabled text (#648)
 - Window geometry: clamp restored and first-run dimensions to the selected monitor's bounds, resolve the actual monitor from the GDK surface after realization, and re-clamp when the surface enters another monitor; remove fixed main-window minimum requests that conflicted with small displays (#648)
 - Window state: persist dimensions only when closing in the normal, non-maximized and non-fullscreen state (#648)
 - Preferences/Shortcuts: remove fixed minimum requests from Preferences and make the shortcuts overlay resizable while preserving its vertical scroller (#648)

@@ -227,3 +227,30 @@ GTK 4's Gdk.Monitor exposes monitor geometry but does not provide a separate wor
 - PR #648 remains open and Draft, targeting feature. No merge was performed.
 - The implementation is confined to fix/ui-modernization-aligned; feature, development, testing and main were not modified.
 
+
+## M2-B Task 4 — Accessibility remediation implementation (2026-11-15)
+
+### Implemented A1–A5
+
+- **A1 — Language downloads:** each Gtk.ProgressBar receives a translated accessible label containing the language name. Native progress reporting remains intact through set_fraction(). Download start is announced once, completion/failure once; percentage updates are not announced.
+- **A2 — Status announcements:** added anura.utils.accessibility.announce_accessible() with a mapped-widget guard and announcement priority. Welcome OCR status announces distinct phases only; TTS announces generating/playing/paused transitions on the visible navigation page; search-result counts are announced at low priority after a 400 ms debounce. Pending search announcements are cancelled on query changes/clear and widget destruction.
+- **A3 — Focus traversal:** added Weston-backed GTK tests for initial tab focus, wide/compact action traversal, responsive focus restoration, and focus transfer from More options to Screenshot. No production focus correction was needed. An initial compact-layout test used child_focus() on the local Gtk.Box, which did not model the actual window-level tab traversal; the regression test now exercises Gtk.Window.child_focus() and passes.
+- **A4 — Reduced motion:** the application reads gtk-interface-reduced-motion when present and falls back to gtk-enable-animations; it updates an application CSS class on GTK setting notifications and does not write desktop-wide settings. GTK's GtkReducedMotion and GtkSettings:gtk-interface-reduced-motion are available since GTK 4.22; older supported GTK builds use the fallback.
+- **A5 — Contrast/theme roles:** focus indicators and History empty-state icons now use scheme-aware green shades. Tests cover 3:1 graphical contrast, downloaded text, suggested-action text, processing-state semantics, and preservation of theme-managed secondary/disabled text.
+
+### Test-first and CI evidence
+
+- The accessibility regression tests were introduced before the implementation. Python-quality run #43758437418 on test-first commit d3ce6efca882b0f801f7e00c8426b266e071a1fd failed on the expected missing A1/A2/A4/A5 behavior (download label/announcements, status announcements, reduced-motion support and contrast rules).
+- Implementation commit: 21dbb3c69527558b0f5047a45cd3f690b773f54a.
+- Final code/test head at the time of this record: 38ecb348c741b87b4e5c886f8770b84a40bbac99.
+- Python quality on run #43760732944: 626 passed, 6 skipped, 262 deselected; Ruff, formatting, mypy, Bandit and Flatpak runtime dependency coverage passed.
+- Weston-backed GTK Integration Tests on the same run: 416 passed, 5 skipped, 632 deselected, 2 warnings.
+- Changelog integrity passed. CodeQL run #43760732956 passed.
+- AppImage x86_64 and aarch64 builds, architecture/update-metadata checks and clean-host smoke tests passed; complete multi-architecture AppImage release-set validation passed.
+- Flatpak aarch64 completed the main application build successfully; the no-source-download and subsequent sandbox validation steps were still running when this note was prepared. Flatpak x86_64 failed before the application build while updating org.gnome.Sdk: OSTree reported Invalid cross-device link, then xvfb-run exited with 139. This is recorded as a runner/runtime-update failure, not as an application build failure. A rerun is pending because the workflow run has not yet completed.
+
+### Validation boundaries and repository state
+
+- Manual GNOME/GTK visual review, Orca/AT-SPI and manual keyboard checks remain explicitly excluded; no claim of screen-reader runtime conformance is made. The focus checks above are automated Weston-backed tests.
+- PR #648 remains open and Draft, targeting feature; no merge was performed.
+- The implementation and test changes are confined to fix/ui-modernization-aligned. feature remains at cb079b0b55e252a7ac054fe1b6f57030ddc7b1f9; compare reported 263 commits ahead and 0 behind. No protected branch was modified.
