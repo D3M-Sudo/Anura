@@ -16,6 +16,7 @@ from anura.models.language_item import LanguageItem
 from anura.services.language_manager import get_language_manager
 from anura.services.settings import settings
 from anura.utils import mask_url
+from anura.utils.accessibility import announce_accessible
 from anura.utils.signal_manager import SignalManagerMixin
 from anura.widgets.language_popover import LanguagePopover
 
@@ -49,6 +50,7 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         SignalManagerMixin.__init__(self)
 
         self.settings = settings
+        self._last_announced_status: str | None = None
 
         self.connect_tracked(self.language_popover, "language-changed", self._on_language_changed)
 
@@ -484,9 +486,12 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         self.hide_spinner()
 
     def set_status(self, status_msg: str) -> None:
-        """Update the status label during processing."""
+        """Update the visible OCR status and announce each distinct phase once."""
         if self.drop_area_label:
             self.drop_area_label.set_label(status_msg)
+        if status_msg and status_msg != self._last_announced_status:
+            if announce_accessible(self, status_msg):
+                self._last_announced_status = status_msg
 
     def hide_spinner(self) -> None:
         """Stop and hide the spinner."""

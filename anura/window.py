@@ -37,6 +37,7 @@ from anura.services.screenshot_service import ScreenshotService, get_screenshot_
 from anura.services.settings import settings  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
 from anura.utils import validate_image_resource  # noqa: E402
+from anura.utils.accessibility import announce_accessible, sync_reduced_motion_class  # noqa: E402
 from anura.utils.export_files import write_export_file  # noqa: E402
 from anura.utils.signal_manager import SignalManagerMixin  # noqa: E402
 from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
@@ -124,6 +125,16 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         super().__init__(**kwargs)
         SignalManagerMixin.__init__(self)
 
+        self._motion_settings = Gtk.Settings.get_for_display(self.get_display())
+        for setting_name in ("gtk-enable-animations", "gtk-interface-reduced-motion"):
+            if self._motion_settings.find_property(setting_name) is not None:
+                self.connect_tracked(
+                    self._motion_settings,
+                    f"notify::{setting_name}",
+                    self._on_motion_settings_changed,
+                )
+        self._sync_reduced_motion_class()
+
         app = Gtk.Application.get_default()
         if app is None:
             raise RuntimeError("Cannot get default application")
@@ -149,6 +160,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         # Safety timeout for portal screenshot (prevents hidden window on D-Bus hang)
         self._screenshot_timeout_id = None
         self._ocr_operation_id = 0
+        self._last_announced_tts_state = "idle"
 
         # Use shared singleton instance
         self.share_service = get_share_service()
@@ -201,6 +213,14 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
             )
         except RuntimeError as e:
             logger.warning(f"Clipboard service unavailable: {e}")
+
+    def _on_motion_settings_changed(self, _settings: Gtk.Settings, _pspec: GObject.ParamSpec) -> None:
+        """Re-apply application CSS motion policy when GTK settings change."""
+        self._sync_reduced_motion_class()
+
+    def _sync_reduced_motion_class(self) -> None:
+        """Reflect the user's GTK motion preference without changing global settings."""
+        sync_reduced_motion_class(self, self._motion_settings)
 
     def _setup_geometry(self) -> None:
         """Restore saved dimensions using the best monitor estimate before realization."""
@@ -636,9 +656,23 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
             self.show_toast(message)
 
     def _on_tts_state_changed(self, _controller: TtsController, state: str) -> None:
-        """Mediate TTS state to the UI."""
+        """Mediate TTS state to the UI and announce transitions on the visible page."""
         self.extracted_page.update_tts_state(state)
         self.history_page.update_tts_state(state)
+
+        if state == self._last_announced_tts_state:
+            return
+
+        messages = {
+            "generating": _("Generating speech"),
+            "playing": _("Reading text"),
+            "paused": _("Reading paused"),
+        }
+        message = messages.get(state)
+        visible_page = self.navigation_view.get_visible_page()
+        if message and visible_page is not None:
+            announce_accessible(visible_page, message)
+        self._last_announced_tts_state = state
 
     def _on_tts_still_waiting(self, _controller: TtsController) -> None:
         """Surface a one-shot notice that generation is still pending."""

@@ -12,6 +12,7 @@ from gi.repository import GLib, GObject, Gtk
 from anura.config import RESOURCE_PREFIX
 from anura.models.language_item import LanguageItem
 from anura.services.language_manager import get_language_manager
+from anura.utils.accessibility import announce_accessible
 from anura.utils.signal_manager import SignalManagerMixin
 
 
@@ -37,9 +38,12 @@ class LanguageRow(Gtk.Overlay, SignalManagerMixin):
         # Instance-level idle ID tracking to prevent cross-instance interference.
         # Uses a set so completed (auto-removed) source IDs can be pruned.
         self._idle_ids: set[int] = set()
+        self._download_announced = False
 
-        self.connect_tracked(get_language_manager(), "downloading", self.update_progress)
-        self.connect_tracked(get_language_manager(), "downloaded", self.on_downloaded)
+        language_manager = get_language_manager()
+        self.connect_tracked(language_manager, "downloading", self.update_progress)
+        self.connect_tracked(language_manager, "downloaded", self.on_downloaded)
+        self.connect_tracked(language_manager, "download-failed", self.on_download_failed)
 
         # Deferred UI update to ensure item is set
         idle_id = GLib.idle_add(self._idle_update_ui)
@@ -64,6 +68,9 @@ class LanguageRow(Gtk.Overlay, SignalManagerMixin):
 
         self.remove_btn.set_tooltip_text(remove_tooltip)
         self.remove_btn.update_property([Gtk.AccessibleProperty.LABEL], [remove_tooltip])
+
+        progress_label = _("Download {language}").format(language=self._item.title)
+        self.progress_bar.update_property([Gtk.AccessibleProperty.LABEL], [progress_label])
 
     def _idle_update_ui(self) -> bool:
         """One-shot idle callback: runs update_ui and prunes itself from tracking."""
@@ -127,6 +134,9 @@ class LanguageRow(Gtk.Overlay, SignalManagerMixin):
                 self.revealer.set_reveal_child(True)
 
             self.progress_bar.set_fraction(progress / 100)
+            if progress > 0 and not self._download_announced:
+                message = _("Downloading {language}").format(language=self._item.title)
+                self._download_announced = announce_accessible(self, message)
 
             if progress >= 100:
                 self.revealer.set_reveal_child(False)
@@ -157,10 +167,20 @@ class LanguageRow(Gtk.Overlay, SignalManagerMixin):
             self.update_ui()
 
     def on_downloaded(self, _sender: GObject.GObject, code: str) -> None:
-        """
-        Signal handler for completed downloads.
-        """
+        """Announce completion and refresh the language row."""
         if self._item and self._item.code == code:
+            message = _("Download of {language} completed").format(language=self._item.title)
+            announce_accessible(self, message)
+            self._download_announced = False
+            idle_id = GLib.idle_add(self._idle_update_ui)
+            self._idle_ids.add(idle_id)
+
+    def on_download_failed(self, _sender: GObject.GObject, code: str) -> None:
+        """Announce a failed download and restore the row controls."""
+        if self._item and self._item.code == code:
+            message = _("Download of {language} failed").format(language=self._item.title)
+            announce_accessible(self, message)
+            self._download_announced = False
             idle_id = GLib.idle_add(self._idle_update_ui)
             self._idle_ids.add(idle_id)
 

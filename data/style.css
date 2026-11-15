@@ -34,9 +34,13 @@
    symbolic icon, consistent with the rest of the modernized UI. */
 .history-empty-state image.icon {
     background-color: alpha(@accent_color, 0.12);
-    color: @accent_color;
+    color: #0F7650;
     border-radius: 9999px;
     padding: 20px;
+}
+
+.dark .history-empty-state image.icon {
+    color: #21B77A;
 }
 
 .language_popover_row {
@@ -78,10 +82,14 @@
 }
 
 .anura-button:focus {
-    outline-color: @accent_color;
+    outline-color: @accent_bg_color;
     outline-style: solid;
     outline-width: 2px;
     outline-offset: 2px;
+}
+
+.dark .anura-button:focus {
+    outline-color: #21B77A;
 }
 
 .anura-button:disabled {
@@ -277,4 +285,21 @@
 #drop_area.drag-processing {
     border-color: @warning_color;
     background: alpha(@warning_color, 0.15);
+}
+
+
+/* Respect GTK's reduced-motion preference for application-authored CSS. */
+.reduced-motion * {
+    transition-duration: 0ms;
+    animation-duration: 0ms;
+    animation-iteration-count: 1;
+}
+
+.reduced-motion .anura-button:hover,
+.reduced-motion .anura-card:hover,
+.reduced-motion .share-row:hover,
+.reduced-motion .welcome-card:hover,
+.reduced-motion .share-row:active,
+.reduced-motion .anura-button:active {
+    transform: none;
 }
