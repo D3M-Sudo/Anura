@@ -74,7 +74,7 @@ def test_application_css_provider_loads_and_registers_for_default_display():
     display = Gdk.Display.get_default()
     assert display is not None
 
-    provider = load_css_provider()
+    provider = load_css_provider(display)
 
     assert isinstance(provider, Gtk.CssProvider)
 
