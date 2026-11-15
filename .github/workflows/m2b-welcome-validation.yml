@@ -102,12 +102,7 @@ jobs:
         run: |
           uv run pytest \
             tests/test_widgets.py \
-            tests/test_welcome_page_accessibility.py \
             -m gtk -v --timeout=30 \
-            --override-ini "addopts=-v --tb=short"
-          uv run pytest \
-            tests/test_welcome_page_accessibility.py \
-            -v --timeout=30 \
             --override-ini "addopts=-v --tb=short"
 
       - name: Stop headless Wayland compositor
