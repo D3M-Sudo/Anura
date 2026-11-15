@@ -118,13 +118,16 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
             None,
         )
 
+    def _load_application_stylesheet(self) -> None:
+        """Load the GTK stylesheet and retain its provider for the app lifetime."""
+        # Headless CLI invocations have no display and intentionally skip CSS setup.
+        self._css_provider = load_css_provider(Gdk.Display.get_default())
+
     def do_startup(self, *args: object, **kwargs: object) -> None:
         Adw.init()
         Adw.Application.do_startup(self)
 
-        # Keep the provider alive for the application's lifetime. Headless CLI
-        # invocations have no display and intentionally skip stylesheet setup.
-        self._css_provider = load_css_provider(Gdk.Display.get_default())
+        self._load_application_stylesheet()
         self._apply_color_scheme()
         self.settings.connect("changed::color-scheme", self._on_color_scheme_changed)
 
