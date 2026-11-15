@@ -166,6 +166,30 @@ class TestWelcomePageEnterprise:
         assert widget._drop_target.get_widget() is widget
 
     @pytest.mark.gtk
+    def test_welcome_layout_transition_keeps_focus_on_visible_control(self, widget):
+        """Collapse returns focus to More options, never to a hidden popover child."""
+        window = Gtk.Window()
+        window.set_child(widget)
+        window.present()
+
+        context = GLib.MainContext.default()
+        for _iteration in range(100):
+            context.iteration(False)
+            if widget.action_clamp.get_width() > 0:
+                break
+
+        widget._set_action_layout(True)
+        widget.open_image_button.grab_focus()
+        assert window.get_focus() is widget.open_image_button
+
+        widget._set_action_layout(False)
+        assert window.get_focus() is widget.more_options_button
+
+        widget._set_action_layout(True)
+        assert window.get_focus() is widget.screenshot_button
+        window.destroy()
+
+    @pytest.mark.gtk
     def test_welcome_action_breakpoint_uses_measured_control_widths(self, widget):
         """The breakpoint follows natural control widths and inter-column spacing."""
         threshold = widget._get_wide_action_threshold()

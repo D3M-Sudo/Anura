@@ -180,7 +180,10 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
                 self.screenshot_button.grab_focus()
 
         if focused_action is not None:
-            GLib.idle_add(lambda: (focused_action.grab_focus(), GLib.SOURCE_REMOVE)[1])
+            if wide:
+                GLib.idle_add(lambda: (focused_action.grab_focus(), GLib.SOURCE_REMOVE)[1])
+            else:
+                self.more_options_button.grab_focus()
 
     def _focus_drop_action(self) -> None:
         """Focus the visible Drop control or its compact-layout menu trigger."""
