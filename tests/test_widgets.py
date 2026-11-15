@@ -12,7 +12,7 @@ from gettext import gettext as _
 from unittest.mock import MagicMock, patch
 
 import gi
-from gi.repository import Adw, Gio, Gtk
+from gi.repository import Adw, Gio, GLib, Gtk
 
 # Register GResources and initialize Adw before importing template-backed widgets.
 
@@ -187,6 +187,33 @@ class TestWelcomePageEnterprise:
         with patch.object(widget.action_clamp, "get_width", return_value=expected - 1):
             widget._update_action_layout()
         assert widget._wide_action_layout is False
+
+    @pytest.mark.parametrize(
+        ("width", "height", "expected_wide"),
+        [
+            (360, 600, False),
+            (640, 480, True),
+            (900, 600, True),
+            (1280, 800, True),
+        ],
+    )
+    @pytest.mark.gtk
+    def test_welcome_responsive_layout_at_m1_viewports(self, widget, width, height, expected_wide):
+        """The action row switches at the measured threshold across M1 window sizes."""
+        window = Gtk.Window()
+        window.set_default_size(width, height)
+        window.set_child(widget)
+        window.present()
+
+        context = GLib.MainContext.default()
+        for _ in range(100):
+            context.iteration(False)
+            if widget.action_clamp.get_width() > 0:
+                break
+
+        assert widget.action_clamp.get_width() > 0
+        assert widget._wide_action_layout is expected_wide
+        window.destroy()
 
     @pytest.mark.gtk
     def test_spinner_state(self, widget):
