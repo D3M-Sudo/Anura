@@ -9,6 +9,8 @@ pytest.importorskip("gi")
 
 from anura.window import _initial_window_size
 
+pytestmark = pytest.mark.gtk
+
 
 def test_first_run_uses_reasonable_default_size() -> None:
     assert _initial_window_size(-1, -1, 1920, 1080) == (900, 600)
@@ -25,3 +27,15 @@ def test_first_run_size_is_clamped_for_small_screen() -> None:
 def test_saved_dimensions_are_restored_with_monitor_clamping() -> None:
     assert _initial_window_size(1200, 900, 1920, 1080) == (1200, 900)
     assert _initial_window_size(1200, 900, 800, 600) == (720, 540)
+
+
+def test_initial_size_stays_within_available_bounds_on_very_small_monitor() -> None:
+    assert _initial_window_size(-1, -1, 300, 250) == (270, 225)
+
+
+def test_window_blueprint_does_not_force_minimums_above_geometry_clamp() -> None:
+    from pathlib import Path
+
+    blueprint = Path("data/ui/window.blp").read_text(encoding="utf-8")
+    assert "width-request: 360;" not in blueprint
+    assert "height-request: 360;" not in blueprint
