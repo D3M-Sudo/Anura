@@ -140,6 +140,7 @@ def _wait_for_gtk_condition(
             pytest.fail(f"GTK did not {description} within {timeout_seconds:.1f}s{detail}")
         time.sleep(0.01)
 
+
 def _welcome_popover_diagnostic_state(window, page, events) -> str:
     """Capture GTK state when the compact Welcome Page popover fails to map."""
 
@@ -183,6 +184,7 @@ def _welcome_popover_diagnostic_state(window, page, events) -> str:
             "events": list(events),
         }
     )
+
 
 def _wait_for_window_allocation(window, widget, timeout_seconds: float = 5.0) -> None:
     """Wait for the Wayland surface and GTK frame clock to allocate real geometry."""
