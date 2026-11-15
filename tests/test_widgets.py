@@ -141,6 +141,8 @@ class TestWelcomePageEnterprise:
     def test_welcome_secondary_actions_reparent_between_layouts(self, widget):
         """The same action controls are visible in either responsive layout."""
         action_ids = tuple(id(button) for button in widget.action_buttons)
+        widget.show_spinner()
+        widget._set_drop_area_processing_state(True)
 
         widget._set_action_layout(True)
 
@@ -149,6 +151,9 @@ class TestWelcomePageEnterprise:
         assert widget.more_options_button.get_visible() is False
         assert all(button.get_parent() is widget.secondary_actions for button in widget.action_buttons)
         assert tuple(id(button) for button in widget.action_buttons) == action_ids
+        assert widget.spinner.get_visible() is True
+        assert widget.drop_area.has_css_class("drag-processing")
+        assert widget._drop_target.get_widget() is widget
 
         widget._set_action_layout(False)
 
@@ -156,6 +161,9 @@ class TestWelcomePageEnterprise:
         assert widget.more_options_button.get_visible() is True
         assert all(button.get_parent() is widget.compact_actions for button in widget.action_buttons)
         assert tuple(id(button) for button in widget.action_buttons) == action_ids
+        assert widget.spinner.get_visible() is True
+        assert widget.drop_area.has_css_class("drag-processing")
+        assert widget._drop_target.get_widget() is widget
 
     @pytest.mark.gtk
     def test_welcome_action_breakpoint_uses_measured_control_widths(self, widget):
@@ -163,8 +171,14 @@ class TestWelcomePageEnterprise:
         threshold = widget._get_wide_action_threshold()
         natural_widths = [button.get_preferred_size()[1].width for button in widget.action_buttons]
 
-        assert threshold > 0
-        assert threshold >= max(natural_widths) * len(widget.action_buttons)
+        expected = (
+            max(natural_widths) * len(widget.action_buttons)
+            + widget.secondary_actions.get_spacing() * (len(widget.action_buttons) - 1)
+            + widget.secondary_actions.get_margin_start()
+            + widget.secondary_actions.get_margin_end()
+        )
+
+        assert threshold == expected
 
     @pytest.mark.gtk
     def test_spinner_state(self, widget):

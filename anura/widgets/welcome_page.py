@@ -133,7 +133,8 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         return (
             (equal_column_width * len(self.action_buttons))
             + (self.secondary_actions.get_spacing() * (len(self.action_buttons) - 1))
-            + 32
+            + self.secondary_actions.get_margin_start()
+            + self.secondary_actions.get_margin_end()
         )
 
     def _on_action_clamp_width_changed(self, _widget: Adw.Clamp, _pspec: object) -> None:
