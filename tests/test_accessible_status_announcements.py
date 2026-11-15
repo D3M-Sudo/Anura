@@ -75,3 +75,21 @@ def test_search_result_announcement_is_debounced(headless_gi_mocks, monkeypatch)
     assert announcements.call_args.args[1] == "2 matches"
     assert len(announcements.call_args.args) == 3
     assert page._search_announce_timeout_id is None
+
+
+
+def test_ocr_status_reannounces_after_status_clear(headless_gi_mocks):
+    from anura.widgets.welcome_page import WelcomePage
+
+    page = MagicMock()
+    page.drop_area_label = MagicMock()
+    page._last_announced_status = None
+
+    WelcomePage.set_status(page, "Loading image")
+    WelcomePage.set_status(page, "")
+    WelcomePage.set_status(page, "Loading image")
+
+    assert [call.args[0] for call in page.announce.call_args_list] == [
+        "Loading image",
+        "Loading image",
+    ]

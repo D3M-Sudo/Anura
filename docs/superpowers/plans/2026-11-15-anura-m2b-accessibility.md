@@ -77,7 +77,7 @@
 - Consumes: WelcomePage._set_action_layout(), _focus_more_options_idle(), _focus_widget_idle(), and the actual GTK widget tree.
 - Produces: display-backed regression coverage for initial tab traversal, wide/compact focus order and focus restoration after reparenting.
 
-- [ ] Write GTK tests test_welcome_initial_tab_focus_is_language_selector, test_welcome_wide_action_focus_order, test_welcome_compact_action_focus_order, and test_welcome_focus_restores_after_responsive_reparenting.
+- [ ] Write GTK tests test_welcome_initial_tab_focus_is_language_selector, test_welcome_wide_action_focus_order, test_welcome_compact_action_focus_order, and test_welcome_focus_restores_after_responsive_reparenting, and test_welcome_focus_moves_from_more_options_to_primary_when_layout_expands.
 - [ ] Run the focused tests in the existing Weston-backed GTK CI tier; expected RED for any uncovered behavior.
 - [ ] Make only the smallest behavior correction required by a reproduced failure.
 - [ ] Re-run the focused GTK tests; expected GREEN.

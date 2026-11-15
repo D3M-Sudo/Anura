@@ -128,6 +128,9 @@ def _present_welcome_page():
     window = Gtk.Window()
     window.set_default_size(900, 600)
     page = WelcomePage()
+    for button in (page.screenshot_button, page.open_image_button, page.paste_image_button, page.drop_button):
+        button.set_action_name(None)
+        button.set_sensitive(True)
     window.set_child(page)
     window.present()
     _drain_gtk_main_context()
@@ -230,5 +233,22 @@ def test_welcome_focus_restores_after_responsive_reparenting():
         page._set_action_layout(True)
         _drain_gtk_main_context()
         assert window.get_focus() is page.open_image_button
+    finally:
+        window.destroy()
+
+
+
+@pytest.mark.gtk
+def test_welcome_focus_moves_from_more_options_to_primary_when_layout_expands():
+    window, page = _present_welcome_page()
+    try:
+        page._set_action_layout(False)
+        _drain_gtk_main_context()
+        page.more_options_button.grab_focus()
+        assert _focus_is_descendant_of(window, page.more_options_button)
+
+        page._set_action_layout(True)
+        _drain_gtk_main_context()
+        assert window.get_focus() is page.screenshot_button
     finally:
         window.destroy()

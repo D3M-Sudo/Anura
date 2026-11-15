@@ -183,6 +183,13 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         root = self.get_root()
         focused_widget = root.get_focus() if root and hasattr(root, "get_focus") else None
         focused_action = focused_widget if focused_widget in self.action_buttons else None
+        focused_more_options = False
+        ancestor = focused_widget
+        while ancestor is not None:
+            if ancestor is self.more_options_button:
+                focused_more_options = True
+                break
+            ancestor = ancestor.get_parent()
         destination = self.secondary_actions if wide else self.compact_actions
 
         if wide:
@@ -202,7 +209,7 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
 
         if wide:
             self.more_options_popover.popdown()
-            if focused_widget == self.more_options_button:
+            if focused_more_options:
                 self.screenshot_button.grab_focus()
 
         if focused_action is not None:
@@ -489,7 +496,9 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         """Update the visible OCR status and announce each distinct phase once."""
         if self.drop_area_label:
             self.drop_area_label.set_label(status_msg)
-        if status_msg and status_msg != self._last_announced_status and announce_accessible(self, status_msg):
+        if not status_msg:
+            self._last_announced_status = None
+        elif status_msg != self._last_announced_status and announce_accessible(self, status_msg):
             self._last_announced_status = status_msg
 
     def hide_spinner(self) -> None:
