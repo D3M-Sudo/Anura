@@ -489,9 +489,8 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         """Update the visible OCR status and announce each distinct phase once."""
         if self.drop_area_label:
             self.drop_area_label.set_label(status_msg)
-        if status_msg and status_msg != self._last_announced_status:
-            if announce_accessible(self, status_msg):
-                self._last_announced_status = status_msg
+        if status_msg and status_msg != self._last_announced_status and announce_accessible(self, status_msg):
+            self._last_announced_status = status_msg
 
     def hide_spinner(self) -> None:
         """Stop and hide the spinner."""

@@ -7,7 +7,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 
-from gi.repository import Gtk
+from gi.repository import Gtk  # noqa: E402
 
 
 def announce_accessible(widget: Gtk.Widget, message: str, priority: object | None = None) -> bool:
