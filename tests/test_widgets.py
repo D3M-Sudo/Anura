@@ -212,8 +212,6 @@ class TestWelcomePageEnterprise:
                 break
 
         measured_width = widget.action_clamp.get_width()
-        threshold = widget._get_wide_action_threshold()
-        natural_widths = [button.get_preferred_size()[1].width for button in widget.action_buttons]
         assert measured_width > 0
         assert widget._wide_action_layout is expected_wide
         window.destroy()
