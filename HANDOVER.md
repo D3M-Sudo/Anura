@@ -195,3 +195,35 @@ These are integration constraints, not a claim that the current branch has alrea
 - PR #648 remains open and Draft, targeting `feature`; no merge was performed.
 - The PR branch was rebased onto the current `feature` baseline without changing `feature`; at the time of this record it was 214 commits ahead and 0 behind.
 - The temporary authorized-rebase workflow was removed after use. No temporary validation workflow was added for this task.
+
+## M2-B Task 3 — Shell geometry implementation update (2026-11-15)
+
+### Implemented
+
+- Main Window: the initial-size helper now clamps to 90% of the selected monitor geometry while adapting its minimum dimensions down to the available bounds. Removed the fixed 360×360 Blueprint size requests that could override the clamp.
+- Monitor selection: before the native surface exists, choose the connected monitor with the largest geometry instead of assuming monitor index 0. After realization, use Gdk.Display.get_monitor_at_surface() to identify the monitor actually containing the window.
+- Monitor changes: track Gdk.Surface::enter-monitor and re-clamp the current dimensions when the window enters another monitor.
+- Window state: persist width and height only when the window closes in its normal state; maximized and fullscreen dimensions are not stored.
+- Extracted: the existing HeaderBar was already compact (two start-side actions and one end-side menu action); a regression test records that structure. Existing scroll/reflow behavior is preserved.
+- Preferences: removed fixed width/height requests so the dialog can adapt to narrower viewports while retaining its preferred content size.
+- Shortcuts: made the overlay resizable. Its existing Gtk.ScrolledWindow and automatic vertical scrollbar remain in place.
+
+### Platform constraint
+
+GTK 4's Gdk.Monitor exposes monitor geometry but does not provide a separate work-area API for excluding panels and docks. The implementation therefore clamps against monitor geometry and does not claim a universal panel/dock-aware work-area calculation. The actual surface monitor is resolved after realization; the largest-monitor fallback is used only before that point.
+
+### Test-first and CI evidence
+
+- G1 RED: the initial small-monitor and Blueprint-minimum tests failed as expected (320×240 returned for a 300×250 monitor; fixed 360px requests remained in the Blueprint).
+- G1 GREEN: after the clamp and Blueprint changes, the GTK job passed both regressions and the four viewport cases.
+- G2/G4/G6 RED: the monitor-selection, monitor-size, normal-state persistence, resizable Shortcuts and Preferences minimum-size tests failed before their implementation; the compact Extracted HeaderBar contract passed.
+- G2/G4/G6 GREEN: CI run [#43748161668](https://github.com/D3M-Sudo/Anura/actions/runs/43748161668) passed Python quality, Changelog integrity and GTK Integration Tests. GTK result: **408 passed, 5 skipped, 617 deselected**, 2 warnings.
+- Python quality on that run passed Ruff, formatting, type checking, Bandit and the Python test suite. CodeQL run [#43748161592](https://github.com/D3M-Sudo/Anura/actions/runs/43748161592) passed.
+- AppImage x86_64/aarch64 and Flatpak x86_64/aarch64 jobs were still running when this entry was written; consult the latest PR CI run before claiming full packaging validation.
+
+### Remaining validation and repository state
+
+- Manual GNOME/GTK visual review, Orca/AT-SPI and keyboard checks were explicitly skipped at the user's request and are not claimed as completed.
+- PR #648 remains open and Draft, targeting feature. No merge was performed.
+- The implementation is confined to fix/ui-modernization-aligned; feature, development, testing and main were not modified.
+
