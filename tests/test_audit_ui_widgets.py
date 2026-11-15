@@ -114,6 +114,7 @@ class TestWidgets:
         assert dialog is not None
 
 
+
 def _drain_gtk_main_context():
     context = GLib.MainContext.default()
     for _ in range(20):
@@ -134,12 +135,36 @@ def _present_welcome_page():
     return window, page
 
 
+def _focus_is_descendant_of(window, widget):
+    focused = window.get_focus()
+    while focused is not None:
+        if focused is widget:
+            return True
+        focused = focused.get_parent()
+    return False
+
+
+@pytest.mark.gtk
+def test_gtk_accessible_announce_api_is_available():
+    from anura.utils.accessibility import announce_accessible
+
+    window = Gtk.Window()
+    label = Gtk.Label(label="Status")
+    window.set_child(label)
+    window.present()
+    _drain_gtk_main_context()
+    try:
+        assert announce_accessible(label, "Status update", Gtk.AccessibleAnnouncementPriority.LOW)
+    finally:
+        window.destroy()
+
+
 @pytest.mark.gtk
 def test_welcome_initial_tab_focus_is_language_selector():
     window, page = _present_welcome_page()
     try:
         assert window.child_focus(Gtk.DirectionType.TAB_FORWARD)
-        assert window.get_focus() is page.lang_combo
+        assert _focus_is_descendant_of(window, page.lang_combo)
     finally:
         window.destroy()
 
@@ -150,10 +175,16 @@ def test_welcome_wide_action_focus_order():
     try:
         page._set_action_layout(True)
         _drain_gtk_main_context()
-        page.screenshot_button.grab_focus()
+        assert page.open_image_button.get_parent() is page.secondary_actions
+        assert page.paste_image_button.get_parent() is page.secondary_actions
+        assert page.drop_button.get_parent() is page.secondary_actions
 
-        assert window.child_focus(Gtk.DirectionType.TAB_FORWARD)
+        page.open_image_button.grab_focus()
         assert window.get_focus() is page.open_image_button
+        assert page.secondary_actions.child_focus(Gtk.DirectionType.TAB_FORWARD)
+        assert window.get_focus() is page.paste_image_button
+        assert page.secondary_actions.child_focus(Gtk.DirectionType.TAB_FORWARD)
+        assert window.get_focus() is page.drop_button
     finally:
         window.destroy()
 
@@ -164,10 +195,19 @@ def test_welcome_compact_action_focus_order():
     try:
         page._set_action_layout(False)
         _drain_gtk_main_context()
-        page.screenshot_button.grab_focus()
+        assert page.more_options_button.get_visible()
+        assert page.open_image_button.get_parent() is page.compact_actions
+        assert page.paste_image_button.get_parent() is page.compact_actions
+        assert page.drop_button.get_parent() is page.compact_actions
 
-        assert window.child_focus(Gtk.DirectionType.TAB_FORWARD)
-        assert window.get_focus() is page.more_options_button
+        page.more_options_popover.popup()
+        _drain_gtk_main_context()
+        page.open_image_button.grab_focus()
+        assert window.get_focus() is page.open_image_button
+        assert page.compact_actions.child_focus(Gtk.DirectionType.TAB_FORWARD)
+        assert window.get_focus() is page.paste_image_button
+        assert page.compact_actions.child_focus(Gtk.DirectionType.TAB_FORWARD)
+        assert window.get_focus() is page.drop_button
     finally:
         window.destroy()
 
@@ -179,9 +219,11 @@ def test_welcome_focus_restores_after_responsive_reparenting():
         page._set_action_layout(True)
         _drain_gtk_main_context()
         page.open_image_button.grab_focus()
+        assert window.get_focus() is page.open_image_button
+
         page._set_action_layout(False)
         _drain_gtk_main_context()
-        assert window.get_focus() is page.more_options_button
+        assert _focus_is_descendant_of(window, page.more_options_button)
 
         page.more_options_popover.popup()
         _drain_gtk_main_context()
