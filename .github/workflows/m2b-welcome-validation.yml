@@ -60,8 +60,7 @@ jobs:
 
       - name: Install project and development dependencies
         run: |
-          python3 -m pip install --user uv
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          pip install uv
           uv sync --dev
 
       - name: Compile Blueprint templates
