@@ -121,7 +121,7 @@
 - Update: this plan with completion/evidence notes.
 
 - [x] Record A1–A5 implementation, exact commits and CI run URLs/results in HANDOVER.md.
-- [x] Run the full existing PR CI matrix on the final branch head `f4979df9bc82dc60e23c82d77d674d9a0862ad95`; all 10 executable jobs completed successfully in run [#43762681835](https://github.com/D3M-Sudo/Anura/actions/runs/43762681835), including both Flatpak architectures and multi-architecture artifact validation.
+- [x] Run the full existing PR CI matrix on the final branch head `f4979df9bc82dc60e23c82d77d674d9a0862ad95`; all 9 executable jobs completed successfully in run [#43762681835](https://github.com/D3M-Sudo/Anura/actions/runs/43762681835), including both Flatpak architectures and multi-architecture artifact validation.
 - [x] Re-check PR #648 state/head/base and compare feature with fix/ui-modernization-aligned; PR remains open/Draft, 265 ahead and 0 behind.
 - [x] Confirm protected branch SHAs are unchanged and PR remains open/Draft/unmerged.
 - [x] Run a final self-review of all Task 4 implementation, test, translation, changelog, handover and plan changes; no subagent reviewer is available in this environment.
