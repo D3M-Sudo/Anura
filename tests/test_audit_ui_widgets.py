@@ -181,7 +181,10 @@ def test_welcome_wide_action_focus_order():
         assert page.paste_image_button.get_parent() is page.secondary_actions
         assert page.drop_button.get_parent() is page.secondary_actions
 
-        page.open_image_button.grab_focus()
+        assert page.open_image_button.get_visible(), "wide action button is not visible"
+        assert page.open_image_button.get_mapped(), "wide action button is not mapped"
+        assert page.open_image_button.get_focusable(), "wide action button is not focusable"
+        assert page.open_image_button.grab_focus(), "GTK refused focus for the wide action button"
         assert window.get_focus() is page.open_image_button
         assert page.secondary_actions.child_focus(Gtk.DirectionType.TAB_FORWARD)
         assert window.get_focus() is page.paste_image_button
@@ -229,7 +232,10 @@ def test_welcome_focus_restores_after_responsive_reparenting():
 
         page.more_options_popover.popup()
         _drain_gtk_main_context()
-        page.open_image_button.grab_focus()
+        assert page.open_image_button.get_visible(), "compact action button is not visible"
+        assert page.open_image_button.get_mapped(), "compact action button is not mapped"
+        assert page.open_image_button.get_focusable(), "compact action button is not focusable"
+        assert page.open_image_button.grab_focus(), "GTK refused focus for the compact action button"
         page._set_action_layout(True)
         _drain_gtk_main_context()
         assert window.get_focus() is page.open_image_button
