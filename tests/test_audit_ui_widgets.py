@@ -211,7 +211,11 @@ def test_welcome_compact_action_focus_order():
         assert window.get_focus() is page.open_image_button
         assert page.compact_actions.child_focus(Gtk.DirectionType.TAB_FORWARD)
         assert window.get_focus() is page.paste_image_button
-        assert page.compact_actions.child_focus(Gtk.DirectionType.TAB_FORWARD)
+        assert page.drop_button.get_visible(), "compact Drop action is not visible"
+        assert page.drop_button.get_mapped(), "compact Drop action is not mapped"
+        assert page.drop_button.get_focusable(), "compact Drop action is not focusable"
+        assert page.drop_button.is_sensitive(), "compact Drop action is not sensitive"
+        assert page.compact_actions.child_focus(Gtk.DirectionType.TAB_FORWARD), "GTK could not advance focus to compact Drop action"
         assert window.get_focus() is page.drop_button
     finally:
         window.destroy()
