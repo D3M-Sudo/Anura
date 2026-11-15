@@ -201,6 +201,15 @@ class TestWelcomePageEnterprise:
     def test_welcome_responsive_layout_at_m1_viewports(self, widget, width, height, expected_wide):
         """The action row switches at the measured threshold across M1 window sizes."""
         window = Gtk.Window()
+        widget.action_clamp.connect(
+            "notify::width",
+            lambda *_args: print(
+                "responsive-width-notify",
+                width,
+                widget.action_clamp.get_width(),
+                widget._get_wide_action_threshold(),
+            ),
+        )
         window.set_default_size(width, height)
         window.set_child(widget)
         window.present()
@@ -211,7 +220,18 @@ class TestWelcomePageEnterprise:
             if widget.action_clamp.get_width() > 0:
                 break
 
-        assert widget.action_clamp.get_width() > 0
+        measured_width = widget.action_clamp.get_width()
+        threshold = widget._get_wide_action_threshold()
+        natural_widths = [button.get_preferred_size()[1].width for button in widget.action_buttons]
+        print(
+            "responsive-layout-debug",
+            width,
+            measured_width,
+            threshold,
+            natural_widths,
+            widget._wide_action_layout,
+        )
+        assert measured_width > 0
         assert widget._wide_action_layout is expected_wide
         window.destroy()
 
