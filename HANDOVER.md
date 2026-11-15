@@ -261,3 +261,16 @@ GTK 4's Gdk.Monitor exposes monitor geometry but does not provide a separate wor
 - The x86_64 Flatpak retry reproduced the original failure: the GNOME SDK/runtime update hit OSTree Invalid cross-device link and xvfb-run exited 139 before Anura was built.
 - The independent final documentation-head x86_64 job reproduced the same pre-build failure. This is consistent across the original run, retry and final-head run; no source-code or manifest change is justified by this evidence.
 - The aarch64 Flatpak job completed all 22 validation steps successfully on the code-equivalent implementation head, including offline rebuild, sandbox smoke tests, both OCR functional cases and licence inventory.
+
+## M2-B Task 4 — Final CI completion (2026-11-15)
+
+- Final PR workflow [#43762681835](https://github.com/D3M-Sudo/Anura/actions/runs/43762681835) completed with overall conclusion **success** on branch `fix/ui-modernization-aligned`, head `f4979df9bc82dc60e23c82d77d674d9a0862ad95`, targeting `feature` at `cb079b0b55e252a7ac054fe1b6f57030ddc7b1f9`.
+- All 10 executable jobs passed: Changelog integrity; Python quality; GTK Integration Tests; AppImage x86_64; AppImage aarch64; Flatpak x86_64; Flatpak aarch64; complete AppImage release-set validation; multi-architecture Flatpak release-artifact validation; and the CodeQL workflow completed successfully as its own run.
+- Python quality: **626 passed, 6 skipped**. GTK Integration: **416 passed, 5 skipped, 632 deselected, 2 warnings**.
+- Both Flatpak architectures completed build, offline-build verification, Blueprint/resource checks, headless runtime, GI typelib checks, positive and negative sandbox OCR tests, desktop/AppStream validation and licence inventory. The multi-architecture Flatpak artifact validator also passed.
+- Both AppImage architectures passed build, architecture/update-metadata checks and clean-host smoke tests. The complete AppImage release-set validator passed.
+- The earlier x86_64 Flatpak OSTree `Invalid cross-device link` runner failure did not recur in this final run. No source or manifest workaround was needed.
+- The workflow's `publish-release` job was skipped, as expected for a pull-request validation run; no release was published.
+- The full Task 4 CI matrix is now complete. The implementation/test/documentation validation gate is green.
+- Manual GNOME/GTK visual review, Orca/AT-SPI and manual keyboard checks remain excluded by user decision; this CI result does not claim real desktop or screen-reader conformance.
+- PR #648 remains open and Draft, targeting `feature`. No merge or protected-branch modification was performed.
