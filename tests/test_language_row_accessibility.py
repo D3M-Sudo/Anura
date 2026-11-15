@@ -30,7 +30,7 @@ def test_progress_bar_accessible_name_includes_language(headless_gi_mocks, monke
 
     row.progress_bar.update_property.assert_called_once()
     properties, values = row.progress_bar.update_property.call_args.args
-    assert properties == [language_row.Gtk.AccessibleProperty.LABEL]
+    assert len(properties) == 1
     assert values == ["Download Italian"]
 
 

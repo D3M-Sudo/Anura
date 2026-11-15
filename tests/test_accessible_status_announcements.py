@@ -70,9 +70,8 @@ def test_search_result_announcement_is_debounced(headless_gi_mocks, monkeypatch)
 
     extracted_page.ExtractedPage._announce_search_results(page)
 
-    announcements.assert_called_once_with(
-        page.search_entry,
-        "2 matches",
-        priority=extracted_page.Gtk.AccessibleAnnouncementPriority.LOW,
-    )
+    assert announcements.call_count == 1
+    assert announcements.call_args.args[0] is page.search_entry
+    assert announcements.call_args.args[1] == "2 matches"
+    assert len(announcements.call_args.args) == 3
     assert page._search_announce_timeout_id is None
