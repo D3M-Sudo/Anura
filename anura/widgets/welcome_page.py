@@ -183,6 +183,9 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         focused_action = focused_widget if focused_widget in self.action_buttons else None
         destination = self.secondary_actions if wide else self.compact_actions
 
+        if wide:
+            self.more_options_popover.popdown()
+
         for button in self.action_buttons:
             parent = button.get_parent()
             if parent is destination:
@@ -197,18 +200,24 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
 
         if wide:
             self.more_options_popover.popdown()
-            if focused_widget is self.more_options_button:
+            if focused_widget == self.more_options_button:
                 self.screenshot_button.grab_focus()
 
         if focused_action is not None:
             if wide:
-                GLib.idle_add(lambda: (focused_action.grab_focus(), GLib.SOURCE_REMOVE)[1])
+                GLib.idle_add(self._focus_widget_idle, focused_action)
             else:
                 GLib.idle_add(self._focus_more_options_idle)
 
     def _focus_more_options_idle(self) -> bool:
         """Restore focus after the compact menu trigger becomes visible."""
         self.more_options_button.grab_focus()
+        return GLib.SOURCE_REMOVE
+
+    @staticmethod
+    def _focus_widget_idle(widget: Gtk.Widget) -> bool:
+        """Restore focus after GTK completes responsive widget reparenting."""
+        widget.grab_focus()
         return GLib.SOURCE_REMOVE
 
     def _focus_drop_action(self) -> None:

@@ -181,10 +181,11 @@ class TestWelcomePageEnterprise:
                 break
 
         widget._set_action_layout(True)
-        assert widget.drop_button.grab_focus() is True
+        widget.open_image_button.grab_focus()
         for _iteration in range(10):
             context.iteration(False)
-        assert window.get_focus() is widget.drop_button
+            time.sleep(0.01)
+        assert window.get_focus() is widget.open_image_button
 
         widget._set_action_layout(False)
         for _iteration in range(10):
@@ -193,6 +194,9 @@ class TestWelcomePageEnterprise:
         assert window.get_focus() is widget.more_options_button
 
         widget._set_action_layout(True)
+        for _iteration in range(10):
+            context.iteration(False)
+            time.sleep(0.01)
         assert window.get_focus() is widget.screenshot_button
         window.destroy()
 
