@@ -40,7 +40,7 @@ from loguru import logger
 GtkSource.init()
 
 from anura.config import APP_ID, XDG_DATA_HOME
-from anura.core.resources import load_gresource_bundle
+from anura.core.resources import load_css_provider, load_gresource_bundle
 
 # Load GResource before importing any widgets
 if not load_gresource_bundle():
@@ -77,6 +77,7 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         super().__init__(application_id=APP_ID, flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)  # type: ignore[call-arg]
         SignalManagerMixin.__init__(self)
         self.backend: ScreenshotService | None = None
+        self._css_provider: Gtk.CssProvider | None = None
         self.version = version
         self._legacy_migration_pending = False
         self._activate_after_legacy_migration = False
@@ -121,6 +122,9 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
         Adw.init()
         Adw.Application.do_startup(self)
 
+        # Keep the provider alive for the application's lifetime. Headless CLI
+        # invocations have no display and intentionally skip stylesheet setup.
+        self._css_provider = load_css_provider()
         self._apply_color_scheme()
         self.settings.connect("changed::color-scheme", self._on_color_scheme_changed)
 
