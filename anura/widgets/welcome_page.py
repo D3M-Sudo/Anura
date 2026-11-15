@@ -131,9 +131,11 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
             minimum_size, natural_size = button.get_preferred_size()
             natural_widths.append(max(minimum_size.width, natural_size.width))
         equal_column_width = max(natural_widths, default=0)
-        return (equal_column_width * len(self.action_buttons)) + (
-            self.secondary_actions.get_spacing() * (len(self.action_buttons) - 1)
-        ) + 32
+        return (
+            (equal_column_width * len(self.action_buttons))
+            + (self.secondary_actions.get_spacing() * (len(self.action_buttons) - 1))
+            + 32
+        )
 
     def _on_action_clamp_width_changed(self, _widget: Adw.Clamp, _pspec: object) -> None:
         """Re-evaluate the layout when the available clamped width changes."""
