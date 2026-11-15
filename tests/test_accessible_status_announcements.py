@@ -5,11 +5,10 @@
 
 from unittest.mock import MagicMock
 
-from anura.widgets.extracted_page import ExtractedPage
-from anura.widgets.welcome_page import WelcomePage
-
 
 def test_ocr_status_announces_only_changed_messages(headless_gi_mocks):
+    from anura.widgets.welcome_page import WelcomePage
+
     page = WelcomePage()
     page.announce = MagicMock()
 
@@ -23,7 +22,7 @@ def test_ocr_status_announces_only_changed_messages(headless_gi_mocks):
     ]
 
 
-def test_tts_announces_state_transitions_without_idle_noise(monkeypatch):
+def test_tts_announces_state_transitions_without_idle_noise(headless_gi_mocks, monkeypatch):
     import anura.widgets.extracted_page as extracted_page
 
     page = MagicMock()
@@ -32,7 +31,7 @@ def test_tts_announces_state_transitions_without_idle_noise(monkeypatch):
     monkeypatch.setattr(extracted_page, "announce_accessible", announcements)
 
     for state in ("generating", "generating", "playing", "paused", "idle"):
-        ExtractedPage.update_tts_state(page, state)
+        extracted_page.ExtractedPage.update_tts_state(page, state)
 
     assert [call.args[1] for call in announcements.call_args_list] == [
         "Generating speech",
@@ -41,7 +40,7 @@ def test_tts_announces_state_transitions_without_idle_noise(monkeypatch):
     ]
 
 
-def test_search_result_announcement_is_debounced(monkeypatch):
+def test_search_result_announcement_is_debounced(headless_gi_mocks, monkeypatch):
     import anura.widgets.extracted_page as extracted_page
 
     page = MagicMock()
@@ -50,8 +49,8 @@ def test_search_result_announcement_is_debounced(monkeypatch):
     page.search_context.get_occurrences_count.return_value = 2
     page.search_entry = MagicMock()
     page._search_announce_timeout_id = None
-    page._cancel_search_announcement = lambda: ExtractedPage._cancel_search_announcement(page)
-    page._announce_search_results = lambda: ExtractedPage._announce_search_results(page)
+    page._cancel_search_announcement = lambda: extracted_page.ExtractedPage._cancel_search_announcement(page)
+    page._announce_search_results = lambda: extracted_page.ExtractedPage._announce_search_results(page)
 
     timeout_ids = iter((101, 102))
     timeout_add = MagicMock(side_effect=lambda _delay, _callback: next(timeout_ids))
@@ -61,13 +60,13 @@ def test_search_result_announcement_is_debounced(monkeypatch):
     monkeypatch.setattr(extracted_page.GLib, "source_remove", source_remove)
     monkeypatch.setattr(extracted_page, "announce_accessible", announcements)
 
-    ExtractedPage._on_search_occurrences_changed(page, page.search_context, None)
-    ExtractedPage._on_search_occurrences_changed(page, page.search_context, None)
+    extracted_page.ExtractedPage._on_search_occurrences_changed(page, page.search_context, None)
+    extracted_page.ExtractedPage._on_search_occurrences_changed(page, page.search_context, None)
 
     source_remove.assert_called_once_with(101)
     assert page._search_announce_timeout_id == 102
 
-    ExtractedPage._announce_search_results(page)
+    extracted_page.ExtractedPage._announce_search_results(page)
 
     announcements.assert_called_once_with(
         page.search_entry,
