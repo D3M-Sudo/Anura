@@ -87,6 +87,13 @@ template $WelcomePage : Adw.NavigationPage {
               };
             }
 
+            Box secondary_actions {
+              orientation: horizontal;
+              spacing: 12;
+              hexpand: true;
+              visible: false;
+            }
+
             MenuButton more_options_button {
               label: _("More options");
               tooltip-text: _("More options");
@@ -95,7 +102,7 @@ template $WelcomePage : Adw.NavigationPage {
               styles ["pill", "anura-button", "flat"]
 
               popover: Gtk.Popover more_options_popover {
-                child: Box {
+                child: Box compact_actions {
                   orientation: vertical;
                   spacing: 6;
                   width-request: 260;
@@ -110,19 +117,20 @@ template $WelcomePage : Adw.NavigationPage {
                     accessibility {
                       label: C_("Welcome screen", "Open Image");
                     }
-                    styles ["flat"]
+                    hexpand: true;
+                    halign: fill;
+                    styles ["flat", "welcome-secondary-action"]
                     child: Box {
-                      spacing: 12;
+                      orientation: vertical;
+                      spacing: 4;
+                      halign: center;
                       margin-top: 6;
                       margin-bottom: 6;
-                      margin-start: 8;
-                      margin-end: 8;
                       Image { icon-name: "folder-open-symbolic"; }
                       Label {
                         label: _("_Open Image");
                         use-underline: true;
-                        xalign: 0;
-                        hexpand: true;
+                        xalign: 0.5;
                       }
                     };
                   }
@@ -133,19 +141,20 @@ template $WelcomePage : Adw.NavigationPage {
                     accessibility {
                       label: C_("Welcome screen", "Paste Image");
                     }
-                    styles ["flat"]
+                    hexpand: true;
+                    halign: fill;
+                    styles ["flat", "welcome-secondary-action"]
                     child: Box {
-                      spacing: 12;
+                      orientation: vertical;
+                      spacing: 4;
+                      halign: center;
                       margin-top: 6;
                       margin-bottom: 6;
-                      margin-start: 8;
-                      margin-end: 8;
                       Image { icon-name: "edit-paste-symbolic"; }
                       Label {
                         label: _("_Paste Image");
                         use-underline: true;
-                        xalign: 0;
-                        hexpand: true;
+                        xalign: 0.5;
                       }
                     };
                   }
@@ -155,26 +164,26 @@ template $WelcomePage : Adw.NavigationPage {
                     accessibility {
                       label: C_("Welcome screen", "Drop image here");
                     }
-                    styles ["flat"]
+                    hexpand: true;
+                    halign: fill;
+                    styles ["flat", "welcome-secondary-action"]
                     child: Box {
-                      spacing: 12;
+                      orientation: vertical;
+                      spacing: 4;
+                      halign: center;
                       margin-top: 6;
                       margin-bottom: 6;
-                      margin-start: 8;
-                      margin-end: 8;
                       Image { icon-name: "folder-drag-accept-symbolic"; }
                       Label {
                         label: _("_Drop Image");
                         use-underline: true;
-                        xalign: 0;
-                        hexpand: true;
+                        xalign: 0.5;
                       }
                     };
                   }
                 };
               };
             }
-
             Revealer drop_revealer {
               transition-type: slide_up;
               reveal-child: false;

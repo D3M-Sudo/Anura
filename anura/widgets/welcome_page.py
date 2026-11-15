@@ -29,6 +29,9 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
     screenshot_button: Gtk.Button = Gtk.Template.Child()
     more_options_button: Gtk.MenuButton = Gtk.Template.Child()
     more_options_popover: Gtk.Popover = Gtk.Template.Child()
+    secondary_actions: Gtk.Box = Gtk.Template.Child()
+    compact_actions: Gtk.Box = Gtk.Template.Child()
+    action_clamp: Adw.Clamp = Gtk.Template.Child()
     open_image_button: Gtk.Button = Gtk.Template.Child()
     paste_image_button: Gtk.Button = Gtk.Template.Child()
     lang_combo: Gtk.MenuButton = Gtk.Template.Child()
@@ -56,6 +59,10 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
 
         self.connect_tracked(self.open_image_button, "clicked", self._on_more_options_action_clicked)
         self.connect_tracked(self.paste_image_button, "clicked", self._on_more_options_action_clicked)
+        self.action_buttons = (self.open_image_button, self.paste_image_button, self.drop_button)
+        self._wide_action_layout = False
+        self.action_clamp.connect("notify::width", self._on_action_clamp_width_changed)
+        self._update_action_layout()
         self.connect_tracked(self.drop_button, "clicked", self._on_drop_button_clicked)
         self._setup_drop_target()
 
@@ -82,7 +89,7 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
             self.drop_button.set_tooltip_text(_("Drop image here"))
             self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [False])
             self.drop_button.update_property([Gtk.AccessibleProperty.LABEL], [_("Drop image here")])
-            GLib.idle_add(lambda: (self.more_options_button.grab_focus(), GLib.SOURCE_REMOVE)[1])
+            GLib.idle_add(lambda: (self._focus_drop_action(), GLib.SOURCE_REMOVE)[1])
             return True
         return False
 
@@ -117,6 +124,62 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
 
         self.add_controller(self._drop_target)
 
+    def _get_wide_action_threshold(self) -> int:
+        """Measure the width required by the three equal secondary action columns."""
+        natural_widths = []
+        for button in self.action_buttons:
+            minimum_size, natural_size = button.get_preferred_size()
+            natural_widths.append(max(minimum_size.width, natural_size.width))
+        equal_column_width = max(natural_widths, default=0)
+        return (equal_column_width * len(self.action_buttons)) + (
+            self.secondary_actions.get_spacing() * (len(self.action_buttons) - 1)
+        ) + 32
+
+    def _on_action_clamp_width_changed(self, _widget: Adw.Clamp, _pspec: object) -> None:
+        """Re-evaluate the layout when the available clamped width changes."""
+        self._update_action_layout()
+
+    def _update_action_layout(self) -> None:
+        """Choose the wide layout only when all three measured actions fit."""
+        available_width = self.action_clamp.get_width()
+        if available_width > 0:
+            self._set_action_layout(available_width >= self._get_wide_action_threshold())
+
+    def _set_action_layout(self, wide: bool) -> None:
+        """Move the existing controls between layouts without duplicating actions."""
+        if self._wide_action_layout == wide:
+            return
+
+        root = self.get_root()
+        focused_widget = root.get_focus() if root and hasattr(root, "get_focus") else None
+        focused_action = focused_widget if focused_widget in self.action_buttons else None
+        destination = self.secondary_actions if wide else self.compact_actions
+
+        for button in self.action_buttons:
+            parent = button.get_parent()
+            if parent is destination:
+                continue
+            if isinstance(parent, Gtk.Box):
+                parent.remove(button)
+            destination.append(button)
+
+        self._wide_action_layout = wide
+        self.secondary_actions.set_visible(wide)
+        self.more_options_button.set_visible(not wide)
+
+        if wide:
+            self.more_options_popover.popdown()
+            if focused_widget is self.more_options_button:
+                self.screenshot_button.grab_focus()
+
+        if focused_action is not None:
+            GLib.idle_add(lambda: (focused_action.grab_focus(), GLib.SOURCE_REMOVE)[1])
+
+    def _focus_drop_action(self) -> None:
+        """Focus the visible Drop control or its compact-layout menu trigger."""
+        target = self.drop_button if self._wide_action_layout else self.more_options_button
+        target.grab_focus()
+
     def _on_more_options_action_clicked(self, _button: Gtk.Button) -> None:
         """Close the image-actions popover after choosing an action."""
         self.more_options_popover.popdown()
@@ -141,7 +204,7 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
                 self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [False])
                 self.drop_button.update_property([Gtk.AccessibleProperty.LABEL], [_("Drop image here")])
                 # Shift focus back to the toggle button asynchronously
-                GLib.idle_add(lambda: (self.more_options_button.grab_focus(), GLib.SOURCE_REMOVE)[1])
+                GLib.idle_add(lambda: (self._focus_drop_action(), GLib.SOURCE_REMOVE)[1])
         except Exception as e:
             logger.exception(f"Anura: Failed to handle drop button click: {e}")
 

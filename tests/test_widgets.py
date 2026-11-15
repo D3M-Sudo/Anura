@@ -138,6 +138,34 @@ class TestWelcomePageEnterprise:
             return WelcomePage()
 
     @pytest.mark.gtk
+    def test_welcome_secondary_actions_reparent_between_layouts(self, widget):
+        """The same action controls are visible in either responsive layout."""
+        action_ids = tuple(id(button) for button in widget.action_buttons)
+
+        widget._set_action_layout(True)
+
+        assert widget.secondary_actions.get_visible() is True
+        assert widget.more_options_button.get_visible() is False
+        assert all(button.get_parent() is widget.secondary_actions for button in widget.action_buttons)
+        assert tuple(id(button) for button in widget.action_buttons) == action_ids
+
+        widget._set_action_layout(False)
+
+        assert widget.secondary_actions.get_visible() is False
+        assert widget.more_options_button.get_visible() is True
+        assert all(button.get_parent() is widget.compact_actions for button in widget.action_buttons)
+        assert tuple(id(button) for button in widget.action_buttons) == action_ids
+
+    @pytest.mark.gtk
+    def test_welcome_action_breakpoint_uses_measured_control_widths(self, widget):
+        """The breakpoint follows natural control widths and inter-column spacing."""
+        threshold = widget._get_wide_action_threshold()
+        natural_widths = [button.get_preferred_size()[1].width for button in widget.action_buttons]
+
+        assert threshold > 0
+        assert threshold >= max(natural_widths) * len(widget.action_buttons)
+
+    @pytest.mark.gtk
     def test_spinner_state(self, widget):
         """Test show/hide spinner logic."""
         widget.show_spinner()

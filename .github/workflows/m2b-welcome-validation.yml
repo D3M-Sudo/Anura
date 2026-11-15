@@ -60,7 +60,7 @@ jobs:
 
       - name: Install project and development dependencies
         run: |
-          pip install uv
+          uv venv --system-site-packages
           uv sync --dev
 
       - name: Compile Blueprint templates
