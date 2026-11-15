@@ -33,7 +33,7 @@ gi.require_version("Notify", "0.7")
 gi.require_version("Xdp", "1.0")
 gi.require_version("Gst", "1.0")
 
-from gi.repository import Adw, Gio, GLib, Gtk, GtkSource
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk, GtkSource
 from loguru import logger
 
 # Register GtkSourceView widget GTypes before loading resources and importing templates.
@@ -124,7 +124,7 @@ class AnuraApplication(Adw.Application, SignalManagerMixin):
 
         # Keep the provider alive for the application's lifetime. Headless CLI
         # invocations have no display and intentionally skip stylesheet setup.
-        self._css_provider = load_css_provider()
+        self._css_provider = load_css_provider(Gdk.Display.get_default())
         self._apply_color_scheme()
         self.settings.connect("changed::color-scheme", self._on_color_scheme_changed)
 
