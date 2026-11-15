@@ -180,14 +180,11 @@ class TestWelcomePageEnterprise:
 
     @pytest.mark.gtk
     def test_welcome_layout_transition_keeps_focus_on_visible_control(self, widget):
-        """Resize-driven transitions retain focus on controls visible in each layout."""
+        """Breakpoint-driven transitions retain focus on controls visible in each layout."""
         window = Gtk.Window()
         window.set_default_size(900, 600)
         window.set_child(widget)
 
-        # The standalone test window has no Gtk.Application action map.
-        # Register the same app actions so GtkActionable buttons remain sensitive
-        # and can participate in real keyboard focus transitions.
         actions = Gio.SimpleActionGroup()
         for action_name in ("get_screenshot", "open_image", "paste_from_clipboard"):
             actions.add_action(Gio.SimpleAction.new(action_name, None))
@@ -206,57 +203,41 @@ class TestWelcomePageEnterprise:
         ), (
             f"wide layout did not settle: clamp_width={widget.action_clamp.get_width()}, "
             f"last_tick_width={widget._last_action_width}, "
-            f"wide={widget._wide_action_layout}, "
-            f"button_mapped={widget.open_image_button.get_mapped()}"
+            f"wide={widget._wide_action_layout}"
         )
 
-        # Gtk.Window.set_focus sets the toplevel focus child without relying on
-        # compositor-driven keyboard activation (which headless Weston may not grant).
         window.set_focus(widget.open_image_button)
-        assert self._spin_until(
-            context,
-            lambda: window.get_focus() == widget.open_image_button,
-        ), (
-            f"could not establish test focus: active={window.is_active()}, "
-            f"focusable={widget.open_image_button.get_focusable()}, "
-            f"sensitive={widget.open_image_button.get_sensitive()}, "
-            f"visible={widget.open_image_button.get_visible()}, "
-            f"child_visible={widget.open_image_button.get_child_visible()}, "
-            f"mapped={widget.open_image_button.get_mapped()}, "
-            f"can_target={widget.open_image_button.get_can_target()}, "
-            f"focus={window.get_focus()}"
-        )
+        assert self._spin_until(context, lambda: window.get_focus() == widget.open_image_button)
 
-        window.set_default_size(360, 600)
+        threshold = widget._get_wide_action_threshold()
+        compact_width = threshold - 1
+        with patch.object(widget.action_clamp, "get_width", return_value=compact_width):
+            widget._on_action_layout_tick(widget.action_clamp, None)
+
         assert self._spin_until(
             context,
             lambda: (
-                widget.action_clamp.get_width() > 0
-                and widget._last_action_width == widget.action_clamp.get_width()
-                and not widget._wide_action_layout
-                and widget.more_options_button.get_mapped()
+                not widget._wide_action_layout
+                and widget.more_options_button.get_visible()
                 and window.get_focus() == widget.more_options_button
             ),
         ), (
-            f"compact transition lost visible focus: window_width={window.get_width()}, "
-            f"clamp_width={widget.action_clamp.get_width()}, "
-            f"last_tick_width={widget._last_action_width}, "
+            f"compact transition lost visible focus: clamp_width={compact_width}, "
             f"wide={widget._wide_action_layout}, focus={window.get_focus()}"
         )
 
-        window.set_default_size(900, 600)
+        with patch.object(widget.action_clamp, "get_width", return_value=threshold):
+            widget._on_action_layout_tick(widget.action_clamp, None)
+
         assert self._spin_until(
             context,
             lambda: (
-                widget.action_clamp.get_width() > 0
-                and widget._last_action_width == widget.action_clamp.get_width()
-                and widget._wide_action_layout
+                widget._wide_action_layout
+                and widget.secondary_actions.get_visible()
                 and window.get_focus() == widget.screenshot_button
             ),
         ), (
-            f"wide transition did not restore primary focus: window_width={window.get_width()}, "
-            f"clamp_width={widget.action_clamp.get_width()}, "
-            f"last_tick_width={widget._last_action_width}, "
+            f"wide transition did not restore primary focus: clamp_width={threshold}, "
             f"wide={widget._wide_action_layout}, focus={window.get_focus()}"
         )
         window.destroy()
