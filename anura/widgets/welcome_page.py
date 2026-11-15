@@ -145,6 +145,7 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         if self._action_layout_tick_id is None:
             self._last_action_width = -1
             self._action_layout_tick_id = self.action_clamp.add_tick_callback(self._on_action_layout_tick)
+            GLib.idle_add(self._update_action_layout_idle)
 
     def _on_action_clamp_unmapped(self, _widget: Adw.Clamp) -> None:
         """Stop the frame-clock monitor while the page is not mapped."""
@@ -152,8 +153,14 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
             self.action_clamp.remove_tick_callback(self._action_layout_tick_id)
             self._action_layout_tick_id = None
 
+    def _update_action_layout_idle(self) -> bool:
+        """Evaluate the initial layout after GTK completes the map allocation."""
+        self._update_action_layout()
+        return GLib.SOURCE_REMOVE
+
     def _on_action_layout_tick(self, widget: Gtk.Widget, _frame_clock: Gdk.FrameClock) -> bool:
         """Re-evaluate only when GTK allocates a different width."""
+
         available_width = widget.get_width()
         if available_width != self._last_action_width:
             self._last_action_width = available_width
@@ -197,7 +204,12 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
             if wide:
                 GLib.idle_add(lambda: (focused_action.grab_focus(), GLib.SOURCE_REMOVE)[1])
             else:
-                self.more_options_button.grab_focus()
+                GLib.idle_add(self._focus_more_options_idle)
+
+    def _focus_more_options_idle(self) -> bool:
+        """Restore focus after the compact menu trigger becomes visible."""
+        self.more_options_button.grab_focus()
+        return GLib.SOURCE_REMOVE
 
     def _focus_drop_action(self) -> None:
         """Focus the visible Drop control or its compact-layout menu trigger."""

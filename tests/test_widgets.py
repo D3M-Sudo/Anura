@@ -187,6 +187,7 @@ class TestWelcomePageEnterprise:
         widget._set_action_layout(False)
         for _iteration in range(10):
             context.iteration(False)
+            time.sleep(0.01)
         assert window.get_focus() is widget.more_options_button
 
         widget._set_action_layout(True)
@@ -236,9 +237,11 @@ class TestWelcomePageEnterprise:
         context = GLib.MainContext.default()
         for _iteration in range(100):
             context.iteration(False)
-            if widget.action_clamp.get_width() > 0:
+            if window.get_mapped() and widget.action_clamp.get_width() > 0:
                 break
+            time.sleep(0.01)
 
+        assert window.get_mapped() is True
         measured_width = widget.action_clamp.get_width()
         assert measured_width > 0
         assert widget._wide_action_layout is expected_wide
@@ -258,6 +261,7 @@ class TestWelcomePageEnterprise:
     def test_drop_button_toggle(self, widget):
         """Test that the drop area visibility is toggled by the button."""
         import sys
+import time
 
         initial_revealed = widget.drop_revealer.get_reveal_child()
         print(f"\n[DEBUG] initial_revealed = {initial_revealed}")
