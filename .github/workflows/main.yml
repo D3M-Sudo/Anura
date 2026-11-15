@@ -304,23 +304,44 @@ jobs:
           flatpak-builder-lint manifest flatpak/.ci-release/io.github.d3m_sudo.anura.json
           echo "✓ Local and generated release manifests validated"
 
+      - name: Configure user Flatpak remote
+        # The container image ships a system installation on its read-only
+        # overlay lower layer. Updating the GNOME SDK there can fail with
+        # OSTree EXDEV during deployment. Keep CI SDK/runtime refs in the
+        # writable per-user installation instead.
+        run: |
+          flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
       - name: Build Anura Flatpak
-        uses: flatpak/flatpak-github-actions/flatpak-builder@79327416609af08178ad73b352877e51450790b3 # v6.7.0
-        with:
-          bundle: io.github.d3m_sudo.anura-${{ matrix.variant.arch }}.flatpak
-          manifest-path: flatpak/.ci-build/io.github.d3m_sudo.anura.json
-          arch: ${{ matrix.variant.arch }}
-          upload-artifact: false
-          cache: false
-          keep-build-dirs: true
-          state-dir: .flatpak-builder
+        run: |
+          xvfb-run --auto-servernum flatpak-builder \
+            --user \
+            --repo=repo \
+            --disable-rofiles-fuse \
+            --install-deps-from=flathub \
+            --subject="Built from ${GITHUB_SHA}" \
+            --force-clean \
+            --default-branch=main \
+            --arch=${{ matrix.variant.arch }} \
+            --keep-build-dirs \
+            --state-dir=.flatpak-builder \
+            flatpak_app \
+            flatpak/.ci-build/io.github.d3m_sudo.anura.json
+
+          flatpak build-bundle \
+            repo \
+            io.github.d3m_sudo.anura-${{ matrix.variant.arch }}.flatpak \
+            --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo \
+            --arch=${{ matrix.variant.arch }} \
+            io.github.d3m_sudo.anura \
+            main
 
       - name: Prove Flatpak build works without source downloads
         # Reuse the source cache populated by the preceding clean build. A
         # fresh build directory plus --disable-download proves every source
         # needed by the generated manifest is already declared and cached.
         run: |
-          flatpak-builder --force-clean --disable-download --disable-rofiles-fuse \
+          flatpak-builder --user --force-clean --disable-download --disable-rofiles-fuse \
             --arch=${{ matrix.variant.arch }} \
             --state-dir=.flatpak-builder \
             builddir-offline \
