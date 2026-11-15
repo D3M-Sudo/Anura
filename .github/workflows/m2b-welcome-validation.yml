@@ -1,17 +1,6 @@
 name: M2-B Task 1 — Welcome GTK validation (temporary)
 
 on:
-  push:
-    branches:
-      - fix/ui-modernization-aligned
-    paths:
-      - .github/workflows/m2b-welcome-validation.yml
-      - anura/widgets/welcome_page.py
-      - data/ui/welcome_page.blp
-      - tests/test_widgets.py
-      - tests/test_welcome_page_accessibility.py
-      - data/io.github.d3m_sudo.anura.gresource.xml
-      - data/io.github.d3m_sudo.anura.gschema.xml
   pull_request:
     branches:
       - feature
@@ -107,6 +96,10 @@ jobs:
             tests/test_widgets.py \
             tests/test_welcome_page_accessibility.py \
             -m gtk -v --timeout=30 \
+            --override-ini "addopts=-v --tb=short"
+          uv run pytest \
+            tests/test_welcome_page_accessibility.py \
+            -v --timeout=30 \
             --override-ini "addopts=-v --tb=short"
 
       - name: Stop headless Wayland compositor
