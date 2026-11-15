@@ -17,7 +17,7 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 
-from gi.repository import Adw, Gio, Gtk  # noqa: E402
+from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
 
 # Load resources before importing widgets
 resource_path = os.path.join(os.path.dirname(__file__), "..", "data", "io.github.d3msudo.anura.gresource")
