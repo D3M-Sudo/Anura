@@ -28,6 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - OCR/UI: make the most recently started file, clipboard, screenshot or drag-and-drop request the sole owner of OCR results and spinner state; discard superseded capture, decode, status, error and navigation callbacks, and isolate screenshot URI dispatch from the OCR task lane (#648)
 - Sharing: align the bundled symbolic icon inventory exactly with the seven active providers, remove unused Discord/LinkedIn assets, and load icons through Gtk.IconTheme for light/dark theme recoloring (#648)
+- UI: load the bundled GTK stylesheet from GResource at application startup and register it at application priority; retain the provider for the application's lifetime while leaving display-less CLI launches unaffected (#648)
 
 ### Changed
 
@@ -35,7 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Welcome: retain Screenshot as the primary action; show Open Image, Paste Image and Drop Image as equal-width horizontal secondary actions when their measured natural widths fit, and group the same controls in More options when compact; preserve the page-wide drop target and focus behavior (#648)
 
-- UI/UX: align the Extracted, Welcome, History and Shortcuts interfaces with the modernized action hierarchy, boxed-list presentation and fixed teal brand accent; use a darker teal background with white foreground for suggested-action controls to meet WCAG AA normal-text contrast, and scheme-aware teal text for light/dark surfaces; preserve existing Welcome accessibility and interaction behavior (#648)
+- UI/UX: align the Extracted, Welcome, History and Shortcuts interfaces with the modernized action hierarchy, boxed-list presentation and fixed green brand palette; use a darker green background with white foreground for suggested-action controls to meet WCAG AA normal-text contrast, and scheme-aware green text for light/dark surfaces; preserve existing Welcome accessibility and interaction behavior (#648)
 
 - CI/governance: align Dependabot and certifi automation with `feature`, run CodeQL on PRs to all protected promotion branches, guard manual dependency-sync dispatch from protected branches, and document the single-maintainer PR/CI policy.
 - Release tooling: correct the release script post-tag instructions to describe generated CHANGELOG notes and the current multi-architecture Flatpak/AppImage publication flow.
