@@ -96,7 +96,7 @@
 - [x] Write tests test_reduced_motion_uses_interface_preference_when_available, test_reduced_motion_falls_back_to_enable_animations, test_reduced_motion_class_tracks_setting_changes, and test_reduced_motion_css_disables_custom_motion.
 - [x] CI test-first run failed on the expected missing reduced-motion support.
 - [x] Implement the setting adapter, signal lifecycle and CSS overrides for Anura-authored transitions/keyframes.
-- [ ] Re-run the focused tests; expected GREEN.
+- [x] Re-run the focused tests; expected GREEN in the final Python-quality CI run.
 
 ### Task 5: Expanded contrast and theme-role coverage (A5)
 
@@ -122,9 +122,9 @@
 
 - [x] Record A1–A5 implementation, exact commits and CI run URLs/results in HANDOVER.md.
 - [ ] Run the full existing PR CI matrix on the final branch head; read each job conclusion.
-- [x] Re-check PR #648 state/head/base and compare feature with fix/ui-modernization-aligned; PR remains open/Draft, 263 ahead and 0 behind.
+- [x] Re-check PR #648 state/head/base and compare feature with fix/ui-modernization-aligned; PR remains open/Draft, 264 ahead and 0 behind.
 - [x] Confirm protected branch SHAs are unchanged and PR remains open/Draft/unmerged.
-- [ ] Run a final whole-branch self-review; no subagent reviewer is available in this environment.
+- [x] Run a final self-review of all Task 4 implementation, test, translation, changelog, handover and plan changes; no subagent reviewer is available in this environment.
 
 ## Verification Commands
 

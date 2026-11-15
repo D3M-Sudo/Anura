@@ -247,10 +247,17 @@ GTK 4's Gdk.Monitor exposes monitor geometry but does not provide a separate wor
 - Weston-backed GTK Integration Tests on the same run: 416 passed, 5 skipped, 632 deselected, 2 warnings.
 - Changelog integrity passed. CodeQL run #43760732956 passed.
 - AppImage x86_64 and aarch64 builds, architecture/update-metadata checks and clean-host smoke tests passed; complete multi-architecture AppImage release-set validation passed.
-- Flatpak aarch64 completed the main application build successfully; the no-source-download and subsequent sandbox validation steps were still running when this note was prepared. Flatpak x86_64 failed before the application build while updating org.gnome.Sdk: OSTree reported Invalid cross-device link, then xvfb-run exited with 139. This is recorded as a runner/runtime-update failure, not as an application build failure. A rerun is pending because the workflow run has not yet completed.
+- Flatpak aarch64: all 22 steps passed in job #132955104373 of run #43760732944, including no-source-download build, Blueprint/resource checks, headless runtime, GI typelibs, positive and negative sandbox OCR tests, desktop/AppStream validation and licence inventory. Flatpak x86_64: failed before the application build in original job #132955104383 and failed again in rerun #132959138004 and final documentation-head job #132959229160. The logs consistently report OSTree Invalid cross-device link while updating org.gnome.Sdk, followed by xvfb-run exit 139. These failures occur before Anura's application build and are treated as a runner/runtime-update issue; no project workaround was introduced.
 
 ### Validation boundaries and repository state
 
 - Manual GNOME/GTK visual review, Orca/AT-SPI and manual keyboard checks remain explicitly excluded; no claim of screen-reader runtime conformance is made. The focus checks above are automated Weston-backed tests.
 - PR #648 remains open and Draft, targeting feature; no merge was performed.
-- The implementation and test changes are confined to fix/ui-modernization-aligned. feature remains at cb079b0b55e252a7ac054fe1b6f57030ddc7b1f9; compare reported 263 commits ahead and 0 behind. No protected branch was modified.
+- The implementation and test changes are confined to fix/ui-modernization-aligned. feature remains at cb079b0b55e252a7ac054fe1b6f57030ddc7b1f9; compare reported 264 commits ahead and 0 behind. No protected branch was modified.
+
+
+### Flatpak retry outcome
+
+- The x86_64 Flatpak retry reproduced the original failure: the GNOME SDK/runtime update hit OSTree Invalid cross-device link and xvfb-run exited 139 before Anura was built.
+- The independent final documentation-head x86_64 job reproduced the same pre-build failure. This is consistent across the original run, retry and final-head run; no source-code or manifest change is justified by this evidence.
+- The aarch64 Flatpak job completed all 22 validation steps successfully on the code-equivalent implementation head, including offline rebuild, sandbox smoke tests, both OCR functional cases and licence inventory.
