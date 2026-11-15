@@ -5,11 +5,13 @@
 
 """Regression tests for the GTK accent palette and button state styling."""
 
-import pathlib
+from pathlib import Path
 import re
 
+import pytest
 
-ROOT = pathlib.Path(__file__).resolve().parents[1]
+
+ROOT = Path(__file__).resolve().parents[1]
 STYLE_CSS = (ROOT / "data" / "style.css").read_text(encoding="utf-8")
 WELCOME_BLP = (ROOT / "data" / "ui" / "welcome_page.blp").read_text(encoding="utf-8")
 
@@ -73,6 +75,8 @@ def test_downloaded_language_text_meets_wcag_aa_in_light_and_dark_schemes():
 
     for surface in ("#242424", "#353535"):
         assert _contrast_ratio(dark_text, surface) >= 4.5
+
+    assert pytest.approx(_contrast_ratio(light_text, "#ffffff"), abs=0.01) == 5.63
 
 
 def test_anura_button_preserves_hover_active_focus_and_disabled_states():
