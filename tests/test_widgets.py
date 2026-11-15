@@ -210,8 +210,22 @@ class TestWelcomePageEnterprise:
             f"button_mapped={widget.open_image_button.get_mapped()}"
         )
 
-        assert widget.open_image_button.grab_focus() is True
-        assert self._spin_until(context, lambda: window.get_focus() == widget.open_image_button)
+        # Gtk.Window.set_focus sets the toplevel focus child without relying on
+        # compositor-driven keyboard activation (which headless Weston may not grant).
+        window.set_focus(widget.open_image_button)
+        assert self._spin_until(
+            context,
+            lambda: window.get_focus() == widget.open_image_button,
+        ), (
+            f"could not establish test focus: active={window.is_active()}, "
+            f"focusable={widget.open_image_button.get_focusable()}, "
+            f"sensitive={widget.open_image_button.get_sensitive()}, "
+            f"visible={widget.open_image_button.get_visible()}, "
+            f"child_visible={widget.open_image_button.get_child_visible()}, "
+            f"mapped={widget.open_image_button.get_mapped()}, "
+            f"can_target={widget.open_image_button.get_can_target()}, "
+            f"focus={window.get_focus()}"
+        )
 
         window.set_default_size(360, 600)
         assert self._spin_until(
