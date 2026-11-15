@@ -5,8 +5,8 @@
 
 """Regression tests for the GTK accent palette and button state styling."""
 
-from pathlib import Path
 import re
+from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
