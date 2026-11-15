@@ -41,7 +41,7 @@ def test_download_announcements_skip_percentage_updates(headless_gi_mocks, monke
     row.late_update("ita", 50)
     row.late_update("ita", 95)
 
-    assert [call.args[1] for call in row.announce.call_args_list] == ["Downloading Italian"]
+    assert [call.args[0] for call in row.announce.call_args_list] == ["Downloading Italian"]
 
 
 def test_download_completion_and_failure_are_announced(headless_gi_mocks, monkeypatch):
@@ -51,7 +51,7 @@ def test_download_completion_and_failure_are_announced(headless_gi_mocks, monkey
     row.on_downloaded(manager, "ita")
     row.on_download_failed(manager, "ita")
 
-    assert [call.args[1] for call in row.announce.call_args_list] == [
+    assert [call.args[0] for call in row.announce.call_args_list] == [
         "Downloading Italian",
         "Download of Italian completed",
         "Download of Italian failed",

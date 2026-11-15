@@ -108,12 +108,17 @@ def _blend(foreground: str, background: str, alpha: float) -> str:
 
 
 def test_focus_indicator_meets_graphical_contrast_on_light_and_dark_surfaces():
-    focus_color = _property(_rule(".anura-button:focus"), "outline-color")
-    assert focus_color == "@accent_color"
-    focus_color = _defined_color("accent_color")
+    light_focus_color = _property(_rule(".anura-button:focus"), "outline-color")
+    dark_focus_color = _property(_rule(".dark .anura-button:focus"), "outline-color")
+    assert light_focus_color == "@accent_bg_color"
+    assert dark_focus_color == "#21b77a"
 
-    for surface in ("#ffffff", "#f6f5f4", "#242424", "#353535"):
-        assert _contrast_ratio(focus_color, surface) >= 3.0
+    light_focus_color = _defined_color("accent_bg_color")
+    dark_focus_color = "#21b77a"
+    for surface in ("#ffffff", "#f6f5f4"):
+        assert _contrast_ratio(light_focus_color, surface) >= 3.0
+    for surface in ("#242424", "#353535"):
+        assert _contrast_ratio(dark_focus_color, surface) >= 3.0
 
 
 def test_history_empty_state_icon_meets_contrast_on_light_and_dark_surfaces():

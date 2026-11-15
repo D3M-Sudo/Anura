@@ -9,12 +9,13 @@ from unittest.mock import MagicMock
 def test_ocr_status_announces_only_changed_messages(headless_gi_mocks):
     from anura.widgets.welcome_page import WelcomePage
 
-    page = WelcomePage()
-    page.announce = MagicMock()
+    page = MagicMock()
+    page.drop_area_label = MagicMock()
+    page._last_announced_status = None
 
-    page.set_status("Loading image")
-    page.set_status("Loading image")
-    page.set_status("Recognizing text")
+    WelcomePage.set_status(page, "Loading image")
+    WelcomePage.set_status(page, "Loading image")
+    WelcomePage.set_status(page, "Recognizing text")
 
     assert [call.args[0] for call in page.announce.call_args_list] == [
         "Loading image",
