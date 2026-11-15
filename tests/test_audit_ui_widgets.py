@@ -137,14 +137,12 @@ def _wait_for_gtk_condition(
             context.iteration(False)
         if time.monotonic() >= deadline:
             detail = f"; GTK state: {diagnostics()}" if diagnostics is not None else ""
-            pytest.fail(
-                f"GTK did not {description} within {timeout_seconds:.1f}s{detail}"
-            )
+            pytest.fail(f"GTK did not {description} within {timeout_seconds:.1f}s{detail}")
         time.sleep(0.01)
-
 
 def _welcome_popover_diagnostic_state(window, page, events) -> str:
     """Capture GTK state when the compact Welcome Page popover fails to map."""
+
     def describe(widget):
         parent = widget.get_parent()
         root = widget.get_root()
@@ -185,7 +183,6 @@ def _welcome_popover_diagnostic_state(window, page, events) -> str:
             "events": list(events),
         }
     )
-
 
 def _wait_for_window_allocation(window, widget, timeout_seconds: float = 5.0) -> None:
     """Wait for the Wayland surface and GTK frame clock to allocate real geometry."""
@@ -400,21 +397,15 @@ def test_welcome_responsive_layout_uses_allocated_viewport(screen_width: int, sc
             for signal in ("map", "unmap", "closed"):
                 page.more_options_popover.connect(
                     signal,
-                    lambda _widget, *_args, event=signal: popover_events.append(
-                        f"popover:{event}"
-                    ),
+                    lambda _widget, *_args, event=signal: popover_events.append(f"popover:{event}"),
                 )
             page.more_options_popover.connect(
                 "notify::visible",
-                lambda *_args: popover_events.append(
-                    f"popover:visible={page.more_options_popover.get_visible()}"
-                ),
+                lambda *_args: popover_events.append(f"popover:visible={page.more_options_popover.get_visible()}"),
             )
             page.more_options_button.connect(
                 "notify::active",
-                lambda *_args: popover_events.append(
-                    f"menu-button:active={page.more_options_button.get_active()}"
-                ),
+                lambda *_args: popover_events.append(f"menu-button:active={page.more_options_button.get_active()}"),
             )
             page.more_options_button.set_active(True)
             _wait_for_gtk_condition(
@@ -423,9 +414,7 @@ def test_welcome_responsive_layout_uses_allocated_viewport(screen_width: int, sc
                     and all(button.get_mapped() for button in page.action_buttons)
                 ),
                 "map the compact More options popover and its secondary actions",
-                diagnostics=lambda: _welcome_popover_diagnostic_state(
-                    window, page, popover_events
-                ),
+                diagnostics=lambda: _welcome_popover_diagnostic_state(window, page, popover_events),
             )
             for button in page.action_buttons:
                 assert button.get_visible()
