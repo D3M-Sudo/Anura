@@ -336,6 +336,53 @@ class TestWelcomePageEnterprise:
         window.destroy()
 
     @pytest.mark.gtk
+    def test_welcome_page_scrolls_when_vertical_viewport_is_constrained(self, widget):
+        """Expanded Welcome content remains reachable in a short window."""
+        window = Gtk.Window()
+        window.set_default_size(360, 260)
+        window.set_child(widget)
+        window.present()
+
+        context = GLib.MainContext.default()
+        scrolled_window = widget.action_clamp.get_child()
+        assert isinstance(scrolled_window, Gtk.ScrolledWindow)
+
+        try:
+            assert self._spin_until(
+                context,
+                lambda: window.get_mapped()
+                and scrolled_window.get_mapped()
+                and scrolled_window.get_height() > 0,
+            ), (
+                f"Welcome scroller did not map: window={window.get_width()}x{window.get_height()}, "
+                f"scroller={scrolled_window.get_width()}x{scrolled_window.get_height()}"
+            )
+
+            # Expanding the drop zone adds real content below the primary and
+            # secondary actions, forcing the short viewport to become scrollable.
+            widget.drop_revealer.set_reveal_child(True)
+            adjustment = scrolled_window.get_vadjustment()
+            assert self._spin_until(
+                context,
+                lambda: adjustment.get_upper() > adjustment.get_page_size() + 1,
+            ), (
+                f"Welcome content did not overflow vertically: "
+                f"upper={adjustment.get_upper()}, page_size={adjustment.get_page_size()}, "
+                f"scroller_height={scrolled_window.get_height()}, "
+                f"drop_revealed={widget.drop_revealer.get_reveal_child()}"
+            )
+
+            assert scrolled_window.get_vscrollbar().get_visible() is True
+            maximum_value = adjustment.get_upper() - adjustment.get_page_size()
+            adjustment.set_value(maximum_value)
+            assert self._spin_until(context, lambda: adjustment.get_value() >= maximum_value - 1), (
+                f"Welcome scroller could not reach its lower range: "
+                f"value={adjustment.get_value()}, maximum={maximum_value}"
+            )
+        finally:
+            window.destroy()
+
+    @pytest.mark.gtk
     def test_spinner_state(self, widget):
         """Test show/hide spinner logic."""
         widget.show_spinner()
