@@ -211,6 +211,7 @@ class TestWelcomePageEnterprise:
 
         threshold = widget._get_wide_action_threshold()
         compact_width = threshold - 1
+        widget._last_action_width = threshold
         with patch.object(widget.action_clamp, "get_width", return_value=compact_width):
             widget._on_action_layout_tick(widget.action_clamp, None)
 
@@ -226,6 +227,7 @@ class TestWelcomePageEnterprise:
             f"wide={widget._wide_action_layout}, focus={window.get_focus()}"
         )
 
+        widget._last_action_width = compact_width
         with patch.object(widget.action_clamp, "get_width", return_value=threshold):
             widget._on_action_layout_tick(widget.action_clamp, None)
 
