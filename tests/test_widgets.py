@@ -143,6 +143,10 @@ class TestWelcomePageEnterprise:
     def test_welcome_secondary_actions_reparent_between_layouts(self, widget):
         """The same action controls are visible in either responsive layout."""
         action_ids = tuple(id(button) for button in widget.action_buttons)
+        primary_parent = widget.screenshot_button.get_parent()
+        assert widget.screenshot_button not in widget.action_buttons
+        assert widget.screenshot_button.get_action_name() == "app.get_screenshot"
+        assert "suggested-action" in widget.screenshot_button.get_css_classes()
         widget.show_spinner()
         widget._set_drop_area_processing_state(True)
 
@@ -153,6 +157,7 @@ class TestWelcomePageEnterprise:
         assert widget.more_options_button.get_visible() is False
         assert all(button.get_parent() is widget.secondary_actions for button in widget.action_buttons)
         assert tuple(id(button) for button in widget.action_buttons) == action_ids
+        assert widget.screenshot_button.get_parent() is primary_parent
         assert widget.spinner.get_visible() is True
         assert widget.drop_area.has_css_class("drag-processing")
         assert widget._drop_target.get_widget() is widget
@@ -163,6 +168,7 @@ class TestWelcomePageEnterprise:
         assert widget.more_options_button.get_visible() is True
         assert all(button.get_parent() is widget.compact_actions for button in widget.action_buttons)
         assert tuple(id(button) for button in widget.action_buttons) == action_ids
+        assert widget.screenshot_button.get_parent() is primary_parent
         assert widget.spinner.get_visible() is True
         assert widget.drop_area.has_css_class("drag-processing")
         assert widget._drop_target.get_widget() is widget
@@ -241,6 +247,19 @@ class TestWelcomePageEnterprise:
 
         assert widget._wide_action_layout is True
         assert widget.secondary_actions.get_visible() is True
+
+        # A focused secondary action must transfer focus to More options when
+        # the wide row is compacted; defer the actual GTK focus call until idle.
+        root.get_focus.return_value = widget.open_image_button
+        with (
+            patch.object(widget, "get_root", return_value=root),
+            patch("anura.widgets.welcome_page.GLib.idle_add") as idle_add,
+        ):
+            widget._set_action_layout(False)
+            idle_add.assert_called_once_with(widget._focus_more_options_idle)
+
+        assert widget._wide_action_layout is False
+        assert all(button.get_parent() is widget.compact_actions for button in widget.action_buttons)
         window.destroy()
 
     @pytest.mark.gtk
