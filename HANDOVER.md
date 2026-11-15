@@ -167,15 +167,25 @@ These are integration constraints, not a claim that the current branch has alrea
 - Root cause of the inert stylesheet: `style.css` was packaged in the GResource but no application startup path created and registered a `Gtk.CssProvider`.
 - Added `load_css_provider()` in `anura/core/resources.py`: it loads `/io/github/d3msudo/anura/style.css` from GResource and registers the provider on the default GDK display at `Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION`.
 - `AnuraApplication.do_startup()` invokes the loader and retains the provider in `self._css_provider` for the application lifetime. A missing display is handled as a display-less CLI invocation and does not abort startup.
-- Added GTK regression coverage in `tests/test_audit_ui_widgets.py`; it exercises the real GResource load and provider registration under the headless Weston integration environment.
+- Added GTK regression coverage in `tests/test_audit_ui_widgets.py`: one test loads the real GResource stylesheet and registers its provider on the active display; a second test verifies that a missing display returns `None` without raising.
 - Added a CHANGELOG entry and corrected the current palette description from teal to green.
 
 ### Test-first and CI evidence
 
 - The new GTK regression test was first run without the implementation and failed as expected with `ImportError: cannot import name 'load_css_provider'`.
 - After implementation, the same test passed.
-- Python quality job on final documented head `c6c494f868ed4399152caa42081da384b8be8c70`: 611 passed, 6 skipped, 240 deselected; Ruff, formatting, mypy, Bandit and Flatpak dependency coverage passed.
-- GTK Integration Tests on the same head: 393 passed, 5 skipped, 617 deselected; the new stylesheet-provider test passed. One pre-existing warning was reported from Blueprint compiler (`invalid escape sequence '\\$'`).
+- Python quality job on implementation head `16d7c913b5932f1fa176b9b7efe23be1ad255572`: 611 passed, 6 skipped, 241 deselected; Ruff, formatting, mypy, Bandit and Flatpak dependency coverage passed.
+- GTK Integration Tests on the same head: 394 passed, 5 skipped, 617 deselected; both stylesheet-provider and no-display tests passed. One pre-existing warning was reported from Blueprint compiler (`invalid escape sequence '\\
+- Changelog integrity passed on the implementation head; CodeQL run #43743790156 passed on that head.
+- AppImage x86_64/aarch64 jobs were still running on implementation head `16d7c913b5932f1fa176b9b7efe23be1ad255572` when this handover update was prepared. An earlier code-equivalent run built both AppImage architectures and validated the complete AppImage release set successfully. Flatpak x86_64/aarch64 jobs were still running; consult the current CI run for their final results before making a release-readiness claim.
+- No local desktop visual review, Orca/AT-SPI or manual keyboard checks were performed; this follows the user's explicit decision to skip manual verification and is not claimed as automated coverage.
+
+### Current repository state
+
+- PR #648 remains open and Draft, targeting `feature`; no merge was performed.
+- The PR branch was rebased onto the current `feature` baseline without changing `feature`; compare the current PR head with `feature` for the latest ahead/behind count.
+- The temporary authorized-rebase workflow was removed after use. No temporary validation workflow was added for this task.
+`).
 - Changelog integrity and CodeQL passed on the documented head.
 - AppImage x86_64/aarch64 and Flatpak x86_64/aarch64 build jobs were still running when this handover update was prepared; consult the linked CI run for their final results before making a release-readiness claim.
 - No local desktop visual review, Orca/AT-SPI or manual keyboard checks were performed; this follows the user's explicit decision to skip manual verification and is not claimed as automated coverage.
