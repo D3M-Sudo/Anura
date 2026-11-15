@@ -67,7 +67,7 @@ jobs:
             data/io.github.d3m_sudo.anura.gresource.xml \
             --sourcedir=data \
             --sourcedir=data/ui \
-            --target=data/io.github.d3m_sudo.anura.gresource
+            --target=data/io.github.d3msudo.anura.gresource
           mkdir -p builddir/data
           cp data/io.github.d3m_sudo.anura.gschema.xml builddir/data/
           glib-compile-schemas builddir/data/
@@ -93,6 +93,12 @@ jobs:
           echo "GSETTINGS_SCHEMA_DIR=$GITHUB_WORKSPACE/builddir/data" >> "$GITHUB_ENV"
 
       - name: Run Welcome GTK regression tests
+        env:
+          DISPLAY: ""
+          WAYLAND_DISPLAY: wayland-test
+          NO_AT_BRIDGE: "1"
+          GTK_A11Y: none
+          ANURA_LOG_LEVEL: WARNING
         run: |
           uv run pytest \
             tests/test_widgets.py \
