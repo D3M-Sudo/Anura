@@ -145,6 +145,7 @@ class TestWelcomePageEnterprise:
         widget._set_action_layout(True)
 
         assert widget.secondary_actions.get_visible() is True
+        assert widget.secondary_actions.get_homogeneous() is True
         assert widget.more_options_button.get_visible() is False
         assert all(button.get_parent() is widget.secondary_actions for button in widget.action_buttons)
         assert tuple(id(button) for button in widget.action_buttons) == action_ids

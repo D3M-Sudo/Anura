@@ -89,6 +89,7 @@ template $WelcomePage : Adw.NavigationPage {
 
             Box secondary_actions {
               orientation: horizontal;
+              homogeneous: true;
               spacing: 12;
               hexpand: true;
               visible: false;
@@ -119,7 +120,7 @@ template $WelcomePage : Adw.NavigationPage {
                     }
                     hexpand: true;
                     halign: fill;
-                    styles ["flat", "welcome-secondary-action"]
+                    styles ["flat"]
                     child: Box {
                       orientation: vertical;
                       spacing: 4;
