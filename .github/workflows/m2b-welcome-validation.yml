@@ -120,8 +120,7 @@ jobs:
             tests/test_widgets.py \
             -m gtk -v --timeout=30 \
             --override-ini "addopts=-v --tb=short"
-          uv run python /tmp/anura_pytest_with_resources.py \
-            tests/test_welcome_page_accessibility.py \
+          ANURA_CI_TEST_MODE=1 uv run pytest tests/test_welcome_page_accessibility.py \
             -v --timeout=30 \
             --override-ini "addopts=-v --tb=short"
 
