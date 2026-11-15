@@ -28,7 +28,7 @@ class FakeWidget:
         self.css_classes.discard(name)
 
 
-def test_reduced_motion_uses_interface_preference_when_available():
+def test_reduced_motion_uses_interface_preference_when_available(headless_gi_mocks):
     from anura.utils.accessibility import is_reduced_motion_enabled
 
     settings = FakeSettings(
@@ -40,7 +40,7 @@ def test_reduced_motion_uses_interface_preference_when_available():
     assert is_reduced_motion_enabled(settings) is True
 
 
-def test_reduced_motion_falls_back_to_enable_animations():
+def test_reduced_motion_falls_back_to_enable_animations(headless_gi_mocks):
     from anura.utils.accessibility import is_reduced_motion_enabled
 
     settings = FakeSettings({"gtk-enable-animations": False})
@@ -49,7 +49,7 @@ def test_reduced_motion_falls_back_to_enable_animations():
     assert is_reduced_motion_enabled(settings) is False
 
 
-def test_reduced_motion_class_tracks_setting_changes():
+def test_reduced_motion_class_tracks_setting_changes(headless_gi_mocks):
     from anura.utils.accessibility import sync_reduced_motion_class
 
     settings = FakeSettings({"gtk-enable-animations": False})
