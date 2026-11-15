@@ -5,15 +5,8 @@
 
 """Regression tests for the GTK accent palette and button state styling."""
 
-from pathlib import Path
-import re
-
-import pytest
-
-
-ROOT = Path(__file__).resolve().parents[1]
-STYLE_CSS = (ROOT / "data" / "style.css").read_text(encoding="utf-8")
-WELCOME_BLP = (ROOT / "data" / "ui" / "welcome_page.blp").read_text(encoding="utf-8")
+STYLE_CSS = open("data/style.css", encoding="utf-8").read()
+WELCOME_BLP = open("data/ui/welcome_page.blp", encoding="utf-8").read()
 
 
 def _defined_color(name: str) -> str:
