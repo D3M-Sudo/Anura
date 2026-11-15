@@ -78,6 +78,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Window geometry: clamp restored and first-run dimensions to the selected monitor's bounds, resolve the actual monitor from the GDK surface after realization, and re-clamp when the surface enters another monitor; remove fixed main-window minimum requests that conflicted with small displays (#648)
+- Window state: persist dimensions only when closing in the normal, non-maximized and non-fullscreen state (#648)
+- Preferences/Shortcuts: remove fixed minimum requests from Preferences and make the shortcuts overlay resizable while preserving its vertical scroller (#648)
+- Tests: cover main-window geometry at 360×600, 640×480, 900×600 and 1280×800, very small monitors, monitor selection, window-state persistence and secondary-window sizing contracts (#648)
+
 - OCR/UI: make the most recently started file, clipboard, screenshot or drag-and-drop request the sole owner of OCR results and spinner state; discard superseded capture, decode, status, error and navigation callbacks, and isolate screenshot URI dispatch from the OCR task lane (#648)
 - Sharing: align the bundled symbolic icon inventory exactly with the seven active providers, remove unused Discord/LinkedIn assets, and load icons through Gtk.IconTheme for light/dark theme recoloring (#648)
 - UI: load the bundled GTK stylesheet from GResource at application startup and register it at application priority; retain the provider for the application's lifetime while leaving display-less CLI launches unaffected (#648)
