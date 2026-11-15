@@ -8,7 +8,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-
 - Release/AppImage: add native x86_64 and aarch64 self-contained AppImage builds, embedded GitHub Releases zsync metadata, paired update files, strict release-asset validation and SHA-256 checksums (#555)
 - Docs/release: document AppImage runtime boundaries, downloads, checksums and Gear Lever-compatible zsync updates (#555)
 - Docs/Flatpak: add a maintainer-operated Flathub submission readiness checklist covering current policy, architecture, manifest, licensing, permissions and validation boundaries (#494)
@@ -24,20 +23,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Flatpak: offer a portal-backed, user-selected migration of history and downloaded OCR models from the previous application ID; no cross-application filesystem permission is required (#613)
 - Flatpak: keep the first-run migration chooser alive until the user responds, persist an explicit skip/close decision, and start with clean data without modifying the legacy installation (#613)
 
-### Fixed
-
-- OCR/UI: make the most recently started file, clipboard, screenshot or drag-and-drop request the sole owner of OCR results and spinner state; discard superseded capture, decode, status, error and navigation callbacks, and isolate screenshot URI dispatch from the OCR task lane (#648)
-- Sharing: align the bundled symbolic icon inventory exactly with the seven active providers, remove unused Discord/LinkedIn assets, and load icons through Gtk.IconTheme for light/dark theme recoloring (#648)
-- UI: load the bundled GTK stylesheet from GResource at application startup and register it at application priority; retain the provider for the application's lifetime while leaving display-less CLI launches unaffected (#648)
-
 ### Changed
 
 - Preferences: reorganize settings into four dedicated pages (General, Editor, Voice and Languages); move the existing Editor controls and TTS volume/language controls into their respective pages while retaining asynchronous TTS catalog loading (#648)
-
 - Welcome: retain Screenshot as the primary action; show Open Image, Paste Image and Drop Image as equal-width horizontal secondary actions when their measured natural widths fit, and group the same controls in More options when compact; preserve the page-wide drop target and focus behavior (#648)
-
 - UI/UX: align the Extracted, Welcome, History and Shortcuts interfaces with the modernized action hierarchy, boxed-list presentation and fixed green brand palette; use a darker green background with white foreground for suggested-action controls to meet WCAG AA normal-text contrast, and scheme-aware green text for light/dark surfaces; preserve existing Welcome accessibility and interaction behavior (#648)
-
 - CI/governance: align Dependabot and certifi automation with `feature`, run CodeQL on PRs to all protected promotion branches, guard manual dependency-sync dispatch from protected branches, and document the single-maintainer PR/CI policy.
 - Release tooling: correct the release script post-tag instructions to describe generated CHANGELOG notes and the current multi-architecture Flatpak/AppImage publication flow.
 - Code quality: clarify technical comments, remove obsolete implementation notes, and standardize selected Python docstrings; add contributor guidance for comment and Google-style docstring conventions.
@@ -88,11 +78,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- OCR/UI: make the most recently started file, clipboard, screenshot or drag-and-drop request the sole owner of OCR results and spinner state; discard superseded capture, decode, status, error and navigation callbacks, and isolate screenshot URI dispatch from the OCR task lane (#648)
+- Sharing: align the bundled symbolic icon inventory exactly with the seven active providers, remove unused Discord/LinkedIn assets, and load icons through Gtk.IconTheme for light/dark theme recoloring (#648)
+- UI: load the bundled GTK stylesheet from GResource at application startup and register it at application priority; retain the provider for the application's lifetime while leaving display-less CLI launches unaffected (#648)
 - CSS: split the combined `0%, 100%` selectors in the `pulse` and `readyPulse` keyframes into separate `0%` and `100%` selectors for GTK4 CssProvider compatibility (#448)
-
 - Welcome: close the nested ScrolledWindow and template declarations correctly so Blueprint compilation succeeds with the responsive 360px layout (#648)
 - Translations: restore neutral POT template metadata and update source references for the split Editor and Voice Preferences pages (#648)
-
 - Changelog: consolidate duplicate `[Unreleased]` category headings and add a CI guard against undocumented removal of existing entries.
 - CI/Flatpak: strengthen the invalid-input OCR regression check to require a non-zero exit without an uncaught Python traceback (#589).
 - AudioPlayer: extend `_cleanup_lock` scope to cover `play()` and `stop()` to prevent races with concurrent cleanup (F19)
@@ -148,6 +139,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Types: the headless `GObject` fallback used when PyGObject is unavailable is now marked as an intentional redefinition, keeping `mypy` clean in CI (#516)
 - Flatpak: automated certifi updates no longer break the build — the FEDC update now rewrites the certifi filename referenced by the module's `build-commands` (the 2026.10.18 bump made `pip3 install` look for the previous 2026.7.22 tarball). Covered by `tests/test_fedc_certifi.py`
 - Clipboard: `hand_off_to_manager()` and `wait_until_replaced()` now refuse to iterate the default GLib main context when it is already running (an active GTK loop, or another thread owns it), logging a warning and returning `False` instead of re-entering the loop (AUDIT-001, #469)
+- GTK: initialize GtkSourceView after GTK/Libadwaita startup so its widget GTypes are registered before the ExtractedPage Blueprint template is instantiated; set the first-run window size to 900 × 600 px with monitor-aware clamping (#648)
 
 ### Security
 
@@ -165,10 +157,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Dependabot #49, #50, #51: `urllib3` 2.7.0 → 2.8.0, fixing the unbounded chunk-size line buffered by `HTTPResponse.stream()`/`read_chunked()`, the HTTPS proxy TLS configuration that could be ignored or overridden, and the infinite loop on chunked deflate streaming. The Flatpak `python3-urllib3` module was resynced by `build-aux/sync_dependencies.py` (wheel 2.8.0 + sha256)
 - Dependabot #47, #48 (`anyio`): no longer in the dependency graph. `anyio` was only reachable through `httpx`, which was required exclusively by the `safety` dev tool removed above; `uv.lock` now has no `anyio` entry, so the IDNA 2003 host-name encoding in `TLSStream` (TLS certificate spoofing) and the process-pool workers blocked on undrained stderr no longer apply
 - Dependabot #32 (`nltk`): no longer in the dependency graph. The direct dev dependency was unused (never imported by the application, the tests or the build scripts), and dropping `safety` removes the only transitive path (`safety 3.8.1` requires `nltk>=3.9`), so NLTK's unfixed model-artifact path traversal cannot be reached from this project at all. NLTK was never shipped in the Flatpak
-
-### Fixed
-
-- GTK: initialize GtkSourceView after GTK/Libadwaita startup so its widget GTypes are registered before the ExtractedPage Blueprint template is instantiated; set the first-run window size to 900 × 600 px with monitor-aware clamping (#648)
 
 ## [0.2.1] - 2026-10-20
 
