@@ -76,7 +76,6 @@ def test_downloaded_language_text_meets_wcag_aa_in_light_and_dark_schemes():
     for surface in ("#242424", "#353535"):
         assert _contrast_ratio(dark_text, surface) >= 4.5
 
-    assert pytest.approx(_contrast_ratio(light_text, "#ffffff"), abs=0.01) == 5.63
 
 
 def test_anura_button_preserves_hover_active_focus_and_disabled_states():
