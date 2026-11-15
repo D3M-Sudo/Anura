@@ -325,8 +325,9 @@ def test_welcome_responsive_layout_uses_allocated_viewport(screen_width: int, sc
 
         scroller = page.action_clamp.get_child()
         assert isinstance(scroller, Gtk.ScrolledWindow)
-        assert scroller.get_hscrollbar_policy() == Gtk.PolicyType.NEVER
-        assert scroller.get_vscrollbar_policy() == Gtk.PolicyType.AUTOMATIC
+        horizontal_policy, vertical_policy = scroller.get_policy()
+        assert horizontal_policy == Gtk.PolicyType.NEVER
+        assert vertical_policy == Gtk.PolicyType.AUTOMATIC
         assert page.action_clamp.get_width() <= window.get_width()
 
         if not wide:
