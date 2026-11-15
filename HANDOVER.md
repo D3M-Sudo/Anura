@@ -68,7 +68,7 @@ The authoritative source for the full historical patch is the original PR diff: 
 - Preserve `feature`; do not commit to or otherwise modify it.
 - Open a new PR targeting `feature` in **Draft** state.
 - PR #448 is closed as superseded by PR #648; its original diff remains the historical source record.
-- Retain the fixed teal brand identity while separating the darker suggested-action background color from text accents; use theme-aware text colors for light and dark surfaces.
+- Retain the fixed green brand palette while separating the darker suggested-action background color from text accents; use theme-aware text colors for light and dark surfaces.
 - Complete the visual review across relevant windows and major states. Updated screenshots and visual documentation are deferred to the next release cycle as agreed.
 - Remediate all findings from the prior audit, including architecture, accessibility, responsiveness, interactions, and maintainability.
 - Functional changes are allowed when justified and verified; document invasive behavior changes and regression coverage.
@@ -126,7 +126,7 @@ These are integration constraints, not a claim that the current branch has alrea
 - The CHANGELOG already describes the final Welcome responsive behavior accurately; the changelog-integrity job passed, so no duplicate entry was added.
 - The four viewport cases (360×600, 640×480, 900×600, 1280×800), measured breakpoint, Screenshot primary-action invariant and focus fallback tests passed.
 - Automated accessibility tests are not real assistive-technology verification: the temporary workflow set `NO_AT_BRIDGE=1` and `GTK_A11Y=none`.
-- Real GNOME/GTK visual review, Orca/AT-SPI, keyboard navigation/focus order and light/dark theme checks on a desktop remain outstanding. Keep the PR Draft until these are reviewed.
+- Real GNOME/GTK visual review, Orca/AT-SPI, keyboard navigation/focus order and desktop light/dark checks were not performed: the user explicitly chose to skip manual verification. They are not represented as passed or used as a blocker for continuing the automated M2-B work.
 - No merge has been performed or authorized.
 
 ## Closure rationale for the original PR
@@ -152,6 +152,36 @@ These are integration constraints, not a claim that the current branch has alrea
 ### Remaining gates
 
 - Perform real GNOME/GTK visual and interaction checks, including Orca/AT-SPI, keyboard navigation and focus order.
-- Confirm the teal appearance in light and dark themes on a real desktop session.
+- Confirm the green appearance in light and dark themes on a real desktop session.
 - The temporary workflow disables AT-SPI via `NO_AT_BRIDGE=1` and `GTK_A11Y=none`; its passing tests are not a substitute for screen-reader verification.
-- Keep PR #648 Draft. No merge or M2-B Task 2 is authorized by this validation.
+- Keep PR #648 Draft. This Task 1 validation did not authorize a merge or Task 2; Task 2 was subsequently authorized and is recorded below.
+
+
+## M2-B Task 2 — Design System palette and runtime stylesheet (2026-11-15)
+
+### Approved palette and implementation
+
+- Applied the approved green tokens in `data/style.css`: `accent_color #16A36A`, `accent_bg_color #0F7650`, and `accent_fg_color #FFFFFF`.
+- Downloaded-language text uses `#0F7650` on light surfaces and `#21B77A` on dark surfaces. The suggested-action foreground remains white on the darker green background.
+- Added explicit focus and disabled rules for `.anura-button`; Screenshot remains the Welcome page's suggested-action primary control.
+- Root cause of the inert stylesheet: `style.css` was packaged in the GResource but no application startup path created and registered a `Gtk.CssProvider`.
+- Added `load_css_provider()` in `anura/core/resources.py`: it loads `/io/github/d3msudo/anura/style.css` from GResource and registers the provider on the default GDK display at `Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION`.
+- `AnuraApplication.do_startup()` invokes the loader and retains the provider in `self._css_provider` for the application lifetime. A missing display is handled as a display-less CLI invocation and does not abort startup.
+- Added GTK regression coverage in `tests/test_audit_ui_widgets.py`; it exercises the real GResource load and provider registration under the headless Weston integration environment.
+- Added a CHANGELOG entry and corrected the current palette description from teal to green.
+
+### Test-first and CI evidence
+
+- The new GTK regression test was first run without the implementation and failed as expected with `ImportError: cannot import name 'load_css_provider'`.
+- After implementation, the same test passed.
+- Python quality job on final documented head `c6c494f868ed4399152caa42081da384b8be8c70`: 611 passed, 6 skipped, 240 deselected; Ruff, formatting, mypy, Bandit and Flatpak dependency coverage passed.
+- GTK Integration Tests on the same head: 393 passed, 5 skipped, 617 deselected; the new stylesheet-provider test passed. One pre-existing warning was reported from Blueprint compiler (`invalid escape sequence '\\$'`).
+- Changelog integrity and CodeQL passed on the documented head.
+- AppImage x86_64/aarch64 and Flatpak x86_64/aarch64 build jobs were still running when this handover update was prepared; consult the linked CI run for their final results before making a release-readiness claim.
+- No local desktop visual review, Orca/AT-SPI or manual keyboard checks were performed; this follows the user's explicit decision to skip manual verification and is not claimed as automated coverage.
+
+### Current repository state
+
+- PR #648 remains open and Draft, targeting `feature`; no merge was performed.
+- The PR branch was rebased onto the current `feature` baseline without changing `feature`; at the time of this record it was 214 commits ahead and 0 behind.
+- The temporary authorized-rebase workflow was removed after use. No temporary validation workflow was added for this task.
