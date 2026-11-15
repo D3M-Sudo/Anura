@@ -62,7 +62,6 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         self.action_buttons = (self.open_image_button, self.paste_image_button, self.drop_button)
         self._wide_action_layout = False
         self.action_clamp.connect("notify::width", self._on_action_clamp_width_changed)
-        self._update_action_layout()
         self.connect_tracked(self.drop_button, "clicked", self._on_drop_button_clicked)
         self._setup_drop_target()
 
