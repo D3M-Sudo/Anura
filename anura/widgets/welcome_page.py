@@ -89,7 +89,7 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
             self.drop_button.set_tooltip_text(_("Drop image here"))
             self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [False])
             self.drop_button.update_property([Gtk.AccessibleProperty.LABEL], [_("Drop image here")])
-            GLib.idle_add(lambda: (self._focus_drop_action(), GLib.SOURCE_REMOVE)[1])
+            GLib.idle_add(self._focus_drop_action_idle)
             return True
         return False
 
@@ -182,6 +182,11 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         target = self.drop_button if self._wide_action_layout else self.more_options_button
         target.grab_focus()
 
+    def _focus_drop_action_idle(self) -> bool:
+        """Restore focus after the drop area has completed its collapse transition."""
+        self._focus_drop_action()
+        return GLib.SOURCE_REMOVE
+
     def _on_more_options_action_clicked(self, _button: Gtk.Button) -> None:
         """Close the image-actions popover after choosing an action."""
         self.more_options_popover.popdown()
@@ -206,7 +211,7 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
                 self.drop_button.update_state([Gtk.AccessibleState.EXPANDED], [False])
                 self.drop_button.update_property([Gtk.AccessibleProperty.LABEL], [_("Drop image here")])
                 # Shift focus back to the toggle button asynchronously
-                GLib.idle_add(lambda: (self._focus_drop_action(), GLib.SOURCE_REMOVE)[1])
+                GLib.idle_add(self._focus_drop_action_idle)
         except Exception as e:
             logger.exception(f"Anura: Failed to handle drop button click: {e}")
 
