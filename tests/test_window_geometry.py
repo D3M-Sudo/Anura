@@ -153,7 +153,7 @@ def test_extracted_page_keeps_its_text_area_scrollable() -> None:
     from pathlib import Path
 
     blueprint = Path("data/ui/extracted_page.blp").read_text(encoding="utf-8")
-    assert "Gtk.ScrolledWindow text_scrollview" in blueprint
+    assert "ScrolledWindow text_scrollview" in blueprint
     assert "hscrollbar-policy: never;" in blueprint
     assert "propagate-natural-width: false;" in blueprint
     assert "vexpand: true;" in blueprint
