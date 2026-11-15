@@ -181,7 +181,11 @@ class TestWelcomePageEnterprise:
                 break
 
         widget._set_action_layout(True)
-        widget.open_image_button.grab_focus()
+        for _iteration in range(30):
+            context.iteration(False)
+            time.sleep(0.01)
+        assert widget.open_image_button.get_mapped() is True
+        assert widget.open_image_button.grab_focus() is True
         for _iteration in range(10):
             context.iteration(False)
             time.sleep(0.01)
@@ -250,7 +254,16 @@ class TestWelcomePageEnterprise:
         assert window.get_mapped() is True
         measured_width = widget.action_clamp.get_width()
         assert measured_width > 0
-        assert widget._wide_action_layout is expected_wide
+        assert widget._wide_action_layout is expected_wide, (
+            f"viewport={width}x{height}, window_width={window.get_width()}, "
+            f"welcome_width={widget.welcome.get_width()}, "
+            f"clamp_width={widget.action_clamp.get_width()}, "
+            f"threshold={widget._get_wide_action_threshold()}, "
+            f"last_tick_width={widget._last_action_width}, "
+            f"tick_id={widget._action_layout_tick_id}, "
+            f"clamp_mapped={widget.action_clamp.get_mapped()}, "
+            f"button_widths={[button.get_preferred_size()[1].width for button in widget.action_buttons]}"
+        )
         window.destroy()
 
     @pytest.mark.gtk
