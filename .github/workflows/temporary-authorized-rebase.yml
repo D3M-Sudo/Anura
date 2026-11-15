@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   rebase:
-    if: github.event.head_commit.message == 'chore: run authorized rebase of UI modernization branch'
+    if: ${{ github.ref == 'refs/heads/fix/ui-modernization-aligned' }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out complete branch history
