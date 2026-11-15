@@ -147,3 +147,24 @@ def test_extracted_headerbar_keeps_the_compact_action_hierarchy() -> None:
     headerbar = blueprint.split("Adw.HeaderBar headerbar {", maxsplit=1)[1].split("\n    }", maxsplit=1)[0]
     assert headerbar.count("[start]") <= 2
     assert headerbar.count("[end]") <= 1
+
+
+def test_extracted_page_keeps_its_text_area_scrollable() -> None:
+    from pathlib import Path
+
+    blueprint = Path("data/ui/extracted_page.blp").read_text(encoding="utf-8")
+    assert "Gtk.ScrolledWindow text_scrollview" in blueprint
+    assert "hscrollbar-policy: never;" in blueprint
+    assert "propagate-natural-width: false;" in blueprint
+    assert "vexpand: true;" in blueprint
+
+
+def test_history_page_keeps_its_entry_list_scrollable() -> None:
+    from pathlib import Path
+
+    blueprint = Path("data/ui/history_page.blp").read_text(encoding="utf-8")
+    assert "Gtk.Stack history_stack" in blueprint
+    assert "vexpand: true;" in blueprint
+    assert "child: Gtk.ScrolledWindow" in blueprint
+    assert "Gtk.ListBox history_list" in blueprint
+
