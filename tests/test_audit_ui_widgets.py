@@ -346,8 +346,10 @@ def test_welcome_responsive_layout_uses_allocated_viewport(screen_width: int, sc
             assert page.more_options_button.get_mapped(), "compact More options trigger is not mapped"
             page.more_options_popover.popup()
             _wait_for_gtk_condition(
-                lambda: page.more_options_popover.get_mapped()
-                and all(button.get_mapped() for button in page.action_buttons),
+                lambda: (
+                    page.more_options_popover.get_mapped()
+                    and all(button.get_mapped() for button in page.action_buttons)
+                ),
                 "map the compact More options popover and its secondary actions",
             )
             for button in page.action_buttons:
