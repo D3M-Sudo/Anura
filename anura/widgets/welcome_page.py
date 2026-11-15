@@ -61,8 +61,10 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         self.connect_tracked(self.paste_image_button, "clicked", self._on_more_options_action_clicked)
         self.action_buttons = (self.open_image_button, self.paste_image_button, self.drop_button)
         self._wide_action_layout = False
-        self.action_clamp.connect("notify::width", self._on_action_clamp_width_changed)
+        self._action_layout_tick_id: int | None = None
+        self._last_action_width = -1
         self.action_clamp.connect("map", self._on_action_clamp_mapped)
+        self.action_clamp.connect("unmap", self._on_action_clamp_unmapped)
         self.connect_tracked(self.drop_button, "clicked", self._on_drop_button_clicked)
         self._setup_drop_target()
 
@@ -138,13 +140,25 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
             + self.secondary_actions.get_margin_end()
         )
 
-    def _on_action_clamp_width_changed(self, _widget: Adw.Clamp, _pspec: object) -> None:
-        """Re-evaluate the layout when the available clamped width changes."""
-        self._update_action_layout()
-
     def _on_action_clamp_mapped(self, _widget: Adw.Clamp) -> None:
-        """Evaluate the first responsive layout after GTK assigns an allocation."""
-        self._update_action_layout()
+        """Monitor allocated width while the responsive action container is mapped."""
+        if self._action_layout_tick_id is None:
+            self._last_action_width = -1
+            self._action_layout_tick_id = self.action_clamp.add_tick_callback(self._on_action_layout_tick)
+
+    def _on_action_clamp_unmapped(self, _widget: Adw.Clamp) -> None:
+        """Stop the frame-clock monitor while the page is not mapped."""
+        if self._action_layout_tick_id is not None:
+            self.action_clamp.remove_tick_callback(self._action_layout_tick_id)
+            self._action_layout_tick_id = None
+
+    def _on_action_layout_tick(self, widget: Gtk.Widget, _frame_clock: Gdk.FrameClock) -> bool:
+        """Re-evaluate only when GTK allocates a different width."""
+        available_width = widget.get_width()
+        if available_width != self._last_action_width:
+            self._last_action_width = available_width
+            self._update_action_layout()
+        return GLib.SOURCE_CONTINUE
 
     def _update_action_layout(self) -> None:
         """Choose the wide layout only when all three measured actions fit."""
