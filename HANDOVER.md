@@ -128,3 +128,31 @@ These are integration constraints, not a claim that the current branch has alrea
 ## Closure rationale for the original PR
 
 **PR #448 is closed as superseded by PR #648.** The relevant modernization work was adapted to the current `feature` baseline and transferred to `fix/ui-modernization-aligned`, preserving later functionality and lifecycle protections. PR #648 remains the active Draft continuation; its remaining CI, packaging, baseline synchronization and real-desktop validation gates are independent of the closure of #448.
+
+
+## M2-B Task 1 — Welcome Page responsive implementation update (2026-11-15)
+
+### Implemented on `fix/ui-modernization-aligned`
+
+- Screenshot remains the primary action.
+- The same Open Image, Paste Image and Drop Image controls are reparented into a homogeneous horizontal row when the measured natural control widths, spacing and side margins fit; otherwise they remain inside the More options popover.
+- The action area is contained in an `Adw.Clamp` with a vertical `Gtk.ScrolledWindow` for constrained heights. The clamp's allocated width is monitored through a GTK frame-clock callback; the breakpoint is derived from the current controls' preferred widths, not a fixed viewport constant.
+- The existing `DropTargetAsync` remains attached to the entire Welcome page, independent of which action layout is visible.
+- Focus handling uses idle callbacks after GTK reparenting. When More options is hidden during expansion, focus is moved to the always-visible Screenshot action. A focused primary action remains visible through compaction.
+- The main GTK workflow's Weston headless surface is set to 1920×1080 so the 1280×800 M1 viewport test is represented by a sufficiently large virtual output.
+
+### Verification on commit `2a9a9501ac4aeba69e29c48bd6648cb762c838ad`
+
+- Temporary Welcome validation [run 43720911845](https://github.com/D3M-Sudo/Anura/actions/runs/43720911845): passed. The GTK widget suite reported 25 passed, 2 warnings; the accessibility suite reported 4 passed. Blueprint compilation, GResource compilation and GSettings schema compilation passed.
+- Main CI [run 43720911879](https://github.com/D3M-Sudo/Anura/actions/runs/43720911879): GTK Integration Tests passed (391 passed, 5 skipped, 613 deselected, 1 warning); Python quality and Changelog integrity passed.
+- CodeQL [run 43720911814](https://github.com/D3M-Sudo/Anura/actions/runs/43720911814): passed.
+- At the time of this update, AppImage x86_64/aarch64 and Flatpak x86_64/aarch64 jobs in the main CI run were still running; no packaging conclusion is claimed here.
+- The four M1 viewport cases (360×600, 640×480, 900×600, 1280×800) passed in the temporary GTK run.
+- This is headless CI evidence, not a substitute for a real GNOME session, Orca testing or visual review on the target desktop.
+
+### Remaining Task 1 gates
+
+- Finish the main CI packaging matrix and review any resulting failures.
+- Complete an independent review of the Task 1 diff and verify that the implementation remains within the approved scope.
+- Confirm documentation and PR description are consistent with the actual responsive behavior and test evidence.
+- Keep PR #648 Draft; do not merge or start M2-B Task 2 without separate authorization.

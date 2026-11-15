@@ -33,7 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Preferences: reorganize settings into four dedicated pages (General, Editor, Voice and Languages); move the existing Editor controls and TTS volume/language controls into their respective pages while retaining asynchronous TTS catalog loading (#648)
 
-- Welcome: restore the emphasized Hero sizing and the equal-width, vertically stacked flat secondary actions (Open Image, Paste Image and Drop Image) while retaining Screenshot as the primary action (#648)
+- Welcome: retain Screenshot as the primary action; show Open Image, Paste Image and Drop Image as equal-width horizontal secondary actions when their measured natural widths fit, and group the same controls in More options when compact; preserve the page-wide drop target and focus behavior (#648)
 
 - UI/UX: align the Extracted, Welcome, History and Shortcuts interfaces with the modernized action hierarchy, boxed-list presentation and fixed teal brand accent; use a darker teal background with white foreground for suggested-action controls to meet WCAG AA normal-text contrast, and scheme-aware teal text for light/dark surfaces; preserve existing Welcome accessibility and interaction behavior (#648)
 
