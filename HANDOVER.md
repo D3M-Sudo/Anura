@@ -114,16 +114,20 @@ These are integration constraints, not a claim that the current branch has alrea
 8. Update the Draft PR with the implementation, migration rationale and validation evidence; screenshot assets remain deferred as agreed.
 9. Keep PR #648 as the active continuation. PR #448 has already been closed with the explicit replacement rationale recorded in PR #648; do not reopen or merge either PR without authorization.
 
-## Validation status at handover
+## Validation status
 
-- Branch creation and initial equality with `feature`: verified at branch creation; current comparison is recorded in PR #648.
-- PR #448 metadata and full diff: retrieved; its changed-file inventory contains 16 paths.
-- The maintainer supplied a local validation report for head `90391da9ee5ac198869753744d3cfb1552868627`: all 14 Blueprint files compiled; GResource and GSettings schema validation passed; Ruff check/format and changelog integrity passed; headless pytest reported 595 passed, 5 skipped and 238 deselected; GTK tests under Weston reported 382 passed, 5 skipped and 600 deselected when `ANURA_CI_TEST_MODE` was unset.
-- The same report exposed the PyGObject 3.48.2 incompatibility with `Gio.Settings.bind_with_mapping`. The implementation now uses explicit `get_double`/`set_double` synchronization, with reverse updates for external GSettings changes.
-- Regression tests exercise normalized volume persistence and external setting changes. The real PreferencesDialog integration test with a memory-backed Gio.Settings backend passed in the current-head GTK Integration Tests job.
-- The original teal's reported contrast failures were addressed by separating the darker suggested-action background from theme-aware text accents. Contrast calculations support the selected values, but a real light/dark desktop visual check remains outstanding.
-- Current-head quality, changelog-integrity and GTK Integration Tests jobs passed; CodeQL passed. AppImage x86_64/aarch64 and Flatpak x86_64/aarch64 jobs were still running at the last check. Real GNOME desktop accessibility/keyboard checks and visual sign-off remain outstanding; keep the PR Draft until every gate is complete.
-- No merge has been performed.
+- PR #648 remains open and Draft, targeting `feature`; working branch `fix/ui-modernization-aligned`.
+- Current comparison at validated head `045bb368c4f7c566cac8c52eb715becfd360d845` against `feature` commit `4a967caf3dc5392308dbb99e3d2f419947abe2bd`: 192 commits ahead, 0 behind.
+- Temporary M2-B Welcome validation run #43721302302 passed: Blueprint/GResource/GSettings compilation and Weston headless startup; 25 GTK tests passed (2 warnings); 4 Welcome accessibility tests passed.
+- Main CI run #43721302304 passed: Changelog integrity, Python quality, GTK Integration (391 passed, 5 skipped, 613 deselected, 1 warning), AppImage x86_64/aarch64, Flatpak x86_64/aarch64 and release-artifact validation. `publish-release` was skipped.
+- CodeQL run #43721302253 passed.
+- The temporary workflow `.github/workflows/m2b-welcome-validation.yml` was used to obtain focused evidence, and its results/logs were reviewed and recorded in PR #648 and this handover before the workflow was removed. GitHub Actions retains the run history.
+- The main GTK workflow's Weston surface was increased to 1920×1080 to represent the 1280×800 test viewport; this permanent CI adjustment remains.
+- The CHANGELOG already describes the final Welcome responsive behavior accurately; the changelog-integrity job passed, so no duplicate entry was added.
+- The four viewport cases (360×600, 640×480, 900×600, 1280×800), measured breakpoint, Screenshot primary-action invariant and focus fallback tests passed.
+- Automated accessibility tests are not real assistive-technology verification: the temporary workflow set `NO_AT_BRIDGE=1` and `GTK_A11Y=none`.
+- Real GNOME/GTK visual review, Orca/AT-SPI, keyboard navigation/focus order and light/dark theme checks on a desktop remain outstanding. Keep the PR Draft until these are reviewed.
+- No merge has been performed or authorized.
 
 ## Closure rationale for the original PR
 
@@ -132,27 +136,22 @@ These are integration constraints, not a claim that the current branch has alrea
 
 ## M2-B Task 1 — Welcome Page responsive implementation update (2026-11-15)
 
-### Implemented on `fix/ui-modernization-aligned`
+### Implementation and automated validation
 
 - Screenshot remains the primary action.
-- The same Open Image, Paste Image and Drop Image controls are reparented into a homogeneous horizontal row when the measured natural control widths, spacing and side margins fit; otherwise they remain inside the More options popover.
-- The action area is contained in an `Adw.Clamp` with a vertical `Gtk.ScrolledWindow` for constrained heights. The clamp's allocated width is monitored through a GTK frame-clock callback; the breakpoint is derived from the current controls' preferred widths, not a fixed viewport constant.
-- The existing `DropTargetAsync` remains attached to the entire Welcome page, independent of which action layout is visible.
-- Focus handling uses idle callbacks after GTK reparenting. When More options is hidden during expansion, focus is moved to the always-visible Screenshot action. A focused primary action remains visible through compaction.
-- The main GTK workflow's Weston headless surface is set to 1920×1080 so the 1280×800 M1 viewport test is represented by a sufficiently large virtual output.
+- Open Image, Paste Image and Drop Image are the same three controls in both layouts: a homogeneous horizontal row when their measured preferred widths, spacing and margins fit; otherwise they are presented in the More options popover.
+- The action controls are reparented, not duplicated. The full-page `DropTargetAsync` remains attached to the Welcome page.
+- The action area uses an `Adw.Clamp` and vertical `Gtk.ScrolledWindow`; the measured width is monitored through a GTK frame-clock callback. Focus is restored after reparenting with idle callbacks.
+- The main GTK workflow's Weston headless surface is 1920×1080 so the 1280×800 M1 viewport test has a sufficiently large virtual output.
+- Temporary focused validation [run #43721302302](https://github.com/D3M-Sudo/Anura/actions/runs/43721302302) passed: 25 GTK tests (2 warnings), 4 Welcome accessibility tests, Blueprint compilation, GResource/GSettings compilation and Weston startup.
+- Main CI [run #43721302304](https://github.com/D3M-Sudo/Anura/actions/runs/43721302304) passed: 391 GTK integration tests, Python quality, changelog integrity, AppImage x86_64/aarch64 and Flatpak x86_64/aarch64 validation. Release publication was skipped.
+- CodeQL [run #43721302253](https://github.com/D3M-Sudo/Anura/actions/runs/43721302253) passed.
+- The temporary focused workflow was removed after recording its evidence in PR #648 and this handover. Its historical GitHub Actions run remains accessible.
+- The CHANGELOG already contains the accurate Welcome responsive entry; no duplicate was added.
 
-### Verification on commit `2a9a9501ac4aeba69e29c48bd6648cb762c838ad`
+### Remaining gates
 
-- Temporary Welcome validation [run 43720911845](https://github.com/D3M-Sudo/Anura/actions/runs/43720911845): passed. The GTK widget suite reported 25 passed, 2 warnings; the accessibility suite reported 4 passed. Blueprint compilation, GResource compilation and GSettings schema compilation passed.
-- Main CI [run 43720911879](https://github.com/D3M-Sudo/Anura/actions/runs/43720911879): GTK Integration Tests passed (391 passed, 5 skipped, 613 deselected, 1 warning); Python quality and Changelog integrity passed.
-- CodeQL [run 43720911814](https://github.com/D3M-Sudo/Anura/actions/runs/43720911814): passed.
-- At the time of this update, AppImage x86_64/aarch64 and Flatpak x86_64/aarch64 jobs in the main CI run were still running; no packaging conclusion is claimed here.
-- The four M1 viewport cases (360×600, 640×480, 900×600, 1280×800) passed in the temporary GTK run.
-- This is headless CI evidence, not a substitute for a real GNOME session, Orca testing or visual review on the target desktop.
-
-### Remaining Task 1 gates
-
-- Finish the main CI packaging matrix and review any resulting failures.
-- Complete an independent review of the Task 1 diff and verify that the implementation remains within the approved scope.
-- Confirm documentation and PR description are consistent with the actual responsive behavior and test evidence.
-- Keep PR #648 Draft; do not merge or start M2-B Task 2 without separate authorization.
+- Perform real GNOME/GTK visual and interaction checks, including Orca/AT-SPI, keyboard navigation and focus order.
+- Confirm the teal appearance in light and dark themes on a real desktop session.
+- The temporary workflow disables AT-SPI via `NO_AT_BRIDGE=1` and `GTK_A11Y=none`; its passing tests are not a substitute for screen-reader verification.
+- Keep PR #648 Draft. No merge or M2-B Task 2 is authorized by this validation.
