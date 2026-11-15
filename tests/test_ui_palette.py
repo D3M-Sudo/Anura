@@ -98,7 +98,6 @@ def test_screenshot_remains_the_welcome_page_suggested_action():
     assert 'styles ["pill", "suggested-action", "anura-button"]' in screenshot_button
 
 
-
 def _blend(foreground: str, background: str, alpha: float) -> str:
     channels = []
     for index in (1, 3, 5):

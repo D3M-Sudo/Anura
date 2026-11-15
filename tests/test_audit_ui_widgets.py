@@ -114,7 +114,6 @@ class TestWidgets:
         assert dialog is not None
 
 
-
 def _drain_gtk_main_context():
     context = GLib.MainContext.default()
     for _ in range(20):
