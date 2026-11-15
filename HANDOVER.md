@@ -265,7 +265,7 @@ GTK 4's Gdk.Monitor exposes monitor geometry but does not provide a separate wor
 ## M2-B Task 4 — Final CI completion (2026-11-15)
 
 - Final PR workflow [#43762681835](https://github.com/D3M-Sudo/Anura/actions/runs/43762681835) completed with overall conclusion **success** on branch `fix/ui-modernization-aligned`, head `f4979df9bc82dc60e23c82d77d674d9a0862ad95`, targeting `feature` at `cb079b0b55e252a7ac054fe1b6f57030ddc7b1f9`.
-- All 10 executable jobs passed: Changelog integrity; Python quality; GTK Integration Tests; AppImage x86_64; AppImage aarch64; Flatpak x86_64; Flatpak aarch64; complete AppImage release-set validation; multi-architecture Flatpak release-artifact validation; and the CodeQL workflow completed successfully as its own run.
+- All 9 executable jobs in the CI Quality Check & Release run passed: Changelog integrity; Python quality; GTK Integration Tests; AppImage x86_64; AppImage aarch64; Flatpak x86_64; Flatpak aarch64; complete AppImage release-set validation; and multi-architecture Flatpak release-artifact validation. The separate CodeQL workflow also completed successfully.
 - Python quality: **626 passed, 6 skipped**. GTK Integration: **416 passed, 5 skipped, 632 deselected, 2 warnings**.
 - Both Flatpak architectures completed build, offline-build verification, Blueprint/resource checks, headless runtime, GI typelib checks, positive and negative sandbox OCR tests, desktop/AppStream validation and licence inventory. The multi-architecture Flatpak artifact validator also passed.
 - Both AppImage architectures passed build, architecture/update-metadata checks and clean-host smoke tests. The complete AppImage release-set validator passed.
