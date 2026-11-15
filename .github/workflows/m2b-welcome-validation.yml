@@ -67,7 +67,7 @@ jobs:
             data/io.github.d3m_sudo.anura.gresource.xml \
             --sourcedir=data \
             --sourcedir=data/ui \
-            --target=data/io.github.d3msudo.anura.gresource
+            --target=data/io.github.d3m_sudo.anura.gresource
           mkdir -p builddir/data
           cp data/io.github.d3m_sudo.anura.gschema.xml builddir/data/
           glib-compile-schemas builddir/data/
@@ -102,6 +102,7 @@ jobs:
         run: |
           uv run pytest \
             tests/test_widgets.py \
+            tests/test_welcome_page_accessibility.py \
             -m gtk -v --timeout=30 \
             --override-ini "addopts=-v --tb=short"
 
