@@ -62,6 +62,7 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         self.action_buttons = (self.open_image_button, self.paste_image_button, self.drop_button)
         self._wide_action_layout = False
         self.action_clamp.connect("notify::width", self._on_action_clamp_width_changed)
+        self.action_clamp.connect("map", self._on_action_clamp_mapped)
         self.connect_tracked(self.drop_button, "clicked", self._on_drop_button_clicked)
         self._setup_drop_target()
 
@@ -139,6 +140,10 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
 
     def _on_action_clamp_width_changed(self, _widget: Adw.Clamp, _pspec: object) -> None:
         """Re-evaluate the layout when the available clamped width changes."""
+        self._update_action_layout()
+
+    def _on_action_clamp_mapped(self, _widget: Adw.Clamp) -> None:
+        """Evaluate the first responsive layout after GTK assigns an allocation."""
         self._update_action_layout()
 
     def _update_action_layout(self) -> None:
