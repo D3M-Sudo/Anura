@@ -237,7 +237,6 @@ def test_welcome_focus_restores_after_responsive_reparenting():
         window.destroy()
 
 
-
 @pytest.mark.gtk
 def test_welcome_focus_moves_from_more_options_to_primary_when_layout_expands():
     window, page = _present_welcome_page()

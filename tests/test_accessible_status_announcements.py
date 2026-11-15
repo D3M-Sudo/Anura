@@ -77,7 +77,6 @@ def test_search_result_announcement_is_debounced(headless_gi_mocks, monkeypatch)
     assert page._search_announce_timeout_id is None
 
 
-
 def test_ocr_status_reannounces_after_status_clear(headless_gi_mocks):
     from anura.widgets.welcome_page import WelcomePage
 
