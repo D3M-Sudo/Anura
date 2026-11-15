@@ -56,10 +56,11 @@ jobs:
 
       - name: Compile Blueprint templates
         run: |
+          mkdir -p builddir/data
           for blp in data/ui/*.blp; do
-            blueprint-compiler compile "$blp" --output "${blp%.blp}.ui"
+            blueprint-compiler compile "$blp" --output "builddir/data/$(basename "${blp%.blp}").ui"
           done
-          echo "Compiled $(find data/ui -maxdepth 1 -name '*.ui' | wc -l) Blueprint template(s)"
+          echo "Compiled $(find builddir/data -maxdepth 1 -name '*.ui' | wc -l) Blueprint template(s)"
 
       - name: Compile GResources and GSettings schema
         run: |
