@@ -67,8 +67,9 @@ except Exception as _register_exc:
 
 
 def test_application_css_provider_loads_and_registers_for_default_display():
-    from anura.core.resources import load_css_provider
     from gi.repository import Gdk
+
+    from anura.core.resources import load_css_provider
 
     display = Gdk.Display.get_default()
     assert display is not None
