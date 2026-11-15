@@ -123,6 +123,18 @@ def _drain_gtk_main_context():
         context.iteration(False)
 
 
+def _wait_for_gtk_condition(condition, description: str, timeout_seconds: float = 5.0) -> None:
+    """Wait for an asynchronous GTK state transition without assuming frame timing."""
+    context = GLib.MainContext.default()
+    deadline = time.monotonic() + timeout_seconds
+    while not condition():
+        while context.pending():
+            context.iteration(False)
+        if time.monotonic() >= deadline:
+            pytest.fail(f"GTK did not {description} within {timeout_seconds:.1f}s")
+        time.sleep(0.01)
+
+
 def _wait_for_window_allocation(window, widget, timeout_seconds: float = 5.0) -> None:
     """Wait for the Wayland surface and GTK frame clock to allocate real geometry."""
     context = GLib.MainContext.default()
@@ -331,8 +343,13 @@ def test_welcome_responsive_layout_uses_allocated_viewport(screen_width: int, sc
         assert page.action_clamp.get_width() <= window.get_width()
 
         if not wide:
+            assert page.more_options_button.get_mapped(), "compact More options trigger is not mapped"
             page.more_options_popover.popup()
-            _drain_gtk_main_context()
+            _wait_for_gtk_condition(
+                lambda: page.more_options_popover.get_mapped()
+                and all(button.get_mapped() for button in page.action_buttons),
+                "map the compact More options popover and its secondary actions",
+            )
             for button in page.action_buttons:
                 assert button.get_visible()
                 assert button.get_mapped()
