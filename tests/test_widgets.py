@@ -167,41 +167,76 @@ class TestWelcomePageEnterprise:
         assert widget.drop_area.has_css_class("drag-processing")
         assert widget._drop_target.get_widget() is widget
 
+    @staticmethod
+    def _spin_until(context, condition, timeout_seconds=3.0):
+        """Process GTK events until a UI condition is met or the test times out."""
+        deadline = time.monotonic() + timeout_seconds
+        while time.monotonic() < deadline:
+            context.iteration(False)
+            if condition():
+                return True
+            time.sleep(0.01)
+        return condition()
+
     @pytest.mark.gtk
     def test_welcome_layout_transition_keeps_focus_on_visible_control(self, widget):
-        """Collapse returns focus to More options, never to a hidden popover child."""
+        """Resize-driven transitions retain focus on controls visible in each layout."""
         window = Gtk.Window()
+        window.set_default_size(900, 600)
         window.set_child(widget)
         window.present()
 
         context = GLib.MainContext.default()
-        for _iteration in range(100):
-            context.iteration(False)
-            if widget.action_clamp.get_width() > 0:
-                break
+        assert self._spin_until(
+            context,
+            lambda: (
+                widget.action_clamp.get_width() > 0
+                and widget._last_action_width == widget.action_clamp.get_width()
+                and widget._wide_action_layout
+                and widget.open_image_button.get_mapped()
+            ),
+        ), (
+            f"wide layout did not settle: clamp_width={widget.action_clamp.get_width()}, "
+            f"last_tick_width={widget._last_action_width}, "
+            f"wide={widget._wide_action_layout}, "
+            f"button_mapped={widget.open_image_button.get_mapped()}"
+        )
 
-        widget._set_action_layout(True)
-        for _iteration in range(30):
-            context.iteration(False)
-            time.sleep(0.01)
-        assert widget.open_image_button.get_mapped() is True
         assert widget.open_image_button.grab_focus() is True
-        for _iteration in range(10):
-            context.iteration(False)
-            time.sleep(0.01)
-        assert window.get_focus() is widget.open_image_button
+        assert self._spin_until(context, lambda: window.get_focus() == widget.open_image_button)
 
-        widget._set_action_layout(False)
-        for _iteration in range(10):
-            context.iteration(False)
-            time.sleep(0.01)
-        assert window.get_focus() is widget.more_options_button
+        window.set_default_size(360, 600)
+        assert self._spin_until(
+            context,
+            lambda: (
+                widget.action_clamp.get_width() > 0
+                and widget._last_action_width == widget.action_clamp.get_width()
+                and not widget._wide_action_layout
+                and widget.more_options_button.get_mapped()
+                and window.get_focus() == widget.more_options_button
+            ),
+        ), (
+            f"compact transition lost visible focus: window_width={window.get_width()}, "
+            f"clamp_width={widget.action_clamp.get_width()}, "
+            f"last_tick_width={widget._last_action_width}, "
+            f"wide={widget._wide_action_layout}, focus={window.get_focus()}"
+        )
 
-        widget._set_action_layout(True)
-        for _iteration in range(10):
-            context.iteration(False)
-            time.sleep(0.01)
-        assert window.get_focus() is widget.screenshot_button
+        window.set_default_size(900, 600)
+        assert self._spin_until(
+            context,
+            lambda: (
+                widget.action_clamp.get_width() > 0
+                and widget._last_action_width == widget.action_clamp.get_width()
+                and widget._wide_action_layout
+                and window.get_focus() == widget.screenshot_button
+            ),
+        ), (
+            f"wide transition did not restore primary focus: window_width={window.get_width()}, "
+            f"clamp_width={widget.action_clamp.get_width()}, "
+            f"last_tick_width={widget._last_action_width}, "
+            f"wide={widget._wide_action_layout}, focus={window.get_focus()}"
+        )
         window.destroy()
 
     @pytest.mark.gtk
@@ -245,11 +280,22 @@ class TestWelcomePageEnterprise:
         window.present()
 
         context = GLib.MainContext.default()
-        for _iteration in range(100):
-            context.iteration(False)
-            if window.get_mapped() and widget.action_clamp.get_width() > 0:
-                break
-            time.sleep(0.01)
+        assert self._spin_until(
+            context,
+            lambda: (
+                window.get_mapped()
+                and widget.action_clamp.get_width() > 0
+                and widget._last_action_width == widget.action_clamp.get_width()
+                and widget._wide_action_layout is expected_wide
+            ),
+        ), (
+            f"viewport layout did not settle: requested={width}x{height}, "
+            f"window={window.get_width()}x{window.get_height()}, "
+            f"clamp_width={widget.action_clamp.get_width()}, "
+            f"last_tick_width={widget._last_action_width}, "
+            f"threshold={widget._get_wide_action_threshold()}, "
+            f"wide={widget._wide_action_layout}"
+        )
 
         assert window.get_mapped() is True
         measured_width = widget.action_clamp.get_width()

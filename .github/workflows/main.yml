@@ -175,7 +175,7 @@ jobs:
           mkdir -p "$XDG_RUNTIME_DIR"
           chmod 700 "$XDG_RUNTIME_DIR"
 
-          nohup weston --backend=headless --socket=wayland-test --no-config \
+          nohup weston --backend=headless --width=1920 --height=1080 --socket=wayland-test --no-config \
             >/tmp/weston.log 2>&1 &
           echo $! > /tmp/weston.pid
 
