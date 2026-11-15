@@ -167,4 +167,3 @@ def test_history_page_keeps_its_entry_list_scrollable() -> None:
     assert "vexpand: true;" in blueprint
     assert "child: Gtk.ScrolledWindow" in blueprint
     assert "Gtk.ListBox history_list" in blueprint
-
