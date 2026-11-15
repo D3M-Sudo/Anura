@@ -10,6 +10,7 @@ pytest.importorskip("gi")
 
 import atexit
 import os
+import time
 import warnings
 
 import gi
@@ -120,6 +121,28 @@ def _drain_gtk_main_context():
         if not context.pending():
             break
         context.iteration(False)
+
+
+def _wait_for_window_allocation(window, widget, timeout_seconds: float = 5.0) -> None:
+    """Wait for the Wayland surface and GTK frame clock to allocate real geometry."""
+    context = GLib.MainContext.default()
+    deadline = time.monotonic() + timeout_seconds
+    while (
+        not window.get_mapped()
+        or window.get_width() <= 0
+        or window.get_height() <= 0
+        or widget.get_width() <= 0
+    ):
+        while context.pending():
+            context.iteration(False)
+        if time.monotonic() >= deadline:
+            pytest.fail(
+                "GTK window/action widget was not allocated within "
+                f"{timeout_seconds:.1f}s (mapped={window.get_mapped()}, "
+                f"window={window.get_width()}x{window.get_height()}, "
+                f"widget_width={widget.get_width()})"
+            )
+        time.sleep(0.01)
 
 
 def _present_welcome_page():
@@ -282,9 +305,10 @@ def test_welcome_responsive_layout_uses_allocated_viewport(screen_width: int, sc
         button.set_sensitive(True)
     window.set_child(page)
     window.present()
-    _drain_gtk_main_context()
 
     try:
+        _wait_for_window_allocation(window, page.action_clamp)
+        _drain_gtk_main_context()
         assert window.get_width() > 0
         assert window.get_height() > 0
         assert page.action_clamp.get_width() > 0
