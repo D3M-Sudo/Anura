@@ -217,8 +217,8 @@ GTK 4's Gdk.Monitor exposes monitor geometry but does not provide a separate wor
 - G1 RED: the initial small-monitor and Blueprint-minimum tests failed as expected (320×240 returned for a 300×250 monitor; fixed 360px requests remained in the Blueprint).
 - G1 GREEN: after the clamp and Blueprint changes, the GTK job passed both regressions and the four viewport cases.
 - G2/G4/G6 RED: the monitor-selection, monitor-size, normal-state persistence, resizable Shortcuts and Preferences minimum-size tests failed before their implementation; the compact Extracted HeaderBar contract passed.
-- G2/G4/G6 GREEN: CI run [#43748161668](https://github.com/D3M-Sudo/Anura/actions/runs/43748161668) passed Python quality, Changelog integrity and GTK Integration Tests. GTK result: **408 passed, 5 skipped, 617 deselected**, 2 warnings.
-- Python quality on that run passed Ruff, formatting, type checking, Bandit and the Python test suite. CodeQL run [#43748161592](https://github.com/D3M-Sudo/Anura/actions/runs/43748161592) passed.
+- G2/G4/G6 GREEN: CI run [#43748956043](https://github.com/D3M-Sudo/Anura/actions/runs/43748956043) passed Python quality, Changelog integrity and GTK Integration Tests. GTK result: **410 passed, 5 skipped, 617 deselected**, 2 warnings. The final two tests guard the existing Extracted text scroller and History entry-list scroller.
+- Python quality on that run passed Ruff, formatting, type checking, Bandit and the Python test suite. CodeQL run [#43748956079](https://github.com/D3M-Sudo/Anura/actions/runs/43748956079) passed.
 - AppImage x86_64/aarch64 and Flatpak x86_64/aarch64 jobs were still running when this entry was written; consult the latest PR CI run before claiming full packaging validation.
 
 ### Remaining validation and repository state
