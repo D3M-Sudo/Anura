@@ -39,16 +39,15 @@ def load_gresource_bundle() -> bool:
     return False
 
 
-def load_css_provider():
+def load_css_provider(display):
     """Load and register the application stylesheet for the active GTK display.
 
     Returns None when GTK is running without a display (for example, a
     headless CLI invocation). The caller must retain the returned provider
     while the application is running.
     """
-    from gi.repository import Gdk, Gtk
+    from gi.repository import Gtk
 
-    display = Gdk.Display.get_default()
     if display is None:
         logger.debug("No GDK display available; skipping application stylesheet registration")
         return None
