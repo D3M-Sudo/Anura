@@ -10,7 +10,7 @@ pytest.importorskip("gi")
 
 from unittest.mock import MagicMock, patch
 
-from gi.repository import GLib
+from gi.repository import Gdk, GLib
 
 from anura.main import AnuraApplication
 
@@ -33,6 +33,14 @@ class TestAppLifecycleEnterprise:
             app.settings = MagicMock()
             app.backend = MagicMock()
             return app
+
+    def test_application_retains_css_provider(self, app):
+        provider = MagicMock()
+        with patch("anura.main.load_css_provider", return_value=provider) as load_provider:
+            app._load_application_stylesheet()
+
+        load_provider.assert_called_once_with(Gdk.Display.get_default())
+        assert app._css_provider is provider
 
     def test_on_error_handler(self, app):
         """Test on_error logic, ensuring 'Cancelled' is ignored."""
