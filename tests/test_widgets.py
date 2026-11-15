@@ -180,7 +180,7 @@ class TestWelcomePageEnterprise:
 
     @pytest.mark.gtk
     def test_welcome_layout_transition_keeps_focus_on_visible_control(self, widget):
-        """Breakpoint-driven transitions retain focus on controls visible in each layout."""
+        """Layout changes keep keyboard focus on a visible Welcome control."""
         window = Gtk.Window()
         window.set_default_size(900, 600)
         window.set_child(widget)
@@ -206,8 +206,10 @@ class TestWelcomePageEnterprise:
             f"wide={widget._wide_action_layout}"
         )
 
-        window.set_focus(widget.open_image_button)
-        assert self._spin_until(context, lambda: window.get_focus() == widget.open_image_button)
+        # The action row is a sibling of the popover trigger; use the primary
+        # action to verify that a visible control retains focus while compacting.
+        window.set_focus(widget.screenshot_button)
+        assert self._spin_until(context, lambda: window.get_focus() == widget.screenshot_button)
 
         threshold = widget._get_wide_action_threshold()
         compact_width = threshold - 1
@@ -219,12 +221,17 @@ class TestWelcomePageEnterprise:
             lambda: (
                 not widget._wide_action_layout
                 and widget.more_options_button.get_visible()
-                and window.get_focus() == widget.more_options_button
+                and window.get_focus() == widget.screenshot_button
             ),
         ), (
             f"compact transition lost visible focus: clamp_width={compact_width}, "
             f"wide={widget._wide_action_layout}, focus={window.get_focus()}"
         )
+
+        # When the compact trigger itself owns focus, expanding restores focus
+        # to the always-visible primary action instead of a hidden menu control.
+        window.set_focus(widget.more_options_button)
+        assert self._spin_until(context, lambda: window.get_focus() == widget.more_options_button)
 
         with patch.object(widget.action_clamp, "get_width", return_value=threshold):
             widget._update_action_layout()
