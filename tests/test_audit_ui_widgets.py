@@ -143,7 +143,6 @@ def _wait_for_gtk_condition(
         time.sleep(0.01)
 
 
-
 def _welcome_popover_diagnostic_state(window, page, events) -> str:
     """Capture GTK state when the compact Welcome Page popover fails to map."""
     def describe(widget):
@@ -186,7 +185,6 @@ def _welcome_popover_diagnostic_state(window, page, events) -> str:
             "events": list(events),
         }
     )
-
 
 
 def _wait_for_window_allocation(window, widget, timeout_seconds: float = 5.0) -> None:
@@ -402,7 +400,7 @@ def test_welcome_responsive_layout_uses_allocated_viewport(screen_width: int, sc
             for signal in ("map", "unmap", "closed"):
                 page.more_options_popover.connect(
                     signal,
-                    lambda _widget, *args, event=signal: popover_events.append(
+                    lambda _widget, *_args, event=signal: popover_events.append(
                         f"popover:{event}"
                     ),
                 )
