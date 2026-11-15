@@ -350,9 +350,7 @@ class TestWelcomePageEnterprise:
         try:
             assert self._spin_until(
                 context,
-                lambda: window.get_mapped()
-                and scrolled_window.get_mapped()
-                and scrolled_window.get_height() > 0,
+                lambda: window.get_mapped() and scrolled_window.get_mapped() and scrolled_window.get_height() > 0,
             ), (
                 f"Welcome scroller did not map: window={window.get_width()}x{window.get_height()}, "
                 f"scroller={scrolled_window.get_width()}x{scrolled_window.get_height()}"
