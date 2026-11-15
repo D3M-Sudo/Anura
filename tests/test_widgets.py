@@ -180,6 +180,14 @@ class TestWelcomePageEnterprise:
 
         assert threshold == expected
 
+        with patch.object(widget.action_clamp, "get_width", return_value=expected):
+            widget._update_action_layout()
+        assert widget._wide_action_layout is True
+
+        with patch.object(widget.action_clamp, "get_width", return_value=expected - 1):
+            widget._update_action_layout()
+        assert widget._wide_action_layout is False
+
     @pytest.mark.gtk
     def test_spinner_state(self, widget):
         """Test show/hide spinner logic."""
