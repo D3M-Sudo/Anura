@@ -121,10 +121,17 @@
 - Update: this plan with completion/evidence notes.
 
 - [x] Record A1–A5 implementation, exact commits and CI run URLs/results in HANDOVER.md.
-- [ ] Run the full existing PR CI matrix on the final branch head; read each job conclusion.
-- [x] Re-check PR #648 state/head/base and compare feature with fix/ui-modernization-aligned; PR remains open/Draft, 264 ahead and 0 behind.
+- [x] Run the full existing PR CI matrix on the final branch head `f4979df9bc82dc60e23c82d77d674d9a0862ad95`; all 10 executable jobs completed successfully in run [#43762681835](https://github.com/D3M-Sudo/Anura/actions/runs/43762681835), including both Flatpak architectures and multi-architecture artifact validation.
+- [x] Re-check PR #648 state/head/base and compare feature with fix/ui-modernization-aligned; PR remains open/Draft, 265 ahead and 0 behind.
 - [x] Confirm protected branch SHAs are unchanged and PR remains open/Draft/unmerged.
 - [x] Run a final self-review of all Task 4 implementation, test, translation, changelog, handover and plan changes; no subagent reviewer is available in this environment.
+
+### Final CI result (2026-11-15)
+
+- Workflow run [#43762681835](https://github.com/D3M-Sudo/Anura/actions/runs/43762681835) completed with conclusion `success` on final documentation head `f4979df9bc82dc60e23c82d77d674d9a0862ad95`.
+- Python quality: 626 passed, 6 skipped; GTK Integration: 416 passed, 5 skipped, 2 warnings.
+- Changelog integrity, CodeQL, AppImage x86_64/aarch64, Flatpak x86_64/aarch64, AppImage release-set validation and multi-architecture Flatpak release-artifact validation all passed. Release publication was skipped.
+- All 10 executable jobs passed; the sole `publish-release` job was skipped as expected for this pull-request run. The earlier x86_64 OSTree runner failure did not recur.
 
 ## Verification Commands
 
