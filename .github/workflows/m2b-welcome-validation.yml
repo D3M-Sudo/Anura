@@ -103,11 +103,20 @@ jobs:
           GTK_A11Y: none
           ANURA_LOG_LEVEL: WARNING
         run: |
-          uv run pytest \
+          cat > /tmp/anura_pytest_with_resources.py <<'PY'
+          import sys
+          import pytest
+          from anura.core.resources import load_gresource_bundle
+
+          if not load_gresource_bundle():
+              raise SystemExit("Could not register the compiled Anura GResource bundle")
+          raise SystemExit(pytest.main(sys.argv[1:]))
+          PY
+          uv run python /tmp/anura_pytest_with_resources.py \
             tests/test_widgets.py \
             -m gtk -v --timeout=30 \
             --override-ini "addopts=-v --tb=short"
-          uv run pytest \
+          uv run python /tmp/anura_pytest_with_resources.py \
             tests/test_welcome_page_accessibility.py \
             -v --timeout=30 \
             --override-ini "addopts=-v --tb=short"
