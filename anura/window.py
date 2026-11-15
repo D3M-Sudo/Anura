@@ -63,6 +63,43 @@ def _initial_window_size(saved_width: int, saved_height: int, screen_width: int,
     )
 
 
+def _monitor_size(monitor: Gdk.Monitor | None) -> tuple[int, int]:
+    """Return monitor geometry in application pixels, or zeroes without a monitor."""
+    if monitor is None:
+        return 0, 0
+    geometry = monitor.get_geometry()
+    return geometry.width, geometry.height
+
+
+def _select_monitor_for_surface(
+    display: Gdk.Display | None,
+    surface: Gdk.Surface | None = None,
+) -> Gdk.Monitor | None:
+    """Resolve the surface monitor, falling back to the largest connected monitor."""
+    if display is None:
+        return None
+
+    if surface is not None:
+        monitor = display.get_monitor_at_surface(surface)
+        if monitor is not None:
+            return monitor
+
+    monitors = display.get_monitors()
+    candidates = [
+        monitor
+        for index in range(monitors.get_n_items())
+        if (monitor := monitors.get_item(index)) is not None
+    ]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda monitor: _monitor_size(monitor)[0] * _monitor_size(monitor)[1])
+
+
+def _should_persist_window_size(is_maximized: bool, is_fullscreen: bool) -> bool:
+    """Persist dimensions only when the window is in its normal state."""
+    return not is_maximized and not is_fullscreen
+
+
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/window.ui")
 class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     __gtype_name__ = "AnuraWindow"
@@ -168,26 +205,39 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
             logger.warning(f"Clipboard service unavailable: {e}")
 
     def _setup_geometry(self) -> None:
-        """Restore saved dimensions or choose a monitor-aware first-run size."""
+        """Restore saved dimensions using the best monitor estimate before realization."""
         display = Gdk.Display.get_default()
-        monitors = display.get_monitors() if display else None
-        monitor = monitors.get_item(0) if monitors and monitors.get_n_items() else None
-        geometry = monitor.get_geometry() if monitor else None
-        screen_width = geometry.width if geometry else 0
-        screen_height = geometry.height if geometry else 0
-        width, height = _initial_window_size(
-            self.settings.get_int("window-width"),
-            self.settings.get_int("window-height"),
-            screen_width,
-            screen_height,
-        )
+        monitor = _select_monitor_for_surface(display)
+        self._apply_monitor_geometry(monitor)
+
+        # Once the native surface exists, GDK can identify its actual monitor.
+        # Keep the surface signal tracked so teardown disconnects it explicitly.
+        self.connect_tracked(self, "realize", self._on_window_realized)
+        self.connect_tracked(self, "notify::scale-factor", self._on_scale_factor_changed)
+
+    def _apply_monitor_geometry(self, monitor: Gdk.Monitor | None, prefer_current_size: bool = False) -> None:
+        """Clamp the saved or current window dimensions to a monitor's geometry."""
+        screen_width, screen_height = _monitor_size(monitor)
+        if prefer_current_size and self.get_width() > 0 and self.get_height() > 0:
+            saved_width, saved_height = self.get_width(), self.get_height()
+        else:
+            saved_width = self.settings.get_int("window-width")
+            saved_height = self.settings.get_int("window-height")
+        width, height = _initial_window_size(saved_width, saved_height, screen_width, screen_height)
         self.set_default_size(width, height)
 
-        # Connect to surface scale changes to handle multi-monitor DPI scaling.
-        # FIX BUG-H-006: use connect_tracked (not plain connect) so teardown_all()
-        # explicitly disconnects this handler. GTK4 auto-disconnects self-signals on
-        # destroy, but consistent use of connect_tracked enforces the pattern uniformly.
-        self.connect_tracked(self, "notify::scale-factor", self._on_scale_factor_changed)
+    def _on_window_realized(self, _window: Gtk.Widget) -> None:
+        """Attach monitor-change tracking after GTK creates the native surface."""
+        surface = self.get_surface()
+        if surface is None:
+            return
+        self.connect_tracked(surface, "enter-monitor", self._on_monitor_entered)
+        monitor = _select_monitor_for_surface(self.get_display(), surface)
+        self._apply_monitor_geometry(monitor, prefer_current_size=True)
+
+    def _on_monitor_entered(self, _surface: Gdk.Surface, monitor: Gdk.Monitor) -> None:
+        """Re-clamp dimensions when the window enters a different monitor."""
+        self._apply_monitor_geometry(monitor, prefer_current_size=True)
 
     def _apply_capability_constraints(self) -> None:
         """Apply UI sensitivity constraints based on the boot-time capability audit."""
@@ -383,10 +433,12 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
 
     def do_close_request(self) -> bool:
         """Handle window close request and save window state."""
-        width: int = self.get_width()
-        height: int = self.get_height()
-        self.settings.set_int("window-width", width)
-        self.settings.set_int("window-height", height)
+        if _should_persist_window_size(self.is_maximized(), self.is_fullscreen()):
+            width: int = self.get_width()
+            height: int = self.get_height()
+            if width > 0 and height > 0:
+                self.settings.set_int("window-width", width)
+                self.settings.set_int("window-height", height)
         return False
 
     def do_destroy(self) -> None:
