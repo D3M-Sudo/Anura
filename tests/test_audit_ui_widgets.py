@@ -127,12 +127,7 @@ def _wait_for_window_allocation(window, widget, timeout_seconds: float = 5.0) ->
     """Wait for the Wayland surface and GTK frame clock to allocate real geometry."""
     context = GLib.MainContext.default()
     deadline = time.monotonic() + timeout_seconds
-    while (
-        not window.get_mapped()
-        or window.get_width() <= 0
-        or window.get_height() <= 0
-        or widget.get_width() <= 0
-    ):
+    while not window.get_mapped() or window.get_width() <= 0 or window.get_height() <= 0 or widget.get_width() <= 0:
         while context.pending():
             context.iteration(False)
         if time.monotonic() >= deadline:
