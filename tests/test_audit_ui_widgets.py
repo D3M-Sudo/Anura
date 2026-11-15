@@ -123,7 +123,12 @@ def _drain_gtk_main_context():
         context.iteration(False)
 
 
-def _wait_for_gtk_condition(condition, description: str, timeout_seconds: float = 5.0) -> None:
+def _wait_for_gtk_condition(
+    condition,
+    description: str,
+    timeout_seconds: float = 5.0,
+    diagnostics=None,
+) -> None:
     """Wait for an asynchronous GTK state transition without assuming frame timing."""
     context = GLib.MainContext.default()
     deadline = time.monotonic() + timeout_seconds
@@ -131,8 +136,57 @@ def _wait_for_gtk_condition(condition, description: str, timeout_seconds: float 
         while context.pending():
             context.iteration(False)
         if time.monotonic() >= deadline:
-            pytest.fail(f"GTK did not {description} within {timeout_seconds:.1f}s")
+            detail = f"; GTK state: {diagnostics()}" if diagnostics is not None else ""
+            pytest.fail(
+                f"GTK did not {description} within {timeout_seconds:.1f}s{detail}"
+            )
         time.sleep(0.01)
+
+
+
+def _welcome_popover_diagnostic_state(window, page, events) -> str:
+    """Capture GTK state when the compact Welcome Page popover fails to map."""
+    def describe(widget):
+        parent = widget.get_parent()
+        root = widget.get_root()
+        return {
+            "type": type(widget).__name__,
+            "visible": widget.get_visible(),
+            "mapped": widget.get_mapped(),
+            "size": (widget.get_width(), widget.get_height()),
+            "parent": type(parent).__name__ if parent is not None else None,
+            "root": type(root).__name__ if root is not None else None,
+        }
+
+    return repr(
+        {
+            "window": describe(window),
+            "menu_button": {
+                **describe(page.more_options_button),
+                "active": page.more_options_button.get_active(),
+                "sensitive": page.more_options_button.is_sensitive(),
+            },
+            "popover": {
+                **describe(page.more_options_popover),
+                "position": str(page.more_options_popover.get_position()),
+                "child": (
+                    type(page.more_options_popover.get_child()).__name__
+                    if page.more_options_popover.get_child() is not None
+                    else None
+                ),
+            },
+            "actions": {
+                name: describe(button)
+                for name, button in (
+                    ("open_image", page.open_image_button),
+                    ("paste_image", page.paste_image_button),
+                    ("drop", page.drop_button),
+                )
+            },
+            "events": list(events),
+        }
+    )
+
 
 
 def _wait_for_window_allocation(window, widget, timeout_seconds: float = 5.0) -> None:
@@ -344,6 +398,26 @@ def test_welcome_responsive_layout_uses_allocated_viewport(screen_width: int, sc
 
         if not wide:
             assert page.more_options_button.get_mapped(), "compact More options trigger is not mapped"
+            popover_events = []
+            for signal in ("map", "unmap", "closed"):
+                page.more_options_popover.connect(
+                    signal,
+                    lambda _widget, *args, event=signal: popover_events.append(
+                        f"popover:{event}"
+                    ),
+                )
+            page.more_options_popover.connect(
+                "notify::visible",
+                lambda *_args: popover_events.append(
+                    f"popover:visible={page.more_options_popover.get_visible()}"
+                ),
+            )
+            page.more_options_button.connect(
+                "notify::active",
+                lambda *_args: popover_events.append(
+                    f"menu-button:active={page.more_options_button.get_active()}"
+                ),
+            )
             page.more_options_button.set_active(True)
             _wait_for_gtk_condition(
                 lambda: (
@@ -351,6 +425,9 @@ def test_welcome_responsive_layout_uses_allocated_viewport(screen_width: int, sc
                     and all(button.get_mapped() for button in page.action_buttons)
                 ),
                 "map the compact More options popover and its secondary actions",
+                diagnostics=lambda: _welcome_popover_diagnostic_state(
+                    window, page, popover_events
+                ),
             )
             for button in page.action_buttons:
                 assert button.get_visible()
