@@ -52,12 +52,13 @@
 - Create: anura/utils/accessibility.py
 - Modify: anura/widgets/welcome_page.py
 - Modify: anura/widgets/extracted_page.py
+- Modify: anura/window.py
 - Create: tests/test_accessible_status_announcements.py
 - Modify: po/POTFILES only if a new translatable Python module contains gettext strings.
 
 **Interfaces:**
-- Produces: announce_accessible(widget, message, priority); no-op for empty/unrooted targets.
-- OCR announces only changed status text; TTS announces generating/playing/paused/stopped transitions; search announces settled result counts after a debounce.
+- Produces: announce_accessible(widget, message, priority); no-op for empty/unmapped targets.
+- OCR announces only changed status text; TTS announces generating/playing/paused transitions on the visible navigation page; search announces settled result counts after a debounce.
 
 - [ ] Write tests test_ocr_status_announces_only_changed_messages, test_tts_announces_state_transitions_without_idle_noise, and test_search_result_announcement_is_debounced.
 - [ ] Run uv run pytest tests/test_accessible_status_announcements.py -q; expected RED.

@@ -24,15 +24,16 @@ def test_ocr_status_announces_only_changed_messages(headless_gi_mocks):
 
 
 def test_tts_announces_state_transitions_without_idle_noise(headless_gi_mocks, monkeypatch):
-    import anura.widgets.extracted_page as extracted_page
+    import anura.window as window_module
 
-    page = MagicMock()
-    page._last_announced_tts_state = None
+    window = MagicMock()
+    window._last_announced_tts_state = "idle"
+    window.navigation_view.get_visible_page.return_value = window.extracted_page
     announcements = MagicMock()
-    monkeypatch.setattr(extracted_page, "announce_accessible", announcements)
+    monkeypatch.setattr(window_module, "announce_accessible", announcements)
 
     for state in ("generating", "generating", "playing", "paused", "idle"):
-        extracted_page.ExtractedPage.update_tts_state(page, state)
+        window_module.AnuraWindow._on_tts_state_changed(window, MagicMock(), state)
 
     assert [call.args[1] for call in announcements.call_args_list] == [
         "Generating speech",

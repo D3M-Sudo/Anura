@@ -86,7 +86,7 @@ def test_anura_button_preserves_hover_active_focus_and_disabled_states():
     assert _property(hover, "transform") != "none"
     assert _property(hover, "box-shadow") != "none"
     assert _property(active, "transform") == "translatey(0)"
-    assert _property(focus, "outline-color") == "@accent_color"
+    assert _property(focus, "outline-color") == "@accent_bg_color"
     assert _property(focus, "outline-style") == "solid"
     assert _property(focus, "outline-width") == "2px"
     assert _property(disabled, "transform") == "none"

@@ -2637,3 +2637,31 @@ msgstr ""
 #: ../data/ui/welcome_page.blp
 msgid "More options"
 msgstr ""
+
+#: ../anura/widgets/language_row.py:72
+msgid "Download {language}"
+msgstr ""
+
+#: ../anura/widgets/language_row.py:138
+msgid "Downloading {language}"
+msgstr ""
+
+#: ../anura/widgets/language_row.py:172
+msgid "Download of {language} completed"
+msgstr ""
+
+#: ../anura/widgets/language_row.py:181
+msgid "Download of {language} failed"
+msgstr ""
+
+#: ../anura/window.py:667
+msgid "Generating speech"
+msgstr ""
+
+#: ../anura/window.py:668
+msgid "Reading text"
+msgstr ""
+
+#: ../anura/window.py:669
+msgid "Reading paused"
+msgstr ""
