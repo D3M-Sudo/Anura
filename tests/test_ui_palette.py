@@ -5,31 +5,40 @@
 
 """Regression tests for the GTK accent palette and button state styling."""
 
-STYLE_CSS = open("data/style.css", encoding="utf-8").read()
-WELCOME_BLP = open("data/ui/welcome_page.blp", encoding="utf-8").read()
+
+def _read_text(path: str) -> str:
+    with open(path, encoding="utf-8") as source:
+        return source.read()
+
+
+STYLE_CSS = _read_text("data/style.css")
+WELCOME_BLP = _read_text("data/ui/welcome_page.blp")
 
 
 def _defined_color(name: str) -> str:
-    match = re.search(rf"@define-color\s+{re.escape(name)}\s+(#[0-9a-fA-F]{{6}})\s*;", STYLE_CSS)
-    assert match is not None, f"Missing GTK color token: {name}"
-    return match.group(1).lower()
+    prefix = f"@define-color {name} "
+    line = next(line for line in STYLE_CSS.splitlines() if line.strip().startswith(prefix))
+    return line.strip().removeprefix(prefix).removesuffix(";").lower()
 
 
 def _rule(selector: str) -> str:
-    match = re.search(rf"(?ms)^{re.escape(selector)}\s*\{{([^{{}}]*)\}}", STYLE_CSS)
-    assert match is not None, f"Missing GTK CSS rule: {selector}"
-    return match.group(1)
+    start = STYLE_CSS.index(selector)
+    opening = STYLE_CSS.index("{", start) + 1
+    closing = STYLE_CSS.index("}", opening)
+    return STYLE_CSS[opening:closing]
 
 
 def _property(rule: str, name: str) -> str:
-    match = re.search(rf"(?m)^\s*{re.escape(name)}\s*:\s*([^;]+);", rule)
-    assert match is not None, f"Missing CSS property: {name}"
-    return match.group(1).strip().lower()
+    prefix = f"{name}:"
+    line = next(line for line in rule.splitlines() if line.strip().startswith(prefix))
+    return line.strip().removeprefix(prefix).removesuffix(";").strip().lower()
 
 
 def _luminance(color: str) -> float:
     channels = [int(color[index : index + 2], 16) / 255 for index in (1, 3, 5)]
-    linear = [channel / 12.92 if channel <= 0.04045 else ((channel + 0.055) / 1.055) ** 2.4 for channel in channels]
+    linear = [
+        channel / 12.92 if channel <= 0.04045 else ((channel + 0.055) / 1.055) ** 2.4 for channel in channels
+    ]
     return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
 
 
@@ -68,7 +77,6 @@ def test_downloaded_language_text_meets_wcag_aa_in_light_and_dark_schemes():
 
     for surface in ("#242424", "#353535"):
         assert _contrast_ratio(dark_text, surface) >= 4.5
-
 
 
 def test_anura_button_preserves_hover_active_focus_and_disabled_states():
