@@ -49,10 +49,10 @@ jobs:
 
       - name: Install project and development dependencies
         run: |
-          python3 -m pip install --user uv
+          python3 -m pip install --user "uv==0.13.5"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           uv venv --system-site-packages
-          uv sync --dev
+          uv sync --locked --dev
 
       - name: Compile Blueprint templates
         run: |
