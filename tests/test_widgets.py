@@ -4,6 +4,8 @@
 #
 # SPDX-License-Identifier: MIT
 
+import time
+
 import pytest
 
 pytest.importorskip("gi")
@@ -261,7 +263,6 @@ class TestWelcomePageEnterprise:
     def test_drop_button_toggle(self, widget):
         """Test that the drop area visibility is toggled by the button."""
         import sys
-import time
 
         initial_revealed = widget.drop_revealer.get_reveal_child()
         print(f"\n[DEBUG] initial_revealed = {initial_revealed}")
