@@ -26,7 +26,7 @@ def _make_language_row(headless_gi_mocks, monkeypatch):
 
 
 def test_progress_bar_accessible_name_includes_language(headless_gi_mocks, monkeypatch):
-    language_row, row, _manager = _make_language_row(headless_gi_mocks, monkeypatch)
+    _language_row, row, _manager = _make_language_row(headless_gi_mocks, monkeypatch)
 
     row.progress_bar.update_property.assert_called_once()
     properties, values = row.progress_bar.update_property.call_args.args
