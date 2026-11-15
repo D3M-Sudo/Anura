@@ -5,11 +5,11 @@
 
 """Regression tests for the GTK accent palette and button state styling."""
 
+import pathlib
 import re
-from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = pathlib.Path(__file__).resolve().parents[1]
 STYLE_CSS = (ROOT / "data" / "style.css").read_text(encoding="utf-8")
 WELCOME_BLP = (ROOT / "data" / "ui" / "welcome_page.blp").read_text(encoding="utf-8")
 
