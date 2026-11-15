@@ -86,9 +86,7 @@ def _select_monitor_for_surface(
 
     monitors = display.get_monitors()
     candidates = [
-        monitor
-        for index in range(monitors.get_n_items())
-        if (monitor := monitors.get_item(index)) is not None
+        monitor for index in range(monitors.get_n_items()) if (monitor := monitors.get_item(index)) is not None
     ]
     if not candidates:
         return None
