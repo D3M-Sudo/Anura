@@ -184,6 +184,14 @@ class TestWelcomePageEnterprise:
         window = Gtk.Window()
         window.set_default_size(900, 600)
         window.set_child(widget)
+
+        # The standalone test window has no Gtk.Application action map.
+        # Register the same app actions so GtkActionable buttons remain sensitive
+        # and can participate in real keyboard focus transitions.
+        actions = Gio.SimpleActionGroup()
+        for action_name in ("get_screenshot", "open_image", "paste_from_clipboard"):
+            actions.add_action(Gio.SimpleAction.new(action_name, None))
+        window.insert_action_group("app", actions)
         window.present()
 
         context = GLib.MainContext.default()
