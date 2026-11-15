@@ -79,6 +79,12 @@ def test_application_css_provider_loads_and_registers_for_default_display():
     assert isinstance(provider, Gtk.CssProvider)
 
 
+def test_application_css_provider_skips_when_display_is_unavailable():
+    from anura.core.resources import load_css_provider
+
+    assert load_css_provider(None) is None
+
+
 class TestWidgets:
     @pytest.mark.gtk
     def test_language_popover_row(self):
