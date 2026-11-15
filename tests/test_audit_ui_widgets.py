@@ -66,6 +66,18 @@ except Exception as _register_exc:
         warnings.warn(f"Gtk.init() also failed: {_init_exc}. @Gtk.Template widgets will likely segfault.", stacklevel=2)
 
 
+def test_application_css_provider_loads_and_registers_for_default_display():
+    from anura.core.resources import load_css_provider
+    from gi.repository import Gdk
+
+    display = Gdk.Display.get_default()
+    assert display is not None
+
+    provider = load_css_provider()
+
+    assert isinstance(provider, Gtk.CssProvider)
+
+
 class TestWidgets:
     @pytest.mark.gtk
     def test_language_popover_row(self):
