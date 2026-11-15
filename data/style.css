@@ -1,9 +1,9 @@
-/* Anura brand accent — fixed teal, intentionally overrides the
-   GNOME system accent color. The darker background variant keeps white
-   text on suggested-action controls above WCAG AA normal-text contrast. */
-@define-color accent_color #1D9E75;
-@define-color accent_bg_color #137A59;
-@define-color accent_fg_color #ffffff;
+/* Anura brand palette — fixed green identity, intentionally overrides the
+   GNOME system accent color. Keep graphical accents distinct from the darker
+   suggested-action background used with white foreground text. */
+@define-color accent_color #16A36A;
+@define-color accent_bg_color #0F7650;
+@define-color accent_fg_color #FFFFFF;
 
 /* Welcome page hero: bigger icon/title than the Adwaita StatusPage
    default (measured default icon size: 128px), more breathing room. */
@@ -19,15 +19,15 @@
     font-size: 1.15em;
 }
 
-/* Text accent must contrast with the light surface in both color schemes.
-   Adwaita's .dark style class selects the brighter teal for dark surfaces. */
+/* Text accents use a separate shade in each color scheme to retain WCAG AA
+   contrast on the corresponding Adwaita surfaces. */
 .downloaded label {
     font-weight: bold;
-    color: #137A59;
+    color: #0F7650;
 }
 
 .dark .downloaded label {
-    color: @accent_color;
+    color: #21B77A;
 }
 
 /* History page empty/disabled states: teal-tinted circle behind the
@@ -75,6 +75,18 @@
 .anura-button:active {
     transform: translateY(0);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.anura-button:focus {
+    outline-color: @accent_color;
+    outline-style: solid;
+    outline-width: 2px;
+    outline-offset: 2px;
+}
+
+.anura-button:disabled {
+    transform: none;
+    box-shadow: none;
 }
 
 .anura-card {
