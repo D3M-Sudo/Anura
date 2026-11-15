@@ -215,7 +215,7 @@ class TestWelcomePageEnterprise:
         window.present()
 
         context = GLib.MainContext.default()
-        for iteration in range(100):
+        for _iteration in range(100):
             context.iteration(False)
             if widget.action_clamp.get_width() > 0:
                 break
