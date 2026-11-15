@@ -261,3 +261,62 @@ def test_welcome_focus_moves_from_more_options_to_primary_when_layout_expands():
         assert window.get_focus() is page.screenshot_button
     finally:
         window.destroy()
+
+
+@pytest.mark.gtk
+@pytest.mark.parametrize(
+    ("screen_width", "screen_height"),
+    [(360, 600), (640, 480), (900, 600), (1280, 800)],
+)
+def test_welcome_responsive_layout_uses_allocated_viewport(
+    screen_width: int, screen_height: int
+) -> None:
+    """Exercise the real GTK allocation and responsive breakpoint per M2-B viewport."""
+    from gi.repository import Gtk
+
+    from anura.widgets.welcome_page import WelcomePage
+
+    window = Gtk.Window()
+    window.set_default_size(screen_width, screen_height)
+    page = WelcomePage()
+    for button in (page.screenshot_button, page.open_image_button, page.paste_image_button, page.drop_button):
+        button.set_action_name(None)
+        button.set_sensitive(True)
+    window.set_child(page)
+    window.present()
+    _drain_gtk_main_context()
+
+    try:
+        assert window.get_width() > 0
+        assert window.get_height() > 0
+        assert page.action_clamp.get_width() > 0
+        assert page.screenshot_button.get_visible()
+        assert page.screenshot_button.get_mapped()
+        assert page.screenshot_button.get_focusable()
+
+        page._update_action_layout()
+        _drain_gtk_main_context()
+        wide = page.action_clamp.get_width() >= page._get_wide_action_threshold()
+
+        assert page.secondary_actions.get_visible() is wide
+        assert page.more_options_button.get_visible() is (not wide)
+        assert all(button.get_parent() is (page.secondary_actions if wide else page.compact_actions)
+                   for button in page.action_buttons)
+        assert len({id(button) for button in page.action_buttons}) == 3
+
+        scroller = page.action_clamp.get_child()
+        assert isinstance(scroller, Gtk.ScrolledWindow)
+        assert scroller.get_hscrollbar_policy() == Gtk.PolicyType.NEVER
+        assert scroller.get_vscrollbar_policy() == Gtk.PolicyType.AUTOMATIC
+        assert page.action_clamp.get_width() <= window.get_width()
+
+        if not wide:
+            page.more_options_popover.popup()
+            _drain_gtk_main_context()
+            for button in page.action_buttons:
+                assert button.get_visible()
+                assert button.get_mapped()
+                assert button.get_focusable()
+            page.more_options_popover.popdown()
+    finally:
+        window.destroy()
