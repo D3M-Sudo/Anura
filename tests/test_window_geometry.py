@@ -143,7 +143,7 @@ def test_extracted_headerbar_keeps_the_compact_action_hierarchy() -> None:
     from pathlib import Path
 
     blueprint = Path("data/ui/extracted_page.blp").read_text(encoding="utf-8")
-    headerbar = blueprint.split("Adw.HeaderBar headerbar {", maxsplit=1)[1].split("\\n    }", maxsplit=1)[0]
+    headerbar = blueprint.split("Adw.HeaderBar headerbar {", maxsplit=1)[1].split("\n    }", maxsplit=1)[0]
     assert headerbar.count("[start]") <= 2
     assert headerbar.count("[end]") <= 1
 
