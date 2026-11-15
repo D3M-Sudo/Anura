@@ -112,3 +112,83 @@ class TestWidgets:
 
         dialog = PreferencesDialog()
         assert dialog is not None
+
+
+
+def _drain_gtk_main_context():
+    context = GLib.MainContext.default()
+    for _ in range(20):
+        if not context.pending():
+            break
+        context.iteration(False)
+
+
+def _present_welcome_page():
+    from anura.widgets.welcome_page import WelcomePage
+
+    window = Gtk.Window()
+    window.set_default_size(900, 600)
+    page = WelcomePage()
+    window.set_child(page)
+    window.present()
+    _drain_gtk_main_context()
+    return window, page
+
+
+@pytest.mark.gtk
+def test_welcome_initial_tab_focus_is_language_selector():
+    window, page = _present_welcome_page()
+    try:
+        assert window.child_focus(Gtk.DirectionType.TAB_FORWARD)
+        assert window.get_focus() is page.lang_combo
+    finally:
+        window.destroy()
+
+
+@pytest.mark.gtk
+def test_welcome_wide_action_focus_order():
+    window, page = _present_welcome_page()
+    try:
+        page._set_action_layout(True)
+        _drain_gtk_main_context()
+        page.screenshot_button.grab_focus()
+
+        assert window.child_focus(Gtk.DirectionType.TAB_FORWARD)
+        assert window.get_focus() is page.open_image_button
+    finally:
+        window.destroy()
+
+
+@pytest.mark.gtk
+def test_welcome_compact_action_focus_order():
+    window, page = _present_welcome_page()
+    try:
+        page._set_action_layout(False)
+        _drain_gtk_main_context()
+        page.screenshot_button.grab_focus()
+
+        assert window.child_focus(Gtk.DirectionType.TAB_FORWARD)
+        assert window.get_focus() is page.more_options_button
+    finally:
+        window.destroy()
+
+
+@pytest.mark.gtk
+def test_welcome_focus_restores_after_responsive_reparenting():
+    window, page = _present_welcome_page()
+    try:
+        page._set_action_layout(True)
+        _drain_gtk_main_context()
+        page.open_image_button.grab_focus()
+        page._set_action_layout(False)
+        _drain_gtk_main_context()
+        assert window.get_focus() is page.more_options_button
+
+        page.more_options_popover.popup()
+        _drain_gtk_main_context()
+        page.open_image_button.grab_focus()
+        page._set_action_layout(True)
+        _drain_gtk_main_context()
+        assert window.get_focus() is page.open_image_button
+    finally:
+        window.destroy()

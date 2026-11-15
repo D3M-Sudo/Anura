@@ -96,3 +96,49 @@ def test_anura_button_preserves_hover_active_focus_and_disabled_states():
 def test_screenshot_remains_the_welcome_page_suggested_action():
     screenshot_button = WELCOME_BLP.split("Button screenshot_button {", maxsplit=1)[1].split("};", maxsplit=1)[0]
     assert 'styles ["pill", "suggested-action", "anura-button"]' in screenshot_button
+
+
+
+def _blend(foreground: str, background: str, alpha: float) -> str:
+    channels = []
+    for index in (1, 3, 5):
+        front = int(foreground[index : index + 2], 16)
+        back = int(background[index : index + 2], 16)
+        channels.append(round(front * alpha + back * (1 - alpha)))
+    return "#" + "".join(f"{channel:02x}" for channel in channels)
+
+
+def test_focus_indicator_meets_graphical_contrast_on_light_and_dark_surfaces():
+    focus_color = _property(_rule(".anura-button:focus"), "outline-color")
+    assert focus_color == "@accent_color"
+    focus_color = _defined_color("accent_color")
+
+    for surface in ("#ffffff", "#f6f5f4", "#242424", "#353535"):
+        assert _contrast_ratio(focus_color, surface) >= 3.0
+
+
+def test_history_empty_state_icon_meets_contrast_on_light_and_dark_surfaces():
+    light_icon = _property(_rule(".history-empty-state image.icon"), "color")
+    dark_icon = _property(_rule(".dark .history-empty-state image.icon"), "color")
+    assert light_icon == "#0f7650"
+    assert dark_icon == "#21b77a"
+
+    for surface in ("#ffffff", "#f6f5f4"):
+        tinted_surface = _blend("#16a36a", surface, 0.12)
+        assert _contrast_ratio(light_icon, tinted_surface) >= 3.0
+
+    for surface in ("#242424", "#353535"):
+        tinted_surface = _blend("#16a36a", surface, 0.12)
+        assert _contrast_ratio(dark_icon, tinted_surface) >= 3.0
+
+
+def test_secondary_and_disabled_text_remain_theme_managed():
+    disabled = _rule(".anura-button:disabled")
+    assert "color:" not in disabled
+    assert ".dim-label" not in STYLE_CSS
+
+
+def test_processing_state_retains_semantic_warning_feedback():
+    processing = _rule("#drop_area.drag-processing")
+    assert "border-color: @warning_color" in processing
+    assert "background: alpha(@warning_color, 0.15)" in processing
