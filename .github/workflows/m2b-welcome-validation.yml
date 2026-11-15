@@ -105,6 +105,10 @@ jobs:
         run: |
           cat > /tmp/anura_pytest_with_resources.py <<'PY'
           import sys
+          from pathlib import Path
+
+          sys.path.insert(0, str(Path.cwd()))
+
           import pytest
           from anura.core.resources import load_gresource_bundle
 
