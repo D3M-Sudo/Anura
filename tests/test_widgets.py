@@ -63,6 +63,22 @@ class TestExtractedPageEnterprise:
         assert "0 words | 0 characters" in widget.stats_label.get_text()
 
     @pytest.mark.gtk
+    def test_hiding_preserves_extracted_text_until_next_result(self, widget):
+        """Navigation away preserves the current result; the next OCR result replaces it."""
+        widget.buffer.set_text("first OCR result")
+        go_back = MagicMock()
+        widget.connect("go-back", go_back)
+
+        widget.do_hiding()
+
+        assert widget.extracted_text == "first OCR result"
+        go_back.assert_called_once_with(widget, 1)
+
+        widget._set_text_internal("second OCR result", "")
+        assert widget.extracted_text == "second OCR result"
+
+
+    @pytest.mark.gtk
     def test_button_sensitivity(self, widget):
         """Test that action buttons are disabled when buffer is empty."""
         widget.buffer.set_text("   ")  # Whitespace only
