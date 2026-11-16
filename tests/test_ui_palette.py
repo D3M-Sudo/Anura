@@ -3,7 +3,15 @@
 #
 # SPDX-License-Identifier: MIT
 
-"""Regression tests for the GTK accent palette and button state styling."""
+"""Regression tests for the GTK palette and shared UI design conventions."""
+
+
+import re
+from pathlib import Path
+
+
+SPACING_SCALE = {4, 8, 12, 16, 24}
+RADIUS_SCALE = {6, 12, 9999}
 
 
 def _read_text(path: str) -> str:
@@ -146,3 +154,36 @@ def test_processing_state_retains_semantic_warning_feedback():
     processing = _rule("#drop_area.drag-processing")
     assert "border-color: @warning_color" in processing
     assert "background: alpha(@warning_color, 0.15)" in processing
+
+
+
+def test_blueprint_spacing_uses_the_shared_scale():
+    pattern = re.compile(r"(?:spacing|margin-(?:top|bottom|start|end)):\s*([0-9]+)\s*;")
+    for path in sorted(Path("data/ui").glob("*.blp")):
+        for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+            match = pattern.search(line)
+            if match:
+                value = int(match.group(1))
+                assert value in SPACING_SCALE, f"{path}:{line_number}: unsupported spacing {value}px"
+
+
+def test_stylesheet_spacing_uses_the_shared_scale():
+    pattern = re.compile(r"(?:padding|padding-(?:top|bottom|left|right)|margin|margin-(?:top|bottom|left|right))\s*:\s*([^;]+);")
+    for match in pattern.finditer(STYLE_CSS):
+        for raw_value in re.findall(r"(?<![\w.-])([0-9]+)px", match.group(1)):
+            value = int(raw_value)
+            assert value == 0 or value in SPACING_SCALE, f"unsupported stylesheet spacing {value}px"
+
+
+def test_custom_corner_radii_follow_the_shared_scale():
+    radii = {int(value) for value in re.findall(r"border-radius\s*:\s*([0-9]+)px", STYLE_CSS)}
+    assert radii
+    assert radii <= RADIUS_SCALE
+
+
+def test_custom_typography_keeps_libadwaita_semantic_hierarchy():
+    font_size_rules = re.findall(r"([^{}]+)\{[^{}]*font-size\s*:\s*([^;]+);[^{}]*\}", STYLE_CSS, re.DOTALL)
+    assert len(font_size_rules) == 1
+    selector, value = font_size_rules[0]
+    assert ".welcome-hero label.title-1" in selector
+    assert value.strip() == "1.15em"

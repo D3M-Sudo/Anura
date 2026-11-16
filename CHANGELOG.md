@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- UI: normalize application-authored spacing to the shared 4/8/12/16/24 px scale; retain Libadwaita semantic typography and existing custom corner-radius roles.
 - Extracted: preserve the current OCR result when navigating away; replace it only when a subsequent extraction completes.
 - History: retain the expanded entry and vertical scroll position when the list refreshes or the user returns to History during the same application session; this transient view state is not persisted across restarts.
 

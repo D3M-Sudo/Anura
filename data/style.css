@@ -5,6 +5,14 @@
 @define-color accent_bg_color #0F7650;
 @define-color accent_fg_color #FFFFFF;
 
+/* GTK CSS does not support CSS custom properties for numeric dimensions.
+   Shared spacing/radius conventions are documented and enforced by tests,
+   rather than expressed through unsupported var() declarations.
+
+   Spacing: 4, 8, 12, 16, 24 px.
+   Radius: 6 px (reserved), 12 px (custom surfaces), 9999 px (circle/pill).
+*/
+
 /* Welcome page hero: bigger icon/title than the Adwaita StatusPage
    default (measured default icon size: 128px), more breathing room. */
 .welcome-hero {
@@ -16,7 +24,7 @@
     -gtk-icon-size: 136px;
 }
 .welcome-hero label.title-1 {
-    font-size: 1.15em;
+    font-size: 1.15em; /* Intentional hero emphasis; retains title-1 semantics. */
 }
 
 /* Text accents use a separate shade in each color scheme to retain WCAG AA
@@ -36,7 +44,7 @@
     background-color: alpha(@accent_color, 0.12);
     color: #0F7650;
     border-radius: 9999px;
-    padding: 20px;
+    padding: 24px;
 }
 
 .dark .history-empty-state image.icon {
@@ -50,7 +58,7 @@
 /* Lang Selector */
 .search_box {
   background: @popover_bg_color;
-  padding: 6px;
+  padding: 8px;
 }
 
 .lang-selector list {
@@ -59,11 +67,11 @@
 }
 
 .lang-selector row {
-  margin-top: 2px;
+  margin-top: 4px;
 }
 
 .lang-selector separator {
-  margin: 0 6px;
+  margin: 0 8px;
 }
 
 /* Modern animations and transitions */
