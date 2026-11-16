@@ -579,7 +579,7 @@ class TestAccessibilityEnhancementsEnterprise:
     @pytest.mark.gtk
     def test_language_row_context_accessibility(self):
         """Verify LanguageRow dynamically updates tooltips and accessibility labels based on assigned language."""
-        from anura.widgets.language_row import LanguageRow
+        from anura.widgets.language_row import LanguageRow  # noqa: E402
 
         row = LanguageRow()
         item = LanguageItem(code="ita", title="Italian")
