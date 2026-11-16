@@ -38,7 +38,9 @@ else:
     )
 
 from anura.models.language_item import LanguageItem  # noqa: E402
+from anura.services.history_service import HistoryService  # noqa: E402
 from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
+from anura.widgets.history_page import HistoryPage  # noqa: E402
 from anura.widgets.welcome_page import WelcomePage  # noqa: E402
 
 
@@ -687,3 +689,115 @@ class TestAccessibilityEnhancementsEnterprise:
             res = widget._on_drop_area_key_pressed(None, Gdk.KEY_Escape, 0, 0)
             assert res is True
             assert widget.drop_revealer.get_reveal_child() is False
+
+
+class TestNavigationStateIntegration:
+    """Real GTK navigation tests for the M2 Extracted and History state policies."""
+
+    @pytest.mark.gtk
+    def test_extracted_result_survives_navigation_round_trip(self):
+        welcome = Adw.NavigationPage.new(Gtk.Label(label="Welcome"), "Welcome")
+        welcome.set_tag("welcome")
+        extracted = ExtractedPage()
+        extracted.set_tag("extracted")
+
+        navigation = Adw.NavigationView()
+        navigation.set_animate_transitions(False)
+        navigation.add(welcome)
+        navigation.add(extracted)
+        window = Gtk.Window()
+        window.set_child(navigation)
+        window.present()
+        context = GLib.MainContext.default()
+
+        try:
+            assert TestWelcomePageEnterprise._spin_until(context, lambda: navigation.get_visible_page_tag() == "welcome")
+            extracted.buffer.set_text("retained OCR result")
+            navigation.push_by_tag("extracted")
+            assert TestWelcomePageEnterprise._spin_until(
+                context, lambda: navigation.get_visible_page_tag() == "extracted"
+            )
+
+            navigation.pop_to_tag("welcome")
+            assert TestWelcomePageEnterprise._spin_until(
+                context, lambda: navigation.get_visible_page_tag() == "welcome"
+            )
+            assert extracted.extracted_text == "retained OCR result"
+
+            navigation.push_by_tag("extracted")
+            assert TestWelcomePageEnterprise._spin_until(
+                context, lambda: navigation.get_visible_page_tag() == "extracted"
+            )
+            assert extracted.extracted_text == "retained OCR result"
+        finally:
+            window.destroy()
+
+    @pytest.mark.gtk
+    def test_history_navigation_restores_expansion_and_scroll_in_session(self, tmp_path):
+        service = HistoryService(base_dir=tmp_path)
+        for index in range(40):
+            service.record(f"entry {index:02d} " + ("stored OCR content " * 12), "eng")
+
+        welcome = Adw.NavigationPage.new(Gtk.Label(label="Welcome"), "Welcome")
+        welcome.set_tag("welcome")
+        history = HistoryPage()
+        history.set_tag("history")
+        history.settings = MagicMock()
+        history.settings.get_boolean.return_value = True
+        history.setup(service)
+
+        navigation = Adw.NavigationView()
+        navigation.set_animate_transitions(False)
+        navigation.add(welcome)
+        navigation.add(history)
+        window = Gtk.Window()
+        window.set_default_size(900, 600)
+        window.set_child(navigation)
+        window.present()
+        context = GLib.MainContext.default()
+
+        try:
+            assert TestWelcomePageEnterprise._spin_until(context, lambda: navigation.get_visible_page_tag() == "welcome")
+            navigation.push_by_tag("history")
+            assert TestWelcomePageEnterprise._spin_until(
+                context, lambda: navigation.get_visible_page_tag() == "history"
+            )
+
+            scrolled_window = history.history_list.get_ancestor(Gtk.ScrolledWindow)
+            adjustment = scrolled_window.get_vadjustment()
+            assert TestWelcomePageEnterprise._spin_until(
+                context, lambda: adjustment.get_upper() > adjustment.get_page_size()
+            )
+
+            entry = service.get_entries()[10]
+            expanded_row = history._row_entry_ids[entry.id]
+            expanded_row.set_expanded(True)
+            assert TestWelcomePageEnterprise._spin_until(context, lambda: history._open_row is expanded_row)
+
+            target_scroll = min(150.0, adjustment.get_upper() - adjustment.get_page_size())
+            adjustment.set_value(target_scroll)
+            assert TestWelcomePageEnterprise._spin_until(
+                context, lambda: abs(adjustment.get_value() - target_scroll) < 1.0
+            )
+
+            navigation.pop_to_tag("welcome")
+            assert TestWelcomePageEnterprise._spin_until(
+                context, lambda: navigation.get_visible_page_tag() == "welcome"
+            )
+            history.refresh()
+            navigation.push_by_tag("history")
+
+            def state_restored():
+                restored_row = history._row_entry_ids.get(entry.id)
+                return (
+                    navigation.get_visible_page_tag() == "history"
+                    and restored_row is not None
+                    and history._open_row is restored_row
+                    and restored_row.get_expanded()
+                    and abs(adjustment.get_value() - target_scroll) < 1.0
+                )
+
+            assert TestWelcomePageEnterprise._spin_until(context, state_restored)
+        finally:
+            window.destroy()
+            history.cleanup()
