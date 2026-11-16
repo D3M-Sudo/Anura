@@ -332,6 +332,8 @@ def _widget_lifecycle_state(widget, include_measure: bool = True) -> dict:
         "mapped": widget.get_mapped(),
         "sensitive": widget.is_sensitive(),
         "size": (widget.get_width(), widget.get_height()),
+        "size_request": widget.get_size_request(),
+        "request_mode": str(widget.get_request_mode()),
         "parent": type(parent).__name__ if parent is not None else None,
         "root": type(root).__name__ if root is not None else None,
     }
@@ -881,6 +883,23 @@ def test_welcome_responsive_layout_uses_allocated_viewport(screen_width: int, sc
                         f"menu-button:notify::{name}", widget
                     ),
                 )
+            ancestor = page.more_options_button.get_parent()
+            while ancestor is not None:
+                for signal in ("realize", "map", "unmap", "unrealize"):
+                    ancestor.connect(
+                        signal,
+                        lambda widget, *_args, name=signal: record_popover_transition(
+                            f"ancestor:{name}", widget
+                        ),
+                    )
+                for prop in ("visible", "child-visible", "realized", "mapped", "width", "height"):
+                    ancestor.connect(
+                        f"notify::{prop}",
+                        lambda widget, *_args, name=prop: record_popover_transition(
+                            f"ancestor:notify::{name}", widget
+                        ),
+                    )
+                ancestor = ancestor.get_parent()
             activated = page.more_options_button.activate()
             popover_events.append(f"widget-activate:returned={activated}")
             _drain_gtk_main_context()
