@@ -334,8 +334,19 @@ The [global roadmap](2026-11-16-anura-ui-modernization-global-roadmap.md) is the
 
 - M0-C global backlog/document reconciliation is complete. The current programme status is M0 Completed; M1–M4 Partial; M5 Not started as a complete phase; M6–M7 Partial.
 - M1-02 conventions, M1-03 audit and M1-04 semantic-color/scanner/theme-test work are complete within their bounded scopes. M1 remains globally Partial pending cross-surface adoption audit.
-- The next recommended global candidate is **M1-05, a read-only cross-surface Design System audit**. It requires its own bounded task proposal and explicit approval. This is not an authorization to implement M1-06 or any other work.
+- **M1-05 is now completed** as a read-only cross-surface Design System audit; see [the audit report](../../audit/ui-design-system-m1-05-2026-11-16.md). The next conditional global candidate is M1-06, limited to F1 reduced-motion handling for the separate Shortcuts window and F2 production-tree color-scanner CI enforcement. M1-06 requires its own bounded proposal and explicit approval; no implementation is authorized.
 - Earlier sections in this roadmap and older task plans may contain historical “next task” directions that predate completed work. Preserve them as historical records; where they conflict with the current snapshot, the global roadmap and this reconciliation note supersede them.
 - Exact-SHA CI history remains unchanged. The latest previously verified documentation head was `37b00668452272e993eb5fd1723402362da8c7e7`, with CI #43956668829 and CodeQL #43956668787 successful on that exact SHA. Those results must not be attributed to later M0-C commits unless rerun.
 - Manual GNOME/GTK visual, Orca/AT-SPI, manual keyboard and live multi-monitor checks remain excluded; screenshot capture remains deferred to the next release cycle.
 - PR #648 remains Open/Draft/unmerged, targeting `feature`; this documentation update does not alter PR metadata or state.
+
+
+## M1-05 — Cross-surface Design System audit (2026-11-16)
+
+- **Outcome:** read-only audit completed. Detailed evidence and the surface matrix are in [M1-05 audit report](../../audit/ui-design-system-m1-05-2026-11-16.md).
+- Reviewed source snapshot `fb1bcbe89f0ce982fc4adad60630a5a88496dd1`: 14 Blueprint templates, 15 Python UI modules, main window/application, reduced-motion utility, CSS, design-system guide and relevant tests/CI definitions.
+- Positive baseline: shared spacing/radius conventions are statically guarded; the documented 6 px Welcome exception and 1.15em hero typography exception are explicit; native GTK4/Libadwaita patterns are used broadly.
+- Findings: **F1 Medium** — separate `ShortcutsOverlay` window does not receive the main window's reduced-motion CSS class despite applying `.anura-fade-in`; **F2 Medium** — scanner fixture tests do not invoke the scanner against the production tree in CI; **F3 Low** — apparently orphaned custom CSS selectors; **F4 Low** — `title`/`h4` typography classes are not mapped in the design-system guide.
+- **M1 remains Partial.** M1-06 is conditional and must be separately scoped/approved; it should address F1 and F2 only unless further evidence justifies expanding scope. F3/F4 are deferred.
+- No application source, tests, workflows, CHANGELOG, dependencies, OCR behavior, architecture, PR metadata or protected branches changed. No tests or CI were run for this audit; manual GNOME/GTK visual, Orca/AT-SPI and keyboard checks remain excluded.
+- PR #648 state is unchanged: Open/Draft/unmerged, base `feature`, head branch `fix/ui-modernization-aligned`.
