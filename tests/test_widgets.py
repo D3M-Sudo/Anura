@@ -1092,6 +1092,7 @@ class TestShortcutsOverlayReducedMotion:
             assert not overlay.has_css_class("reduced-motion")
             assert overlay.has_css_class("anura-fade-in")
             assert overlay.has_css_class("anura-card")
+            assert overlay._on_close_request(overlay) is False
         finally:
             overlay.destroy()
 
@@ -1118,6 +1119,7 @@ class TestShortcutsOverlayReducedMotion:
                 "notify::gtk-enable-animations",
                 overlay._on_motion_settings_changed,
             )
+            assert overlay._on_close_request(overlay) is False
         finally:
             overlay.destroy()
 
