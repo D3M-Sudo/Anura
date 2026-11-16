@@ -77,7 +77,6 @@ class TestExtractedPageEnterprise:
         widget._set_text_internal("second OCR result", "")
         assert widget.extracted_text == "second OCR result"
 
-
     @pytest.mark.gtk
     def test_button_sensitivity(self, widget):
         """Test that action buttons are disabled when buffer is empty."""
