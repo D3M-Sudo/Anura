@@ -6,9 +6,12 @@ This document transfers the context required to continue the UI modernization wo
 
 This handover records the adapted implementation and its remaining validation. The modernization work is now present on `fix/ui-modernization-aligned`; it was adapted against `feature` rather than copied wholesale from PR #448.
 
-> **Progress tracking:** the authoritative task status, next steps and mandatory per-task update rule are maintained in [the UI modernization roadmap](docs/superpowers/plans/2026-11-16-anura-ui-modernization-roadmap.md). This handover remains the technical/history record; update the roadmap after every completed task before starting another.
+> **Roadmap hierarchy:** the [Global Anura UI/UX Modernization Roadmap](docs/superpowers/plans/2026-11-16-anura-ui-modernization-global-roadmap.md) is the primary plan for the complete application-wide M0–M7 modernization, all windows/components and global requirement traceability. The [PR #648 workstream roadmap](docs/superpowers/plans/2026-11-16-anura-ui-modernization-roadmap.md) is subordinate and preserves detailed implementation/task/CI evidence for that PR only. This handover remains the technical/history record. After every completed task, update the global roadmap—and the PR #648 workstream roadmap when relevant—before starting another task.
 
 ## Current Git state
+
+- **Global modernization plan:** [M0–M7 Global Roadmap](docs/superpowers/plans/2026-11-16-anura-ui-modernization-global-roadmap.md).
+- **PR #648 detailed workstream:** [PR #648 Roadmap](docs/superpowers/plans/2026-11-16-anura-ui-modernization-roadmap.md). Its completion records only the contribution made by this PR and is not evidence that all application windows have been modernized.
 
 - Repository: `D3M-Sudo/Anura`
 - Working branch: `fix/ui-modernization-aligned`
