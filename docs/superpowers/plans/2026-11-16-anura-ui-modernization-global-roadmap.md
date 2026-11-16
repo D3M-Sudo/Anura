@@ -85,7 +85,7 @@ Status values are evidence-based: **Not started**, **In progress**, **Partial**,
 | Phase | Scope | Exit condition | Current status |
 |---|---|---|---|
 | M0 | Full application audit | Complete inventory of windows/components/states/functions; current behavior, visual/functional/accessibility/architecture/performance/Linux-compatibility findings; prioritized requirements and traceability baseline | **Completed — M0-A inventory, M0-B traceability/evidence reconciliation and M0-C prioritized backlog/document reconciliation are complete. The programme proceeds to M1-05; this does not imply that all M0 findings are implemented.** |
-| M1 | Design System and themes | Approved shared palette/tokens and reusable patterns; typography/spacing/component rules; automatic/light/dark and force-light/force-dark behavior verified | **Partial — M1-02 conventions, M1-03 semantic-color audit and M1-04 scanner, downloaded-language style linkage and GTK theme-transition coverage are complete within their bounded scopes; cross-surface Design System adoption and any justified residual corrections remain** |
+| M1 | Design System and themes | Approved shared palette/tokens and reusable patterns; typography/spacing/component rules; automatic/light/dark and force-light/force-dark behavior verified | **Partial — M1-02 conventions, M1-03 audit, M1-04 implementation and M1-05 cross-surface audit are complete within bounded scopes. M1-05 recorded two Medium gaps (reduced-motion handling in the separate Shortcuts window; production-tree color-scanner CI enforcement) for a separately approved M1-06; low-priority CSS/typography cleanup remains deferred.** |
 | M2 | Welcome and main navigation | Welcome and main-shell/navigation experience meet responsive, visual, interaction and focus criteria | **Partial — M2-A through M2-E audits and M2-D/M2-F targeted lifecycle fixes completed; M2-F exact-head CI and CodeQL passed. The phase remains partial pending broader Welcome/main-shell criteria and global M2 exit conditions** |
 | M3 | Extracted and History | Extracted/OCR and History surfaces consistently modernized without functional regressions | **Partial — Extracted header/action area and scroll protections exist; History modernization is not established as complete** |
 | M4 | Preferences and languages | General, Languages, Editor, Voice and language selector meet shared visual, responsive, lifecycle and accessibility criteria | **Partial — Preferences split and selected lifecycle work exist; full page and language-selector audit remains** |
@@ -99,8 +99,8 @@ M0-C consolidated the operational backlog. The task list is a planning baseline,
 
 | ID | Priority | Task / boundary | Dependencies | Exit criteria |
 |---|---|---|---|---|
-| M1-05 | P1 | Read-only audit of Design System adoption across all UI surfaces: tokens, typography, spacing, radii, semantic colors, component patterns and theme behavior. | M1-04 | Surface matrix, evidence-backed findings and explicit acceptable/gap/deferred dispositions. |
-| M1-06 | P1, conditional | Address only demonstrated Design System gaps; implementation scope and files require separate approval. | M1-05 and explicit approval | Approved findings corrected with regression tests and exact-SHA CI; if no justified gap exists, record why no implementation is required. |
+| M1-05 | P1 | **Completed** — read-only cross-surface audit; report: [M1-05 audit](../../audit/ui-design-system-m1-05-2026-11-16.md). | M1-04 | 14 Blueprint templates, 15 Python UI modules and related styles/docs/tests inventoried; findings F1–F4 recorded with priorities and evidence limits. |
+| M1-06 | P1, conditional | Prepare a bounded implementation proposal for F1 reduced-motion propagation to the separate Shortcuts window and F2 production-tree color-scanner CI enforcement. No implementation is authorized. | M1-05 and explicit approval | Approved fixes have targeted regression coverage and exact-SHA CI; F3 orphaned CSS selectors and F4 typography-role mapping remain low-priority/deferred unless separately justified. |
 | M2-01 | P1 | Complete the residual Welcome/main-shell audit, including navigation, states and focus affordances. | M2-E, M2-F | Requirement-to-surface matrix, findings and test gaps; separate automated evidence from excluded manual checks. |
 | M3-01 | P1 | Full Extracted and History audit: states, actions, scrolling, list/row/empty/confirmation behavior. | M1-05 | Surface/state inventory, behavior-preservation map, findings and test gaps; no OCR internals or mockup-only features. |
 | M4-01 | P1 | Full Preferences and language-selector audit across General, Editor, Voice, Languages and asynchronous states. | M1-05 | Page/state matrix, lifecycle/accessibility findings and test gaps; preserve settings semantics. |
@@ -202,7 +202,7 @@ This table maps the global requirements to the current known PR #648 contributio
 
 | Global requirement / surface | PR #648 contribution known today | Remaining global work / disposition |
 |---|---|---|
-| Green palette and runtime stylesheet | Green semantic palette, GResource CSS provider registration, palette/contrast tests | M1 must audit shared tokens, all surfaces and all theme modes |
+| Green palette and runtime stylesheet | Green semantic palette, GResource CSS provider registration, palette/contrast tests; M1-05 cross-surface audit recorded targeted gaps | M1-06 proposal for reduced-motion coverage in Shortcuts and production-tree color-scanner enforcement; manual/pixel validation remains excluded |
 | Welcome primary/secondary actions | Screenshot primary; Open/Paste/Drop responsive grouping | Complete remaining M2 audit of navigation and all states |
 | Welcome responsiveness and scrolling | Adaptive actions, scroll container, focus restoration; constrained-viewport test passed in recorded CI | Extend M6 coverage only where M0 identifies gaps in other windows |
 | Main window geometry | Monitor-aware clamp, monitor-change handling, normal-size persistence | M2/M6 audit other windows and geometry constraints; no universal dock-aware guarantee |
@@ -555,3 +555,17 @@ After every completed task, append/update the relevant phase and record:
 - Manual GNOME/GTK visual checks, real Orca/AT-SPI, manual keyboard checks and live multi-monitor geometry verification remain excluded. Screenshots remain deferred to the next release cycle.
 - No application source, tests, workflows, CHANGELOG, PR metadata, protected branches, OCR behavior, dependencies or architecture were changed by M0-C.
 - PR #648 was rechecked during this task: Open, Draft, unmerged, base `feature`, head branch `fix/ui-modernization-aligned`. No PR state transition or merge was performed.
+
+
+## M1-05 — Cross-surface Design System audit (2026-11-16)
+
+- **Status: Completed — read-only audit.** Report: [M1-05 cross-surface Design System audit](../../audit/ui-design-system-m1-05-2026-11-16.md).
+- Source snapshot inspected: `fb1bcbe89f0ce982fc4adad60630a5a88496dd1`. Coverage: 14 Blueprint templates, 15 Python UI modules, main window/application, reduced-motion utility, stylesheet, Design System guide and relevant test/CI definitions.
+- **Pass / acceptable:** documented spacing scale is statically checked across all 14 Blueprint templates and CSS; custom radii remain within the documented scale; the 1.15em Welcome hero typography exception is documented; the 6 px compact-action spacing exception is documented and guarded; native Libadwaita controls are used consistently across Preferences and most surfaces.
+- **F1 — Medium:** reduced-motion CSS class is applied to the main `AnuraWindow`, but the separate `ShortcutsOverlay(Adw.Window)` receives app-authored `.anura-fade-in` and `.anura-card` classes without the reduced-motion class. Recommend a targeted fix and regression test.
+- **F2 — Medium:** scanner unit tests exercise temporary fixtures, but no inspected test or CI command invokes the scanner against the production repository tree and fails on unclassified color literals. Recommend a production-tree CI gate with a reviewed path/value rationale map.
+- **F3 — Low:** apparently unreferenced CSS selectors recorded in the report; defer cleanup pending confirmation that no dynamic consumer exists.
+- **F4 — Low:** `title` and `h4` typography classes are not mapped in the design-system guide; their use is not classified as a defect without checking toolkit semantics.
+- **M1 remains Partial.** M1-06 is the next conditional candidate, limited to F1/F2 and subject to a separate bounded proposal and explicit approval. F3/F4 remain deferred.
+- No tests or workflows were run for M1-05; this is static source/test-definition inspection only. No runtime rendering, manual GNOME/GTK visual, Orca/AT-SPI or manual keyboard checks are claimed. Live multi-monitor checks remain excluded; screenshots remain deferred.
+- No application source, tests, workflows, CHANGELOG, dependencies, OCR behavior, architecture, protected branches or PR metadata were modified. PR #648 remains Open/Draft/unmerged, base `feature`, head branch `fix/ui-modernization-aligned`.
