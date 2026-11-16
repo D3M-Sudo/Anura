@@ -85,7 +85,7 @@ Status values are evidence-based: **Not started**, **In progress**, **Partial**,
 | Phase | Scope | Exit condition | Current status |
 |---|---|---|---|
 | M0 | Full application audit | Complete inventory of windows/components/states/functions; current behavior, visual/functional/accessibility/architecture/performance/Linux-compatibility findings; prioritized requirements and traceability baseline | **Partial — M0-A inventory and M0-B traceability/evidence reconciliation completed; M0-C prioritization and remaining audit synthesis are next** |
-| M1 | Design System and themes | Approved shared palette/tokens and reusable patterns; typography/spacing/component rules; automatic/light/dark and force-light/force-dark behavior verified | **Partial — green palette/runtime CSS implemented in PR #648; app-wide system audit and theme coverage remain** |
+| M1 | Design System and themes | Approved shared palette/tokens and reusable patterns; typography/spacing/component rules; automatic/light/dark and force-light/force-dark behavior verified | **Partial — M1-A/M1-B read-only audit completed; green palette/runtime CSS and three-mode preference mapping exist, but full token consolidation, cross-surface theme coverage and automated runtime theme verification remain** |
 | M2 | Welcome and main navigation | Welcome and main-shell/navigation experience meet responsive, visual, interaction and focus criteria | **Partial — Welcome and selected shell behavior implemented in PR #648; full navigation audit and acceptance remain** |
 | M3 | Extracted and History | Extracted/OCR and History surfaces consistently modernized without functional regressions | **Partial — Extracted header/action area and scroll protections exist; History modernization is not established as complete** |
 | M4 | Preferences and languages | General, Languages, Editor, Voice and language selector meet shared visual, responsive, lifecycle and accessibility criteria | **Partial — Preferences split and selected lifecycle work exist; full page and language-selector audit remains** |
@@ -219,8 +219,9 @@ The subordinate document [2026-11-16-anura-ui-modernization-roadmap.md](2026-11-
 1. **GLOBAL-00 — Establish the roadmap hierarchy and reconcile references.** This task creates this global document, identifies the PR #648 roadmap as subordinate and updates the handover links. Documentation-only; no application code or PR state changes.
 2. **M0-A — Complete the current-tree UI inventory.** **Completed 2026-11-16** in read-only mode; details and limitations are recorded below.
 3. **M0-B — Requirement and evidence reconciliation.** **Completed 2026-11-16** in read-only mode; details and limitations are recorded below.
-4. **M0-C — Prioritize the phase backlog.** Next: synthesize M0-A/M0-B findings into bounded, dependency-ordered tasks with acceptance criteria and test plans for maintainer approval.
-5. Proceed through M1–M7 in dependency order. The maintainer must explicitly approve each implementation task before code changes.
+4. **M0-C — Prioritize the phase backlog.** The bounded, dependency-ordered M1–M7 audit/implementation backlog was synthesized and reviewed in chat on 2026-11-16. Its roadmap record remains separate from this M1 audit update; no implementation was authorized by backlog review.
+5. **M1-A/M1-B — Design-system and theme audit.** **Completed 2026-11-16** in read-only mode; findings and evidence limits are recorded below. M1 remains Partial because design-system consolidation and app-wide runtime theme coverage are not complete.
+6. **Next permitted task: M2-A — Welcome and main-navigation audit**, grouped as the next read-only audit workstream. No code changes are authorized.
 
 No application-code task is authorized by GLOBAL-00 or by the existence of this roadmap.
 
@@ -271,6 +272,19 @@ After every completed task, append/update the relevant phase and record:
 - **M0 status:** remains **Partial** until M0-C produces the prioritized, bounded backlog and remaining audit synthesis. M0-A and M0-B are complete; no implementation task is authorized by their completion.
 - **Next permitted task:** M0-C planning only; no application-code changes are authorized by this record.
 
+### 2026-11-16 — M1-A/M1-B: design-system and theme audit completed
+
+- **Outcome:** completed as a read-only source/test audit on `fix/ui-modernization-aligned`. No application code, tests, workflows, PR metadata, protected branches or packaging files were changed; no tests or CI were run.
+- **Audited source:** `data/style.css`, `anura/main.py`, `data/io.github.d3m_sudo.anura.gschema.xml`, `data/ui/preferences_general.blp`, and `tests/test_ui_palette.py`; existing roadmap and PR #648 metadata were also checked for context.
+- **M1-A — Design system:** the application has a GResource-loaded GTK stylesheet and an existing green palette. The inspected primary accent tokens are `accent_color: #16A36A`, `accent_bg_color: #0F7650` and `accent_fg_color: #FFFFFF`. Existing CSS also uses GTK/Libadwaita semantic colors and component-specific selectors. This is a useful foundation, but not evidence of a fully centralized design-token system.
+- **M1-A findings:** (1) shared token coverage appears partial; (2) component-specific color declarations/selectors need a complete usage audit; (3) typography, spacing and radii consistency has not yet been established; (4) CSS class usage and possible dead/duplicated rules need source-to-template tracing. These are audit findings/open questions, not confirmed defects.
+- **M1-B — Theme handling:** GSettings defines `default`, `force-light` and `force-dark`; Preferences General exposes the color-scheme choice. Application startup applies the configured scheme and connects to `changed::color-scheme` for subsequent updates. The inspected code therefore establishes the preference mapping and runtime update path.
+- **M1-B findings:** `tests/test_ui_palette.py` provides static palette/contrast assertions for selected UI elements. The inspected evidence does not establish an automated runtime test that switches the actual Libadwaita color scheme and verifies all relevant application surfaces. Cross-window theme coverage remains unproven.
+- **Recommended direction (not implementation authorization):** retain the approved green/teal identity and existing semantic GTK colors; centralize only genuinely shared values; avoid replacing theme-managed colors with unnecessary hardcoded values; trace CSS selectors to their consumers before cleanup; add automated runtime theme coverage for `default`, `force-light` and `force-dark` across applicable surfaces.
+- **Evidence limits:** this was a source/test inspection, not a runtime visual audit. No contrast recalculation beyond the existing test source, GTK rendering, test execution or CI result is claimed. Manual GNOME/GTK visual checks, Orca/AT-SPI and manual keyboard checks remain excluded, not passed.
+- **M1 disposition:** M1-A and M1-B audit activities are complete; the M1 phase remains **Partial** pending design-system decisions/implementation, broader token and component coverage, and automated cross-surface theme verification.
+- **Next permitted task:** M2-A Welcome and main-navigation read-only audit. Implementation still requires a separate explicit approval.
+
 ## 9. Change log
 
 ### 2026-11-16 — GLOBAL-00: global roadmap consolidated
@@ -300,3 +314,10 @@ After every completed task, append/update the relevant phase and record:
 - Recorded the completed structural UI inventory (M0-A), requirement/evidence reconciliation (M0-B), priority findings, CI evidence boundary and tool limitations.
 - Updated the M0 status and execution sequence: M0 remains partial; M0-C backlog prioritization is next.
 - Documentation-only roadmap update on `fix/ui-modernization-aligned`; no application code, workflows, tests, protected branches, PR state or merge state changed. No CI run is claimed.
+
+### 2026-11-16 — M1-A/M1-B audit record
+
+- Recorded the read-only design-system/CSS and theme-mode audit, including existing green tokens, GSettings mode mapping, runtime update path, test coverage boundary and unresolved app-wide coverage.
+- M1 remains Partial: audit activities are complete, but design-system consolidation and automated cross-surface runtime theme verification remain.
+- Updated the next permitted task to M2-A, read-only Welcome and main-navigation audit.
+- Documentation-only update on `fix/ui-modernization-aligned`; no application code, tests, workflows, protected branches or PR metadata changed. No CI run is claimed.
