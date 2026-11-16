@@ -226,3 +226,31 @@ Append or update the relevant task record before starting the next task:
 - **Global M2 phase:** remains Partial. This workstream does not complete broader Welcome/main-shell requirements or the full M0–M7 modernization.
 - **Manual checks:** GNOME/GTK visual checks, real Orca/AT-SPI and manual keyboard-navigation checks remain explicitly excluded, not passed or pending blockers.
 - **PR:** [#648](https://github.com/D3M-Sudo/Anura/pull/648) remains Open, Draft, unmerged, targeting `feature`. No protected branch was modified.
+
+
+## UI-13 — M2-E Welcome and main-shell residual-gap audit (2026-11-16)
+
+**Status:** Completed — read-only audit and documentation record only.
+
+### Welcome disposition
+
+- Screenshot remains the primary action; Open Image, Paste Image and Drop Image remain the same secondary controls, reparented according to measured preferred widths.
+- Existing implementation/test coverage addresses 360×600, 640×480, 900×600 and 1280×800; constrained-height scrolling; responsive focus preservation; drag/drop; and language-selector accessible naming/state updates.
+- No broad Welcome rewrite or additional feature is justified by this audit.
+
+### Main-shell findings
+
+1. **High — History TTS lifecycle:** History row playback starts through `HistoryPage._on_tts_clicked()`. The explicit stop is in `AnuraWindow.show_welcome_page()`; standard `Adw.NavigationView` back navigation from History does not necessarily call that method. Playback can continue after returning to Welcome. This is the primary M2-F functional correction candidate.
+2. **Medium — route integration:** no end-to-end test was found for the actual `AnuraWindow` History-open/back route.
+3. **Medium — focus:** focus restoration across the actual History → Welcome route is not covered end-to-end.
+4. **Geometry:** helper/policy tests exist for sizing, monitor selection and persistence. The maintainer explicitly declined live multi-monitor geometry verification; no such test is planned or required.
+
+### Evidence and limits
+
+- Inspected `AnuraWindow`, `WelcomePage`, `HistoryPage`, `TtsController`, Blueprint templates and related Welcome/navigation/geometry test sources on pre-recording head `97a42a0c17252cc2a36be563e87255cb2d306e63`.
+- No source, test, workflow or CHANGELOG file was modified. No tests or CI were run for this audit.
+- Manual GNOME/GTK visual, real Orca/AT-SPI and manual keyboard checks remain excluded, not passed or blockers.
+- Context7 Libadwaita navigation documentation was consulted. AI Delivery Evidence Checker structured the criteria; its combined verdict call returned `out_of_scope`, so no combined checker verdict is claimed.
+- PR #648 was verified Open/Draft/unmerged, base `feature`; no protected branch or PR metadata was changed.
+
+**Next permitted task:** define the bounded M2-F implementation/test plan and request explicit approval before implementation. Do not add live multi-monitor verification.
