@@ -86,7 +86,7 @@ Status values are evidence-based: **Not started**, **In progress**, **Partial**,
 |---|---|---|---|
 | M0 | Full application audit | Complete inventory of windows/components/states/functions; current behavior, visual/functional/accessibility/architecture/performance/Linux-compatibility findings; prioritized requirements and traceability baseline | **Partial — M0-A inventory and M0-B traceability/evidence reconciliation completed; M0-C prioritization and remaining audit synthesis are next** |
 | M1 | Design System and themes | Approved shared palette/tokens and reusable patterns; typography/spacing/component rules; automatic/light/dark and force-light/force-dark behavior verified | **Partial — M1-A/M1-B read-only audit completed; green palette/runtime CSS and three-mode preference mapping exist, but full token consolidation, cross-surface theme coverage and automated runtime theme verification remain** |
-| M2 | Welcome and main navigation | Welcome and main-shell/navigation experience meet responsive, visual, interaction and focus criteria | **Partial — M2-A/M2-B audits and M2-C bounded integration-test proposal completed 2026-11-16; implementation and execution of navigation/state-restoration tests, plus remaining shell acceptance evidence, are not established** |
+| M2 | Welcome and main navigation | Welcome and main-shell/navigation experience meet responsive, visual, interaction and focus criteria | **Partial — M2-A/M2-B audits and M2-C proposal completed; M2-D implementation is in progress on 2026-11-16. Extracted text retention and History in-session view-state restoration are implemented with regression tests; current-commit CI and full GTK navigation-path evidence remain pending** |
 | M3 | Extracted and History | Extracted/OCR and History surfaces consistently modernized without functional regressions | **Partial — Extracted header/action area and scroll protections exist; History modernization is not established as complete** |
 | M4 | Preferences and languages | General, Languages, Editor, Voice and language selector meet shared visual, responsive, lifecycle and accessibility criteria | **Partial — Preferences split and selected lifecycle work exist; full page and language-selector audit remains** |
 | M5 | Other windows and components | Shortcuts, About, dialogs, popovers, menus, notifications, banners and toasts audited and addressed where justified | **Not started as a complete phase — Shortcuts received limited resizing work; app-wide coverage is unverified** |
@@ -224,7 +224,7 @@ The subordinate document [2026-11-16-anura-ui-modernization-roadmap.md](2026-11-
 6. **M2-A — Welcome and main-navigation read-only audit. Completed 2026-11-16**; findings and evidence limits are recorded below. No code changes were made.
 7. **M2-B — focused read-only verification of complete NavigationView transition paths and state restoration. Completed 2026-11-16**; findings and evidence limits are recorded below. No code changes were made.
 8. **M2-C — bounded automated integration-test proposal. Completed 2026-11-16 (planning only).** The two navigation paths, focus/side-effect assertions and maintainer-approved state-retention policies are specified in the task record below. No implementation was authorized.
-9. **Next permitted task: M2-D — present a bounded implementation scope, affected files, acceptance criteria and CI test plan for the M2-C proposal; obtain separate explicit approval before changing source/tests/workflows.**
+9. **M2-D — implement the approved Extracted and History navigation-state policies, add automated regression tests, update CHANGELOG and record exact CI evidence. In progress 2026-11-16; implementation approval received.**
 
 No application-code task is authorized by GLOBAL-00 or by the existence of this roadmap.
 
@@ -383,3 +383,18 @@ After every completed task, append/update the relevant phase and record:
 - Recorded the read-only NavigationView transition/state-restoration audit, including OCR and History paths, current side effects, existing test coverage and missing end-to-end evidence.
 - M2 remains Partial. Next permitted task is M2-C, a planning-only proposal for bounded automated integration tests; implementation still requires separate explicit approval.
 - Documentation-only update on `fix/ui-modernization-aligned`; no application code, tests, workflows, protected branches, PR metadata or merge state changed. No CI run is claimed.
+
+
+### 2026-11-16 — M2-D implementation record (CI pending)
+
+- **Outcome:** implementation in progress; the functional changes and first regression tests have been committed, but this task is not complete until current-head CI and test results are inspected.
+- **Approved behavior:** Extracted text remains available when navigating away and is replaced by the next OCR result (decision 1C). History retains the expanded entry and vertical scroll position across refresh/navigation in the current process only; no disk persistence or new settings (decision 2C).
+- **Files changed so far:** `anura/widgets/extracted_page.py`, `anura/widgets/history_page.py`, `tests/test_widgets.py`, `tests/test_history_ui.py`, `CHANGELOG.md`.
+- **Implementation details:** removed buffer clearing from `ExtractedPage.do_hiding()`; added stable entry-ID mapping and generation-guarded idle restoration of the expanded History row and vertical adjustment after refresh.
+- **Regression tests added:** GTK widget test for Extracted retention/replacement; headless History tests for refresh snapshot, row expansion/scroll restoration and stale/removed-entry safety.
+- **Branch:** `fix/ui-modernization-aligned`. The implementation and test commits are on this authorized branch only. The branch head will be recorded after CI-triggering documentation updates are complete.
+- **Tests / CI:** no test execution or current-head CI result is claimed yet. GitHub Actions is the execution environment; the existing GTK integration job has `NO_AT_BRIDGE=1` and `GTK_A11Y=none`, so it cannot establish real Orca/AT-SPI behavior.
+- **Limitations:** full live AnuraWindow end-to-end navigation/focus assertions remain to be assessed; manual GNOME/GTK visual, real Orca/AT-SPI and manual keyboard checks remain excluded, not passed.
+- **PR / protected branches:** PR #648 must remain Draft/open/unmerged. No protected branch is modified; no merge is authorized.
+- **Next permitted activity:** finish bounded regression coverage, update subordinate evidence record, inspect the CI run on the exact resulting head and correct any failures before declaring M2-D complete.
+- **Global roadmap updated:** yes; this record precedes further task work.
