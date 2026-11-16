@@ -58,11 +58,12 @@ class ShortcutsOverlay(Adw.Window):
     def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
 
-        self._motion_settings: Gtk.Settings | None = Gtk.Settings.get_for_display(self.get_display())
+        motion_settings = Gtk.Settings.get_for_display(self.get_display())
+        self._motion_settings: Gtk.Settings | None = motion_settings
         self._motion_handler_ids: list[int] = []
         for setting_name in ("gtk-enable-animations", "gtk-interface-reduced-motion"):
-            if self._motion_settings.find_property(setting_name) is not None:
-                handler_id = self._motion_settings.connect(
+            if motion_settings.find_property(setting_name) is not None:
+                handler_id = motion_settings.connect(
                     f"notify::{setting_name}",
                     self._on_motion_settings_changed,
                 )
