@@ -792,7 +792,6 @@ class TestNavigationStateIntegration:
             window.destroy()
             history.cleanup()
 
-
     @pytest.mark.gtk
     def test_navigation_to_extracted_acquires_text_view_focus(self):
         from anura.window import AnuraWindow
