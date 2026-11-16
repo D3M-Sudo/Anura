@@ -1,6 +1,8 @@
-# Anura UI Modernization Roadmap
+# Anura UI Modernization Roadmap — PR #648 Workstream
 
-> **Scope:** UI modernization work represented by [PR #648](https://github.com/D3M-Sudo/Anura/pull/648) only. This roadmap is the authoritative progress register for that work. It does not absorb other UI/UX issues or pull requests in Anura.
+> **Roadmap hierarchy:** the [Global Anura UI/UX Modernization Roadmap](2026-11-16-anura-ui-modernization-global-roadmap.md) is primary and covers all application windows and components. This file is subordinate and records the PR #648 workstream only. Completing tasks here does not, by itself, complete a global M0–M7 phase.
+
+> **Scope:** subordinate execution and evidence register for the PR #648 workstream only. The authoritative application-wide scope, phase plan M0–M7, progress status and requirement traceability live in the [Global Anura UI/UX Modernization Roadmap](2026-11-16-anura-ui-modernization-global-roadmap.md). This document preserves the detailed PR #648 implementation history and must not be interpreted as the complete modernization plan.
 
 **Repository:** `D3M-Sudo/Anura`  
 **Working branch:** `fix/ui-modernization-aligned`  
@@ -30,6 +32,12 @@
 - GTK Integration Tests: **431 passed, 5 skipped, 632 deselected, 2 warnings**. The constrained-viewport Welcome scrolling regression passed. The run's job logs are the source of truth for detailed results.
 - The latest workflow correction uses Xvfb-backed Weston X11 and verifies the Wayland seat exposes pointer and keyboard capabilities before GTK tests. The latest run passed the popup activation tests.
 - No merge, release publication or protected-branch update is authorized.
+
+## Relationship to the global M0–M7 plan
+
+This workstream contributes implementation/evidence to global M1 (Design System), M2 (Welcome/navigation), M3 (Extracted/History), M4 (Preferences/languages), and M6 (responsive/accessibility), with CI evidence contributing to M7. Contributions are partial at application-wide level unless the global roadmap explicitly records the corresponding requirement as satisfied. In particular, this workstream does not establish completion of History, language selector, About, dialogs, popovers, menus, banners/toasts or notifications.
+
+The global roadmap owns phase status and app-wide prioritization. This document owns detailed PR #648 task records, commits, CI evidence and workstream-specific follow-ups. When a task changes a global requirement status, update both documents before starting the next task.
 
 ## Progress overview
 
@@ -169,3 +177,13 @@ Append or update the relevant task record before starting the next task:
 - The latest full application CI evidence remains run [#43801048308](https://github.com/D3M-Sudo/Anura/actions/runs/43801048308) on the prior application/workflow head `cc8aaad6601f25b9e96f3d2eb9f78bc9fb3c524d`. The two commits in this roadmap-publication step are documentation-only; no claim is made that CI ran on the new documentation head.
 - UI-07 remains the next task. Only the HANDOVER roadmap link is complete; palette/accessibility plan reconciliation and PR description correction remain outstanding.
 - **Roadmap updated before proceeding:** yes. No subsequent task has started.
+
+
+### 2026-11-16 — Roadmap hierarchy aligned with global plan
+
+- Reframed this document as the subordinate PR #648 implementation/evidence register.
+- Linked the primary [Global Anura UI/UX Modernization Roadmap](2026-11-16-anura-ui-modernization-global-roadmap.md), which restores the full approved M0–M7 scope across all application windows and components.
+- Clarified that PR #648 contributions are partial at global phase level unless the global traceability matrix explicitly marks a requirement satisfied.
+- No application source, CI workflow, PR state or protected branch was changed by this documentation update.
+- Global roadmap creation commit: `7683f8ea733f8218eb223b2f710291a87592a514`.
+- This workstream document is updated before proceeding; UI-07 remains the next detailed workstream task (documentation reconciliation), and global M0-A remains the next application-wide audit task after explicit approval.
