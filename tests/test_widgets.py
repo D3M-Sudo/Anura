@@ -717,7 +717,7 @@ class TestNavigationStateIntegration:
             extracted.buffer.set_text("retained OCR result")
             navigation.push_by_tag("extracted")
             assert TestWelcomePageEnterprise._spin_until(
-                context, lambda: navigation.get_visible_page_tag() == "extracted"
+                context, lambda: navigation.get_visible_page() is extracted
             )
 
             navigation.pop_to_tag("welcome")
@@ -728,7 +728,7 @@ class TestNavigationStateIntegration:
 
             navigation.push_by_tag("extracted")
             assert TestWelcomePageEnterprise._spin_until(
-                context, lambda: navigation.get_visible_page_tag() == "extracted"
+                context, lambda: navigation.get_visible_page() is extracted
             )
             assert extracted.extracted_text == "retained OCR result"
         finally:
