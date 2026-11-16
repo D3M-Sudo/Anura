@@ -602,6 +602,7 @@ def test_welcome_compact_popover_geometry_diagnostic(
         # callbacks does not guarantee that the frame clock has reallocated children.
         parent.queue_resize()
         window.queue_resize()
+
         def trigger_was_reallocated() -> bool:
             available, current_bounds = page.more_options_button.compute_bounds(window)
             return available and abs(current_bounds.origin.y - before_bounds.origin.y) > 1
