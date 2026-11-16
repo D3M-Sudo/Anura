@@ -214,9 +214,7 @@ def _probe_minimal_popover() -> dict:
                 "visible": popover.get_visible(),
                 "mapped": popover.get_mapped(),
                 "surface_mapped": surface.get_mapped() if surface is not None else None,
-                "surface_size": (
-                    (surface.get_width(), surface.get_height()) if surface is not None else None
-                ),
+                "surface_size": ((surface.get_width(), surface.get_height()) if surface is not None else None),
             },
             "events": events,
         }
