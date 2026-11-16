@@ -835,113 +835,137 @@ class TestNavigationStateIntegration:
 
 
 class TestHistoryTtsNavigationLifecycle:
-    """The real Adw.NavigationView visible-page signal owns History TTS cleanup."""
+    """The real AnuraWindow and Adw.NavigationView own History TTS cleanup."""
 
     @staticmethod
-    def _build_navigation_harness():
+    def _build_window():
         from anura.window import AnuraWindow
 
-        welcome = Adw.NavigationPage.new(Gtk.Label(label="Welcome"), "Welcome")
-        welcome.set_tag("welcome")
-        extracted = Adw.NavigationPage.new(Gtk.Label(label="Extracted"), "Extracted")
-        extracted.set_tag("extracted")
-        history = Adw.NavigationPage.new(Gtk.Label(label="History"), "History")
-        history.set_tag("history")
-
-        navigation = Adw.NavigationView()
-        navigation.set_animate_transitions(False)
-        navigation.add(welcome)
-        navigation.add(extracted)
-        navigation.add(history)
-
-        harness = MagicMock()
-        harness.navigation_view = navigation
-        harness.history_page = history
-        harness.tts_controller = MagicMock()
-        harness._previous_navigation_page = navigation.get_visible_page()
-        navigation.connect(
-            "notify::visible-page",
-            lambda view, pspec: AnuraWindow._on_navigation_visible_page_changed(harness, view, pspec),
+        app = Gtk.Application(
+            application_id="io.github.d3msudo.anura.M2FTest",
+            flags=Gio.ApplicationFlags.NON_UNIQUE,
         )
-        return navigation, welcome, extracted, history, harness
+        app.register(None)
+        app.settings = MagicMock()
+        app.settings.get_string.return_value = "eng"
+        app.settings.get_int.return_value = 10
+
+        language_manager = MagicMock()
+        language_manager.get_language_item.return_value = LanguageItem(code="eng", title="English")
+
+        with (
+            patch("gi.repository.Gtk.Application.get_default", return_value=app),
+            patch("anura.window.get_language_manager", return_value=language_manager),
+            patch("anura.window.get_share_service", return_value=MagicMock()),
+            patch("anura.window.get_clipboard_service", side_effect=RuntimeError("clipboard unavailable")),
+            patch("anura.window.HistoryService", return_value=MagicMock()),
+            patch("anura.window.HistoryController", return_value=MagicMock()),
+            patch("anura.window.TtsController") as tts_factory,
+            patch("anura.window.OcrController", return_value=MagicMock()),
+            patch("anura.window.DndController", return_value=MagicMock()),
+            patch.object(AnuraWindow, "_setup_geometry"),
+            patch.object(AnuraWindow, "_apply_capability_constraints"),
+            patch.object(HistoryPage, "setup"),
+        ):
+            tts_controller = tts_factory.return_value
+            window = AnuraWindow(application=app, backend=MagicMock())
+
+        window.history_page.refresh = MagicMock()
+        return window, tts_controller
 
     @pytest.mark.gtk
     def test_leaving_history_for_welcome_stops_tts(self):
-        navigation, welcome, _extracted, history, harness = self._build_navigation_harness()
-        window = Gtk.Window()
-        window.set_child(navigation)
+        window, tts_controller = self._build_window()
         window.present()
         context = GLib.MainContext.default()
 
         try:
-            assert TestWelcomePageEnterprise._spin_until(context, lambda: navigation.get_visible_page() is welcome)
-            navigation.push_by_tag("history")
-            assert TestWelcomePageEnterprise._spin_until(context, lambda: navigation.get_visible_page() is history)
-            harness.tts_controller.stop.reset_mock()
+            assert TestWelcomePageEnterprise._spin_until(
+                context, lambda: window.navigation_view.get_visible_page() is window.welcome_page
+            )
+            window.show_history_page()
+            assert TestWelcomePageEnterprise._spin_until(
+                context, lambda: window.navigation_view.get_visible_page() is window.history_page
+            )
+            tts_controller.stop.reset_mock()
 
-            navigation.pop_to_tag("welcome")
-            assert TestWelcomePageEnterprise._spin_until(context, lambda: navigation.get_visible_page() is welcome)
-            harness.tts_controller.stop.assert_called_once_with()
+            # Use NavigationView's native back path, not show_welcome_page().
+            window.navigation_view.pop_to_tag("welcome")
+            assert TestWelcomePageEnterprise._spin_until(
+                context, lambda: window.navigation_view.get_visible_page() is window.welcome_page
+            )
+            tts_controller.stop.assert_called_once_with()
         finally:
             window.destroy()
 
     @pytest.mark.gtk
     def test_leaving_history_for_extracted_stops_tts(self):
-        navigation, welcome, extracted, history, harness = self._build_navigation_harness()
-        window = Gtk.Window()
-        window.set_child(navigation)
+        window, tts_controller = self._build_window()
         window.present()
         context = GLib.MainContext.default()
 
         try:
-            assert TestWelcomePageEnterprise._spin_until(context, lambda: navigation.get_visible_page() is welcome)
-            navigation.push_by_tag("history")
-            assert TestWelcomePageEnterprise._spin_until(context, lambda: navigation.get_visible_page() is history)
-            harness.tts_controller.stop.reset_mock()
+            assert TestWelcomePageEnterprise._spin_until(
+                context, lambda: window.navigation_view.get_visible_page() is window.welcome_page
+            )
+            window.show_history_page()
+            assert TestWelcomePageEnterprise._spin_until(
+                context, lambda: window.navigation_view.get_visible_page() is window.history_page
+            )
+            tts_controller.stop.reset_mock()
 
-            navigation.push_by_tag("extracted")
-            assert TestWelcomePageEnterprise._spin_until(context, lambda: navigation.get_visible_page() is extracted)
-            harness.tts_controller.stop.assert_called_once_with()
+            window.navigation_view.push_by_tag("extracted")
+            assert TestWelcomePageEnterprise._spin_until(
+                context, lambda: window.navigation_view.get_visible_page() is window.extracted_page
+            )
+            tts_controller.stop.assert_called_once_with()
         finally:
             window.destroy()
 
     @pytest.mark.gtk
     def test_entering_and_remaining_in_history_does_not_stop_tts(self):
-        navigation, welcome, _extracted, history, harness = self._build_navigation_harness()
-        window = Gtk.Window()
-        window.set_child(navigation)
+        window, tts_controller = self._build_window()
         window.present()
         context = GLib.MainContext.default()
 
         try:
-            assert TestWelcomePageEnterprise._spin_until(context, lambda: navigation.get_visible_page() is welcome)
-            harness.tts_controller.stop.reset_mock()
-            navigation.push_by_tag("history")
-            assert TestWelcomePageEnterprise._spin_until(context, lambda: navigation.get_visible_page() is history)
-            harness.tts_controller.stop.assert_not_called()
+            assert TestWelcomePageEnterprise._spin_until(
+                context, lambda: window.navigation_view.get_visible_page() is window.welcome_page
+            )
+            tts_controller.stop.reset_mock()
+            window.show_history_page()
+            assert TestWelcomePageEnterprise._spin_until(
+                context, lambda: window.navigation_view.get_visible_page() is window.history_page
+            )
+            tts_controller.stop.assert_not_called()
 
-            harness.tts_controller.stop.reset_mock()
-            assert navigation.get_visible_page() is history
-            harness.tts_controller.stop.assert_not_called()
+            # History-local refresh leaves visible-page unchanged.
+            window.history_page.refresh()
+            tts_controller.stop.assert_not_called()
         finally:
             window.destroy()
 
     @pytest.mark.gtk
     def test_leaving_history_stops_even_if_tts_was_already_idle(self):
-        navigation, welcome, _extracted, history, harness = self._build_navigation_harness()
-        window = Gtk.Window()
-        window.set_child(navigation)
+        window, tts_controller = self._build_window()
         window.present()
         context = GLib.MainContext.default()
 
         try:
-            assert TestWelcomePageEnterprise._spin_until(context, lambda: navigation.get_visible_page() is welcome)
-            navigation.push_by_tag("history")
-            assert TestWelcomePageEnterprise._spin_until(context, lambda: navigation.get_visible_page() is history)
-            harness.tts_controller.stop.reset_mock()
+            assert TestWelcomePageEnterprise._spin_until(
+                context, lambda: window.navigation_view.get_visible_page() is window.welcome_page
+            )
+            window.show_history_page()
+            assert TestWelcomePageEnterprise._spin_until(
+                context, lambda: window.navigation_view.get_visible_page() is window.history_page
+            )
+            tts_controller.stop.reset_mock()
 
-            navigation.pop_to_tag("welcome")
-            assert TestWelcomePageEnterprise._spin_until(context, lambda: navigation.get_visible_page() is welcome)
-            harness.tts_controller.stop.assert_called_once_with()
+            # stop() remains safe to call when no speech is active; one page exit means one call.
+            window.navigation_view.pop_to_tag("welcome")
+            assert TestWelcomePageEnterprise._spin_until(
+                context, lambda: window.navigation_view.get_visible_page() is window.welcome_page
+            )
+            tts_controller.stop.assert_called_once_with()
         finally:
             window.destroy()
