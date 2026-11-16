@@ -105,7 +105,7 @@ def test_ignores_comments_and_non_ui_files(tmp_path: Path):
         "data/style.css",
         """
         /* #badc0de */
-        // #deadbeef
+        /* #deadbeef */
         .real { color: #123456; }
         """,
     )
