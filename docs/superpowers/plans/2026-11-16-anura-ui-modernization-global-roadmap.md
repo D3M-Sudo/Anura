@@ -495,4 +495,6 @@ After every completed task, append/update the relevant phase and record:
 - **Execution boundary:** no tests were run during this audit. Historical CI #43907544843 passed on implementation SHA `6dece44cd3deb57fc43cb276db4a291a771e9584`; it is not a new run on audit head `f5225e2e82973db63822ca8b3b26cf13619b907a`. Manual GNOME/GTK visual, Orca/AT-SPI and manual keyboard checks remain excluded, not passed or blockers.
 - **Repository state:** PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`. No protected branch or PR metadata was modified.
 
-**Next:** prepare a bounded M1-04 proposal for the semantic-color consolidation and automated-coverage gaps. No implementation is authorized until separately approved.
+**M1-04 design proposal (2026-11-16):** approach B selected by the maintainer. Design document created at [`docs/superpowers/specs/2026-11-16-m1-04-semantic-colors-design.md`](../specs/2026-11-16-m1-04-semantic-colors-design.md), commit `b724f2688475bfd94e03c6e085863bfbc066c80c`. It defines conditional adoption of Libadwaita `.success`, semantic color consolidation, a classified hardcoded-color scanner and automated transitions across `default`, `force-light` and `force-dark`. This is design-only; implementation and test changes remain unauthorized pending design approval and a separately reviewed implementation plan.
+
+**Next:** obtain maintainer approval of the M1-04 design, then prepare the implementation plan. No implementation is authorized until the plan is separately approved.
