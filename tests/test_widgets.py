@@ -711,25 +711,17 @@ class TestNavigationStateIntegration:
         context = GLib.MainContext.default()
 
         try:
-            assert TestWelcomePageEnterprise._spin_until(
-                context, lambda: navigation.get_visible_page() is welcome
-            )
+            assert TestWelcomePageEnterprise._spin_until(context, lambda: navigation.get_visible_page() is welcome)
             extracted.buffer.set_text("retained OCR result")
             navigation.push_by_tag("extracted")
-            assert TestWelcomePageEnterprise._spin_until(
-                context, lambda: navigation.get_visible_page() is extracted
-            )
+            assert TestWelcomePageEnterprise._spin_until(context, lambda: navigation.get_visible_page() is extracted)
 
             navigation.pop_to_tag("welcome")
-            assert TestWelcomePageEnterprise._spin_until(
-                context, lambda: navigation.get_visible_page() is welcome
-            )
+            assert TestWelcomePageEnterprise._spin_until(context, lambda: navigation.get_visible_page() is welcome)
             assert extracted.extracted_text == "retained OCR result"
 
             navigation.push_by_tag("extracted")
-            assert TestWelcomePageEnterprise._spin_until(
-                context, lambda: navigation.get_visible_page() is extracted
-            )
+            assert TestWelcomePageEnterprise._spin_until(context, lambda: navigation.get_visible_page() is extracted)
             assert extracted.extracted_text == "retained OCR result"
         finally:
             window.destroy()
@@ -759,13 +751,9 @@ class TestNavigationStateIntegration:
         context = GLib.MainContext.default()
 
         try:
-            assert TestWelcomePageEnterprise._spin_until(
-                context, lambda: navigation.get_visible_page() is welcome
-            )
+            assert TestWelcomePageEnterprise._spin_until(context, lambda: navigation.get_visible_page() is welcome)
             navigation.push_by_tag("history")
-            assert TestWelcomePageEnterprise._spin_until(
-                context, lambda: navigation.get_visible_page() is history
-            )
+            assert TestWelcomePageEnterprise._spin_until(context, lambda: navigation.get_visible_page() is history)
 
             scrolled_window = history.history_list.get_ancestor(Gtk.ScrolledWindow)
             adjustment = scrolled_window.get_vadjustment()
@@ -785,9 +773,7 @@ class TestNavigationStateIntegration:
             )
 
             navigation.pop_to_tag("welcome")
-            assert TestWelcomePageEnterprise._spin_until(
-                context, lambda: navigation.get_visible_page() is welcome
-            )
+            assert TestWelcomePageEnterprise._spin_until(context, lambda: navigation.get_visible_page() is welcome)
             history.refresh()
             navigation.push_by_tag("history")
 
