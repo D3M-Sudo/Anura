@@ -1004,7 +1004,8 @@ class TestThemeModeIntegration:
         language_manager.loading_languages = set()
         with patch("anura.widgets.language_row.get_language_manager", return_value=language_manager):
             language_row = LanguageRow()
-        language_row.item = LanguageItem(code="ita", title="Italian")
+            language_row.item = LanguageItem(code="ita", title="Italian")
+            language_row.update_ui()
 
         history_page = HistoryPage()
         empty_page = history_page.history_stack.get_child_by_name("empty")
@@ -1025,7 +1026,6 @@ class TestThemeModeIntegration:
         context = GLib.MainContext.default()
 
         try:
-            language_row.update_ui()
             assert language_row.has_css_class("downloaded")
             assert empty_status_page.has_css_class("history-empty-state")
             assert focus_button.has_css_class("anura-button")
