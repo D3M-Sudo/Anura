@@ -167,8 +167,6 @@ def test_processing_state_retains_semantic_warning_feedback():
     assert "background: alpha(@warning_color, 0.15)" in processing
 
 
-
-
 def test_blueprint_spacing_uses_the_shared_scale():
     for path in BLUEPRINT_FILES:
         for line_number, line in enumerate(_read_text(path).splitlines(), start=1):
@@ -180,8 +178,18 @@ def test_blueprint_spacing_uses_the_shared_scale():
 
 
 def test_stylesheet_spacing_uses_the_shared_scale():
-    properties = ("padding:", "padding-top:", "padding-bottom:", "padding-left:", "padding-right:",
-                  "margin:", "margin-top:", "margin-bottom:", "margin-left:", "margin-right:")
+    properties = (
+        "padding:",
+        "padding-top:",
+        "padding-bottom:",
+        "padding-left:",
+        "padding-right:",
+        "margin:",
+        "margin-top:",
+        "margin-bottom:",
+        "margin-left:",
+        "margin-right:",
+    )
     for line in STYLE_CSS.splitlines():
         stripped = line.strip()
         for property_name in properties:
