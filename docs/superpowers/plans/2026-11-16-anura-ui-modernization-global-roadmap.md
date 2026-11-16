@@ -405,3 +405,32 @@ After every completed task, append/update the relevant phase and record:
 - **Branch / PR:** implementation and tests are on `fix/ui-modernization-aligned`; PR [#648](https://github.com/D3M-Sudo/Anura/pull/648) remains Open, Draft, unmerged, base `feature`. No protected branch was modified and no merge/release was performed.
 - **Scope boundary:** M2-D's bounded behavior and automated checks are complete; this does not complete the full global M2 phase or M0–M7 programme. Broader Welcome/main-shell, cross-window and application-wide criteria remain tracked above.
 - **Next permitted activity:** proceed to the next separately scoped M2/global roadmap task only after this evidence record is committed. Manual GNOME/GTK visual, Orca/AT-SPI and manual keyboard checks remain excluded by maintainer decision.
+
+
+### M2-E — Welcome and main-shell residual-gap audit (2026-11-16; read-only)
+
+**Outcome:** audit completed; no source, test, workflow, CHANGELOG or PR metadata changes. The audit was performed against branch `fix/ui-modernization-aligned` at the pre-recording head `97a42a0c17252cc2a36be563e87255cb2d306e63`.
+
+**Welcome — substantially covered; no redesign justified by this audit**
+
+- Screenshot remains the primary action; Open Image, Paste Image and Drop Image are the same secondary actions reparented between the homogeneous row and More options according to measured preferred widths.
+- Existing implementation and automated tests cover the four reference viewports (360×600, 640×480, 900×600, 1280×800), constrained-height scrolling, responsive focus preservation, drop-target behavior and language-selector accessible naming/state updates.
+- Existing loading/status and error feedback paths were inspected. No concrete Welcome-page defect justifying a broad rewrite was established.
+
+**Main shell — findings**
+
+- **M2-E-01 / High — History TTS lifecycle:** History rows can start TTS through `HistoryPage._on_tts_clicked()`. The explicit stop is currently performed by `AnuraWindow.show_welcome_page()`, but the standard `Adw.NavigationView` back path from History does not necessarily invoke that application method. Returning to Welcome from History can therefore leave playback active. This is a functional gap requiring a bounded follow-up.
+- **M2-E-02 / Medium — actual navigation integration coverage:** no end-to-end test was found for the real `AnuraWindow` History-open/back route. Existing tests cover synthetic NavigationView paths or mocked window interactions, not the complete route.
+- **M2-E-03 / Medium — focus restoration:** focus across the actual History → Welcome route is not covered end-to-end. Existing focused tests cover Welcome responsive reparenting and Extracted focus behavior, not this route.
+- **Geometry coverage:** existing tests exercise sizing/monitor-selection helpers and persistence policy. A live multi-monitor geometry test is explicitly **not requested and will not be added**, by maintainer decision. This is not an open task or blocker.
+
+**Verification boundaries**
+
+- This was a source/test audit only. No new tests were run and no CI was triggered; prior CI results remain tied to their recorded commits.
+- Manual GNOME/GTK visual checks, real Orca/AT-SPI checks and manual keyboard-navigation checks remain **excluded**, neither passed nor blockers.
+- Context7 documentation was consulted for Libadwaita navigation behavior; it confirms the standard back action/gesture is part of `Adw.NavigationView` navigation. This supports the distinction between framework back navigation and the application's explicit `show_welcome_page()` method.
+- AI Delivery Evidence Checker was used to structure the audit requirements. Its evidence checks are secondary and do not replace source inspection; its combined verdict endpoint returned `out_of_scope`, so no combined verdict is claimed.
+
+**Disposition:** Welcome remains substantially covered. The next justified work is a bounded M2-F plan for History → Welcome TTS stop and real `AnuraWindow` navigation/focus integration tests. No live multi-monitor verification is in scope.
+
+**Repository governance:** PR [#648](https://github.com/D3M-Sudo/Anura/pull/648) was verified Open, Draft, unmerged, base `feature`; no protected branch was modified. The PR must remain Draft/open/unmerged.
