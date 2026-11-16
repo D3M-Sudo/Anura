@@ -336,3 +336,19 @@ Read-only audit completed on `fix/ui-modernization-aligned` at pre-recording hea
 - PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`.
 - No protected branch or PR metadata was modified; no merge or release was performed.
 - The next task requires a bounded plan and separate explicit approval.
+
+
+## M1-02 — GTK4/Libadwaita design conventions (2026-11-16)
+
+- **Outcome:** M1-02 completed; global M1 remains Partial.
+- Added `docs/ui-design-system.md` documenting semantic typography roles, spacing scale (4/8/12/16/24 px), custom corner-radius roles, native control hierarchy, theme compatibility and GTK CSS limitations.
+- Normalized Blueprint and GTK CSS spacing and added four static regression tests in `tests/test_ui_palette.py`. Updated `CHANGELOG.md`.
+- Preserved one documented 6 px gap in the Welcome compact screenshot action. Changing it to 8 px caused three narrow-viewport GTK integration regressions; the 6 px exception is guarded by the new regression test.
+- No OCR engines/pipelines/models, architecture, dependencies, portal or OS integration were changed. No manual visual, Orca/AT-SPI or manual keyboard verification is claimed.
+- Implementation range: `b4f8c0798933fb410dd4bf24cb808e183aba932a` → `6dece44cd3deb57fc43cb276db4a291a771e9584`.
+- GitHub Actions [#43907544843](https://github.com/D3M-Sudo/Anura/actions/runs/43907544843) succeeded on the exact head: Python **634 passed, 6 skipped, 277 deselected**; GTK **441 passed, 5 skipped, 640 deselected, 2 warnings**; Changelog integrity, AppImage x86_64/aarch64, Flatpak x86_64/aarch64 and release artifact validations passed. `publish-release` skipped as expected.
+- CodeQL [#43907544861](https://github.com/D3M-Sudo/Anura/actions/runs/43907544861) succeeded on the same SHA.
+- AI Delivery Evidence Checker: delivery criteria supported; test-evidence assessment partial and combined verdict `needs_more_evidence` due to its inability to inspect code/run CI and a mismatch treating documentation criterion C7 as a runtime-test criterion. CI logs and source/diff were independently inspected; checker output is not treated as a code audit.
+- PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`. No merge or release occurred.
+
+**Next:** prepare a bounded M1-03 semantic-color role audit plan; no implementation until separately approved.

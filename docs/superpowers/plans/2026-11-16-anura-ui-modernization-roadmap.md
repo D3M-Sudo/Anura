@@ -50,12 +50,13 @@ The global roadmap owns phase status and app-wide prioritization. This document 
 | UI-04 | M2-B T2 green Design System palette and stylesheet loading | **Implemented; evidence recorded** | Implementation and palette tests exist. The palette plan's checkboxes are stale (all unchecked); reconcile its execution record rather than treating the checkboxes as proof of unfinished code. |
 | UI-05 | M2-B T3 shell geometry and resizability | **Completed** | Monitor-aware sizing, normal-state size persistence and resizable Preferences/Shortcuts behavior have implementation and regression evidence. |
 | UI-06 | M2-B T4 accessibility A1–A5 | **Completed** | Accessibility implementation and tests are recorded; manual assistive-technology checks remain excluded. |
-| UI-07 | Reconcile handover, subordinate plans and PR description with current state | **Next** | Correct stale status/evidence and contradictions without changing application code or PR state. |
+| UI-07 | Reconcile handover, subordinate plans and PR description with current state | **Partial / approval-limited** | Global and subordinate roadmaps plus HANDOVER are being reconciled; the PR description remains unchanged because PR metadata changes require separate explicit approval. |
 | UI-08 | Audit original modernization requirements against the final PR diff | **Pending** | Trace every accepted original requirement to implementation/test/evidence or an explicit rejection/deferment. |
 | UI-09 | Define the next development task and obtain maintainer approval | **Blocked pending UI-08** | Do not invent a feature or infer authorization from this roadmap. |
 | UI-10 | Implement the next explicitly approved task | **Not started** | Must use an approved execution approach and task-level acceptance criteria. |
 | UI-11 | Review, run CI and validate delivery evidence | **Not started** | Run after UI-10 or any later implementation task; record exact results and limitations. |
 | UI-12 | Update this roadmap after every completed task | **Mandatory recurring control** | Execute after each task, before starting another. This is not a one-time final task. |
+| UI-13 | M1-02 GTK4/Libadwaita typography, spacing and radius conventions | **Completed** | Design conventions documented, Blueprint/CSS spacing normalized, four static regression tests added; exact-head CI and CodeQL passed. See the M1-02 record below. |
 
 ## Completed work — scope and evidence
 
@@ -277,3 +278,19 @@ Append or update the relevant task record before starting the next task:
 ### PR state
 
 PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`. No protected branch, PR metadata or release state was changed.
+
+
+## M1-02 — GTK4/Libadwaita design conventions (2026-11-16)
+
+- **Outcome:** completed for the M1-02 scope. This is a contribution to global M1, not closure of the whole Design System phase.
+- **Changed files:** `docs/ui-design-system.md`, `data/style.css`, `data/ui/extracted_page.blp`, `data/ui/language_popover.blp`, `data/ui/language_popover_row.blp`, `data/ui/language_row.blp`, `data/ui/share_row.blp`, `data/ui/welcome_page.blp`, `tests/test_ui_palette.py`, `CHANGELOG.md`.
+- The design document specifies Libadwaita semantic typography, spacing values 4/8/12/16/24 px, custom radius roles, native control hierarchy and theme compatibility, including GTK CSS numeric-token limitations.
+- Four static regression tests cover Blueprint spacing, GTK stylesheet spacing, custom corner radii and the semantic typography exception.
+- The Welcome compact screenshot action retains a documented 6 px spacing exception: 8 px caused three responsive GTK test failures by increasing the compact action width. The regression test enforces that this exception remains documented.
+- **Implementation range:** `b4f8c0798933fb410dd4bf24cb808e183aba932a` → `6dece44cd3deb57fc43cb276db4a291a771e9584` (8 commits).
+- **CI:** [#43907544843](https://github.com/D3M-Sudo/Anura/actions/runs/43907544843) success on exact head. Python: 634 passed, 6 skipped, 277 deselected. GTK: 441 passed, 5 skipped, 640 deselected, 2 warnings. Changelog integrity, AppImage x86_64/aarch64, Flatpak x86_64/aarch64 and release-artifact validations passed; publish-release skipped as expected.
+- **CodeQL:** [#43907544861](https://github.com/D3M-Sudo/Anura/actions/runs/43907544861) success on the same SHA.
+- No manual visual, Orca/AT-SPI or manual keyboard verification is claimed. No OCR/pipeline/model, architecture, dependency, portal or OS integration changes were made.
+- PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`.
+
+**Next:** prepare a bounded M1-03 semantic-color role audit plan for review. The PR description remains unchanged pending separate approval for PR metadata edits.

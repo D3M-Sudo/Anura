@@ -85,7 +85,7 @@ Status values are evidence-based: **Not started**, **In progress**, **Partial**,
 | Phase | Scope | Exit condition | Current status |
 |---|---|---|---|
 | M0 | Full application audit | Complete inventory of windows/components/states/functions; current behavior, visual/functional/accessibility/architecture/performance/Linux-compatibility findings; prioritized requirements and traceability baseline | **Partial — M0-A inventory and M0-B traceability/evidence reconciliation completed; M0-C prioritization and remaining audit synthesis are next** |
-| M1 | Design System and themes | Approved shared palette/tokens and reusable patterns; typography/spacing/component rules; automatic/light/dark and force-light/force-dark behavior verified | **Partial — M1-A/M1-B read-only audit completed; green palette/runtime CSS and three-mode preference mapping exist, but full token consolidation, cross-surface theme coverage and automated runtime theme verification remain** |
+| M1 | Design System and themes | Approved shared palette/tokens and reusable patterns; typography/spacing/component rules; automatic/light/dark and force-light/force-dark behavior verified | **Partial — M1-A/M1-B audit and M1-02 typography/spacing/radius conventions completed; broader semantic-color/component coverage and automated cross-surface runtime theme verification remain** |
 | M2 | Welcome and main navigation | Welcome and main-shell/navigation experience meet responsive, visual, interaction and focus criteria | **Partial — M2-A through M2-E audits and M2-D/M2-F targeted lifecycle fixes completed; M2-F exact-head CI and CodeQL passed. The phase remains partial pending broader Welcome/main-shell criteria and global M2 exit conditions** |
 | M3 | Extracted and History | Extracted/OCR and History surfaces consistently modernized without functional regressions | **Partial — Extracted header/action area and scroll protections exist; History modernization is not established as complete** |
 | M4 | Preferences and languages | General, Languages, Editor, Voice and language selector meet shared visual, responsive, lifecycle and accessibility criteria | **Partial — Preferences split and selected lifecycle work exist; full page and language-selector audit remains** |
@@ -114,6 +114,8 @@ Status values are evidence-based: **Not started**, **In progress**, **Partial**,
 6. Add automated palette, contrast and theme-role regression coverage.
 
 **M1 deliverables:** design-system specification, shared style implementation where justified, component usage rules and automated theme/palette tests.
+
+**M1-02 completed:** the GTK4/Libadwaita-first typography, spacing and custom-radius conventions are documented in `docs/ui-design-system.md`; Blueprint/GTK CSS spacing is normalized and statically guarded. The shared numeric spacing scale is documented rather than expressed as CSS custom properties because GTK CSS does not support arbitrary numeric custom properties. One 6 px Welcome compact-action spacing exception is retained to preserve responsive geometry and is explicitly guarded by a regression test. M1 as a whole remains Partial.
 
 ### M2 — Welcome and navigation
 
@@ -449,3 +451,32 @@ After every completed task, append/update the relevant phase and record:
 - PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`. No protected branch, PR metadata or release state was changed.
 
 **Next:** continue with the next approved roadmap task only after presenting its bounded plan and receiving explicit approval.
+
+
+## M1-02 — GTK4/Libadwaita design conventions (2026-11-16)
+
+### Outcome and implementation
+
+- **Outcome:** completed for the bounded M1-02 scope; global M1 remains **Partial**.
+- **Approach:** approved hybrid GTK4/Libadwaita-first conventions. Native semantic typography and native widget geometry remain defaults; application-authored conventions cover typography exceptions, spacing and custom radii.
+- Added `docs/ui-design-system.md` with semantic typography roles; spacing scale `4/8/12/16/24 px`; custom radius roles `6/12/9999 px`; native control hierarchy; theme compatibility; and GTK CSS limitations.
+- Normalized application-authored spacing in `data/ui/*.blp` and `data/style.css`; updated `CHANGELOG.md`.
+- Added four static regression tests in `tests/test_ui_palette.py` for Blueprint spacing, GTK CSS spacing, custom radii and semantic typography.
+- **Responsive exception:** an initial 8 px normalization of the Welcome compact screenshot action changed its measured width and caused three narrow-viewport GTK integration regressions. Restored that one gap to 6 px, documented the exception immediately above the Blueprint property, and added a test that requires the documented exception. The remaining selector CSS padding was normalized to 8 px.
+- No OCR engines/pipelines/models, architecture, dependencies, portal or OS integration were changed. No manual visual, Orca/AT-SPI or manual keyboard verification is claimed.
+
+### Validation evidence
+
+- M1-02 implementation range: `b4f8c0798933fb410dd4bf24cb808e183aba932a` → `6dece44cd3deb57fc43cb276db4a291a771e9584` (8 commits).
+- GitHub Actions [run #43907544843](https://github.com/D3M-Sudo/Anura/actions/runs/43907544843): **completed/success** on exact head `6dece44cd3deb57fc43cb276db4a291a771e9584`.
+  - Python quality: **634 passed, 6 skipped, 277 deselected**.
+  - GTK Integration: **441 passed, 5 skipped, 640 deselected, 2 warnings**.
+  - Changelog integrity passed.
+  - AppImage x86_64/aarch64 and Flatpak x86_64/aarch64 builds passed.
+  - Complete AppImage release-set and multi-architecture artifact validations passed.
+  - `publish-release` skipped as expected for a PR; no release was published.
+- CodeQL [run #43907544861](https://github.com/D3M-Sudo/Anura/actions/runs/43907544861): **completed/success** on the same SHA.
+- The AI Delivery Evidence Checker supported all eight supplied delivery criteria. Its test-evidence sub-check was only partially supported and its combined verdict was `needs_more_evidence`, primarily because it treated documentation/CHANGELOG delivery criterion C7 as a runtime-test criterion and does not inspect source or execute CI. Actual CI and source/diff evidence are recorded above; the checker result is not represented as an independent code audit.
+- Manual visual, Orca/AT-SPI and manual keyboard checks remain excluded, not passed or blockers.
+
+**Next permitted task:** prepare a bounded M1-03 semantic-color role audit plan for review. No M1-03 implementation is authorized by this record.
