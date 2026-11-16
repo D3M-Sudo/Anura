@@ -213,9 +213,7 @@ def _welcome_popover_diagnostic_state(window, page, events) -> str:
             "native_type": type(native).__name__ if native is not None else None,
             "surface_type": type(surface).__name__ if surface is not None else None,
             "surface_mapped": surface.get_mapped() if surface is not None else None,
-            "surface_size": (
-                (surface.get_width(), surface.get_height()) if surface is not None else None
-            ),
+            "surface_size": ((surface.get_width(), surface.get_height()) if surface is not None else None),
             "surface_parent_type": (
                 type(surface.get_parent()).__name__
                 if surface is not None and hasattr(surface, "get_parent") and surface.get_parent() is not None
