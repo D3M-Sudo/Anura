@@ -347,7 +347,7 @@ The [global roadmap](2026-11-16-anura-ui-modernization-global-roadmap.md) is the
 - Reviewed source snapshot `fb1bcbe89f0ce982fc4adad60630a5a88496dd1`: 14 Blueprint templates, 15 Python UI modules, main window/application, reduced-motion utility, CSS, design-system guide and relevant tests/CI definitions.
 - Positive baseline: shared spacing/radius conventions are statically guarded; the documented 6 px Welcome exception and 1.15em hero typography exception are explicit; native GTK4/Libadwaita patterns are used broadly.
 - Findings: **F1 Medium** — separate `ShortcutsOverlay` window does not receive the main window's reduced-motion CSS class despite applying `.anura-fade-in`; **F2 Medium** — scanner fixture tests do not invoke the scanner against the production tree in CI; **F3 Low** — apparently orphaned custom CSS selectors; **F4 Low** — `title`/`h4` typography classes are not mapped in the design-system guide.
-- **M1 remains Partial.** M1-06 is conditional and must be separately scoped/approved; it should address F1 and F2 only unless further evidence justifies expanding scope. F3/F4 are deferred.
+- **Historical note:** at the time of M1-05, M1-06 required separate scope and approval. That approval was subsequently received and the bounded F1/F2 implementation is recorded in the M1-06 section above. F3/F4 remain deferred.
 - No application source, tests, workflows, CHANGELOG, dependencies, OCR behavior, architecture, PR metadata or protected branches changed. No tests or CI were run for this audit; manual GNOME/GTK visual, Orca/AT-SPI and keyboard checks remain excluded.
 - PR #648 state is unchanged: Open/Draft/unmerged, base `feature`, head branch `fix/ui-modernization-aligned`.
 

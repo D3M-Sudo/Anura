@@ -109,7 +109,7 @@ M0-C consolidated the operational backlog. The task list is a planning baseline,
 | M7-01 | P2 | Define the global integration and final validation plan. | M1-05 through M6-01; M1-06 disposition | Traceability/validation plan, exact evidence requirements, translation review and deferred screenshot timing. |
 | M7-02 | P3 | Execute approved global integration, documentation and distribution validation. | M7-01 and explicit approval | Regression/packaging evidence, relevant docs/CHANGELOG, translation review and final requirement dispositions. |
 
-P1 establishes foundational audits and justified gap closure; P2 completes cross-surface validation and integration planning; P3 executes final integration. M1-06 is conditional on M1-05 findings. No task authorizes implementation merely by appearing in this table.
+P1 establishes foundational audits and justified gap closure; P2 completes cross-surface validation and integration planning; P3 executes final integration. M1-06 implementation and regression coverage are now complete within scope, with final AppImage aarch64 validation still pending. No task authorizes implementation merely by appearing in this table.
 
 ### M0 — Full audit
 
@@ -202,7 +202,7 @@ This table maps the global requirements to the current known PR #648 contributio
 
 | Global requirement / surface | PR #648 contribution known today | Remaining global work / disposition |
 |---|---|---|
-| Green palette and runtime stylesheet | Green semantic palette, GResource CSS provider registration, palette/contrast tests; M1-05 cross-surface audit recorded targeted gaps | M1-06 proposal for reduced-motion coverage in Shortcuts and production-tree color-scanner enforcement; manual/pixel validation remains excluded |
+| Green palette and runtime stylesheet | Green semantic palette, GResource CSS provider registration, palette/contrast tests; M1-05 cross-surface audit recorded targeted gaps | M1-06 implementation/test coverage closes reduced-motion handling in Shortcuts and production-tree color-scanner enforcement; AppImage aarch64 CI remains pending; manual/pixel validation remains excluded |
 | Welcome primary/secondary actions | Screenshot primary; Open/Paste/Drop responsive grouping | Complete remaining M2 audit of navigation and all states |
 | Welcome responsiveness and scrolling | Adaptive actions, scroll container, focus restoration; constrained-viewport test passed in recorded CI | Extend M6 coverage only where M0 identifies gaps in other windows |
 | Main window geometry | Monitor-aware clamp, monitor-change handling, normal-size persistence | M2/M6 audit other windows and geometry constraints; no universal dock-aware guarantee |
@@ -566,7 +566,7 @@ After every completed task, append/update the relevant phase and record:
 - **F2 — Medium:** scanner unit tests exercise temporary fixtures, but no inspected test or CI command invokes the scanner against the production repository tree and fails on unclassified color literals. Recommend a production-tree CI gate with a reviewed path/value rationale map.
 - **F3 — Low:** apparently unreferenced CSS selectors recorded in the report; defer cleanup pending confirmation that no dynamic consumer exists.
 - **F4 — Low:** `title` and `h4` typography classes are not mapped in the design-system guide; their use is not classified as a defect without checking toolkit semantics.
-- **M1 remains Partial.** M1-06 is the next conditional candidate, limited to F1/F2 and subject to a separate bounded proposal and explicit approval. F3/F4 remain deferred.
+- **Historical note:** at the time of the M1-05 audit, M1-06 was the next conditional candidate. The later approved F1/F2 implementation and test evidence are recorded in the M1-06 section below. F3/F4 remain deferred.
 - No tests or workflows were run for M1-05; this is static source/test-definition inspection only. No runtime rendering, manual GNOME/GTK visual, Orca/AT-SPI or manual keyboard checks are claimed. Live multi-monitor checks remain excluded; screenshots remain deferred.
 - No application source, tests, workflows, CHANGELOG, dependencies, OCR behavior, architecture, protected branches or PR metadata were modified. PR #648 remains Open/Draft/unmerged, base `feature`, head branch `fix/ui-modernization-aligned`.
 

@@ -37,4 +37,7 @@ Branch: `fix/ui-modernization-aligned`
 
 ## Final review
 
-Pending final full CI and whole-branch self-review. No subagent tool is available; final review will be recorded as a self-review, not an independent review.
+- Read-only compare `57d2bad6399526f155d3ccb2d992a41631e8b877...35fa684e72fd4e83eae4d58d4b7e731a00d2486b` reviewed. Final implementation diff is limited to `anura/widgets/shortcuts_overlay.py`, `tests/test_widgets.py` and `tests/test_ui_color_scanner.py`; no Critical or Important code issues identified in self-review.
+- Ruff, mypy, Bandit, Python and GTK CI passed on the exact implementation/test SHA. No independent subagent review was possible or claimed.
+- The AI Delivery Evidence Checker assessed supplied materials only and returned partial support because it cannot inspect repository code or authenticate CI. It is an evidence-sufficiency aid, not a correctness verdict.
+- At this ledger snapshot, all CI jobs on SHA `35fa684e72fd4e83eae4d58d4b7e731a00d2486b` passed except AppImage aarch64, which remained in progress. M1-06 closure and final plan Step 4 remain pending until that job finishes.
