@@ -534,3 +534,98 @@ def test_welcome_compact_popover_opening_methods_at_narrow_viewport(opening_meth
     finally:
         page.more_options_popover.popdown()
         window.destroy()
+
+
+@pytest.mark.gtk
+@pytest.mark.parametrize(
+    ("popover_width", "anchor_edge", "preferred_position"),
+    [
+        ("natural", "top", Gtk.PositionType.BOTTOM),
+        ("natural", "top", Gtk.PositionType.TOP),
+        ("natural", "bottom", Gtk.PositionType.BOTTOM),
+        ("natural", "bottom", Gtk.PositionType.TOP),
+        ("constrained", "top", Gtk.PositionType.BOTTOM),
+        ("constrained", "top", Gtk.PositionType.TOP),
+        ("constrained", "bottom", Gtk.PositionType.BOTTOM),
+        ("constrained", "bottom", Gtk.PositionType.TOP),
+    ],
+)
+def test_welcome_compact_popover_geometry_diagnostic(
+    popover_width: str,
+    anchor_edge: str,
+    preferred_position: Gtk.PositionType,
+) -> None:
+    """Record whether width and anchor placement affect the compact Wayland popup."""
+    from anura.widgets.welcome_page import WelcomePage
+
+    window = Gtk.Window()
+    window.set_default_size(360, 600)
+    page = WelcomePage()
+    for button in (page.screenshot_button, page.open_image_button, page.paste_image_button, page.drop_button):
+        button.set_action_name(None)
+        button.set_sensitive(True)
+    window.set_child(page)
+    window.present()
+
+    try:
+        _wait_for_window_allocation(window, page.action_clamp)
+        _drain_gtk_main_context()
+        page._update_action_layout()
+        _drain_gtk_main_context()
+
+        assert page.action_clamp.get_width() < page._get_wide_action_threshold()
+        assert page.more_options_button.get_visible()
+        assert page.more_options_button.get_mapped()
+
+        if popover_width == "constrained":
+            # Reduce the template's 260px content width request for this test only.
+            page.compact_actions.set_size_request(147, -1)
+        else:
+            # Restore the Blueprint-declared natural width request for this test.
+            page.compact_actions.set_size_request(260, -1)
+
+        parent = page.more_options_button.get_parent()
+        assert isinstance(parent, Gtk.Box)
+        if anchor_edge == "top":
+            parent.reorder_child_after(page.more_options_button, None)
+        else:
+            parent.reorder_child_after(page.more_options_button, page.drop_revealer)
+
+        page.more_options_popover.set_position(preferred_position)
+        _drain_gtk_main_context()
+
+        bounds_available, bounds = page.more_options_button.compute_bounds(window)
+        assert bounds_available, "could not translate the popover trigger bounds to the window"
+        trigger_top = bounds.origin.y
+        trigger_bottom = trigger_top + bounds.size.height
+        available_above = trigger_top
+        available_below = window.get_height() - trigger_bottom
+
+        page.more_options_popover.popup()
+        deadline = time.monotonic() + 1.0
+        while time.monotonic() < deadline and not page.more_options_popover.get_mapped():
+            context = GLib.MainContext.default()
+            while context.pending():
+                context.iteration(False)
+            time.sleep(0.01)
+
+        native = page.more_options_popover.get_native()
+        surface = native.get_surface() if native is not None else None
+        print(
+            "PHASE2_POPOVER_GEOMETRY="
+            f"width={popover_width},anchor={anchor_edge},"
+            f"preferred={preferred_position.value_nick},"
+            f"trigger=({bounds.origin.x:.1f},{trigger_top:.1f},"
+            f"{bounds.size.width:.1f},{bounds.size.height:.1f}),"
+            f"space_above={available_above:.1f},space_below={available_below:.1f},"
+            f"popover_measure={page.more_options_popover.measure(Gtk.Orientation.HORIZONTAL, -1)[:2]},"
+            f"x_measure={page.more_options_popover.measure(Gtk.Orientation.VERTICAL, -1)[:2]},"
+            f"mapped={page.more_options_popover.get_mapped()},"
+            f"allocated={page.more_options_popover.get_width()}x{page.more_options_popover.get_height()},"
+            f"surface={type(surface).__name__ if surface is not None else None},"
+            f"surface_mapped={surface.get_mapped() if surface is not None else None},"
+            f"surface_size={(surface.get_width(), surface.get_height()) if surface is not None else None}"
+        )
+    finally:
+        page.more_options_popover.popdown()
+        window.destroy()
