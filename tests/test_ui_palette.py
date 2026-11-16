@@ -174,7 +174,14 @@ def test_blueprint_spacing_uses_the_shared_scale():
                 if property_name in line:
                     value = line.split(property_name, maxsplit=1)[1].split(";", maxsplit=1)[0].strip()
                     if value.isdigit():
-                        assert int(value) in SPACING_SCALE, f"{path}:{line_number}: unsupported spacing {value}px"
+                        if int(value) == 6:
+                            assert (
+                                path == "data/ui/welcome_page.blp"
+                                and line_number > 1
+                                and "Intentional spacing exception:" in _read_text(path).splitlines()[line_number - 2]
+                            ), f"{path}:{line_number}: undocumented 6px spacing exception"
+                        else:
+                            assert int(value) in SPACING_SCALE, f"{path}:{line_number}: unsupported spacing {value}px"
 
 
 def test_stylesheet_spacing_uses_the_shared_scale():

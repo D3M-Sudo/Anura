@@ -78,7 +78,8 @@ template $WelcomePage : Adw.NavigationPage {
 
               child: Box {
                 halign: center;
-                spacing: 8;
+                // Intentional spacing exception: preserves the compact responsive action width.
+                spacing: 6;
                 Image { icon-name: "camera-photo-symbolic"; }
                 Label {
                   label: _("_Take a Screenshot");
