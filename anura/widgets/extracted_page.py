@@ -267,8 +267,11 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
         return GLib.SOURCE_REMOVE
 
     def do_hiding(self) -> None:
-        """Handle widget hiding event."""
-        self.buffer.set_text("")
+        """Handle navigation away without discarding the current OCR result.
+
+        The extracted buffer is replaced only when the next OCR result arrives.
+        Returning to Welcome (or visiting another page) must not erase user text.
+        """
         self.emit("go-back", 1)
 
     def do_unmap(self) -> None:
