@@ -91,6 +91,7 @@ class LanguageRow(Gtk.Overlay, SignalManagerMixin):
             return
 
         if self._item.code == "eng":
+            self.remove_css_class("downloaded")
             self.install_btn.set_visible(False)
             self.remove_btn.set_sensitive(False)
             return
@@ -98,6 +99,11 @@ class LanguageRow(Gtk.Overlay, SignalManagerMixin):
         # Handle button states based on installation/download status
         is_installed = self._item.code in get_language_manager().get_downloaded_codes()
         is_loading = self._item.code in get_language_manager().loading_languages
+
+        if is_installed:
+            self.add_css_class("downloaded")
+        else:
+            self.remove_css_class("downloaded")
 
         self.remove_btn.set_visible(is_installed)
         self.install_btn.set_visible(not is_installed)
