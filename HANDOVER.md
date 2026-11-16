@@ -279,3 +279,15 @@ GTK 4's Gdk.Monitor exposes monitor geometry but does not provide a separate wor
 - The full Task 4 CI matrix is now complete. The implementation/test/documentation validation gate is green.
 - Manual GNOME/GTK visual review, Orca/AT-SPI and manual keyboard checks remain excluded by user decision; this CI result does not claim real desktop or screen-reader conformance.
 - PR #648 remains open and Draft, targeting `feature`. No merge or protected-branch modification was performed.
+
+
+## M2-D — Extracted and History navigation-state completion (2026-11-16)
+
+- Extracted OCR text survives navigation away and back; the next completed extraction replaces it.
+- History preserves expanded-entry identity and vertical scroll through refresh/navigation during the current application session only; no restart persistence was added.
+- Automated tests cover Extracted retention/replacement and round-trip navigation, focus acquisition on Extracted navigation, TTS stop on return to Welcome, and History state restoration/stale callbacks/removed entries.
+- Exact implementation head: `bb316f94d37629cc7566b24330a87b6e86029db3`.
+- CI Quality Check & Release [#43885843452](https://github.com/D3M-Sudo/Anura/actions/runs/43885843452): success; Python Quality 630 passed/6 skipped/277 deselected; GTK Integration 436 passed/5 skipped/636 deselected/2 warnings; Changelog integrity, AppImage x86_64/aarch64, Flatpak x86_64/aarch64, AppImage release-set and multi-architecture release-artifact validation all succeeded. `publish-release` was skipped as expected for a PR.
+- CodeQL [#43885843419](https://github.com/D3M-Sudo/Anura/actions/runs/43885843419): success on the same SHA.
+- Manual GNOME/GTK visual, real Orca/AT-SPI and manual keyboard checks remain excluded, not passed.
+- PR #648 remains Open/Draft/unmerged, base `feature`; no protected branch or release was changed.
