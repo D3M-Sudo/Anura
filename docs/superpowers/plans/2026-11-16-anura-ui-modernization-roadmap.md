@@ -158,3 +158,14 @@ Append or update the relevant task record before starting the next task:
 - Created after a read-only audit of PR #648, its current head and CI run, HANDOVER, and the M2-B palette/accessibility plans.
 - Confirmed completed M1/M2/M2-B implementation areas and identified stale plan/handover/PR evidence as a documentation task, not a reason to invent another feature.
 - Next task is UI-07, documentation reconciliation only.
+
+
+### 2026-11-16 — UI-00 completion and roadmap publication
+
+- UI-00 is complete: the read-only audit has been converted into this authoritative progress register.
+- Created this roadmap and linked it from `HANDOVER.md` in documentation-only commit `95fb1ed70ea4dc05a7a2bd273d9ff08772198b93` (the roadmap file itself was introduced immediately before that link commit).
+- Current PR head after the documentation commits: `95fb1ed70ea4dc05a7a2bd273d9ff08772198b93`.
+- Re-checked PR #648: open, Draft, unmerged, target `feature`. No protected branch was modified.
+- The latest full application CI evidence remains run [#43801048308](https://github.com/D3M-Sudo/Anura/actions/runs/43801048308) on the prior application/workflow head `cc8aaad6601f25b9e96f3d2eb9f78bc9fb3c524d`. The two commits in this roadmap-publication step are documentation-only; no claim is made that CI ran on the new documentation head.
+- UI-07 remains the next task. Only the HANDOVER roadmap link is complete; palette/accessibility plan reconciliation and PR description correction remain outstanding.
+- **Roadmap updated before proceeding:** yes. No subsequent task has started.
