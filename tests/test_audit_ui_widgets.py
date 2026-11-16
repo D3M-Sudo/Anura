@@ -588,9 +588,11 @@ def test_welcome_compact_popover_geometry_diagnostic(
         parent = page.more_options_button.get_parent()
         assert isinstance(parent, Gtk.Box)
         if anchor_edge == "top":
-            parent.reorder_child_after(page.more_options_button, None)
+            page.more_options_button.insert_before(parent, page.screenshot_button)
+            assert parent.get_first_child() is page.more_options_button
         else:
-            parent.reorder_child_after(page.more_options_button, page.drop_revealer)
+            page.more_options_button.insert_after(parent, page.drop_revealer)
+            assert parent.get_last_child() is page.more_options_button
 
         page.more_options_popover.set_position(preferred_position)
         _drain_gtk_main_context()
