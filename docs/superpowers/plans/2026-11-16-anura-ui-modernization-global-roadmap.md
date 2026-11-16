@@ -86,7 +86,7 @@ Status values are evidence-based: **Not started**, **In progress**, **Partial**,
 |---|---|---|---|
 | M0 | Full application audit | Complete inventory of windows/components/states/functions; current behavior, visual/functional/accessibility/architecture/performance/Linux-compatibility findings; prioritized requirements and traceability baseline | **Partial — M0-A inventory and M0-B traceability/evidence reconciliation completed; M0-C prioritization and remaining audit synthesis are next** |
 | M1 | Design System and themes | Approved shared palette/tokens and reusable patterns; typography/spacing/component rules; automatic/light/dark and force-light/force-dark behavior verified | **Partial — M1-A/M1-B read-only audit completed; green palette/runtime CSS and three-mode preference mapping exist, but full token consolidation, cross-surface theme coverage and automated runtime theme verification remain** |
-| M2 | Welcome and main navigation | Welcome and main-shell/navigation experience meet responsive, visual, interaction and focus criteria | **Partial — M2-A read-only audit completed 2026-11-16; Welcome responsive/focus coverage is substantial, but end-to-end NavigationView transitions/state restoration and remaining shell acceptance evidence require follow-up** |
+| M2 | Welcome and main navigation | Welcome and main-shell/navigation experience meet responsive, visual, interaction and focus criteria | **Partial — M2-A and M2-B read-only audits completed 2026-11-16; core NavigationView paths and side effects are present in source, but end-to-end transition/focus/state-restoration tests and remaining shell acceptance evidence are not established** |
 | M3 | Extracted and History | Extracted/OCR and History surfaces consistently modernized without functional regressions | **Partial — Extracted header/action area and scroll protections exist; History modernization is not established as complete** |
 | M4 | Preferences and languages | General, Languages, Editor, Voice and language selector meet shared visual, responsive, lifecycle and accessibility criteria | **Partial — Preferences split and selected lifecycle work exist; full page and language-selector audit remains** |
 | M5 | Other windows and components | Shortcuts, About, dialogs, popovers, menus, notifications, banners and toasts audited and addressed where justified | **Not started as a complete phase — Shortcuts received limited resizing work; app-wide coverage is unverified** |
@@ -222,7 +222,8 @@ The subordinate document [2026-11-16-anura-ui-modernization-roadmap.md](2026-11-
 4. **M0-C — Prioritize the phase backlog.** The bounded, dependency-ordered M1–M7 audit/implementation backlog was synthesized and reviewed in chat on 2026-11-16. Its roadmap record remains separate from this M1 audit update; no implementation was authorized by backlog review.
 5. **M1-A/M1-B — Design-system and theme audit.** **Completed 2026-11-16** in read-only mode; findings and evidence limits are recorded below. M1 remains Partial because design-system consolidation and app-wide runtime theme coverage are not complete.
 6. **M2-A — Welcome and main-navigation read-only audit. Completed 2026-11-16**; findings and evidence limits are recorded below. No code changes were made.
-7. **Next permitted task: M2-B — focused read-only verification of complete NavigationView transition paths and state restoration**, addressing the integration-evidence gap identified by M2-A. No code changes are authorized.
+7. **M2-B — focused read-only verification of complete NavigationView transition paths and state restoration. Completed 2026-11-16**; findings and evidence limits are recorded below. No code changes were made.
+8. **Next permitted task: M2-C — define a bounded automated integration-test proposal** for Welcome → Extracted → Welcome and Welcome → History → Welcome, including focus and side-effect assertions. Planning only; implementation requires separate explicit approval.
 
 No application-code task is authorized by GLOBAL-00 or by the existence of this roadmap.
 
@@ -300,6 +301,21 @@ After every completed task, append/update the relevant phase and record:
 - **M2 disposition:** M2 remains **Partial**. M2-A audit is complete; Welcome's responsive/focus implementation has substantial test coverage, while end-to-end navigation transitions/state restoration and remaining shell acceptance criteria are not yet established.
 - **Next permitted task:** M2-B, focused read-only verification of complete `Adw.NavigationView` transition paths and state restoration. Implementation requires separate explicit approval.
 
+
+### 2026-11-16 — M2-B: NavigationView transition and state-restoration audit completed
+
+- **Outcome:** completed as a read-only source/test audit on `fix/ui-modernization-aligned`, audited against commit `bf39a91454ff2665cb881454363126f0b72e0ea5`. No application code, tests, workflows, PR metadata, protected branches or merge state were changed; no tests or CI were run.
+- **Audited source and tests:** `anura/window.py`, `anura/main.py`, `anura/core/action_registry.py`, `anura/widgets/welcome_page.py`, `anura/widgets/extracted_page.py`, `anura/widgets/history_page.py`, `anura/controllers/ocr_controller.py`, `data/ui/window.blp`, `data/ui/welcome_page.blp`, `data/ui/extracted_page.blp`, `data/ui/history_page.blp`, `tests/test_app_lifecycle.py`, `tests/test_keyboard_shortcuts.py`, `tests/test_widgets.py`, `tests/test_audit_ui_widgets.py` and `tests/test_history_controller.py`.
+- **Welcome → Extracted:** OCR navigation is mediated by `OcrController`, which emits `navigation-requested("extracted")`; the window pushes the Extracted page and requests focus on `text_view`. On return, the window pops to the `welcome` tag and stops TTS. `ExtractedPage.do_hiding()` clears its buffer and emits `go-back`; the inspected implementation therefore does not preserve extracted text across this return path. This is an observed behavior, not a defect determination; whether it is intended product behavior remains a state-policy question.
+- **Welcome → History:** the Welcome menu exposes `win.show-history`; the registered action invokes the window handler, which calls `history_page.refresh()` before pushing the `history` page. The History page uses an `Adw.HeaderBar`. The inspected implementation rebuilds History rows during refresh; persistence of expanded-row state and scroll position across reopening was not established.
+- **Navigation affordances and focus:** the inspected page templates use Libadwaita header-bar/navigation structures, but no dedicated test was found proving the rendered back affordance and complete return path. OCR focus is requested after navigation push, but the inspected tests do not establish that focus is actually acquired once the destination page is mapped and visible.
+- **Test coverage:** `tests/test_widgets.py` and `tests/test_audit_ui_widgets.py` cover Welcome responsive layout and focus behavior; `tests/test_history_controller.py` covers History controller operations, not navigation; `tests/test_app_lifecycle.py` and `tests/test_keyboard_shortcuts.py` do not establish complete page-transition integration coverage. No test was identified that exercises the complete Welcome → Extracted → Welcome or Welcome → History → Welcome path with state and side-effect assertions.
+- **Findings:** no confirmed navigation defect was established by static inspection. The primary gap is missing end-to-end evidence for transitions, return affordances, focus acquisition/restoration, TTS stop behavior in the full flow, History refresh and any required state preservation.
+- **Recommended next step (not implementation authorization):** define a bounded automated integration-test proposal for both navigation paths. Decide explicitly whether Extracted text should be discarded on return and whether History expansion/scroll state should persist. Assert actual focus only where the GTK test environment can reliably observe it; otherwise document the limitation rather than claiming success.
+- **Evidence limits:** source/test inspection only; no runtime GTK execution, test pass/fail result or CI result is claimed. Manual GNOME/GTK visual checks, real Orca/AT-SPI and manual keyboard checks remain excluded, not passed.
+- **M2 disposition:** remains **Partial**. M2-A and M2-B audits are complete, but integration tests and remaining shell acceptance evidence are not established.
+- **Next permitted task:** M2-C, planning a bounded automated integration-test proposal. No code changes are authorized.
+
 ## 9. Change log
 
 ### 2026-11-16 — GLOBAL-00: global roadmap consolidated
@@ -342,4 +358,11 @@ After every completed task, append/update the relevant phase and record:
 
 - Recorded the read-only Welcome/main-navigation audit, including existing responsive/focus test coverage, NavigationView structure, evidence gaps and follow-up priorities.
 - M2 remains Partial; the next permitted task is M2-B, a focused read-only verification of complete navigation transition paths and state restoration.
+- Documentation-only update on `fix/ui-modernization-aligned`; no application code, tests, workflows, protected branches, PR metadata or merge state changed. No CI run is claimed.
+
+
+### 2026-11-16 — M2-B audit record
+
+- Recorded the read-only NavigationView transition/state-restoration audit, including OCR and History paths, current side effects, existing test coverage and missing end-to-end evidence.
+- M2 remains Partial. Next permitted task is M2-C, a planning-only proposal for bounded automated integration tests; implementation still requires separate explicit approval.
 - Documentation-only update on `fix/ui-modernization-aligned`; no application code, tests, workflows, protected branches, PR metadata or merge state changed. No CI run is claimed.
