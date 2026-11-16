@@ -127,7 +127,6 @@ class TestAppLifecycleEnterprise:
 
             mock_lookup.assert_called_once()
 
-
     @pytest.mark.gtk
     def test_color_scheme_setting_maps_and_reapplies_repeated_transitions(self, app):
         Adw.init()
