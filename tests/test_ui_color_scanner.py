@@ -187,6 +187,7 @@ def test_scanner_discovers_new_files_without_updating_a_file_list(tmp_path: Path
         "anura/widgets/nested/new_widget.py",
     }
 
+
 def test_repository_ui_colors_are_classified():
     scan, unclassified = _scanner_api()
     repository_root = Path(__file__).resolve().parents[1]
