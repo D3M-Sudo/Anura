@@ -5,7 +5,6 @@
 
 """Regression tests for the GTK palette and shared UI design conventions."""
 
-
 import re
 from pathlib import Path
 
