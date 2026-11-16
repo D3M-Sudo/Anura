@@ -899,6 +899,30 @@ class TestHistoryTtsNavigationLifecycle:
             window.destroy()
 
     @pytest.mark.gtk
+    def test_explicit_welcome_navigation_stops_history_tts_once(self):
+        window, tts_controller = self._build_window()
+        window.present()
+        context = GLib.MainContext.default()
+
+        try:
+            assert TestWelcomePageEnterprise._spin_until(
+                context, lambda: window.navigation_view.get_visible_page() is window.welcome_page
+            )
+            window.show_history_page()
+            assert TestWelcomePageEnterprise._spin_until(
+                context, lambda: window.navigation_view.get_visible_page() is window.history_page
+            )
+            tts_controller.stop.reset_mock()
+
+            window.show_welcome_page()
+            assert TestWelcomePageEnterprise._spin_until(
+                context, lambda: window.navigation_view.get_visible_page() is window.welcome_page
+            )
+            tts_controller.stop.assert_called_once_with()
+        finally:
+            window.destroy()
+
+    @pytest.mark.gtk
     def test_leaving_history_for_extracted_stops_tts(self):
         window, tts_controller = self._build_window()
         window.present()
