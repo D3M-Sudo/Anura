@@ -34,6 +34,7 @@ def _make_page(headless_gi_mocks, service: HistoryService | None = None, enabled
     # give this instance fresh isolated mocks so call counts don't leak.
     page.history_stack = MagicMock()
     page.history_list = MagicMock()
+    page.history_list.get_ancestor.return_value = None
     page.clear_button = MagicMock()
     page.settings = FakeSettings(enabled)
     if service is not None:
@@ -509,6 +510,14 @@ def test_restore_view_state_expands_matching_row_and_restores_scroll(headless_gi
     row.set_expanded.assert_called_once_with(True)
     adjustment.set_value.assert_called_once_with(83.5)
     assert result is fake_glib.SOURCE_REMOVE
+
+
+def test_new_history_page_starts_with_default_transient_state(headless_gi_mocks, tmp_path):
+    """A newly constructed page (including after process restart) has no persisted view state."""
+    page = _make_page(headless_gi_mocks, HistoryService(base_dir=tmp_path))
+
+    assert page._open_row is None
+    assert page._row_entry_ids == {}
 
 
 def test_restore_view_state_ignores_removed_entry_and_stale_refresh(headless_gi_mocks, monkeypatch, tmp_path):
