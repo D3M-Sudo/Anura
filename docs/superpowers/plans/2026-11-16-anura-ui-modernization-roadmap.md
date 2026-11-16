@@ -254,3 +254,26 @@ Append or update the relevant task record before starting the next task:
 - PR #648 was verified Open/Draft/unmerged, base `feature`; no protected branch or PR metadata was changed.
 
 **Next permitted task:** define the bounded M2-F implementation/test plan and request explicit approval before implementation. Do not add live multi-monitor verification.
+
+## M2-F — History TTS navigation lifecycle (2026-11-16)
+
+### Implemented
+
+- `AnuraWindow` centrally observes `Adw.NavigationView:visible-page` using a tracked signal connection.
+- When the previous visible page is History and the new visible page is different, the handler stops TTS. This covers native back navigation, gestures and transitions to any destination without wiring individual navigation controls.
+- The explicit `show_welcome_page()` route already stops TTS; the lifecycle handler avoids a duplicate stop for that same transition.
+- Added five real GTK integration tests around the actual `AnuraWindow` and `Adw.NavigationView`: native History → Welcome, explicit History → Welcome, History → Extracted, entering/remaining in History, and History exit with TTS already idle. All five passed.
+- Changed files: `anura/window.py`, `tests/test_widgets.py`, `CHANGELOG.md`. No dependencies, OCR pipeline, Welcome redesign, manifests, workflows or live multi-monitor tests were added.
+
+### Exact-head validation
+
+- Final code/CHANGELOG head: `acd1f03e3dee92173af98b4afe7f712806747afe`.
+- CI Quality Check & Release [#43897822566](https://github.com/D3M-Sudo/Anura/actions/runs/43897822566): **success** on the exact head. Python Quality: **630 passed, 6 skipped, 277 deselected**. GTK Integration: **441 passed, 5 skipped, 636 deselected, 2 warnings**; all five M2-F tests passed. Changelog integrity passed.
+- AppImage x86_64 and aarch64 builds passed; Flatpak x86_64 and aarch64 builds passed; complete AppImage release-set validation and multi-architecture release-artifact validation passed. `publish-release` was skipped as expected for a PR.
+- CodeQL [#43897822286](https://github.com/D3M-Sudo/Anura/actions/runs/43897822286) passed on the same code head.
+- The subsequent roadmap/HANDOVER commits are documentation-only; the CI run above is not represented as having tested those later documentation commits.
+- Manual GNOME/GTK visual checks, real Orca/AT-SPI and manual keyboard checks remain excluded, not passed. Live multi-monitor verification remains out of scope.
+
+### PR state
+
+PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`. No protected branch, PR metadata or release state was changed.
