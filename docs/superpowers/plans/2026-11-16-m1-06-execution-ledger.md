@@ -26,11 +26,11 @@ Branch: `fix/ui-modernization-aligned`
 
 ## Task 3 — Documentation and verification
 
-- Updated CHANGELOG, global roadmap, PR roadmap, HANDOVER and this ledger.
+- Updated CHANGELOG, global roadmap, PR roadmap, HANDOVER, approved spec, implementation plan and this ledger.
 - Static checks passed in Python quality: Ruff lint/format, mypy, Bandit and runtime dependency coverage.
 - Changelog integrity passed.
 - CodeQL #43974750821 passed on SHA `35fa684e72fd4e83eae4d58d4b7e731a00d2486b`.
-- CI #43974750869 on the same SHA: Python and GTK passed; AppImage x86_64/aarch64 and Flatpak x86_64/aarch64 plus release validation were still running at the time of this ledger update.
+- CI #43974750869 on the same SHA: Python quality, GTK integration, Changelog integrity, AppImage x86_64, Flatpak x86_64/aarch64 and multi-architecture release artifact validation passed; AppImage aarch64 remained in progress at this update.
 - PR #648 last checked: Open, Draft, unmerged, base `feature`, head `fix/ui-modernization-aligned`.
 - No protected branches, PR metadata, dependencies, OCR, palette, architecture, portal or OS configuration changed.
 - Manual visual, Orca/AT-SPI, keyboard and live multi-monitor checks are excluded and not claimed. F3/F4 remain deferred.
@@ -40,4 +40,4 @@ Branch: `fix/ui-modernization-aligned`
 - Read-only compare `57d2bad6399526f155d3ccb2d992a41631e8b877...35fa684e72fd4e83eae4d58d4b7e731a00d2486b` reviewed. Final implementation diff is limited to `anura/widgets/shortcuts_overlay.py`, `tests/test_widgets.py` and `tests/test_ui_color_scanner.py`; no Critical or Important code issues identified in self-review.
 - Ruff, mypy, Bandit, Python and GTK CI passed on the exact implementation/test SHA. No independent subagent review was possible or claimed.
 - The AI Delivery Evidence Checker assessed supplied materials only and returned partial support because it cannot inspect repository code or authenticate CI. It is an evidence-sufficiency aid, not a correctness verdict.
-- At this ledger snapshot, all CI jobs on SHA `35fa684e72fd4e83eae4d58d4b7e731a00d2486b` passed except AppImage aarch64, which remained in progress. M1-06 closure and final plan Step 4 remain pending until that job finishes.
+- AppImage aarch64 remains in progress; M1-06 closure and final plan Step 4 remain pending until that job finishes.

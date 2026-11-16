@@ -1,0 +1,121 @@
+# Contributing to Anura OCR
+
+> This file is read by AI coding agents (Cascade, Claude Code, Cursor, Aider).
+> It complements AGENTS.md with workflow-specific guidelines.
+
+## Quick Start
+
+```bash
+# 1. Clone and enter the repo
+git clone https://github.com/D3M-Sudo/Anura.git && cd Anura
+
+# 2. Setup environment and install dev tools
+uv sync --dev
+
+# 3. Install system dependencies (Ubuntu/Debian)
+sudo apt install python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-gtksource-5 \
+    libgtksourceview-5-dev blueprint-compiler libportal-gtk4-dev \
+    tesseract-ocr libxml2-utils \
+    gstreamer1.0-plugins-good gstreamer1.0-pulseaudio
+
+# 4. Build with Meson
+uv run meson setup builddir
+uv run meson compile -C builddir
+
+# 5. Run from source (no install needed)
+GSETTINGS_SCHEMA_DIR=builddir/data python3 -m anura.main
+```
+
+## Running Tests
+
+History V1 behaviour is covered by `tests/test_history_storage.py`,
+`tests/test_history_controller_integration.py`, `tests/test_history_ui.py`,
+`tests/test_history_settings.py` (GTK-marked) and
+`tests/test_preferences_page_resilience.py` (history/TTS wiring regression).
+Shortcuts overlay consistency is guarded by
+`tests/test_shortcuts_consistency.py`. See
+[docs/reference/history-v1.md](docs/reference/history-v1.md) for the current History V1 reference
+and [docs/reference/dependencies.md](docs/reference/dependencies.md) for the headless GTK testing
+approach (system `python3-gi` via `PYTHONPATH`, no venv PyGObject).
+
+### Test Categories
+
+Anura has two main categories of tests:
+
+1. **Unit & Security Tests** - Logic without GTK dependencies (headless tests)
+2. **Integration Tests** - Require GTK/GLib environment
+
+### 🚀 QUICK START - Daily Development
+
+```bash
+# Run unit tests (ALWAYS use this for daily development)
+uv run pytest tests/ -m "not gtk" -v
+```
+
+### 📋 COMPLETE TEST COMMANDS
+
+#### **Unit Tests (No GTK Required)**
+```bash
+# All headless unit tests
+uv run pytest tests/ -m "not gtk" -v
+
+# Run specific unit test files
+uv run pytest tests/test_gi_atomic_task_manager_unit.py -v
+uv run pytest tests/test_security_hardening.py -v
+uv run pytest tests/test_history_storage.py -v
+```
+
+#### **GTK Tests (Requires display/sandbox)**
+
+```bash
+# 1. Compile GSettings schemas and GResource bundle
+./build-aux/setup-gschema.sh
+./tests/setup_resources.sh
+
+# 2. Run GTK tests with the system python3-gi (PyGObject ships no wheels,
+#    so it is NOT installed in the venv — see docs/reference/dependencies.md)
+SP=$(ls -d .venv/lib/python3.*/site-packages)
+PYTHONPATH=".:$SP" \
+  GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" \
+  GSETTINGS_SCHEMA_DIR="builddir/data" \
+  /usr/bin/python3 -m pytest tests/ -v
+```
+
+### ⚠️ IMPORTANT - WHAT NOT TO DO
+
+```bash
+# ❌ NEVER run this without a display or proper setup
+uv run pytest tests/ -v
+# Result: will fail — many GTK tests require a live display/Wayland session
+```
+
+## Linting
+
+```bash
+# Strict enforcement of Ruff (E402, I001)
+uv run ruff check anura/
+
+# Format according to project style
+uv run ruff format anura/
+```
+
+## Branch & Commit Conventions
+
+- **Branch names**: `feature/short-description`, `fix/short-description`
+- **Normal integration flow**: create `feature/*` or `fix/*` branches from `feature` and open pull requests targeting `feature`. After integration, changes are validated and promoted through `testing`, then `development`, and finally `main`.
+- **Automation exceptions**: dependency automation (including Dependabot and FEDC) may use its explicitly configured target; do not change those targets as part of ordinary feature development. See [docs/reference/dependencies.md](docs/reference/dependencies.md).
+- **Commit messages**: Use [Conventional Commits](https://www.conventionalcommits.org/).
+- Every change should be documented in `CHANGELOG.md` under `[Unreleased]`.
+- Keep one heading per Keep a Changelog category within `[Unreleased]`; append bullets to the existing category.
+- CI blocks removal of existing `[Unreleased]` bullets unless the exact original text, a substantive rationale and a verifiable issue/PR reference are recorded in `.github/changelog-removals.json`. Rewording counts as removal plus addition.
+
+## Security Checklist (before every PR)
+
+- [ ] **DoS Prevention**: Image size validated with `MAX_IMAGE_SIZE_BYTES`.
+- [ ] **Text Sanitization**: OCR output passed through `validators.sanitize_text`.
+- [ ] **URI Validation**: URLs checked with `uri_validator()` before launch.
+- [ ] **Pango Markup Prevention**: User input in notifications sanitized against markup injection.
+- [ ] **Thread Safety**: No UI modifications from secondary threads; use `AtomicTaskManager`.
+- [ ] **Signal Lifecycle**: Use `SignalManagerMixin` for automated cleanup.
+- [ ] **No Telemetry**: Absolute privacy maintained.
+- [ ] **Fallback Security**: bundled `scrot` fallback only active on X11 (never on Wayland); no host screenshot tools required.

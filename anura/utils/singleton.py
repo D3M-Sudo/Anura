@@ -1,0 +1,102 @@
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
+#
+# SPDX-License-Identifier: MIT
+
+import threading
+from typing import Any, ClassVar, TypeVar, cast
+
+T = TypeVar("T")
+
+
+class ThreadSafeSingleton:
+    """
+    Thread-safe lazy singleton implementation using double-checked locking.
+
+    This ensures:
+    - Only one instance is ever created
+    - Initialization is thread-safe
+    - Instance is created only when first accessed
+    - Minimal performance overhead after initialization
+    """
+
+    _instances: ClassVar[dict[type[Any], Any]] = {}
+    _locks: ClassVar[dict[type[Any], threading.Lock]] = {}
+    _meta_lock = threading.Lock()
+
+    @classmethod
+    def _get_lock(cls, wrapped_class: type[Any]) -> threading.Lock:
+        """Get or create lock for the specific class."""
+        with cls._meta_lock:
+            if wrapped_class not in cls._locks:
+                cls._locks[wrapped_class] = threading.Lock()
+            return cls._locks[wrapped_class]
+
+    @classmethod
+    def get_instance(cls, wrapped_class: type[T]) -> T:
+        """
+        Explicit method to get singleton instance.
+
+        Args:
+            wrapped_class: The class to get singleton instance of
+
+        Returns:
+            The singleton instance
+        """
+        # First check without lock for performance
+        if wrapped_class in cls._instances:
+            return cast(T, cls._instances[wrapped_class])
+
+        # Double-checked locking pattern
+        with cls._get_lock(wrapped_class):
+            # Check again inside lock to prevent race condition
+            if wrapped_class not in cls._instances:
+                # Create the instance
+                instance = wrapped_class()
+                cls._instances[wrapped_class] = instance
+                return instance
+
+            return cast(T, cls._instances[wrapped_class])
+
+    @classmethod
+    def get_existing_instance(cls, wrapped_class: type[T]) -> T | None:
+        """Return the singleton if it already exists, without creating it.
+
+        Shutdown paths use this: cleaning up an optional service must not
+        instantiate it (#536). ``get_tts_service().cleanup()`` used to build a
+        ``TTSService`` — starting a Google language-catalog fetch — just to
+        tear it down in a silent CLI run that never used TTS.
+        """
+        return cast("T | None", cls._instances.get(wrapped_class))
+
+    @classmethod
+    def reset_for_testing(cls) -> None:
+        """
+        Reset all singletons for testing purposes only.
+        This should never be used in production code.
+        """
+        with cls._meta_lock:
+            cls._instances.clear()
+            cls._locks.clear()
+
+
+def get_instance[T](wrapped_class: type[T]) -> T:
+    """
+    Function to get singleton instance of a class.
+
+    Usage:
+        service = get_instance(MyService)
+    """
+    return ThreadSafeSingleton.get_instance(wrapped_class)
+
+
+def get_existing_instance[T](wrapped_class: type[T]) -> T | None:
+    """Return an already-created singleton, or None, without creating it.
+
+    Usage (cleanup paths only):
+        service = get_existing_instance(TTSService)
+        if service is not None:
+            service.cleanup()
+    """
+    return ThreadSafeSingleton.get_existing_instance(wrapped_class)

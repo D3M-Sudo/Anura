@@ -1,0 +1,112 @@
+[project]
+name = "anura"
+version = "0.2.1"
+description = "GTK4/Libadwaita desktop app for OCR via Tesseract — fork of Frog OCR"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+dependencies = [
+    "gtts>=2.5.4",
+    "loguru>=0.7.3",
+    "pillow>=13.0.0",
+    "psutil>=7.2.2",
+    "pytesseract>=0.3.13",
+    "requests>=2.34.2",
+    "zxing-cpp>=3.1.1",
+]
+
+# ─── Ruff ─────────────────────────────────────────────────────────────────────
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+src = ["anura", "build-aux"]
+# Markdown is excluded: ruff >=0.15 also formats fenced code blocks inside
+# Markdown, which would rewrite documentation snippets and agent rules.
+exclude = ["data/", "po/", "**/*.md"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "SIM",  # flake8-simplify
+    "TID",  # flake8-tidy-imports
+    "RUF",  # ruff-specific rules
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "B008",   # do not perform function calls in argument defaults
+    "SIM105", # use contextlib.suppress (style preference)
+    "SIM108", # ternary operator (readability preference)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["anura"]
+# gi.repository is a special namespace — treat as third-party
+known-third-party = ["gi", "loguru", "pytesseract", "gtts", "PIL", "requests"]
+force-sort-within-sections = true
+
+[tool.ruff.lint.per-file-ignores]
+# Allow unused imports in __init__.py (re-exports)
+"anura/**/__init__.py" = ["F401"]
+# Allow module level imports not at top of file (intentional for logging setup)
+"anura/main.py" = ["E402"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+docstring-code-line-length = 100
+
+# ─── Bandit ───────────────────────────────────────────────────────────────────
+# Production code is scanned in full. Test code is excluded because pytest
+# legitimately uses assert (B101), try/except/pass (B110), hardcoded temp paths
+# (B108) and subprocess/shell mocks (B403/B404/B602/B603), which would otherwise
+# produce ~1,000 non-actionable findings and mask real production regressions.
+#
+# Bandit only reads this section when the config is passed explicitly:
+#   bandit -c pyproject.toml -r .
+[tool.bandit]
+targets = ["anura"]
+exclude_dirs = ["tests", ".git", "__pycache__", "builddir", "build", "dist", ".venv"]
+
+# ─── Mypy ─────────────────────────────────────────────────────────────────────
+# Non-strict gate: PyGObject ships no usable type stubs and the codebase still
+# has a long tail of intentionally untyped callbacks. With the ignores below the
+# production tree is clean; per-module strictness is tracked as a separate epic.
+[tool.mypy]
+python_version = "3.12"
+files = ["anura"]
+ignore_missing_imports = true
+
+
+# ─── Pytest ───────────────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+# Markers for GTK-dependent tests that require a display
+markers = [
+    "gtk: tests that require a live GTK/Wayland display",
+    "network: tests that require network access",
+]
+# The default test invocation excludes display-dependent integration modules.
+# CI jobs select the appropriate headless or display-backed test tier.
+addopts = "-v --tb=short --ignore=tests/test_clipboard_service.py --ignore=tests/test_screenshot_service.py --ignore=tests/test_share_service.py --ignore=tests/test_tts_service.py --ignore=tests/test_notification_service.py --ignore=tests/test_language_manager.py --ignore=tests/test_tts_initialization.py --ignore=tests/test_app_lifecycle.py --ignore=tests/test_widgets.py --ignore=tests/test_audit_app_logic.py --ignore=tests/test_integration_cli_enterprise.py --ignore=tests/test_security_download_limit.py"
+
+[dependency-groups]
+dev = [
+    "bandit>=1.9.4",
+    "meson>=1.11.2",
+    "mypy>=2.1.0",
+    "ninja>=1.13.0",
+    "pytest>=9.1.1",
+    "pytest-cov>=6.0.0",
+    "pytest-timeout>=2.3.1",
+    "ruff>=0.15.21",
+    "vulture>=2.16",
+]

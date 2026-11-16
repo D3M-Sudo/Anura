@@ -1,0 +1,184 @@
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
+#
+# SPDX-License-Identifier: MIT
+
+import pytest
+
+pytest.importorskip("gi")
+
+# tests/test_integration_cli_enterprise.py
+from unittest.mock import MagicMock, patch
+
+from gi.repository import Gio
+
+from anura.main import AnuraApplication
+
+
+class TestCLIIntegrationEnterprise:
+    """
+    Integration tests for CLI argument handling in AnuraApplication.
+    """
+
+    @pytest.fixture
+    def app(self):
+        with (
+            patch("anura.core.resources.load_gresource_bundle", return_value=True),
+            patch("anura.main.ScreenshotService"),
+            patch("anura.main.get_notification_service"),
+            patch("anura.main.get_clipboard_service"),
+        ):
+            app = AnuraApplication()
+            # Mock settings to avoid GSettings dependency if possible,
+            # or rely on builddir schema setup
+            app.settings = MagicMock()
+            app.backend = MagicMock()
+            return app
+
+    def test_handle_extract_to_clipboard(self, app):
+        """Test the -e / --extract-to-clipboard CLI flow."""
+        app.settings.get_string.return_value = "eng"
+        exit_code = app._handle_extract_to_clipboard()
+
+        assert exit_code == 0
+        app.backend.capture.assert_called_once_with("eng", copy=True)
+
+    def test_command_line_file_option_is_decoded_to_a_path_string(self, app):
+        """Regression: `--file` crashed with TypeError before reaching any handler.
+
+        GLib.OptionArg.FILENAME yields an 'ay' bytestring; unpack() turns it into a list
+        of ints and Path() rejects that. The handler must receive a decoded str, with
+        non-ASCII names intact.
+        """
+        from gi.repository import GLib
+
+        options = GLib.VariantDict.new(None)
+        options.insert_value("file", GLib.Variant.new_bytestring("/tmp/scansione è.png".encode()))
+        options.insert_value("silent", GLib.Variant.new_boolean(True))
+        command_line = MagicMock()
+        command_line.get_options_dict.return_value = options
+        command_line.get_cwd.return_value = "/tmp/client"
+
+        with patch.object(app, "_handle_file_option", return_value=0) as handler:
+            assert app.do_command_line(command_line) == 0
+
+        handler.assert_called_once_with("/tmp/scansione è.png", True)
+
+    def test_command_line_without_file_option_activates_the_window(self, app):
+        from gi.repository import GLib
+
+        command_line = MagicMock()
+        command_line.get_options_dict.return_value = GLib.VariantDict.new(None)
+
+        with patch.object(app, "activate") as activate, patch.object(app, "_handle_file_option") as handler:
+            assert app.do_command_line(command_line) == 0
+
+        activate.assert_called_once()
+        handler.assert_not_called()
+
+    def test_handle_missing_file_returns_failure_without_opening_picker(self, app):
+        """An explicit missing --file path must not silently open the image picker."""
+        with patch("pathlib.Path.exists", return_value=False), patch.object(app, "activate") as activate:
+            assert app._handle_file_option("/tmp/missing.png", is_silent=False) == 1
+        activate.assert_not_called()
+
+    def test_handle_file_option_silent(self, app):
+        """Test the -f --silent CLI flow."""
+        file_path = "/tmp/test.png"
+        with (
+            patch("anura.main.Path.exists", return_value=True),
+            patch("os.access", return_value=True),
+            patch("anura.main.SilentRunner") as mock_runner_cls,
+        ):
+            mock_runner = mock_runner_cls.return_value
+            mock_runner.run.return_value = 0
+            exit_code = app._handle_file_option(file_path, is_silent=True)
+            assert exit_code == 0
+            mock_runner_cls.assert_called_once_with(app, file_path)
+
+    def test_handle_file_option_gui(self, app):
+        """Test the -f (without --silent) CLI flow."""
+        file_path = "/tmp/test.png"
+        with (
+            patch("anura.main.Path.exists", return_value=True),
+            patch("os.access", return_value=True),
+            patch.object(app, "activate") as mock_activate,
+            patch.object(app, "props") as mock_props,
+        ):
+            mock_window = MagicMock()
+            mock_props.active_window = mock_window
+            exit_code = app._handle_file_option(file_path, is_silent=False)
+            assert exit_code == 0
+            mock_activate.assert_called_once()
+            mock_window.process_file.assert_called_once_with(file_path)
+
+    def test_handle_inaccessible_file_silent(self, app):
+        """Test handling of inaccessible files in silent mode.
+
+        Note: production code uses pathlib.Path.exists(), not os.path.exists().
+        Patching os.path.exists has no effect — we must patch pathlib.Path.exists
+        directly.  os.access is still patched via its module path because the
+        production import is `import os` (not `from os import access`).
+        """
+        file_path = "/root/secret.png"
+        with (
+            patch("pathlib.Path.exists", return_value=True),
+            patch("os.access", return_value=False),
+        ):
+            exit_code = app._handle_file_option(file_path, is_silent=True)
+            assert exit_code == 1
+
+    def test_do_command_line_routing(self, app):
+        """Test that do_command_line correctly routes to specific handlers."""
+        # Mock Gio.ApplicationCommandLine
+        cmd_line = MagicMock(spec=Gio.ApplicationCommandLine)
+
+        # Test -e
+        cmd_line.get_options_dict().end().unpack.return_value = {"extract_to_clipboard": True}
+        with patch.object(app, "_handle_extract_to_clipboard", return_value=0) as mock_extract:
+            app.do_command_line(cmd_line)
+            mock_extract.assert_called_once()
+
+        # Test -f: GLib.OptionArg.FILENAME arrives as an 'ay' bytestring, never as a str
+        # (the previous version of this test fed a plain str, which hid a TypeError crash)
+        from gi.repository import GLib
+
+        file_options = GLib.VariantDict.new(None)
+        file_options.insert_value("file", GLib.Variant.new_bytestring(b"image.png"))
+        cmd_line.get_options_dict.return_value = file_options
+        cmd_line.get_cwd.return_value = "/tmp/requesting-client"
+        with patch.object(app, "_handle_file_option", return_value=0) as mock_file:
+            app.do_command_line(cmd_line)
+            mock_file.assert_called_once_with("/tmp/requesting-client/image.png", False)
+
+    def test_on_decoded_no_window(self, app):
+        """Test application-level on_decoded when no GUI window is present."""
+        from gi.repository import GLib
+
+        # GObject exposes active-window as read-only; replace the props proxy for this test.
+        with patch.object(app, "props") as mock_props:
+            mock_props.active_window = None
+
+        # Case: No text found
+        app.on_decoded(None, "", copy=False, ocr_result=None)
+
+        # Process the main loop to execute idle_add callbacks
+        while GLib.MainContext.default().iteration(False):
+            pass
+
+        app.notification_service.show_notification.assert_called_with(title="Anura OCR", body="No text found.")
+
+        # Case: Success with copy
+        with patch("anura.main.get_clipboard_service") as mock_get_cb:
+            mock_cb = mock_get_cb.return_value
+            app.on_decoded(None, "found text", copy=True, ocr_result=None)
+
+            # Process the main loop to execute idle_add callbacks
+            while GLib.MainContext.default().iteration(False):
+                pass
+
+            mock_cb.set.assert_called_with("found text")
+            app.notification_service.show_notification.assert_any_call(
+                title="Anura OCR", body="Text copied to clipboard."
+            )
