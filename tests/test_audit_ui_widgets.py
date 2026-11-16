@@ -308,9 +308,7 @@ def _probe_minimal_popover() -> dict:
                 "native_type": type(native).__name__ if native is not None else None,
                 "surface_type": type(surface).__name__ if surface is not None else None,
                 "surface_mapped": surface.get_mapped() if surface is not None else None,
-                "surface_size": (
-                    (surface.get_width(), surface.get_height()) if surface is not None else None
-                ),
+                "surface_size": ((surface.get_width(), surface.get_height()) if surface is not None else None),
             },
             "events": events,
             "wayland_protocol_probe": _probe_wayland_popup_protocol(),
