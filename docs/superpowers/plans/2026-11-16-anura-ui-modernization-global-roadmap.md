@@ -497,4 +497,6 @@ After every completed task, append/update the relevant phase and record:
 
 **M1-04 design proposal (2026-11-16):** approach B selected by the maintainer. Design document created at [`docs/superpowers/specs/2026-11-16-m1-04-semantic-colors-design.md`](../specs/2026-11-16-m1-04-semantic-colors-design.md), commit `b724f2688475bfd94e03c6e085863bfbc066c80c`. It defines conditional adoption of Libadwaita `.success`, semantic color consolidation, a classified hardcoded-color scanner and automated transitions across `default`, `force-light` and `force-dark`. This is design-only; implementation and test changes remain unauthorized pending design approval and a separately reviewed implementation plan.
 
-**Next:** obtain maintainer approval of the M1-04 design, then prepare the implementation plan. No implementation is authorized until the plan is separately approved.
+**M1-04 design approval and implementation plan (2026-11-16):** maintainer approved approach B and the design document. The detailed implementation plan is [`2026-11-16-m1-04-semantic-color-consolidation-plan.md`](2026-11-16-m1-04-semantic-color-consolidation-plan.md). It decomposes the work into scanner, semantic success/color consolidation, GTK theme-transition coverage and exact-SHA CI/documentation evidence. The plan is ready for maintainer review; implementation remains unauthorized until the plan is reviewed and explicitly approved for execution.
+
+**Next:** obtain approval of the implementation plan and explicit execution authorization. No source or test implementation has started.
