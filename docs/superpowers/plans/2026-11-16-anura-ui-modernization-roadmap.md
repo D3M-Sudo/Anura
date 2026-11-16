@@ -202,20 +202,27 @@ Append or update the relevant task record before starting the next task:
 
 - `anura/widgets/extracted_page.py`: `do_hiding()` no longer clears the text buffer; it continues emitting the existing `go-back` signal.
 - `anura/widgets/history_page.py`: capture the expanded entry's stable ID and the containing scroller's vertical adjustment before rebuilding; map rebuilt rows by entry ID; restore expansion and scroll through a generation-guarded GLib idle callback. A removed entry is not re-expanded. No new GSettings key, disk persistence, service change or data-model change.
-- `tests/test_widgets.py`: GTK regression test verifies text remains after hiding and a subsequent OCR result replaces it.
+- `tests/test_widgets.py`: GTK tests verify retention/replacement, navigation round-trip, focus acquisition on Extracted navigation and TTS stop when returning to Welcome.
 - `tests/test_history_ui.py`: headless regression tests cover refresh snapshot, matching-row expansion, scroll restoration, stale refresh/removed-entry safety and default state on a newly constructed page.
-- `CHANGELOG.md`: records the user-visible behavior and session-only scope.
+- `CHANGELOG.md`: existing `[Unreleased]` entries record the user-visible behavior and session-only scope; no duplicate entry was necessary.
 
-### Current validation status
+### Final validation evidence
 
-- **Code and tests committed:** yes, on `fix/ui-modernization-aligned`.
-- **CI:** pending inspection on the exact resulting branch head; no test counts or green status are claimed until the corresponding GitHub Actions run completes.
-- **Known limitation:** this bounded implementation does not yet establish a full live `AnuraWindow` end-to-end navigation test for every transition/focus side effect. The existing GTK job has `NO_AT_BRIDGE=1` and `GTK_A11Y=none`; real Orca/AT-SPI and manual GNOME/GTK visual/keyboard checks remain excluded, not passed.
-- **Protected branches / PR:** no protected branch modified; PR #648 remains Draft/open/unmerged and is not merged.
+- **CI Quality Check & Release:** [run #43885843452](https://github.com/D3M-Sudo/Anura/actions/runs/43885843452), workflow run 2397, completed/success on exact implementation head `bb316f94d37629cc7566b24330a87b6e86029db3`.
+- **Python Quality:** success — 630 passed, 6 skipped, 277 deselected.
+- **Changelog integrity:** success.
+- **GTK Integration Tests:** success — 436 passed, 5 skipped, 636 deselected, 2 warnings. The five M2-D GTK regression cases (Extracted retention/replacement, navigation round-trip, History state restoration, Extracted text-view focus, and TTS stop on return to Welcome) passed.
+- **AppImage:** x86_64 and aarch64 builds succeeded; complete AppImage release-set validation succeeded.
+- **Flatpak:** x86_64 and aarch64 builds succeeded; multi-architecture release-artifact validation succeeded.
+- **CodeQL:** [run #43885843419](https://github.com/D3M-Sudo/Anura/actions/runs/43885843419), completed/success on the same exact commit.
+- **publish-release:** skipped as expected for a pull-request run; no release was published.
+- The History unit tests for snapshot/restore, stale refresh callbacks, removed entries and default state on a new page passed in Python Quality. Current-head Python Quality also completed successfully.
+- These are automated CI results only. Manual GNOME/GTK visual checks, real Orca/AT-SPI checks and manual keyboard-navigation checks remain **excluded**, not passed. CI's `NO_AT_BRIDGE=1` and `GTK_A11Y=none` settings do not validate real assistive-technology behavior.
+- Warnings were non-fatal; all executable jobs concluded successfully.
 
-### Next steps
+### Disposition and limitations
 
-1. Inspect the current CI run against the exact final implementation/documentation commit.
-2. Fix any failures and rerun the relevant CI before closing UI-12.
-3. Record the final commit SHA, CI run URL, job conclusions and test counts in this roadmap and the global roadmap.
-4. Do not start another implementation task until both roadmap records are updated with final evidence.
+- **UI-12 / M2-D bounded task:** implementation, automated regression coverage, CHANGELOG record and exact-head CI/CodeQL verification complete.
+- **Global M2 phase:** remains Partial. This workstream does not complete broader Welcome/main-shell requirements or the full M0–M7 modernization.
+- **Manual checks:** GNOME/GTK visual checks, real Orca/AT-SPI and manual keyboard-navigation checks remain explicitly excluded, not passed or pending blockers.
+- **PR:** [#648](https://github.com/D3M-Sudo/Anura/pull/648) remains Open, Draft, unmerged, targeting `feature`. No protected branch was modified.
