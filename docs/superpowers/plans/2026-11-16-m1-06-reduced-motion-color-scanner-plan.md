@@ -133,7 +133,7 @@
   Run: `ruff format --check anura/widgets/shortcuts_overlay.py tests/test_widgets.py tests/test_ui_color_scanner.py`
   Expected: both commands pass.
 
-- [ ] **Step 4: Run full CI and CodeQL on the final implementation SHA**
+- [x] **Step 4: Run full CI and CodeQL on the final implementation SHA**
 
   Confirm all applicable jobs on the exact final SHA, including Python quality, GTK integration, changelog integrity, AppImage x86_64/aarch64, Flatpak x86_64/aarch64, release artifact validation, and CodeQL. Record skipped jobs with their reasons; do not interpret expected PR-only skips as failures.
 
@@ -146,4 +146,4 @@
 - Execution used the native in-session method; no subagent-driven execution was claimed.
 - The root `.anura-fade-in` and `.anura-card` classes are removed while reduced motion is active because `.reduced-motion *` does not match the root widget. They are restored in normal-motion mode; no CSS change is needed.
 - Settings handlers are disconnected in both `_on_close_request()` and `do_destroy()`. GTK CI demonstrated that the tested `destroy()` call did not exercise the existing `do_destroy()` path, so close-request cleanup is also required; the destroy hook remains an idempotent fallback.
-- On implementation/test SHA `35fa684e72fd4e83eae4d58d4b7e731a00d2486b`, Python quality (644 passed, 6 skipped, 277 deselected), GTK Integration (447 passed, 5 skipped, 650 deselected, 2 warnings), Ruff, mypy, Bandit, Changelog integrity, AppImage x86_64, Flatpak x86_64/aarch64 and release artifact validation passed; CodeQL passed. AppImage aarch64 remains in progress, so Task 3 Step 4 is intentionally unchecked.
+- On implementation/test SHA `35fa684e72fd4e83eae4d58d4b7e731a00d2486b`, CI #43974750869 completed with overall `success`; all 9 executable jobs passed, including AppImage x86_64/aarch64 builds, metadata checks, clean-host smoke tests and artifact uploads, Flatpak x86_64/aarch64 builds/runtime checks, and both release-set validators. Python quality: 644 passed, 6 skipped, 277 deselected; GTK Integration: 447 passed, 5 skipped, 650 deselected, 2 warnings. Ruff, mypy, Bandit and Changelog integrity passed. CodeQL #43974750821 passed on the same SHA. `publish-release` was skipped as expected for a PR.
