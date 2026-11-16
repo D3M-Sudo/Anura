@@ -388,7 +388,7 @@ Read-only audit completed on `fix/ui-modernization-aligned` at pre-recording hea
 - No OCR, dependency, architecture, portal or OS integration changes were made.
 - PR #648 remains Open/Draft/unmerged, base `feature`; no protected branch or PR metadata was changed.
 
-**Next:** prepare the remaining M1-04 semantic-style and GTK theme-transition work as a bounded continuation; do not mark M1-04 complete until it is implemented and verified.
+**Historical next-step note — superseded by M0-C (2026-11-16):** prepare the remaining M1-04 semantic-style and GTK theme-transition work. M1-04 was subsequently completed within its approved scope; see the completion record and current operational snapshot above.
 
 
 ## M1-04 — semantic color consolidation (2026-11-16)
