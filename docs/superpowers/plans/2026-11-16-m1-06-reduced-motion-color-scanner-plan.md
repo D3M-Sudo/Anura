@@ -41,33 +41,33 @@
 - Follow the established pattern in `anura/window.py`: `Gtk.Settings.get_for_display(self.get_display())`, optional-property detection with `find_property()`, and `notify::<property>` observers.
 - Add overlay-local callback and sync method; do not introduce a new shared abstraction.
 
-- [ ] **Step 1: Add GTK regression tests for initial state and live preference transitions**
+- [x] **Step 1: Add GTK regression tests for initial state and live preference transitions**
 
   Add focused tests for `ShortcutsOverlay` in `tests/test_widgets.py`. Verify the `reduced-motion` CSS class is present when `is_reduced_motion_enabled()` resolves true and absent when it resolves false. Exercise both directions by changing the settings state and invoking the connected notification path. Preserve and restore any GTK settings changed by the test in a `try/finally` block.
 
-- [ ] **Step 2: Run the focused GTK tests and confirm the expected failure**
+- [x] **Step 2: Run the focused GTK tests and confirm the expected failure**
 
   Run: `pytest tests/test_widgets.py -k shortcuts_overlay_reduced_motion -v`
   Expected: FAIL before implementation because `ShortcutsOverlay` does not yet synchronize reduced-motion state.
 
-- [ ] **Step 3: Add initial reduced-motion synchronization**
+- [x] **Step 3: Add initial reduced-motion synchronization**
 
   In `ShortcutsOverlay.__init__`, obtain `Gtk.Settings` for `self.get_display()`, store it as `self._motion_settings`, and call a private `_sync_reduced_motion_class()` after window initialization. Import and reuse `sync_reduced_motion_class` from `anura.utils.accessibility`.
 
-- [ ] **Step 4: Observe supported GTK motion properties**
+- [x] **Step 4: Observe supported GTK motion properties**
 
   For `gtk-enable-animations` and `gtk-interface-reduced-motion`, connect `notify::<name>` only when `self._motion_settings.find_property(name)` is not `None`. Store each returned handler ID. Add `_on_motion_settings_changed(settings, pspec)` to reapply the class and a private sync method matching the main-window policy.
 
-- [ ] **Step 5: Disconnect motion-setting handlers during destruction**
+- [x] **Step 5: Disconnect motion-setting handlers during destruction**
 
   Extend `do_destroy()` to disconnect every stored handler from `self._motion_settings`, using the same defensive handling already used for the overlay's other signal handlers. Clear the stored IDs and references before delegating to `super().do_destroy()`.
 
-- [ ] **Step 6: Run the focused GTK tests and verify they pass**
+- [x] **Step 6: Run the focused GTK tests and verify they pass**
 
   Run: `pytest tests/test_widgets.py -k shortcuts_overlay_reduced_motion -v`
   Expected: PASS for initial reduced-motion, initial normal-motion, both live transitions, and handler cleanup.
 
-- [ ] **Step 7: Run the complete GTK integration test module**
+- [x] **Step 7: Run the complete GTK integration test module**
 
   Run: `pytest tests/test_widgets.py -m gtk -v`
   Expected: PASS; no regressions in existing widget tests.
@@ -84,11 +84,11 @@
 - `find_unclassified_ui_colors(findings, approved) -> list[ColorLiteral]`
 - Repository root: `Path(__file__).resolve().parents[1]`.
 
-- [ ] **Step 1: Add a repository-root enforcement test**
+- [x] **Step 1: Add a repository-root enforcement test**
 
   Add a test that scans the real repository root and checks that `find_unclassified_ui_colors()` returns no findings. Define a module-level approval map keyed by `(relative_path, normalized_value)`, with a non-empty semantic rationale for every approved literal.
 
-- [ ] **Step 2: Confirm the allowlist against actual scanner output**
+- [x] **Step 2: Confirm the allowlist against actual scanner output**
 
   Run: `pytest tests/test_ui_color_scanner.py -k repository_ui_colors_are_classified -v`
   Expected: initially FAIL if the inventory is incomplete. Inspect every finding and add only the exact path/value pair with a defensible rationale. Do not approve by value alone or add wildcard paths.
@@ -97,16 +97,16 @@
   - `#16a36a`, `#0f7650`, `#ffffff`, `#21b77a`
   - `rgba(0, 0, 0, 0.15)`, `rgba(0, 0, 0, 0.1)`, `rgba(0, 0, 0, 0.12)`
 
-- [ ] **Step 3: Make failures actionable**
+- [x] **Step 3: Make failures actionable**
 
   Format each unclassified result with `path:line`, literal value, and syntax. Include the full list in the assertion message so a future contributor can classify or remove each new literal.
 
-- [ ] **Step 4: Verify fixture-level and repository-level scanner tests**
+- [x] **Step 4: Verify fixture-level and repository-level scanner tests**
 
   Run: `pytest tests/test_ui_color_scanner.py -v`
   Expected: all existing fixture tests and the new repository-root enforcement test PASS.
 
-- [ ] **Step 5: Verify the normal non-GTK pytest tier**
+- [x] **Step 5: Verify the normal non-GTK pytest tier**
 
   Run: `pytest tests/ -m "not gtk"`
   Expected: PASS. This is the same test tier invoked by `python-quality`; no standalone workflow step is necessary.
@@ -119,15 +119,15 @@
 - Modify: `HANDOVER.md`
 - Modify: `CHANGELOG.md` only if a user-facing entry is warranted.
 
-- [ ] **Step 1: Record F1 and F2 completion evidence**
+- [x] **Step 1: Record F1 and F2 completion evidence**
 
   Update both roadmaps and `HANDOVER.md` with the implemented behavior, tests, and exact verification status. Mark M1-06 complete only after required evidence is available. Keep F3 and F4 explicitly deferred.
 
-- [ ] **Step 2: Review CHANGELOG relevance**
+- [x] **Step 2: Review CHANGELOG relevance**
 
   Check existing `[Unreleased]` entries. Add one concise entry only if the behavior change is user-visible and not already represented; do not duplicate an existing entry.
 
-- [ ] **Step 3: Run static checks**
+- [x] **Step 3: Run static checks**
 
   Run: `ruff check anura/widgets/shortcuts_overlay.py tests/test_widgets.py tests/test_ui_color_scanner.py`
   Run: `ruff format --check anura/widgets/shortcuts_overlay.py tests/test_widgets.py tests/test_ui_color_scanner.py`
@@ -137,11 +137,13 @@
 
   Confirm all applicable jobs on the exact final SHA, including Python quality, GTK integration, changelog integrity, AppImage x86_64/aarch64, Flatpak x86_64/aarch64, release artifact validation, and CodeQL. Record skipped jobs with their reasons; do not interpret expected PR-only skips as failures.
 
-- [ ] **Step 5: Verify PR invariants**
+- [x] **Step 5: Verify PR invariants**
 
   Re-fetch PR #648 and confirm it remains Open, Draft, unmerged, base `feature`, head `fix/ui-modernization-aligned`. Do not alter PR metadata or merge it.
 
 ## Execution Notes
 
-- The current harness does not provide a usable subagent-driven implementation workflow. If execution is later approved, use the native in-session method and the `superpowers:executing-plans` skill; do not claim subagent execution.
-- This plan authorizes no implementation by itself. Implementation requires the user's separate explicit approval after plan review.
+- Execution used the native in-session method; no subagent-driven execution was claimed.
+- The root `.anura-fade-in` and `.anura-card` classes are removed while reduced motion is active because `.reduced-motion *` does not match the root widget. They are restored in normal-motion mode; no CSS change is needed.
+- Settings handlers are disconnected in both `_on_close_request()` and `do_destroy()`. CI demonstrated that the tested GTK4 `destroy()` call did not exercise the existing `do_destroy()` path, so close-request cleanup is required for the normal user close path; the destroy hook remains an idempotent fallback.
+- On implementation/test SHA `35fa684e72fd4e83eae4d58d4b7e731a00d2486b`, Python quality (644 passed, 6 skipped, 277 deselected), GTK Integration (447 passed, 5 skipped, 650 deselected, 2 warnings), Ruff, mypy, Bandit, Changelog integrity and CodeQL passed. AppImage/Flatpak multi-architecture and release validation were still in progress when this plan snapshot was written.

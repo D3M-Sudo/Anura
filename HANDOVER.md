@@ -6,17 +6,18 @@ This document transfers the context required to continue the UI modernization wo
 
 This handover records the adapted implementation and its remaining validation. The modernization work is now present on `fix/ui-modernization-aligned`; it was adapted against `feature` rather than copied wholesale from PR #448.
 
-## Current operational snapshot — M1-05 (2026-11-16)
+## Current operational snapshot — M1-06 (2026-11-16)
 
 - **Authoritative global status:** M0 Completed after M0-C consolidation; M1 Partial; M2 Partial; M3 Partial; M4 Partial; M5 Not started as a complete phase; M6 Partial; M7 Partial.
 - **M1-05 completed:** read-only cross-surface Design System audit recorded in [M1-05 report](docs/audit/ui-design-system-m1-05-2026-11-16.md).
-- M1-02 conventions, M1-03 semantic-color audit and M1-04 scanner/style-linkage/theme-transition work are complete within their bounded scopes. M1 is not globally complete.
+- **M1-06 implementation and regression coverage completed; distribution CI pending.** F1 Shortcuts reduced-motion handling and F2 production-tree scanner enforcement are implemented on SHA `35fa684e72fd4e83eae4d58d4b7e731a00d2486b`.
+- Python quality (644 passed, 6 skipped, 277 deselected), GTK Integration (447 passed, 5 skipped, 650 deselected, 2 warnings), Ruff, mypy, Bandit, Changelog integrity and CodeQL pass on that exact SHA. AppImage/Flatpak x86_64/aarch64 jobs are still running; do not mark M1-06 fully closed until they pass.
+- M1-02 conventions, M1-03 semantic-color audit, M1-04 scanner/style-linkage/theme-transition work and M1-05 cross-surface audit are complete within their bounded scopes. M1 remains globally Partial.
 - The [global roadmap](docs/superpowers/plans/2026-11-16-anura-ui-modernization-global-roadmap.md) owns current phase status, priorities, dependencies and global traceability. The [PR #648 roadmap](docs/superpowers/plans/2026-11-16-anura-ui-modernization-roadmap.md) owns detailed PR workstream history and exact-SHA evidence. Older continuation instructions below are historical and are superseded where they conflict with the current global roadmap.
-- PR #648 was rechecked during M0-C: Open, Draft, unmerged, base `feature`, head branch `fix/ui-modernization-aligned`. No PR metadata/state change or merge was made.
+- PR #648 was rechecked: Open, Draft, unmerged, base `feature`, head branch `fix/ui-modernization-aligned`. No PR metadata/state change or merge was made.
 - Manual GNOME/GTK visual checks, real Orca/AT-SPI, manual keyboard checks and live multi-monitor geometry verification remain excluded. Screenshot capture remains deferred to the next release cycle.
-- **Next conditional candidate:** M1-06 proposal for F1 reduced-motion handling in the separate Shortcuts window and F2 production-tree color-scanner CI enforcement. No implementation is authorized until a bounded proposal is reviewed and explicitly approved.
-- M1-05 found F3 low-priority apparently orphaned CSS selectors and F4 low-priority undocumented `title`/`h4` typography classes; both are deferred pending further justification.
-- M0-C and M1-05 changed documentation only: no app source, tests, workflows, CHANGELOG, OCR, dependencies, architecture or protected branches.
+- M1-05 findings F3 (apparently orphaned CSS selectors) and F4 (`title`/`h4` typography mapping) remain deferred pending separate justification.
+- No dependencies, OCR, palette, architecture, portal, OS or protected branch changes were made.
 
 
 > **Roadmap hierarchy:** the [Global Anura UI/UX Modernization Roadmap](docs/superpowers/plans/2026-11-16-anura-ui-modernization-global-roadmap.md) is the primary plan for the complete application-wide M0–M7 modernization, all windows/components and global requirement traceability. The [PR #648 workstream roadmap](docs/superpowers/plans/2026-11-16-anura-ui-modernization-roadmap.md) is subordinate and preserves detailed implementation/task/CI evidence for that PR only. This handover remains the technical/history record. After every completed task, update the global roadmap—and the PR #648 workstream roadmap when relevant—before starting another task.
@@ -398,3 +399,15 @@ Read-only audit completed on `fix/ui-modernization-aligned` at pre-recording hea
 M1-04 implementation completed on `fix/ui-modernization-aligned` at `7f6a7045feefb019c869cc74aecc31a5e991a74d`. The scanner, downloaded-language class linkage and GTK theme-transition tests are implemented. CI #43951965392 and CodeQL #43951968944 both passed on the exact SHA. Python: 643 passed, 6 skipped, 277 deselected; GTK Integration, Changelog integrity, AppImage x86_64/aarch64, Flatpak x86_64/aarch64 and release artifact validation passed. `publish-release` was skipped for PR validation.
 
 The application-owned light/dark green fallback is retained; Libadwaita `.success` was not adopted because it cannot guarantee contrast on the resolved application surfaces. Automated theme tests validate transitions and CSS-class state, not pixel-level contrast across all desktop themes. Manual visual, Orca/AT-SPI and keyboard checks remain excluded. M1 and the global M0–M7 programme remain Partial. PR #648 remains Open/Draft/unmerged, targeting `feature`; no protected branch was changed.
+
+
+## M1-06 — implementation handover (2026-11-16)
+
+- **Implementation/test SHA:** `35fa684e72fd4e83eae4d58d4b7e731a00d2486b`.
+- **F1:** `ShortcutsOverlay` uses the existing reduced-motion helper, observes supported GTK setting notifications, suppresses root animation/transition classes in reduced mode, restores them in normal mode, and disconnects settings callbacks on close-request and destruction.
+- **F2:** the existing UI color scanner now runs against the actual repository tree in pytest with exact path/value approvals and semantic rationales. No scanner implementation or CI workflow change was required.
+- **TDD:** expected red GTK runs confirmed the missing reduced-motion propagation and missing close-path cleanup before the corresponding fixes. Final GTK suite passes.
+- **Green evidence:** CI #43974750869 — Python 644 passed, 6 skipped, 277 deselected; GTK 447 passed, 5 skipped, 650 deselected, 2 warnings; Changelog integrity passed. CodeQL #43974750821 passed. AppImage/Flatpak architecture jobs and release validations were still in progress when this handover snapshot was written.
+- **Ruling — root motion classes:** the shared `.reduced-motion *` selector excludes the root widget. The implementation therefore removes `anura-fade-in` and `anura-card` from the Shortcuts root while reduced motion is enabled, restoring them otherwise; this avoids a CSS-wide selector change and preserves normal behavior. Cost if wrong: root-level motion could remain visible despite reduced-motion preference.
+- **Ruling — close lifecycle:** GTK integration showed that calling `Gtk.Window.destroy()` in the test did not exercise the existing `do_destroy()` cleanup path. Settings handlers are therefore also disconnected in `close-request`, with `do_destroy()` retained as an idempotent fallback. Cost if wrong: a close path that bypasses both hooks could retain a settings callback.
+- Manual visual, Orca/AT-SPI, keyboard and live multi-monitor tests remain excluded and are not claimed. F3/F4 remain deferred.

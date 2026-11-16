@@ -334,9 +334,9 @@ The [global roadmap](2026-11-16-anura-ui-modernization-global-roadmap.md) is the
 
 - M0-C global backlog/document reconciliation is complete. The current programme status is M0 Completed; M1–M4 Partial; M5 Not started as a complete phase; M6–M7 Partial.
 - M1-02 conventions, M1-03 audit and M1-04 semantic-color/scanner/theme-test work are complete within their bounded scopes. M1 remains globally Partial pending cross-surface adoption audit.
-- **M1-05 is now completed** as a read-only cross-surface Design System audit; see [the audit report](../../audit/ui-design-system-m1-05-2026-11-16.md). The next conditional global candidate is M1-06, limited to F1 reduced-motion handling for the separate Shortcuts window and F2 production-tree color-scanner CI enforcement. M1-06 requires its own bounded proposal and explicit approval; no implementation is authorized.
+- **M1-05 and the implementation portion of M1-06 are complete within their bounded scopes.** M1-06 closes F1 reduced-motion handling for Shortcuts and F2 production-tree color-scanner enforcement. Python/GTK regression suites and CodeQL pass on SHA `35fa684e72fd4e83eae4d58d4b7e731a00d2486b`; AppImage/Flatpak multi-architecture CI is still running, so phase closure remains pending.
 - Earlier sections in this roadmap and older task plans may contain historical “next task” directions that predate completed work. Preserve them as historical records; where they conflict with the current snapshot, the global roadmap and this reconciliation note supersede them.
-- Exact-SHA CI history remains unchanged. The latest previously verified documentation head was `37b00668452272e993eb5fd1723402362da8c7e7`, with CI #43956668829 and CodeQL #43956668787 successful on that exact SHA. Those results must not be attributed to later M0-C commits unless rerun.
+- M1-06 implementation/test SHA is `35fa684e72fd4e83eae4d58d4b7e731a00d2486b`. CI #43974750869 has Python quality, GTK Integration and Changelog integrity green; CodeQL #43974750821 is green. AppImage/Flatpak multi-architecture jobs remain in progress. Earlier CI results are not substituted for this exact-SHA evidence.
 - Manual GNOME/GTK visual, Orca/AT-SPI, manual keyboard and live multi-monitor checks remain excluded; screenshot capture remains deferred to the next release cycle.
 - PR #648 remains Open/Draft/unmerged, targeting `feature`; this documentation update does not alter PR metadata or state.
 
@@ -350,3 +350,14 @@ The [global roadmap](2026-11-16-anura-ui-modernization-global-roadmap.md) is the
 - **M1 remains Partial.** M1-06 is conditional and must be separately scoped/approved; it should address F1 and F2 only unless further evidence justifies expanding scope. F3/F4 are deferred.
 - No application source, tests, workflows, CHANGELOG, dependencies, OCR behavior, architecture, PR metadata or protected branches changed. No tests or CI were run for this audit; manual GNOME/GTK visual, Orca/AT-SPI and keyboard checks remain excluded.
 - PR #648 state is unchanged: Open/Draft/unmerged, base `feature`, head branch `fix/ui-modernization-aligned`.
+
+
+## M1-06 — Reduced-motion and production color-scanner enforcement (2026-11-16)
+
+- **Implementation/test head:** `35fa684e72fd4e83eae4d58d4b7e731a00d2486b`. The work changes only `anura/widgets/shortcuts_overlay.py`, `tests/test_widgets.py` and `tests/test_ui_color_scanner.py` beyond the previously approved design/plan documents.
+- **F1 implementation:** the separate Shortcuts window now reads the GTK settings associated with its display, reuses the existing accessibility helper, observes supported setting notifications and updates the reduced-motion state live. It removes root `anura-fade-in`/`anura-card` motion classes while reduced motion is active and restores them in normal mode. Settings callbacks are disconnected on close-request and in `do_destroy()`.
+- **F1 tests:** GTK coverage includes initial normal/reduced states, live `gtk-interface-reduced-motion` transitions, root animation/transition class behavior, older-GTK fallback when the reduced-motion property is absent, live `gtk-enable-animations` changes and handler cleanup.
+- **F2 implementation:** repository-root pytest enforcement uses the existing scanner and an exact path/value rationale map; it does not add a separate workflow or change the scanner's production-source scope.
+- **Verification on the exact SHA:** Python quality 644 passed/6 skipped/277 deselected; GTK Integration 447 passed/5 skipped/650 deselected/2 warnings; Ruff, mypy, Bandit, Changelog integrity and CodeQL passed. CI [#43974750869](https://github.com/D3M-Sudo/Anura/actions/runs/43974750869), CodeQL [#43974750821](https://github.com/D3M-Sudo/Anura/actions/runs/43974750821). AppImage/Flatpak architecture and release validation are still running.
+- **TDD red evidence:** test-only commits produced four expected GTK failures before the reduced-motion implementation and four expected failures before close-request cleanup; the final implementation/test SHA above is green for the complete GTK suite.
+- F3/F4 remain deferred. Manual visual, Orca/AT-SPI, manual keyboard and live multi-monitor checks remain excluded; screenshots remain deferred. PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`.

@@ -32,7 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- Accessibility: respect the GTK reduced-motion preference with an application-scoped CSS policy; use gtk-interface-reduced-motion when available and fall back to gtk-enable-animations on older GTK versions (#648)
+- Accessibility: respect GTK reduced-motion preferences in the main window and separate Shortcuts window, including live setting changes; suppress app-authored root animations/transitions and retain the gtk-enable-animations fallback on older GTK versions (#648)
 - Preferences: reorganize settings into four dedicated pages (General, Editor, Voice and Languages); move the existing Editor controls and TTS volume/language controls into their respective pages while retaining asynchronous TTS catalog loading (#648)
 - Welcome: retain Screenshot as the primary action; show Open Image, Paste Image and Drop Image as equal-width horizontal secondary actions when their measured natural widths fit, and group the same controls in More options when compact; preserve the page-wide drop target and focus behavior (#648)
 - UI/UX: align the Extracted, Welcome, History and Shortcuts interfaces with the modernized action hierarchy, boxed-list presentation and fixed green brand palette; use a darker green background with white foreground for suggested-action controls to meet WCAG AA normal-text contrast, and scheme-aware green text for light/dark surfaces; preserve existing Welcome accessibility and interaction behavior (#648)
