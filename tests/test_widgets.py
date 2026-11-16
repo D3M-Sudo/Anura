@@ -1102,7 +1102,8 @@ class TestShortcutsOverlayReducedMotion:
     def test_older_gtk_without_reduced_motion_property_uses_animation_fallback(self):
         settings = MagicMock()
         settings.find_property.side_effect = lambda name: object() if name == "gtk-enable-animations" else None
-        settings.get_property.return_value = True
+        state = {"gtk-enable-animations": True}
+        settings.get_property.side_effect = lambda name: state[name]
         settings.connect.return_value = 103
 
         with patch(
@@ -1119,6 +1120,18 @@ class TestShortcutsOverlayReducedMotion:
                 "notify::gtk-enable-animations",
                 overlay._on_motion_settings_changed,
             )
+
+            state["gtk-enable-animations"] = False
+            overlay._on_motion_settings_changed(settings, None)
+            assert overlay.has_css_class("reduced-motion")
+            assert not overlay.has_css_class("anura-fade-in")
+            assert not overlay.has_css_class("anura-card")
+
+            state["gtk-enable-animations"] = True
+            overlay._on_motion_settings_changed(settings, None)
+            assert not overlay.has_css_class("reduced-motion")
+            assert overlay.has_css_class("anura-fade-in")
+            assert overlay.has_css_class("anura-card")
             assert overlay._on_close_request(overlay) is False
         finally:
             overlay.destroy()
