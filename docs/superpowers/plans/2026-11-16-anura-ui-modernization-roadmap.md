@@ -294,3 +294,18 @@ PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-
 - PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`.
 
 **Next:** prepare a bounded M1-03 semantic-color role audit plan for review. The PR description remains unchanged pending separate approval for PR metadata edits.
+
+## M1-03 — Semantic color-role audit (2026-11-16)
+
+- **Outcome:** read-only audit completed. No source, test, CHANGELOG, workflow or PR metadata changes were made.
+- **Inspected:** `data/style.css`, all 14 Blueprint UI files, relevant Python widget/application modules, `anura/main.py`, `docs/ui-design-system.md` and `tests/test_ui_palette.py`. This was a scoped inspection, not an exhaustive repository-wide color scan.
+- **Role mapping:** `#16A36A` brand/graphical accent; `#0F7650` + white suggested-action pair and light-scheme standalone green; `#21B77A` dark-scheme standalone green; `@warning_color` warning; `@popover_bg_color`, `@theme_base_color`, `@theme_fg_color` and `@borders` theme-managed surfaces/text/borders; translucent black shadows decorative.
+- **Contrast samples:** white on `#0F7650` 5.63:1; `#0F7650` on `#F6F5F4` 5.17:1; `#21B77A` on `#242424` 6.00:1 and on `#353535` 4.74:1. Brand accent `#16A36A` is 3.24:1 on white and should remain graphical rather than general normal text. These are calculated representative pairs, not runtime measurements.
+- **Findings:** no Critical/High issue demonstrated. Medium: downloaded-language success uses explicit light/dark green values instead of a semantic Libadwaita success class. Low: repeated standalone green literals and missing repository-wide color-literal guard. Informational: no explicit error color role found in audited CSS; no missing user-facing error state is inferred.
+- **Theme review:** existing `default`, `force-light` and `force-dark` mapping through `Adw.StyleManager` is present. Custom green states have dark overrides; surfaces and warning use theme-managed colors.
+- **Test gaps:** no runtime cross-surface test across all three theme modes; no repository-wide scanner for unclassified hardcoded colors; no explicit test for semantic success/error style-role mapping. Existing contrast tests use fixed representative surfaces.
+- **Context7 Libadwaita:** confirms `.accent`, `.success`, `.warning`, `.error` classes and recommends theme-aware colors for custom styling. This is a future evaluation point, not approval to change the palette.
+- **AI Delivery Evidence Checker:** 10 criteria; delivery partially supported (5 supported, 5 partial); test evidence partially supported; verdict `needs_more_evidence` (level 3). No tests were run during this audit. Historical CI #43907544843 applies to SHA `6dece44cd3deb57fc43cb276db4a291a771e9584`, not audit head `f5225e2e82973db63822ca8b3b26cf13619b907a`.
+- Manual GNOME/GTK visual, Orca/AT-SPI and manual keyboard checks remain excluded, not passed. PR #648 remains Open/Draft/unmerged, base `feature`; no protected branch or PR metadata was changed.
+
+**Next:** prepare a bounded M1-04 proposal for semantic-color consolidation and automated coverage; implementation requires separate explicit approval.
