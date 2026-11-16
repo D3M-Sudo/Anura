@@ -84,7 +84,7 @@ Status values are evidence-based: **Not started**, **In progress**, **Partial**,
 
 | Phase | Scope | Exit condition | Current status |
 |---|---|---|---|
-| M0 | Full application audit | Complete inventory of windows/components/states/functions; current behavior, visual/functional/accessibility/architecture/performance/Linux-compatibility findings; prioritized requirements and traceability baseline | **Partial — scope recovered; full current-tree audit still required** |
+| M0 | Full application audit | Complete inventory of windows/components/states/functions; current behavior, visual/functional/accessibility/architecture/performance/Linux-compatibility findings; prioritized requirements and traceability baseline | **Partial — M0-A inventory and M0-B traceability/evidence reconciliation completed; M0-C prioritization and remaining audit synthesis are next** |
 | M1 | Design System and themes | Approved shared palette/tokens and reusable patterns; typography/spacing/component rules; automatic/light/dark and force-light/force-dark behavior verified | **Partial — green palette/runtime CSS implemented in PR #648; app-wide system audit and theme coverage remain** |
 | M2 | Welcome and main navigation | Welcome and main-shell/navigation experience meet responsive, visual, interaction and focus criteria | **Partial — Welcome and selected shell behavior implemented in PR #648; full navigation audit and acceptance remain** |
 | M3 | Extracted and History | Extracted/OCR and History surfaces consistently modernized without functional regressions | **Partial — Extracted header/action area and scroll protections exist; History modernization is not established as complete** |
@@ -217,9 +217,9 @@ The subordinate document [2026-11-16-anura-ui-modernization-roadmap.md](2026-11-
 ## 7. Next execution sequence
 
 1. **GLOBAL-00 — Establish the roadmap hierarchy and reconcile references.** This task creates this global document, identifies the PR #648 roadmap as subordinate and updates the handover links. Documentation-only; no application code or PR state changes.
-2. **M0-A — Complete the current-tree UI inventory.** Read-only audit of every window/page/dialog/popover/menu/transient state; produce a concrete inventory and findings.
-3. **M0-B — Requirement and evidence reconciliation.** Compare the inventory with the approved scope, PR #448 historical proposal, PR #648 workstream and existing tests. Assign every requirement a disposition.
-4. **M0-C — Prioritize the phase backlog.** Present bounded implementation tasks, dependencies and acceptance criteria for approval.
+2. **M0-A — Complete the current-tree UI inventory.** **Completed 2026-11-16** in read-only mode; details and limitations are recorded below.
+3. **M0-B — Requirement and evidence reconciliation.** **Completed 2026-11-16** in read-only mode; details and limitations are recorded below.
+4. **M0-C — Prioritize the phase backlog.** Next: synthesize M0-A/M0-B findings into bounded, dependency-ordered tasks with acceptance criteria and test plans for maintainer approval.
 5. Proceed through M1–M7 in dependency order. The maintainer must explicitly approve each implementation task before code changes.
 
 No application-code task is authorized by GLOBAL-00 or by the existence of this roadmap.
@@ -239,6 +239,37 @@ After every completed task, append/update the relevant phase and record:
 - **Requirement matrix changes:**
 - **Next permitted task:**
 - **Global roadmap updated before next task:** yes
+
+
+### 2026-11-16 — M0-A: current-tree UI inventory completed
+
+- **Outcome:** completed as a structural/read-only inventory. No repository files, application code, workflows, tests, PR metadata or protected branches were changed.
+- **Audited snapshot:** branch `fix/ui-modernization-aligned`, HEAD `066c698ea9d039985e79e09776268d5d4a96414f`.
+- **Repository inventory:** 416 tracked files; 89 under `anura/`; 14 Python widget files; 14 Blueprint (`.blp`) templates; 125 test files.
+- **Surface map:** main shell/navigation (`anura/window.py`, `data/ui/window.blp`); Welcome; Extracted/OCR; History; Preferences General/Editor/Voice/Languages; Welcome language popover and rows; Keyboard Shortcuts; Share; About and dialogs; notification services; banners/toasts; contextual menus, screenshot menu and provider/language popovers.
+- **State inventory:** OCR processing/results/errors; drag/drop; clipboard; text empty/selection/search-no-results; TTS generation/playback/pause; History empty/disabled/populated/expanded and deletion confirmation; model download progress/failure/network states; asynchronous Voice catalog; toasts, banners and desktop notifications.
+- **Representative existing test modules identified:** `test_ui_palette.py`, `test_reduced_motion.py`, `test_accessible_status_announcements.py`, `test_window_geometry.py`, `test_history_ui.py`, `test_keyboard_shortcuts.py`, Preferences resilience/Voice/idle/language tests, `test_language_row_accessibility.py`, notification/privacy tests, file-dialog regressions, search navigation, widget/share tests, Extracted reflow, UI widget audit, Welcome accessibility and shortcut consistency.
+- **Preliminary findings:** contextual menu contents differ by page and require intentionality review rather than assuming parity; About/menu/some dialogs have less dedicated UI coverage than Welcome/History; responsive evidence is concentrated on Welcome and window geometry; Preferences Languages and the Welcome language selector need a consistency review; toast/banner/desktop notification implementations need a cross-surface consistency review; shared CSS/component patterns need systematic audit.
+- **Limitations:** this was a structural source/test inventory, not a complete runtime visual audit, manual desktop verification, test execution or proof that every behavior is correct. Manual GNOME/GTK visual checks, real Orca/AT-SPI and manual keyboard checks remain excluded by maintainer decision.
+
+### 2026-11-16 — M0-B: requirement traceability and evidence reconciliation completed
+
+- **Outcome:** completed as a read-only reconciliation of the approved global requirements against the M0-A inventory, inspected source/test modules and available PR #648 CI evidence. No repository files or tests were changed or run.
+- **Requirement disposition:** R01–R11 and R16 remain **partial** at application-wide scope; R12 (no OCR/model/pipeline/image-processing/portal/OS expansion) and R13 (no unapproved mockup-only features) remain explicit scope constraints; R14 manual verification remains **excluded**, not passed; R15 CI evidence-recording requirement has a recorded baseline; R17 remains a governance constraint.
+- **Priority findings:**
+  - **High — M0-B01:** verify automatic/light/dark theme behavior and `default`, `force-light`, `force-dark` across all relevant surfaces.
+  - **High — M0-B02:** extend responsive test coverage beyond Welcome and main-window geometry to applicable secondary surfaces and reference viewports.
+  - **High — M0-B03:** extend cross-window focus, accessible-name/role and announcement coverage.
+  - **Medium — M0-B04:** add focused UI coverage for About, contextual menus and dialogs where tests are practical.
+  - **Medium — M0-B05:** reconcile behavior and presentation across toast, banner and desktop notification channels.
+  - **Medium — M0-B06:** review translation impact and user-facing strings as part of implementation/integration.
+- **Evidence boundary for CI:** run [#43801048308](https://github.com/D3M-Sudo/Anura/actions/runs/43801048308) succeeded on tested application/workflow head `cc8aaad6601f25b9e96f3d2eb9f78bc9fb3c524d`: Python quality, changelog integrity, GTK integration, AppImage x86_64/aarch64, Flatpak x86_64/aarch64, AppImage release-set and multi-architecture validation succeeded; publish release was skipped as expected for a PR. GTK reported 431 passed, 5 skipped, 632 deselected and 2 warnings. This is aggregate run evidence, not an individual pass/fail result for every named test module and not evidence for later documentation-only commits.
+- **AI Delivery Evidence Checker limitation:** the checker was supplied with criteria and evidence snippets; its verdict was `not_supported` at Level 1 because the supplied material did not establish each criterion. It does not inspect the full live repository, execute tests or authenticate CI evidence. Its result is an evidence-sufficiency warning, not a finding that the implementation is defective. Individual test outcomes not independently supplied remain unknown; they must not be described as failed or skipped on that basis.
+- **Graphify limitation:** its repository graph indexed `development`, not the audited `fix/ui-modernization-aligned` branch. Graph output was used only as discovery context, not as branch-specific implementation proof.
+- **Context7:** official Libadwaita and Blueprint documentation was used to clarify component responsibilities and template/widget relationships; it does not prove Anura-specific behavior.
+- **Superpowers:** no executable Superpowers tool was available in this session; no subagents were run.
+- **M0 status:** remains **Partial** until M0-C produces the prioritized, bounded backlog and remaining audit synthesis. M0-A and M0-B are complete; no implementation task is authorized by their completion.
+- **Next permitted task:** M0-C planning only; no application-code changes are authorized by this record.
 
 ## 9. Change log
 
@@ -262,3 +293,10 @@ After every completed task, append/update the relevant phase and record:
 - Branch comparison against `feature` reports 320 commits ahead and 0 behind, with `feature` at `cb079b0b55e252a7ac054fe1b6f57030ddc7b1f9`. This is a fresh comparison snapshot, not a merge/readiness recommendation.
 - This task changed documentation only; no new CI run is claimed. The latest recorded application CI evidence remains the run cited in the subordinate roadmap and must be re-evaluated when implementation changes are proposed.
 - **GLOBAL-00 completed.** Next global task: M0-A, read-only full current-tree UI inventory, pending explicit task approval. Mandatory roadmap update completed before any next task.
+
+
+### 2026-11-16 — M0-A/M0-B audit record
+
+- Recorded the completed structural UI inventory (M0-A), requirement/evidence reconciliation (M0-B), priority findings, CI evidence boundary and tool limitations.
+- Updated the M0 status and execution sequence: M0 remains partial; M0-C backlog prioritization is next.
+- Documentation-only roadmap update on `fix/ui-modernization-aligned`; no application code, workflows, tests, protected branches, PR state or merge state changed. No CI run is claimed.
