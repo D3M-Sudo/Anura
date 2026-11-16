@@ -459,6 +459,74 @@ def test_teardown_all_cancels_pending_timers_and_drops_controller(headless_gi_mo
 
 
 # ---------------------------------------------------------------------- #
+# In-session view-state restoration
+# ---------------------------------------------------------------------- #
+
+
+def test_refresh_captures_expanded_entry_and_scroll_position(headless_gi_mocks, monkeypatch, tmp_path):
+    fake_adw, fake_gtk, fake_glib = _patch_ui(monkeypatch)
+    fake_adw.ExpanderRow.side_effect = lambda **_kwargs: MagicMock()
+    service = HistoryService(base_dir=tmp_path)
+    service.record("first", "eng")
+    service.record("second", "eng")
+    page = _make_page(headless_gi_mocks)
+    page.setup(service)
+
+    expanded_row = page._rows[0]
+    expanded_id = service.get_entries()[0].id
+    page._open_row = expanded_row
+    page._row_entry_ids = {expanded_id: expanded_row}
+    adjustment = MagicMock()
+    adjustment.get_value.return_value = 137.0
+    scrolled_window = MagicMock()
+    scrolled_window.get_vadjustment.return_value = adjustment
+    page.history_list.get_ancestor.return_value = scrolled_window
+
+    page.refresh()
+
+    fake_glib.idle_add.assert_called_once()
+    callback, restored_id, restored_scroll, generation = fake_glib.idle_add.call_args.args
+    assert callback == page._restore_view_state
+    assert restored_id == expanded_id
+    assert restored_scroll == 137.0
+    assert generation == page._refresh_generation
+
+
+def test_restore_view_state_expands_matching_row_and_restores_scroll(headless_gi_mocks, monkeypatch, tmp_path):
+    _fake_adw, _fake_gtk, fake_glib = _patch_ui(monkeypatch)
+    service = HistoryService(base_dir=tmp_path)
+    page = _make_page(headless_gi_mocks, service)
+    row = MagicMock()
+    page._row_entry_ids = {"stable-entry-id": row}
+    page._refresh_generation = 4
+    adjustment = MagicMock()
+    scrolled_window = MagicMock()
+    scrolled_window.get_vadjustment.return_value = adjustment
+    page.history_list.get_ancestor.return_value = scrolled_window
+
+    result = page._restore_view_state("stable-entry-id", 83.5, 4)
+
+    row.set_expanded.assert_called_once_with(True)
+    adjustment.set_value.assert_called_once_with(83.5)
+    assert result is fake_glib.SOURCE_REMOVE
+
+
+def test_restore_view_state_ignores_removed_entry_and_stale_refresh(headless_gi_mocks, monkeypatch, tmp_path):
+    _fake_adw, _fake_gtk, fake_glib = _patch_ui(monkeypatch)
+    page = _make_page(headless_gi_mocks, HistoryService(base_dir=tmp_path))
+    page._refresh_generation = 5
+    adjustment = MagicMock()
+    scrolled_window = MagicMock()
+    scrolled_window.get_vadjustment.return_value = adjustment
+    page.history_list.get_ancestor.return_value = scrolled_window
+
+    result = page._restore_view_state("removed-entry-id", 99.0, 4)
+
+    adjustment.set_value.assert_not_called()
+    assert result is fake_glib.SOURCE_REMOVE
+
+
+# ---------------------------------------------------------------------- #
 # Malformed entry / defensive formatting
 # ---------------------------------------------------------------------- #
 
