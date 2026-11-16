@@ -1073,6 +1073,8 @@ class TestShortcutsOverlayReducedMotion:
 
         try:
             assert overlay.has_css_class("reduced-motion") is expected
+            assert overlay.has_css_class("anura-fade-in") is not expected
+            assert overlay.has_css_class("anura-card") is not expected
             assert settings.connect.call_args_list == [
                 call("notify::gtk-enable-animations", overlay._on_motion_settings_changed),
                 call("notify::gtk-interface-reduced-motion", overlay._on_motion_settings_changed),
@@ -1082,10 +1084,14 @@ class TestShortcutsOverlayReducedMotion:
             state["gtk-interface-reduced-motion"] = True
             overlay._on_motion_settings_changed(settings, None)
             assert overlay.has_css_class("reduced-motion")
+            assert not overlay.has_css_class("anura-fade-in")
+            assert not overlay.has_css_class("anura-card")
 
             state["gtk-interface-reduced-motion"] = False
             overlay._on_motion_settings_changed(settings, None)
             assert not overlay.has_css_class("reduced-motion")
+            assert overlay.has_css_class("anura-fade-in")
+            assert overlay.has_css_class("anura-card")
         finally:
             overlay.destroy()
 
@@ -1106,6 +1112,8 @@ class TestShortcutsOverlayReducedMotion:
 
         try:
             assert not overlay.has_css_class("reduced-motion")
+            assert overlay.has_css_class("anura-fade-in")
+            assert overlay.has_css_class("anura-card")
             settings.connect.assert_called_once_with(
                 "notify::gtk-enable-animations",
                 overlay._on_motion_settings_changed,
