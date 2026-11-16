@@ -65,7 +65,7 @@
   Expected: FAIL on missing scanner module/functions.
 
 - [ ] **Step 3: Implement the scanner** in `tests/ui_color_scanner.py`:
-  - Discover `data/style.css`, all `data/ui/**/*.blp`, and all production `anura/**/*.py` files recursively.
+  - Discover `data/style.css`, all `data/ui/**/*.blp`, `anura/widgets/**/*.py`, `anura/window.py` and `anura/main.py` recursively/explicitly. Do not scan OCR, model, service or transformation modules that do not own UI styling.
   - Strip format-appropriate comments before scanning CSS/Blueprint.
   - Parse Python with `ast` and inspect string constants, excluding module/class/function docstrings; do not regex-scan Python comments or arbitrary source text.
   - Normalize hex literals to lowercase; retain source line and syntax kind.
@@ -90,7 +90,8 @@
 - Modify: `data/style.css`
 - Modify: `anura/widgets/language_row.py` only for the existing installed-language state class, if source tracing confirms that this is the owner of the `.downloaded` selector.
 - Modify: `tests/test_ui_palette.py`
-- Modify: `tests/test_language_row_accessibility.py` or the existing GTK widget test module for installed-state behavior, choosing the established test location after inspecting its fixtures.
+- Modify: `tests/test_language_row_accessibility.py` for deterministic installed-state class toggling with the existing `headless_gi_mocks` fixture.
+- Modify: `tests/test_widgets.py` for a real GTK `LanguageRow` style-class assertion under the existing GResource/Wayland test bootstrap.
 - Modify: `docs/ui-design-system.md`
 
 **Interfaces:**
@@ -99,12 +100,12 @@
 - Do not add new public application APIs.
 
 - [ ] **Step 1: Add/adjust failing palette and state tests**:
-  - Verify the current installed-language state maps to one semantic success treatment.
-  - Verify the state class is present only when the language is installed and is removed when it is not.
+  - Verify `LanguageRow.update_ui()` maps the existing `get_downloaded_codes()` installed state to the chosen semantic class and removes that class when the language is no longer installed.
+  - Keep the existing `remove_btn` visibility, `install_btn` visibility/sensitivity and loading behavior unchanged.
   - Verify the approved palette role definitions remain exactly `#16A36A`, `#0F7650` and `#FFFFFF`.
   - Verify brand accent is not used as normal text.
   - Verify the focus and History icon treatments remain distinct from success.
-  - Verify `.success` is used only if the runtime-backed test can establish the documented semantics and light/dark readability; otherwise verify the application-owned light/dark success token remains.
+  - Verify the real `LanguageRow.label` receives Libadwaita `.success` only if the GTK test can establish that the class is available and semantically suitable. If stable resolved foreground values cannot be read in CI, keep the existing app-owned light/dark CSS fallback and document that computed runtime contrast was not established.
 
 - [ ] **Step 2: Run focused tests and confirm the new assertions fail** against the current implementation.
 
@@ -112,8 +113,8 @@
   Expected: new success-role assertions fail before implementation; unrelated existing tests remain green.
 
 - [ ] **Step 3: Evaluate the Libadwaita `.success` class** using the GTK runtime available in CI and the semantic class behavior documented in the spec.
-  - Apply it to the existing installed-language label/state only if the runtime test demonstrates acceptable semantics and readable foreground in both forced schemes.
-  - If resolved foreground/background values are not available through a stable GTK API, do not assert an invented contrast result. Retain the explicit application-owned success token and document the limitation.
+  - Apply `.success` to `LanguageRow.label` only if runtime checks can establish suitable semantic styling and readable foreground in both forced schemes. The current `.downloaded label` selector has no `downloaded` class application in the audited `LanguageRow` implementation; connect the existing installed state to the chosen style without changing install/remove behavior.
+  - If resolved foreground/background values are not available through a stable GTK API, retain the app-owned `.downloaded label` light/dark fallback, add/remove `downloaded` on the `LanguageRow` according to the existing installed state, and explicitly record that computed runtime contrast was not established.
   - Do not add an explicit error role; no existing production error-color requirement was established.
 
 - [ ] **Step 4: Consolidate only identical semantic roles** in `data/style.css`.
@@ -137,8 +138,9 @@
 
 **Files:**
 - Modify: `tests/test_widgets.py` (existing GTK integration module with GResource registration and real GTK widgets).
+- Modify: `tests/test_app_lifecycle.py` (existing `AnuraApplication` fixture; add focused GTK-marked tests for the existing theme mapping).
 - Modify: `tests/test_ui_palette.py` only if a static contract assertion needs to remain separate from runtime behavior.
-- Modify: `anura/main.py` only if a minimal test seam is proven necessary; do not rewrite the theme manager.
+- Do not modify `anura/main.py` unless a demonstrated defect requires a minimal test seam; the current `_apply_color_scheme()` mapping is already directly testable.
 
 **Interfaces:**
 - Exercise the existing `AnuraApplication._apply_color_scheme()` mapping and `_on_color_scheme_changed()` callback.
@@ -161,9 +163,9 @@
 - [ ] **Step 3: Implement only the minimum test helper/fixture** needed to set the application preference through the existing `_apply_color_scheme()` mapping and restore the global StyleManager state. Do not introduce a new production theme abstraction.
 
 - [ ] **Step 4: Assert observable runtime behavior**:
-  - Assert StyleManager enum values after each preference transition.
-  - Assert widget style classes and stable GTK style-context state for the installed-language, History and focus surfaces.
-  - Use resolved foreground/background contrast only when the GTK API exposes both through a stable, supported interface in this CI runtime; otherwise retain the semantic-class assertion and the existing static contrast checks, explicitly recording that pixel-level contrast was not runtime-measured.
+  - Assert StyleManager enum values after each preference transition using the existing `AnuraApplication._apply_color_scheme()` implementation and a mocked GSettings object.
+  - Assert the real `LanguageRow.label` success class (or documented fallback class) persists across theme transitions, the real History StatusPage retains `history-empty-state`, and a representative button retains `anura-button`.
+  - Verify the application does not add app-owned color declarations for secondary text, surfaces, borders or warning state. The stable assertion is the semantic GTK class/StyleManager state; do not infer resolved CSS colors from a style context that does not expose them.
   - Verify theme-managed warning and secondary text do not acquire application-owned hardcoded colors.
 
 - [ ] **Step 5: Run the focused GTK suite.**
