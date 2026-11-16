@@ -531,7 +531,7 @@ After every completed task, append/update the relevant phase and record:
 - Manual GNOME/GTK visual checks, real Orca/AT-SPI and manual keyboard checks remain excluded, not passed. No OCR, dependency, architecture, portal or OS integration changes were made.
 - PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`. No protected branch or PR metadata was changed.
 
-**Next:** prepare a bounded continuation for the remaining M1-04 semantic-style and runtime theme-transition work; do not mark M1-04 complete until those acceptance criteria are implemented and verified.
+**Historical next-step note — superseded by M0-C (2026-11-16):** prepare a bounded continuation for the remaining M1-04 semantic-style and runtime theme-transition work. M1-04 was subsequently completed within its approved scope; see the M1-04 completion record and current backlog above.
 
 ## M1-04 semantic color consolidation — implementation outcome (2026-11-16)
 
