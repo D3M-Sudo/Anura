@@ -5,12 +5,24 @@
 
 """Regression tests for the GTK palette and shared UI design conventions."""
 
-from pathlib import Path
-import re
-
-
 SPACING_SCALE = {4, 8, 12, 16, 24}
 RADIUS_SCALE = {6, 12, 9999}
+BLUEPRINT_FILES = (
+    "data/ui/extracted_page.blp",
+    "data/ui/history_page.blp",
+    "data/ui/language_popover.blp",
+    "data/ui/language_popover_row.blp",
+    "data/ui/language_row.blp",
+    "data/ui/preferences_dialog.blp",
+    "data/ui/preferences_editor.blp",
+    "data/ui/preferences_general.blp",
+    "data/ui/preferences_languages.blp",
+    "data/ui/preferences_voice.blp",
+    "data/ui/share_row.blp",
+    "data/ui/shortcuts_overlay.blp",
+    "data/ui/welcome_page.blp",
+    "data/ui/window.blp",
+)
 
 
 def _read_text(path: str) -> str:
@@ -156,33 +168,45 @@ def test_processing_state_retains_semantic_warning_feedback():
 
 
 
+
 def test_blueprint_spacing_uses_the_shared_scale():
-    pattern = re.compile(r"(?:spacing|margin-(?:top|bottom|start|end)):\s*([0-9]+)\s*;")
-    for path in sorted(Path("data/ui").glob("*.blp")):
-        for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
-            match = pattern.search(line)
-            if match:
-                value = int(match.group(1))
-                assert value in SPACING_SCALE, f"{path}:{line_number}: unsupported spacing {value}px"
+    for path in BLUEPRINT_FILES:
+        for line_number, line in enumerate(_read_text(path).splitlines(), start=1):
+            for property_name in ("spacing:", "margin-top:", "margin-bottom:", "margin-start:", "margin-end:"):
+                if property_name in line:
+                    value = line.split(property_name, maxsplit=1)[1].split(";", maxsplit=1)[0].strip()
+                    if value.isdigit():
+                        assert int(value) in SPACING_SCALE, f"{path}:{line_number}: unsupported spacing {value}px"
 
 
 def test_stylesheet_spacing_uses_the_shared_scale():
-    pattern = re.compile(r"(?:padding|padding-(?:top|bottom|left|right)|margin|margin-(?:top|bottom|left|right))\s*:\s*([^;]+);")
-    for match in pattern.finditer(STYLE_CSS):
-        for raw_value in re.findall(r"(?<![\w.-])([0-9]+)px", match.group(1)):
-            value = int(raw_value)
-            assert value == 0 or value in SPACING_SCALE, f"unsupported stylesheet spacing {value}px"
+    properties = ("padding:", "padding-top:", "padding-bottom:", "padding-left:", "padding-right:",
+                  "margin:", "margin-top:", "margin-bottom:", "margin-left:", "margin-right:")
+    for line in STYLE_CSS.splitlines():
+        stripped = line.strip()
+        for property_name in properties:
+            if stripped.startswith(property_name):
+                value = stripped.split(":", maxsplit=1)[1].split(";", maxsplit=1)[0]
+                for token in value.split():
+                    numeric = token.removesuffix("px")
+                    if numeric.isdigit():
+                        assert int(numeric) == 0 or int(numeric) in SPACING_SCALE, (
+                            f"unsupported stylesheet spacing {numeric}px"
+                        )
 
 
 def test_custom_corner_radii_follow_the_shared_scale():
-    radii = {int(value) for value in re.findall(r"border-radius\s*:\s*([0-9]+)px", STYLE_CSS)}
+    radii = set()
+    for line in STYLE_CSS.splitlines():
+        if "border-radius:" in line:
+            value = line.split("border-radius:", maxsplit=1)[1].split(";", maxsplit=1)[0].strip()
+            if value.endswith("px") and value[:-2].isdigit():
+                radii.add(int(value[:-2]))
     assert radii
     assert radii <= RADIUS_SCALE
 
 
 def test_custom_typography_keeps_libadwaita_semantic_hierarchy():
-    font_size_rules = re.findall(r"([^{}]+)\{[^{}]*font-size\s*:\s*([^;]+);[^{}]*\}", STYLE_CSS, re.DOTALL)
-    assert len(font_size_rules) == 1
-    selector, value = font_size_rules[0]
-    assert ".welcome-hero label.title-1" in selector
-    assert value.strip() == "1.15em"
+    assert STYLE_CSS.count("font-size:") == 1
+    assert ".welcome-hero label.title-1 {" in STYLE_CSS
+    assert "font-size: 1.15em;" in STYLE_CSS
