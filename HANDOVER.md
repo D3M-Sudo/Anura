@@ -6,15 +6,17 @@ This document transfers the context required to continue the UI modernization wo
 
 This handover records the adapted implementation and its remaining validation. The modernization work is now present on `fix/ui-modernization-aligned`; it was adapted against `feature` rather than copied wholesale from PR #448.
 
-## Current operational snapshot — M0-C (2026-11-16)
+## Current operational snapshot — M1-05 (2026-11-16)
 
 - **Authoritative global status:** M0 Completed after M0-C consolidation; M1 Partial; M2 Partial; M3 Partial; M4 Partial; M5 Not started as a complete phase; M6 Partial; M7 Partial.
-- **Next recommended candidate:** M1-05, a read-only audit of cross-surface Design System adoption. It requires a separate bounded proposal and explicit approval before work begins; no implementation is pre-authorized.
+- **M1-05 completed:** read-only cross-surface Design System audit recorded in [M1-05 report](docs/audit/ui-design-system-m1-05-2026-11-16.md).
 - M1-02 conventions, M1-03 semantic-color audit and M1-04 scanner/style-linkage/theme-transition work are complete within their bounded scopes. M1 is not globally complete.
 - The [global roadmap](docs/superpowers/plans/2026-11-16-anura-ui-modernization-global-roadmap.md) owns current phase status, priorities, dependencies and global traceability. The [PR #648 roadmap](docs/superpowers/plans/2026-11-16-anura-ui-modernization-roadmap.md) owns detailed PR workstream history and exact-SHA evidence. Older continuation instructions below are historical and are superseded where they conflict with the current global roadmap.
 - PR #648 was rechecked during M0-C: Open, Draft, unmerged, base `feature`, head branch `fix/ui-modernization-aligned`. No PR metadata/state change or merge was made.
 - Manual GNOME/GTK visual checks, real Orca/AT-SPI, manual keyboard checks and live multi-monitor geometry verification remain excluded. Screenshot capture remains deferred to the next release cycle.
-- M0-C changed documentation only: no app source, tests, workflows, CHANGELOG, OCR, dependencies, architecture or protected branches.
+- **Next conditional candidate:** M1-06 proposal for F1 reduced-motion handling in the separate Shortcuts window and F2 production-tree color-scanner CI enforcement. No implementation is authorized until a bounded proposal is reviewed and explicitly approved.
+- M1-05 found F3 low-priority apparently orphaned CSS selectors and F4 low-priority undocumented `title`/`h4` typography classes; both are deferred pending further justification.
+- M0-C and M1-05 changed documentation only: no app source, tests, workflows, CHANGELOG, OCR, dependencies, architecture or protected branches.
 
 
 > **Roadmap hierarchy:** the [Global Anura UI/UX Modernization Roadmap](docs/superpowers/plans/2026-11-16-anura-ui-modernization-global-roadmap.md) is the primary plan for the complete application-wide M0–M7 modernization, all windows/components and global requirement traceability. The [PR #648 workstream roadmap](docs/superpowers/plans/2026-11-16-anura-ui-modernization-roadmap.md) is subordinate and preserves detailed implementation/task/CI evidence for that PR only. This handover remains the technical/history record. After every completed task, update the global roadmap—and the PR #648 workstream roadmap when relevant—before starting another task.
