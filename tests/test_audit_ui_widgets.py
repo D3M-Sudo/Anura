@@ -461,9 +461,7 @@ def _probe_nested_menubutton_popover() -> dict:
             "primary_button": _compact_widget_state(_widget_lifecycle_state(primary_button)),
             "button": _compact_widget_state(_widget_lifecycle_state(button)),
             "popover": _compact_widget_state(_widget_lifecycle_state(popover)),
-            "popover_parent_chain": [
-                _compact_widget_state(state) for state in _widget_parent_chain(popover)
-            ],
+            "popover_parent_chain": [_compact_widget_state(state) for state in _widget_parent_chain(popover)],
         }
         button.set_active(True)
         deadline = time.monotonic() + 1.0
@@ -506,9 +504,7 @@ def _probe_nested_menubutton_popover() -> dict:
             "primary_button": _compact_widget_state(_widget_lifecycle_state(primary_button)),
             "button": _compact_widget_state(_widget_lifecycle_state(button)),
             "popover": _compact_widget_state(_widget_lifecycle_state(popover)),
-            "popover_parent_chain": [
-                _compact_widget_state(state) for state in _widget_parent_chain(popover)
-            ],
+            "popover_parent_chain": [_compact_widget_state(state) for state in _widget_parent_chain(popover)],
             "events": _compact_event_log(events),
         }
     finally:
