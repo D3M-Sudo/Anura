@@ -352,3 +352,19 @@ Read-only audit completed on `fix/ui-modernization-aligned` at pre-recording hea
 - PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`. No merge or release occurred.
 
 **Next:** prepare a bounded M1-03 semantic-color role audit plan; no implementation until separately approved.
+
+## M1-03 — Semantic color-role audit (2026-11-16)
+
+- Read-only audit completed on `fix/ui-modernization-aligned` at pre-documentation head `f5225e2e82973db63822ca8b3b26cf13619b907a`.
+- Inspected `data/style.css`, all 14 Blueprint UI files, relevant Python widget/application modules, `anura/main.py`, `docs/ui-design-system.md` and `tests/test_ui_palette.py`. No source, test, CHANGELOG or workflow files were changed.
+- Color roles: `#16A36A` brand/graphical accent; `#0F7650` + white suggested-action pair and light standalone green; `#21B77A` dark standalone green; `@warning_color` semantic warning; GTK/Libadwaita theme colors for surfaces, text and borders; translucent black shadows decorative.
+- Representative calculated contrast ratios: white on `#0F7650` 5.63:1; `#0F7650` on `#F6F5F4` 5.17:1; `#21B77A` on `#242424` 6.00:1 and `#353535` 4.74:1. `#16A36A` is 3.24:1 on white and is not a general normal-text color. Ratios are sample calculations, not runtime theme measurements.
+- Findings: no Critical/High issue demonstrated. Medium: downloaded-language success state uses explicit light/dark green values rather than a semantic Libadwaita success class. Low: repeated green literals and no exhaustive repository-wide hardcoded-color scanner. Informational: no explicit error color role in audited CSS; no missing user-facing error state inferred.
+- Theme mode mapping for `default`, `force-light`, `force-dark` is present through `Adw.StyleManager`. Custom green states have dark overrides; surfaces and warning remain theme-managed.
+- Coverage gaps: no runtime cross-surface theme-switching test across all three modes; no repository-wide color-literal guard; no explicit semantic success/error class test. Existing contrast tests use representative fixed surfaces.
+- Context7 confirmed Libadwaita semantic classes `.accent`, `.success`, `.warning`, `.error` and theme-aware color guidance.
+- AI Delivery Evidence Checker: 10 criteria extracted; delivery partially supported (5 supported, 5 partial), test evidence partially supported, verdict `needs_more_evidence` (level 3). No tests were run during this audit. Historical CI #43907544843 is on SHA `6dece44cd3deb57fc43cb276db4a291a771e9584`, not the audit head.
+- Manual GNOME/GTK visual, Orca/AT-SPI and manual keyboard checks remain excluded, not passed.
+- PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`. No protected branch or PR metadata changed.
+
+**Next:** prepare a bounded M1-04 proposal for semantic-color consolidation and automated coverage. No implementation is authorized until separately approved.
