@@ -791,3 +791,45 @@ class TestNavigationStateIntegration:
         finally:
             window.destroy()
             history.cleanup()
+
+
+    @pytest.mark.gtk
+    def test_navigation_to_extracted_acquires_text_view_focus(self):
+        from anura.window import AnuraWindow
+
+        welcome = Adw.NavigationPage.new(Gtk.Label(label="Welcome"), "Welcome")
+        welcome.set_tag("welcome")
+        extracted = ExtractedPage()
+        extracted.set_tag("extracted")
+
+        navigation = Adw.NavigationView()
+        navigation.set_animate_transitions(False)
+        navigation.add(welcome)
+        navigation.add(extracted)
+        gtk_window = Gtk.Window()
+        gtk_window.set_child(navigation)
+        gtk_window.present()
+        context = GLib.MainContext.default()
+
+        window_harness = MagicMock()
+        window_harness.navigation_view = navigation
+        window_harness.extracted_page = extracted
+
+        try:
+            assert TestWelcomePageEnterprise._spin_until(context, lambda: navigation.get_visible_page() is welcome)
+            AnuraWindow._on_navigation_requested(window_harness, MagicMock(), "extracted")
+            assert TestWelcomePageEnterprise._spin_until(
+                context, lambda: navigation.get_visible_page() is extracted and extracted.text_view.has_focus()
+            )
+        finally:
+            gtk_window.destroy()
+
+    @pytest.mark.gtk
+    def test_return_to_welcome_stops_active_tts(self):
+        from anura.window import AnuraWindow
+
+        window_harness = MagicMock()
+        AnuraWindow.show_welcome_page(window_harness)
+
+        window_harness.navigation_view.pop_to_tag.assert_called_once_with("welcome")
+        window_harness.tts_controller.stop.assert_called_once_with()
