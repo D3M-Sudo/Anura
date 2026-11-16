@@ -587,6 +587,10 @@ def test_welcome_compact_popover_geometry_diagnostic(
 
         parent = page.more_options_button.get_parent()
         assert isinstance(parent, Gtk.Box)
+
+        before_available, before_bounds = page.more_options_button.compute_bounds(window)
+        assert before_available, "could not calculate initial popover trigger bounds"
+
         if anchor_edge == "top":
             page.more_options_button.insert_before(parent, page.screenshot_button)
             assert parent.get_first_child() is page.more_options_button
@@ -594,11 +598,34 @@ def test_welcome_compact_popover_geometry_diagnostic(
             page.more_options_button.insert_after(parent, page.drop_revealer)
             assert parent.get_last_child() is page.more_options_button
 
+        # Reordering schedules a GTK layout pass; draining only pending idle
+        # callbacks does not guarantee that the frame clock has reallocated children.
+        parent.queue_resize()
+        window.queue_resize()
+        _wait_for_gtk_condition(
+            lambda: (
+                (lambda result: result[0] and abs(result[1].origin.y - before_bounds.origin.y) > 1)(
+                    page.more_options_button.compute_bounds(window)
+                )
+            ),
+            f"reallocate {anchor_edge} popover trigger after sibling reordering",
+            diagnostics=lambda: {
+                "before": (before_bounds.origin.x, before_bounds.origin.y),
+                "after": page.more_options_button.compute_bounds(window)[1].origin.y,
+                "parent_first": type(parent.get_first_child()).__name__,
+                "parent_last": type(parent.get_last_child()).__name__,
+            },
+        )
+
         page.more_options_popover.set_position(preferred_position)
         _drain_gtk_main_context()
 
         bounds_available, bounds = page.more_options_button.compute_bounds(window)
         assert bounds_available, "could not translate the popover trigger bounds to the window"
+        if anchor_edge == "top":
+            assert bounds.origin.y < page.screenshot_button.compute_bounds(window)[1].origin.y
+        else:
+            assert bounds.origin.y > page.drop_revealer.compute_bounds(window)[1].origin.y
         trigger_top = bounds.origin.y
         trigger_bottom = trigger_top + bounds.size.height
         available_above = trigger_top
