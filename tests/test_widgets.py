@@ -1054,9 +1054,7 @@ class TestShortcutsOverlayReducedMotion:
             (True, True, True),
         ],
     )
-    def test_initial_motion_preference_and_live_transitions(
-        self, animations_enabled, reduced_motion, expected
-    ):
+    def test_initial_motion_preference_and_live_transitions(self, animations_enabled, reduced_motion, expected):
         settings = MagicMock()
         settings.find_property.return_value = object()
         state = {
@@ -1115,4 +1113,3 @@ class TestShortcutsOverlayReducedMotion:
             overlay.destroy()
 
         settings.disconnect.assert_called_once_with(103)
-
