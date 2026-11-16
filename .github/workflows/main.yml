@@ -214,8 +214,58 @@ jobs:
             --override-ini "addopts=-v --tb=short" \
             > /tmp/wayland-client-protocol.log 2>&1
           test_status=$?
+          cat > /tmp/anura-minimal-popover.py <<'PY'
+          import time
+          from gi.repository import Gtk, GLib
+
+          Gtk.init()
+          window = Gtk.Window()
+          window.set_default_size(360, 600)
+          button = Gtk.MenuButton(label="More options")
+          popover = Gtk.Popover()
+          popover.set_child(Gtk.Label(label="Minimal popup content"))
+          button.set_popover(popover)
+          window.set_child(button)
+          window.present()
+
+          context = GLib.MainContext.default()
+          deadline = time.monotonic() + 2
+          while time.monotonic() < deadline:
+              while context.pending():
+                  context.iteration(False)
+              if window.get_mapped():
+                  break
+              time.sleep(0.01)
+
+          button.set_active(True)
+          deadline = time.monotonic() + 3
+          while time.monotonic() < deadline:
+              while context.pending():
+                  context.iteration(False)
+              if popover.get_mapped():
+                  break
+              time.sleep(0.01)
+
+          native = popover.get_native()
+          surface = native.get_surface() if native is not None else None
+          print(
+              "MINIMAL_POPOVER_RESULT="
+              f"window_mapped={window.get_mapped()},"
+              f"button_active={button.get_active()},"
+              f"popover_visible={popover.get_visible()},"
+              f"popover_realized={popover.get_realized()},"
+              f"popover_mapped={popover.get_mapped()},"
+              f"surface_type={type(surface).__name__ if surface else None},"
+              f"surface_mapped={surface.get_mapped() if surface else None},"
+              f"surface_size={(surface.get_width(), surface.get_height()) if surface else None}"
+          )
+          window.destroy()
+          PY
+          minimal_status=0
+          WAYLAND_DEBUG=client timeout 30 uv run python /tmp/anura-minimal-popover.py >> /tmp/wayland-client-protocol.log 2>&1 || minimal_status=$?
           set -e
           printf 'Focused GTK diagnostic exit status: %s\n' "$test_status"
+          printf 'Minimal GTK reproducer exit status: %s\n' "$minimal_status"
           cp /tmp/weston.log /tmp/weston-protocol-diagnostic.log 2>/dev/null || true
           {
             echo "=== focused GTK test exit status ==="
