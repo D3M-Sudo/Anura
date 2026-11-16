@@ -141,6 +141,98 @@ def _wait_for_gtk_condition(
         time.sleep(0.01)
 
 
+def _probe_wayland_popup_protocol() -> dict:
+    """Run an isolated GTK client with Wayland protocol tracing enabled."""
+    import subprocess
+    import sys
+
+    script = r"""
+import time
+import gi
+
+gi.require_version("Gtk", "4.0")
+from gi.repository import GLib, Gtk
+
+Gtk.init()
+window = Gtk.Window()
+window.set_default_size(320, 180)
+button = Gtk.MenuButton.new()
+button.set_child(Gtk.Label(label="Protocol trace trigger"))
+popover = Gtk.Popover.new()
+popover.set_child(Gtk.Label(label="Protocol trace content"))
+button.set_popover(popover)
+window.set_child(button)
+events = []
+for signal in ("map", "unmap", "closed"):
+    popover.connect(signal, lambda _widget, *_args, event=signal: events.append(event))
+popover.connect(
+    "notify::visible",
+    lambda *_args: events.append(f"visible={popover.get_visible()}"),
+)
+
+def spin_until(condition, timeout=0.75):
+    context = GLib.MainContext.default()
+    deadline = time.monotonic() + timeout
+    while not condition() and time.monotonic() < deadline:
+        while context.pending():
+            context.iteration(False)
+        time.sleep(0.01)
+    return condition()
+
+window.present()
+spin_until(window.get_mapped, 2.0)
+button.set_active(True)
+spin_until(popover.get_mapped)
+after_active = (button.get_active(), popover.get_visible(), popover.get_mapped())
+if not popover.get_mapped():
+    popover.popup()
+    spin_until(popover.get_mapped)
+print(
+    "PROBE_RESULT",
+    {
+        "after_set_active": after_active,
+        "after_direct_popup": (button.get_active(), popover.get_visible(), popover.get_mapped()),
+        "events": events,
+    },
+    flush=True,
+)
+window.destroy()
+"""
+    env = os.environ.copy()
+    env["WAYLAND_DEBUG"] = "client"
+    try:
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=5,
+            env=env,
+        )
+    except subprocess.TimeoutExpired as exc:
+        return {"error": "protocol probe timed out", "stdout": exc.stdout, "stderr": exc.stderr}
+
+    output = f"{result.stdout}\n{result.stderr}"
+    keywords = (
+        "xdg_popup",
+        "xdg_surface",
+        "xdg_positioner",
+        "wl_surface",
+        "popup_done",
+        "configure",
+        "wl_display",
+        "error",
+        "warning",
+        "PROBE_RESULT",
+    )
+    relevant_lines = [line.strip() for line in output.splitlines() if any(key in line.lower() for key in keywords)]
+    return {
+        "returncode": result.returncode,
+        "relevant_protocol_lines": relevant_lines[-100:],
+        "unfiltered_output_tail": output.splitlines()[-20:],
+    }
+
+
 def _probe_minimal_popover() -> dict:
     """Compare a standalone GtkPopover with Welcome on the same display."""
     events = []
@@ -170,22 +262,6 @@ def _probe_minimal_popover() -> dict:
     try:
         window.present()
         _wait_for_window_allocation(window, button, timeout_seconds=2.0)
-        native = popover.get_native()
-        surface = native.get_surface() if native is not None else None
-        if surface is not None:
-            surface.connect(
-                "notify::mapped",
-                lambda *_args: events.append(f"surface:mapped={surface.get_mapped()}"),
-            )
-            surface.connect(
-                "notify::width",
-                lambda *_args: events.append(f"surface:width={surface.get_width()}"),
-            )
-            surface.connect(
-                "notify::height",
-                lambda *_args: events.append(f"surface:height={surface.get_height()}"),
-            )
-
         button.set_active(True)
         deadline = time.monotonic() + 0.75
         context = GLib.MainContext.default()
@@ -207,16 +283,37 @@ def _probe_minimal_popover() -> dict:
                     context.iteration(False)
                 time.sleep(0.01)
 
+        native = popover.get_native()
+        surface = native.get_surface() if native is not None else None
+        if surface is not None:
+            surface.connect(
+                "notify::mapped",
+                lambda *_args: events.append(f"surface:mapped={surface.get_mapped()}"),
+            )
+            surface.connect(
+                "notify::width",
+                lambda *_args: events.append(f"surface:width={surface.get_width()}"),
+            )
+            surface.connect(
+                "notify::height",
+                lambda *_args: events.append(f"surface:height={surface.get_height()}"),
+            )
+
         return {
             "after_set_active": after_set_active,
             "after_direct_popup": {
                 "active": button.get_active(),
                 "visible": popover.get_visible(),
                 "mapped": popover.get_mapped(),
+                "native_type": type(native).__name__ if native is not None else None,
+                "surface_type": type(surface).__name__ if surface is not None else None,
                 "surface_mapped": surface.get_mapped() if surface is not None else None,
-                "surface_size": ((surface.get_width(), surface.get_height()) if surface is not None else None),
+                "surface_size": (
+                    (surface.get_width(), surface.get_height()) if surface is not None else None
+                ),
             },
             "events": events,
+            "wayland_protocol_probe": _probe_wayland_popup_protocol(),
         }
     except Exception as exc:
         return {"error": repr(exc), "events": events}
