@@ -431,6 +431,8 @@ def test_welcome_responsive_layout_uses_allocated_viewport(screen_width: int, sc
             assert trigger_bounds.origin.y >= 0
             assert trigger_bounds.origin.x + trigger_bounds.size.width <= scroller.get_width()
             assert trigger_bounds.origin.y + trigger_bounds.size.height <= scroller.get_height()
+    finally:
+        window.destroy()
 
 
 @pytest.mark.gtk
