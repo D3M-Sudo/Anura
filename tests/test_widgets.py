@@ -1092,3 +1092,27 @@ class TestShortcutsOverlayReducedMotion:
 
         assert settings.disconnect.call_args_list == [call(101), call(102)]
 
+    @pytest.mark.gtk
+    def test_older_gtk_without_reduced_motion_property_uses_animation_fallback(self):
+        settings = MagicMock()
+        settings.find_property.side_effect = lambda name: object() if name == "gtk-enable-animations" else None
+        settings.get_property.return_value = True
+        settings.connect.return_value = 103
+
+        with patch(
+            "anura.widgets.shortcuts_overlay.Gtk.Settings.get_for_display",
+            return_value=settings,
+        ):
+            overlay = ShortcutsOverlay()
+
+        try:
+            assert not overlay.has_css_class("reduced-motion")
+            settings.connect.assert_called_once_with(
+                "notify::gtk-enable-animations",
+                overlay._on_motion_settings_changed,
+            )
+        finally:
+            overlay.destroy()
+
+        settings.disconnect.assert_called_once_with(103)
+
