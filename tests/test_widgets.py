@@ -1006,9 +1006,8 @@ class TestThemeModeIntegration:
             language_row.update_ui()
 
         history_page = HistoryPage()
-        empty_page = history_page.history_stack.get_child_by_name("empty")
-        assert empty_page is not None
-        empty_status_page = empty_page.get_child()
+        empty_status_page = history_page.history_stack.get_child_by_name("empty")
+        assert empty_status_page is not None
         focus_button = Gtk.Button(label="Focus target")
         focus_button.add_css_class("anura-button")
 
