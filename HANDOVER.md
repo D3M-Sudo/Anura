@@ -6,6 +6,8 @@ This document transfers the context required to continue the UI modernization wo
 
 This handover records the adapted implementation and its remaining validation. The modernization work is now present on `fix/ui-modernization-aligned`; it was adapted against `feature` rather than copied wholesale from PR #448.
 
+> **Progress tracking:** the authoritative task status, next steps and mandatory per-task update rule are maintained in [the UI modernization roadmap](docs/superpowers/plans/2026-11-16-anura-ui-modernization-roadmap.md). This handover remains the technical/history record; update the roadmap after every completed task before starting another.
+
 ## Current Git state
 
 - Repository: `D3M-Sudo/Anura`
