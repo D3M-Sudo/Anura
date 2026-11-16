@@ -187,3 +187,35 @@ Append or update the relevant task record before starting the next task:
 - No application source, CI workflow, PR state or protected branch was changed by this documentation update.
 - Global roadmap creation commit: `7683f8ea733f8218eb223b2f710291a87592a514`.
 - This workstream document is updated before proceeding; UI-07 remains the next detailed workstream task (documentation reconciliation), and global M0-A remains the next application-wide audit task after explicit approval.
+
+
+## UI-12 — M2-D Extracted and History navigation-state implementation
+
+**Authorization:** maintainer approved complete M2-D implementation on 2026-11-16 after reviewing the bounded file/test/CI plan.
+
+### Approved behavior
+
+- **Extracted (decision 1C):** preserve the current OCR result when navigating away; replace it only when the next extraction completes.
+- **History (decision 2C):** preserve the expanded entry and vertical scroll position across refresh/navigation in the current application session; do not persist this transient view state across process restarts.
+
+### Implementation and regression coverage
+
+- `anura/widgets/extracted_page.py`: `do_hiding()` no longer clears the text buffer; it continues emitting the existing `go-back` signal.
+- `anura/widgets/history_page.py`: capture the expanded entry's stable ID and the containing scroller's vertical adjustment before rebuilding; map rebuilt rows by entry ID; restore expansion and scroll through a generation-guarded GLib idle callback. A removed entry is not re-expanded. No new GSettings key, disk persistence, service change or data-model change.
+- `tests/test_widgets.py`: GTK regression test verifies text remains after hiding and a subsequent OCR result replaces it.
+- `tests/test_history_ui.py`: headless regression tests cover refresh snapshot, matching-row expansion, scroll restoration, stale refresh/removed-entry safety and default state on a newly constructed page.
+- `CHANGELOG.md`: records the user-visible behavior and session-only scope.
+
+### Current validation status
+
+- **Code and tests committed:** yes, on `fix/ui-modernization-aligned`.
+- **CI:** pending inspection on the exact resulting branch head; no test counts or green status are claimed until the corresponding GitHub Actions run completes.
+- **Known limitation:** this bounded implementation does not yet establish a full live `AnuraWindow` end-to-end navigation test for every transition/focus side effect. The existing GTK job has `NO_AT_BRIDGE=1` and `GTK_A11Y=none`; real Orca/AT-SPI and manual GNOME/GTK visual/keyboard checks remain excluded, not passed.
+- **Protected branches / PR:** no protected branch modified; PR #648 remains Draft/open/unmerged and is not merged.
+
+### Next steps
+
+1. Inspect the current CI run against the exact final implementation/documentation commit.
+2. Fix any failures and rerun the relevant CI before closing UI-12.
+3. Record the final commit SHA, CI run URL, job conclusions and test counts in this roadmap and the global roadmap.
+4. Do not start another implementation task until both roadmap records are updated with final evidence.
