@@ -142,7 +142,7 @@ def _wait_for_gtk_condition(
 
 
 def _welcome_popover_diagnostic_state(window, page, events) -> str:
-    """Capture GTK state when the compact Welcome Page popover fails to map."""
+    """Capture GTK geometry, clipping, sizing, and native-surface state on failure."""
 
     def describe(widget):
         parent = widget.get_parent()
@@ -156,13 +156,88 @@ def _welcome_popover_diagnostic_state(window, page, events) -> str:
             "root": type(root).__name__ if root is not None else None,
         }
 
+    def bounds(widget, target):
+        try:
+            result = widget.compute_bounds(target)
+            success, rect = result if isinstance(result, tuple) else (True, result)
+            if not success or rect is None:
+                return {"available": False}
+            x = float(rect.origin.x)
+            y = float(rect.origin.y)
+            width = float(rect.size.width)
+            height = float(rect.size.height)
+            target_width = float(target.get_width())
+            target_height = float(target.get_height())
+            left = max(0.0, x)
+            top = max(0.0, y)
+            right = min(target_width, x + width)
+            bottom = min(target_height, y + height)
+            return {
+                "available": True,
+                "rect": (x, y, width, height),
+                "target_size": (target_width, target_height),
+                "visible_intersection": (
+                    max(0.0, right - left),
+                    max(0.0, bottom - top),
+                ),
+            }
+        except Exception as exc:
+            return {"available": False, "error": repr(exc)}
+
+    def measure(widget):
+        try:
+            return {
+                "horizontal": widget.measure(Gtk.Orientation.HORIZONTAL, -1)[:2],
+                "vertical": widget.measure(Gtk.Orientation.VERTICAL, -1)[:2],
+            }
+        except Exception as exc:
+            return {"error": repr(exc)}
+
+    scroller = page.action_clamp.get_child()
+    adjustment = scroller.get_vadjustment() if isinstance(scroller, Gtk.ScrolledWindow) else None
+    scroll_state = None
+    if adjustment is not None:
+        scroll_state = {
+            "lower": adjustment.get_lower(),
+            "upper": adjustment.get_upper(),
+            "page_size": adjustment.get_page_size(),
+            "value": adjustment.get_value(),
+            "page_end": adjustment.get_value() + adjustment.get_page_size(),
+        }
+
+    native_state = None
+    try:
+        native = page.more_options_popover.get_native()
+        surface = native.get_surface() if native is not None else None
+        native_state = {
+            "native_type": type(native).__name__ if native is not None else None,
+            "surface_type": type(surface).__name__ if surface is not None else None,
+            "surface_mapped": surface.get_mapped() if surface is not None else None,
+            "surface_size": (
+                (surface.get_width(), surface.get_height()) if surface is not None else None
+            ),
+            "surface_parent_type": (
+                type(surface.get_parent()).__name__
+                if surface is not None and hasattr(surface, "get_parent") and surface.get_parent() is not None
+                else None
+            ),
+        }
+    except Exception as exc:
+        native_state = {"error": repr(exc)}
+
     return repr(
         {
             "window": describe(window),
+            "scroller": {
+                **describe(scroller),
+                "vertical_adjustment": scroll_state,
+            },
             "menu_button": {
                 **describe(page.more_options_button),
                 "active": page.more_options_button.get_active(),
                 "sensitive": page.more_options_button.is_sensitive(),
+                "bounds_in_scroller": bounds(page.more_options_button, scroller),
+                "bounds_in_window": bounds(page.more_options_button, window),
             },
             "popover": {
                 **describe(page.more_options_popover),
@@ -172,9 +247,14 @@ def _welcome_popover_diagnostic_state(window, page, events) -> str:
                     if page.more_options_popover.get_child() is not None
                     else None
                 ),
+                "requested_size": measure(page.more_options_popover),
+                "native_surface": native_state,
             },
             "actions": {
-                name: describe(button)
+                name: {
+                    **describe(button),
+                    "bounds_in_scroller": bounds(button, scroller),
+                }
                 for name, button in (
                     ("open_image", page.open_image_button),
                     ("paste_image", page.paste_image_button),
@@ -409,7 +489,24 @@ def test_welcome_responsive_layout_uses_allocated_viewport(screen_width: int, sc
                 "notify::active",
                 lambda *_args: popover_events.append(f"menu-button:active={page.more_options_button.get_active()}"),
             )
-            page.more_options_button.set_active(True)
+            activated = page.more_options_button.activate()
+            popover_events.append(f"widget-activate:returned={activated}")
+            _drain_gtk_main_context()
+            popover_events.append(
+                "after-widget-activate:"
+                f"active={page.more_options_button.get_active()},"
+                f"visible={page.more_options_popover.get_visible()},"
+                f"mapped={page.more_options_popover.get_mapped()}"
+            )
+            if not page.more_options_popover.get_mapped():
+                page.more_options_button.set_active(True)
+                _drain_gtk_main_context()
+                popover_events.append(
+                    "after-set-active:"
+                    f"active={page.more_options_button.get_active()},"
+                    f"visible={page.more_options_popover.get_visible()},"
+                    f"mapped={page.more_options_popover.get_mapped()}"
+                )
             _wait_for_gtk_condition(
                 lambda: (
                     page.more_options_popover.get_mapped()
