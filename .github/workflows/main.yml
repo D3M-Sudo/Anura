@@ -169,180 +169,81 @@ jobs:
           cp data/io.github.d3m_sudo.anura.gschema.xml builddir/data/
           glib-compile-schemas builddir/data/
 
-      - name: Start Wayland compositor (headless)
-        # Keep Weston running across workflow steps; the GTK test step owns cleanup.
+      - name: Start Wayland compositor with virtual input
+        # Weston headless has no wl_seat. Run its X11 backend inside Xvfb so
+        # GTK receives a virtual pointer and keyboard for popup integration tests.
         run: |
           mkdir -p "$XDG_RUNTIME_DIR"
           chmod 700 "$XDG_RUNTIME_DIR"
 
-          nohup weston --backend=headless --width=1920 --height=1080 --socket=wayland-test --no-config \
+          Xvfb :99 -screen 0 1920x1080x24 -nolisten tcp -ac >/tmp/xvfb.log 2>&1 &
+          echo $! > /tmp/xvfb.pid
+          for i in $(seq 1 20); do
+            if [ -S /tmp/.X11-unix/X99 ]; then break; fi
+            sleep 0.25
+          done
+          if [ ! -S /tmp/.X11-unix/X99 ]; then
+            echo "::error::Xvfb did not create display :99 within 5 s"
+            cat /tmp/xvfb.log
+            exit 1
+          fi
+
+          DISPLAY=:99 nohup weston --backend=x11 --renderer=pixman \
+            --width=1920 --height=1080 --socket=wayland-test --no-config \
             >/tmp/weston.log 2>&1 &
           echo $! > /tmp/weston.pid
 
-          # Poll for the socket for up to 10 s (20 × 500 ms).
           echo "Waiting for Wayland socket…"
           for i in $(seq 1 20); do
             if [ -S "$XDG_RUNTIME_DIR/wayland-test" ]; then
               echo "Wayland compositor ready (attempt ${i}/20)"
               break
             fi
+            if ! kill -0 "$(cat /tmp/weston.pid)" 2>/dev/null; then break; fi
             sleep 0.5
           done
-
           if [ ! -S "$XDG_RUNTIME_DIR/wayland-test" ]; then
-            echo "::error::Weston did not create the wayland-test socket within 10 s"
-            kill "$(cat /tmp/weston.pid)" 2>/dev/null || true
+            echo "::error::Weston X11 backend did not create the Wayland socket"
+            cat /tmp/weston.log
             exit 1
           fi
 
-      - name: Capture Wayland popup protocol trace
-        # Temporary, PR #648-only diagnostic. Keep the full GTK suite below unchanged.
-        if: github.event_name == 'pull_request' && github.event.pull_request.number == 648
-        env:
-          GSETTINGS_SCHEMA_DIR: builddir/data
-          DISPLAY: ""
-          WAYLAND_DISPLAY: wayland-test
-          NO_AT_BRIDGE: "1"
-          GTK_A11Y: none
-          ANURA_LOG_LEVEL: WARNING
-          NO_COLOR: "1"
-        run: |
-          set +e
-          # Collect the full GTK test tree so module-level resource registration matches normal GTK CI.
-          WAYLAND_DEBUG=client timeout 120 uv run pytest \
-            tests/ -m gtk -k "compact_popover" -vv --timeout=30 \
-            --override-ini "addopts=-v --tb=short" \
-            > /tmp/wayland-client-protocol.log 2>&1
-          test_status=$?
-          cat > /tmp/anura-minimal-popover.py <<'PY'
-          import time
+          # Assert that the compositor actually advertises both input devices;
+          # a socket alone does not prove that popups can obtain a wl_seat.
+          seat_ready=0
+          for i in $(seq 1 10); do
+            if env DISPLAY='' GDK_BACKEND=wayland WAYLAND_DISPLAY=wayland-test \
+              uv run python - <<'PY' >/tmp/wayland-seat-check.log 2>&1
           import gi
           gi.require_version("Gtk", "4.0")
-          from gi.repository import Gdk, Gtk, GLib
+          from gi.repository import Gdk, Gtk
 
           Gtk.init()
-          window = Gtk.Window()
-          window.set_default_size(360, 600)
-          button = Gtk.MenuButton(label="More options")
-          popover = Gtk.Popover()
-          popover.set_child(Gtk.Label(label="Minimal popup content"))
-          button.set_popover(popover)
-          window.set_child(button)
-          window.present()
-
-          context = GLib.MainContext.default()
-          deadline = time.monotonic() + 2
-          while time.monotonic() < deadline:
-              while context.pending():
-                  context.iteration(False)
-              if window.get_mapped():
-                  break
-              time.sleep(0.01)
-
-          button.set_active(True)
-          deadline = time.monotonic() + 3
-          while time.monotonic() < deadline:
-              while context.pending():
-                  context.iteration(False)
-              if popover.get_mapped():
-                  break
-              time.sleep(0.01)
-
-          native = popover.get_native()
-          surface = native.get_surface() if native is not None else None
           display = Gdk.Display.get_default()
-          seat = display.get_default_seat() if display is not None else None
-          parent_surface = surface.get_parent() if surface is not None else None
-          print(
-              "MINIMAL_POPOVER_RESULT="
-              f"window_mapped={window.get_mapped()},"
-              f"button_active={button.get_active()},"
-              f"popover_visible={popover.get_visible()},"
-              f"popover_realized={popover.get_realized()},"
-              f"popover_mapped={popover.get_mapped()},"
-              f"surface_type={type(surface).__name__ if surface else None},"
-              f"surface_mapped={surface.get_mapped() if surface else None},"
-              f"surface_size={(surface.get_width(), surface.get_height()) if surface else None},"
-              f"seat_present={seat is not None},"
-              f"popup_parent_type={type(parent_surface).__name__ if parent_surface else None},"
-              f"popup_parent_mapped={parent_surface.get_mapped() if parent_surface else None}"
-          )
-          window.destroy()
+          seat = display.get_default_seat() if display else None
+          if seat is None:
+              raise SystemExit("Wayland display did not advertise a default wl_seat")
+          capabilities = seat.get_capabilities()
+          required = Gdk.SeatCapabilities.POINTER | Gdk.SeatCapabilities.KEYBOARD
+          if capabilities & required != required:
+              raise SystemExit(f"wl_seat lacks pointer/keyboard capabilities: {capabilities}")
+          print(f"Wayland wl_seat ready with pointer and keyboard: {capabilities}")
           PY
-          minimal_status=0
-          WAYLAND_DEBUG=client timeout 30 uv run python /tmp/anura-minimal-popover.py >> /tmp/wayland-client-protocol.log 2>&1 || minimal_status=$?
-          printf 'Headless minimal reproducer exit status: %s\n' "$minimal_status"
-          # Compare against Weston nested on Xvfb, which should expose X11-backed virtual input devices.
-          xvfb_status=0
-          Xvfb :99 -screen 0 1920x1080x24 -nolisten tcp -ac > /tmp/xvfb-input.log 2>&1 &
-          xvfb_pid=$!
-          for i in $(seq 1 20); do
-            if [ -S /tmp/.X11-unix/X99 ]; then break; fi
-            sleep 0.25
-          done
-          if [ ! -S /tmp/.X11-unix/X99 ]; then
-            echo 'Xvfb did not create display :99' >> /tmp/xvfb-input.log
-            xvfb_status=1
-          else
-            DISPLAY=:99 nohup weston --backend=x11 --renderer=pixman --width=1920 --height=1080 --socket=wayland-input --no-config > /tmp/weston-input.log 2>&1 &
-            weston_input_pid=$!
-            for i in $(seq 1 20); do
-              if [ -S "$XDG_RUNTIME_DIR/wayland-input" ]; then break; fi
-              if ! kill -0 "$weston_input_pid" 2>/dev/null; then break; fi
-              sleep 0.5
-            done
-            if [ -S "$XDG_RUNTIME_DIR/wayland-input" ]; then
-              input_test_status=0
-              env DISPLAY='' GDK_BACKEND=wayland WAYLAND_DISPLAY=wayland-input WAYLAND_DEBUG=client timeout 120 uv run pytest tests/ -m gtk -k "compact_popover" -vv --timeout=30 --override-ini "addopts=-v --tb=short" > /tmp/wayland-input-protocol.log 2>&1 || input_test_status=$?
-              input_minimal_status=0
-              env DISPLAY='' GDK_BACKEND=wayland WAYLAND_DISPLAY=wayland-input WAYLAND_DEBUG=client timeout 30 uv run python /tmp/anura-minimal-popover.py >> /tmp/wayland-input-protocol.log 2>&1 || input_minimal_status=$?
-              printf 'Input-backed focused GTK test exit status: %s\n' "$input_test_status"
-              printf 'Input-backed minimal reproducer exit status: %s\n' "$input_minimal_status"
-            else
-              xvfb_status=1
-              echo 'Weston X11 backend did not create wayland-input socket' >> /tmp/weston-input.log
+            then
+              cat /tmp/wayland-seat-check.log
+              seat_ready=1
+              break
             fi
+            sleep 0.5
+          done
+          if [ "$seat_ready" -ne 1 ]; then
+            echo "::error::Wayland compositor did not expose a pointer+keyboard wl_seat"
+            cat /tmp/wayland-seat-check.log
+            cat /tmp/weston.log
+            exit 1
           fi
-          kill "${weston_input_pid:-0}" 2>/dev/null || true
-          kill "$xvfb_pid" 2>/dev/null || true
-          rm -f "$XDG_RUNTIME_DIR/wayland-input"
-          printf 'Xvfb/Weston input-backed setup status: %s\n' "$xvfb_status"
-          set -e
-          printf 'Focused GTK diagnostic exit status: %s\n' "$test_status"
-          printf 'Minimal GTK reproducer exit status: %s\n' "$minimal_status"
-          cp /tmp/weston.log /tmp/weston-protocol-diagnostic.log 2>/dev/null || true
-          {
-            echo "=== focused GTK test exit status ==="
-            echo "$test_status"
-            echo "=== xdg popup protocol messages ==="
-            grep -E 'xdg_(wm_base|surface|popup)|wl_surface\.(commit|attach)|wl_display\.sync' \
-              /tmp/wayland-client-protocol.log || true
-            echo "=== Weston errors and warnings ==="
-            grep -Ei 'error|warning|fatal|popup|configure' /tmp/weston-protocol-diagnostic.log || true
-            echo "=== headless client seat and popup state ==="
-            grep -E 'wl_seat|MINIMAL_POPOVER_RESULT|xdg_(wm_base|surface|popup)' /tmp/wayland-client-protocol.log || true
-            echo "=== Xvfb-backed client seat and popup state ==="
-            grep -E 'wl_seat|MINIMAL_POPOVER_RESULT|xdg_(wm_base|surface|popup)' /tmp/wayland-input-protocol.log || true
-            echo "=== Xvfb log ==="
-            cat /tmp/xvfb-input.log 2>/dev/null || true
-            echo "=== Xvfb-backed Weston errors and warnings ==="
-            grep -Ei 'error|warning|fatal|seat|input' /tmp/weston-input.log 2>/dev/null || true
-          } > /tmp/wayland-protocol-summary.log
-      - name: Upload Wayland protocol diagnostic
-        if: always() && github.event_name == 'pull_request' && github.event.pull_request.number == 648
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: wayland-popover-protocol-${{ github.run_id }}
-          path: |
-            /tmp/wayland-client-protocol.log
-            /tmp/weston-protocol-diagnostic.log
-            /tmp/wayland-protocol-summary.log
-            /tmp/wayland-input-protocol.log
-            /tmp/weston-input.log
-            /tmp/xvfb-input.log
-          if-no-files-found: warn
-          retention-days: 7
-      - name: Run GTK tests (Wayland headless)
+
+      - name: Run GTK tests (Wayland with virtual input)
         # --override-ini replaces the global addopts from pyproject.toml.
         # Without this override the --ignore list baked into addopts would
         # suppress collection of the files that hold most gtk-marked tests.
@@ -362,8 +263,8 @@ jobs:
             echo "::group::Cleanup remaining processes"
             echo "Stopping Weston and orphaned workers..."
             kill "$(cat /tmp/weston.pid 2>/dev/null)" 2>/dev/null || true
-            pkill -x weston 2>/dev/null || true
-            rm -f "$XDG_RUNTIME_DIR/wayland-test" /tmp/weston.pid
+            kill "$(cat /tmp/xvfb.pid 2>/dev/null)" 2>/dev/null || true
+            rm -f "$XDG_RUNTIME_DIR/wayland-test" /tmp/weston.pid /tmp/xvfb.pid
             echo "Cleanup complete."
             echo "::endgroup::"
           }
