@@ -202,15 +202,22 @@ class ShortcutsOverlay(Adw.Window):
             self.remove_controller(self._key_controller)
             self._key_controller = None
 
-        motion_settings = getattr(self, "_motion_settings", None)
-        if motion_settings is not None:
-            for handler_id in getattr(self, "_motion_handler_ids", []):
-                with contextlib.suppress(TypeError, RuntimeError):
-                    motion_settings.disconnect(handler_id)
-            self._motion_handler_ids.clear()
-            self._motion_settings = None
-
+        self._disconnect_motion_settings_handlers()
         super().do_destroy()
+
+    def _disconnect_motion_settings_handlers(self) -> None:
+        """Release GTK settings callbacks when the overlay is closing or disposed."""
+        import contextlib
+
+        motion_settings = getattr(self, "_motion_settings", None)
+        if motion_settings is None:
+            return
+
+        for handler_id in getattr(self, "_motion_handler_ids", []):
+            with contextlib.suppress(TypeError, RuntimeError):
+                motion_settings.disconnect(handler_id)
+        self._motion_handler_ids.clear()
+        self._motion_settings = None
 
     def _on_motion_settings_changed(self, _settings: Gtk.Settings, _pspec: GObject.ParamSpec) -> None:
         """Re-apply the overlay's reduced-motion policy when GTK settings change."""
@@ -255,6 +262,7 @@ class ShortcutsOverlay(Adw.Window):
 
     def _on_close_request(self, _window: Gtk.Window) -> bool:
         """Handle window close request."""
+        self._disconnect_motion_settings_handlers()
         self.emit("closed")
         return False
 
