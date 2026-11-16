@@ -310,4 +310,6 @@ PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-
 
 **M1-04 design proposal (2026-11-16):** approach B selected by the maintainer. Design: [`docs/superpowers/specs/2026-11-16-m1-04-semantic-colors-design.md`](../specs/2026-11-16-m1-04-semantic-colors-design.md), commit `b724f2688475bfd94e03c6e085863bfbc066c80c`. The proposal covers conditional `.success` adoption, role-safe green consolidation, classified color-literal scanning and automated theme-mode transitions. Design only; no source/test implementation is authorized.
 
-**Next:** obtain maintainer design approval, then prepare a separate implementation plan requiring its own approval.
+**M1-04 design approved; implementation plan prepared (2026-11-16):** [`2026-11-16-m1-04-semantic-color-consolidation-plan.md`](2026-11-16-m1-04-semantic-color-consolidation-plan.md). Approach B is approved at design level. The implementation plan is awaiting review and explicit execution approval; no source/test changes are authorized yet.
+
+**Next:** maintainer review and approval of the implementation plan before execution.
