@@ -141,185 +141,6 @@ def _wait_for_gtk_condition(
         time.sleep(0.01)
 
 
-def _probe_wayland_popup_protocol() -> dict:
-    """Run an isolated GTK client with Wayland protocol tracing enabled."""
-    import subprocess
-    import sys
-
-    script = r"""
-import time
-import gi
-
-gi.require_version("Gtk", "4.0")
-from gi.repository import GLib, Gtk
-
-Gtk.init()
-window = Gtk.Window()
-window.set_default_size(320, 180)
-button = Gtk.MenuButton.new()
-button.set_child(Gtk.Label(label="Protocol trace trigger"))
-popover = Gtk.Popover.new()
-popover.set_child(Gtk.Label(label="Protocol trace content"))
-button.set_popover(popover)
-window.set_child(button)
-events = []
-for signal in ("map", "unmap", "closed"):
-    popover.connect(signal, lambda _widget, *_args, event=signal: events.append(event))
-popover.connect(
-    "notify::visible",
-    lambda *_args: events.append(f"visible={popover.get_visible()}"),
-)
-
-def spin_until(condition, timeout=0.75):
-    context = GLib.MainContext.default()
-    deadline = time.monotonic() + timeout
-    while not condition() and time.monotonic() < deadline:
-        while context.pending():
-            context.iteration(False)
-        time.sleep(0.01)
-    return condition()
-
-window.present()
-spin_until(window.get_mapped, 2.0)
-button.set_active(True)
-spin_until(popover.get_mapped)
-after_active = (button.get_active(), popover.get_visible(), popover.get_mapped())
-if not popover.get_mapped():
-    popover.popup()
-    spin_until(popover.get_mapped)
-print(
-    "PROBE_RESULT",
-    {
-        "after_set_active": after_active,
-        "after_direct_popup": (button.get_active(), popover.get_visible(), popover.get_mapped()),
-        "events": events,
-    },
-    flush=True,
-)
-window.destroy()
-"""
-    env = os.environ.copy()
-    env["WAYLAND_DEBUG"] = "client"
-    try:
-        result = subprocess.run(
-            [sys.executable, "-c", script],
-            check=False,
-            capture_output=True,
-            text=True,
-            timeout=5,
-            env=env,
-        )
-    except subprocess.TimeoutExpired as exc:
-        return {"error": "protocol probe timed out", "stdout": exc.stdout, "stderr": exc.stderr}
-
-    output = f"{result.stdout}\n{result.stderr}"
-    keywords = (
-        "xdg_popup",
-        "xdg_surface",
-        "xdg_positioner",
-        "wl_surface",
-        "popup_done",
-        "configure",
-        "wl_display",
-        "error",
-        "warning",
-        "PROBE_RESULT",
-    )
-    relevant_lines = [line.strip() for line in output.splitlines() if any(key in line.lower() for key in keywords)]
-    return {
-        "returncode": result.returncode,
-        "relevant_protocol_lines": relevant_lines[-100:],
-        "unfiltered_output_tail": output.splitlines()[-20:],
-    }
-
-
-def _probe_minimal_popover() -> dict:
-    """Compare a standalone GtkPopover with Welcome on the same display."""
-    events = []
-    window = Gtk.Window()
-    window.set_default_size(320, 180)
-    button = Gtk.MenuButton.new()
-    button.set_child(Gtk.Label(label="Minimal popover trigger"))
-    popover = Gtk.Popover.new()
-    popover.set_child(Gtk.Label(label="Minimal popover content"))
-    button.set_popover(popover)
-    window.set_child(button)
-
-    window.connect(
-        "notify::mapped",
-        lambda *_args: events.append(f"window:mapped={window.get_mapped()}"),
-    )
-    for signal in ("map", "unmap", "closed"):
-        popover.connect(
-            signal,
-            lambda _widget, *_args, event=signal: events.append(f"popover:{event}"),
-        )
-    popover.connect(
-        "notify::visible",
-        lambda *_args: events.append(f"popover:visible={popover.get_visible()}"),
-    )
-
-    try:
-        window.present()
-        _wait_for_window_allocation(window, button, timeout_seconds=2.0)
-        button.set_active(True)
-        deadline = time.monotonic() + 0.75
-        context = GLib.MainContext.default()
-        while not popover.get_mapped() and time.monotonic() < deadline:
-            while context.pending():
-                context.iteration(False)
-            time.sleep(0.01)
-        after_set_active = {
-            "active": button.get_active(),
-            "visible": popover.get_visible(),
-            "mapped": popover.get_mapped(),
-        }
-
-        if not popover.get_mapped():
-            popover.popup()
-            deadline = time.monotonic() + 0.75
-            while not popover.get_mapped() and time.monotonic() < deadline:
-                while context.pending():
-                    context.iteration(False)
-                time.sleep(0.01)
-
-        native = popover.get_native()
-        surface = native.get_surface() if native is not None else None
-        if surface is not None:
-            surface.connect(
-                "notify::mapped",
-                lambda *_args: events.append(f"surface:mapped={surface.get_mapped()}"),
-            )
-            surface.connect(
-                "notify::width",
-                lambda *_args: events.append(f"surface:width={surface.get_width()}"),
-            )
-            surface.connect(
-                "notify::height",
-                lambda *_args: events.append(f"surface:height={surface.get_height()}"),
-            )
-
-        return {
-            "after_set_active": after_set_active,
-            "after_direct_popup": {
-                "active": button.get_active(),
-                "visible": popover.get_visible(),
-                "mapped": popover.get_mapped(),
-                "native_type": type(native).__name__ if native is not None else None,
-                "surface_type": type(surface).__name__ if surface is not None else None,
-                "surface_mapped": surface.get_mapped() if surface is not None else None,
-                "surface_size": ((surface.get_width(), surface.get_height()) if surface is not None else None),
-            },
-            "events": events,
-            "wayland_protocol_probe": _probe_wayland_popup_protocol(),
-        }
-    except Exception as exc:
-        return {"error": repr(exc), "events": events}
-    finally:
-        window.destroy()
-        _drain_gtk_main_context()
-
-
 def _widget_lifecycle_state(widget, include_measure: bool = True) -> dict:
     """Capture GTK visibility, realization, allocation, and natural-size state."""
     parent = widget.get_parent()
@@ -367,200 +188,8 @@ def _widget_parent_chain(widget, include_measure: bool = True) -> list[dict]:
     return chain
 
 
-def _compact_widget_state(state: dict) -> dict:
-    """Keep diagnostic failure output readable while preserving lifecycle gates."""
-    keys = (
-        "type",
-        "visible",
-        "child_visible",
-        "realized",
-        "mapped",
-        "size",
-        "size_request",
-        "parent",
-        "native_surface",
-        "measure",
-    )
-    return {key: state[key] for key in keys if key in state}
-
-
-def _compact_event_log(events: list) -> list:
-    """Summarize event-time snapshots without dropping transition ordering."""
-    compact = []
-    for event in events:
-        if not isinstance(event, dict):
-            compact.append(event)
-            continue
-        compact.append(
-            {
-                "event": event.get("event"),
-                "widget": _compact_widget_state(event.get("widget", {})),
-                "popover": _compact_widget_state(event.get("popover", {})),
-                "menu_button": _compact_widget_state(event.get("menu_button", {})),
-            }
-        )
-    return compact
-
-
-def _probe_nested_menubutton_popover() -> dict:
-    """Compare a MenuButton popover inside Clamp/ScrolledWindow/Box nesting."""
-    window = Gtk.Window()
-    window.set_default_size(360, 600)
-    clamp = Adw.Clamp()
-    clamp.set_maximum_size(223)
-    clamp.set_hexpand(True)
-    clamp.set_valign(Gtk.Align.START)
-    scroller = Gtk.ScrolledWindow()
-    scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-    scroller.set_hexpand(True)
-    scroller.set_vexpand(False)
-    actions = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-    actions.set_hexpand(True)
-    actions.set_valign(Gtk.Align.START)
-    primary_button = Gtk.Button(label="Screenshot")
-    button = Gtk.MenuButton.new()
-    button.set_label("More")
-    button.set_hexpand(True)
-    popover = Gtk.Popover.new()
-    popover.set_child(Gtk.Label(label="Nested popover content"))
-    button.set_popover(popover)
-    actions.append(primary_button)
-    actions.append(button)
-    scroller.set_child(actions)
-    clamp.set_child(scroller)
-    window.set_child(clamp)
-    events = []
-
-    def record(event: str, widget) -> None:
-        events.append(
-            {
-                "event": event,
-                "widget": _widget_lifecycle_state(widget, include_measure=False),
-                "popover": _widget_lifecycle_state(popover, include_measure=False),
-                "popover_parent_chain": _widget_parent_chain(popover, include_measure=False),
-                "button_parent_chain": _widget_parent_chain(button, include_measure=False),
-            }
-        )
-
-    for signal in ("realize", "map", "unmap", "unrealize", "closed"):
-        popover.connect(signal, lambda widget, *_args, name=signal: record(name, widget))
-    for prop in ("visible", "child-visible", "realized", "mapped", "width", "height", "parent"):
-        popover.connect(
-            f"notify::{prop}",
-            lambda widget, *_args, name=prop: record(f"notify::{name}", widget),
-        )
-
-    try:
-        window.present()
-        _wait_for_window_allocation(window, button, timeout_seconds=2.0)
-        before_popup = {
-            "window": _compact_widget_state(_widget_lifecycle_state(window)),
-            "clamp": _compact_widget_state(_widget_lifecycle_state(clamp)),
-            "scroller": _compact_widget_state(_widget_lifecycle_state(scroller)),
-            "actions": _compact_widget_state(_widget_lifecycle_state(actions)),
-            "primary_button": _compact_widget_state(_widget_lifecycle_state(primary_button)),
-            "button": _compact_widget_state(_widget_lifecycle_state(button)),
-            "popover": _compact_widget_state(_widget_lifecycle_state(popover)),
-            "popover_parent_chain": [_compact_widget_state(state) for state in _widget_parent_chain(popover)],
-        }
-        button.set_active(True)
-        deadline = time.monotonic() + 1.0
-        context = GLib.MainContext.default()
-        while not popover.get_mapped() and time.monotonic() < deadline:
-            while context.pending():
-                context.iteration(False)
-            time.sleep(0.01)
-        after_set_active = {
-            "button_active": button.get_active(),
-            "popover": _compact_widget_state(_widget_lifecycle_state(popover)),
-            "button": _compact_widget_state(_widget_lifecycle_state(button)),
-        }
-
-        if not popover.get_mapped():
-            popover.popup()
-            deadline = time.monotonic() + 1.0
-            while not popover.get_mapped() and time.monotonic() < deadline:
-                while context.pending():
-                    context.iteration(False)
-                time.sleep(0.01)
-        after_direct_popup = {
-            "button_active": button.get_active(),
-            "popover": _compact_widget_state(_widget_lifecycle_state(popover)),
-            "button": _compact_widget_state(_widget_lifecycle_state(button)),
-        }
-        return {
-            "before_popup": before_popup,
-            "after_set_active": after_set_active,
-            "after_direct_popup": after_direct_popup,
-            "events": _compact_event_log(events),
-        }
-    except Exception as exc:
-        return {
-            "error": repr(exc),
-            "window": _compact_widget_state(_widget_lifecycle_state(window)),
-            "clamp": _compact_widget_state(_widget_lifecycle_state(clamp)),
-            "scroller": _compact_widget_state(_widget_lifecycle_state(scroller)),
-            "actions": _compact_widget_state(_widget_lifecycle_state(actions)),
-            "primary_button": _compact_widget_state(_widget_lifecycle_state(primary_button)),
-            "button": _compact_widget_state(_widget_lifecycle_state(button)),
-            "popover": _compact_widget_state(_widget_lifecycle_state(popover)),
-            "popover_parent_chain": [_compact_widget_state(state) for state in _widget_parent_chain(popover)],
-            "events": _compact_event_log(events),
-        }
-    finally:
-        window.destroy()
-        _drain_gtk_main_context()
-
-
-def _welcome_popover_diagnostic_state(window, page, events) -> str:
-    """Capture GTK geometry, clipping, sizing, and native-surface state on failure."""
-
-    def describe(widget):
-        parent = widget.get_parent()
-        root = widget.get_root()
-        return {
-            **_widget_lifecycle_state(widget),
-            "parent": type(parent).__name__ if parent is not None else None,
-            "root": type(root).__name__ if root is not None else None,
-        }
-
-    def bounds(widget, target):
-        try:
-            result = widget.compute_bounds(target)
-            success, rect = result if isinstance(result, tuple) else (True, result)
-            if not success or rect is None:
-                return {"available": False}
-            x = float(rect.origin.x)
-            y = float(rect.origin.y)
-            width = float(rect.size.width)
-            height = float(rect.size.height)
-            target_width = float(target.get_width())
-            target_height = float(target.get_height())
-            left = max(0.0, x)
-            top = max(0.0, y)
-            right = min(target_width, x + width)
-            bottom = min(target_height, y + height)
-            return {
-                "available": True,
-                "rect": (x, y, width, height),
-                "target_size": (target_width, target_height),
-                "visible_intersection": (
-                    max(0.0, right - left),
-                    max(0.0, bottom - top),
-                ),
-            }
-        except Exception as exc:
-            return {"available": False, "error": repr(exc)}
-
-    def measure(widget):
-        try:
-            return {
-                "horizontal": widget.measure(Gtk.Orientation.HORIZONTAL, -1)[:2],
-                "vertical": widget.measure(Gtk.Orientation.VERTICAL, -1)[:2],
-            }
-        except Exception as exc:
-            return {"error": repr(exc)}
-
+def _welcome_popover_diagnostic_state(window, page, events) -> dict:
+    """Capture the real Welcome popover state without running secondary probes."""
     scroller = page.action_clamp.get_child()
     adjustment = scroller.get_vadjustment() if isinstance(scroller, Gtk.ScrolledWindow) else None
     scroll_state = None
@@ -570,79 +199,23 @@ def _welcome_popover_diagnostic_state(window, page, events) -> str:
             "upper": adjustment.get_upper(),
             "page_size": adjustment.get_page_size(),
             "value": adjustment.get_value(),
-            "page_end": adjustment.get_value() + adjustment.get_page_size(),
         }
 
-    native_state = None
-    try:
-        native = page.more_options_popover.get_native()
-        surface = native.get_surface() if native is not None else None
-        native_state = {
-            "native_type": type(native).__name__ if native is not None else None,
-            "surface_type": type(surface).__name__ if surface is not None else None,
-            "surface_mapped": surface.get_mapped() if surface is not None else None,
-            "surface_size": ((surface.get_width(), surface.get_height()) if surface is not None else None),
-            "surface_parent_type": (
-                type(surface.get_parent()).__name__
-                if surface is not None and hasattr(surface, "get_parent") and surface.get_parent() is not None
-                else None
-            ),
-        }
-    except Exception as exc:
-        native_state = {"error": repr(exc)}
-
-    return repr(
-        {
-            "window": describe(window),
-            "scroller": {
-                **describe(scroller),
-                "vertical_adjustment": scroll_state,
-            },
-            "menu_button": {
-                **describe(page.more_options_button),
-                "active": page.more_options_button.get_active(),
-                "sensitive": page.more_options_button.is_sensitive(),
-                "bounds_in_scroller": bounds(page.more_options_button, scroller),
-                "bounds_in_window": bounds(page.more_options_button, window),
-            },
-            "popover": {
-                **describe(page.more_options_popover),
-                "position": str(page.more_options_popover.get_position()),
-                "child": (
-                    type(page.more_options_popover.get_child()).__name__
-                    if page.more_options_popover.get_child() is not None
-                    else None
-                ),
-                "requested_size": measure(page.more_options_popover),
-                "native_surface": native_state,
-            },
-            "actions": {
-                name: {
-                    **describe(button),
-                    "bounds_in_scroller": bounds(button, scroller),
-                }
-                for name, button in (
-                    ("open_image", page.open_image_button),
-                    ("paste_image", page.paste_image_button),
-                    ("drop", page.drop_button),
-                )
-            },
-            "events": _compact_event_log(events),
-            "popover_parent_chain": [
-                _compact_widget_state(state) for state in _widget_parent_chain(page.more_options_popover)
-            ],
-            "menu_button_parent_chain": [
-                _compact_widget_state(state) for state in _widget_parent_chain(page.more_options_button)
-            ],
-            "popover_child_state": (
-                _widget_lifecycle_state(page.more_options_popover.get_child())
-                if page.more_options_popover.get_child() is not None
-                else None
-            ),
-            "minimal_popover_baseline": _probe_minimal_popover(),
-            "nested_menubutton_popover_baseline": _probe_nested_menubutton_popover(),
-        }
-    )
+    return {
+        "window": _widget_lifecycle_state(window),
+        "action_clamp": _widget_lifecycle_state(page.action_clamp),
+        "scroller": _widget_lifecycle_state(scroller),
+        "scroll_adjustment": scroll_state,
+        "menu_button": _widget_lifecycle_state(page.more_options_button),
+        "popover": _widget_lifecycle_state(page.more_options_popover),
+        "popover_parent_chain": _widget_parent_chain(page.more_options_popover),
+        "actions": {
+            "open_image": _widget_lifecycle_state(page.open_image_button),
+            "paste_image": _widget_lifecycle_state(page.paste_image_button),
+            "drop": _widget_lifecycle_state(page.drop_button),
+        },
+        "events": events,
+    }
 
 
 def _wait_for_window_allocation(window, widget, timeout_seconds: float = 5.0) -> None:
@@ -810,8 +383,6 @@ def test_welcome_focus_moves_from_more_options_to_primary_when_layout_expands():
 )
 def test_welcome_responsive_layout_uses_allocated_viewport(screen_width: int, screen_height: int) -> None:
     """Exercise the real GTK allocation and responsive breakpoint per M2-B viewport."""
-    from gi.repository import Gtk
-
     from anura.widgets.welcome_page import WelcomePage
 
     window = Gtk.Window()
@@ -854,130 +425,112 @@ def test_welcome_responsive_layout_uses_allocated_viewport(screen_width: int, sc
 
         if not wide:
             assert page.more_options_button.get_mapped(), "compact More options trigger is not mapped"
-            popover_events = []
-            for signal in ("map", "unmap", "closed"):
-                page.more_options_popover.connect(
-                    signal,
-                    lambda _widget, *_args, event=signal: popover_events.append(f"popover:{event}"),
-                )
+            bounds_available, trigger_bounds = page.more_options_button.compute_bounds(scroller)
+            assert bounds_available, "could not calculate compact trigger bounds inside the scroller"
+            assert trigger_bounds.origin.x >= 0
+            assert trigger_bounds.origin.y >= 0
+            assert trigger_bounds.origin.x + trigger_bounds.size.width <= scroller.get_width()
+            assert trigger_bounds.origin.y + trigger_bounds.size.height <= scroller.get_height()
+
+
+@pytest.mark.gtk
+@pytest.mark.parametrize("opening_method", ("popover_popup", "menu_button_set_active", "widget_activate"))
+def test_welcome_compact_popover_opening_methods_at_narrow_viewport(opening_method: str) -> None:
+    """Exercise each GTK popover opening path on a fresh 360x600 WelcomePage."""
+    from anura.widgets.welcome_page import WelcomePage
+
+    window = Gtk.Window()
+    window.set_default_size(360, 600)
+    page = WelcomePage()
+    for button in (page.screenshot_button, page.open_image_button, page.paste_image_button, page.drop_button):
+        button.set_action_name(None)
+        button.set_sensitive(True)
+    window.set_child(page)
+    window.present()
+
+    events = []
+    try:
+        _wait_for_window_allocation(window, page.action_clamp)
+        _drain_gtk_main_context()
+        page._update_action_layout()
+        _drain_gtk_main_context()
+
+        assert page.action_clamp.get_width() < page._get_wide_action_threshold()
+        assert page.more_options_button.get_visible()
+        assert page.more_options_button.get_mapped()
+        assert page.more_options_button.get_width() == 223
+        assert page.more_options_button.get_height() == 44
+
+        for signal in ("realize", "map", "unmap", "unrealize", "closed"):
             page.more_options_popover.connect(
-                "notify::visible",
-                lambda *_args: popover_events.append(f"popover:visible={page.more_options_popover.get_visible()}"),
+                signal,
+                lambda _widget, *_args, name=signal: events.append(f"popover:{name}"),
             )
-            page.more_options_button.connect(
-                "notify::active",
-                lambda *_args: popover_events.append(f"menu-button:active={page.more_options_button.get_active()}"),
-            )
-            window.connect(
-                "notify::mapped",
-                lambda *_args: popover_events.append(f"window:mapped={window.get_mapped()}"),
-            )
-            connected_surfaces = set()
-
-            def attach_surface_signal_hooks() -> None:
-                native = page.more_options_popover.get_native()
-                surface = native.get_surface() if native is not None else None
-                if surface is None or id(surface) in connected_surfaces:
-                    return
-                connected_surfaces.add(id(surface))
-                for prop in ("mapped", "width", "height"):
-                    surface.connect(
-                        f"notify::{prop}",
-                        lambda *_args, name=prop, current_surface=surface: popover_events.append(
-                            f"surface:{name}={getattr(current_surface, f'get_{name}')()}"
-                        ),
-                    )
-                popover_events.append(
-                    "surface-created:"
-                    f"type={type(surface).__name__},"
-                    f"mapped={surface.get_mapped()},"
-                    f"size={surface.get_width()}x{surface.get_height()}"
-                )
-
+        for prop in ("visible", "realized", "mapped", "width", "height"):
             page.more_options_popover.connect(
-                "realize",
-                lambda *_args: attach_surface_signal_hooks(),
-            )
-            attach_surface_signal_hooks()
-
-            def record_popover_transition(event: str, widget) -> None:
-                popover_events.append(
-                    {
-                        "event": event,
-                        "widget": _widget_lifecycle_state(widget, include_measure=False),
-                        "popover": _widget_lifecycle_state(page.more_options_popover, include_measure=False),
-                        "popover_parent_chain": _widget_parent_chain(page.more_options_popover, include_measure=False),
-                        "menu_button": _widget_lifecycle_state(page.more_options_button, include_measure=False),
-                    }
-                )
-
-            for signal in ("realize", "map", "unmap", "unrealize", "closed"):
-                page.more_options_popover.connect(
-                    signal,
-                    lambda widget, *_args, name=signal: record_popover_transition(name, widget),
-                )
-            for prop in ("visible", "child-visible", "realized", "mapped", "width", "height", "parent"):
-                page.more_options_popover.connect(
-                    f"notify::{prop}",
-                    lambda widget, *_args, name=prop: record_popover_transition(f"notify::{name}", widget),
-                )
-            for prop in ("visible", "child-visible", "realized", "mapped", "width", "height", "parent"):
-                page.more_options_button.connect(
-                    f"notify::{prop}",
-                    lambda widget, *_args, name=prop: record_popover_transition(f"menu-button:notify::{name}", widget),
-                )
-            ancestor = page.more_options_button.get_parent()
-            while ancestor is not None:
-                for signal in ("realize", "map", "unmap", "unrealize"):
-                    ancestor.connect(
-                        signal,
-                        lambda widget, *_args, name=signal: record_popover_transition(f"ancestor:{name}", widget),
-                    )
-                for prop in ("visible", "child-visible", "realized", "mapped", "width", "height"):
-                    ancestor.connect(
-                        f"notify::{prop}",
-                        lambda widget, *_args, name=prop: record_popover_transition(f"ancestor:notify::{name}", widget),
-                    )
-                ancestor = ancestor.get_parent()
-            activated = page.more_options_button.activate()
-            popover_events.append(f"widget-activate:returned={activated}")
-            _drain_gtk_main_context()
-            popover_events.append(
-                "after-widget-activate:"
-                f"active={page.more_options_button.get_active()},"
-                f"visible={page.more_options_popover.get_visible()},"
-                f"mapped={page.more_options_popover.get_mapped()}"
-            )
-            if not page.more_options_popover.get_mapped():
-                page.more_options_button.set_active(True)
-                _drain_gtk_main_context()
-                popover_events.append(
-                    "after-set-active:"
-                    f"active={page.more_options_button.get_active()},"
-                    f"visible={page.more_options_popover.get_visible()},"
-                    f"mapped={page.more_options_popover.get_mapped()}"
-                )
-            if not page.more_options_popover.get_mapped():
-                page.more_options_popover.popup()
-                _drain_gtk_main_context()
-                popover_events.append(
-                    "after-direct-popup:"
-                    f"active={page.more_options_button.get_active()},"
-                    f"visible={page.more_options_popover.get_visible()},"
-                    f"mapped={page.more_options_popover.get_mapped()}"
-                )
-            _wait_for_gtk_condition(
-                lambda: (
-                    page.more_options_popover.get_mapped()
-                    and all(button.get_mapped() for button in page.action_buttons)
+                f"notify::{prop}",
+                lambda _widget, *_args, name=prop: events.append(
+                    f"popover:{name}={getattr(page.more_options_popover, f'get_{name}')()}"
                 ),
-                "map the compact More options popover and its secondary actions",
-                diagnostics=lambda: _welcome_popover_diagnostic_state(window, page, popover_events),
             )
-            for button in page.action_buttons:
-                assert button.get_visible()
-                assert button.get_mapped()
-                assert button.get_focusable()
-            page.more_options_popover.popdown()
+        page.more_options_button.connect(
+            "notify::active",
+            lambda *_args: events.append(f"menu-button:active={page.more_options_button.get_active()}"),
+        )
+        page.more_options_button.connect(
+            "map",
+            lambda *_args: events.append("menu-button:map"),
+        )
+        page.more_options_button.connect(
+            "unmap",
+            lambda *_args: events.append("menu-button:unmap"),
+        )
+
+        def attach_surface_signals(*_args) -> None:
+            native = page.more_options_popover.get_native()
+            surface = native.get_surface() if native is not None else None
+            if surface is None:
+                return
+            for prop in ("mapped", "width", "height"):
+                surface.connect(
+                    f"notify::{prop}",
+                    lambda *_args, name=prop, current=surface: events.append(
+                        f"surface:{name}={getattr(current, f'get_{name}')()}"
+                    ),
+                )
+            events.append(
+                f"surface-created:type={type(surface).__name__},"
+                f"mapped={surface.get_mapped()},"
+                f"size={surface.get_width()}x{surface.get_height()}"
+            )
+
+        page.more_options_popover.connect("realize", attach_surface_signals)
+        attach_surface_signals()
+
+        if opening_method == "popover_popup":
+            page.more_options_popover.popup()
+        elif opening_method == "menu_button_set_active":
+            page.more_options_button.set_active(True)
+        elif opening_method == "widget_activate":
+            activated = page.more_options_button.activate()
+            events.append(f"widget-activate:returned={activated}")
+        else:
+            pytest.fail(f"Unknown popover opening method: {opening_method}")
+
+        _wait_for_gtk_condition(
+            lambda: (
+                page.more_options_popover.get_mapped()
+                and all(button.get_mapped() for button in page.action_buttons)
+            ),
+            f"map compact More options via {opening_method}",
+            diagnostics=lambda: _welcome_popover_diagnostic_state(window, page, events),
+        )
+
+        for button in page.action_buttons:
+            assert button.get_visible()
+            assert button.get_mapped()
+            assert button.get_focusable()
     finally:
+        page.more_options_popover.popdown()
         window.destroy()
+
