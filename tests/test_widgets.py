@@ -1044,6 +1044,7 @@ class TestThemeModeIntegration:
             history_page.run_dispose()
             focus_button.run_dispose()
 
+
 class TestShortcutsOverlayReducedMotion:
     @pytest.mark.gtk
     @pytest.mark.parametrize(
