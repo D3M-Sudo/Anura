@@ -465,7 +465,7 @@ def test_teardown_all_cancels_pending_timers_and_drops_controller(headless_gi_mo
 
 
 def test_refresh_captures_expanded_entry_and_scroll_position(headless_gi_mocks, monkeypatch, tmp_path):
-    fake_adw, fake_gtk, fake_glib = _patch_ui(monkeypatch)
+    fake_adw, _fake_gtk, fake_glib = _patch_ui(monkeypatch)
     fake_adw.ExpanderRow.side_effect = lambda **_kwargs: MagicMock()
     service = HistoryService(base_dir=tmp_path)
     service.record("first", "eng")
