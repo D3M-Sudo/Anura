@@ -521,8 +521,7 @@ def test_welcome_compact_popover_opening_methods_at_narrow_viewport(opening_meth
 
         _wait_for_gtk_condition(
             lambda: (
-                page.more_options_popover.get_mapped()
-                and all(button.get_mapped() for button in page.action_buttons)
+                page.more_options_popover.get_mapped() and all(button.get_mapped() for button in page.action_buttons)
             ),
             f"map compact More options via {opening_method}",
             diagnostics=lambda: _welcome_popover_diagnostic_state(window, page, events),
@@ -535,4 +534,3 @@ def test_welcome_compact_popover_opening_methods_at_narrow_viewport(opening_meth
     finally:
         page.more_options_popover.popdown()
         window.destroy()
-
