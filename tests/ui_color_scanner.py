@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import ast
 import re
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Mapping, Sequence
 
 
 @dataclass(frozen=True, slots=True)
