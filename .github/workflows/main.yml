@@ -208,8 +208,8 @@ jobs:
           NO_COLOR: "1"
         run: |
           set +e
-          WAYLAND_DEBUG=client timeout 120 uv run pytest \
-            tests/test_audit_ui_widgets.py -m gtk -k "compact_popover" -vv --timeout=30 \
+# Collect the full GTK test tree so module-level resource registration matches normal GTK CI.
+            tests/ -m gtk -k "compact_popover" -vv --timeout=30 \
             --override-ini "addopts=-v --tb=short" \
             > /tmp/wayland-client-protocol.log 2>&1
           test_status=$?
