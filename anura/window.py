@@ -576,9 +576,11 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
             self.tts_controller.stop()
 
     def show_welcome_page(self, *_args: object) -> None:
-        """Show the welcome page and hide the extracted content."""
+        """Show the welcome page and stop speech unless History exit owns cleanup."""
+        leaving_page = self.navigation_view.get_visible_page()
         self.navigation_view.pop_to_tag("welcome")
-        self.tts_controller.stop()
+        if leaving_page is not self.history_page:
+            self.tts_controller.stop()
 
     def show_history_page(self, *_args: object) -> None:
         """Show the History page, reloading its entries from the service."""
