@@ -5,8 +5,8 @@
 
 """Regression tests for the GTK palette and shared UI design conventions."""
 
-import re
 from pathlib import Path
+import re
 
 
 SPACING_SCALE = {4, 8, 12, 16, 24}
