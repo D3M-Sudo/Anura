@@ -86,7 +86,7 @@ Status values are evidence-based: **Not started**, **In progress**, **Partial**,
 |---|---|---|---|
 | M0 | Full application audit | Complete inventory of windows/components/states/functions; current behavior, visual/functional/accessibility/architecture/performance/Linux-compatibility findings; prioritized requirements and traceability baseline | **Partial — M0-A inventory and M0-B traceability/evidence reconciliation completed; M0-C prioritization and remaining audit synthesis are next** |
 | M1 | Design System and themes | Approved shared palette/tokens and reusable patterns; typography/spacing/component rules; automatic/light/dark and force-light/force-dark behavior verified | **Partial — M1-A/M1-B read-only audit completed; green palette/runtime CSS and three-mode preference mapping exist, but full token consolidation, cross-surface theme coverage and automated runtime theme verification remain** |
-| M2 | Welcome and main navigation | Welcome and main-shell/navigation experience meet responsive, visual, interaction and focus criteria | **Partial — M2-A and M2-B read-only audits completed 2026-11-16; core NavigationView paths and side effects are present in source, but end-to-end transition/focus/state-restoration tests and remaining shell acceptance evidence are not established** |
+| M2 | Welcome and main navigation | Welcome and main-shell/navigation experience meet responsive, visual, interaction and focus criteria | **Partial — M2-A/M2-B audits and M2-C bounded integration-test proposal completed 2026-11-16; implementation and execution of navigation/state-restoration tests, plus remaining shell acceptance evidence, are not established** |
 | M3 | Extracted and History | Extracted/OCR and History surfaces consistently modernized without functional regressions | **Partial — Extracted header/action area and scroll protections exist; History modernization is not established as complete** |
 | M4 | Preferences and languages | General, Languages, Editor, Voice and language selector meet shared visual, responsive, lifecycle and accessibility criteria | **Partial — Preferences split and selected lifecycle work exist; full page and language-selector audit remains** |
 | M5 | Other windows and components | Shortcuts, About, dialogs, popovers, menus, notifications, banners and toasts audited and addressed where justified | **Not started as a complete phase — Shortcuts received limited resizing work; app-wide coverage is unverified** |
@@ -223,7 +223,8 @@ The subordinate document [2026-11-16-anura-ui-modernization-roadmap.md](2026-11-
 5. **M1-A/M1-B — Design-system and theme audit.** **Completed 2026-11-16** in read-only mode; findings and evidence limits are recorded below. M1 remains Partial because design-system consolidation and app-wide runtime theme coverage are not complete.
 6. **M2-A — Welcome and main-navigation read-only audit. Completed 2026-11-16**; findings and evidence limits are recorded below. No code changes were made.
 7. **M2-B — focused read-only verification of complete NavigationView transition paths and state restoration. Completed 2026-11-16**; findings and evidence limits are recorded below. No code changes were made.
-8. **Next permitted task: M2-C — define a bounded automated integration-test proposal** for Welcome → Extracted → Welcome and Welcome → History → Welcome, including focus and side-effect assertions. Planning only; implementation requires separate explicit approval.
+8. **M2-C — bounded automated integration-test proposal. Completed 2026-11-16 (planning only).** The two navigation paths, focus/side-effect assertions and maintainer-approved state-retention policies are specified in the task record below. No implementation was authorized.
+9. **Next permitted task: M2-D — present a bounded implementation scope, affected files, acceptance criteria and CI test plan for the M2-C proposal; obtain separate explicit approval before changing source/tests/workflows.**
 
 No application-code task is authorized by GLOBAL-00 or by the existence of this roadmap.
 
@@ -315,6 +316,22 @@ After every completed task, append/update the relevant phase and record:
 - **Evidence limits:** source/test inspection only; no runtime GTK execution, test pass/fail result or CI result is claimed. Manual GNOME/GTK visual checks, real Orca/AT-SPI and manual keyboard checks remain excluded, not passed.
 - **M2 disposition:** remains **Partial**. M2-A and M2-B audits are complete, but integration tests and remaining shell acceptance evidence are not established.
 - **Next permitted task:** M2-C, planning a bounded automated integration-test proposal. No code changes are authorized.
+
+
+### 2026-11-16 — M2-C: navigation integration-test proposal
+
+- **Outcome:** completed as a planning-only task. The proposal defines bounded automated integration coverage for Welcome → Extracted → Welcome and Welcome → History → Welcome. No source code, tests or workflows were changed.
+- **Maintainer-approved state policies:**
+  - **Extracted (choice 1C):** retain the extracted text when returning to Welcome; retain it only until the next extraction, which replaces the prior content.
+  - **History (choice 2C):** retain expanded-row state and scroll position across navigation/reopening within the current application session; do not persist either state across application restarts.
+- **Proposed Extracted scenarios:** verify destination visibility and focus where observable; text survives return to Welcome; a subsequent extraction replaces the previous text; returning while TTS is active stops playback; re-entering Extracted shows the current result.
+- **Proposed History scenarios:** verify refresh before display; expansion and scroll survive leaving/reopening History within one session; a fresh application session starts with default expansion/scroll state. The restart case must distinguish in-memory session state from persisted state and must not introduce new GSettings keys or disk persistence for these transient preferences.
+- **Cross-cutting test design:** reuse existing GTK integration fixtures/helpers and deterministic OCR/History data; assert observable navigation, focus, signals and side effects rather than implementation details. Assert actual focus only where the CI GTK environment can reliably observe it; otherwise record the limitation.
+- **Test proposal identifiers:** M2-C01–M2-C05 (Extracted lifecycle/navigation/TTS); M2-C06–M2-C10 (History refresh, session-state retention and restart reset).
+- **Evidence limits:** this is a test design, not execution evidence. No tests were run and no CI result is claimed. Manual GNOME/GTK visual checks, real Orca/AT-SPI and manual keyboard checks remain excluded, not passed.
+- **Requirement disposition:** the user decisions for Extracted text lifetime and History session-only state are now explicit acceptance constraints for any subsequent implementation.
+- **Next permitted task:** M2-D, present a bounded implementation scope with affected files, acceptance criteria and CI plan; obtain separate explicit approval before modifying source, tests or workflows.
+- **Roadmap update:** this record is being committed to the global roadmap on fix/ui-modernization-aligned; no protected branch, PR metadata or merge state is to be changed.
 
 ## 9. Change log
 
