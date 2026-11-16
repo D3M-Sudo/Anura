@@ -11,7 +11,7 @@ import pytest
 pytest.importorskip("gi")
 
 from gettext import gettext as _
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import gi
 from gi.repository import Adw, Gio, GLib, Gtk
@@ -42,6 +42,7 @@ from anura.services.history_service import HistoryService  # noqa: E402
 from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
 from anura.widgets.history_page import HistoryPage  # noqa: E402
 from anura.widgets.language_row import LanguageRow  # noqa: E402
+from anura.widgets.shortcuts_overlay import ShortcutsOverlay  # noqa: E402
 from anura.widgets.welcome_page import WelcomePage  # noqa: E402
 
 
@@ -1042,3 +1043,52 @@ class TestThemeModeIntegration:
             history_page.cleanup()
             history_page.run_dispose()
             focus_button.run_dispose()
+
+class TestShortcutsOverlayReducedMotion:
+    @pytest.mark.gtk
+    @pytest.mark.parametrize(
+        ("animations_enabled", "reduced_motion", "expected"),
+        [
+            (False, False, True),
+            (True, False, False),
+            (True, True, True),
+        ],
+    )
+    def test_initial_motion_preference_and_live_transitions(
+        self, animations_enabled, reduced_motion, expected
+    ):
+        settings = MagicMock()
+        settings.find_property.return_value = object()
+        state = {
+            "gtk-enable-animations": animations_enabled,
+            "gtk-interface-reduced-motion": reduced_motion,
+        }
+        settings.get_property.side_effect = lambda name: state[name]
+        settings.connect.side_effect = [101, 102]
+
+        with patch(
+            "anura.widgets.shortcuts_overlay.Gtk.Settings.get_for_display",
+            return_value=settings,
+        ):
+            overlay = ShortcutsOverlay()
+
+        try:
+            assert overlay.has_css_class("reduced-motion") is expected
+            assert settings.connect.call_args_list == [
+                call("notify::gtk-enable-animations", overlay._on_motion_settings_changed),
+                call("notify::gtk-interface-reduced-motion", overlay._on_motion_settings_changed),
+            ]
+
+            state["gtk-enable-animations"] = True
+            state["gtk-interface-reduced-motion"] = True
+            overlay._on_motion_settings_changed(settings, None)
+            assert overlay.has_css_class("reduced-motion")
+
+            state["gtk-interface-reduced-motion"] = False
+            overlay._on_motion_settings_changed(settings, None)
+            assert not overlay.has_css_class("reduced-motion")
+        finally:
+            overlay.destroy()
+
+        assert settings.disconnect.call_args_list == [call(101), call(102)]
+
