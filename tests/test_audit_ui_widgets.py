@@ -320,7 +320,7 @@ def _probe_minimal_popover() -> dict:
         _drain_gtk_main_context()
 
 
-def _widget_lifecycle_state(widget) -> dict:
+def _widget_lifecycle_state(widget, include_measure: bool = True) -> dict:
     """Capture GTK visibility, realization, allocation, and natural-size state."""
     parent = widget.get_parent()
     root = widget.get_root()
@@ -335,22 +335,32 @@ def _widget_lifecycle_state(widget) -> dict:
         "parent": type(parent).__name__ if parent is not None else None,
         "root": type(root).__name__ if root is not None else None,
     }
-    try:
-        state["measure"] = {
-            "horizontal": widget.measure(Gtk.Orientation.HORIZONTAL, -1)[:2],
-            "vertical": widget.measure(Gtk.Orientation.VERTICAL, -1)[:2],
+    native = widget.get_native()
+    surface = native.get_surface() if native is not None else None
+    if surface is not None:
+        state["native_surface"] = {
+            "native_type": type(native).__name__,
+            "surface_type": type(surface).__name__,
+            "mapped": surface.get_mapped(),
+            "size": (surface.get_width(), surface.get_height()),
         }
-    except Exception as exc:
-        state["measure_error"] = repr(exc)
+    if include_measure:
+        try:
+            state["measure"] = {
+                "horizontal": widget.measure(Gtk.Orientation.HORIZONTAL, -1)[:2],
+                "vertical": widget.measure(Gtk.Orientation.VERTICAL, -1)[:2],
+            }
+        except Exception as exc:
+            state["measure_error"] = repr(exc)
     return state
 
 
-def _widget_parent_chain(widget) -> list[dict]:
+def _widget_parent_chain(widget, include_measure: bool = True) -> list[dict]:
     """Capture each ancestor's visibility and allocation gates up to the root."""
     chain = []
     current = widget
     while current is not None:
-        chain.append(_widget_lifecycle_state(current))
+        chain.append(_widget_lifecycle_state(current, include_measure=include_measure))
         current = current.get_parent()
     return chain
 
@@ -378,10 +388,10 @@ def _probe_nested_menubutton_popover() -> dict:
         events.append(
             {
                 "event": event,
-                "widget": _widget_lifecycle_state(widget),
-                "popover": _widget_lifecycle_state(popover),
-                "popover_parent_chain": _widget_parent_chain(popover),
-                "button_parent_chain": _widget_parent_chain(button),
+                "widget": _widget_lifecycle_state(widget, include_measure=False),
+                "popover": _widget_lifecycle_state(popover, include_measure=False),
+                "popover_parent_chain": _widget_parent_chain(popover, include_measure=False),
+                "button_parent_chain": _widget_parent_chain(button, include_measure=False),
             }
         )
 
@@ -816,29 +826,41 @@ def test_welcome_responsive_layout_uses_allocated_viewport(screen_width: int, sc
                 "notify::mapped",
                 lambda *_args: popover_events.append(f"window:mapped={window.get_mapped()}"),
             )
-            native = page.more_options_popover.get_native()
-            surface = native.get_surface() if native is not None else None
-            if surface is not None:
-                surface.connect(
-                    "notify::mapped",
-                    lambda *_args: popover_events.append(f"surface:mapped={surface.get_mapped()}"),
+            connected_surfaces = set()
+
+            def attach_surface_signal_hooks() -> None:
+                native = page.more_options_popover.get_native()
+                surface = native.get_surface() if native is not None else None
+                if surface is None or id(surface) in connected_surfaces:
+                    return
+                connected_surfaces.add(id(surface))
+                for prop in ("mapped", "width", "height"):
+                    surface.connect(
+                        f"notify::{prop}",
+                        lambda *_args, name=prop, current_surface=surface: popover_events.append(
+                            f"surface:{name}={getattr(current_surface, f'get_{name}')()}"
+                        ),
+                    )
+                popover_events.append(
+                    "surface-created:"
+                    f"type={type(surface).__name__},"
+                    f"mapped={surface.get_mapped()},"
+                    f"size={surface.get_width()}x{surface.get_height()}"
                 )
-                surface.connect(
-                    "notify::width",
-                    lambda *_args: popover_events.append(f"surface:width={surface.get_width()}"),
-                )
-                surface.connect(
-                    "notify::height",
-                    lambda *_args: popover_events.append(f"surface:height={surface.get_height()}"),
-                )
+
+            page.more_options_popover.connect(
+                "realize",
+                lambda *_args: attach_surface_signal_hooks(),
+            )
+            attach_surface_signal_hooks()
             def record_popover_transition(event: str, widget) -> None:
                 popover_events.append(
                     {
                         "event": event,
-                        "widget": _widget_lifecycle_state(widget),
-                        "popover": _widget_lifecycle_state(page.more_options_popover),
-                        "popover_parent_chain": _widget_parent_chain(page.more_options_popover),
-                        "menu_button": _widget_lifecycle_state(page.more_options_button),
+                        "widget": _widget_lifecycle_state(widget, include_measure=False),
+                        "popover": _widget_lifecycle_state(page.more_options_popover, include_measure=False),
+                        "popover_parent_chain": _widget_parent_chain(page.more_options_popover, include_measure=False),
+                        "menu_button": _widget_lifecycle_state(page.more_options_button, include_measure=False),
                     }
                 )
 
