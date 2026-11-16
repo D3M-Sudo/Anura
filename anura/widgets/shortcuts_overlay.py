@@ -22,6 +22,7 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Adw, Gdk, GLib, GObject, Gtk  # noqa: E402
 
 from anura.config import RESOURCE_PREFIX  # noqa: E402
+from anura.utils.accessibility import sync_reduced_motion_class  # noqa: E402
 
 
 class _Shortcut(TypedDict):
@@ -57,6 +58,17 @@ class ShortcutsOverlay(Adw.Window):
     def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
 
+        motion_settings = Gtk.Settings.get_for_display(self.get_display())
+        self._motion_settings: Gtk.Settings | None = motion_settings
+        self._motion_handler_ids: list[int] = []
+        for setting_name in ("gtk-enable-animations", "gtk-interface-reduced-motion"):
+            if motion_settings.find_property(setting_name) is not None:
+                handler_id = motion_settings.connect(
+                    f"notify::{setting_name}",
+                    self._on_motion_settings_changed,
+                )
+                self._motion_handler_ids.append(handler_id)
+
         # Title, modal, default size, etc. are declared in shortcuts_overlay.blp.
 
         self._setup_shortcuts_data()
@@ -65,6 +77,7 @@ class ShortcutsOverlay(Adw.Window):
 
         self.add_css_class("anura-fade-in")
         self.add_css_class("anura-card")
+        self._sync_reduced_motion_class()
 
     def _setup_shortcuts_data(self) -> None:
         """Define all keyboard shortcuts with descriptions.
@@ -189,7 +202,32 @@ class ShortcutsOverlay(Adw.Window):
             self.remove_controller(self._key_controller)
             self._key_controller = None
 
+        motion_settings = getattr(self, "_motion_settings", None)
+        if motion_settings is not None:
+            for handler_id in getattr(self, "_motion_handler_ids", []):
+                with contextlib.suppress(TypeError, RuntimeError):
+                    motion_settings.disconnect(handler_id)
+            self._motion_handler_ids.clear()
+            self._motion_settings = None
+
         super().do_destroy()
+
+    def _on_motion_settings_changed(self, _settings: Gtk.Settings, _pspec: GObject.ParamSpec) -> None:
+        """Re-apply the overlay's reduced-motion policy when GTK settings change."""
+        self._sync_reduced_motion_class()
+
+    def _sync_reduced_motion_class(self) -> None:
+        """Reflect GTK's motion preference without changing desktop-wide settings."""
+        if self._motion_settings is None:
+            return
+
+        reduced_motion = sync_reduced_motion_class(self, self._motion_settings)
+        motion_classes = ("anura-fade-in", "anura-card")
+        for css_class in motion_classes:
+            if reduced_motion:
+                self.remove_css_class(css_class)
+            else:
+                self.add_css_class(css_class)
 
     def _on_search_changed(self, entry: Gtk.SearchEntry) -> None:
         """Handle search entry changes."""
