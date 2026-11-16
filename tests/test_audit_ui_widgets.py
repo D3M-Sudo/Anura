@@ -879,25 +879,19 @@ def test_welcome_responsive_layout_uses_allocated_viewport(screen_width: int, sc
             for prop in ("visible", "child-visible", "realized", "mapped", "width", "height", "parent"):
                 page.more_options_button.connect(
                     f"notify::{prop}",
-                    lambda widget, *_args, name=prop: record_popover_transition(
-                        f"menu-button:notify::{name}", widget
-                    ),
+                    lambda widget, *_args, name=prop: record_popover_transition(f"menu-button:notify::{name}", widget),
                 )
             ancestor = page.more_options_button.get_parent()
             while ancestor is not None:
                 for signal in ("realize", "map", "unmap", "unrealize"):
                     ancestor.connect(
                         signal,
-                        lambda widget, *_args, name=signal: record_popover_transition(
-                            f"ancestor:{name}", widget
-                        ),
+                        lambda widget, *_args, name=signal: record_popover_transition(f"ancestor:{name}", widget),
                     )
                 for prop in ("visible", "child-visible", "realized", "mapped", "width", "height"):
                     ancestor.connect(
                         f"notify::{prop}",
-                        lambda widget, *_args, name=prop: record_popover_transition(
-                            f"ancestor:notify::{name}", widget
-                        ),
+                        lambda widget, *_args, name=prop: record_popover_transition(f"ancestor:notify::{name}", widget),
                     )
                 ancestor = ancestor.get_parent()
             activated = page.more_options_button.activate()
