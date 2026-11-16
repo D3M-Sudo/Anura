@@ -712,7 +712,7 @@ class TestNavigationStateIntegration:
 
         try:
             assert TestWelcomePageEnterprise._spin_until(
-                context, lambda: navigation.get_visible_page_tag() == "welcome"
+                context, lambda: navigation.get_visible_page() is welcome
             )
             extracted.buffer.set_text("retained OCR result")
             navigation.push_by_tag("extracted")
@@ -722,7 +722,7 @@ class TestNavigationStateIntegration:
 
             navigation.pop_to_tag("welcome")
             assert TestWelcomePageEnterprise._spin_until(
-                context, lambda: navigation.get_visible_page_tag() == "welcome"
+                context, lambda: navigation.get_visible_page() is welcome
             )
             assert extracted.extracted_text == "retained OCR result"
 
@@ -760,11 +760,11 @@ class TestNavigationStateIntegration:
 
         try:
             assert TestWelcomePageEnterprise._spin_until(
-                context, lambda: navigation.get_visible_page_tag() == "welcome"
+                context, lambda: navigation.get_visible_page() is welcome
             )
             navigation.push_by_tag("history")
             assert TestWelcomePageEnterprise._spin_until(
-                context, lambda: navigation.get_visible_page_tag() == "history"
+                context, lambda: navigation.get_visible_page() is history
             )
 
             scrolled_window = history.history_list.get_ancestor(Gtk.ScrolledWindow)
@@ -786,7 +786,7 @@ class TestNavigationStateIntegration:
 
             navigation.pop_to_tag("welcome")
             assert TestWelcomePageEnterprise._spin_until(
-                context, lambda: navigation.get_visible_page_tag() == "welcome"
+                context, lambda: navigation.get_visible_page() is welcome
             )
             history.refresh()
             navigation.push_by_tag("history")
@@ -794,7 +794,7 @@ class TestNavigationStateIntegration:
             def state_restored():
                 restored_row = history._row_entry_ids.get(entry.id)
                 return (
-                    navigation.get_visible_page_tag() == "history"
+                    navigation.get_visible_page() is history
                     and restored_row is not None
                     and history._open_row is restored_row
                     and restored_row.get_expanded()
