@@ -320,6 +320,120 @@ def _probe_minimal_popover() -> dict:
         _drain_gtk_main_context()
 
 
+def _widget_lifecycle_state(widget) -> dict:
+    """Capture GTK visibility, realization, allocation, and natural-size state."""
+    parent = widget.get_parent()
+    root = widget.get_root()
+    state = {
+        "type": type(widget).__name__,
+        "visible": widget.get_visible(),
+        "child_visible": widget.get_child_visible(),
+        "realized": widget.get_realized(),
+        "mapped": widget.get_mapped(),
+        "sensitive": widget.is_sensitive(),
+        "size": (widget.get_width(), widget.get_height()),
+        "parent": type(parent).__name__ if parent is not None else None,
+        "root": type(root).__name__ if root is not None else None,
+    }
+    try:
+        state["measure"] = {
+            "horizontal": widget.measure(Gtk.Orientation.HORIZONTAL, -1)[:2],
+            "vertical": widget.measure(Gtk.Orientation.VERTICAL, -1)[:2],
+        }
+    except Exception as exc:
+        state["measure_error"] = repr(exc)
+    return state
+
+
+def _widget_parent_chain(widget) -> list[dict]:
+    """Capture each ancestor's visibility and allocation gates up to the root."""
+    chain = []
+    current = widget
+    while current is not None:
+        chain.append(_widget_lifecycle_state(current))
+        current = current.get_parent()
+    return chain
+
+
+def _probe_directly_parented_popover() -> dict:
+    """Compare GtkPopover parented directly to a regular Gtk.Button."""
+    window = Gtk.Window()
+    window.set_default_size(320, 180)
+    anchor = Gtk.Button(label="Direct popover anchor")
+    container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    container.append(anchor)
+    window.set_child(container)
+
+    popover = Gtk.Popover.new()
+    popover.set_child(Gtk.Label(label="Directly parented popover content"))
+    popover.set_parent(anchor)
+    events = []
+
+    def record(event: str, widget) -> None:
+        events.append(
+            {
+                "event": event,
+                "anchor": _widget_lifecycle_state(anchor),
+                "popover": _widget_lifecycle_state(popover),
+                "popover_parent_chain": _widget_parent_chain(popover),
+            }
+        )
+
+    for signal in ("realize", "map", "unmap", "unrealize", "closed"):
+        popover.connect(signal, lambda widget, *_args, name=signal: record(name, widget))
+    for prop in ("visible", "child-visible", "realized", "mapped", "width", "height", "parent"):
+        popover.connect(
+            f"notify::{prop}",
+            lambda widget, *_args, name=prop: record(f"notify::{name}", widget),
+        )
+
+    try:
+        window.present()
+        _wait_for_window_allocation(window, anchor, timeout_seconds=2.0)
+        before_popup = {
+            "anchor": _widget_lifecycle_state(anchor),
+            "popover": _widget_lifecycle_state(popover),
+            "popover_parent_chain": _widget_parent_chain(popover),
+        }
+        popover.popup()
+        _wait_for_gtk_condition(
+            lambda: popover.get_mapped(),
+            "map a GtkPopover directly parented to a Gtk.Button",
+            timeout_seconds=1.0,
+            diagnostics=lambda: repr(
+                {
+                    "before_popup": before_popup,
+                    "after_popup": {
+                        "anchor": _widget_lifecycle_state(anchor),
+                        "popover": _widget_lifecycle_state(popover),
+                        "popover_parent_chain": _widget_parent_chain(popover),
+                        "events": events,
+                    },
+                }
+            ),
+        )
+        return {
+            "before_popup": before_popup,
+            "after_popup": {
+                "anchor": _widget_lifecycle_state(anchor),
+                "popover": _widget_lifecycle_state(popover),
+                "popover_parent_chain": _widget_parent_chain(popover),
+            },
+            "events": events,
+        }
+    except Exception as exc:
+        return {
+            "error": repr(exc),
+            "anchor": _widget_lifecycle_state(anchor),
+            "popover": _widget_lifecycle_state(popover),
+            "popover_parent_chain": _widget_parent_chain(popover),
+            "events": events,
+        }
+    finally:
+        window.destroy()
+        _drain_gtk_main_context()
+
+
 def _welcome_popover_diagnostic_state(window, page, events) -> str:
     """Capture GTK geometry, clipping, sizing, and native-surface state on failure."""
 
@@ -327,10 +441,7 @@ def _welcome_popover_diagnostic_state(window, page, events) -> str:
         parent = widget.get_parent()
         root = widget.get_root()
         return {
-            "type": type(widget).__name__,
-            "visible": widget.get_visible(),
-            "mapped": widget.get_mapped(),
-            "size": (widget.get_width(), widget.get_height()),
+            **_widget_lifecycle_state(widget),
             "parent": type(parent).__name__ if parent is not None else None,
             "root": type(root).__name__ if root is not None else None,
         }
@@ -439,7 +550,15 @@ def _welcome_popover_diagnostic_state(window, page, events) -> str:
                 )
             },
             "events": list(events),
+            "popover_parent_chain": _widget_parent_chain(page.more_options_popover),
+            "menu_button_parent_chain": _widget_parent_chain(page.more_options_button),
+            "popover_child_state": (
+                _widget_lifecycle_state(page.more_options_popover.get_child())
+                if page.more_options_popover.get_child() is not None
+                else None
+            ),
             "minimal_popover_baseline": _probe_minimal_popover(),
+            "directly_parented_popover_baseline": _probe_directly_parented_popover(),
         }
     )
 
@@ -685,6 +804,34 @@ def test_welcome_responsive_layout_uses_allocated_viewport(screen_width: int, sc
                 surface.connect(
                     "notify::height",
                     lambda *_args: popover_events.append(f"surface:height={surface.get_height()}"),
+                )
+            def record_popover_transition(event: str, widget) -> None:
+                popover_events.append(
+                    {
+                        "event": event,
+                        "widget": _widget_lifecycle_state(widget),
+                        "popover": _widget_lifecycle_state(page.more_options_popover),
+                        "popover_parent_chain": _widget_parent_chain(page.more_options_popover),
+                        "menu_button": _widget_lifecycle_state(page.more_options_button),
+                    }
+                )
+
+            for signal in ("realize", "map", "unmap", "unrealize", "closed"):
+                page.more_options_popover.connect(
+                    signal,
+                    lambda widget, *_args, name=signal: record_popover_transition(name, widget),
+                )
+            for prop in ("visible", "child-visible", "realized", "mapped", "width", "height", "parent"):
+                page.more_options_popover.connect(
+                    f"notify::{prop}",
+                    lambda widget, *_args, name=prop: record_popover_transition(f"notify::{name}", widget),
+                )
+            for prop in ("visible", "child-visible", "realized", "mapped", "width", "height", "parent"):
+                page.more_options_button.connect(
+                    f"notify::{prop}",
+                    lambda widget, *_args, name=prop: record_popover_transition(
+                        f"menu-button:notify::{name}", widget
+                    ),
                 )
             activated = page.more_options_button.activate()
             popover_events.append(f"widget-activate:returned={activated}")
