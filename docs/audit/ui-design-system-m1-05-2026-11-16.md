@@ -107,8 +107,8 @@ These may be valid native GTK/Libadwaita style classes and are not classified as
 |---|---|---|
 | P1 | F1 — reduced-motion omission on separate Shortcuts window | Recommend bounded M1-06 fix and regression test |
 | P1 | F2 — no production-tree CI gate for the color scanner | Recommend bounded M1-06 test/CI integration and rationale map |
-| P3 | F3 — apparently orphaned CSS selectors | Defer; cleanup only after confirming no dynamic consumer |
-| P3 | F4 — undocumented `title`/`h4` typography roles | Defer; clarify semantic intent without gratuitous restyling |
+| P3 | F3 — apparently orphaned CSS selectors | Follow-up completed: tracked-file consumer audit found no production source consumers; unused rules/keyframes removed |
+| P3 | F4 — undocumented `title`/`h4` typography roles | Follow-up completed: toolkit semantics and current use documented; no Blueprint change |
 
 **M1-05 disposition: Completed.** The cross-surface inventory and evidence-backed findings are recorded. **M1 remains Partial** because F1 and F2 are demonstrated gaps and require a separately approved implementation. M1-06 remains conditional and is not authorized by this audit.
 
@@ -122,3 +122,25 @@ These may be valid native GTK/Libadwaita style classes and are not classified as
 - Screenshot capture remains deferred to the next release cycle.
 - No application source, tests, workflows, CHANGELOG, dependencies, OCR behavior, architecture, protected branches or PR metadata were modified by M1-05.
 - PR #648 was Open, Draft, unmerged, base `feature`, head branch `fix/ui-modernization-aligned` at the source snapshot checked for this audit.
+
+
+## 7. M1 F3/F4 follow-up — 2026-11-17
+
+This addendum resolves the two low-priority follow-ups without changing the scope or conclusions of the original M1-05 source snapshot.
+
+### F3 — consumer audit and cleanup
+
+- Temporary GitHub Actions run [#43981815120](https://github.com/D3M-Sudo/Anura/actions/runs/43981815120) completed successfully on branch `fix/ui-modernization-aligned`, commit `498f8de52cff7c4ea9d12f0ea9a9b19e913d81ce`. The job checked out that exact commit and ran `git grep` across all tracked files other than `data/style.css`.
+- The search found no candidate class references in Python or Blueprint application sources. Matches were limited to the temporary workflow's own pattern, documentation/audit text, a historical CHANGELOG phrase, and Welcome screenshot/asset names. These substring matches are not runtime class consumers.
+- The artifact [m1-f3-selector-audit](https://github.com/D3M-Sudo/Anura/actions/runs/43981815120/artifacts/14283985075) was uploaded successfully. A second earlier push-triggered audit run [#43981785415](https://github.com/D3M-Sudo/Anura/actions/runs/43981785415) also completed successfully on the preceding workflow commit.
+- Removed from `data/style.css`: `.anura-pulse`, `.anura-spinner`, `.anura-toast`/`.hiding`, `.share-row`, `.welcome-page`, `.welcome-card`, `.language-popover`, `.language-row` and `.screenshot-btn.ready`; also removed their dedicated `pulse`, `spin`, `toastSlideIn`, `toastSlideOut` and `readyPulse` keyframes and obsolete reduced-motion references to `.share-row` and `.welcome-card`.
+- No candidate was retained as a reserved future selector: the tracked repository and approved near-term plan supplied no justified consumer. Existing active application styles and animations were retained.
+- **Limit:** a literal search of tracked files cannot exclude a class name assembled from fragments at runtime or supplied by an external integration. It does establish no direct textual consumer in the tracked application sources/resources at the audited commit.
+
+### F4 — toolkit semantics and documentation
+
+- The Libadwaita style-class reference documents `.title-1`–`.title-4` as the title hierarchy and `.heading` as the standard UI-heading style. It does not list `.title` or `.h4` as typography utility classes.
+- GTK allows arbitrary CSS class names; the names `title` and `h4` do not, by themselves, guarantee a standard Libadwaita typographic role. The current `heading` class is supported; `title` on the LanguageRow label and `h4` on the Languages section label are documented as legacy/unverified styling hooks.
+- `docs/ui-design-system.md` now records these roles and the relevant official GTK/Libadwaita references. No Blueprint code or class assignment was changed, consistent with the approved documentation-only F4 scope.
+
+**Follow-up disposition:** F3 cleanup completed; F4 documentation completed. The original M1-05 audit remains historically valid for its stated snapshot. Neither follow-up closes global M1; cross-surface Design System adoption and verification remain broader work.

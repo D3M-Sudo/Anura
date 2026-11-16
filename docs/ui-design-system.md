@@ -67,3 +67,16 @@ Preserve the existing `default`, `force-light` and `force-dark` behavior and gre
 - Keep the app-owned fallback pair `#0F7650` (light) and `#21B77A` (dark). Repeated identical literals are retained where they serve distinct semantic roles (downloaded text, History empty-state icon, focus indicator); do not consolidate across roles.
 - `default`, `force-light` and `force-dark` theme transitions are covered by GTK tests for the setting callback and affected language/History/focus CSS classes. These tests verify class/state continuity, not rendered-pixel contrast under every desktop theme.
 - The UI color scanner in `tests/ui_color_scanner.py` discovers new supported UI source files and flags unclassified color literals; intentional exceptions require path-specific rationale.
+
+
+## Existing typography class usage requiring caution
+
+The following existing Blueprint classes are documented for traceability; they are not new conventions to copy into new UI:
+
+- `heading` is a documented Libadwaita typography style for standard UI headings at the default text size. It is the supported semantic class on the Languages section label.
+- `title` on the `LanguageRow` label expresses a title-like intent in the current template, but it is not one of the documented Adwaita typography utility classes. The class name alone does not guarantee a standard title size or hierarchy; no matching application rule is defined in `data/style.css`.
+- `h4` is also present on the Languages section label alongside `heading`. It is not part of the documented Adwaita typography utility set and does not establish an Adwaita heading level. Treat it as a legacy/unverified styling hook, not as a semantic heading token.
+
+Libadwaita documents the title hierarchy as `title-1` through `title-4`, plus `heading`, `body`, `caption-heading` and `caption` (alongside other utility classes). GTK permits arbitrary widget CSS classes, but arbitrary names acquire visual meaning only when a stylesheet defines them. See the [Libadwaita style-class reference](https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/style-classes.html) and [GTK CSS overview](https://docs.gtk.org/gtk4/css-overview.html).
+
+No Blueprint class was changed as part of this documentation-only F4 resolution. A future visual review may decide whether `title` should become `title-4` or `heading`, and whether `h4` should be removed; that requires a separately scoped change with rendered UI review.

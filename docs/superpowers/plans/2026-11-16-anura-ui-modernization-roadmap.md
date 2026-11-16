@@ -360,4 +360,16 @@ The [global roadmap](2026-11-16-anura-ui-modernization-global-roadmap.md) is the
 - **F2 implementation:** repository-root pytest enforcement uses the existing scanner and an exact path/value rationale map; it does not add a separate workflow or change the scanner's production-source scope.
 - **Final verification on the exact SHA:** CI #43974750869 completed with conclusion `success` on the exact source/test SHA `35fa684e72fd4e83eae4d58d4b7e731a00d2486b`. All 9 executable jobs passed: Python quality (644 passed, 6 skipped, 277 deselected); GTK Integration (447 passed, 5 skipped, 650 deselected, 2 warnings); Changelog integrity; AppImage x86_64 and aarch64 builds, architecture/update-metadata verification, clean-host smoke tests and artifact uploads; Flatpak x86_64 and aarch64 builds/runtime checks; multi-architecture Flatpak artifact validation; and complete AppImage release-set validation. The `publish-release` job was skipped as expected for a pull request. CodeQL #43974750821 also passed on the same source/test SHA. Ruff, mypy and Bandit passed within Python quality.
 - **TDD red evidence:** test-only commits produced expected GTK failures before the reduced-motion implementation and before close-request cleanup; the final implementation/test SHA above is green for the complete GTK suite.
-- F3/F4 remain deferred. Manual visual, Orca/AT-SPI, manual keyboard and live multi-monitor checks remain excluded; screenshots remain deferred. PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`.
+- F3/F4 follow-up is recorded in M1-07 below. Manual visual, Orca/AT-SPI, manual keyboard and live multi-monitor checks remain excluded; screenshots remain deferred. PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`.
+
+
+## M1-07 — F3 CSS selector cleanup and F4 typography documentation (2026-11-17)
+
+- **Outcome:** completed within the approved follow-up scope; no change to global M1 Partial status.
+- **F3 audit:** temporary workflow [#43981815120](https://github.com/D3M-Sudo/Anura/actions/runs/43981815120) succeeded on audit commit `498f8de52cff7c4ea9d12f0ea9a9b19e913d81ce`. No direct consumers were found in tracked Python/Blueprint application sources. The uploaded [audit artifact](https://github.com/D3M-Sudo/Anura/actions/runs/43981815120/artifacts/14283985075) and job log record the search.
+- **F3 cleanup:** removed unused custom selector groups and their dedicated keyframes from `data/style.css`; removed stale reduced-motion references to `.share-row` and `.welcome-card`. No speculative future selectors were retained. The temporary workflow was removed after collecting evidence.
+- **F4 documentation:** the design-system guide now distinguishes supported `.heading` from arbitrary/unverified `.title` and `.h4` classes. Existing Blueprint assignments remain unchanged.
+- **Limitations:** the consumer audit searches literal strings in tracked files and cannot rule out dynamically synthesized names or external integrations. No manual rendered UI or assistive-technology test is claimed.
+- **Files updated:** `data/style.css`, `docs/ui-design-system.md`, M1-05 audit report, global roadmap, HANDOVER, CHANGELOG and M1-06 execution ledger.
+- **Final CI/CodeQL:** pending verification on the resulting head; see the execution ledger for the final exact-SHA record.
+- PR #648 remains Open/Draft/unmerged, base `feature`; protected branches and PR metadata remain unchanged.
