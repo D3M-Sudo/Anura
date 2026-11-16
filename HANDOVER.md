@@ -291,3 +291,18 @@ GTK 4's Gdk.Monitor exposes monitor geometry but does not provide a separate wor
 - CodeQL [#43885843419](https://github.com/D3M-Sudo/Anura/actions/runs/43885843419): success on the same SHA.
 - Manual GNOME/GTK visual, real Orca/AT-SPI and manual keyboard checks remain excluded, not passed.
 - PR #648 remains Open/Draft/unmerged, base `feature`; no protected branch or release was changed.
+
+
+## M2-E — Welcome and main-shell residual-gap audit (2026-11-16)
+
+Read-only audit completed on `fix/ui-modernization-aligned` at pre-recording head `97a42a0c17252cc2a36be563e87255cb2d306e63`.
+
+- **Welcome:** existing implementation and automated coverage substantially address the responsive action hierarchy, four reference viewports (360×600, 640×480, 900×600, 1280×800), constrained-height scrolling, responsive focus preservation, drag/drop and language-selector accessibility. No broad rewrite is justified.
+- **High-priority finding:** History can start TTS via its row controls, but the normal `Adw.NavigationView` back path to Welcome does not necessarily invoke `AnuraWindow.show_welcome_page()`, where `tts_controller.stop()` currently runs. Playback may continue after returning from History.
+- **Coverage gaps:** no end-to-end test was found for the real `AnuraWindow` History-open/back route or focus restoration across that route.
+- **Geometry:** helper/policy tests cover sizing and monitor selection. The maintainer explicitly declined live multi-monitor geometry verification; do not add it.
+- **Verification:** source/test inspection only; no tests or CI run for M2-E. No source, test, workflow or CHANGELOG changes were made. Manual GNOME/GTK visual, real Orca/AT-SPI and manual keyboard checks remain excluded, not passed or blockers.
+- Context7 Libadwaita navigation documentation was consulted. AI Delivery Evidence Checker was used to structure criteria, but its combined verdict endpoint returned `out_of_scope`; no combined verdict is claimed.
+- PR #648 remains Open/Draft/unmerged, base `feature`. No protected branch or PR metadata was modified.
+
+**Next:** prepare the M2-F plan only; implementation requires separate explicit approval. Live multi-monitor verification remains out of scope.
