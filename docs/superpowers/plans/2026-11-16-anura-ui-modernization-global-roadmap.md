@@ -86,7 +86,7 @@ Status values are evidence-based: **Not started**, **In progress**, **Partial**,
 |---|---|---|---|
 | M0 | Full application audit | Complete inventory of windows/components/states/functions; current behavior, visual/functional/accessibility/architecture/performance/Linux-compatibility findings; prioritized requirements and traceability baseline | **Partial — M0-A inventory and M0-B traceability/evidence reconciliation completed; M0-C prioritization and remaining audit synthesis are next** |
 | M1 | Design System and themes | Approved shared palette/tokens and reusable patterns; typography/spacing/component rules; automatic/light/dark and force-light/force-dark behavior verified | **Partial — M1-A/M1-B read-only audit completed; green palette/runtime CSS and three-mode preference mapping exist, but full token consolidation, cross-surface theme coverage and automated runtime theme verification remain** |
-| M2 | Welcome and main navigation | Welcome and main-shell/navigation experience meet responsive, visual, interaction and focus criteria | **Partial — M2-A/M2-B audits and M2-C proposal completed; M2-D implementation and automated regression coverage completed on 2026-11-16, with exact-head CI and CodeQL success. The phase remains partial pending broader Welcome/main-shell criteria and global M2 exit conditions** |
+| M2 | Welcome and main navigation | Welcome and main-shell/navigation experience meet responsive, visual, interaction and focus criteria | **Partial — M2-A through M2-E audits and M2-D/M2-F targeted lifecycle fixes completed; M2-F exact-head CI and CodeQL passed. The phase remains partial pending broader Welcome/main-shell criteria and global M2 exit conditions** |
 | M3 | Extracted and History | Extracted/OCR and History surfaces consistently modernized without functional regressions | **Partial — Extracted header/action area and scroll protections exist; History modernization is not established as complete** |
 | M4 | Preferences and languages | General, Languages, Editor, Voice and language selector meet shared visual, responsive, lifecycle and accessibility criteria | **Partial — Preferences split and selected lifecycle work exist; full page and language-selector audit remains** |
 | M5 | Other windows and components | Shortcuts, About, dialogs, popovers, menus, notifications, banners and toasts audited and addressed where justified | **Not started as a complete phase — Shortcuts received limited resizing work; app-wide coverage is unverified** |
@@ -434,3 +434,18 @@ After every completed task, append/update the relevant phase and record:
 **Disposition:** Welcome remains substantially covered. The next justified work is a bounded M2-F plan for History → Welcome TTS stop and real `AnuraWindow` navigation/focus integration tests. No live multi-monitor verification is in scope.
 
 **Repository governance:** PR [#648](https://github.com/D3M-Sudo/Anura/pull/648) was verified Open, Draft, unmerged, base `feature`; no protected branch was modified. The PR must remain Draft/open/unmerged.
+
+## M2-F — History TTS navigation lifecycle (2026-11-16)
+
+- Implemented centralized navigation lifecycle handling in `AnuraWindow`: the window tracks `Adw.NavigationView:visible-page` transitions through `connect_tracked` and stops History TTS whenever the visible page leaves History, regardless of destination.
+- The handler avoids a duplicate stop when the explicit `show_welcome_page()` path already stops TTS. Entering History and History-local operations do not trigger the History-exit stop.
+- Added five GTK integration regressions using the real `AnuraWindow` and `Adw.NavigationView`: History → Welcome via native back navigation; explicit History → Welcome; History → Extracted; entering/remaining in History; and leaving History while TTS is already idle. All five passed.
+- Source/test/CHANGELOG final code head: `acd1f03e3dee92173af98b4afe7f712806747afe`.
+- CI Quality Check & Release [#43897822566](https://github.com/D3M-Sudo/Anura/actions/runs/43897822566): **success** on that exact SHA. Python Quality: **630 passed, 6 skipped, 277 deselected**. GTK Integration: **441 passed, 5 skipped, 636 deselected, 2 warnings**. Changelog integrity passed. AppImage x86_64/aarch64, Flatpak x86_64/aarch64, complete AppImage release-set validation and multi-architecture release-artifact validation all passed. `publish-release` was skipped as expected for a pull request; no release was published.
+- CodeQL [#43897822286](https://github.com/D3M-Sudo/Anura/actions/runs/43897822286) passed on the same code head.
+- No dependencies, OCR pipeline, Welcome redesign, manifests, workflows or live multi-monitor tests were changed. CHANGELOG was updated without duplicating prior entries.
+- Manual GNOME/GTK visual checks, real Orca/AT-SPI and manual keyboard checks remain explicitly excluded, not passed.
+- Documentation follow-up commits update this roadmap, the subordinate PR #648 roadmap and `HANDOVER.md`; CI evidence above is attributed to the exact code/CHANGELOG SHA, not to those later documentation commits.
+- PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`. No protected branch, PR metadata or release state was changed.
+
+**Next:** continue with the next approved roadmap task only after presenting its bounded plan and receiving explicit approval.
