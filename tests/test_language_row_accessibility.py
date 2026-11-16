@@ -56,3 +56,27 @@ def test_download_completion_and_failure_are_announced(headless_gi_mocks, monkey
         "Download of Italian completed",
         "Download of Italian failed",
     ]
+
+
+def test_installed_language_state_toggles_downloaded_style_class(headless_gi_mocks, monkeypatch):
+    _language_row, row, manager = _make_language_row(headless_gi_mocks, monkeypatch)
+    row.add_css_class = MagicMock()
+    row.remove_css_class = MagicMock()
+    manager.get_downloaded_codes.return_value = ["ita"]
+    manager.loading_languages = set()
+
+    row.update_ui()
+
+    row.add_css_class.assert_called_once_with("downloaded")
+    row.remove_css_class.assert_not_called()
+    row.remove_btn.set_visible.assert_called_with(True)
+    row.install_btn.set_visible.assert_called_with(False)
+    row.install_btn.set_sensitive.assert_called_with(True)
+
+    manager.get_downloaded_codes.return_value = []
+    row.update_ui()
+
+    row.remove_css_class.assert_called_once_with("downloaded")
+    row.remove_btn.set_visible.assert_called_with(False)
+    row.install_btn.set_visible.assert_called_with(True)
+    row.install_btn.set_sensitive.assert_called_with(True)

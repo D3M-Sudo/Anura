@@ -40,7 +40,8 @@ else:
 from anura.models.language_item import LanguageItem  # noqa: E402
 from anura.services.history_service import HistoryService  # noqa: E402
 from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
-from anura.widgets.history_page import HistoryPage  # noqa: E402
+from anura.widgets.history_page import HistoryPage
+from anura.widgets.language_row import LanguageRow  # noqa: E402
 from anura.widgets.welcome_page import WelcomePage  # noqa: E402
 
 
@@ -993,3 +994,54 @@ class TestHistoryTtsNavigationLifecycle:
             tts_controller.stop.assert_called_once_with()
         finally:
             window.destroy()
+
+
+class TestThemeModeIntegration:
+    @pytest.mark.gtk
+    def test_installed_language_history_and_focus_styles_survive_theme_transitions(self):
+        language_manager = MagicMock()
+        language_manager.get_downloaded_codes.return_value = ["ita"]
+        language_manager.loading_languages = set()
+        with patch("anura.widgets.language_row.get_language_manager", return_value=language_manager):
+            language_row = LanguageRow()
+        language_row.item = LanguageItem(code="ita", title="Italian")
+
+        history_page = HistoryPage()
+        empty_page = history_page.history_stack.get_child_by_name("empty")
+        assert empty_page is not None
+        empty_status_page = empty_page.get_child()
+        focus_button = Gtk.Button(label="Focus target")
+        focus_button.add_css_class("anura-button")
+
+        style_manager = Adw.StyleManager.get_default()
+        previous_scheme = style_manager.get_color_scheme()
+        transitions = (
+            Adw.ColorScheme.DEFAULT,
+            Adw.ColorScheme.FORCE_LIGHT,
+            Adw.ColorScheme.FORCE_DARK,
+            Adw.ColorScheme.FORCE_LIGHT,
+            Adw.ColorScheme.DEFAULT,
+        )
+        context = GLib.MainContext.default()
+
+        try:
+            language_row.update_ui()
+            assert language_row.has_css_class("downloaded")
+            assert empty_status_page.has_css_class("history-empty-state")
+            assert focus_button.has_css_class("anura-button")
+
+            for scheme in transitions:
+                style_manager.set_color_scheme(scheme)
+                while context.pending():
+                    context.iteration(False)
+
+                assert style_manager.get_color_scheme() == scheme
+                assert language_row.has_css_class("downloaded")
+                assert empty_status_page.has_css_class("history-empty-state")
+                assert focus_button.has_css_class("anura-button")
+        finally:
+            style_manager.set_color_scheme(previous_scheme)
+            language_row.run_dispose()
+            history_page.cleanup()
+            history_page.run_dispose()
+            focus_button.run_dispose()
