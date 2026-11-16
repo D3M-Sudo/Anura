@@ -22,6 +22,7 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Adw, Gdk, GLib, GObject, Gtk  # noqa: E402
 
 from anura.config import RESOURCE_PREFIX  # noqa: E402
+from anura.utils.accessibility import sync_reduced_motion_class  # noqa: E402
 
 
 class _Shortcut(TypedDict):
@@ -56,6 +57,17 @@ class ShortcutsOverlay(Adw.Window):
 
     def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
+
+        self._motion_settings: Gtk.Settings | None = Gtk.Settings.get_for_display(self.get_display())
+        self._motion_handler_ids: list[int] = []
+        for setting_name in ("gtk-enable-animations", "gtk-interface-reduced-motion"):
+            if self._motion_settings.find_property(setting_name) is not None:
+                handler_id = self._motion_settings.connect(
+                    f"notify::{setting_name}",
+                    self._on_motion_settings_changed,
+                )
+                self._motion_handler_ids.append(handler_id)
+        self._sync_reduced_motion_class()
 
         # Title, modal, default size, etc. are declared in shortcuts_overlay.blp.
 
@@ -189,7 +201,24 @@ class ShortcutsOverlay(Adw.Window):
             self.remove_controller(self._key_controller)
             self._key_controller = None
 
+        motion_settings = getattr(self, "_motion_settings", None)
+        if motion_settings is not None:
+            for handler_id in getattr(self, "_motion_handler_ids", []):
+                with contextlib.suppress(TypeError, RuntimeError):
+                    motion_settings.disconnect(handler_id)
+            self._motion_handler_ids.clear()
+            self._motion_settings = None
+
         super().do_destroy()
+
+    def _on_motion_settings_changed(self, _settings: Gtk.Settings, _pspec: GObject.ParamSpec) -> None:
+        """Re-apply the overlay's reduced-motion policy when GTK settings change."""
+        self._sync_reduced_motion_class()
+
+    def _sync_reduced_motion_class(self) -> None:
+        """Reflect GTK's motion preference without changing desktop-wide settings."""
+        if self._motion_settings is not None:
+            sync_reduced_motion_class(self, self._motion_settings)
 
     def _on_search_changed(self, entry: Gtk.SearchEntry) -> None:
         """Handle search entry changes."""
