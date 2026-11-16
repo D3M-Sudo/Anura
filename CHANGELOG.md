@@ -86,6 +86,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- History: stop active text-to-speech playback whenever navigation leaves the History page, including native back navigation to Welcome or navigation to Extracted (#648)
 - Accessibility: use scheme-aware focus indicators and History empty-state icon colors with verified contrast, while retaining theme-managed secondary and disabled text (#648)
 - Window geometry: clamp restored and first-run dimensions to the selected monitor's bounds, resolve the actual monitor from the GDK surface after realization, and re-clamp when the surface enters another monitor; remove fixed main-window minimum requests that conflicted with small displays (#648)
 - Window state: persist dimensions only when closing in the normal, non-maximized and non-fullscreen state (#648)
