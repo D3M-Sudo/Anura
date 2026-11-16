@@ -308,4 +308,6 @@ PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-
 - **AI Delivery Evidence Checker:** 10 criteria; delivery partially supported (5 supported, 5 partial); test evidence partially supported; verdict `needs_more_evidence` (level 3). No tests were run during this audit. Historical CI #43907544843 applies to SHA `6dece44cd3deb57fc43cb276db4a291a771e9584`, not audit head `f5225e2e82973db63822ca8b3b26cf13619b907a`.
 - Manual GNOME/GTK visual, Orca/AT-SPI and manual keyboard checks remain excluded, not passed. PR #648 remains Open/Draft/unmerged, base `feature`; no protected branch or PR metadata was changed.
 
-**Next:** prepare a bounded M1-04 proposal for semantic-color consolidation and automated coverage; implementation requires separate explicit approval.
+**M1-04 design proposal (2026-11-16):** approach B selected by the maintainer. Design: [`docs/superpowers/specs/2026-11-16-m1-04-semantic-colors-design.md`](../specs/2026-11-16-m1-04-semantic-colors-design.md), commit `b724f2688475bfd94e03c6e085863bfbc066c80c`. The proposal covers conditional `.success` adoption, role-safe green consolidation, classified color-literal scanning and automated theme-mode transitions. Design only; no source/test implementation is authorized.
+
+**Next:** obtain maintainer design approval, then prepare a separate implementation plan requiring its own approval.
