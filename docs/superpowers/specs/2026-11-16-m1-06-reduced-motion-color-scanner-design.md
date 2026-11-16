@@ -1,6 +1,6 @@
 # M1-06 — Reduced-motion coverage and UI color scanner enforcement
 
-**Status:** Approved; implementation and regression coverage complete; final AppImage aarch64 CI pending.
+**Status:** Completed within approved scope; implementation, regression coverage, full CI and CodeQL passed.
 **Date:** 2026-11-16
 **Parent audit:** `docs/audit/ui-design-system-m1-05-2026-11-16.md`
 **Target branch:** `fix/ui-modernization-aligned`
@@ -68,4 +68,4 @@ Verification must be tied to the exact tested commit SHA. Run the relevant Pytho
 - F1 and F2 implementation and automated regression coverage are complete on source/test SHA `35fa684e72fd4e83eae4d58d4b7e731a00d2486b`.
 - F1 also removes/restores root `anura-fade-in` and `anura-card` classes because `.reduced-motion *` excludes the root widget; settings callbacks are disconnected on close-request and in `do_destroy()`.
 - F2 scans the actual repository root with exact path/value approvals and semantic rationales.
-- Python and GTK suites, static checks, Changelog integrity, CodeQL, AppImage x86_64, Flatpak x86_64/aarch64 and release artifact validation pass on that SHA. AppImage aarch64 is still running; full phase closure remains pending.
+- CI #43974750869 completed successfully on that SHA: all 9 executable jobs passed, including AppImage x86_64/aarch64 build, metadata, smoke-test and upload steps; Flatpak x86_64/aarch64; and both release-set validators. Python quality: 644 passed, 6 skipped, 277 deselected; GTK Integration: 447 passed, 5 skipped, 650 deselected, 2 warnings. Changelog integrity, Ruff, mypy, Bandit and CodeQL #43974750821 passed. `publish-release` was skipped as expected for a PR.
