@@ -202,9 +202,6 @@ def test_repository_ui_colors_are_classified():
 
     findings = scan(repository_root)
     remaining = unclassified(findings, approved)
-    details = "\n".join(
-        f"{item.path}:{item.line}: {item.value} ({item.syntax})" for item in remaining
-    )
+    details = "\n".join(f"{item.path}:{item.line}: {item.value} ({item.syntax})" for item in remaining)
 
     assert not remaining, f"Unclassified production UI color literals:\n{details}"
-
