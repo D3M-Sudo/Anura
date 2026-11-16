@@ -355,27 +355,33 @@ def _widget_parent_chain(widget) -> list[dict]:
     return chain
 
 
-def _probe_directly_parented_popover() -> dict:
-    """Compare GtkPopover parented directly to a regular Gtk.Button."""
+def _probe_nested_menubutton_popover() -> dict:
+    """Compare a MenuButton popover inside Clamp/ScrolledWindow/Box nesting."""
     window = Gtk.Window()
-    window.set_default_size(320, 180)
-    anchor = Gtk.Button(label="Direct popover anchor")
-    container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-    container.append(anchor)
-    window.set_child(container)
-
+    window.set_default_size(360, 600)
+    clamp = Adw.Clamp()
+    scroller = Gtk.ScrolledWindow()
+    scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+    actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+    button = Gtk.MenuButton.new()
+    button.set_label("Nested More options")
     popover = Gtk.Popover.new()
-    popover.set_child(Gtk.Label(label="Directly parented popover content"))
-    popover.set_parent(anchor)
+    popover.set_child(Gtk.Label(label="Nested popover content"))
+    button.set_popover(popover)
+    actions.append(button)
+    scroller.set_child(actions)
+    clamp.set_child(scroller)
+    window.set_child(clamp)
     events = []
 
     def record(event: str, widget) -> None:
         events.append(
             {
                 "event": event,
-                "anchor": _widget_lifecycle_state(anchor),
+                "widget": _widget_lifecycle_state(widget),
                 "popover": _widget_lifecycle_state(popover),
                 "popover_parent_chain": _widget_parent_chain(popover),
+                "button_parent_chain": _widget_parent_chain(button),
             }
         )
 
@@ -389,24 +395,34 @@ def _probe_directly_parented_popover() -> dict:
 
     try:
         window.present()
-        _wait_for_window_allocation(window, anchor, timeout_seconds=2.0)
+        _wait_for_window_allocation(window, button, timeout_seconds=2.0)
         before_popup = {
-            "anchor": _widget_lifecycle_state(anchor),
+            "window": _widget_lifecycle_state(window),
+            "clamp": _widget_lifecycle_state(clamp),
+            "scroller": _widget_lifecycle_state(scroller),
+            "actions": _widget_lifecycle_state(actions),
+            "button": _widget_lifecycle_state(button),
             "popover": _widget_lifecycle_state(popover),
             "popover_parent_chain": _widget_parent_chain(popover),
+            "button_parent_chain": _widget_parent_chain(button),
         }
-        popover.popup()
+        button.set_active(True)
         _wait_for_gtk_condition(
             lambda: popover.get_mapped(),
-            "map a GtkPopover directly parented to a Gtk.Button",
+            "map a nested GtkMenuButton popover",
             timeout_seconds=1.0,
             diagnostics=lambda: repr(
                 {
                     "before_popup": before_popup,
                     "after_popup": {
-                        "anchor": _widget_lifecycle_state(anchor),
+                        "window": _widget_lifecycle_state(window),
+                        "clamp": _widget_lifecycle_state(clamp),
+                        "scroller": _widget_lifecycle_state(scroller),
+                        "actions": _widget_lifecycle_state(actions),
+                        "button": _widget_lifecycle_state(button),
                         "popover": _widget_lifecycle_state(popover),
                         "popover_parent_chain": _widget_parent_chain(popover),
+                        "button_parent_chain": _widget_parent_chain(button),
                         "events": events,
                     },
                 }
@@ -415,18 +431,28 @@ def _probe_directly_parented_popover() -> dict:
         return {
             "before_popup": before_popup,
             "after_popup": {
-                "anchor": _widget_lifecycle_state(anchor),
+                "window": _widget_lifecycle_state(window),
+                "clamp": _widget_lifecycle_state(clamp),
+                "scroller": _widget_lifecycle_state(scroller),
+                "actions": _widget_lifecycle_state(actions),
+                "button": _widget_lifecycle_state(button),
                 "popover": _widget_lifecycle_state(popover),
                 "popover_parent_chain": _widget_parent_chain(popover),
+                "button_parent_chain": _widget_parent_chain(button),
             },
             "events": events,
         }
     except Exception as exc:
         return {
             "error": repr(exc),
-            "anchor": _widget_lifecycle_state(anchor),
+            "window": _widget_lifecycle_state(window),
+            "clamp": _widget_lifecycle_state(clamp),
+            "scroller": _widget_lifecycle_state(scroller),
+            "actions": _widget_lifecycle_state(actions),
+            "button": _widget_lifecycle_state(button),
             "popover": _widget_lifecycle_state(popover),
             "popover_parent_chain": _widget_parent_chain(popover),
+            "button_parent_chain": _widget_parent_chain(button),
             "events": events,
         }
     finally:
@@ -558,7 +584,7 @@ def _welcome_popover_diagnostic_state(window, page, events) -> str:
                 else None
             ),
             "minimal_popover_baseline": _probe_minimal_popover(),
-            "directly_parented_popover_baseline": _probe_directly_parented_popover(),
+            "nested_menubutton_popover_baseline": _probe_nested_menubutton_popover(),
         }
     )
 
