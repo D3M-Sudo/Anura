@@ -135,11 +135,11 @@ def test_ignores_non_color_hash_strings_and_theme_references(tmp_path: Path):
     _write(
         tmp_path,
         "anura/widgets/example.py",
-        '''
+        """
 ICON_URL = "resource:///icons.svg#abcdef"
 THEME_COLOR = "@theme_fg_color"
 COLOR = "#123456"
-''',
+""",
     )
 
     findings = scan(tmp_path)
@@ -158,9 +158,7 @@ def test_approved_literal_requires_path_and_semantic_rationale(tmp_path: Path):
     approved = {("data/style.css", "#123456"): "brand graphical accent"}
     remaining = unclassified(findings, approved)
 
-    assert {(item.path, item.value) for item in remaining} == {
-        ("data/ui/other.blp", "#123456")
-    }
+    assert {(item.path, item.value) for item in remaining} == {("data/ui/other.blp", "#123456")}
 
 
 def test_unclassified_fixture_reports_path_line_and_literal(tmp_path: Path):
