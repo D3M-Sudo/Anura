@@ -186,3 +186,25 @@ def test_scanner_discovers_new_files_without_updating_a_file_list(tmp_path: Path
         "anura/widgets/first.py",
         "anura/widgets/nested/new_widget.py",
     }
+
+def test_repository_ui_colors_are_classified():
+    scan, unclassified = _scanner_api()
+    repository_root = Path(__file__).resolve().parents[1]
+    approved = {
+        ("data/style.css", "#16a36a"): "Brand green graphical accent, reserved for non-text emphasis.",
+        ("data/style.css", "#0f7650"): "Dark green brand surface and light-scheme status text.",
+        ("data/style.css", "#ffffff"): "Foreground text on the dark suggested-action surface.",
+        ("data/style.css", "#21b77a"): "Light green status and focus accent on dark surfaces.",
+        ("data/style.css", "rgba(0, 0, 0, 0.15)"): "Subtle shadow for button hover elevation.",
+        ("data/style.css", "rgba(0, 0, 0, 0.1)"): "Subtle shadow for active button feedback.",
+        ("data/style.css", "rgba(0, 0, 0, 0.12)"): "Subtle shadow for card hover elevation.",
+    }
+
+    findings = scan(repository_root)
+    remaining = unclassified(findings, approved)
+    details = "\\n".join(
+        f"{item.path}:{item.line}: {item.value} ({item.syntax})" for item in remaining
+    )
+
+    assert not remaining, f"Unclassified production UI color literals:\\n{details}"
+
