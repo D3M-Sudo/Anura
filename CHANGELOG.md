@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Extracted: preserve the current OCR result when navigating away; replace it only when a subsequent extraction completes.
+- History: retain the expanded entry and vertical scroll position when the list refreshes or the user returns to History during the same application session; this transient view state is not persisted across restarts.
+
 ### Added
 
 - Accessibility: give language-download progress bars translated language context; announce download start/completion/failure and concise OCR, TTS and debounced search status transitions without percentage-level announcement noise (#648)
