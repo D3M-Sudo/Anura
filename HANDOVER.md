@@ -378,3 +378,10 @@ Read-only audit completed on `fix/ui-modernization-aligned` at pre-recording hea
 - PR #648 remains Open/Draft/unmerged, base `feature`; no protected branch or PR metadata was changed.
 
 **Next:** prepare the remaining M1-04 semantic-style and GTK theme-transition work as a bounded continuation; do not mark M1-04 complete until it is implemented and verified.
+
+
+## M1-04 — semantic color consolidation (2026-11-16)
+
+M1-04 implementation completed on `fix/ui-modernization-aligned` at `7f6a7045feefb019c869cc74aecc31a5e991a74d`. The scanner, downloaded-language class linkage and GTK theme-transition tests are implemented. CI #43951965392 and CodeQL #43951968944 both passed on the exact SHA. Python: 643 passed, 6 skipped, 277 deselected; GTK Integration, Changelog integrity, AppImage x86_64/aarch64, Flatpak x86_64/aarch64 and release artifact validation passed. `publish-release` was skipped for PR validation.
+
+The application-owned light/dark green fallback is retained; Libadwaita `.success` was not adopted because it cannot guarantee contrast on the resolved application surfaces. Automated theme tests validate transitions and CSS-class state, not pixel-level contrast across all desktop themes. Manual visual, Orca/AT-SPI and keyboard checks remain excluded. M1 and the global M0–M7 programme remain Partial. PR #648 remains Open/Draft/unmerged, targeting `feature`; no protected branch was changed.

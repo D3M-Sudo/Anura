@@ -514,3 +514,13 @@ After every completed task, append/update the relevant phase and record:
 - PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`. No protected branch or PR metadata was changed.
 
 **Next:** prepare a bounded continuation for the remaining M1-04 semantic-style and runtime theme-transition work; do not mark M1-04 complete until those acceptance criteria are implemented and verified.
+
+## M1-04 semantic color consolidation — implementation outcome (2026-11-16)
+
+**Status: implementation complete for approved scope; global M1 remains Partial.**
+
+- Color scanner implemented with TDD and eight unit tests. It covers CSS/Blueprint literals and selected Python UI string constants, ignores comments/docstrings/non-UI paths, reports file/line/value and requires path-specific rationale for approved exceptions.
+- Downloaded-language semantic state now correctly applies/removes `downloaded` on installation-state changes. Existing light/dark green values remain; Libadwaita `.success` was not adopted because its widget-accent effect does not guarantee contrast on resolved application surfaces. No deprecated style-context color getter was introduced.
+- GTK tests cover `default`, `force-light`, `force-dark` transitions and continuity of language, History empty-state and focus CSS classes. This is automated state/theme integration coverage, not pixel-level verification of all desktop themes.
+- Exact code/test SHA `7f6a7045feefb019c869cc74aecc31a5e991a74d`: CI #43951965392 and CodeQL #43951968944 succeeded. Python 643 passed, 6 skipped, 277 deselected; GTK Integration Tests passed; Changelog integrity, AppImage x86_64/aarch64, Flatpak x86_64/aarch64 and both release-artifact validation jobs passed. PR publication job skipped as expected.
+- Manual visual, Orca/AT-SPI and manual keyboard checks remain excluded, not passed. No OCR/dependency/architecture/portal/OS changes. PR #648 remains Open/Draft/unmerged, base `feature`.

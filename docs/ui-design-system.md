@@ -58,3 +58,12 @@ Preserve the existing `default`, `force-light` and `force-dark` behavior and gre
 ## Validation
 
 `tests/test_ui_palette.py` checks the palette, semantic typography exception, spacing values in every Blueprint file and GTK stylesheet, and custom radius values. Full execution is performed by GitHub Actions; static checks do not claim manual visual, Orca/AT-SPI or manual keyboard verification.
+
+
+## Semantic color roles and downloaded-language state
+
+- The downloaded-language state is expressed by the `downloaded` CSS class on the language-row widget. `LanguageRow.update_ui()` adds the class when the language is installed and removes it when it is not installed (including the special English row); the existing light/dark label colors remain in place.
+- The Libadwaita `.success` class was evaluated but not adopted: it changes the widget accent and does not itself establish adequate contrast on the application's resolved light/dark surfaces. GTK's deprecated style-context color getter is not used as a new runtime contrast-test dependency.
+- Keep the app-owned fallback pair `#0F7650` (light) and `#21B77A` (dark). Repeated identical literals are retained where they serve distinct semantic roles (downloaded text, History empty-state icon, focus indicator); do not consolidate across roles.
+- `default`, `force-light` and `force-dark` theme transitions are covered by GTK tests for the setting callback and affected language/History/focus CSS classes. These tests verify class/state continuity, not rendered-pixel contrast under every desktop theme.
+- The UI color scanner in `tests/ui_color_scanner.py` discovers new supported UI source files and flags unclassified color literals; intentional exceptions require path-specific rationale.

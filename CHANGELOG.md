@@ -498,3 +498,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Removed all telemetry and PostHog tracking for total privacy.
 - Optimized sharing service: added X (formerly Twitter) and Instagram.
 - Updated dependencies for modern Linux distributions.
+
+- UI/Accessibility: apply the existing scheme-aware downloaded-language styling only while the language is installed, keeping the semantic state synchronized with installation changes; add automated theme-transition regression coverage for `default`, `force-light` and `force-dark` (#648).

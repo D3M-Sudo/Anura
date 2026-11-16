@@ -216,3 +216,14 @@
 ## Completion gate
 
 M1-04 is ready for maintainer review only when all acceptance criteria in the design spec are supported by the implementation diff and exact-SHA CI evidence. This plan does not authorize implementation. After this plan is reviewed, obtain explicit execution approval before starting Task 1.
+
+
+## M1-04 implementation outcome — 2026-11-16
+
+- Retained the app-owned light/dark green success fallback (`#0F7650` / `#21B77A`); did not adopt Libadwaita `.success` because its widget-accent behavior does not provide a stable contrast guarantee for the actual application surfaces. No deprecated `Gtk.StyleContext` color getter was introduced.
+- Fixed the semantic-state linkage: `LanguageRow.update_ui()` now adds/removes `downloaded` as installation state changes. No model download/install behavior changed.
+- Added GTK regression coverage for the three theme modes and repeated transitions across language, History empty-state and focus styling. Added/retained scanner coverage for supported UI sources and path-specific approved exceptions.
+- Exact implementation/test head: `7f6a7045feefb019c869cc74aecc31a5e991a74d`. CI Quality Check & Release [#43951965392](https://github.com/D3M-Sudo/Anura/actions/runs/43951965392) and CodeQL [#43951968944](https://github.com/D3M-Sudo/Anura/actions/runs/43951968944) both succeeded on this exact SHA. Python: 643 passed, 6 skipped, 277 deselected; GTK integration job succeeded; Changelog integrity, AppImage x86_64/aarch64, Flatpak x86_64/aarch64, AppImage release-set and multi-architecture release-artifact validation succeeded. `publish-release` was skipped as expected for a PR.
+- The GTK suite validates theme setting transitions and relevant CSS-class state, not screenshot/pixel-level contrast for every system theme. Manual GNOME/GTK visual review, real Orca/AT-SPI and manual keyboard checks remain excluded and are not claimed as passed.
+- No OCR pipeline/model, dependencies, architecture, portal, OS integration or workflow changes.
+- M1-04 implementation is complete for its approved scope; global M1 and the global M0–M7 programme remain partial.

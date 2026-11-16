@@ -315,3 +315,14 @@ PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-
 **Important status correction:** M1-04 is **Partial**, not complete. The successful run verifies the scanner and the existing suites, but does not establish the planned semantic success-style consolidation or new GTK theme-transition integration tests. The `.downloaded label` CSS fallback remains and `LanguageRow.update_ui()` does not currently apply a corresponding style class. These remaining plan items require a separate bounded continuation and verification.
 
 **Next:** continue M1-04 with the remaining semantic success styling and GTK theme-transition coverage; retain the existing palette and behavior constraints.
+
+
+## M1-04 — semantic color implementation completed (2026-11-16)
+
+- **Outcome:** M1-04 implementation complete for approved scope; M1 remains Partial.
+- Added a repository-discovering scanner and eight tests for unclassified hardcoded UI colors. Intentional colors require path-specific rationale.
+- Linked the installed-language state to the existing `downloaded` CSS class in `LanguageRow.update_ui()`; the class is added/removed with installation state. No download/install behavior changed.
+- Retained application-owned light/dark green values. Libadwaita `.success` was not adopted because it modifies widget accent and does not ensure contrast against the actual resolved surfaces. Repeated values remain where roles differ.
+- Added automated theme-transition coverage for `default`, `force-light` and `force-dark`, including downloaded language, History empty-state and focus classes. This does not claim pixel-level contrast across arbitrary desktop themes.
+- Exact code/test SHA: `7f6a7045feefb019c869cc74aecc31a5e991a74d`. CI #43951965392 and CodeQL #43951968944 passed on this SHA. Python 643 passed, 6 skipped, 277 deselected; GTK Integration, Changelog integrity, AppImage and Flatpak x86_64/aarch64 builds and release-set validators passed. `publish-release` skipped as expected for a PR.
+- Manual GNOME/GTK visual, Orca/AT-SPI and manual keyboard checks remain excluded, not passed. No OCR, dependency, architecture, portal or OS integration changes.

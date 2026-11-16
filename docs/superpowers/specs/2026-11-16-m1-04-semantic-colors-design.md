@@ -156,3 +156,5 @@ Approach B is selected by the maintainer. The conditional rule in §4.1 prevents
 This document is a design proposal only. No source code, tests, CHANGELOG, workflows, roadmap or PR metadata are changed by the proposed implementation at this stage.
 
 **Next step after approval:** prepare a separate implementation plan with file-by-file tasks, test-first steps, GitHub Actions verification and evidence checkpoints. Implementation requires a further explicit maintainer approval after the plan is reviewed.
+
+- UI/Accessibility: apply the existing scheme-aware downloaded-language styling only while the language is installed, keeping the semantic state synchronized with installation changes; add automated theme-transition regression coverage for `default`, `force-light` and `force-dark` (#648).
