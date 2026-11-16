@@ -326,3 +326,16 @@ PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-
 - Added automated theme-transition coverage for `default`, `force-light` and `force-dark`, including downloaded language, History empty-state and focus classes. This does not claim pixel-level contrast across arbitrary desktop themes.
 - Exact code/test SHA: `7f6a7045feefb019c869cc74aecc31a5e991a74d`. CI #43951965392 and CodeQL #43951968944 passed on this SHA. Python 643 passed, 6 skipped, 277 deselected; GTK Integration, Changelog integrity, AppImage and Flatpak x86_64/aarch64 builds and release-set validators passed. `publish-release` skipped as expected for a PR.
 - Manual GNOME/GTK visual, Orca/AT-SPI and manual keyboard checks remain excluded, not passed. No OCR, dependency, architecture, portal or OS integration changes.
+
+
+## M0-C reconciliation — current workstream boundary (2026-11-16)
+
+The [global roadmap](2026-11-16-anura-ui-modernization-global-roadmap.md) is the sole authority for current M0–M7 phase status, global priorities, dependencies and application-wide requirement disposition. This file remains the detailed PR #648 workstream/evidence register; completion of a PR task does not complete a global phase.
+
+- M0-C global backlog/document reconciliation is complete. The current programme status is M0 Completed; M1–M4 Partial; M5 Not started as a complete phase; M6–M7 Partial.
+- M1-02 conventions, M1-03 audit and M1-04 semantic-color/scanner/theme-test work are complete within their bounded scopes. M1 remains globally Partial pending cross-surface adoption audit.
+- The next recommended global candidate is **M1-05, a read-only cross-surface Design System audit**. It requires its own bounded task proposal and explicit approval. This is not an authorization to implement M1-06 or any other work.
+- Earlier sections in this roadmap and older task plans may contain historical “next task” directions that predate completed work. Preserve them as historical records; where they conflict with the current snapshot, the global roadmap and this reconciliation note supersede them.
+- Exact-SHA CI history remains unchanged. The latest previously verified documentation head was `37b00668452272e993eb5fd1723402362da8c7e7`, with CI #43956668829 and CodeQL #43956668787 successful on that exact SHA. Those results must not be attributed to later M0-C commits unless rerun.
+- Manual GNOME/GTK visual, Orca/AT-SPI, manual keyboard and live multi-monitor checks remain excluded; screenshot capture remains deferred to the next release cycle.
+- PR #648 remains Open/Draft/unmerged, targeting `feature`; this documentation update does not alter PR metadata or state.
