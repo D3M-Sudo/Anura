@@ -251,3 +251,14 @@ After every completed task, append/update the relevant phase and record:
 - Manual visual/Orca/AT-SPI/manual keyboard checks remain excluded by maintainer decision; automated GTK tests remain in scope.
 - GLOBAL-00 is documentation-only. No application code, protected branch, PR state or merge state is changed.
 - Next task: M0-A, read-only full current-tree UI inventory, subject to task-level approval.
+
+
+### 2026-11-16 — GLOBAL-00 publication and hierarchy verification
+
+- Global roadmap created in commit `7683f8ea733f8218eb223b2f710291a87592a514`.
+- PR #648 subordinate roadmap reframed and linked to the global plan in commit `ed676556a56cb541e458dfe302f6ec65ae83200f`.
+- `HANDOVER.md` updated to identify the global M0–M7 roadmap as primary and PR #648 plan as subordinate in commit `549208d2a0c53585bc0986d7d698ed0a2b0329ff`.
+- Verified all three files are readable on `fix/ui-modernization-aligned`, the branch exists, and the PR remains open. No PR state transition, merge, application-code edit or protected-branch update was performed.
+- Branch comparison against `feature` reports 320 commits ahead and 0 behind, with `feature` at `cb079b0b55e252a7ac054fe1b6f57030ddc7b1f9`. This is a fresh comparison snapshot, not a merge/readiness recommendation.
+- This task changed documentation only; no new CI run is claimed. The latest recorded application CI evidence remains the run cited in the subordinate roadmap and must be re-evaluated when implementation changes are proposed.
+- **GLOBAL-00 completed.** Next global task: M0-A, read-only full current-tree UI inventory, pending explicit task approval. Mandatory roadmap update completed before any next task.
