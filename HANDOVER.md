@@ -369,4 +369,6 @@ Read-only audit completed on `fix/ui-modernization-aligned` at pre-recording hea
 
 **M1-04 design proposal (2026-11-16):** approach B selected. Design document: [`docs/superpowers/specs/2026-11-16-m1-04-semantic-colors-design.md`](docs/superpowers/specs/2026-11-16-m1-04-semantic-colors-design.md), commit `b724f2688475bfd94e03c6e085863bfbc066c80c`. It specifies conditional `.success` adoption, role-safe color consolidation, a classified production-UI color scanner and automated tests for all three theme modes. This is design-only; implementation and tests remain unauthorized pending approval and a separate implementation plan.
 
-**Next:** obtain maintainer approval of the M1-04 design before preparing the implementation plan.
+**M1-04 design approved; implementation plan prepared (2026-11-16):** [`docs/superpowers/plans/2026-11-16-m1-04-semantic-color-consolidation-plan.md`](docs/superpowers/plans/2026-11-16-m1-04-semantic-color-consolidation-plan.md). The plan covers scanner/classification, installed-language success styling, theme-mode GTK integration tests, and exact-SHA CI evidence. The design is approved; implementation plan awaits review and explicit execution approval. No source/test changes have started.
+
+**Next:** maintainer review and approval of the implementation plan before execution.
