@@ -181,6 +181,12 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         self.connect_tracked(self.settings, "changed::history-limit", self._on_history_limit_changed)
         self.history_controller = HistoryController(self)
         self.tts_controller = TtsController(self)
+        self._previous_navigation_page = self.navigation_view.get_visible_page()
+        self.connect_tracked(
+            self.navigation_view,
+            "notify::visible-page",
+            self._on_navigation_visible_page_changed,
+        )
         self.history_page.setup(self.history_service, self.history_controller, self.tts_controller)
         self.ocr_controller = OcrController(self, history_service=self.history_service)
 
@@ -555,6 +561,19 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
                     "is installed and a default app is set for text files."
                 ).format(detail=detail)
             )
+
+    def _on_navigation_visible_page_changed(
+        self,
+        navigation_view: Adw.NavigationView,
+        _pspec: GObject.ParamSpec,
+    ) -> None:
+        """Stop History playback whenever navigation leaves the History page."""
+        visible_page = navigation_view.get_visible_page()
+        previous_page = self._previous_navigation_page
+        self._previous_navigation_page = visible_page
+
+        if previous_page is self.history_page and visible_page is not self.history_page:
+            self.tts_controller.stop()
 
     def show_welcome_page(self, *_args: object) -> None:
         """Show the welcome page and hide the extracted content."""
