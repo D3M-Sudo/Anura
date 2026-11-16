@@ -367,19 +367,60 @@ def _widget_parent_chain(widget, include_measure: bool = True) -> list[dict]:
     return chain
 
 
+def _compact_widget_state(state: dict) -> dict:
+    """Keep diagnostic failure output readable while preserving lifecycle gates."""
+    keys = (
+        "type",
+        "visible",
+        "child_visible",
+        "realized",
+        "mapped",
+        "size",
+        "size_request",
+        "parent",
+        "native_surface",
+        "measure",
+    )
+    return {key: state[key] for key in keys if key in state}
+
+
+def _compact_event_log(events: list) -> list:
+    """Summarize event-time snapshots without dropping transition ordering."""
+    compact = []
+    for event in events:
+        if not isinstance(event, dict):
+            compact.append(event)
+            continue
+        compact.append(
+            {
+                "event": event.get("event"),
+                "widget": _compact_widget_state(event.get("widget", {})),
+                "popover": _compact_widget_state(event.get("popover", {})),
+                "menu_button": _compact_widget_state(event.get("menu_button", {})),
+            }
+        )
+    return compact
+
+
 def _probe_nested_menubutton_popover() -> dict:
     """Compare a MenuButton popover inside Clamp/ScrolledWindow/Box nesting."""
     window = Gtk.Window()
     window.set_default_size(360, 600)
     clamp = Adw.Clamp()
+    clamp.set_maximum_size(223)
+    clamp.set_hexpand(True)
     scroller = Gtk.ScrolledWindow()
     scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+    scroller.set_hexpand(True)
     actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+    actions.set_hexpand(True)
+    primary_button = Gtk.Button(label="Screenshot")
     button = Gtk.MenuButton.new()
-    button.set_label("Nested More options")
+    button.set_label("More")
     popover = Gtk.Popover.new()
     popover.set_child(Gtk.Label(label="Nested popover content"))
     button.set_popover(popover)
+    actions.append(primary_button)
     actions.append(button)
     scroller.set_child(actions)
     clamp.set_child(scroller)
@@ -409,63 +450,62 @@ def _probe_nested_menubutton_popover() -> dict:
         window.present()
         _wait_for_window_allocation(window, button, timeout_seconds=2.0)
         before_popup = {
-            "window": _widget_lifecycle_state(window),
-            "clamp": _widget_lifecycle_state(clamp),
-            "scroller": _widget_lifecycle_state(scroller),
-            "actions": _widget_lifecycle_state(actions),
-            "button": _widget_lifecycle_state(button),
-            "popover": _widget_lifecycle_state(popover),
-            "popover_parent_chain": _widget_parent_chain(popover),
-            "button_parent_chain": _widget_parent_chain(button),
+            "window": _compact_widget_state(_widget_lifecycle_state(window)),
+            "clamp": _compact_widget_state(_widget_lifecycle_state(clamp)),
+            "scroller": _compact_widget_state(_widget_lifecycle_state(scroller)),
+            "actions": _compact_widget_state(_widget_lifecycle_state(actions)),
+            "primary_button": _compact_widget_state(_widget_lifecycle_state(primary_button)),
+            "button": _compact_widget_state(_widget_lifecycle_state(button)),
+            "popover": _compact_widget_state(_widget_lifecycle_state(popover)),
+            "popover_parent_chain": [
+                _compact_widget_state(state) for state in _widget_parent_chain(popover)
+            ],
         }
         button.set_active(True)
-        _wait_for_gtk_condition(
-            lambda: popover.get_mapped(),
-            "map a nested GtkMenuButton popover",
-            timeout_seconds=1.0,
-            diagnostics=lambda: repr(
-                {
-                    "before_popup": before_popup,
-                    "after_popup": {
-                        "window": _widget_lifecycle_state(window),
-                        "clamp": _widget_lifecycle_state(clamp),
-                        "scroller": _widget_lifecycle_state(scroller),
-                        "actions": _widget_lifecycle_state(actions),
-                        "button": _widget_lifecycle_state(button),
-                        "popover": _widget_lifecycle_state(popover),
-                        "popover_parent_chain": _widget_parent_chain(popover),
-                        "button_parent_chain": _widget_parent_chain(button),
-                        "events": events,
-                    },
-                }
-            ),
-        )
+        deadline = time.monotonic() + 1.0
+        context = GLib.MainContext.default()
+        while not popover.get_mapped() and time.monotonic() < deadline:
+            while context.pending():
+                context.iteration(False)
+            time.sleep(0.01)
+        after_set_active = {
+            "button_active": button.get_active(),
+            "popover": _compact_widget_state(_widget_lifecycle_state(popover)),
+            "button": _compact_widget_state(_widget_lifecycle_state(button)),
+        }
+
+        if not popover.get_mapped():
+            popover.popup()
+            deadline = time.monotonic() + 1.0
+            while not popover.get_mapped() and time.monotonic() < deadline:
+                while context.pending():
+                    context.iteration(False)
+                time.sleep(0.01)
+        after_direct_popup = {
+            "button_active": button.get_active(),
+            "popover": _compact_widget_state(_widget_lifecycle_state(popover)),
+            "button": _compact_widget_state(_widget_lifecycle_state(button)),
+        }
         return {
             "before_popup": before_popup,
-            "after_popup": {
-                "window": _widget_lifecycle_state(window),
-                "clamp": _widget_lifecycle_state(clamp),
-                "scroller": _widget_lifecycle_state(scroller),
-                "actions": _widget_lifecycle_state(actions),
-                "button": _widget_lifecycle_state(button),
-                "popover": _widget_lifecycle_state(popover),
-                "popover_parent_chain": _widget_parent_chain(popover),
-                "button_parent_chain": _widget_parent_chain(button),
-            },
-            "events": events,
+            "after_set_active": after_set_active,
+            "after_direct_popup": after_direct_popup,
+            "events": _compact_event_log(events),
         }
     except Exception as exc:
         return {
             "error": repr(exc),
-            "window": _widget_lifecycle_state(window),
-            "clamp": _widget_lifecycle_state(clamp),
-            "scroller": _widget_lifecycle_state(scroller),
-            "actions": _widget_lifecycle_state(actions),
-            "button": _widget_lifecycle_state(button),
-            "popover": _widget_lifecycle_state(popover),
-            "popover_parent_chain": _widget_parent_chain(popover),
-            "button_parent_chain": _widget_parent_chain(button),
-            "events": events,
+            "window": _compact_widget_state(_widget_lifecycle_state(window)),
+            "clamp": _compact_widget_state(_widget_lifecycle_state(clamp)),
+            "scroller": _compact_widget_state(_widget_lifecycle_state(scroller)),
+            "actions": _compact_widget_state(_widget_lifecycle_state(actions)),
+            "primary_button": _compact_widget_state(_widget_lifecycle_state(primary_button)),
+            "button": _compact_widget_state(_widget_lifecycle_state(button)),
+            "popover": _compact_widget_state(_widget_lifecycle_state(popover)),
+            "popover_parent_chain": [
+                _compact_widget_state(state) for state in _widget_parent_chain(popover)
+            ],
+            "events": _compact_event_log(events),
         }
     finally:
         window.destroy()
@@ -587,9 +627,13 @@ def _welcome_popover_diagnostic_state(window, page, events) -> str:
                     ("drop", page.drop_button),
                 )
             },
-            "events": list(events),
-            "popover_parent_chain": _widget_parent_chain(page.more_options_popover),
-            "menu_button_parent_chain": _widget_parent_chain(page.more_options_button),
+            "events": _compact_event_log(events),
+            "popover_parent_chain": [
+                _compact_widget_state(state) for state in _widget_parent_chain(page.more_options_popover)
+            ],
+            "menu_button_parent_chain": [
+                _compact_widget_state(state) for state in _widget_parent_chain(page.more_options_button)
+            ],
             "popover_child_state": (
                 _widget_lifecycle_state(page.more_options_popover.get_child())
                 if page.more_options_popover.get_child() is not None
