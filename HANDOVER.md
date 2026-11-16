@@ -367,4 +367,6 @@ Read-only audit completed on `fix/ui-modernization-aligned` at pre-recording hea
 - Manual GNOME/GTK visual, Orca/AT-SPI and manual keyboard checks remain excluded, not passed.
 - PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`. No protected branch or PR metadata changed.
 
-**Next:** prepare a bounded M1-04 proposal for semantic-color consolidation and automated coverage. No implementation is authorized until separately approved.
+**M1-04 design proposal (2026-11-16):** approach B selected. Design document: [`docs/superpowers/specs/2026-11-16-m1-04-semantic-colors-design.md`](docs/superpowers/specs/2026-11-16-m1-04-semantic-colors-design.md), commit `b724f2688475bfd94e03c6e085863bfbc066c80c`. It specifies conditional `.success` adoption, role-safe color consolidation, a classified production-UI color scanner and automated tests for all three theme modes. This is design-only; implementation and tests remain unauthorized pending approval and a separate implementation plan.
+
+**Next:** obtain maintainer approval of the M1-04 design before preparing the implementation plan.
