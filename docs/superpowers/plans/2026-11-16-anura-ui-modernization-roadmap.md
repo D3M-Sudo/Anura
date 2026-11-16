@@ -314,7 +314,7 @@ PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-
 
 **Important status correction:** M1-04 is **Partial**, not complete. The successful run verifies the scanner and the existing suites, but does not establish the planned semantic success-style consolidation or new GTK theme-transition integration tests. The `.downloaded label` CSS fallback remains and `LanguageRow.update_ui()` does not currently apply a corresponding style class. These remaining plan items require a separate bounded continuation and verification.
 
-**Next:** continue M1-04 with the remaining semantic success styling and GTK theme-transition coverage; retain the existing palette and behavior constraints.
+**Historical next-step note — superseded by M0-C (2026-11-16):** continue M1-04 with semantic success styling and GTK theme-transition coverage. The approved M1-04 work was subsequently completed within scope; see the completion record and global roadmap.
 
 
 ## M1-04 — semantic color implementation completed (2026-11-16)
