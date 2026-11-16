@@ -122,10 +122,6 @@
     animation: slideUp 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.anura-pulse {
-    animation: pulse 2s infinite;
-}
-
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -142,12 +138,6 @@
     }
 }
 
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.7; }
-    100% { opacity: 1; }
-}
-
 /* Enhanced extracted page styling */
 .extracted-page textview {
     border-radius: 12px;
@@ -161,108 +151,7 @@
     box-shadow: 0 0 0 2px alpha(@accent_color, 0.2);
 }
 
-/* Share buttons with hover effects */
-.share-row {
-    transition: all 150ms ease;
-}
-
-.share-row:hover {
-    background: alpha(@accent_color, 0.1);
-    transform: translateX(4px);
-}
-
-.share-row:active {
-    transform: translateX(2px);
-}
-
-/* Loading spinner animation */
-.anura-spinner {
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-/* Toast notifications */
-.anura-toast {
-    animation: toastSlideIn 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.anura-toast.hiding {
-    animation: toastSlideOut 250ms ease-in;
-}
-
-@keyframes toastSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-40px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes toastSlideOut {
-    from {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    to {
-        opacity: 0;
-        transform: translateY(-40px);
-    }
-}
-
-/* Welcome page enhancements */
-.welcome-page {
-    background: linear-gradient(135deg, alpha(@accent_color, 0.05) 0%, alpha(@accent_color, 0.02) 100%);
-}
-
-.welcome-card {
-    transition: all 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.welcome-card:hover {
-    transform: scale(1.02);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
-}
-
-/* Language selector improvements */
-.language-popover {
-    transition: all 200ms ease;
-}
-
-.language-row {
-    transition: all 150ms ease;
-}
-
-.language-row:hover {
-    background: alpha(@accent_color, 0.08);
-}
-
-.language-row:selected {
-    background: alpha(@accent_color, 0.15);
-}
-
-/* Screenshot button pulse effect */
-.screenshot-btn.ready {
-    animation: readyPulse 2s infinite;
-}
-
-@keyframes readyPulse {
-    0% {
-        box-shadow: 0 0 0 0 alpha(@accent_color, 0.4);
-    }
-    50% {
-        box-shadow: 0 0 0 8px alpha(@accent_color, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 alpha(@accent_color, 0.4);
-    }
-}
+/* Legacy selector block removed after repository-wide consumer audit. */
 
 /* Drag and drop visual feedback */
 .drag-hover {
@@ -305,9 +194,6 @@
 
 .reduced-motion .anura-button:hover,
 .reduced-motion .anura-card:hover,
-.reduced-motion .share-row:hover,
-.reduced-motion .welcome-card:hover,
-.reduced-motion .share-row:active,
 .reduced-motion .anura-button:active {
     transform: none;
 }
