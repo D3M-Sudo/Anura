@@ -306,3 +306,33 @@ Read-only audit completed on `fix/ui-modernization-aligned` at pre-recording hea
 - PR #648 remains Open/Draft/unmerged, base `feature`. No protected branch or PR metadata was modified.
 
 **Next:** prepare the M2-F plan only; implementation requires separate explicit approval. Live multi-monitor verification remains out of scope.
+
+## M2-F — History TTS navigation lifecycle (2026-11-16)
+
+### Implementation
+
+- Centralized the History TTS lifecycle in `AnuraWindow` by tracking `Adw.NavigationView:visible-page` with `connect_tracked`.
+- Whenever the previous visible page is History and the new page differs, TTS is stopped irrespective of destination (native back/gesture, Welcome, Extracted or another page).
+- The explicit `show_welcome_page()` path continues to stop TTS and the lifecycle handler avoids issuing a duplicate stop for that transition.
+- Five GTK integration tests use the real `AnuraWindow` and `Adw.NavigationView`: native History → Welcome, explicit History → Welcome, History → Extracted, entering/remaining in History, and History exit while TTS is idle. All passed.
+- Changed files: `anura/window.py`, `tests/test_widgets.py`, `CHANGELOG.md`. No dependency, OCR, Welcome redesign, manifest, workflow or live multi-monitor changes.
+
+### Validation evidence
+
+- Exact code/CHANGELOG head: `acd1f03e3dee92173af98b4afe7f712806747afe`.
+- CI Quality Check & Release [#43897822566](https://github.com/D3M-Sudo/Anura/actions/runs/43897822566) completed **success** on that SHA:
+  - Python Quality: **630 passed, 6 skipped, 277 deselected**.
+  - GTK Integration: **441 passed, 5 skipped, 636 deselected, 2 warnings**; all five M2-F regressions passed.
+  - Changelog integrity passed.
+  - AppImage x86_64/aarch64 and Flatpak x86_64/aarch64 builds passed.
+  - Complete AppImage release-set and multi-architecture release-artifact validation passed.
+  - `publish-release` skipped as expected for a PR; no release was published.
+- CodeQL [#43897822286](https://github.com/D3M-Sudo/Anura/actions/runs/43897822286) passed on the same code head.
+- The CI evidence is attributed to the code/CHANGELOG SHA above; subsequent roadmap and handover updates are documentation-only commits and were not part of that CI run.
+- Manual GNOME/GTK visual checks, real Orca/AT-SPI and manual keyboard checks remain excluded, not passed. Live multi-monitor verification remains explicitly out of scope.
+
+### Current state
+
+- PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`.
+- No protected branch or PR metadata was modified; no merge or release was performed.
+- The next task requires a bounded plan and separate explicit approval.
