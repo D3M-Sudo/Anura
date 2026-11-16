@@ -1,6 +1,7 @@
 name: Temporary M1 F3 selector consumer audit
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - fix/ui-modernization-aligned
