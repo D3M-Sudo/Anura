@@ -24,13 +24,11 @@ class ColorLiteral:
     syntax: str
 
 
-_HEX_RE = re.compile(r"(?<![\w/:#])#[0-9a-fA-F]{8}|(?<![\w/:#])#[0-9a-fA-F]{6}|(?<![\w/:#])#[0-9a-fA-F]{4}|(?<![\w/:#])#[0-9a-fA-F]{3}(?![\w])")
-_RGB_RE = re.compile(
-    r"(?i)\brgb\(\s*(?:\d+(?:\.\d+)?%?\s*,\s*){2}\d+(?:\.\d+)?%?\s*\)"
+_HEX_RE = re.compile(
+    r"(?<![\w/:#])#[0-9a-fA-F]{8}|(?<![\w/:#])#[0-9a-fA-F]{6}|(?<![\w/:#])#[0-9a-fA-F]{4}|(?<![\w/:#])#[0-9a-fA-F]{3}(?![\w])"
 )
-_RGBA_RE = re.compile(
-    r"(?i)\brgba\(\s*(?:\d+(?:\.\d+)?%?\s*,\s*){3}\d+(?:\.\d+)?%?\s*\)"
-)
+_RGB_RE = re.compile(r"(?i)\brgb\(\s*(?:\d+(?:\.\d+)?%?\s*,\s*){2}\d+(?:\.\d+)?%?\s*\)")
+_RGBA_RE = re.compile(r"(?i)\brgba\(\s*(?:\d+(?:\.\d+)?%?\s*,\s*){3}\d+(?:\.\d+)?%?\s*\)")
 
 
 def _strip_css_comments(source: str) -> str:
@@ -70,11 +68,7 @@ def _python_string_literals(source: str) -> list[tuple[str, int]]:
 
     literals: list[tuple[str, int]] = []
     for node in ast.walk(tree):
-        if (
-            isinstance(node, ast.Constant)
-            and isinstance(node.value, str)
-            and id(node) not in docstring_nodes
-        ):
+        if isinstance(node, ast.Constant) and isinstance(node.value, str) and id(node) not in docstring_nodes:
             literals.append((node.value, node.lineno))
     return literals
 
@@ -83,14 +77,10 @@ def _scan_text(path: str, source: str, syntax: str) -> list[ColorLiteral]:
     findings: list[ColorLiteral] = []
     for line_number, line in enumerate(source.splitlines(), start=1):
         for match in _HEX_RE.finditer(line):
-            findings.append(
-                ColorLiteral(path, match.group().lower(), line_number, "hex")
-            )
+            findings.append(ColorLiteral(path, match.group().lower(), line_number, "hex"))
         for kind, pattern in (("rgb", _RGB_RE), ("rgba", _RGBA_RE)):
             for match in pattern.finditer(line):
-                findings.append(
-                    ColorLiteral(path, re.sub(r"\s+", " ", match.group()), line_number, kind)
-                )
+                findings.append(ColorLiteral(path, re.sub(r"\s+", " ", match.group()), line_number, kind))
     return findings
 
 
@@ -99,9 +89,7 @@ def _scan_python(path: str, source: str) -> list[ColorLiteral]:
     for value, start_line in _python_string_literals(source):
         for offset, line in enumerate(value.splitlines() or [value]):
             for match in _HEX_RE.finditer(line):
-                findings.append(
-                    ColorLiteral(path, match.group().lower(), start_line + offset, "hex")
-                )
+                findings.append(ColorLiteral(path, match.group().lower(), start_line + offset, "hex"))
             for kind, pattern in (("rgb", _RGB_RE), ("rgba", _RGBA_RE)):
                 for match in pattern.finditer(line):
                     findings.append(
@@ -152,9 +140,7 @@ def scan_ui_color_literals(root: Path) -> list[ColorLiteral]:
                 )
             )
         else:
-            findings.extend(
-                _scan_text(relative_path, _strip_css_comments(source), "css")
-            )
+            findings.extend(_scan_text(relative_path, _strip_css_comments(source), "css"))
 
     return sorted(
         findings,
@@ -168,8 +154,4 @@ def find_unclassified_ui_colors(
 ) -> list[ColorLiteral]:
     """Return findings without a path-specific, non-empty semantic rationale."""
 
-    return [
-        finding
-        for finding in findings
-        if not approved.get((finding.path, finding.value), "").strip()
-    ]
+    return [finding for finding in findings if not approved.get((finding.path, finding.value), "").strip()]
