@@ -855,6 +855,7 @@ def test_welcome_responsive_layout_uses_allocated_viewport(screen_width: int, sc
                 lambda *_args: attach_surface_signal_hooks(),
             )
             attach_surface_signal_hooks()
+
             def record_popover_transition(event: str, widget) -> None:
                 popover_events.append(
                     {
