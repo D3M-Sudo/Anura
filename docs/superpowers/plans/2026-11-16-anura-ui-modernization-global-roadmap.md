@@ -84,14 +84,32 @@ Status values are evidence-based: **Not started**, **In progress**, **Partial**,
 
 | Phase | Scope | Exit condition | Current status |
 |---|---|---|---|
-| M0 | Full application audit | Complete inventory of windows/components/states/functions; current behavior, visual/functional/accessibility/architecture/performance/Linux-compatibility findings; prioritized requirements and traceability baseline | **Partial — M0-A inventory and M0-B traceability/evidence reconciliation completed; M0-C prioritization and remaining audit synthesis are next** |
-| M1 | Design System and themes | Approved shared palette/tokens and reusable patterns; typography/spacing/component rules; automatic/light/dark and force-light/force-dark behavior verified | **Partial — M1-02 conventions and M1-03 audit completed; M1-04 scanner implemented and its CI passed, but semantic success consolidation and GTK runtime theme-transition coverage remain unimplemented; broader component coverage also remains** |
+| M0 | Full application audit | Complete inventory of windows/components/states/functions; current behavior, visual/functional/accessibility/architecture/performance/Linux-compatibility findings; prioritized requirements and traceability baseline | **Completed — M0-A inventory, M0-B traceability/evidence reconciliation and M0-C prioritized backlog/document reconciliation are complete. The programme proceeds to M1-05; this does not imply that all M0 findings are implemented.** |
+| M1 | Design System and themes | Approved shared palette/tokens and reusable patterns; typography/spacing/component rules; automatic/light/dark and force-light/force-dark behavior verified | **Partial — M1-02 conventions, M1-03 semantic-color audit and M1-04 scanner, downloaded-language style linkage and GTK theme-transition coverage are complete within their bounded scopes; cross-surface Design System adoption and any justified residual corrections remain** |
 | M2 | Welcome and main navigation | Welcome and main-shell/navigation experience meet responsive, visual, interaction and focus criteria | **Partial — M2-A through M2-E audits and M2-D/M2-F targeted lifecycle fixes completed; M2-F exact-head CI and CodeQL passed. The phase remains partial pending broader Welcome/main-shell criteria and global M2 exit conditions** |
 | M3 | Extracted and History | Extracted/OCR and History surfaces consistently modernized without functional regressions | **Partial — Extracted header/action area and scroll protections exist; History modernization is not established as complete** |
 | M4 | Preferences and languages | General, Languages, Editor, Voice and language selector meet shared visual, responsive, lifecycle and accessibility criteria | **Partial — Preferences split and selected lifecycle work exist; full page and language-selector audit remains** |
 | M5 | Other windows and components | Shortcuts, About, dialogs, popovers, menus, notifications, banners and toasts audited and addressed where justified | **Not started as a complete phase — Shortcuts received limited resizing work; app-wide coverage is unverified** |
 | M6 | Responsive behavior and accessibility | Cross-window responsive, focus, contrast, accessible naming/announcements and reduced-motion requirements tested consistently | **Partial — selected automated accessibility and responsive work exists in PR #648; cross-window coverage remains** |
 | M7 | Integration and consolidation | Integrated regression suite, documentation/CHANGELOG, translations review, screenshots at agreed timing, and distribution/build validation complete | **Partial — PR #648 has strong branch-level CI evidence; full app-wide phase exit criteria remain** |
+
+## 4.1 Current prioritized backlog (M0-C, 2026-11-16)
+
+M0-C consolidated the operational backlog. The task list is a planning baseline, not blanket implementation authorization. Every implementation requires a separate bounded proposal and explicit approval.
+
+| ID | Priority | Task / boundary | Dependencies | Exit criteria |
+|---|---|---|---|---|
+| M1-05 | P1 | Read-only audit of Design System adoption across all UI surfaces: tokens, typography, spacing, radii, semantic colors, component patterns and theme behavior. | M1-04 | Surface matrix, evidence-backed findings and explicit acceptable/gap/deferred dispositions. |
+| M1-06 | P1, conditional | Address only demonstrated Design System gaps; implementation scope and files require separate approval. | M1-05 and explicit approval | Approved findings corrected with regression tests and exact-SHA CI; if no justified gap exists, record why no implementation is required. |
+| M2-01 | P1 | Complete the residual Welcome/main-shell audit, including navigation, states and focus affordances. | M2-E, M2-F | Requirement-to-surface matrix, findings and test gaps; separate automated evidence from excluded manual checks. |
+| M3-01 | P1 | Full Extracted and History audit: states, actions, scrolling, list/row/empty/confirmation behavior. | M1-05 | Surface/state inventory, behavior-preservation map, findings and test gaps; no OCR internals or mockup-only features. |
+| M4-01 | P1 | Full Preferences and language-selector audit across General, Editor, Voice, Languages and asynchronous states. | M1-05 | Page/state matrix, lifecycle/accessibility findings and test gaps; preserve settings semantics. |
+| M5-01 | P2 | Audit Shortcuts, About, dialogs, popovers, menus, banners, toasts and notifications. | M1-05 | Component/state inventory and evidence-backed disposition; coherent surfaces may remain unchanged. |
+| M6-01 | P2 | Cross-window responsive/accessibility coverage matrix and approved automated-test gap closure. | M2-01, M3-01, M4-01, M5-01 | Reference viewport matrix plus focus, naming, announcements, contrast and reduced-motion evidence; exclusions explicit. |
+| M7-01 | P2 | Define the global integration and final validation plan. | M1-05 through M6-01; M1-06 disposition | Traceability/validation plan, exact evidence requirements, translation review and deferred screenshot timing. |
+| M7-02 | P3 | Execute approved global integration, documentation and distribution validation. | M7-01 and explicit approval | Regression/packaging evidence, relevant docs/CHANGELOG, translation review and final requirement dispositions. |
+
+P1 establishes foundational audits and justified gap closure; P2 completes cross-surface validation and integration planning; P3 executes final integration. M1-06 is conditional on M1-05 findings. No task authorizes implementation merely by appearing in this table.
 
 ### M0 — Full audit
 
@@ -524,3 +542,16 @@ After every completed task, append/update the relevant phase and record:
 - GTK tests cover `default`, `force-light`, `force-dark` transitions and continuity of language, History empty-state and focus CSS classes. This is automated state/theme integration coverage, not pixel-level verification of all desktop themes.
 - Exact code/test SHA `7f6a7045feefb019c869cc74aecc31a5e991a74d`: CI #43951965392 and CodeQL #43951968944 succeeded. Python 643 passed, 6 skipped, 277 deselected; GTK Integration Tests passed; Changelog integrity, AppImage x86_64/aarch64, Flatpak x86_64/aarch64 and both release-artifact validation jobs passed. PR publication job skipped as expected.
 - Manual visual, Orca/AT-SPI and manual keyboard checks remain excluded, not passed. No OCR/dependency/architecture/portal/OS changes. PR #648 remains Open/Draft/unmerged, base `feature`.
+
+
+## M0-C — Global backlog and document consolidation (2026-11-16)
+
+- **Status: Completed.** M0-C formalized the prioritized, dependency-ordered M1–M7 backlog and reconciled the global roadmap, subordinate PR #648 roadmap and `HANDOVER.md`.
+- The global roadmap is authoritative for scope, phase status, global priorities and requirement disposition. The PR #648 roadmap remains a subordinate workstream evidence register. `HANDOVER.md` is the concise operational handover and historical technical record.
+- Current phase snapshot: M0 Completed; M1 Partial; M2 Partial; M3 Partial; M4 Partial; M5 Not started as a complete phase; M6 Partial; M7 Partial.
+- M1-02, M1-03 and M1-04 are complete only within their recorded bounded scopes. M1 remains Partial pending cross-surface Design System coverage. M1-04 includes the scanner, downloaded-language `.downloaded` class linkage and automated GTK theme-transition coverage; these are not pending implementation items.
+- **Next recommended task: M1-05 — read-only audit of cross-surface Design System adoption.** It is a candidate for a separate bounded proposal and approval, not pre-authorized implementation.
+- Historical task records and CI evidence are retained. CI results remain attributable only to their exact recorded SHAs; the latest previously verified documentation-head CI was run #43956668829 on `37b00668452272e993eb5fd1723402362da8c7e7`, with CodeQL #43956668787 on the same SHA. These results do not automatically validate subsequent M0-C documentation commits.
+- Manual GNOME/GTK visual checks, real Orca/AT-SPI, manual keyboard checks and live multi-monitor geometry verification remain excluded. Screenshots remain deferred to the next release cycle.
+- No application source, tests, workflows, CHANGELOG, PR metadata, protected branches, OCR behavior, dependencies or architecture were changed by M0-C.
+- PR #648 was rechecked during this task: Open, Draft, unmerged, base `feature`, head branch `fix/ui-modernization-aligned`. No PR state transition or merge was performed.
