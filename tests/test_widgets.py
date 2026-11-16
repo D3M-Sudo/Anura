@@ -711,7 +711,9 @@ class TestNavigationStateIntegration:
         context = GLib.MainContext.default()
 
         try:
-            assert TestWelcomePageEnterprise._spin_until(context, lambda: navigation.get_visible_page_tag() == "welcome")
+            assert TestWelcomePageEnterprise._spin_until(
+                context, lambda: navigation.get_visible_page_tag() == "welcome"
+            )
             extracted.buffer.set_text("retained OCR result")
             navigation.push_by_tag("extracted")
             assert TestWelcomePageEnterprise._spin_until(
@@ -757,7 +759,9 @@ class TestNavigationStateIntegration:
         context = GLib.MainContext.default()
 
         try:
-            assert TestWelcomePageEnterprise._spin_until(context, lambda: navigation.get_visible_page_tag() == "welcome")
+            assert TestWelcomePageEnterprise._spin_until(
+                context, lambda: navigation.get_visible_page_tag() == "welcome"
+            )
             navigation.push_by_tag("history")
             assert TestWelcomePageEnterprise._spin_until(
                 context, lambda: navigation.get_visible_page_tag() == "history"
