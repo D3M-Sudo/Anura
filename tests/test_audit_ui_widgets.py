@@ -554,6 +554,7 @@ def test_welcome_compact_popover_geometry_diagnostic(
     popover_width: str,
     anchor_edge: str,
     preferred_position: Gtk.PositionType,
+    capsys,
 ) -> None:
     """Record whether width and anchor placement affect the compact Wayland popup."""
     from anura.widgets.welcome_page import WelcomePage
@@ -611,21 +612,22 @@ def test_welcome_compact_popover_geometry_diagnostic(
 
         native = page.more_options_popover.get_native()
         surface = native.get_surface() if native is not None else None
-        print(
-            "PHASE2_POPOVER_GEOMETRY="
-            f"width={popover_width},anchor={anchor_edge},"
-            f"preferred={preferred_position.value_nick},"
-            f"trigger=({bounds.origin.x:.1f},{trigger_top:.1f},"
-            f"{bounds.size.width:.1f},{bounds.size.height:.1f}),"
-            f"space_above={available_above:.1f},space_below={available_below:.1f},"
-            f"popover_measure={page.more_options_popover.measure(Gtk.Orientation.HORIZONTAL, -1)[:2]},"
-            f"x_measure={page.more_options_popover.measure(Gtk.Orientation.VERTICAL, -1)[:2]},"
-            f"mapped={page.more_options_popover.get_mapped()},"
-            f"allocated={page.more_options_popover.get_width()}x{page.more_options_popover.get_height()},"
-            f"surface={type(surface).__name__ if surface is not None else None},"
-            f"surface_mapped={surface.get_mapped() if surface is not None else None},"
-            f"surface_size={(surface.get_width(), surface.get_height()) if surface is not None else None}"
-        )
+        with capsys.disabled():
+            print(
+                "PHASE2_POPOVER_GEOMETRY="
+                f"width={popover_width},anchor={anchor_edge},"
+                f"preferred={preferred_position.value_nick},"
+                f"trigger=({bounds.origin.x:.1f},{trigger_top:.1f},"
+                f"{bounds.size.width:.1f},{bounds.size.height:.1f}),"
+                f"space_above={available_above:.1f},space_below={available_below:.1f},"
+                f"popover_measure={page.more_options_popover.measure(Gtk.Orientation.HORIZONTAL, -1)[:2]},"
+                f"x_measure={page.more_options_popover.measure(Gtk.Orientation.VERTICAL, -1)[:2]},"
+                f"mapped={page.more_options_popover.get_mapped()},"
+                f"allocated={page.more_options_popover.get_width()}x{page.more_options_popover.get_height()},"
+                f"surface={type(surface).__name__ if surface is not None else None},"
+                f"surface_mapped={surface.get_mapped() if surface is not None else None},"
+                f"surface_size={(surface.get_width(), surface.get_height()) if surface is not None else None}"
+            )
     finally:
         page.more_options_popover.popdown()
         window.destroy()
