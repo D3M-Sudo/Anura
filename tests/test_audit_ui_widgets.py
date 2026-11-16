@@ -141,6 +141,92 @@ def _wait_for_gtk_condition(
         time.sleep(0.01)
 
 
+def _probe_minimal_popover() -> dict:
+    """Compare a standalone GtkPopover with Welcome on the same display."""
+    events = []
+    window = Gtk.Window()
+    window.set_default_size(320, 180)
+    button = Gtk.MenuButton.new()
+    button.set_child(Gtk.Label(label="Minimal popover trigger"))
+    popover = Gtk.Popover.new()
+    popover.set_child(Gtk.Label(label="Minimal popover content"))
+    button.set_popover(popover)
+    window.set_child(button)
+
+    window.connect(
+        "notify::mapped",
+        lambda *_args: events.append(f"window:mapped={window.get_mapped()}"),
+    )
+    for signal in ("map", "unmap", "closed"):
+        popover.connect(
+            signal,
+            lambda _widget, *_args, event=signal: events.append(f"popover:{event}"),
+        )
+    popover.connect(
+        "notify::visible",
+        lambda *_args: events.append(f"popover:visible={popover.get_visible()}"),
+    )
+
+    try:
+        window.present()
+        _wait_for_window_allocation(window, button, timeout_seconds=2.0)
+        native = popover.get_native()
+        surface = native.get_surface() if native is not None else None
+        if surface is not None:
+            surface.connect(
+                "notify::mapped",
+                lambda *_args: events.append(f"surface:mapped={surface.get_mapped()}"),
+            )
+            surface.connect(
+                "notify::width",
+                lambda *_args: events.append(f"surface:width={surface.get_width()}"),
+            )
+            surface.connect(
+                "notify::height",
+                lambda *_args: events.append(f"surface:height={surface.get_height()}"),
+            )
+
+        button.set_active(True)
+        deadline = time.monotonic() + 0.75
+        context = GLib.MainContext.default()
+        while not popover.get_mapped() and time.monotonic() < deadline:
+            while context.pending():
+                context.iteration(False)
+            time.sleep(0.01)
+        after_set_active = {
+            "active": button.get_active(),
+            "visible": popover.get_visible(),
+            "mapped": popover.get_mapped(),
+        }
+
+        if not popover.get_mapped():
+            popover.popup()
+            deadline = time.monotonic() + 0.75
+            while not popover.get_mapped() and time.monotonic() < deadline:
+                while context.pending():
+                    context.iteration(False)
+                time.sleep(0.01)
+
+        return {
+            "after_set_active": after_set_active,
+            "after_direct_popup": {
+                "active": button.get_active(),
+                "visible": popover.get_visible(),
+                "mapped": popover.get_mapped(),
+                "surface_mapped": surface.get_mapped() if surface is not None else None,
+                "surface_size": (
+                    (surface.get_width(), surface.get_height()) if surface is not None else None
+                ),
+            },
+            "events": events,
+        }
+    except Exception as exc:
+        return {"error": repr(exc), "events": events}
+    finally:
+        window.destroy()
+        _drain_gtk_main_context()
+
+
 def _welcome_popover_diagnostic_state(window, page, events) -> str:
     """Capture GTK geometry, clipping, sizing, and native-surface state on failure."""
 
@@ -260,6 +346,7 @@ def _welcome_popover_diagnostic_state(window, page, events) -> str:
                 )
             },
             "events": list(events),
+            "minimal_popover_baseline": _probe_minimal_popover(),
         }
     )
 
@@ -487,6 +574,25 @@ def test_welcome_responsive_layout_uses_allocated_viewport(screen_width: int, sc
                 "notify::active",
                 lambda *_args: popover_events.append(f"menu-button:active={page.more_options_button.get_active()}"),
             )
+            window.connect(
+                "notify::mapped",
+                lambda *_args: popover_events.append(f"window:mapped={window.get_mapped()}"),
+            )
+            native = page.more_options_popover.get_native()
+            surface = native.get_surface() if native is not None else None
+            if surface is not None:
+                surface.connect(
+                    "notify::mapped",
+                    lambda *_args: popover_events.append(f"surface:mapped={surface.get_mapped()}"),
+                )
+                surface.connect(
+                    "notify::width",
+                    lambda *_args: popover_events.append(f"surface:width={surface.get_width()}"),
+                )
+                surface.connect(
+                    "notify::height",
+                    lambda *_args: popover_events.append(f"surface:height={surface.get_height()}"),
+                )
             activated = page.more_options_button.activate()
             popover_events.append(f"widget-activate:returned={activated}")
             _drain_gtk_main_context()
@@ -501,6 +607,15 @@ def test_welcome_responsive_layout_uses_allocated_viewport(screen_width: int, sc
                 _drain_gtk_main_context()
                 popover_events.append(
                     "after-set-active:"
+                    f"active={page.more_options_button.get_active()},"
+                    f"visible={page.more_options_popover.get_visible()},"
+                    f"mapped={page.more_options_popover.get_mapped()}"
+                )
+            if not page.more_options_popover.get_mapped():
+                page.more_options_popover.popup()
+                _drain_gtk_main_context()
+                popover_events.append(
+                    "after-direct-popup:"
                     f"active={page.more_options_button.get_active()},"
                     f"visible={page.more_options_popover.get_visible()},"
                     f"mapped={page.more_options_popover.get_mapped()}"
