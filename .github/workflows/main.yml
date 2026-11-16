@@ -195,6 +195,47 @@ jobs:
             exit 1
           fi
 
+      - name: Capture Wayland popup protocol trace
+        # Temporary, PR #648-only diagnostic. Keep the full GTK suite below unchanged.
+        if: github.event_name == 'pull_request' && github.event.pull_request.number == 648
+        env:
+          GSETTINGS_SCHEMA_DIR: builddir/data
+          DISPLAY: ""
+          WAYLAND_DISPLAY: wayland-test
+          NO_AT_BRIDGE: "1"
+          GTK_A11Y: none
+          ANURA_LOG_LEVEL: WARNING
+          NO_COLOR: "1"
+        run: |
+          set +e
+          WAYLAND_DEBUG=client timeout 120 uv run pytest \
+            tests/test_audit_ui_widgets.py -m gtk -k "compact_popover" -vv --timeout=30 \
+            --override-ini "addopts=-v --tb=short" \
+            > /tmp/wayland-client-protocol.log 2>&1
+          test_status=$?
+          set -e
+          printf 'Focused GTK diagnostic exit status: %s\n' "$test_status"
+          cp /tmp/weston.log /tmp/weston-protocol-diagnostic.log 2>/dev/null || true
+          {
+            echo "=== focused GTK test exit status ==="
+            echo "$test_status"
+            echo "=== xdg popup protocol messages ==="
+            grep -E 'xdg_(wm_base|surface|popup)|wl_surface\.(commit|attach)|wl_display\.sync' \
+              /tmp/wayland-client-protocol.log || true
+            echo "=== Weston errors and warnings ==="
+            grep -Ei 'error|warning|fatal|popup|configure' /tmp/weston-protocol-diagnostic.log || true
+          } > /tmp/wayland-protocol-summary.log
+      - name: Upload Wayland protocol diagnostic
+        if: always() && github.event_name == 'pull_request' && github.event.pull_request.number == 648
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: wayland-popover-protocol-${{ github.run_id }}
+          path: |
+            /tmp/wayland-client-protocol.log
+            /tmp/weston-protocol-diagnostic.log
+            /tmp/wayland-protocol-summary.log
+          if-no-files-found: warn
+          retention-days: 7
       - name: Run GTK tests (Wayland headless)
         # --override-ini replaces the global addopts from pyproject.toml.
         # Without this override the --ignore list baked into addopts would
