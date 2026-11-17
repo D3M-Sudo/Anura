@@ -278,8 +278,41 @@ def _send_weston_key(key: str) -> None:
     )
 
 
-def _wait_for_focus_change(window, previous_focus, timeout: float = 1.0):
-    """Pump GTK events until a real key event changes focus."""
+def _install_keyboard_probe(window):
+    """Record key events at the GTK toplevel before child event handling."""
+    from gi.repository import Gtk
+
+    received = []
+    controller = Gtk.EventControllerKey()
+    controller.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
+    controller.connect(
+        "key-pressed",
+        lambda _controller, keyval, keycode, state: received.append((keyval, state)) or False,
+    )
+    window.add_controller(controller)
+    return received
+
+
+def _wait_for_key_event(received, previous_count: int, key: str, timeout: float = 1.0):
+    """Wait until GTK confirms receipt of the injected physical key event."""
+    from gi.repository import GLib
+
+    context = GLib.MainContext.default()
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        while context.pending():
+            context.iteration(False)
+        if len(received) > previous_count:
+            return
+        time.sleep(0.01)
+    pytest.fail(
+        f"Weston received the injected {key!r} request, but GTK's toplevel "
+        "EventControllerKey did not observe the key event"
+    )
+
+
+def _wait_for_focus_change(window, previous_focus, key: str, timeout: float = 1.0):
+    """Pump GTK events until the observed key event changes focus."""
     from gi.repository import GLib
 
     context = GLib.MainContext.default()
@@ -291,10 +324,13 @@ def _wait_for_focus_change(window, previous_focus, timeout: float = 1.0):
         if focused is not previous_focus:
             return focused
         time.sleep(0.01)
-    pytest.fail(f"keyboard input did not move focus away from {previous_focus!r}")
+    pytest.fail(
+        f"GTK received {key!r}, but focus remained on {previous_focus!r}; "
+        "this distinguishes a GTK focus-traversal failure from missing input"
+    )
 
 
-def _tab_focus_cycle(window, starting_control, key: str, max_steps: int = 40):
+def _tab_focus_cycle(window, starting_control, key: str, received, max_steps: int = 40):
     """Return the widgets reached by physical Tab/Shift+Tab input before wrapping."""
     assert starting_control.grab_focus()
     assert window.get_focus() is starting_control
@@ -302,8 +338,10 @@ def _tab_focus_cycle(window, starting_control, key: str, max_steps: int = 40):
     focused = starting_control
 
     for _ in range(max_steps):
+        previous_count = len(received)
         _send_weston_key(key)
-        focused = _wait_for_focus_change(window, focused)
+        _wait_for_key_event(received, previous_count, key)
+        focused = _wait_for_focus_change(window, focused, key)
         if focused is starting_control:
             return visited
         visited.add(focused)
@@ -331,7 +369,8 @@ def real_history_window(real_history):
         time.sleep(0.01)
     assert window.get_mapped(), "History test window was not mapped by Weston"
 
-    yield window, page
+    received = _install_keyboard_probe(window)
+    yield window, page, received
 
     window.destroy()
 
@@ -350,13 +389,13 @@ def _suffix_buttons(row):
 
 def test_tab_and_shift_tab_reach_enabled_history_suffix_actions(real_history_window):
     """Actual Tab and Shift+Tab events traverse the enabled suffix actions."""
-    window, page = real_history_window
+    window, page, received = real_history_window
     assert len(page._rows) == 3
     expected = [button for row in page._rows for button in _suffix_buttons(row)]
     assert all(button.get_sensitive() for button in expected)
 
-    forward = _tab_focus_cycle(window, expected[0], "Tab")
-    backward = _tab_focus_cycle(window, expected[0], "shift+Tab")
+    forward = _tab_focus_cycle(window, expected[0], "Tab", received)
+    backward = _tab_focus_cycle(window, expected[0], "shift+Tab", received)
     assert set(expected) <= forward
     assert set(expected) <= backward
 
@@ -365,7 +404,7 @@ def test_expanded_history_row_keeps_suffix_actions_in_keyboard_traversal(real_hi
     """Expanding a row preserves keyboard access to its suffix actions."""
     from gi.repository import Gtk
 
-    window, page = real_history_window
+    window, page, received = real_history_window
     row = page._rows[1]
     buttons = _suffix_buttons(row)
 
@@ -374,17 +413,17 @@ def test_expanded_history_row_keeps_suffix_actions_in_keyboard_traversal(real_hi
     assert text_views
     assert buttons == _suffix_buttons(row)
 
-    forward = _tab_focus_cycle(window, buttons[0], "Tab")
-    backward = _tab_focus_cycle(window, buttons[0], "shift+Tab")
+    forward = _tab_focus_cycle(window, buttons[0], "Tab", received)
+    backward = _tab_focus_cycle(window, buttons[0], "shift+Tab", received)
     assert set(buttons) <= forward
     assert set(buttons) <= backward
 
 
-def test_collapsing_focused_history_text_moves_focus_to_visible_control(real_history_window):
-    """Collapsing expanded content must not leave focus on its hidden TextView."""
-    from gi.repository import Gtk
+def test_collapsing_focused_history_text_keeps_keyboard_navigation_usable(real_history_window):
+    """After collapse, Tab must leave the expanded content if it still owns focus."""
+    from gi.repository import GLib, Gtk
 
-    window, page = real_history_window
+    window, page, received = real_history_window
     row = page._rows[1]
     row.set_expanded(True)
     (text_view,) = _find_all(row, Gtk.TextView)
@@ -394,12 +433,40 @@ def test_collapsing_focused_history_text_moves_focus_to_visible_control(real_his
 
     row.set_expanded(False)
     assert row.get_expanded() is False
-    assert window.get_focus() is not text_view
+
+    # Let GTK process the collapse/layout before observing widget state.
+    context = GLib.MainContext.default()
+    deadline = time.monotonic() + 0.5
+    while time.monotonic() < deadline:
+        while context.pending():
+            context.iteration(False)
+        time.sleep(0.01)
+
+    collapsed_state = {
+        "visible": text_view.get_visible(),
+        "effectively_visible": text_view.is_visible(),
+        "mapped": text_view.get_mapped(),
+        "has_focus": text_view.has_focus(),
+        "window_focus_is_text_view": window.get_focus() is text_view,
+    }
+
+    if window.get_focus() is text_view:
+        previous_count = len(received)
+        _send_weston_key("Tab")
+        _wait_for_key_event(received, previous_count, "Tab")
+        focused = _wait_for_focus_change(window, text_view, "Tab")
+
+        assert focused is not text_view, (
+            "Tab was delivered but focus remained on the collapsed TextView; "
+            f"observed collapsed widget state: {collapsed_state}"
+        )
+    else:
+        assert window.get_focus() is not text_view
 
 
 def test_expanding_another_history_row_preserves_keyboard_traversal(real_history_window):
     """Single-open-row behavior remains compatible with actual keyboard traversal."""
-    window, page = real_history_window
+    window, page, received = real_history_window
     first, second, _third = page._rows
     first.set_expanded(True)
     second.set_expanded(True)
@@ -408,7 +475,7 @@ def test_expanding_another_history_row_preserves_keyboard_traversal(real_history
     assert second.get_expanded() is True
 
     expected = [button for row in page._rows for button in _suffix_buttons(row)]
-    forward = _tab_focus_cycle(window, expected[0], "Tab")
-    backward = _tab_focus_cycle(window, expected[0], "shift+Tab")
+    forward = _tab_focus_cycle(window, expected[0], "Tab", received)
+    backward = _tab_focus_cycle(window, expected[0], "shift+Tab", received)
     assert set(expected) <= forward
     assert set(expected) <= backward
