@@ -1,6 +1,11 @@
 name: Temporary M5-02 UI contract tests
 
 on:
+  push:
+    branches: [ "fix/ui-modernization-aligned" ]
+    paths:
+      - ".github/workflows/m5-02-temporary.yml"
+      - "tests/test_m5_02_ui_contracts.py"
   pull_request:
     branches: [ "feature" ]
     paths:
