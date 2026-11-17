@@ -379,9 +379,9 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
             if button is active and self._tts_state == "generating":
                 icon, label = _TTS_STOP_ICON, _("Stop listening")
             elif button is active and self._tts_state == "playing":
-                icon, label = _TTS_PAUSE_ICON, _("Pause/resume listening")
+                icon, label = _TTS_PAUSE_ICON, _("Pause listening")
             elif button is active and self._tts_state == "paused":
-                icon, label = _TTS_PLAY_ICON, _("Pause/resume listening")
+                icon, label = _TTS_PLAY_ICON, _("Resume listening")
             else:
                 icon, label = _TTS_PLAY_ICON, _("Listen to text")
             button.set_icon_name(icon)
