@@ -601,6 +601,9 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         self.connect_tracked(self.ocr_controller, "capture-portal-missing", self._on_portal_missing)
         self.connect_tracked(self.ocr_controller, "navigation-requested", self._on_navigation_requested)
 
+        # Window UI signals
+        self.connect_tracked(self.portal_banner, "button-clicked", self._on_portal_banner_dismissed)
+
         # DnD Controller signals
         self.connect_tracked(self.dnd_controller, "error-occurred", self._on_dnd_error)
 
@@ -663,6 +666,10 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         """Show the portal missing banner."""
         self.portal_banner.set_title(message)
         self.portal_banner.set_revealed(True)
+
+    def _on_portal_banner_dismissed(self, _banner: Adw.Banner) -> None:
+        """Hide the portal-unavailable banner when the user dismisses it."""
+        self.portal_banner.set_revealed(False)
 
     def _on_navigation_requested(self, _controller: OcrController, tag: str) -> None:
         """Handle navigation requests from controllers."""
