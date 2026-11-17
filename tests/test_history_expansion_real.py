@@ -152,17 +152,29 @@ def test_expanding_another_row_collapses_the_previous_one(real_history):
     assert [row.get_expanded() for row in (first, second, third)] == [False, False, False]
 
 
-def test_refresh_rebuilds_the_list_with_every_row_collapsed(real_history):
+def test_refresh_rebuilds_the_list_and_restores_the_expanded_row(real_history):
+    from gi.repository import GLib
+
     page, _service, _controller = real_history
-    page._rows[1].set_expanded(True)
+    expanded_row = page._rows[1]
+    expanded_entry_id = next(
+        entry_id for entry_id, row in page._row_entry_ids.items() if row is expanded_row
+    )
+    expanded_row.set_expanded(True)
     old_rows = list(page._rows)
 
     page.refresh()
 
+    context = GLib.MainContext.default()
+    while context.pending():
+        context.iteration(False)
+
     assert len(page._rows) == 3
-    assert all(row.get_expanded() is False for row in page._rows)
     assert all(new is not old for new, old in zip(page._rows, old_rows, strict=True))
-    assert page._open_row is None
+    restored_row = page._row_entry_ids[expanded_entry_id]
+    assert page._open_row is restored_row
+    assert restored_row.get_expanded() is True
+    assert sum(row.get_expanded() for row in page._rows) == 1
 
 
 def test_text_area_height_is_capped_and_short_text_is_not_padded(real_history):
