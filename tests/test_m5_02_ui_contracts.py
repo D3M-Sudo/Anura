@@ -102,6 +102,7 @@ class TestM502ToastDelegation:
         assert toast.get_title() == "M5-02 test toast"
         assert toast.get_priority() == Adw.ToastPriority.HIGH
 
+
 @pytest.mark.gtk
 class TestPortalBannerDismissal:
     def test_dismiss_signal_is_connected_to_the_window_handler(self):
