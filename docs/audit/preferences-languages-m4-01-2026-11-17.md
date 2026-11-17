@@ -88,6 +88,35 @@ The audit found three lifecycle/behavior issues and one accessibility/coverage g
 - F-303-02 remains suspended because the current GitHub Actions XTest → Weston → Wayland → GTK input path does not reliably deliver injected keys to GTK. That limitation is recorded separately; it is not evidence of an Anura production defect.
 - No OCR engine, OCR pipeline, dependency, setting semantics, application source, workflow, CHANGELOG, protected branch or PR metadata was changed.
 
+## Approved remediation — M4-F01 through M4-F04 (2026-11-17)
+
+The maintainer approved remediation of all four findings with targeted regression tests. The changes below resolve the audited findings without changing OCR engine selection, download semantics, metered-network messaging, model quality settings or language-manager behavior.
+
+| Finding | Resolution |
+|---|---|
+| M4-F01 | The reachability probe now derives its host from `TESSDATA_URL` and checks HTTPS port 443, rather than probing `google.com`. |
+| M4-F02 | The page owns a `Gio.Cancellable`, cancels any previous probe before starting a replacement, cancels on destruction, and ignores callbacks after disposal or from superseded requests. |
+| M4-F03 | `LanguageRow._schedule_idle_update()` tracks each one-shot source and removes its ID as soon as the callback begins, before the source returns `GLib.SOURCE_REMOVE`. |
+| M4-F04 | The Preferences model ListView receives the localized accessible label “Available OCR models”; the message was added to the gettext POT template. |
+
+### Regression coverage
+
+Added `tests/test_preferences_languages_lifecycle.py` with four focused tests:
+
+- `test_network_probe_targets_the_configured_ocr_model_host`
+- `test_disposing_languages_page_cancels_probe_and_ignores_late_result`
+- `test_language_row_prunes_idle_id_when_refresh_callback_finishes`
+- `test_preferences_language_list_has_an_explicit_accessible_name`
+
+The tests use deterministic GI test doubles and run in the existing Python quality job. The full PR CI and CodeQL must be checked against the final documentation-inclusive branch head before this remediation is declared fully verified.
+
+### Scope and limits
+
+- Changed application files: `anura/widgets/preferences_languages_page.py`, `anura/widgets/language_row.py`.
+- Changed verification/i18n files: `tests/test_preferences_languages_lifecycle.py`, `po/io.github.d3m_sudo.anura.pot`, `CHANGELOG.md`.
+- No workflow, dependency, OCR engine, OCR pipeline, model source path, protected branch or PR state was changed.
+- Real Orca/AT-SPI and manual visual/keyboard verification were not performed; these remain excluded/deferred under the global roadmap. The automated test asserts the GTK accessible label property, not the behavior of a real screen reader.
+
 ## Recommended disposition
 
-M4-01 read-only audit is complete. Keep global M4 **Partial** until the maintainer decides whether to remediate or explicitly accept/defer M4-F01–F04 and the listed coverage gaps. Any implementation requires a separate bounded proposal and explicit approval.
+M4-01 audit and the approved M4-F01–F04 remediation are complete within their bounded scope. Global M4 remains **Partial** because the broader Preferences mapping, secondary-language refresh/removal, Voice late-result lifecycle and cross-surface keyboard/accessibility coverage gaps remain outside this remediation.
