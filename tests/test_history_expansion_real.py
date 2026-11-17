@@ -262,12 +262,42 @@ def _send_weston_key(key: str) -> None:
 
     env = os.environ.copy()
     env["DISPLAY"] = display
+
+    # Weston forwards X11 keyboard input to its currently focused Wayland
+    # surface. Move the pointer into the center of the 1920x1080 Weston output
+    # first, so the app surface under the pointer can acquire wl_pointer focus;
+    # then focus the Weston host window before sending the XTest key event.
+    subprocess.run(
+        ["xdotool", "mousemove", "--sync", "--window", window_id, "960", "540"],
+        check=True,
+        capture_output=True,
+        text=True,
+        env=env,
+    )
     subprocess.run(
         ["xdotool", "windowfocus", "--sync", window_id],
         check=True,
         capture_output=True,
         text=True,
         env=env,
+    )
+    x11_focus = subprocess.run(
+        ["xdotool", "getwindowfocus"],
+        check=True,
+        capture_output=True,
+        text=True,
+        env=env,
+    ).stdout.strip()
+    pointer = subprocess.run(
+        ["xdotool", "getmouselocation", "--shell"],
+        check=True,
+        capture_output=True,
+        text=True,
+        env=env,
+    ).stdout.strip()
+    print(
+        f"XTest preflight: Weston host={window_id}, X11 focus={x11_focus}, "
+        f"pointer=({pointer.replace(chr(10), ', ')})"
     )
     subprocess.run(
         ["xdotool", "key", "--clearmodifiers", "--delay", "20", key],
@@ -293,7 +323,7 @@ def _install_keyboard_probe(window):
     return received
 
 
-def _wait_for_key_event(received, previous_count: int, key: str, timeout: float = 1.0):
+def _wait_for_key_event(window, received, previous_count: int, key: str, timeout: float = 1.0):
     """Wait until GTK confirms receipt of the injected physical key event."""
     from gi.repository import GLib
 
@@ -307,7 +337,9 @@ def _wait_for_key_event(received, previous_count: int, key: str, timeout: float 
         time.sleep(0.01)
     pytest.fail(
         f"Weston received the injected {key!r} request, but GTK's toplevel "
-        "EventControllerKey did not observe the key event"
+        "EventControllerKey did not observe the key event; "
+        f"GTK window active={window.is_active()}, mapped={window.get_mapped()}, "
+        f"focus={window.get_focus()!r}"
     )
 
 
@@ -340,7 +372,7 @@ def _tab_focus_cycle(window, starting_control, key: str, received, max_steps: in
     for _ in range(max_steps):
         previous_count = len(received)
         _send_weston_key(key)
-        _wait_for_key_event(received, previous_count, key)
+        _wait_for_key_event(window, received, previous_count, key)
         focused = _wait_for_focus_change(window, focused, key)
         if focused is starting_control:
             return visited
@@ -456,7 +488,7 @@ def test_collapsing_focused_history_text_keeps_keyboard_navigation_usable(real_h
     if window.get_focus() is text_view:
         previous_count = len(received)
         _send_weston_key("Tab")
-        _wait_for_key_event(received, previous_count, "Tab")
+        _wait_for_key_event(window, received, previous_count, "Tab")
         focused = _wait_for_focus_change(window, text_view, "Tab")
 
         assert focused is not text_view, (
