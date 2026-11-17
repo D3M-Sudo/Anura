@@ -23,7 +23,12 @@ class FakeSettings:
 
     def __init__(self, values=None):
         self.bound_keys: list[str] = []
-        self.values = {"tts-volume": 0.5, "color-scheme": "default", "extra-language": ""}
+        self.values = {
+            "tts-volume": 0.5,
+            "color-scheme": "default",
+            "extra-language": "",
+            "editor-wrap-mode": "word",
+        }
         self.values.update(values or {})
         self.handlers: dict[int, tuple[str, object]] = {}
         self._next_handler = 1
@@ -62,6 +67,51 @@ class FakeSettings:
 
     def disconnect(self, handler_id):
         self.handlers.pop(handler_id, None)
+
+
+# ---------------------------------------------------------------------------
+# EditorPage
+# ---------------------------------------------------------------------------
+def _make_editor_page(monkeypatch, settings_values=None):
+    """Build PreferencesEditorPage with mocked GSettings."""
+    import anura.widgets.preferences_editor_page as mod
+
+    fake_settings = FakeSettings(settings_values)
+    monkeypatch.setattr(mod, "settings", fake_settings)
+
+    page = mod.PreferencesEditorPage()
+    return page, fake_settings
+
+
+@pytest.mark.parametrize(
+    ("stored_mode", "expected_index"),
+    [("word", 0), ("char", 1), ("none", 2), ("unknown", 0)],
+)
+def test_editor_wrap_mode_setting_initializes_combo(
+    monkeypatch, headless_gi_mocks, stored_mode, expected_index
+):
+    """The saved wrap mode selects its matching combo item, defaulting to words."""
+    page, _settings = _make_editor_page(
+        monkeypatch, settings_values={"editor-wrap-mode": stored_mode}
+    )
+
+    page.editor_wrap_mode_combo.set_selected.assert_called_with(expected_index)
+
+
+@pytest.mark.parametrize(
+    ("selected_index", "expected_mode"),
+    [(0, "word"), (1, "char"), (2, "none"), (99, "word")],
+)
+def test_editor_wrap_mode_selection_persists_setting(
+    monkeypatch, headless_gi_mocks, selected_index, expected_mode
+):
+    """Selecting a wrap mode persists its matching GSettings value."""
+    page, fake_settings = _make_editor_page(monkeypatch)
+    page.editor_wrap_mode_combo.get_selected.return_value = selected_index
+
+    page._on_editor_wrap_mode_changed(page.editor_wrap_mode_combo, None)
+
+    assert fake_settings.get_string("editor-wrap-mode") == expected_mode
 
 
 # ---------------------------------------------------------------------------
