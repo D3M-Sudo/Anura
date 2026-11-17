@@ -249,5 +249,3 @@ def test_copy_button_still_copies_the_full_text_with_the_row_expanded(real_histo
     copy_button.emit("clicked")
 
     controller.copy_entry_text.assert_called_once_with(LONG_TEXT)
-
-
