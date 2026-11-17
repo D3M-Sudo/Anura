@@ -108,7 +108,7 @@ Added `tests/test_preferences_languages_lifecycle.py` with four focused tests:
 - `test_language_row_prunes_idle_id_when_refresh_callback_finishes`
 - `test_preferences_language_list_has_an_explicit_accessible_name`
 
-The tests use deterministic GI test doubles and run in the existing Python quality job. The full PR CI and CodeQL must be checked against the final documentation-inclusive branch head before this remediation is declared fully verified.
+The tests use deterministic GI test doubles and run in the existing Python quality job. On documentation-inclusive head `c0eaa426e2fa2c37eeb43c7e04200fe67848bb37`, CI [#44109820125](https://github.com/D3M-Sudo/Anura/actions/runs/44109820125) reported Python quality success (661 passed, 6 skipped, 283 deselected) and Changelog integrity success. CodeQL [#44109819932](https://github.com/D3M-Sudo/Anura/actions/runs/44109819932) passed on the same head. GTK Integration failed only in the four previously suspended F-303-02 virtual keyboard tests (449 passed, 4 failed, 5 skipped, 667 deselected); those failures are the known XTest/Weston-to-GTK input-delivery/focus limitation and do not involve the M4 test file. AppImage x86_64/aarch64 jobs were still running at the last check; Flatpak and downstream artifact-validation jobs were skipped because GTK Integration failed.
 
 ### Scope and limits
 
