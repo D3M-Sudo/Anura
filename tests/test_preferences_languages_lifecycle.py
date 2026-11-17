@@ -101,7 +101,4 @@ def test_preferences_language_list_has_an_explicit_accessible_name(monkeypatch, 
     """Assistive technology must receive a contextual name for the model list."""
     _module, page, _monitor, _address, _cancellable = _make_languages_page(monkeypatch, headless_gi_mocks)
 
-    assert any(
-        call.args[1] == ["Available OCR models"]
-        for call in page.list_view.update_property.call_args_list
-    )
+    assert any(call.args[1] == ["Available OCR models"] for call in page.list_view.update_property.call_args_list)
