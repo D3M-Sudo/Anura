@@ -55,9 +55,9 @@ No production file is presumed to require modification.
 - GTK integration: create `tests/test_preferences_editor_integration.py` for real Editor/GSettings coverage; leave the existing Voice integration module focused on Voice.
 - Conditional production fix: `anura/widgets/preferences_editor_page.py`
 
-- [ ] Add headless tests for initialization mappings: `word → 0`, `char → 1`, `none → 2`.
-- [ ] Add headless tests for selection persistence: `0 → word`, `1 → char`, `2 → none`; pin invalid-index fallback to `word`.
-- [ ] Extend the existing GTK integration harness to instantiate the real Editor page with an isolated GSettings memory backend and verify the selected value is persisted and reflected by the setting.
+- [x] Add headless tests for initialization mappings: `word → 0`, `char → 1`, `none → 2`.
+- [x] Add headless tests for selection persistence: `0 → word`, `1 → char`, `2 → none`; pin invalid-index fallback to `word`.
+- [x] Extend the existing GTK integration harness to instantiate the real Editor page with an isolated GSettings memory backend and verify the selected value is persisted and reflected by the setting.
 - [ ] Observe the intended RED result for each new contract before any production correction.
 - [ ] Apply only a demonstrated, bounded production fix; rerun focused tests and full Python-quality checks.
 
@@ -132,3 +132,14 @@ M4-02 is complete only when all CI-testable acceptance criteria are either suppo
 - [x] Full CI verification completed successfully.
 
 **Evidence:** implementation/test head `c5f820aac1a722c42bb79f5ebcbbf6fea17a0c7a`; [CI #44188821619](https://github.com/D3M-Sudo/Anura/actions/runs/44188821619) passed with Python Quality pytest **682 passed, 6 skipped, 287 deselected**, GTK Integration, Changelog Integrity, AppImage/Flatpak builds for both architectures and release-artifact validation; [CodeQL #44188821605](https://github.com/D3M-Sudo/Anura/actions/runs/44188821605) passed. No production files changed. Initial pytest failures were confined to an over-strict mock call-count assertion, corrected in the test; final CI passed. Next task: Task 2 — Editor wrap-mode mapping and persistence.
+
+ 
+## Execution record — Task 2: Editor wrap-mode mapping and GSettings persistence (2026-11-18)
+
+- [x] Headless initialization mapping: `word → 0`, `char → 1`, `none → 2`, with unknown-value fallback.
+- [x] Headless selection persistence: `0 → word`, `1 → char`, `2 → none`, with invalid-index fallback.
+- [x] Dedicated GTK integration module uses the real Editor Preferences page and isolated Gio memory GSettings backend; all three stored-mode/persisted-mode cases passed.
+- [x] Full exact-head CI verification completed successfully.
+- [ ] Production correction: not applicable; the tests did not demonstrate a production defect, so no production code was changed.
+ 
+**Evidence:** exact implementation head `cae8b8c27114daf59fab96ebefdd377b3efb76ae`; [CI #44195812990](https://github.com/D3M-Sudo/Anura/actions/runs/44195812990) passed with Python Quality **690 passed, 6 skipped, 290 deselected**, GTK Integration **460 passed, 6 skipped, 696 deselected** (including all three Editor integration cases), Changelog Integrity, AppImage/Flatpak builds for x86_64/aarch64 and artifact validation; [CodeQL #44195813017](https://github.com/D3M-Sudo/Anura/actions/runs/44195813017) passed. No production files changed. Next task: Task 3 — Voice late-result-after-disposal; maintainer authorization required.
