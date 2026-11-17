@@ -529,3 +529,16 @@ Issue [#655 — F-303-02 native-host keyboard traversal validation](https://gith
 5. Record host/session details, exact tested commit, procedure, results and any remaining defect. Reintroduce automated blocking tests only if a reliable harness is separately established.
 
 M5-01 can proceed after this formal disposition; F-303-02 remains deferred until M7-03 is completed. Manual keyboard validation is not claimed as passed.
+
+
+## M5-01 — Other windows and shared UI components audit (2026-11-17)
+
+- **Outcome:** read-only source/Blueprint/test-definition audit completed on source snapshot `0e07bdcf916a6a3eec3b61d9acafbfbbb8de989a`. Global report: [M5-01 audit](../../audit/ui-other-surfaces-m5-01-2026-11-17.md).
+- **Surfaces:** Shortcuts; About and fatal-error dialogs; Clear History confirmation; language/share popovers; Welcome/Extracted menus; banner; toast overlay; XDG Portal/libnotify notifications.
+- **Disposition:** no confirmed product defect. Keep existing Libadwaita/native components; no broad restyle or behavior change justified. Existing test coverage is meaningful for Clear History response wiring, language search/accessibility state, share-row accessibility/icon resources, notification backend fallback/markup escaping and OCR-notification privacy.
+- **P2 test proposal (not implemented):** M5-P2-01 Shortcuts search/match/empty/reset/Escape; M5-P2-02 menu action resolution and action scope across Welcome/Extracted/screenshot menus; M5-P2-03 banner dismissal and deterministic toast lifecycle. Each requires a separate implementation approval.
+- **P3 deferred:** About/fatal-dialog configuration assertions, Portal cleanup/error-path tests and any additional popover focus tests after duplicate-coverage review.
+- **Validation boundary:** no tests or build were run for this audit; no live GTK, visual, Orca/AT-SPI, keyboard, notification daemon or multi-monitor behavior is claimed. CodeQL #44128147802 passed on the audited head; CI #44128148026 was still in progress when checked.
+- **CHANGELOG:** unchanged; no product behavior changed.
+- **PR state:** Open/Draft/unmerged, base `feature`. No protected branch or PR metadata changed.
+- **Next:** M5-02 test implementation only after separate explicit approval; F-303-03 remains a separate History workstream and is not pulled into M5-01.
