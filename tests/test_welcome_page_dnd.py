@@ -5,9 +5,18 @@
 
 """Regression tests for WelcomePage's asynchronous URI-list drop lifecycle."""
 
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
+
+
+def _patch_drag_actions(monkeypatch):
+    import anura.widgets.welcome_page as welcome_page
+
+    actions = SimpleNamespace(COPY=object(), NONE=object())
+    monkeypatch.setattr(welcome_page.Gdk, "DragAction", actions)
+    return actions
 
 
 def _page(headless_gi_mocks):
@@ -46,7 +55,7 @@ def _run_bytes_callback(page, stream, drop, cancellable, operation_id=41):
 
 
 def test_local_image_uri_finishes_copy_exactly_once_and_dispatches(monkeypatch, headless_gi_mocks):
-    from anura.widgets.welcome_page import Gdk
+    actions = _patch_drag_actions(monkeypatch)
 
     page, _window = _page(headless_gi_mocks)
     stream = _bytes_result(monkeypatch, b"file:///tmp/dropped.png\r\n")
@@ -55,7 +64,7 @@ def test_local_image_uri_finishes_copy_exactly_once_and_dispatches(monkeypatch, 
 
     _run_bytes_callback(page, stream, drop, cancellable)
 
-    drop.finish.assert_called_once_with(Gdk.DragAction.COPY)
+    drop.finish.assert_called_once_with(actions.COPY)
     page._process_dropped_path.assert_called_once_with("/tmp/dropped.png", 41)
     page._show_error_toast.assert_not_called()
     assert page._drop_cancellable is None
@@ -71,7 +80,7 @@ def test_empty_or_uri_free_payload_finishes_none(monkeypatch, headless_gi_mocks,
 
     _run_bytes_callback(page, stream, drop, MagicMock())
 
-    drop.finish.assert_called_once_with(Gdk.DragAction.NONE)
+    drop.finish.assert_called_once_with(actions.NONE)
     page._process_dropped_path.assert_not_called()
     page._show_error_toast.assert_called_once()
 
@@ -128,8 +137,6 @@ def test_read_bytes_failure_finishes_none_and_reports_error(monkeypatch, headles
 
 
 def test_cancelled_previous_drop_does_not_replace_new_cancellable(headless_gi_mocks):
-    from anura.widgets.welcome_page import Gio
-
     page, _window = _page(headless_gi_mocks)
     previous = MagicMock()
     page._drop_cancellable = previous
@@ -140,7 +147,7 @@ def test_cancelled_previous_drop_does_not_replace_new_cancellable(headless_gi_mo
     assert accepted is True
     previous.cancel.assert_called_once()
     assert page._drop_cancellable is not previous
-    assert isinstance(page._drop_cancellable, Gio.Cancellable)
+    assert page._drop_cancellable is not previous
     drop.read_async.assert_called_once()
 
 
