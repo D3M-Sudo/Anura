@@ -320,3 +320,85 @@ def test_voice_catalog_worker_failure_resets_loading_state(monkeypatch, headless
     page = mod.PreferencesVoicePage()
 
     assert page._tts_catalog_loading is False
+
+
+def test_voice_catalog_result_after_disposal_does_not_update_combo(monkeypatch, headless_gi_mocks):
+    """A queued TTS catalog result must not mutate a destroyed Voice page."""
+    import anura.widgets.preferences_voice_page as mod
+
+    class Service:
+        def get_cached_supported_languages(self):
+            return None
+
+        def get_supported_languages(self):
+            return {"en": "English"}
+
+    class InlineThread:
+        def __init__(self, target, **_kwargs):
+            self.target = target
+
+        def start(self):
+            self.target()
+
+    queued_callbacks = []
+    monkeypatch.setattr(mod, "get_tts_service", lambda: Service())
+    monkeypatch.setattr(mod.threading, "Thread", InlineThread)
+    monkeypatch.setattr(mod.GLib, "idle_add", lambda callback, *args: queued_callbacks.append((callback, args)))
+
+    fake_settings = FakeSettings()
+    monkeypatch.setattr(mod, "settings", fake_settings)
+    page = mod.PreferencesVoicePage()
+    initial_model_calls = page.tts_language_combo.set_model.call_count
+    initial_selection_calls = page.tts_language_combo.set_selected.call_count
+
+    assert page._tts_catalog_loading is True
+    assert len(queued_callbacks) == 1
+
+    page.do_destroy()
+    callback, args = queued_callbacks.pop()
+    result = callback(*args)
+
+    assert result == mod.GLib.SOURCE_REMOVE
+    assert page.tts_language_combo.set_model.call_count == initial_model_calls
+    assert page.tts_language_combo.set_selected.call_count == initial_selection_calls
+    assert page._tts_catalog_loading is False
+
+
+def test_voice_catalog_result_updates_live_combo(monkeypatch, headless_gi_mocks):
+    """A valid TTS catalog result updates a Voice page that is still alive."""
+    import anura.widgets.preferences_voice_page as mod
+
+    class Service:
+        def get_cached_supported_languages(self):
+            return None
+
+        def get_supported_languages(self):
+            return {"en": "English"}
+
+    class InlineThread:
+        def __init__(self, target, **_kwargs):
+            self.target = target
+
+        def start(self):
+            self.target()
+
+    queued_callbacks = []
+    monkeypatch.setattr(mod, "get_tts_service", lambda: Service())
+    monkeypatch.setattr(mod.threading, "Thread", InlineThread)
+    monkeypatch.setattr(mod.GLib, "idle_add", lambda callback, *args: queued_callbacks.append((callback, args)))
+
+    fake_settings = FakeSettings()
+    monkeypatch.setattr(mod, "settings", fake_settings)
+    page = mod.PreferencesVoicePage()
+    initial_model_calls = page.tts_language_combo.set_model.call_count
+    initial_selection_calls = page.tts_language_combo.set_selected.call_count
+
+    assert page._tts_catalog_loading is True
+    callback, args = queued_callbacks.pop()
+    result = callback(*args)
+
+    assert result == mod.GLib.SOURCE_REMOVE
+    assert page.tts_language_combo.set_model.call_count == initial_model_calls + 1
+    assert page.tts_language_combo.set_selected.call_count == initial_selection_calls + 1
+    page.tts_language_combo.set_selected.assert_called_with(1)
+    assert page._tts_catalog_loading is False
