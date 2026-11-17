@@ -40,9 +40,7 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
         self._disposed = False
         self._network_cancellable: Gio.Cancellable | None = None
 
-        self.list_view.update_property(
-            [Gtk.AccessibleProperty.LABEL], [_("Available OCR models")]
-        )
+        self.list_view.update_property([Gtk.AccessibleProperty.LABEL], [_("Available OCR models")])
 
         # Dynamic language store initialization - use centralized get_language_item pattern
         for lang_code in get_language_manager().get_available_codes():
