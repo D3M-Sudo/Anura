@@ -134,7 +134,7 @@ P1 establishes foundational audits and justified gap closure; P2 completes cross
 
 **M1 deliverables:** design-system specification, shared style implementation where justified, component usage rules and automated theme/palette tests.
 
-**M1-02 completed:** the GTK4/Libadwaita-first typography, spacing and custom-radius conventions are documented in `docs/ui-design-system.md`; Blueprint/GTK CSS spacing is normalized and statically guarded. The shared numeric spacing scale is documented rather than expressed as CSS custom properties because GTK CSS does not support arbitrary numeric custom properties. One 6 px Welcome compact-action spacing exception is retained to preserve responsive geometry and is explicitly guarded by a regression test. M1 as a whole remains Partial.
+**M1-02 completed:** the GTK4/Libadwaita-first typography, spacing and custom-radius conventions are documented in `docs/ui-design-system.md`; Blueprint/GTK CSS spacing is normalized and statically guarded. The shared numeric spacing scale is documented rather than expressed as CSS custom properties because GTK CSS does not support arbitrary numeric custom properties. One 6 px Welcome compact-action spacing exception is retained to preserve responsive geometry and is explicitly guarded by a regression test. Historical status note: at the time of this M1-02 entry, the broader M1 phase remained Partial; the later M1-07 closure decision below supersedes that interim status.
 
 ### M2 — Welcome and navigation
 
