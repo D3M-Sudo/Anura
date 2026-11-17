@@ -326,6 +326,8 @@ def test_tab_and_shift_tab_follow_native_history_focus_order(real_history_window
 
 def test_expanded_history_row_keeps_suffix_actions_in_native_focus_chain(real_history_window):
     """Expanding and collapsing a row does not strand focus or remove its suffix actions."""
+    from gi.repository import Gtk
+
     window, page = real_history_window
     row = page._rows[1]
     buttons = _suffix_buttons(row)
