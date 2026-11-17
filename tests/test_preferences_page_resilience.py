@@ -354,6 +354,7 @@ def test_voice_catalog_result_after_disposal_does_not_update_combo(monkeypatch, 
     assert page._tts_catalog_loading is True
     assert len(queued_callbacks) == 1
 
+    monkeypatch.setattr(mod.Adw.PreferencesPage, "do_destroy", lambda _self: None, raising=False)
     page.do_destroy()
     callback, args = queued_callbacks.pop()
     result = callback(*args)
@@ -394,6 +395,7 @@ def test_voice_catalog_result_updates_live_combo(monkeypatch, headless_gi_mocks)
     initial_selection_calls = page.tts_language_combo.set_selected.call_count
 
     assert page._tts_catalog_loading is True
+    page.settings.values["tts-language"] = "en"
     callback, args = queued_callbacks.pop()
     result = callback(*args)
 
