@@ -120,8 +120,8 @@ def test_window_ocr_error_cleans_up_and_displays_message(headless_gi_mocks, monk
 
 
 def test_stale_ocr_result_does_not_navigate(headless_gi_mocks):
-    from anura.controllers.ocr_controller import OcrController
     from anura.controllers import ocr_controller as module
+    from anura.controllers.ocr_controller import OcrController
 
     controller = MagicMock()
     controller._window._is_current_ocr_operation.return_value = False
