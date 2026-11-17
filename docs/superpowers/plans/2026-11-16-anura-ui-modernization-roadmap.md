@@ -428,8 +428,8 @@ The [global roadmap](2026-11-16-anura-ui-modernization-global-roadmap.md) is the
 
 - No production source, permanent/temporary workflow, CHANGELOG, protected branch or PR metadata was changed for F-301/F-302 remediation.
 - PR #648 remains Open/Draft/unmerged, base `feature`, head `56d794502d84c0dfc392230867b4c90b6d08ee91`.
-- M3 remains Partial; this record does not close the full Extracted/History modernization phase.
-- **Next:** F-303-02 was attempted with native virtual keyboard input and is now suspended due to the current CI input-delivery limitation; F-303-03 is deferred pending later disposition. The workstream proceeds to the global M4-01 read-only audit.
+- M3 status at the time of this record was Partial; this interim status is superseded by the operational-closure record below.
+- **Historical next-step note:** F-303-02 CI input experiments were later stopped and moved to M7-03/#655; F-303-03 initial accessible-label assertions were subsequently added. The next current task is M4-02 planning.
 
 
 ## F-303-01 — History TTS action-label semantics (2026-11-17)
@@ -458,7 +458,7 @@ The [global roadmap](2026-11-16-anura-ui-modernization-global-roadmap.md) is the
 
 - No workflow, dependency, protected branch or PR metadata was changed.
 - PR #648 remains Open/Draft/unmerged, base `feature`.
-- M3 remains Partial. **F-303-02** automated keyboard-traversal tests are next; **F-303-03** direct assertions for History accessible action labels follow. Broader Extracted/History modernization remains open.
+- M3 status at the time of this record was Partial. The subsequent CI keyboard-traversal experiment was stopped and assigned to M7-03/#655; F-303-03 assertions were later added in `tests/test_history_ui.py`. See the M3 operational-closure record below.
 
 
 ## F-303-02 — suspended due to CI virtual-input limitation (2026-11-17)
@@ -485,7 +485,7 @@ The [global roadmap](2026-11-16-anura-ui-modernization-global-roadmap.md) is the
   - AppImage x86_64/aarch64 — still in progress at the last check. Flatpak and downstream artifact-validation jobs were skipped because GTK Integration failed.
   - No local tests or manual GNOME/GTK, Orca/AT-SPI or keyboard checks are claimed.
 - **Limits:** no local tests were run. No manual GNOME/GTK visual, real Orca/AT-SPI or keyboard checks are claimed; those remain excluded/deferred. No workflow, dependency, OCR engine/pipeline, protected branch or PR state changed.
-- **Global status:** M4 remains Partial because other Preferences mapping, secondary-language refresh/removal and Voice lifecycle coverage gaps remain. M4-01's four audited findings are remediated.
+- **Global status at the time of this record:** M4 remained Partial because other Preferences mapping, secondary-language refresh/removal and Voice lifecycle coverage gaps remained. M4-01's four audited findings are remediated; current gap disposition is recorded in M4-02 below.
 - **Next:** M5-01 — read-only audit of Shortcuts, About, dialogs, popovers, menus, banners, toasts and notifications.
 
 
@@ -580,3 +580,21 @@ M5-01 can proceed after this formal disposition; F-303-02 remains deferred until
 - **Manual verification disposition:** native GNOME/GTK visual inspection, real Orca/AT-SPI and physical keyboard traversal are allocated to M7. F-303-02 is tracked by [issue #655](https://github.com/D3M-Sudo/Anura/issues/655) for M7-03; it is deferred, not passed.
 - **Global programme status after closure:** M0 Completed; M1 Completed (operationally); M2 Completed (operationally); M3 Partial; M4 Partial; M5 Completed within agreed scope; M6 Partial; M7 Partial.
 - **CHANGELOG:** the existing `[Unreleased] / Fixed` entry already records the banner Dismiss correction; no additional changelog entry was needed for the phase-status decision.
+
+
+## M3 — operational closure within agreed scope (2026-11-17)
+
+- **Status:** Completed operationally within the bounded M3 remediation scope; this is not a claim that all future visual refinements or native accessibility checks are complete.
+- **Automated contracts:** Extracted selection/labels, OCR asynchronous lifecycle and announcements, History initial action accessible labels (Copy, Editor, TTS), History state semantics and GNOME 51 icon compatibility are covered by the audited test/code sequence.
+- **F-303-03:** no longer outstanding. `tests/test_history_ui.py` includes `test_history_row_actions_have_initial_accessible_labels`, covering the initial labels.
+- **F-303-02:** not passed; physical Tab/Shift+Tab traversal remains deferred to M7-03 under [#655](https://github.com/D3M-Sudo/Anura/issues/655).
+- **Native visual and real Orca/AT-SPI checks:** not performed; assigned to M7.
+- **Pre-merge note:** the M3 commit sequence contained a transient large deletion/restoration anomaly; the net audited delta is limited to five M3-related files. Review the history before merge.
+
+## M4-02 — remaining CI coverage gaps (next; not yet authorized)
+
+- M4-01 and M4-F01–F04 remain complete. Global M4 stays **Partial**.
+- CI-testable candidates: General color-scheme and secondary-language selection/refresh/removal mapping; Editor `word`/`char`/`none` mapping and persistence; Voice late-result-after-disposal; Preferences Languages page search/empty/install/remove/progress/cancellation/disposal lifecycle.
+- Native-only residual: actual physical keyboard traversal in the language selector and real Orca/AT-SPI verification remain M7 work. Existing direct handler invocation is not physical keyboard evidence.
+- M4-02 must add deterministic regression tests only where the CI environment can exercise the contract. A test gap alone does not justify production changes; a fix requires a reproduced defect and explicit bounded approval.
+- **Next permitted task:** prepare the M4-02 test plan for maintainer review. No M4-02 code/test implementation is authorized by this update.
