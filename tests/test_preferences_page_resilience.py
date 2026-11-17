@@ -98,9 +98,7 @@ def test_editor_wrap_mode_setting_initializes_combo(monkeypatch, headless_gi_moc
     ("selected_index", "expected_mode"),
     [(0, "word"), (1, "char"), (2, "none"), (99, "word")],
 )
-def test_editor_wrap_mode_selection_persists_setting(
-    monkeypatch, headless_gi_mocks, selected_index, expected_mode
-):
+def test_editor_wrap_mode_selection_persists_setting(monkeypatch, headless_gi_mocks, selected_index, expected_mode):
     """Selecting a wrap mode persists its matching GSettings value."""
     page, fake_settings = _make_editor_page(monkeypatch)
     page.editor_wrap_mode_combo.get_selected.return_value = selected_index
