@@ -92,3 +92,105 @@ def test_ocr_status_reannounces_after_status_clear(headless_gi_mocks):
         "Loading image",
         "Loading image",
     ]
+
+def _make_extracted_search_page(extracted_page, *, count: int, search_text: str = "Anura"):
+    page = MagicMock()
+    page.search_count_label = MagicMock()
+    page.search_settings.get_search_text.return_value = search_text
+    page.search_context.get_occurrences_count.return_value = count
+    page.search_entry = MagicMock()
+    page._search_announce_timeout_id = None
+    page._cancel_search_announcement = lambda: extracted_page.ExtractedPage._cancel_search_announcement(page)
+    page._announce_search_results = lambda: extracted_page.ExtractedPage._announce_search_results(page)
+    return page
+
+
+def test_search_in_progress_updates_visible_and_accessible_labels(headless_gi_mocks, monkeypatch):
+    import anura.widgets.extracted_page as extracted_page
+
+    page = _make_extracted_search_page(extracted_page, count=-1)
+    timeout_add = MagicMock()
+    monkeypatch.setattr(extracted_page.GLib, "timeout_add", timeout_add)
+
+    extracted_page.ExtractedPage._on_search_occurrences_changed(page, page.search_context, None)
+
+    page.search_count_label.set_text.assert_called_once_with("Searching…")
+    assert page.search_entry.update_property.call_args.args[1] == [
+        "Search extracted text (Searching…)"
+    ]
+    timeout_add.assert_not_called()
+
+
+def test_single_search_result_is_announced_after_400ms_with_low_priority(
+    headless_gi_mocks, monkeypatch
+):
+    import anura.widgets.extracted_page as extracted_page
+
+    page = _make_extracted_search_page(extracted_page, count=1)
+    timeout_add = MagicMock(return_value=303)
+    announcements = MagicMock()
+    monkeypatch.setattr(extracted_page.GLib, "timeout_add", timeout_add)
+    monkeypatch.setattr(extracted_page, "announce_accessible", announcements)
+
+    extracted_page.ExtractedPage._on_search_occurrences_changed(page, page.search_context, None)
+
+    page.search_count_label.set_text.assert_called_once_with("1 match")
+    assert page.search_entry.update_property.call_args.args[1] == [
+        "Search extracted text (1 match)"
+    ]
+    timeout_add.assert_called_once_with(400, page._announce_search_results)
+
+    extracted_page.ExtractedPage._announce_search_results(page)
+
+    assert announcements.call_args.args == (
+        page.search_entry,
+        "1 match",
+        extracted_page.Gtk.AccessibleAnnouncementPriority.LOW,
+    )
+
+
+def test_zero_search_results_are_announced_as_no_matches(headless_gi_mocks, monkeypatch):
+    import anura.widgets.extracted_page as extracted_page
+
+    page = _make_extracted_search_page(extracted_page, count=0)
+    monkeypatch.setattr(extracted_page.GLib, "timeout_add", MagicMock(return_value=404))
+    announcements = MagicMock()
+    monkeypatch.setattr(extracted_page, "announce_accessible", announcements)
+
+    extracted_page.ExtractedPage._on_search_occurrences_changed(page, page.search_context, None)
+
+    page.search_count_label.set_text.assert_called_once_with("No matches")
+    assert page.search_entry.update_property.call_args.args[1] == [
+        "Search extracted text (No matches)"
+    ]
+
+    extracted_page.ExtractedPage._announce_search_results(page)
+
+    assert announcements.call_args.args == (
+        page.search_entry,
+        "No matches",
+        extracted_page.Gtk.AccessibleAnnouncementPriority.LOW,
+    )
+
+
+def test_clearing_search_restores_accessible_label_and_cancels_pending_announcement(
+    headless_gi_mocks, monkeypatch
+):
+    import anura.widgets.extracted_page as extracted_page
+
+    page = _make_extracted_search_page(extracted_page, count=2)
+    page._search_announce_timeout_id = 505
+    entry = page.search_entry
+    entry.get_text.return_value = ""
+    source_remove = MagicMock()
+    monkeypatch.setattr(extracted_page.GLib, "source_remove", source_remove)
+
+    extracted_page.ExtractedPage._on_search_text_changed(page, entry)
+
+    source_remove.assert_called_once_with(505)
+    assert page._search_announce_timeout_id is None
+    page.search_settings.set_search_text.assert_called_once_with(None)
+    page.search_context.set_highlight.assert_called_once_with(False)
+    page.search_count_label.set_text.assert_called_once_with("")
+    assert entry.update_property.call_args.args[1] == ["Search extracted text"]
+
