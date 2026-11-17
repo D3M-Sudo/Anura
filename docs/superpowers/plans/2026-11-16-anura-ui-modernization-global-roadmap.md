@@ -781,3 +781,15 @@ No M4-02 implementation is authorized by this documentation update. M6-01 remain
 - **Evidence:** CI [#44188821619](https://github.com/D3M-Sudo/Anura/actions/runs/44188821619) passed, including Python Quality (**682 passed, 6 skipped, 287 deselected**), GTK Integration, Changelog Integrity, AppImage and Flatpak builds for x86_64/aarch64, and release-artifact validation. CodeQL [#44188821605](https://github.com/D3M-Sudo/Anura/actions/runs/44188821605) passed.
 - **Limitations:** no native/manual GNOME, physical keyboard, Orca or AT-SPI verification is claimed; those remain in M7. No CHANGELOG entry was warranted because this task adds tests only and changes no product behavior.
 - **Next:** M4-02 Task 2 — Editor wrap-mode mapping and persistence.
+
+
+## 2026-11-18 — M4-02 Task 2: Editor Preferences coverage
+
+- **Status:** Task 2 Completed within the approved scope; global M4 remains **Partial**.
+- **Coverage:** headless tests now cover Editor wrap-mode initialization and persistence for `word`, `char` and `none`, including unknown-value and invalid-index fallbacks. A dedicated GTK integration module verifies the real Editor Preferences page against an isolated Gio memory GSettings backend; all three parametrized integration cases passed.
+- **Production changes:** none. Only `tests/test_preferences_page_resilience.py` and `tests/test_preferences_editor_integration.py` changed for this task. No new dependency or workflow was added.
+- **Exact implementation head:** `cae8b8c27114daf59fab96ebefdd377b3efb76ae`.
+- **Evidence:** [CI #44195812990](https://github.com/D3M-Sudo/Anura/actions/runs/44195812990) passed: Python Quality **690 passed, 6 skipped, 290 deselected**; GTK Integration **460 passed, 6 skipped, 696 deselected**, including all three Editor/GSettings cases; Changelog Integrity, AppImage and Flatpak builds for x86_64/aarch64, AppImage release-set and multi-architecture artifact validation passed. [CodeQL #44195813017](https://github.com/D3M-Sudo/Anura/actions/runs/44195813017) passed.
+- **Limitations:** skipped/deselected tests are not claimed as executed. No local tests, native visual inspection, physical keyboard traversal or real Orca/AT-SPI checks are claimed; native checks remain assigned to M7.
+- **Remaining M4-02 tasks:** Voice late-result-after-disposal (Task 3) and Languages search/filter/lifecycle (Task 4). M4 must remain Partial until these approved CI-testable gaps are addressed or explicitly dispositioned.
+- **Next:** Task 3 — Voice late-result-after-disposal coverage; requires maintainer authorization.
