@@ -599,3 +599,15 @@ M5-01 can proceed after this formal disposition; F-303-02 remains deferred until
 - Native-only residual: actual physical keyboard traversal in the language selector and real Orca/AT-SPI verification remain M7 work. Existing direct handler invocation is not physical keyboard evidence.
 - M4-02 must add deterministic regression tests only where the CI environment can exercise the contract. A test gap alone does not justify production changes; a fix requires a reproduced defect and explicit bounded approval.
 - **Next permitted task:** prepare the M4-02 test plan for maintainer review. No M4-02 code/test implementation is authorized by this update.
+
+
+## M4-02 Task 1 — General Preferences mapping and extra-language behavior (2026-11-17)
+
+- **Outcome:** Completed — headless coverage for General Preferences color-scheme initialization/persistence, extra-language mapping/persistence, and active-language removal/reset with model refresh.
+- **Files changed for implementation:** `tests/test_preferences_page_resilience.py` only; no production files changed.
+- **Commits:** `fbbbf00d063ed7638aca488d99aae0d98d1603ef` (tests), `b8af80b3931957f4eeae7ea39e77431fec2e5d24` (formatting), `c5f820aac1a722c42bb79f5ebcbbf6fea17a0c7a` (assert final selected value).
+- **CI:** [Quality/build run #44188821619](https://github.com/D3M-Sudo/Anura/actions/runs/44188821619) passed. Python Quality: Ruff, formatting, mypy, Bandit, pytest and F-005 all passed; pytest reported **682 passed, 6 skipped, 287 deselected**. GTK Integration passed. Changelog Integrity passed. AppImage x86_64/aarch64, Flatpak x86_64/aarch64, AppImage release-set and multi-architecture artifact validation passed; publish-release was skipped as expected for a PR. [CodeQL #44188821605](https://github.com/D3M-Sudo/Anura/actions/runs/44188821605) passed.
+- **Test correction:** the first test run exposed four assertion failures caused by checking mock invocation count across parametrized initialization cases. The assertion now checks the final selected value; the next full CI passed. This was a test assertion correction, not a production defect; no RED→GREEN production fix was needed.
+- **Limitations:** CI ran against the PR merge ref; no local tests are claimed. The 6 skipped and 287 deselected tests remain outside this run's executed pytest set. No native keyboard, Orca/AT-SPI or manual visual result is claimed.
+- **Next permitted task:** Task 2 — Editor wrap-mode mapping and persistence, under the already approved M4-02 plan. M4 remains Partial.
+- **Governance:** PR #648 remains Open/Draft/unmerged, target `feature`; no protected branch was changed.
