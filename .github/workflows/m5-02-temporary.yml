@@ -31,8 +31,7 @@ jobs:
         run: |
           pip install "ruff==0.17.5"
           ruff check --fix tests/test_m5_02_*.py
-          sed -n '1,32p' tests/test_m5_02_menu_actions.py
-          sed -n '1,32p' tests/test_m5_02_ui_contracts.py
+          git diff -- tests/test_m5_02_menu_actions.py tests/test_m5_02_ui_contracts.py
 
       - name: Install GTK and Wayland test dependencies
         run: |
