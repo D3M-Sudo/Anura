@@ -94,13 +94,9 @@ def test_general_init_completes_normally(monkeypatch, headless_gi_mocks):
     ("stored_scheme", "expected_index"),
     [("default", 0), ("force-light", 1), ("force-dark", 2), ("unknown", 0)],
 )
-def test_general_color_scheme_setting_initializes_combo(
-    monkeypatch, headless_gi_mocks, stored_scheme, expected_index
-):
+def test_general_color_scheme_setting_initializes_combo(monkeypatch, headless_gi_mocks, stored_scheme, expected_index):
     """The stored color-scheme value selects its corresponding combo item."""
-    page, _settings, _manager = _make_general_page(
-        monkeypatch, settings_values={"color-scheme": stored_scheme}
-    )
+    page, _settings, _manager = _make_general_page(monkeypatch, settings_values={"color-scheme": stored_scheme})
 
     page.color_scheme_combo.set_selected.assert_called_once_with(expected_index)
 
@@ -152,9 +148,7 @@ def test_general_extra_language_selection_persists_language_code(monkeypatch, he
     assert fake_settings.get_string("extra-language") == "ita"
 
 
-def test_general_removing_active_extra_language_clears_setting_and_refreshes_model(
-    monkeypatch, headless_gi_mocks
-):
+def test_general_removing_active_extra_language_clears_setting_and_refreshes_model(monkeypatch, headless_gi_mocks):
     """Removing the configured extra language clears it and refreshes choices."""
     manager = MagicMock()
     manager.get_downloaded_languages.return_value = ["English"]
