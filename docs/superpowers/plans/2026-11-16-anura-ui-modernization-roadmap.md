@@ -467,10 +467,16 @@ The [global roadmap](2026-11-16-anura-ui-modernization-global-roadmap.md) is the
 - **Diagnostics:** three failures were at the input-delivery boundary (Weston/XTest request not observed by GTK); one delivered Tab event did not move focus from the collapsed TextView. The latter is not classified as an app defect because the test route is not yet reliable.
 - **Decision:** stop further F-303-02 CI input experiments. F-303-02 is suspended; F-303-03 remains deferred pending later disposition. No further workflow, test, production or dependency changes were made.
 
-## M4-01 — Preferences and language selector audit (2026-11-17)
+## M4-01 — Preferences and language selector audit + remediation (2026-11-17)
 
-- **Outcome:** completed — read-only audit. Report: [M4-01 audit](../../audit/preferences-languages-m4-01-2026-11-17.md).
-- **Findings:** M4-F01 P2 network-probe/source mismatch; M4-F02 P2 asynchronous reachability callback lacks cancellation/disposal guard; M4-F03 P3 stale GLib idle IDs retained by LanguageRow; M4-F04 P2 accessibility/coverage gap for the Preferences language ListView's missing explicit accessible name.
-- **Coverage:** existing tests exercise selected settings mappings, TTS volume/cache behavior, language model-quality cache invalidation, LanguageRow announcements and main selector filtering/selection. Gaps remain for General/Editor mappings, extra-language refresh/removal, page disposal during network/TTS callbacks and LanguageRow idle-source cleanup.
-- **Evidence boundary:** read-only source, Blueprint, GSettings schema and test-definition inspection; no tests or manual runtime accessibility checks were run.
-- **Next:** prepare a separate bounded remediation/disposition proposal for M4-F01–F04; no implementation is authorized by this audit.
+- **Outcome:** completed within approved scope: read-only audit followed by remediation of all four findings M4-F01–F04. Report: [M4-01 audit](../../audit/preferences-languages-m4-01-2026-11-17.md).
+- **M4-F01:** network reachability now probes the hostname from `TESSDATA_URL` over HTTPS instead of `google.com`.
+- **M4-F02:** PreferencesLanguagesPage owns a cancellable, cancels superseded checks and cancels on destruction; late or stale callbacks are ignored before touching widgets.
+- **M4-F03:** LanguageRow now tracks one-shot idle refreshes through `_schedule_idle_update()` and prunes each source ID when its callback starts.
+- **M4-F04:** the Preferences OCR model ListView has the localized accessible label “Available OCR models”; the gettext POT template includes the new message.
+- **Regression tests:** added `tests/test_preferences_languages_lifecycle.py` with four focused tests covering configured source host, cancellation/late callback after disposal, completed idle-source cleanup and the accessible ListView name.
+- **Changed files:** `anura/widgets/preferences_languages_page.py`, `anura/widgets/language_row.py`, `tests/test_preferences_languages_lifecycle.py`, `CHANGELOG.md`, `po/io.github.d3m_sudo.anura.pot`, and the M4-01 audit report.
+- **Verification:** Python quality (Ruff lint/format, Mypy, Bandit, Vulture, coverage tests and Flatpak runtime dependency coverage) and Changelog integrity passed on code head `ade9950264588fdfe6ee7fa25938300fabe006a3`, CI [#44109387223](https://github.com/D3M-Sudo/Anura/actions/runs/44109387223). Full GTK Integration, AppImage x86_64/aarch64 and CodeQL results must be reconciled against the final documentation-inclusive head before final verification is claimed.
+- **Limits:** no local tests were run. No manual GNOME/GTK visual, real Orca/AT-SPI or keyboard checks are claimed; those remain excluded/deferred. No workflow, dependency, OCR engine/pipeline, protected branch or PR state changed.
+- **Global status:** M4 remains Partial because other Preferences mapping, secondary-language refresh/removal and Voice lifecycle coverage gaps remain. M4-01's four audited findings are remediated.
+- **Next:** M5-01 — read-only audit of Shortcuts, About, dialogs, popovers, menus, banners, toasts and notifications.
