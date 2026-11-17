@@ -6,15 +6,20 @@ This document transfers the context required to continue the UI modernization wo
 
 This handover records the adapted implementation and its remaining validation. The modernization work is now present on `fix/ui-modernization-aligned`; it was adapted against `feature` rather than copied wholesale from PR #448.
 
-## Current operational snapshot — M2 operational closure (2026-11-17)
+## Current operational snapshot — M3-01 audit and F-301/F-302 remediation (2026-11-17)
 
-- **Authoritative global status:** M0 Completed; M1 Completed (operationally); **M2 Completed (operationally)**; M3 Partial; M4 Partial; M5 Not started as a complete phase; M6 Partial; M7 Partial.
+- **Authoritative global status:** M0 Completed; M1 Completed (operationally); **M2 Completed (operationally)**; **M3 Partial**; M4 Partial; M5 Not started as a complete phase; M6 Partial; M7 Partial.
+- **M3-01 audit:** Extracted and History baseline audit completed read-only. No production defect was established. F-301 was a contradictory test expectation against the chosen A1 refresh-preservation contract; F-302 was a limited search-announcement edge-case coverage gap (an existing debounced plural-result test was already present).
+- **F-301:** updated `tests/test_history_expansion_real.py` to verify refresh restores the same still-existing expanded entry and maintains single-row expansion. Commits: `e7ee3032bc375ea953c18a809b2ccd42a9397aad`, formatting-only `0988708e88a162417a9622500c813ae3c1a98dac`.
+- **F-302:** expanded `tests/test_accessible_status_announcements.py` for Searching state, singular announcement after 400 ms at LOW priority, zero results and clearing/cancelling pending announcement. Stable LOW-priority sentinel fix is in `56d794502d84c0dfc392230867b4c90b6d08ee91`.
+- **Exact-head validation:** CI [#2497](https://github.com/D3M-Sudo/Anura/actions/runs/44006990401) and CodeQL [#699](https://github.com/D3M-Sudo/Anura/actions/runs/44006990338) both succeeded on `56d794502d84c0dfc392230867b4c90b6d08ee91`. Python quality, Changelog integrity, GTK Integration, AppImage/Flatpak x86_64+aarch64 builds and release artifact validators passed; `publish-release` was skipped as expected for a PR.
+- **Evidence limitations:** no local test execution or TDD red→green demonstration is claimed. CI does not establish real Orca/AT-SPI or manual keyboard behavior; those checks remain excluded/deferred. F-303 (History action labels and keyboard traversal) remains unaudited.
 - **M2-G01 completed:** History → Welcome focus behavior passed exact-head CI on `7d34cf8f92435c85d9ba3537ead42c7bb98519a4`.
 - **M2-G02 completed:** asynchronous Welcome drag-and-drop and eight regression tests passed on exact head `f52e437d9bdfdf6200d26449152e3ffeeacc14be`. CI [#43995410588](https://github.com/D3M-Sudo/Anura/actions/runs/43995410588) and CodeQL [#43995410567](https://github.com/D3M-Sudo/Anura/actions/runs/43995410567) both succeeded on that exact head. Python quality: 652 passed, 6 skipped, 279 deselected; GTK Integration, Changelog integrity, AppImage x86_64/aarch64, Flatpak x86_64/aarch64 and release artifact validation passed. `publish-release` was skipped as expected for a PR.
 - **Operational closure decision:** the maintainer selected option A. All M2 requirements selected for automated verification are complete. Manual GNOME/GTK visual, keyboard and real Orca/AT-SPI checks are deferred to M7 and are not claimed as passed. Live multi-monitor verification remains excluded. App-wide menu consistency and intentional menu differences are deferred to M5.
 - The [global roadmap](docs/superpowers/plans/2026-11-16-anura-ui-modernization-global-roadmap.md) owns current phase status, priorities, dependencies and global traceability. The [PR #648 roadmap](docs/superpowers/plans/2026-11-16-anura-ui-modernization-roadmap.md) owns detailed PR workstream history and exact-SHA evidence.
 - PR #648 was rechecked: Open, Draft, unmerged, base `feature`, head branch `fix/ui-modernization-aligned`. No PR metadata/state change or merge was made.
-- No protected branch was modified. This documentation update does not authorize M3 implementation; M3-01 remains a read-only audit.
+- No protected branch was modified. M3-01 audit and F-301/F-302 bounded test remediation are recorded; M3 remains Partial. F-303 is the next read-only audit, and no F-303 implementation is authorized.
 
 
 ## Current Git state
