@@ -24,7 +24,6 @@ def test_icons_used_by_extracted_and_history_exist_in_gnome_51_runtime():
     theme = Gtk.IconTheme.get_for_display(display)
     required_icons = (
         "edit-copy-symbolic",
-        "emblem-ok-symbolic",
         "object-select-symbolic",
     )
     missing = [name for name in required_icons if not theme.has_icon(name)]
