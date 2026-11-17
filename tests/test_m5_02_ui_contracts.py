@@ -9,14 +9,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
-
 ROOT = Path(__file__).resolve().parents[1]
-
 
 
 pytest.importorskip("gi")
 import gi  # noqa: E402
-
 from gi.repository import Adw, Gdk, Gio  # noqa: E402
 
 gi.require_version("Adw", "1")
