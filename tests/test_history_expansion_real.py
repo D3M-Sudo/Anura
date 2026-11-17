@@ -247,3 +247,124 @@ def test_copy_button_still_copies_the_full_text_with_the_row_expanded(real_histo
     copy_button.emit("clicked")
 
     controller.copy_entry_text.assert_called_once_with(LONG_TEXT)
+
+
+def _focus_traversal(window, direction, limit: int = 40):
+    """Advance GTK's native focus chain and return each widget that received focus."""
+    focused = []
+    for _ in range(limit):
+        if not window.child_focus(direction):
+            break
+        widget = window.get_focus()
+        assert widget is not None, "GTK reported focus movement without a focused widget"
+        focused.append(widget)
+    else:
+        pytest.fail("GTK focus traversal did not terminate within the safety limit")
+    return focused
+
+
+@pytest.fixture
+def real_history_window(real_history):
+    """Present the real HistoryPage so GTK can calculate its native focus chain."""
+    from gi.repository import GLib, Gtk
+
+    page, _service, _controller = real_history
+    window = Gtk.Window(default_width=720, default_height=600)
+    window.set_child(page)
+    window.present()
+
+    context = GLib.MainContext.default()
+    deadline = time.monotonic() + 2.0
+    while context.pending() and time.monotonic() < deadline:
+        context.iteration(False)
+
+    yield window, page
+
+    window.destroy()
+
+
+def _suffix_buttons(row):
+    from gi.repository import Gtk
+
+    buttons = _find_all(row, Gtk.Button)
+    by_label = {button.get_tooltip_text(): button for button in buttons}
+    return [
+        by_label["Copy text to clipboard"],
+        by_label["Open in external editor"],
+        by_label["Listen to text"],
+    ]
+
+
+def _assert_subsequence(actual, expected):
+    """Assert that expected widgets occur in GTK's focus sequence in the given order."""
+    positions = [actual.index(widget) for widget in expected]
+    assert positions == sorted(positions)
+
+
+def test_tab_and_shift_tab_follow_native_history_focus_order(real_history_window):
+    """Real GTK focus traversal reaches each row header and its enabled suffix actions."""
+    from gi.repository import Gtk
+
+    window, page = real_history_window
+    rows = page._rows
+    assert len(rows) == 3
+
+    # Enable the TTS suffixes for this integration fixture without invoking speech.
+    # The controller mock is shared by the page's history and TTS interfaces.
+    controller = page._history_controller()
+    controller.can_listen_for_language.return_value = True
+    page._tts_controller = __import__("weakref").ref(controller)
+    page.refresh()
+
+    expected = [button for row in page._rows for button in _suffix_buttons(row)]
+    assert all(button.get_sensitive() for button in expected)
+
+    assert page._rows[0].grab_focus(), "the first History row must accept keyboard focus"
+    forward = _focus_traversal(window, Gtk.DirectionType.TAB_FORWARD)
+    _assert_subsequence(forward, expected)
+
+    assert expected[-1].grab_focus(), "the last TTS action must accept keyboard focus"
+    backward = _focus_traversal(window, Gtk.DirectionType.TAB_BACKWARD)
+    _assert_subsequence(backward, list(reversed(expected)))
+
+
+def test_expanded_history_row_keeps_suffix_actions_in_native_focus_chain(real_history_window):
+    """Expanding and collapsing a row does not strand focus or remove its suffix actions."""
+    from gi.repository import Gtk
+
+    window, page = real_history_window
+    row = page._rows[1]
+    buttons = _suffix_buttons(row)
+
+    row.set_expanded(True)
+    assert _find_all(row, Gtk.TextView)
+    assert buttons == _suffix_buttons(row)
+
+    assert buttons[0].grab_focus()
+    expanded_forward = _focus_traversal(window, Gtk.DirectionType.TAB_FORWARD)
+    _assert_subsequence(expanded_forward, buttons)
+
+    row.set_expanded(False)
+    assert row.get_expanded() is False
+    assert buttons[0].grab_focus()
+    collapsed_forward = _focus_traversal(window, Gtk.DirectionType.TAB_FORWARD)
+    _assert_subsequence(collapsed_forward, buttons)
+
+
+def test_expanding_another_row_preserves_focus_traversal(real_history_window):
+    """Single-open-row behavior remains compatible with GTK focus traversal."""
+    from gi.repository import Gtk
+
+    window, page = real_history_window
+    first, second, _third = page._rows
+    first.set_expanded(True)
+    second.set_expanded(True)
+
+    assert first.get_expanded() is False
+    assert second.get_expanded() is True
+
+    expected = [button for row in page._rows for button in _suffix_buttons(row)]
+    assert expected[0].grab_focus()
+    forward = _focus_traversal(window, Gtk.DirectionType.TAB_FORWARD)
+    _assert_subsequence(forward, expected)
+
