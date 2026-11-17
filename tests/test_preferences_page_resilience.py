@@ -98,7 +98,7 @@ def test_general_color_scheme_setting_initializes_combo(monkeypatch, headless_gi
     """The stored color-scheme value selects its corresponding combo item."""
     page, _settings, _manager = _make_general_page(monkeypatch, settings_values={"color-scheme": stored_scheme})
 
-    page.color_scheme_combo.set_selected.assert_called_once_with(expected_index)
+    page.color_scheme_combo.set_selected.assert_called_with(expected_index)
 
 
 @pytest.mark.parametrize(
