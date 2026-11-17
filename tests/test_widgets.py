@@ -1188,16 +1188,23 @@ class TestM3ExtractedSelection:
             button.update_property = MagicMock(wraps=original_update_property)
 
         widget._update_action_tooltips(False)
+        widget._update_action_tooltips(True)
 
-        widget.text_copy_btn.update_property.assert_called_once_with(
-            [Gtk.AccessibleProperty.LABEL],
-            ["Copy Extracted Text to Clipboard (Ctrl+C)"],
+        widget.text_copy_btn.update_property.assert_has_calls(
+            [
+                call([Gtk.AccessibleProperty.LABEL], ["Copy Extracted Text to Clipboard (Ctrl+C)"]),
+                call([Gtk.AccessibleProperty.LABEL], ["Copy Selected Text to Clipboard (Ctrl+C)"]),
+            ]
         )
-        widget.listen_btn.update_property.assert_called_once_with(
-            [Gtk.AccessibleProperty.LABEL],
-            ["Listen to Text (Ctrl+L)"],
+        widget.listen_btn.update_property.assert_has_calls(
+            [
+                call([Gtk.AccessibleProperty.LABEL], ["Listen to Text (Ctrl+L)"]),
+                call([Gtk.AccessibleProperty.LABEL], ["Listen to Selected Text (Ctrl+L)"]),
+            ]
         )
-        widget.share_button.update_property.assert_called_once_with(
-            [Gtk.AccessibleProperty.LABEL],
-            ["Share To"],
+        widget.share_button.update_property.assert_has_calls(
+            [
+                call([Gtk.AccessibleProperty.LABEL], ["Share To"]),
+                call([Gtk.AccessibleProperty.LABEL], ["Share Selection To"]),
+            ]
         )
