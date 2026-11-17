@@ -103,7 +103,7 @@ M0-C consolidated the operational backlog. The task list is a planning baseline,
 | M1-06 | P1 | **Completed within approved scope.** F1 reduced-motion handling in Shortcuts; F2 production-tree color-scanner enforcement in pytest. Exact-SHA CI and CodeQL passed; F3/F4 were subsequently addressed by the M1-07 follow-up recorded below. | M1-05; explicit approval received | Initial/live motion preferences, older-GTK fallback, close/dispose cleanup, root motion suppression, production-tree scanner and path/value rationale allowlist covered by tests; final AppImage aarch64 build, metadata verification, clean-host smoke test and artifact upload passed. F3/F4 were subsequently addressed by the M1-07 follow-up recorded below. |
 | M2-01 | P1 | Complete the residual Welcome/main-shell audit, including navigation, states and focus affordances. | M2-E, M2-F | Requirement-to-surface matrix, findings and test gaps; separate automated evidence from excluded manual checks. |
 | M3-01 | P1 | Full Extracted and History audit: states, actions, scrolling, list/row/empty/confirmation behavior. | M1-05 | Surface/state inventory, behavior-preservation map, findings and test gaps; no OCR internals or mockup-only features. |
-| M4-01 | P1 | Full Preferences and language-selector audit across General, Editor, Voice, Languages and asynchronous states. | M1-05 | Page/state matrix, lifecycle/accessibility findings and test gaps; preserve settings semantics. |
+| M4-01 | P1 | **Completed — read-only audit**; report: [M4-01 audit](../../audit/preferences-languages-m4-01-2026-11-17.md). | M1-05 | General/Editor/Voice/Languages and main selector audited; page/state matrix, lifecycle/accessibility findings M4-F01–F04 and test gaps recorded. M4 remains Partial pending maintainer disposition. |
 | M5-01 | P2 | Audit Shortcuts, About, dialogs, popovers, menus, banners, toasts and notifications. | M1-05 | Component/state inventory and evidence-backed disposition; coherent surfaces may remain unchanged. |
 | M6-01 | P2 | Cross-window responsive/accessibility coverage matrix and approved automated-test gap closure. | M2-01, M3-01, M4-01, M5-01 | Reference viewport matrix plus focus, naming, announcements, contrast and reduced-motion evidence; exclusions explicit. |
 | M7-01 | P2 | Define the global integration and final validation plan. | M1-05 through M6-01; M1-06 disposition | Traceability/validation plan, exact evidence requirements, translation review and deferred screenshot timing. |
@@ -636,3 +636,22 @@ After every completed task, append/update the relevant phase and record:
 - **Evidence limits:** no local test execution or TDD red→green demonstration is claimed. Automated tests verify label/tooltip state transitions; they do not establish real Orca/AT-SPI behavior or manual keyboard traversal. Those checks remain excluded/deferred under the existing decision.
 - **Governance:** PR #648 remains Open, Draft and unmerged, base `feature`. No protected branch, workflow or PR metadata was changed. The implementation/test SHA above is the exact SHA validated by CI; subsequent documentation-only commits are not covered by those runs.
 - **M3 status:** remains **Partial**. F-303-01 is complete; F-303-02 automated keyboard traversal tests are next, followed by F-303-03 direct accessible-label assertions. Broader Extracted/History modernization remains open.
+
+
+## F-303-02 — CI keyboard-input limitation and suspension (2026-11-17)
+
+- **Disposition:** suspended as an automated real-keyboard traversal test task; no further changes to the test harness are authorized or planned in this work cycle.
+- **Evidence commit:** `84ff4d50a3291b4328d28e657b251144d979e9c6`.
+- **CI:** [Quality & Release #44040005554](https://github.com/D3M-Sudo/Anura/actions/runs/44040005554) failed in GTK Integration Tests; [CodeQL #44040005537](https://github.com/D3M-Sudo/Anura/actions/runs/44040005537) succeeded on the same source/test commit.
+- **Observed result:** GTK Integration reported 4 failed, 449 passed, 5 skipped and 663 deselected. Three tests received no key event at GTK's toplevel `EventControllerKey` after the test helper invoked `xdotool` against the Weston X11 host window. One test did observe Tab at GTK but focus remained on the collapsed `Gtk.TextView`.
+- **Diagnostic boundary:** Xvfb :99, Weston X11 backend, Wayland socket and a keyboard-capable `wl_seat` were available. The current XTest → Weston → Wayland → GTK route nevertheless did not reliably deliver key events to the GTK client. The logs do not prove that every possible CI input mechanism is impossible; they establish that the currently configured route is not a reliable verification mechanism.
+- **Conclusion:** do not classify these failures as a confirmed Anura application defect. The one focus-retention case remains unproven because the full keyboard traversal environment is not reliable. Do not claim keyboard traversal passed.
+- **Next:** suspend F-303-02 and defer F-303-03 until its dependency/order is reconsidered. Continue with the next global audit M4-01. No production code, workflow or dependency changes were made after this diagnostic commit.
+
+## M4-01 — Preferences and language selector audit (2026-11-17)
+
+- **Status:** Completed — read-only audit. Report: [M4-01 Preferences and language selector audit](../../audit/preferences-languages-m4-01-2026-11-17.md).
+- **Scope:** General, Editor, Voice and Languages Preferences pages; main language selector/popover; language rows; GSettings schema; LanguageManager signal contract; related test coverage.
+- **Findings:** M4-F01 P2 (network probe checks `google.com`, while OCR model downloads use GitHub); M4-F02 P2 (OCR reachability callback has no cancellation/disposal guard); M4-F03 P3 (LanguageRow retains completed idle source IDs); M4-F04 P2 coverage/accessibility gap (Preferences language ListView has no explicit accessible name).
+- **Evidence:** source/template/schema/test-definition inspection only; no runtime tests or manual AT-SPI/keyboard verification were run for this audit.
+- **Disposition:** global M4 remains Partial. Findings and test gaps require separate maintainer disposition; this audit does not authorize implementation.
