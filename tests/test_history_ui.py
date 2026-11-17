@@ -765,8 +765,6 @@ def test_tts_action_is_disabled_when_language_cannot_be_resolved(headless_gi_moc
 
 
 def test_tts_button_labels_describe_the_current_action(headless_gi_mocks):
-    from anura.widgets.history_page import HistoryPage
-
     page = _make_page(headless_gi_mocks)
     button = MagicMock()
     page._tts_buttons = {"entry": button}
