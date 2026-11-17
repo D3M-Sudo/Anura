@@ -770,3 +770,14 @@ M4-01 and remediations M4-F01–F04 are complete. The following coverage gaps re
 M4-02 must first inspect existing tests and public GTK/Gio seams, then add only deterministic tests that can run in the existing GitHub Actions environment. A missing test is not evidence of a production defect: production changes require a reproduced failing behavior and a separate, narrowly justified fix. Any CI-unreliable keyboard traversal remains explicitly deferred to M7. M4 must not be marked complete until the approved CI-testable gaps have been addressed or explicitly dispositioned with evidence.
 
 No M4-02 implementation is authorized by this documentation update. M6-01 remains sequenced after M4-02.
+
+
+## M4-02 Task 1 — General Preferences automated coverage (2026-11-17)
+
+- **Status:** Completed within the approved M4-02 scope; global M4 remains Partial.
+- **Coverage:** General Preferences color-scheme initialization and persistence mappings, extra-language selection/persistence, and active-language removal/reset plus model refresh are now covered by headless regression tests in `tests/test_preferences_page_resilience.py`.
+- **Production changes:** none. A test assertion was corrected after the first pytest run; the final full CI passed.
+- **Exact implementation head:** `c5f820aac1a722c42bb79f5ebcbbf6fea17a0c7a`.
+- **Evidence:** CI [#44188821619](https://github.com/D3M-Sudo/Anura/actions/runs/44188821619) passed, including Python Quality (**682 passed, 6 skipped, 287 deselected**), GTK Integration, Changelog Integrity, AppImage and Flatpak builds for x86_64/aarch64, and release-artifact validation. CodeQL [#44188821605](https://github.com/D3M-Sudo/Anura/actions/runs/44188821605) passed.
+- **Limitations:** no native/manual GNOME, physical keyboard, Orca or AT-SPI verification is claimed; those remain in M7. No CHANGELOG entry was warranted because this task adds tests only and changes no product behavior.
+- **Next:** M4-02 Task 2 — Editor wrap-mode mapping and persistence.
