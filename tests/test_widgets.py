@@ -134,7 +134,7 @@ class TestExtractedPageEnterprise:
         widget.show_copy_feedback()
 
         # Verify icon changed to checkmark
-        assert widget.text_copy_btn.get_icon_name() == "emblem-ok-symbolic"
+        assert widget.text_copy_btn.get_icon_name() == "object-select-symbolic"
         # Verify tooltip changed to "Copied to clipboard!"
         assert widget.text_copy_btn.get_tooltip_text() == "Copied to clipboard!"
 
