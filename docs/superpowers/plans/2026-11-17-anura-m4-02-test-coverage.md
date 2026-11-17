@@ -45,14 +45,14 @@ No production file is presumed to require modification.
 - [ ] Add headless tests for combo selection persistence: `0 → default`, `1 → force-light`, `2 → force-dark`; pin invalid-index fallback to `default`.
 - [ ] Add tests for extra-language selected-item persistence using the language manager's name/code mapping.
 - [ ] Add tests for language install/removal refresh, including clearing `extra-language` when its active model is removed.
-- [ ] Run the focused headless tests in the GTK-enabled CI job and confirm each new contract fails for the intended reason before any production fix.
+- [ ] Run the focused headless tests in the existing Python Quality workflow and confirm each new contract fails for the intended reason before any production fix.
 - [ ] If a production defect is proven, apply the smallest fix and rerun the focused tests plus the complete Python-quality suite.
 
 ## Task 2 — Editor wrap-mode mapping and persistence
 
 **Files**
 - Test/modify: `tests/test_preferences_page_resilience.py`
-- GTK integration: `tests/test_preferences_voice_integration.py` (rename only if required for clarity and update workflow discovery consistently)
+- GTK integration: create `tests/test_preferences_editor_integration.py` for real Editor/GSettings coverage; leave the existing Voice integration module focused on Voice.
 - Conditional production fix: `anura/widgets/preferences_editor_page.py`
 
 - [ ] Add headless tests for initialization mappings: `word → 0`, `char → 1`, `none → 2`.
@@ -77,13 +77,13 @@ No production file is presumed to require modification.
 
 **Files**
 - Test/modify: `tests/test_preferences_languages_lifecycle.py`
-- GTK integration: `tests/test_preferences_voice_integration.py` or a focused new `tests/test_preferences_languages_integration.py`
+- GTK integration: create `tests/test_preferences_languages_integration.py` so the real Languages widget tests remain isolated from Voice integration.
 - Conditional production fix: `anura/widgets/preferences_languages_page.py`
 
 - [ ] Add headless tests for case-insensitive title search and the default downloaded-only filter.
 - [ ] Add headless tests for empty/non-empty stack state and stop-search reset behavior.
 - [ ] Add headless tests for idempotent language-added events and filter refresh on removal.
-- [ ] Prefer a focused GTK integration module if adding Languages-page widget tests would make the existing Voice integration module incohesive.
+- [ ] Keep the Languages GTK tests in the dedicated integration module; do not expand the Voice integration module.
 - [ ] In real GTK, instantiate the Languages page with controlled language-manager data and a stubbed network probe; verify search model contents, empty-state stack selection and reset behavior.
 - [ ] Confirm each new test detects its intended regression before any production fix.
 - [ ] Fix only demonstrated defects; preserve existing model-quality/cache invalidation behavior.
