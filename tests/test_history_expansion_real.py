@@ -11,6 +11,7 @@ is what is asserted: what exists before a row is opened, what is shown after, th
 open row, the bounded height and the cost of very long text.
 """
 
+import json
 import os
 import subprocess
 import time
@@ -253,57 +254,61 @@ def test_copy_button_still_copies_the_full_text_with_the_row_expanded(real_histo
     controller.copy_entry_text.assert_called_once_with(LONG_TEXT)
 
 
-def _send_weston_key(key: str) -> None:
-    """Inject a real XTest key event into Weston; GTK receives it through wl_keyboard."""
-    display = os.environ.get("WESTON_HOST_DISPLAY")
-    window_id = os.environ.get("WESTON_WINDOW_ID")
-    if not display or not window_id:
-        pytest.skip("real keyboard input requires the Weston X11 host display configured by CI")
+def _sway_window_is_focused(title: str) -> bool:
+    """Return whether Sway reports the GTK test window as the focused surface."""
+    result = subprocess.run(
+        ["swaymsg", "-t", "get_tree", "-r"],
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=5,
+    )
+    tree = json.loads(result.stdout)
 
-    env = os.environ.copy()
-    env["DISPLAY"] = display
+    def walk(node):
+        if node.get("focused") and node.get("name") == title:
+            return True
+        return any(walk(child) for key in ("nodes", "floating_nodes") for child in node.get(key, []))
 
-    # Weston forwards X11 keyboard input to its currently focused Wayland
-    # surface. Move the pointer into the center of the 1920x1080 Weston output
-    # first, so the app surface under the pointer can acquire wl_pointer focus;
-    # then focus the Weston host window before sending the XTest key event.
-    subprocess.run(
-        ["xdotool", "mousemove", "--sync", "--window", window_id, "960", "540"],
+    return walk(tree)
+
+
+def _send_wayland_key(key: str, window) -> None:
+    """Inject Tab/Shift+Tab through Wayland's virtual-keyboard protocol."""
+    if not os.environ.get("WAYLAND_DISPLAY") or not os.environ.get("SWAYSOCK"):
+        pytest.skip("native Wayland keyboard input requires the Sway CI compositor")
+
+    title = window.get_title()
+    focus = subprocess.run(
+        ["swaymsg", f'[title="{title}"] focus'],
         check=True,
         capture_output=True,
         text=True,
-        env=env,
+        timeout=5,
     )
+    assert "success" in focus.stdout.lower(), f"Sway could not focus the GTK test window: {focus.stdout}"
+
+    deadline = time.monotonic() + 2.0
+    while time.monotonic() < deadline:
+        if _sway_window_is_focused(title):
+            break
+        time.sleep(0.02)
+    else:
+        pytest.fail(f"Sway did not focus GTK test window {title!r}")
+
+    if key == "Tab":
+        command = ["wtype", "-k", "Tab"]
+    elif key == "shift+Tab":
+        command = ["wtype", "-M", "shift", "-k", "Tab", "-m", "shift"]
+    else:
+        raise ValueError(f"unsupported traversal key: {key!r}")
+
     subprocess.run(
-        ["xdotool", "windowfocus", "--sync", window_id],
+        command,
         check=True,
         capture_output=True,
         text=True,
-        env=env,
-    )
-    x11_focus = subprocess.run(
-        ["xdotool", "getwindowfocus"],
-        check=True,
-        capture_output=True,
-        text=True,
-        env=env,
-    ).stdout.strip()
-    pointer = subprocess.run(
-        ["xdotool", "getmouselocation", "--shell"],
-        check=True,
-        capture_output=True,
-        text=True,
-        env=env,
-    ).stdout.strip()
-    print(
-        f"XTest preflight: Weston host={window_id}, X11 focus={x11_focus}, pointer=({pointer.replace(chr(10), ', ')})"
-    )
-    subprocess.run(
-        ["xdotool", "key", "--clearmodifiers", "--delay", "20", key],
-        check=True,
-        capture_output=True,
-        text=True,
-        env=env,
+        timeout=5,
     )
 
 
@@ -371,7 +376,7 @@ def _tab_focus_cycle(window, starting_control, key: str, received, max_steps: in
 
     for _ in range(max_steps):
         previous_count = len(received)
-        _send_weston_key(key)
+        _send_wayland_key(key, window)
         _wait_for_key_event(window, received, previous_count, key)
         focused = _wait_for_focus_change(window, focused, key)
         if focused is starting_control:
@@ -388,6 +393,7 @@ def real_history_window(real_history):
 
     page, _service, _controller = real_history
     window = Gtk.Window(default_width=720, default_height=600)
+    window.set_title("Anura F-303-02 Keyboard Traversal")
     window.set_child(page)
     window.present()
 
@@ -487,7 +493,7 @@ def test_collapsing_focused_history_text_keeps_keyboard_navigation_usable(real_h
 
     if window.get_focus() is text_view:
         previous_count = len(received)
-        _send_weston_key("Tab")
+        _send_wayland_key("Tab", window)
         _wait_for_key_event(window, received, previous_count, "Tab")
         focused = _wait_for_focus_change(window, text_view, "Tab", diagnostic_context=collapsed_state)
 
