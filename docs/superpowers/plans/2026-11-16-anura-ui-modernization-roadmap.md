@@ -25,9 +25,9 @@
 
 - PR #648 is open, **Draft**, unmerged and targets `feature`.
 - Working branch: `fix/ui-modernization-aligned`.
-- Latest verified PR head before this roadmap: `cc8aaad6601f25b9e96f3d2eb9f78bc9fb3c524d`.
+- Latest verified PR head before this documentation update: `ae048880f46162f1f11892a06b27fa420c39430c`.
 - The PR snapshot reports 314 commits and 67 changed files; the branch is mergeable. The prior comparison record is 314 commits ahead and 0 behind. Re-check the compare immediately before any future integration decision.
-- Latest verified CI run: [#43801048308](https://github.com/D3M-Sudo/Anura/actions/runs/43801048308), on head `cc8aaad6601f25b9e96f3d2eb9f78bc9fb3c524d`.
+- Latest verified CI run: [#44135571249](https://github.com/D3M-Sudo/Anura/actions/runs/44135571249), on head `ae048880f46162f1f11892a06b27fa420c39430c`; CodeQL [#44135571322](https://github.com/D3M-Sudo/Anura/actions/runs/44135571322) passed on the same head.
 - CI jobs passed: Python quality, Changelog integrity, GTK Integration Tests, AppImage x86_64/aarch64, Flatpak x86_64/aarch64, AppImage release-set validation and multi-architecture release validation. Publish-release was skipped as expected for a PR.
 - GTK Integration Tests: **431 passed, 5 skipped, 632 deselected, 2 warnings**. The constrained-viewport Welcome scrolling regression passed. The run's job logs are the source of truth for detailed results.
 - The latest workflow correction uses Xvfb-backed Weston X11 and verifies the Wayland seat exposes pointer and keyboard capabilities before GTK tests. The latest run passed the popup activation tests.
@@ -58,6 +58,7 @@ The global roadmap owns phase status and app-wide prioritization. This document 
 | UI-12 | Update this roadmap after every completed task | **Mandatory recurring control** | Execute after each task, before starting another. This is not a one-time final task. |
 | UI-13 | M1-02 GTK4/Libadwaita typography, spacing and radius conventions | **Completed** | Design conventions documented, Blueprint/CSS spacing normalized, four static regression tests added; exact-head CI and CodeQL passed. See the M1-02 record below. |\n| UI-14 | M3-01 Extracted/History audit and F-301/F-302 test remediation | **Completed within bounded scope** | Read-only audit completed; History refresh contract test reconciled; Extracted search-announcement edge cases covered; exact-head CI and CodeQL passed. M3 remains Partial; F-303-01 followed. |
 | UI-15 | F-303-01 History TTS action-label semantics and state tests | **Completed** | State-specific tooltip and accessible labels implemented; four-state assertions and CHANGELOG entry added. Exact-head CI #44027455501 and CodeQL #44027455444 passed on `2d503db3b98383ab0b293f7e7752b583826a40c9`. F-303-02 is next. |
+| UI-16 | M5-02 approved automated UI contract tests | **Completed within approved scope** | Shortcuts search/Escape, static menu action/scope contract and toast delegation/title/priority tests. Banner dismissal and toast lifecycle excluded. Exact-head CI #44135571249 and CodeQL #44135571322 passed. |
 
 ## Completed work — scope and evidence
 
@@ -542,3 +543,16 @@ M5-01 can proceed after this formal disposition; F-303-02 remains deferred until
 - **CHANGELOG:** unchanged; no product behavior changed.
 - **PR state:** Open/Draft/unmerged, base `feature`. No protected branch or PR metadata changed.
 - **Next:** M5-02 test implementation only after separate explicit approval; F-303-03 remains a separate History workstream and is not pulled into M5-01.
+
+
+## M5-02 — Approved automated UI contract tests (2026-11-17)
+
+- **Outcome:** completed within the approved test-only scope on `fix/ui-modernization-aligned`; global M5 remains Partial.
+- **Implemented tests:** `tests/test_m5_02_ui_contracts.py` contains five GTK tests for Shortcuts search matching, no-results state, clearing/resetting, Escape semantics and toast delegation/title/priority. `tests/test_m5_02_menu_actions.py` contains one headless/static test validating Blueprint `app.*`/`win.*` action references against the action registry/declarations.
+- **Toast lifecycle exclusion:** no test asserts dismissal or `dismissed` signal timing. The initial assertion invoked `Adw.Toast.dismiss()` before the toast had been registered with an `Adw.ToastOverlay`; that call is a documented no-op. The lifecycle test was removed instead of adding fragile event-loop timing. The task therefore makes no claim about dismissal lifecycle.
+- **Banner exclusion:** banner dismissal was not included in the approved implementation subset; the suspected signal-wiring question remains separate and no production fix was made.
+- **Temporary CI:** [run #44134120773](https://github.com/D3M-Sudo/Anura/actions/runs/44134120773) passed the dedicated GTK and action-contract test job. The temporary workflow was removed after evidence collection; no permanent workflow or dependency was added.
+- **Exact-head CI:** `ae048880f46162f1f11892a06b27fa420c39430c`; [CI #44135571249](https://github.com/D3M-Sudo/Anura/actions/runs/44135571249) passed Python quality, Changelog integrity, GTK Integration, AppImage x86_64/aarch64, Flatpak x86_64/aarch64, complete AppImage release-set validation and multi-architecture artifact validation. `publish-release` was skipped as expected for a PR. [CodeQL #44135571322](https://github.com/D3M-Sudo/Anura/actions/runs/44135571322) passed on the same head.
+- **CHANGELOG:** unchanged; the work adds test coverage only and does not change user-visible behavior.
+- **Validation boundary:** no local test run, live visual inspection, physical keyboard traversal, Orca/AT-SPI or live notification-daemon validation is claimed. F-303-02 remains deferred to M7-03/#655.
+- **Governance:** PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`; no protected branch or PR metadata changed.
