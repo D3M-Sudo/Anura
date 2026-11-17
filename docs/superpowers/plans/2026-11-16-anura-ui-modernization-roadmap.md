@@ -611,3 +611,15 @@ M5-01 can proceed after this formal disposition; F-303-02 remains deferred until
 - **Limitations:** CI ran against the PR merge ref; no local tests are claimed. The 6 skipped and 287 deselected tests remain outside this run's executed pytest set. No native keyboard, Orca/AT-SPI or manual visual result is claimed.
 - **Next permitted task:** Task 2 — Editor wrap-mode mapping and persistence, under the already approved M4-02 plan. M4 remains Partial.
 - **Governance:** PR #648 remains Open/Draft/unmerged, target `feature`; no protected branch was changed.
+
+
+## M4-02 Task 2 — Editor wrap-mode mapping and GSettings persistence (2026-11-18)
+
+- **Outcome:** Completed — headless mapping/persistence coverage and real GTK/GSettings integration coverage passed on the exact implementation head.
+- **Files changed:** `tests/test_preferences_page_resilience.py` and new `tests/test_preferences_editor_integration.py`. No production files, dependencies or workflows changed.
+- **Coverage:** headless initialization mappings `word → 0`, `char → 1`, `none → 2`, unknown-value fallback; persistence mappings `0 → word`, `1 → char`, `2 → none`, invalid-index fallback to `word`. GTK integration instantiated the real Editor Preferences page with an isolated Gio memory settings backend and verified read/write persistence for all three modes (3 parametrized cases passed).
+- **Exact implementation head:** `cae8b8c27114daf59fab96ebefdd377b3efb76ae` — `style: fix remaining Ruff formatting violation`. The preceding CI run failed only because one test declaration still differed from Ruff's formatter output; this formatting-only correction resolved it.
+- **CI evidence:** [CI Quality Check & Release #44195812990](https://github.com/D3M-Sudo/Anura/actions/runs/44195812990) passed. Python Quality: Ruff, formatting, mypy, Bandit, pytest and F-005 passed; pytest **690 passed, 6 skipped, 290 deselected**. GTK Integration passed (**460 passed, 6 skipped, 696 deselected**), including all three Editor/GSettings integration cases. Changelog Integrity passed. AppImage x86_64/aarch64, Flatpak x86_64/aarch64, AppImage release-set and multi-architecture artifact validation passed. [CodeQL #44195813017](https://github.com/D3M-Sudo/Anura/actions/runs/44195813017) passed; publish-release was skipped as expected for a PR.
+- **Limitations:** no local test execution is claimed. The six skipped and deselected tests are not represented as executed. Physical keyboard traversal, native GNOME visual inspection and real Orca/AT-SPI remain M7 work; GTK CI's virtual-input harness does not substitute for those checks.
+- **Next permitted task:** Task 3 — Voice late-result-after-disposal coverage. Do not start it without maintainer authorization.
+- **Governance:** PR #648 remains Open/Draft/unmerged and targets `feature`; no protected branch was modified.
