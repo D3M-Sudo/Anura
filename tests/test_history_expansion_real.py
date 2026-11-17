@@ -296,8 +296,7 @@ def _send_weston_key(key: str) -> None:
         env=env,
     ).stdout.strip()
     print(
-        f"XTest preflight: Weston host={window_id}, X11 focus={x11_focus}, "
-        f"pointer=({pointer.replace(chr(10), ', ')})"
+        f"XTest preflight: Weston host={window_id}, X11 focus={x11_focus}, pointer=({pointer.replace(chr(10), ', ')})"
     )
     subprocess.run(
         ["xdotool", "key", "--clearmodifiers", "--delay", "20", key],
@@ -343,9 +342,7 @@ def _wait_for_key_event(window, received, previous_count: int, key: str, timeout
     )
 
 
-def _wait_for_focus_change(
-    window, previous_focus, key: str, timeout: float = 1.0, diagnostic_context=None
-):
+def _wait_for_focus_change(window, previous_focus, key: str, timeout: float = 1.0, diagnostic_context=None):
     """Pump GTK events until the observed key event changes focus."""
     from gi.repository import GLib
 
@@ -492,9 +489,7 @@ def test_collapsing_focused_history_text_keeps_keyboard_navigation_usable(real_h
         previous_count = len(received)
         _send_weston_key("Tab")
         _wait_for_key_event(window, received, previous_count, "Tab")
-        focused = _wait_for_focus_change(
-            window, text_view, "Tab", diagnostic_context=collapsed_state
-        )
+        focused = _wait_for_focus_change(window, text_view, "Tab", diagnostic_context=collapsed_state)
 
         assert focused is not text_view, (
             "Tab was delivered but focus remained on the collapsed TextView; "
