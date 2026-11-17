@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: MIT
 
 from pathlib import Path
-
 import re
 
 
