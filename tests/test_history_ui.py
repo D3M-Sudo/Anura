@@ -762,3 +762,26 @@ def test_tts_action_is_disabled_when_language_cannot_be_resolved(headless_gi_moc
 
     fake_gtk.Button.return_value.set_sensitive.assert_any_call(False)
     tts_controller.request_listen.assert_not_called()
+
+
+def test_tts_button_labels_describe_the_current_action(headless_gi_mocks):
+    from anura.widgets.history_page import HistoryPage
+
+    page = _make_page(headless_gi_mocks)
+    button = MagicMock()
+    page._tts_buttons = {"entry": button}
+
+    expected_labels = {
+        "generating": "Stop listening",
+        "playing": "Pause listening",
+        "paused": "Resume listening",
+        "idle": "Listen to text",
+    }
+
+    for state, expected_label in expected_labels.items():
+        page._active_tts_entry_id = "entry" if state != "idle" else None
+        page._tts_state = state
+        page._update_tts_button()
+
+        assert button.set_tooltip_text.call_args.args == (expected_label,)
+        assert button.update_property.call_args.args[1] == [expected_label]
