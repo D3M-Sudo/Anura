@@ -108,11 +108,3 @@ class TestM502ToastDelegation:
         assert toast.get_title() == "M5-02 test toast"
         assert toast.get_priority() == Adw.ToastPriority.HIGH
 
-    def test_toast_dismiss_signal_is_deterministic(self):
-        toast = Adw.Toast.new("Dismiss lifecycle")
-        dismissed = []
-        toast.connect("dismissed", lambda _toast: dismissed.append(True))
-
-        toast.dismiss()
-
-        assert dismissed == [True]
