@@ -382,3 +382,14 @@ The [global roadmap](2026-11-16-anura-ui-modernization-global-roadmap.md) is the
 - [CI #43982790571](https://github.com/D3M-Sudo/Anura/actions/runs/43982790571) and [CodeQL #43982790585](https://github.com/D3M-Sudo/Anura/actions/runs/43982790585) both succeeded on that exact head. The CI build/test and packaging matrix passed; `publish-release` was skipped as expected for a PR.
 - Not performed: manual GNOME/GTK rendered-UI review, manual keyboard navigation, real Orca/AT-SPI verification and live multi-monitor checks. These are deferred to M7 and must not be represented as passed. Screenshot capture remains deferred to the agreed later release stage.
 - PR #648 remains Open, Draft and unmerged, targeting `feature`. This documentation update does not change PR metadata, merge state or any protected branch.
+
+
+## M2 — operational closure (2026-11-17)
+
+- **Outcome:** the maintainer selected option A. M2 is **Completed (operationally)** for this work cycle; the global roadmap remains authoritative for phase status and global scope.
+- **M2-G01:** History → Welcome focus behavior implemented and exact-head CI passed on `7d34cf8f92435c85d9ba3537ead42c7bb98519a4`.
+- **M2-G02:** asynchronous Welcome drag-and-drop implementation and eight regression tests completed on `f52e437d9bdfdf6200d26449152e3ffeeacc14be`. CI [#43995410588](https://github.com/D3M-Sudo/Anura/actions/runs/43995410588) and CodeQL [#43995410567](https://github.com/D3M-Sudo/Anura/actions/runs/43995410567) both passed on that exact head. Python quality: 652 passed, 6 skipped, 279 deselected; GTK Integration, Changelog integrity, AppImage x86_64/aarch64, Flatpak x86_64/aarch64 and release artifact validators passed. Release publication was skipped as expected for a PR.
+- **Deferred to M7:** manual GNOME/GTK visual checks, manual keyboard navigation and real Orca/AT-SPI verification. They were not performed and are not claimed as passed or as M2 blockers. Live multi-monitor verification remains excluded.
+- **Deferred to M5:** app-wide menu consistency and review of intentional menu differences.
+- **Governance:** PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`. No merge, protected-branch update or PR metadata change was made.
+- **Next:** M3-01 read-only audit, separately scoped; no M3 implementation is authorized by this closure.
