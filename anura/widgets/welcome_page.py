@@ -324,22 +324,18 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         result: Gio.AsyncResult,
         user_data: tuple,
     ) -> None:
-        """Called when the Xdnd stream is ready. Starts async byte read.
-
-        source_object is the Gdk.Drop that initiated read_async (not an InputStream).
-        We immediately start read_bytes_async — no blocking calls here.
-        """
+        """Finish failed/stale stream reads, or continue with an asynchronous byte read."""
         drop, cancellable, operation_id = user_data
         try:
             input_stream, _mime_type = source_object.read_finish(result)
         except GLib.Error as e:
             logger.error(f"DnD: Failed to open drop stream: {e}")
-            drop.finish(Gdk.DragAction.COPY)  # Always finish, even on error
+            drop.finish(Gdk.DragAction.NONE)
             self._show_error_toast(_("Failed to read dropped file"), operation_id)
             return
 
         if not self._is_drop_operation_current(operation_id):
-            drop.finish(Gdk.DragAction.COPY)
+            drop.finish(Gdk.DragAction.NONE)
             return
 
         input_stream.read_bytes_async(
@@ -356,34 +352,29 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         result: Gio.AsyncResult,
         user_data: tuple,
     ) -> None:
-        """Called when bytes are available. Parses URIs and triggers OCR.
-
-        This is the end of the async chain. We call drop.finish() here (required),
-        then process the first valid local image path.
-        """
+        """Validate the URI-list before finishing the drop with its selected action."""
         stream, drop, cancellable, operation_id = user_data
 
         try:
             gbytes = stream.read_bytes_finish(result)
         except GLib.Error as e:
             logger.error(f"DnD: Failed to read drop bytes: {e}")
-            drop.finish(Gdk.DragAction.COPY)
+            drop.finish(Gdk.DragAction.NONE)
             self._show_error_toast(_("Failed to read dropped file"), operation_id)
             return
         finally:
-            # #538: only release the cancellable this callback owns; a newer
-            # drop may already have installed its own.
+            # Only release the cancellable this callback owns; a newer drop may have installed its own.
             if self._drop_cancellable is cancellable:
                 self._drop_cancellable = None
 
-        # Xdnd protocol: always call finish BEFORE processing
-        drop.finish(Gdk.DragAction.COPY)
         if not self._is_drop_operation_current(operation_id):
+            drop.finish(Gdk.DragAction.NONE)
             return
 
         raw = gbytes.get_data() if gbytes else None
         if not raw:
             logger.error("DnD: Received empty data from drop stream")
+            drop.finish(Gdk.DragAction.NONE)
             self._show_error_toast(_("No file data received from drop"), operation_id)
             return
 
@@ -392,23 +383,32 @@ class WelcomePage(Adw.NavigationPage, SignalManagerMixin):
         except UnicodeDecodeError:
             text = raw.decode("latin-1", errors="replace")
 
-        # Parse text/uri-list: skip comment lines (#) and empty lines
+        # Parse text/uri-list: skip comment lines (#) and empty lines.
         uris = [line.strip() for line in text.splitlines() if line.strip() and not line.startswith("#")]
-
         if not uris:
             logger.error("DnD: No valid URIs found in drop data")
+            drop.finish(Gdk.DragAction.NONE)
             self._show_error_toast(_("No valid file found in drop"), operation_id)
             return
 
-        # Anura processes one image at a time — take the first URI
-        gfile = Gio.File.new_for_uri(uris[0])
-        local_path = gfile.get_path()
+        try:
+            # Anura processes one image at a time — take the first URI.
+            gfile = Gio.File.new_for_uri(uris[0])
+            local_path = gfile.get_path()
+        except (GLib.Error, TypeError, ValueError) as e:
+            logger.error(f"DnD: Invalid URI in drop data: {e}")
+            drop.finish(Gdk.DragAction.NONE)
+            self._show_error_toast(_("No valid file found in drop"), operation_id)
+            return
 
         if not local_path:
             logger.error(f"DnD: URI has no local path: {mask_url(uris[0])}")
+            drop.finish(Gdk.DragAction.NONE)
             self._show_error_toast(_("Only local files can be dropped"), operation_id)
             return
 
+        # COPY is acknowledged only after the payload has been validated as a local URI.
+        drop.finish(Gdk.DragAction.COPY)
         self._process_dropped_path(local_path, operation_id)
 
     def cancel_pending_drop(self) -> None:
