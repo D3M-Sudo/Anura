@@ -56,7 +56,7 @@ The global roadmap owns phase status and app-wide prioritization. This document 
 | UI-10 | Implement the next explicitly approved task | **Not started** | Must use an approved execution approach and task-level acceptance criteria. |
 | UI-11 | Review, run CI and validate delivery evidence | **Not started** | Run after UI-10 or any later implementation task; record exact results and limitations. |
 | UI-12 | Update this roadmap after every completed task | **Mandatory recurring control** | Execute after each task, before starting another. This is not a one-time final task. |
-| UI-13 | M1-02 GTK4/Libadwaita typography, spacing and radius conventions | **Completed** | Design conventions documented, Blueprint/CSS spacing normalized, four static regression tests added; exact-head CI and CodeQL passed. See the M1-02 record below. |
+| UI-13 | M1-02 GTK4/Libadwaita typography, spacing and radius conventions | **Completed** | Design conventions documented, Blueprint/CSS spacing normalized, four static regression tests added; exact-head CI and CodeQL passed. See the M1-02 record below. |\n| UI-14 | M3-01 Extracted/History audit and F-301/F-302 test remediation | **Completed within bounded scope** | Read-only audit completed; History refresh contract test reconciled; Extracted search-announcement edge cases covered; exact-head CI and CodeQL passed. M3 remains Partial; F-303 is next. |
 
 ## Completed work — scope and evidence
 
@@ -393,3 +393,38 @@ The [global roadmap](2026-11-16-anura-ui-modernization-global-roadmap.md) is the
 - **Deferred to M5:** app-wide menu consistency and review of intentional menu differences.
 - **Governance:** PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`. No merge, protected-branch update or PR metadata change was made.
 - **Next:** M3-01 read-only audit, separately scoped; no M3 implementation is authorized by this closure.
+
+
+## M3-01 — Extracted and History audit; F-301/F-302 remediation (2026-11-17)
+
+### Audit disposition
+
+- Extracted baseline includes header/actions, editable text and scrolling, search navigation/wrap, undo/redo, TTS/share/statistics and OCR-result focus. Existing accessible-search announcement behavior was found in `tests/test_accessible_status_announcements.py`; F-302 was therefore refined from “missing tests” to a limited edge-case coverage gap.
+- History baseline includes entry list/empty/disabled states, expandable details, copy/editor/TTS actions, clear confirmation, refresh/navigation and in-session expansion/scroll restoration.
+- No production bug was established by the read-only audit. F-301 was a contradictory test expectation; F-302/F-303 are test-coverage gaps. Visual/viewport evidence is not exhaustive.
+
+### F-301 — History refresh contract
+
+- Maintainer decision: **A1 — `HistoryPage.refresh()` preserves view state**. Preserve the expanded entry if it remains, preserve scroll, clear expansion if the entry disappears, and maintain the contract across navigation.
+- Updated `tests/test_history_expansion_real.py` so the former “every row collapsed” test now verifies restoration of the same expanded entry and that no more than one row remains expanded.
+- Commits: `e7ee3032bc375ea953c18a809b2ccd42a9397aad` (test contract), `0988708e88a162417a9622500c813ae3c1a98dac` (Ruff formatting only).
+
+### F-302 — Extracted search announcements
+
+- Added focused coverage for the visible/accessibility “Searching…” state, one-result announcement after the 400 ms debounce with LOW priority, zero-result “No matches”, and clearing search/restoring the accessible label while cancelling a pending announcement.
+- A CI failure exposed unstable independent MagicMock values for `Gtk.AccessibleAnnouncementPriority.LOW`; the test now uses a stable sentinel via `SimpleNamespace`. No production code was changed.
+- Final test commit: `56d794502d84c0dfc392230867b4c90b6d08ee91`, file `tests/test_accessible_status_announcements.py`.
+
+### Exact-head verification
+
+- CI [#2497](https://github.com/D3M-Sudo/Anura/actions/runs/44006990401) and CodeQL [#699](https://github.com/D3M-Sudo/Anura/actions/runs/44006990338) both completed successfully on exact head `56d794502d84c0dfc392230867b4c90b6d08ee91`.
+- Passed: Ruff lint/format, Mypy, Bandit, Vulture, Python tests with coverage, Flatpak runtime dependency coverage, Changelog integrity, GTK Integration, AppImage x86_64/aarch64, Flatpak x86_64/aarch64, AppImage release-set validation and multi-architecture release-artifact validation.
+- `publish-release` was skipped as expected for a pull request.
+- No local test execution or TDD red→green demonstration is claimed; CI is the verification source. The evidence does not establish real Orca/AT-SPI or manual keyboard behavior.
+
+### Boundaries and next task
+
+- No production source, permanent/temporary workflow, CHANGELOG, protected branch or PR metadata was changed for F-301/F-302 remediation.
+- PR #648 remains Open/Draft/unmerged, base `feature`, head `56d794502d84c0dfc392230867b4c90b6d08ee91`.
+- M3 remains Partial; this record does not close the full Extracted/History modernization phase.
+- **Next:** F-303 read-only audit of History accessible action labels and keyboard traversal. Any implementation requires a separate bounded proposal and explicit approval.
