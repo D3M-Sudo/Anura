@@ -387,6 +387,7 @@ def _suffix_buttons(row):
     ]
 
 
+@pytest.mark.keyboard_traversal
 def test_tab_and_shift_tab_reach_enabled_history_suffix_actions(real_history_window):
     """Actual Tab and Shift+Tab events traverse the enabled suffix actions."""
     window, page, received = real_history_window
@@ -400,6 +401,7 @@ def test_tab_and_shift_tab_reach_enabled_history_suffix_actions(real_history_win
     assert set(expected) <= backward
 
 
+@pytest.mark.keyboard_traversal
 def test_expanded_history_row_keeps_suffix_actions_in_keyboard_traversal(real_history_window):
     """Expanding a row preserves keyboard access to its suffix actions."""
     from gi.repository import Gtk
@@ -419,6 +421,7 @@ def test_expanded_history_row_keeps_suffix_actions_in_keyboard_traversal(real_hi
     assert set(buttons) <= backward
 
 
+@pytest.mark.keyboard_traversal
 def test_collapsing_focused_history_text_keeps_keyboard_navigation_usable(real_history_window):
     """After collapse, Tab must leave the expanded content if it still owns focus."""
     from gi.repository import GLib, Gtk
@@ -464,6 +467,7 @@ def test_collapsing_focused_history_text_keeps_keyboard_navigation_usable(real_h
         assert window.get_focus() is not text_view
 
 
+@pytest.mark.keyboard_traversal
 def test_expanding_another_history_row_preserves_keyboard_traversal(real_history_window):
     """Single-open-row behavior remains compatible with actual keyboard traversal."""
     window, page, received = real_history_window
