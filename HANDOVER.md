@@ -8,7 +8,7 @@ This handover records the adapted implementation and its remaining validation. T
 
 ## Current operational snapshot — M3-01/F-301/F-302/F-303-01 (2026-11-17)
 
-- **Authoritative global status:** M0 Completed; M1 Completed (operationally); M2 Completed (operationally); M3 Partial; M4 Partial; M5 Partial (M5-01 read-only audit complete; P2 test implementation not yet authorized); M6 Partial; M7 Partial.
+- **Authoritative global status:** M0 Completed; M1 Completed (operationally); M2 Completed (operationally); M3 Partial; M4 Partial; M5 Partial (M5-01 audit and M5-02 approved automated-test subset complete; banner dismissal, toast lifecycle and broader phase work remain); M6 Partial; M7 Partial.
 - **M3-01 audit:** Extracted and History baseline audit completed read-only. No production defect was established by that audit. F-301 was a contradictory test expectation against the selected A1 refresh-preservation contract; F-302 was a limited search-announcement edge-case coverage gap, with an existing debounced plural-result test already present.
 - **F-301:** `tests/test_history_expansion_real.py` now verifies refresh restores the same still-existing expanded entry and maintains single-row expansion. Commits: `e7ee3032bc375ea953c18a809b2ccd42a9397aad`, formatting-only `0988708e88a162417a9622500c813ae3c1a98dac`.
 - **F-302:** `tests/test_accessible_status_announcements.py` covers Searching state, singular announcement after the 400 ms debounce at LOW priority, zero results and clearing/cancelling a pending announcement. Stable LOW-priority sentinel fix: `56d794502d84c0dfc392230867b4c90b6d08ee91`.
@@ -484,3 +484,16 @@ The application-owned light/dark green fallback is retained; Libadwaita `.succes
 - **Evidence:** static source/Blueprint/test-definition inspection only. No test/build/CI execution or live desktop/assistive-technology verification was performed for M5-01. CodeQL #44128147802 passed; CI #44128148026 was still in progress at last check.
 - **CHANGELOG:** unchanged because no user-visible product behavior changed.
 - **Current programme state:** M5 Partial, not complete. Next proposed task M5-02 requires separate maintainer approval. PR #648 remains Open/Draft/unmerged, targeting `feature`; no protected branch or PR metadata changed.
+
+
+## 2026-11-17 — M5-02 automated UI contract tests completed
+
+- **Outcome:** M5-02 completed within the maintainer-approved test-only scope. The global M5 phase remains Partial; this task does not close the full app-wide phase.
+- **Tests:** `tests/test_m5_02_menu_actions.py` adds one static/headless test validating Blueprint `app.*` and `win.*` action references against registered action declarations. `tests/test_m5_02_ui_contracts.py` adds five GTK tests covering Shortcuts search/match, empty state, clearing/resetting, Escape behavior, and toast delegation/title/priority.
+- **Toast lifecycle deliberately excluded:** the attempted lifecycle test called `Adw.Toast.dismiss()` before adding the toast to an `Adw.ToastOverlay`. Libadwaita documents this as a no-op. The test was removed; no dismissal-signal timing or lifecycle behavior is claimed as verified.
+- **Banner dismissal excluded:** no banner behavior or wiring was changed; the potential issue remains a separate diagnosis/approval item.
+- **Dedicated temporary CI:** [#44134120773](https://github.com/D3M-Sudo/Anura/actions/runs/44134120773) passed the M5-02 GTK and action-contract test job. The temporary workflow was removed after evidence collection; no permanent workflow or dependency was added.
+- **Exact-head CI:** PR head `ae048880f46162f1f11892a06b27fa420c39430c`; [CI #44135571249](https://github.com/D3M-Sudo/Anura/actions/runs/44135571249) passed Python quality, Changelog integrity, GTK Integration, AppImage x86_64/aarch64, Flatpak x86_64/aarch64 and both release-artifact validation jobs. `publish-release` was skipped as expected for a PR. [CodeQL #44135571322](https://github.com/D3M-Sudo/Anura/actions/runs/44135571322) passed on the same SHA.
+- **CHANGELOG:** unchanged because no user-visible behavior changed. No production source or runtime behavior was modified.
+- **Limits:** no local tests, rendered UI, physical keyboard traversal, Orca/AT-SPI or live notification-daemon checks are claimed. F-303-02 physical keyboard validation remains deferred to M7-03/#655.
+- **Governance:** PR #648 remains Open/Draft/unmerged, base `feature`; no protected branch or PR metadata change, merge or release was performed.
