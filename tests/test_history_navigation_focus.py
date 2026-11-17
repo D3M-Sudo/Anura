@@ -52,6 +52,9 @@ def _build_window():
         flags=Gio.ApplicationFlags.NON_UNIQUE,
     )
     app.register(None)
+    # The Blueprint button uses app.get_screenshot. Install the action so GTK
+    # does not mark the primary control insensitive in this isolated fixture.
+    app.add_action(Gio.SimpleAction.new("get_screenshot", None))
     app.settings = MagicMock()
     app.settings.get_string.return_value = "eng"
     app.settings.get_int.return_value = 10
@@ -88,7 +91,8 @@ def test_history_to_welcome_restores_primary_action_focus(navigation_route):
 
     try:
         assert _spin_until(lambda: window.navigation_view.get_visible_page() is window.welcome_page)
-
+        assert _spin_until(window.welcome_page.screenshot_button.get_mapped)
+        assert window.welcome_page.screenshot_button.is_sensitive()
         assert window.welcome_page.screenshot_button.grab_focus()
         assert _spin_until(window.welcome_page.screenshot_button.has_focus)
 
