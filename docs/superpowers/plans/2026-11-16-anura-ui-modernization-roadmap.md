@@ -498,3 +498,34 @@ The [global roadmap](2026-11-16-anura-ui-modernization-global-roadmap.md) is the
 - **Last pre-change evidence:** CI [#44110517818](https://github.com/D3M-Sudo/Anura/actions/runs/44110517818) on `24c9f99f683de1ee26eb33e53678998326fc5ce9`: Python Quality, Changelog integrity, AppImage x86_64/aarch64 and complete AppImage release-set validation passed; GTK failed on the four F-303-02 tests; Flatpak builds and multi-architecture release-artifact validation were skipped. CodeQL [#44110517974](https://github.com/D3M-Sudo/Anura/actions/runs/44110517974) passed.
 - **Validation status:** workflow/test-marker changes are committed; the new graph and exact-SHA CI results remain pending. No local tests or YAML validation are claimed. No production code, dependency, OCR behavior, CHANGELOG, protected branch, PR metadata, merge or release was changed.
 - **Governance:** PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`.
+
+
+## F-303-02 — final disposition: defer physical keyboard validation to M7 (2026-11-17)
+
+### Decision and evidence
+
+The maintainer selected the cleanup fallback: stop CI input-harness experiments, remove the four CI-specific keyboard traversal tests and their synthetic input helpers, restore the ordinary GTK CI gate, and retain a tracked native-host validation obligation. This formally closes the *CI experimentation phase* only; it does not mark keyboard traversal as passed or F-303-02 fully validated.
+
+- **Weston/XTest:** prior CI runs repeatedly failed to establish reliable Tab/Shift+Tab delivery at GTK's `EventControllerKey` boundary. One case received Tab but focus remained on a collapsed `Gtk.TextView`; this was not classified as a product defect because the harness was unreliable.
+- **Sway/wtype:** [CI run #44120435948](https://github.com/D3M-Sudo/Anura/actions/runs/44120435948), tested head `bff387fcf5a07c6b580f47d60f98f9ff6966e319`. Sway, Wayland socket, `wl_seat` and `zwp_virtual_keyboard_manager_v1` were available; Sway reported the GTK test window focused. GTK did not receive the injected Tab event and reported `active=False`. The shell stopped on the first failure, so three-run repeatability was not tested. The evidence shows this harness was unsuccessful, not that CI virtual input is categorically impossible.
+
+### CI and test cleanup
+
+- Removed the experimental Sway job and its Sway/wtype/wayland-utils packages.
+- Removed xdotool, Weston X11 host-window lookup and `WESTON_HOST_DISPLAY`, which existed only for XTest injection.
+- Retained Xvfb + Weston X11 and the `wl_seat` pointer/keyboard preflight for ordinary GTK integration tests.
+- Restored the regular GTK test selection and restored `flatpak-builder` to `needs: [python-quality, gtk-tests]`.
+- Removed the four experimental tests and Sway/XTest helpers; retained unrelated History tests.
+- No application source or runtime dependency changes. CHANGELOG was not changed because this is test infrastructure and validation disposition, not a product behavior change.
+
+### Residual debt and acceptance
+
+Issue [#655 — F-303-02 native-host keyboard traversal validation](https://github.com/D3M-Sudo/Anura/issues/655) remains open. M7-03 must validate on a native desktop session:
+
+1. Tab and Shift+Tab reach the enabled History row suffix actions in forward and reverse order.
+2. Expanded rows preserve keyboard reachability of suffix actions.
+3. Collapsing a row while its text view has focus leaves keyboard navigation usable.
+4. Expanding another row preserves the single-open-row behavior and traversal.
+5. Record host/session details, exact tested commit, procedure, results and any remaining defect. Reintroduce automated blocking tests only if a reliable harness is separately established.
+
+M5-01 can proceed after this formal disposition; F-303-02 remains deferred until M7-03 is completed. Manual keyboard validation is not claimed as passed.
