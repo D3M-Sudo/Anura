@@ -22,11 +22,13 @@ def test_ocr_status_updates_visible_label_and_deduplicates_announcements(headles
     module.WelcomePage.set_status(page, "Loading image")
 
     assert [call.args[0] for call in page.drop_area_label.set_label.call_args_list] == [
-        "Loading image", "Loading image", "Recognizing text", "", "Loading image"
+        "Loading image",
+        "Loading image",
+        "Recognizing text",
+        "",
+        "Loading image",
     ]
-    assert [call.args[1] for call in announce.call_args_list] == [
-        "Loading image", "Recognizing text", "Loading image"
-    ]
+    assert [call.args[1] for call in announce.call_args_list] == ["Loading image", "Recognizing text", "Loading image"]
 
 
 def test_ocr_controller_forwards_backend_status_signal(headless_gi_mocks):
@@ -98,7 +100,6 @@ def test_screenshot_timeout_invalidates_operation_before_backend_cancellation(he
     window.backend.cancel.assert_called_once_with()
     window.present.assert_called_once_with()
     window.show_toast.assert_called_once()
-
 
 
 def test_window_ocr_error_cleans_up_and_displays_message(headless_gi_mocks, monkeypatch):
