@@ -1,5 +1,19 @@
 # Handover: UI modernization alignment
 
+## Current operational snapshot — M5 closure (2026-11-17)
+
+- **Authoritative global status:** M0 Completed; M1 Completed (operationally); M2 Completed (operationally); M3 Partial; M4 Partial; M5 **Completed within the agreed scope**; M6 Partial; M7 Partial.
+- **M4:** M4-01 audit and approved remediation of M4-F01–F04 are complete. The configured model-source probe, cancellable/disposal-safe callback, LanguageRow idle-source pruning and localized accessible list name have four regression tests. Broader General/Editor/Voice mappings, secondary-language refresh/removal and complete page lifecycle coverage remain; global M4 is Partial.
+- **M5-01:** audit completed for Shortcuts, About/fatal/Clear History dialogs, language/share popovers, Welcome/Extracted menus, banner, toast overlay and desktop notifications. Report: `docs/audit/ui-other-surfaces-m5-01-2026-11-17.md`.
+- **M5-02:** approved automated contracts completed: Shortcuts search/empty/reset/Escape, static Blueprint action resolution/scope, and toast delegation/title/priority. Toast dismissal/lifecycle was deliberately excluded and is not claimed as tested.
+- **M5-03:** portal-unavailable banner Dismiss now connects `button-clicked` to a handler setting `revealed=False`; two GTK regression tests passed in temporary run [#44141439001](https://github.com/D3M-Sudo/Anura/actions/runs/44141439001). Exact code/test head `74f6a4ef` passed CI [#44142298765](https://github.com/D3M-Sudo/Anura/actions/runs/44142298765) and CodeQL [#44142298673](https://github.com/D3M-Sudo/Anura/actions/runs/44142298673).
+- **M5 closure decision:** maintainer approved closure. P3 About/fatal-dialog, Portal cleanup/error-path and extra popover-focus tests are deferred/non-blocking. Native GNOME/GTK visual, real Orca/AT-SPI and physical keyboard checks are assigned to M7, not M5. F-303-02 remains deferred under [#655](https://github.com/D3M-Sudo/Anura/issues/655), not passed.
+- **Latest PR snapshot before this documentation update:** PR #648 Open/Draft/unmerged, base `feature`, branch `fix/ui-modernization-aligned`, head `ee81c01c47b49ebe53b5c36797eb54f18e6d8469`; GitHub reported 576 commits, 96 changed files, +8,661/-986, and compare 576 ahead/0 behind. This is an ancestry count, not a count of independent UI features.
+- **CI evidence boundary:** full CI and CodeQL passed on code/test head `74f6a4ef`. On documentation head `ee81c01c`, CodeQL passed; CI [#44145092344](https://github.com/D3M-Sudo/Anura/actions/runs/44145092344) was still running when inspected (Flatpak x86_64/aarch64 builds in progress after the other required jobs passed). The later M5 closure documentation commits are not covered by that run.
+- **Governance:** keep work on `fix/ui-modernization-aligned`; do not modify `feature`, `development`, `testing` or `main`; PR #648 remains Draft and no merge is authorized.
+
+---
+
 ## Purpose
 
 This document transfers the context required to continue the UI modernization work originally proposed in [PR #448](https://github.com/D3M-Sudo/Anura/pull/448), adapting it to the current `feature` branch rather than applying the old branch wholesale.
@@ -509,3 +523,12 @@ The application-owned light/dark green fallback is retained; Libadwaita `.succes
 - **Limitations:** no local test execution, rendered UI, physical keyboard traversal, real Orca/AT-SPI or live portal/notification-daemon verification is claimed. F-303-02 remains deferred to M7-03/#655. M5-02 toast lifecycle and P3 dialog/Portal/popover tests remain deferred.
 - **Programme state:** M5 remains Partial. M5-01, M5-02 and M5-03 are complete within their recorded bounded scopes; global M5 exit criteria are not yet met.
 - **Governance:** PR #648 remains Open/Draft/unmerged, targeting feature; no protected branch, merge or release was changed.
+
+
+## 2026-11-17 — M5 agreed-scope closure
+
+- The maintainer confirmed that P3 test candidates were not M5 exit criteria and that manual/native verification had already been transferred to M7. M5 is therefore **Completed within the agreed scope**.
+- M5-01 audit, M5-02 approved automated contracts and M5-03 portal-banner Dismiss correction are complete. Toast dismissal/lifecycle remains excluded; P3 About/fatal-dialog, Portal cleanup/error-path and additional popover-focus tests remain deferred and non-blocking.
+- Native GNOME/GTK visual verification, real Orca/AT-SPI and physical keyboard traversal remain assigned to M7. F-303-02 remains open/deferred under issue #655; no keyboard traversal success is claimed.
+- The CHANGELOG already contains the user-visible banner Dismiss fix under `[Unreleased] / Fixed`; no further changelog entry was required for this phase closure.
+- PR #648 remains Open/Draft/unmerged, targeting `feature`. No protected branch or merge state changed.
