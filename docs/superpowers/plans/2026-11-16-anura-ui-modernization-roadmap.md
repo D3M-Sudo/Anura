@@ -556,3 +556,15 @@ M5-01 can proceed after this formal disposition; F-303-02 remains deferred until
 - **CHANGELOG:** unchanged; the work adds test coverage only and does not change user-visible behavior.
 - **Validation boundary:** no local test run, live visual inspection, physical keyboard traversal, Orca/AT-SPI or live notification-daemon validation is claimed. F-303-02 remains deferred to M7-03/#655.
 - **Governance:** PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`; no protected branch or PR metadata changed.
+
+
+## M5-03 — Portal-missing banner dismissal correction (2026-11-17)
+
+- **Finding and correction:** the portal-missing Adw.Banner displayed a “Dismiss” button but had no button-clicked handler. AnuraWindow._setup_controller_signals() now connects the signal to _on_portal_banner_dismissed(), which sets revealed=False. The existing _on_portal_missing() reveal behavior is preserved.
+- **Tests:** two GTK regressions in tests/test_m5_02_ui_contracts.py verify the signal connection and the hide behavior.
+- **Test evidence:** the temporary M5-03 workflow [#44141439001](https://github.com/D3M-Sudo/Anura/actions/runs/44141439001) passed both tests (2 passed, 1 warning). The red phase had demonstrated both failures before the production fix. The temporary workflow was removed after evidence collection.
+- **Final formatting and CI head:** formatting-only commit 74f6a4ef98392f80c0ca1e95ed987d2c1d48749c. Exact-head CI [#44142298765](https://github.com/D3M-Sudo/Anura/actions/runs/44142298765) and CodeQL [#44142298673](https://github.com/D3M-Sudo/Anura/actions/runs/44142298673) both succeeded. Python quality, Changelog Integrity, GTK Integration, AppImage x86_64/aarch64, Flatpak x86_64/aarch64 and both release-artifact validation jobs passed; publish-release was skipped as expected for a PR.
+- **CHANGELOG:** added an [Unreleased] / Fixed entry for the user-visible correction.
+- **Boundaries:** no local tests, manual visual inspection, physical keyboard traversal, Orca/AT-SPI or live portal/notification-daemon verification are claimed. F-303-02 remains deferred to M7-03/#655. M5-02 toast lifecycle and P3 About/fatal-dialog, Portal cleanup/error-path and popover-focus tests remain deferred.
+- **Status:** M5 remains Partial; M5-03 is complete only within this correction and regression-test scope.
+- **PR state:** #648 remains Open/Draft/unmerged, base feature. No protected branch, merge or release was changed.
