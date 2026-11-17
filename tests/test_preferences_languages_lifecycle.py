@@ -90,8 +90,6 @@ def test_language_row_prunes_idle_id_when_refresh_callback_finishes(monkeypatch,
 
 def test_preferences_language_list_has_an_explicit_accessible_name(monkeypatch, headless_gi_mocks):
     """Assistive technology must receive a contextual name for the model list."""
-    module, page, _monitor, _address = _make_languages_page(
-        monkeypatch, headless_gi_mocks
-    )
+    module, page, _monitor, _address = _make_languages_page(monkeypatch, headless_gi_mocks)
 
     page.list_view.update_property.assert_any_call([module.Gtk.AccessibleProperty.LABEL], ["Available OCR models"])
