@@ -294,16 +294,16 @@ jobs:
             --override-ini "addopts=-v --tb=short"
 
   gtk-keyboard-traversal-experimental:
-    name: GTK Keyboard Traversal (experimental)
+    name: GTK Keyboard Traversal (Sway headless / experimental)
     runs-on: ubuntu-24.04
     needs: python-quality
     continue-on-error: true
-    # Robustness: prevent job from hanging indefinitely
     timeout-minutes: 15
-    # XDG_RUNTIME_DIR is required by weston to create its Wayland socket.
-    # Setting it at the job level makes it available to every step.
     env:
       XDG_RUNTIME_DIR: /tmp/xdg-runtime-ci
+      WLR_BACKENDS: headless
+      WLR_RENDERER: pixman
+      WLR_LIBINPUT_NO_DEVICES: "1"
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -323,18 +323,15 @@ jobs:
             libxml2-utils \
             blueprint-compiler \
             tesseract-ocr tesseract-ocr-eng \
-            weston xwayland xvfb xdotool
+            sway wtype wayland-utils
 
       - name: Install Python dependencies (with system site-packages)
-        # The venv must inherit apt-installed PyGObject and Libadwaita modules.
         run: |
           pip install uv
           uv venv --system-site-packages .venv
           uv sync --dev
 
       - name: Compile Blueprint UI files
-        # .ui files are build artifacts from .blp sources and are no longer
-        # tracked in git. Regenerate them before compiling the GResource bundle.
         run: |
           for blp in data/ui/*.blp; do
             blueprint-compiler compile "$blp" --output "${blp%.blp}.ui"
@@ -342,7 +339,6 @@ jobs:
           echo "Compiled $(find data/ui -maxdepth 1 -name '*.ui' | wc -l) .ui file(s)"
 
       - name: Compile GResources
-        # Write the bundle to the path resolved by the application's resource loader.
         run: |
           glib-compile-resources \
             data/io.github.d3m_sudo.anura.gresource.xml \
@@ -356,129 +352,84 @@ jobs:
           cp data/io.github.d3m_sudo.anura.gschema.xml builddir/data/
           glib-compile-schemas builddir/data/
 
-      - name: Start Wayland compositor with virtual input
-        # Weston headless has no wl_seat. Run its X11 backend inside Xvfb so
-        # GTK receives a virtual pointer and keyboard for popup integration tests.
+      - name: Start Sway headless Wayland compositor
         run: |
           mkdir -p "$XDG_RUNTIME_DIR"
           chmod 700 "$XDG_RUNTIME_DIR"
+          cat > /tmp/sway-ci.conf <<'EOF'
+          output HEADLESS-1 resolution 1920x1080
+          seat seat0 xcursor_theme Adwaita 24
+          EOF
 
-          Xvfb :99 -screen 0 1920x1080x24 -nolisten tcp -ac >/tmp/xvfb.log 2>&1 &
-          echo $! > /tmp/xvfb.pid
-          for i in $(seq 1 20); do
-            if [ -S /tmp/.X11-unix/X99 ]; then break; fi
-            sleep 0.25
-          done
-          if [ ! -S /tmp/.X11-unix/X99 ]; then
-            echo "::error::Xvfb did not create display :99 within 5 s"
-            cat /tmp/xvfb.log
-            exit 1
-          fi
+          dbus-run-session -- sway --config /tmp/sway-ci.conf --verbose \
+            >/tmp/sway.log 2>&1 &
+          echo $! > /tmp/sway-session.pid
 
-          DISPLAY=:99 nohup weston --backend=x11 --renderer=pixman \
-            --width=1920 --height=1080 --socket=wayland-test --no-config \
-            >/tmp/weston.log 2>&1 &
-          echo $! > /tmp/weston.pid
-
-          echo "Waiting for Wayland socket…"
-          for i in $(seq 1 20); do
-            if [ -S "$XDG_RUNTIME_DIR/wayland-test" ]; then
-              echo "Wayland compositor ready (attempt ${i}/20)"
+          echo "Waiting for Sway Wayland socket..."
+          for i in $(seq 1 40); do
+            if [ -n "${SWAYSOCK:-}" ] && [ -S "$SWAYSOCK" ]; then break; fi
+            socket="$(find "$XDG_RUNTIME_DIR" -maxdepth 1 -type s -name 'wayland-*' -print -quit)"
+            if [ -n "$socket" ]; then
+              echo "WAYLAND_DISPLAY=$(basename "$socket")" >> "$GITHUB_ENV"
               break
             fi
-            if ! kill -0 "$(cat /tmp/weston.pid)" 2>/dev/null; then break; fi
-            sleep 0.5
-          done
-          if [ ! -S "$XDG_RUNTIME_DIR/wayland-test" ]; then
-            echo "::error::Weston X11 backend did not create the Wayland socket"
-            cat /tmp/weston.log
-            exit 1
-          fi
-
-          # Assert that the compositor actually advertises both input devices;
-          # a socket alone does not prove that popups can obtain a wl_seat.
-          seat_ready=0
-          for i in $(seq 1 10); do
-            if env DISPLAY='' GDK_BACKEND=wayland WAYLAND_DISPLAY=wayland-test \
-              uv run python - <<'PY' >/tmp/wayland-seat-check.log 2>&1
-          import gi
-          gi.require_version("Gtk", "4.0")
-          from gi.repository import Gdk, Gtk
-
-          Gtk.init()
-          display = Gdk.Display.get_default()
-          seat = display.get_default_seat() if display else None
-          if seat is None:
-              raise SystemExit("Wayland display did not advertise a default wl_seat")
-          capabilities = seat.get_capabilities()
-          required = Gdk.SeatCapabilities.POINTER | Gdk.SeatCapabilities.KEYBOARD
-          if capabilities & required != required:
-              raise SystemExit(f"wl_seat lacks pointer/keyboard capabilities: {capabilities}")
-          print(f"Wayland wl_seat ready with pointer and keyboard: {capabilities}")
-          PY
-            then
-              cat /tmp/wayland-seat-check.log
-              seat_ready=1
-              break
-            fi
-            sleep 0.5
-          done
-          if [ "$seat_ready" -ne 1 ]; then
-            echo "::error::Wayland compositor did not expose a pointer+keyboard wl_seat"
-            cat /tmp/wayland-seat-check.log
-            cat /tmp/weston.log
-            exit 1
-          fi
-
-          # Export the X11 host window so tests can inject real XTest keyboard
-          # events into Weston; Weston then forwards them to the focused Wayland
-          # client through wl_keyboard.
-          weston_window_id=""
-          for i in $(seq 1 10); do
-            weston_window_id="$(DISPLAY=:99 xdotool search --onlyvisible --class weston 2>/dev/null | head -n 1 || true)"
-            if [ -n "$weston_window_id" ]; then break; fi
+            if ! kill -0 "$(cat /tmp/sway-session.pid)" 2>/dev/null; then break; fi
             sleep 0.25
           done
-          if [ -z "$weston_window_id" ]; then
-            echo "::error::Could not locate the Weston X11 host window for XTest input"
-            cat /tmp/weston.log
+
+          socket="$(find "$XDG_RUNTIME_DIR" -maxdepth 1 -type s -name 'wayland-*' -print -quit)"
+          if [ -z "$socket" ]; then
+            echo "::error::Sway did not create a Wayland socket"
+            cat /tmp/sway.log
             exit 1
           fi
-          echo "WESTON_WINDOW_ID=$weston_window_id" >> "$GITHUB_ENV"
+          WAYLAND_DISPLAY="$(basename "$socket")"
+          echo "WAYLAND_DISPLAY=$WAYLAND_DISPLAY" >> "$GITHUB_ENV"
 
-      - name: Run experimental keyboard traversal tests (Wayland with virtual input)
-        # --override-ini replaces the global addopts from pyproject.toml.
-        # Without this override the --ignore list baked into addopts would
-        # suppress collection of the files that hold most gtk-marked tests.
-        #
-        # The cleanup trap lives here (not in the weston setup step) so that
-        # weston is kept alive for the full duration of the test run and is
-        # only stopped once pytest exits — whether it passes, fails, or times out.
+          sway_socket=""
+          for i in $(seq 1 40); do
+            sway_socket="$(find "$XDG_RUNTIME_DIR" -maxdepth 1 -type s -name 'sway-ipc.*.sock' -print -quit)"
+            if [ -n "$sway_socket" ]; then break; fi
+            sleep 0.25
+          done
+          if [ -z "$sway_socket" ]; then
+            echo "::error::Sway did not create its IPC socket"
+            cat /tmp/sway.log
+            exit 1
+          fi
+          echo "SWAYSOCK=$sway_socket" >> "$GITHUB_ENV"
+
+          export WAYLAND_DISPLAY
+          export SWAYSOCK="$sway_socket"
+          swaymsg -t get_version
+          wayland-info | grep -E 'zwp_virtual_keyboard_manager_v1|wl_seat'
+          echo "Sway headless compositor and virtual-keyboard protocol are available."
+
+      - name: Run experimental keyboard traversal tests (native Wayland input)
         env:
           GSETTINGS_SCHEMA_DIR: builddir/data
+          GDK_BACKEND: wayland
           DISPLAY: ""
-          WAYLAND_DISPLAY: wayland-test
-          WESTON_HOST_DISPLAY: :99
           NO_AT_BRIDGE: "1"
           GTK_A11Y: none
           ANURA_LOG_LEVEL: WARNING
         run: |
           cleanup() {
-            echo "::group::Cleanup remaining processes"
-            echo "Stopping Weston and orphaned workers..."
-            kill "$(cat /tmp/weston.pid 2>/dev/null)" 2>/dev/null || true
-            kill "$(cat /tmp/xvfb.pid 2>/dev/null)" 2>/dev/null || true
-            rm -f "$XDG_RUNTIME_DIR/wayland-test" /tmp/weston.pid /tmp/xvfb.pid
+            echo "::group::Cleanup Sway headless compositor"
+            kill "$(cat /tmp/sway-session.pid 2>/dev/null)" 2>/dev/null || true
+            rm -f /tmp/sway-session.pid
             echo "Cleanup complete."
             echo "::endgroup::"
           }
           trap cleanup EXIT
 
-          # GTK tests register Adw.Application instances on D-Bus. Their shutdown
-          # hooks must quit the applications so GLib/GDBus threads do not keep
-          # the pytest process alive after the test session completes.
-          uv run pytest tests/ -m "gtk and keyboard_traversal" -v --timeout=30 \
-            --override-ini "addopts=-v --tb=short"
+          for attempt in 1 2 3; do
+            echo "::group::Keyboard traversal repetition ${attempt}/3"
+            uv run pytest tests/test_history_expansion_real.py \
+              -m "gtk and keyboard_traversal" -v --timeout=30 \
+              --override-ini "addopts=-v --tb=short"
+            echo "::endgroup::"
+          done
 
   # JOB 2: Flatpak build and optional release
   flatpak-builder:
