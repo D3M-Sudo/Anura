@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: MIT
 
-import re
 from pathlib import Path
+import re
 
 
 ROOT = Path(__file__).resolve().parents[1]
