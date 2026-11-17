@@ -1179,18 +1179,25 @@ class TestM3ExtractedSelection:
         assert "Listen to Text" in widget.listen_btn.get_tooltip_text()
         assert widget.share_button.get_tooltip_text() == "Share To"
 
-        assert Gtk.test_accessible_check_property(
-            widget.text_copy_btn,
-            Gtk.AccessibleProperty.LABEL,
-            "Copy Extracted Text to Clipboard (Ctrl+C)",
+        # GTK's C testsuite exposes test_accessible_assert_property(), but
+        # that helper is not part of the public PyGObject API in the CI runtime.
+        # Spy on the public Accessible.update_property calls instead, while
+        # allowing the real GTK method to run.
+        for button in (widget.text_copy_btn, widget.listen_btn, widget.share_button):
+            original_update_property = button.update_property
+            button.update_property = MagicMock(wraps=original_update_property)
+
+        widget._update_action_tooltips(False)
+
+        widget.text_copy_btn.update_property.assert_called_once_with(
+            [Gtk.AccessibleProperty.LABEL],
+            ["Copy Extracted Text to Clipboard (Ctrl+C)"],
         )
-        assert Gtk.test_accessible_check_property(
-            widget.listen_btn,
-            Gtk.AccessibleProperty.LABEL,
-            "Listen to Text (Ctrl+L)",
+        widget.listen_btn.update_property.assert_called_once_with(
+            [Gtk.AccessibleProperty.LABEL],
+            ["Listen to Text (Ctrl+L)"],
         )
-        assert Gtk.test_accessible_check_property(
-            widget.share_button,
-            Gtk.AccessibleProperty.LABEL,
-            "Share To",
+        widget.share_button.update_property.assert_called_once_with(
+            [Gtk.AccessibleProperty.LABEL],
+            ["Share To"],
         )
