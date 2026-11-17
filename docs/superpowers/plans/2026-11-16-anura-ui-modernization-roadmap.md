@@ -365,11 +365,20 @@ The [global roadmap](2026-11-16-anura-ui-modernization-global-roadmap.md) is the
 
 ## M1-07 — F3 CSS selector cleanup and F4 typography documentation (2026-11-17)
 
-- **Outcome:** completed within the approved follow-up scope; no change to global M1 Partial status.
+- **Outcome:** M1-07 completed within the approved follow-up scope. The maintainer subsequently closed the global M1 cycle as **Completed (operationally)**; manual visual/accessibility verification is deferred to M7.
 - **F3 audit:** temporary workflow [#43981815120](https://github.com/D3M-Sudo/Anura/actions/runs/43981815120) succeeded on audit commit `498f8de52cff7c4ea9d12f0ea9a9b19e913d81ce`. No direct consumers were found in tracked Python/Blueprint application sources. The uploaded [audit artifact](https://github.com/D3M-Sudo/Anura/actions/runs/43981815120/artifacts/14283985075) and job log record the search.
 - **F3 cleanup:** removed unused custom selector groups and their dedicated keyframes from `data/style.css`; removed stale reduced-motion references to `.share-row` and `.welcome-card`. No speculative future selectors were retained. The temporary workflow was removed after collecting evidence.
 - **F4 documentation:** the design-system guide now distinguishes supported `.heading` from arbitrary/unverified `.title` and `.h4` classes. Existing Blueprint assignments remain unchanged.
 - **Limitations:** the consumer audit searches literal strings in tracked files and cannot rule out dynamically synthesized names or external integrations. No manual rendered UI or assistive-technology test is claimed.
 - **Files updated:** `data/style.css`, `docs/ui-design-system.md`, M1-05 audit report, global roadmap, HANDOVER, CHANGELOG and M1-06 execution ledger.
-- **Final CI/CodeQL:** pending verification on the resulting head; see the execution ledger for the final exact-SHA record.
+- **Final CI/CodeQL:** verified on final head `443fd6085dfa14ef9941015e688760ff5874ec4f`: [CI #43982790571](https://github.com/D3M-Sudo/Anura/actions/runs/43982790571) and [CodeQL #43982790585](https://github.com/D3M-Sudo/Anura/actions/runs/43982790585) both completed with conclusion `success`. Python quality, GTK Integration, Changelog integrity, AppImage/Flatpak x86_64+aarch64 builds and release-artifact validators passed; `publish-release` was skipped as expected for a PR.
 - PR #648 remains Open/Draft/unmerged, base `feature`; protected branches and PR metadata remain unchanged.
+
+
+## M1 — operational closure (2026-11-17)
+
+- The maintainer selected **A — operationally completed**, with the remaining manual verification deferred to M7. The global roadmap is authoritative for phase status; this subordinate workstream records the final evidence and disposition.
+- M1-02 through M1-07 are complete within their approved scopes. Final validation was performed against branch head `443fd6085dfa14ef9941015e688760ff5874ec4f`.
+- [CI #43982790571](https://github.com/D3M-Sudo/Anura/actions/runs/43982790571) and [CodeQL #43982790585](https://github.com/D3M-Sudo/Anura/actions/runs/43982790585) both succeeded on that exact head. The CI build/test and packaging matrix passed; `publish-release` was skipped as expected for a PR.
+- Not performed: manual GNOME/GTK rendered-UI review, manual keyboard navigation, real Orca/AT-SPI verification and live multi-monitor checks. These are deferred to M7 and must not be represented as passed. Screenshot capture remains deferred to the agreed later release stage.
+- PR #648 remains Open, Draft and unmerged, targeting `feature`. This documentation update does not change PR metadata, merge state or any protected branch.
