@@ -497,3 +497,15 @@ The application-owned light/dark green fallback is retained; Libadwaita `.succes
 - **CHANGELOG:** unchanged because no user-visible behavior changed. No production source or runtime behavior was modified.
 - **Limits:** no local tests, rendered UI, physical keyboard traversal, Orca/AT-SPI or live notification-daemon checks are claimed. F-303-02 physical keyboard validation remains deferred to M7-03/#655.
 - **Governance:** PR #648 remains Open/Draft/unmerged, base `feature`; no protected branch or PR metadata change, merge or release was performed.
+
+
+## 2026-11-17 — M5-03 portal-missing banner dismissal fix
+
+- **Finding:** the portal-missing Adw.Banner exposed “Dismiss”, but AnuraWindow did not handle its button-clicked signal. The banner could be revealed by the existing portal-missing path but not dismissed through its action button.
+- **Production correction:** connect portal_banner's button-clicked signal in _setup_controller_signals() to _on_portal_banner_dismissed(); the handler sets revealed=False. Existing reveal behavior is unchanged.
+- **Regression coverage:** two GTK tests in tests/test_m5_02_ui_contracts.py verify signal wiring and the handler's hide behavior. The temporary M5-03 CI run [#44141439001](https://github.com/D3M-Sudo/Anura/actions/runs/44141439001) passed both tests (2 passed, 1 warning); the red phase showed both tests failing before the fix. Temporary workflow removed after evidence collection.
+- **Final exact-head CI:** commit 74f6a4ef98392f80c0ca1e95ed987d2c1d48749c; [CI #44142298765](https://github.com/D3M-Sudo/Anura/actions/runs/44142298765) and [CodeQL #44142298673](https://github.com/D3M-Sudo/Anura/actions/runs/44142298673) both succeeded. Python quality, Changelog Integrity, GTK Integration, AppImage x86_64/aarch64, Flatpak x86_64/aarch64, AppImage release-set and multi-architecture artifact validation passed. publish-release skipped as expected.
+- **CHANGELOG:** added an [Unreleased] / Fixed entry for the user-visible banner dismissal correction.
+- **Limitations:** no local test execution, rendered UI, physical keyboard traversal, real Orca/AT-SPI or live portal/notification-daemon verification is claimed. F-303-02 remains deferred to M7-03/#655. M5-02 toast lifecycle and P3 dialog/Portal/popover tests remain deferred.
+- **Programme state:** M5 remains Partial. M5-01, M5-02 and M5-03 are complete within their recorded bounded scopes; global M5 exit criteria are not yet met.
+- **Governance:** PR #648 remains Open/Draft/unmerged, targeting feature; no protected branch, merge or release was changed.
