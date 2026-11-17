@@ -93,6 +93,7 @@ def test_ocr_status_reannounces_after_status_clear(headless_gi_mocks):
         "Loading image",
     ]
 
+
 def _make_extracted_search_page(extracted_page, *, count: int, search_text: str = "Anura"):
     page = MagicMock()
     page.search_count_label = MagicMock()
@@ -115,15 +116,11 @@ def test_search_in_progress_updates_visible_and_accessible_labels(headless_gi_mo
     extracted_page.ExtractedPage._on_search_occurrences_changed(page, page.search_context, None)
 
     page.search_count_label.set_text.assert_called_once_with("Searching…")
-    assert page.search_entry.update_property.call_args.args[1] == [
-        "Search extracted text (Searching…)"
-    ]
+    assert page.search_entry.update_property.call_args.args[1] == ["Search extracted text (Searching…)"]
     timeout_add.assert_not_called()
 
 
-def test_single_search_result_is_announced_after_400ms_with_low_priority(
-    headless_gi_mocks, monkeypatch
-):
+def test_single_search_result_is_announced_after_400ms_with_low_priority(headless_gi_mocks, monkeypatch):
     import anura.widgets.extracted_page as extracted_page
 
     page = _make_extracted_search_page(extracted_page, count=1)
@@ -135,9 +132,7 @@ def test_single_search_result_is_announced_after_400ms_with_low_priority(
     extracted_page.ExtractedPage._on_search_occurrences_changed(page, page.search_context, None)
 
     page.search_count_label.set_text.assert_called_once_with("1 match")
-    assert page.search_entry.update_property.call_args.args[1] == [
-        "Search extracted text (1 match)"
-    ]
+    assert page.search_entry.update_property.call_args.args[1] == ["Search extracted text (1 match)"]
     timeout_add.assert_called_once_with(400, page._announce_search_results)
 
     extracted_page.ExtractedPage._announce_search_results(page)
@@ -160,9 +155,7 @@ def test_zero_search_results_are_announced_as_no_matches(headless_gi_mocks, monk
     extracted_page.ExtractedPage._on_search_occurrences_changed(page, page.search_context, None)
 
     page.search_count_label.set_text.assert_called_once_with("No matches")
-    assert page.search_entry.update_property.call_args.args[1] == [
-        "Search extracted text (No matches)"
-    ]
+    assert page.search_entry.update_property.call_args.args[1] == ["Search extracted text (No matches)"]
 
     extracted_page.ExtractedPage._announce_search_results(page)
 
@@ -173,9 +166,7 @@ def test_zero_search_results_are_announced_as_no_matches(headless_gi_mocks, monk
     )
 
 
-def test_clearing_search_restores_accessible_label_and_cancels_pending_announcement(
-    headless_gi_mocks, monkeypatch
-):
+def test_clearing_search_restores_accessible_label_and_cancels_pending_announcement(headless_gi_mocks, monkeypatch):
     import anura.widgets.extracted_page as extracted_page
 
     page = _make_extracted_search_page(extracted_page, count=2)
@@ -193,4 +184,3 @@ def test_clearing_search_restores_accessible_label_and_cancels_pending_announcem
     page.search_context.set_highlight.assert_called_once_with(False)
     page.search_count_label.set_text.assert_called_once_with("")
     assert entry.update_property.call_args.args[1] == ["Search extracted text"]
-
