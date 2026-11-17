@@ -6,22 +6,16 @@ This document transfers the context required to continue the UI modernization wo
 
 This handover records the adapted implementation and its remaining validation. The modernization work is now present on `fix/ui-modernization-aligned`; it was adapted against `feature` rather than copied wholesale from PR #448.
 
-## Current operational snapshot — M1 operational closure (2026-11-17)
+## Current operational snapshot — M2 operational closure (2026-11-17)
 
-- **Authoritative global status:** M0 Completed after M0-C consolidation; **M1 Completed (operationally)**; M2 Partial; M3 Partial; M4 Partial; M5 Not started as a complete phase; M6 Partial; M7 Partial.
-- **M1-05 completed:** read-only cross-surface Design System audit recorded in [M1-05 report](docs/audit/ui-design-system-m1-05-2026-11-16.md).
-- **M1-06 completed within its approved scope.** F1 Shortcuts reduced-motion handling and F2 production-tree scanner enforcement are implemented on SHA `35fa684e72fd4e83eae4d58d4b7e731a00d2486b`; CI #43974750869 and CodeQL #43974750821 passed on that exact SHA.
-- Final CI #43974750869: all 9 executable jobs passed, including AppImage x86_64/aarch64, Flatpak x86_64/aarch64, Python quality, GTK Integration, Changelog integrity and both release-set validators. `publish-release` was skipped as expected for a PR. CodeQL #43974750821 passed. Python: 644 passed, 6 skipped, 277 deselected; GTK: 447 passed, 5 skipped, 650 deselected, 2 warnings.
-- M1-02 through M1-07 are complete within their approved scopes. The maintainer selected operational closure (option A): M1 is Completed for purposes of the current work cycle; manual rendered-UI, keyboard, Orca/AT-SPI and live multi-monitor verification is explicitly deferred to M7 and is not claimed as passed.
-- The [global roadmap](docs/superpowers/plans/2026-11-16-anura-ui-modernization-global-roadmap.md) owns current phase status, priorities, dependencies and global traceability. The [PR #648 roadmap](docs/superpowers/plans/2026-11-16-anura-ui-modernization-roadmap.md) owns detailed PR workstream history and exact-SHA evidence. Older continuation instructions below are historical and are superseded where they conflict with the current global roadmap.
+- **Authoritative global status:** M0 Completed; M1 Completed (operationally); **M2 Completed (operationally)**; M3 Partial; M4 Partial; M5 Not started as a complete phase; M6 Partial; M7 Partial.
+- **M2-G01 completed:** History → Welcome focus behavior passed exact-head CI on `7d34cf8f92435c85d9ba3537ead42c7bb98519a4`.
+- **M2-G02 completed:** asynchronous Welcome drag-and-drop and eight regression tests passed on exact head `f52e437d9bdfdf6200d26449152e3ffeeacc14be`. CI [#43995410588](https://github.com/D3M-Sudo/Anura/actions/runs/43995410588) and CodeQL [#43995410567](https://github.com/D3M-Sudo/Anura/actions/runs/43995410567) both succeeded on that exact head. Python quality: 652 passed, 6 skipped, 279 deselected; GTK Integration, Changelog integrity, AppImage x86_64/aarch64, Flatpak x86_64/aarch64 and release artifact validation passed. `publish-release` was skipped as expected for a PR.
+- **Operational closure decision:** the maintainer selected option A. All M2 requirements selected for automated verification are complete. Manual GNOME/GTK visual, keyboard and real Orca/AT-SPI checks are deferred to M7 and are not claimed as passed. Live multi-monitor verification remains excluded. App-wide menu consistency and intentional menu differences are deferred to M5.
+- The [global roadmap](docs/superpowers/plans/2026-11-16-anura-ui-modernization-global-roadmap.md) owns current phase status, priorities, dependencies and global traceability. The [PR #648 roadmap](docs/superpowers/plans/2026-11-16-anura-ui-modernization-roadmap.md) owns detailed PR workstream history and exact-SHA evidence.
 - PR #648 was rechecked: Open, Draft, unmerged, base `feature`, head branch `fix/ui-modernization-aligned`. No PR metadata/state change or merge was made.
-- Manual GNOME/GTK visual checks, real Orca/AT-SPI, manual keyboard checks and live multi-monitor geometry verification remain excluded. Screenshot capture remains deferred to the next release cycle.
-- M1-07 F3/F4 follow-up completed: the tracked-file consumer audit found no production consumers for the candidate selectors, the orphaned CSS rules/keyframes were removed, and `title`/`h4` semantics were documented without changing Blueprint code.
-- **Final M1 validation:** branch head `443fd6085dfa14ef9941015e688760ff5874ec4f`; [CI #43982790571](https://github.com/D3M-Sudo/Anura/actions/runs/43982790571) and [CodeQL #43982790585](https://github.com/D3M-Sudo/Anura/actions/runs/43982790585) both completed successfully on that exact head. The CI Python/GTK tests, Changelog integrity, AppImage/Flatpak x86_64+aarch64 builds and release-artifact validators passed; `publish-release` was skipped as expected for a PR.
-- No dependencies, OCR, palette, architecture, portal, OS or protected branch changes were made.
+- No protected branch was modified. This documentation update does not authorize M3 implementation; M3-01 remains a read-only audit.
 
-
-> **Roadmap hierarchy:** the [Global Anura UI/UX Modernization Roadmap](docs/superpowers/plans/2026-11-16-anura-ui-modernization-global-roadmap.md) is the primary plan for the complete application-wide M0–M7 modernization, all windows/components and global requirement traceability. The [PR #648 workstream roadmap](docs/superpowers/plans/2026-11-16-anura-ui-modernization-roadmap.md) is subordinate and preserves detailed implementation/task/CI evidence for that PR only. This handover remains the technical/history record. After every completed task, update the global roadmap—and the PR #648 workstream roadmap when relevant—before starting another task.
 
 ## Current Git state
 
