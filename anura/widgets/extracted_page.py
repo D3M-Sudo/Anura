@@ -239,12 +239,12 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
             return
 
         # Defensive: if already showing feedback, don't nested-capture the checkmark
-        if self.text_copy_btn.get_icon_name() == "emblem-ok-symbolic":
+        if self.text_copy_btn.get_icon_name() == "object-select-symbolic":
             return
 
         # Store original icon and switch to checkmark
         original_icon = self.text_copy_btn.get_icon_name()
-        self.text_copy_btn.set_icon_name("emblem-ok-symbolic")
+        self.text_copy_btn.set_icon_name("object-select-symbolic")
 
         # Temporarily update tooltip and screen reader accessible label
         copied_text = C_("Extracted screen", "Copied to clipboard!")
@@ -256,7 +256,7 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
     def _reset_copy_icon(self, icon_name: str) -> bool:
         """Helper to reset copy button icon, tooltip and accessible label."""
         try:
-            if self.text_copy_btn and self.text_copy_btn.get_icon_name() == "emblem-ok-symbolic":
+            if self.text_copy_btn and self.text_copy_btn.get_icon_name() == "object-select-symbolic":
                 # Only reset if it's still showing the checkmark (don't overwrite newer state)
                 self.text_copy_btn.set_icon_name(icon_name)
                 # Restore original tooltip and accessibility label based on the active selection state
