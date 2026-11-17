@@ -476,7 +476,13 @@ The [global roadmap](2026-11-16-anura-ui-modernization-global-roadmap.md) is the
 - **M4-F04:** the Preferences OCR model ListView has the localized accessible label “Available OCR models”; the gettext POT template includes the new message.
 - **Regression tests:** added `tests/test_preferences_languages_lifecycle.py` with four focused tests covering configured source host, cancellation/late callback after disposal, completed idle-source cleanup and the accessible ListView name.
 - **Changed files:** `anura/widgets/preferences_languages_page.py`, `anura/widgets/language_row.py`, `tests/test_preferences_languages_lifecycle.py`, `CHANGELOG.md`, `po/io.github.d3m_sudo.anura.pot`, and the M4-01 audit report.
-- **Verification:** Python quality (Ruff lint/format, Mypy, Bandit, Vulture, coverage tests and Flatpak runtime dependency coverage) and Changelog integrity passed on code head `ade9950264588fdfe6ee7fa25938300fabe006a3`, CI [#44109387223](https://github.com/D3M-Sudo/Anura/actions/runs/44109387223). Full GTK Integration, AppImage x86_64/aarch64 and CodeQL results must be reconciled against the final documentation-inclusive head before final verification is claimed.
+- **Exact final-head evidence:** documentation-inclusive head `c0eaa426e2fa2c37eeb43c7e04200fe67848bb37`; CI [#44109820125](https://github.com/D3M-Sudo/Anura/actions/runs/44109820125), CodeQL [#44109819932](https://github.com/D3M-Sudo/Anura/actions/runs/44109819932).
+  - Python quality — passed, including Ruff lint/format, Mypy, Bandit, Vulture, tests and Flatpak runtime dependency coverage. Coverage run: **661 passed, 6 skipped, 283 deselected**.
+  - Changelog integrity — passed.
+  - CodeQL — passed on the exact head.
+  - GTK Integration — failed with **4 failed, 449 passed, 5 skipped, 667 deselected**. All four failures are the previously suspended F-303-02 XTest/Weston keyboard-traversal tests: three input events not observed by GTK and one focus-retention case after GTK received Tab. This is the already documented CI input-harness limitation, not a new M4 regression. No further F-303-02 changes are authorized in this work cycle.
+  - AppImage x86_64/aarch64 — still in progress at the last check. Flatpak and downstream artifact-validation jobs were skipped because GTK Integration failed.
+  - No local tests or manual GNOME/GTK, Orca/AT-SPI or keyboard checks are claimed.
 - **Limits:** no local tests were run. No manual GNOME/GTK visual, real Orca/AT-SPI or keyboard checks are claimed; those remain excluded/deferred. No workflow, dependency, OCR engine/pipeline, protected branch or PR state changed.
 - **Global status:** M4 remains Partial because other Preferences mapping, secondary-language refresh/removal and Voice lifecycle coverage gaps remain. M4-01's four audited findings are remediated.
 - **Next:** M5-01 — read-only audit of Shortcuts, About, dialogs, popovers, menus, banners, toasts and notifications.
