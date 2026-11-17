@@ -45,9 +45,8 @@ class LanguageRow(Gtk.Overlay, SignalManagerMixin):
         self.connect_tracked(language_manager, "downloaded", self.on_downloaded)
         self.connect_tracked(language_manager, "download-failed", self.on_download_failed)
 
-        # Deferred UI update to ensure item is set
-        idle_id = GLib.idle_add(self._idle_update_ui)
-        self._idle_ids.add(idle_id)
+        # Deferred UI update to ensure item is set.
+        self._schedule_idle_update()
 
     @GObject.Property(type=GObject.TYPE_PYOBJECT)
     def item(self) -> LanguageItem | None:
@@ -72,14 +71,23 @@ class LanguageRow(Gtk.Overlay, SignalManagerMixin):
         progress_label = _("Download {language}").format(language=self._item.title)
         self.progress_bar.update_property([Gtk.AccessibleProperty.LABEL], [progress_label])
 
+    def _schedule_idle_update(self) -> None:
+        """Queue a one-shot UI refresh and prune its ID when it runs."""
+        source_id: list[int] = []
+
+        def _run() -> bool:
+            if source_id:
+                self._idle_ids.discard(source_id[0])
+            return self._idle_update_ui()
+
+        source_id.append(GLib.idle_add(_run))
+        self._idle_ids.add(source_id[0])
+
     def _idle_update_ui(self) -> bool:
-        """One-shot idle callback: runs update_ui and prunes itself from tracking."""
-        # Check widget validity before accessing attributes to prevent crash if widget destroyed
+        """One-shot idle callback that refreshes the row when it is still attached."""
         if not self.get_parent() or not self._item:
             return GLib.SOURCE_REMOVE
         self.update_ui()
-        # Prune: this source has fired and auto-removed; discard the stale ID
-        # (the ID was added in __init__ or on_downloaded)
         return GLib.SOURCE_REMOVE
 
     def update_ui(self) -> None:
@@ -178,8 +186,7 @@ class LanguageRow(Gtk.Overlay, SignalManagerMixin):
             message = _("Download of {language} completed").format(language=self._item.title)
             announce_accessible(self, message)
             self._download_announced = False
-            idle_id = GLib.idle_add(self._idle_update_ui)
-            self._idle_ids.add(idle_id)
+            self._schedule_idle_update()
 
     def on_download_failed(self, _sender: GObject.GObject, code: str) -> None:
         """Announce a failed download and restore the row controls."""
