@@ -61,6 +61,8 @@ def test_disposing_languages_page_cancels_probe_and_ignores_late_result(monkeypa
     _module, page, monitor, _address, cancellable = _make_languages_page(monkeypatch, headless_gi_mocks)
     callback = monitor.can_reach_async.call_args.args[2]
     result = MagicMock()
+    base_class = module.PreferencesLanguagesPage.__mro__[1]
+    monkeypatch.setattr(base_class, "do_destroy", lambda _self: None, raising=False)
 
     page.do_destroy()
 
