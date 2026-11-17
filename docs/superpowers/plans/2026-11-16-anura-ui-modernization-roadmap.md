@@ -21,16 +21,14 @@
 7. Use GitHub Actions as the test execution environment; this working environment does not provide the local project test runner. Do not claim local tests were run.
 8. Keep CHANGELOG and technical documentation accurate when a task changes user-visible behavior or project contracts.
 
-## Verified baseline (2026-11-16)
+## Verified baseline (2026-11-17)
 
-- PR #648 is open, **Draft**, unmerged and targets `feature`.
-- Working branch: `fix/ui-modernization-aligned`.
-- Latest verified PR head before this documentation update: `ae048880f46162f1f11892a06b27fa420c39430c`.
-- The PR snapshot reports 314 commits and 67 changed files; the branch is mergeable. The prior comparison record is 314 commits ahead and 0 behind. Re-check the compare immediately before any future integration decision.
-- Latest verified CI run: [#44135571249](https://github.com/D3M-Sudo/Anura/actions/runs/44135571249), on head `ae048880f46162f1f11892a06b27fa420c39430c`; CodeQL [#44135571322](https://github.com/D3M-Sudo/Anura/actions/runs/44135571322) passed on the same head.
-- CI jobs passed: Python quality, Changelog integrity, GTK Integration Tests, AppImage x86_64/aarch64, Flatpak x86_64/aarch64, AppImage release-set validation and multi-architecture release validation. Publish-release was skipped as expected for a PR.
-- GTK Integration Tests: **431 passed, 5 skipped, 632 deselected, 2 warnings**. The constrained-viewport Welcome scrolling regression passed. The run's job logs are the source of truth for detailed results.
-- The latest workflow correction uses Xvfb-backed Weston X11 and verifies the Wayland seat exposes pointer and keyboard capabilities before GTK tests. The latest run passed the popup activation tests.
+- PR #648 is Open, Draft, unmerged and mergeable; base `feature`; working branch `fix/ui-modernization-aligned`.
+- Audited head before M5 closure documentation: `ee81c01c47b49ebe53b5c36797eb54f18e6d8469`.
+- GitHub PR metadata at that snapshot: 576 commits, 96 changed files, 8,661 additions and 986 deletions. Live comparison with `feature`: 576 ahead / 0 behind; merge base `cb079b0b55e252a7ac054fe1b6f57030ddc7b1f9`. Ahead count is Git ancestry, not a count of distinct UI features.
+- Latest complete code/test-head CI: [#44142298765](https://github.com/D3M-Sudo/Anura/actions/runs/44142298765) and CodeQL [#44142298673](https://github.com/D3M-Sudo/Anura/actions/runs/44142298673) passed on exact head `74f6a4ef98392f80c0ca1e95ed987d2c1d48749c`. Python quality, Changelog integrity, GTK Integration, AppImage x86_64/aarch64, Flatpak x86_64/aarch64, AppImage release-set validation and multi-architecture artifact validation passed; publish-release was skipped as expected for a PR.
+- Documentation-inclusive head observed during the audit: CodeQL [#44145092317](https://github.com/D3M-Sudo/Anura/actions/runs/44145092317) passed on `ee81c01c47b49ebe53b5c36797eb54f18e6d8469`. CI [#44145092344](https://github.com/D3M-Sudo/Anura/actions/runs/44145092344) was still in progress: Python quality, Changelog integrity, GTK Integration, AppImage x86_64/aarch64 and AppImage release-set validation had passed; Flatpak x86_64/aarch64 were still running. This run does not cover later documentation commits.
+- M5 banner regressions: temporary run [#44141439001](https://github.com/D3M-Sudo/Anura/actions/runs/44141439001), 2 passed, 1 warning. Final code/test head and CI evidence are recorded in M5-03 below.
 - No merge, release publication or protected-branch update is authorized.
 
 ## Relationship to the global M0–M7 plan
@@ -59,6 +57,8 @@ The global roadmap owns phase status and app-wide prioritization. This document 
 | UI-13 | M1-02 GTK4/Libadwaita typography, spacing and radius conventions | **Completed** | Design conventions documented, Blueprint/CSS spacing normalized, four static regression tests added; exact-head CI and CodeQL passed. See the M1-02 record below. |\n| UI-14 | M3-01 Extracted/History audit and F-301/F-302 test remediation | **Completed within bounded scope** | Read-only audit completed; History refresh contract test reconciled; Extracted search-announcement edge cases covered; exact-head CI and CodeQL passed. M3 remains Partial; F-303-01 followed. |
 | UI-15 | F-303-01 History TTS action-label semantics and state tests | **Completed** | State-specific tooltip and accessible labels implemented; four-state assertions and CHANGELOG entry added. Exact-head CI #44027455501 and CodeQL #44027455444 passed on `2d503db3b98383ab0b293f7e7752b583826a40c9`. F-303-02 is next. |
 | UI-16 | M5-02 approved automated UI contract tests | **Completed within approved scope** | Shortcuts search/Escape, static menu action/scope contract and toast delegation/title/priority tests. Banner dismissal and toast lifecycle excluded. Exact-head CI #44135571249 and CodeQL #44135571322 passed. |
+| UI-17 | M5-03 portal-banner Dismiss correction | **Completed** | Connected `Adw.Banner::button-clicked` to the hide handler; two GTK regression tests passed in temporary run #44141439001. Exact code/test head `74f6a4ef` passed CI #44142298765 and CodeQL #44142298673. CHANGELOG records the user-visible fix. |
+| UI-18 | M5 agreed-scope closure and global documentation reconciliation | **Completed by maintainer decision** | P3 candidates are deferred/non-blocking; native visual, Orca/AT-SPI and physical keyboard checks belong to M7; toast lifecycle remains excluded. Global roadmap, workstream roadmap and HANDOVER record M5 Completed within agreed scope. |
 
 ## Completed work — scope and evidence
 
@@ -568,3 +568,15 @@ M5-01 can proceed after this formal disposition; F-303-02 remains deferred until
 - **Boundaries:** no local tests, manual visual inspection, physical keyboard traversal, Orca/AT-SPI or live portal/notification-daemon verification are claimed. F-303-02 remains deferred to M7-03/#655. M5-02 toast lifecycle and P3 About/fatal-dialog, Portal cleanup/error-path and popover-focus tests remain deferred.
 - **Status:** M5 remains Partial; M5-03 is complete only within this correction and regression-test scope.
 - **PR state:** #648 remains Open/Draft/unmerged, base feature. No protected branch, merge or release was changed.
+
+
+## M5 — agreed-scope closure (2026-11-17)
+
+- **Status:** Completed within the scope explicitly agreed with the maintainer. This is a phase-level disposition, not a claim that every conceivable test or manual check was performed.
+- **M5-01:** read-only audit completed for Shortcuts, About/fatal/Clear History dialogs, language/share popovers, Welcome/Extracted menus, banner, toast overlay and desktop notifications. Report: [M5-01 audit](../../audit/ui-other-surfaces-m5-01-2026-11-17.md).
+- **M5-02:** five GTK tests cover Shortcuts search/match/empty/reset/Escape and toast delegation/title/priority; one headless/static test checks Blueprint `app.*`/`win.*` action resolution/scope. Toast dismissal/lifecycle is deliberately excluded and is not claimed as tested.
+- **M5-03:** portal-unavailable banner Dismiss is wired to hide the banner. Two GTK regressions verify signal wiring and handler behavior; temporary run [#44141439001](https://github.com/D3M-Sudo/Anura/actions/runs/44141439001) passed both (2 passed, 1 warning). Final code/test head `74f6a4ef` passed CI [#44142298765](https://github.com/D3M-Sudo/Anura/actions/runs/44142298765) and CodeQL [#44142298673](https://github.com/D3M-Sudo/Anura/actions/runs/44142298673).
+- **P3 disposition:** About/fatal-dialog construction/presentation tests, Portal timeout/shutdown cleanup and error-path tests, and additional popover-focus assertions are deferred and do not block M5 closure.
+- **Manual verification disposition:** native GNOME/GTK visual inspection, real Orca/AT-SPI and physical keyboard traversal are allocated to M7. F-303-02 is tracked by [issue #655](https://github.com/D3M-Sudo/Anura/issues/655) for M7-03; it is deferred, not passed.
+- **Global programme status after closure:** M0 Completed; M1 Completed (operationally); M2 Completed (operationally); M3 Partial; M4 Partial; M5 Completed within agreed scope; M6 Partial; M7 Partial.
+- **CHANGELOG:** the existing `[Unreleased] / Fixed` entry already records the banner Dismiss correction; no additional changelog entry was needed for the phase-status decision.
