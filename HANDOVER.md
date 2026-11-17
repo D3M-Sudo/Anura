@@ -424,3 +424,11 @@ The application-owned light/dark green fallback is retained; Libadwaita `.succes
 - **Files updated:** `data/style.css`, `docs/ui-design-system.md`, this M1-05 audit report, global and PR #648 roadmaps, `CHANGELOG.md`, and this handover/ledger.
 - **Validation:** the full PR CI and CodeQL are to be checked against the resulting source/documentation head before this task is declared fully verified. No local tests or manual visual/assistive-technology checks are claimed.
 - **Governance:** PR #648 remains Open, Draft, unmerged, base `feature`; protected branches and PR metadata were not changed.
+
+
+## 2026-11-17 — F-303-02 suspension and M4-01 audit
+
+- F-303-02 is suspended. CI #44040005554 on `84ff4d50a3291b4328d28e657b251144d979e9c6` showed three XTest/Weston-to-GTK input-delivery failures and one focus-retention case after GTK received Tab; CodeQL #44040005537 passed on that commit.
+- The current CI virtual-input route is not reliable enough to establish real keyboard traversal. No production defect is confirmed; no more input-harness changes are planned in this work cycle.
+- M4-01 read-only audit completed; report: `docs/audit/preferences-languages-m4-01-2026-11-17.md`. Findings M4-F01–F04 are recorded; global M4 remains Partial pending maintainer disposition.
+- No application source, workflow, dependency, CHANGELOG, protected branch or PR metadata was changed by the audit/documentation record. PR #648 remains Open/Draft/unmerged, targeting `feature`.
