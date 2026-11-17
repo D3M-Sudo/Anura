@@ -87,7 +87,6 @@ def test_screenshot_timeout_invalidates_operation_before_backend_cancellation(he
         assert window.backend.active_operation_id == 22
 
     window.backend.cancel.side_effect = assert_generation_invalidated_before_cancel
-    monkeypatch = MagicMock()
     module.GLib.SOURCE_REMOVE = False
 
     result = module.AnuraWindow._on_screenshot_timeout(window)
@@ -99,3 +98,34 @@ def test_screenshot_timeout_invalidates_operation_before_backend_cancellation(he
     window.backend.cancel.assert_called_once_with()
     window.present.assert_called_once_with()
     window.show_toast.assert_called_once()
+
+
+
+def test_window_ocr_error_cleans_up_and_displays_message(headless_gi_mocks, monkeypatch):
+    import anura.services.screenshot_service as screenshot_service
+    from anura.window import AnuraWindow
+
+    backend = MagicMock()
+    backend.fallback_provider = object()
+    monkeypatch.setattr(screenshot_service, "get_screenshot_service", lambda: backend)
+
+    window = MagicMock()
+    window._ocr_operation_id = 31
+
+    AnuraWindow._on_ocr_error(window, MagicMock(), "OCR recognition failed")
+
+    window._cleanup_screenshot_state.assert_called_once_with()
+    window._finish_ocr_operation.assert_called_once_with(31)
+    window.show_toast.assert_called_once_with("OCR recognition failed")
+
+
+def test_stale_ocr_result_does_not_navigate(headless_gi_mocks):
+    from anura.controllers.ocr_controller import OcrController
+    from anura.controllers import ocr_controller as module
+
+    controller = MagicMock()
+    controller._window._is_current_ocr_operation.return_value = False
+    result = OcrController._navigate_to_extracted_page(controller, "old-task", 30)
+
+    assert result == module.GLib.SOURCE_REMOVE
+    controller.emit.assert_not_called()

@@ -793,7 +793,7 @@ def test_history_row_actions_have_initial_accessible_labels(headless_gi_mocks, m
     service.record("stored OCR text", "eng")
     _make_page(headless_gi_mocks, service)
 
-    button_calls = fake_button_calls = __import__("anura.widgets.history_page", fromlist=["Gtk"]).Gtk.Button.call_args_list
+    button_calls = __import__("anura.widgets.history_page", fromlist=["Gtk"]).Gtk.Button.call_args_list
     labels = [call.kwargs["tooltip_text"] for call in button_calls]
     assert labels == [
         "Copy text to clipboard",
