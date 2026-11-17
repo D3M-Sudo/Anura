@@ -92,7 +92,6 @@ python_functions = ["test_*"]
 # Markers for GTK-dependent tests that require a display
 markers = [
     "gtk: tests that require a live GTK/Wayland display",
-    "keyboard_traversal: experimental GTK keyboard traversal tests with an unreliable CI input harness",
     "network: tests that require network access",
 ]
 # The default test invocation excludes display-dependent integration modules.
