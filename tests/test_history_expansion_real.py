@@ -157,9 +157,7 @@ def test_refresh_rebuilds_the_list_and_restores_the_expanded_row(real_history):
 
     page, _service, _controller = real_history
     expanded_row = page._rows[1]
-    expanded_entry_id = next(
-        entry_id for entry_id, row in page._row_entry_ids.items() if row is expanded_row
-    )
+    expanded_entry_id = next(entry_id for entry_id, row in page._row_entry_ids.items() if row is expanded_row)
     expanded_row.set_expanded(True)
     old_rows = list(page._rows)
 
