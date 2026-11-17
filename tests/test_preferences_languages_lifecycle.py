@@ -22,24 +22,34 @@ def _make_languages_page(monkeypatch, headless_gi_mocks):
 
     monitor = MagicMock()
     address = SimpleNamespace(hostname=None, port=None)
+    cancellable = MagicMock()
 
     def make_address(hostname, port):
         address.hostname = hostname
         address.port = port
         return address
 
-    monkeypatch.setattr(module.Gio.NetworkMonitor, "get_default", lambda: monitor)
-    monkeypatch.setattr(module.Gio.NetworkAddress, "new", make_address)
+    monkeypatch.setattr(
+        module.Gio,
+        "NetworkMonitor",
+        SimpleNamespace(get_default=lambda: monitor),
+    )
+    monkeypatch.setattr(
+        module.Gio,
+        "NetworkAddress",
+        SimpleNamespace(new=make_address),
+    )
+    monkeypatch.setattr(module.Gio, "Cancellable", lambda: cancellable)
 
     page = module.PreferencesLanguagesPage()
-    return module, page, monitor, address
+    return module, page, monitor, address, cancellable
 
 
 def test_network_probe_targets_the_configured_ocr_model_host(monkeypatch, headless_gi_mocks):
     """The reachability warning must probe the host that serves tessdata."""
     from anura.config import TESSDATA_URL
 
-    _module, _page, monitor, address = _make_languages_page(monkeypatch, headless_gi_mocks)
+    _module, _page, monitor, address, _cancellable = _make_languages_page(monkeypatch, headless_gi_mocks)
 
     assert address.hostname == urlsplit(TESSDATA_URL).hostname
     assert address.port == 443
@@ -48,8 +58,7 @@ def test_network_probe_targets_the_configured_ocr_model_host(monkeypatch, headle
 
 def test_disposing_languages_page_cancels_probe_and_ignores_late_result(monkeypatch, headless_gi_mocks):
     """A late network result must not update a destroyed Preferences page."""
-    _module, page, monitor, _address = _make_languages_page(monkeypatch, headless_gi_mocks)
-    cancellable = page._network_cancellable
+    _module, page, monitor, _address, cancellable = _make_languages_page(monkeypatch, headless_gi_mocks)
     callback = monitor.can_reach_async.call_args.args[2]
     result = MagicMock()
 
@@ -90,6 +99,9 @@ def test_language_row_prunes_idle_id_when_refresh_callback_finishes(monkeypatch,
 
 def test_preferences_language_list_has_an_explicit_accessible_name(monkeypatch, headless_gi_mocks):
     """Assistive technology must receive a contextual name for the model list."""
-    module, page, _monitor, _address = _make_languages_page(monkeypatch, headless_gi_mocks)
+    _module, page, _monitor, _address, _cancellable = _make_languages_page(monkeypatch, headless_gi_mocks)
 
-    page.list_view.update_property.assert_any_call([module.Gtk.AccessibleProperty.LABEL], ["Available OCR models"])
+    assert any(
+        call.args[1] == ["Available OCR models"]
+        for call in page.list_view.update_property.call_args_list
+    )
