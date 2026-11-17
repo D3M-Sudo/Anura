@@ -361,7 +361,7 @@ jobs:
           seat seat0 xcursor_theme Adwaita 24
           EOF
 
-          dbus-run-session -- sway --config /tmp/sway-ci.conf --verbose \
+          dbus-run-session -- sh -c 'echo "DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS" >> "$GITHUB_ENV"; exec sway --config /tmp/sway-ci.conf --verbose' \
             >/tmp/sway.log 2>&1 &
           echo $! > /tmp/sway-session.pid
 
