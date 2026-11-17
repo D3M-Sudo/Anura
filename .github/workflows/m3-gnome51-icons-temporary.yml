@@ -32,7 +32,51 @@ jobs:
             echo "Gtk-4.0.typelib not found in the GNOME 51 Platform runtime" >&2
             exit 1
           fi
+
+          GTK_RUNTIME_FILES="$(dirname "$(dirname "$(dirname "$(dirname "$GTK_TYPELIB")")")")"
+          GTK_LIBRARY="$(find "$GTK_RUNTIME_FILES" \( -type f -o -type l \) -name 'libgtk-4.so.1' -print -quit)"
+          if [ -z "$GTK_LIBRARY" ]; then
+            echo "libgtk-4.so.1 not found in the GNOME 51 Platform runtime" >&2
+            exit 1
+          fi
+
           GTK_TYPELIB_DIR="$(dirname "$GTK_TYPELIB")"
+          GTK_LINK_DIR="$(mktemp -d)"
           export GI_TYPELIB_PATH="$GTK_TYPELIB_DIR:/app/lib/girepository-1.0"
+          ln -s "$GTK_LIBRARY" "$GTK_LINK_DIR/libgtk-4.so.1"
+
+          # Expose only GTK's missing runtime dependencies via a private link
+          # directory. Never prepend the complete runtime lib directory:
+          # that can shadow the container's glibc and trigger GLIBC_PRIVATE.
+          for pass in 1 2 3 4 5 6 7 8; do
+            MISSING="$(LD_LIBRARY_PATH="$GTK_LINK_DIR:/app/lib" ldd "$GTK_LIBRARY" | awk '/not found/ {print $1}')"
+            if [ -z "$MISSING" ]; then
+              break
+            fi
+            for soname in $MISSING; do
+              case "$soname" in
+                libc.so*|libpthread.so*|libm.so*|libdl.so*|librt.so*|ld-linux*|libresolv.so*|libnss_*|libutil.so*|libanl.so*|libthread_db.so*|libcrypt.so*)
+                  echo "Refusing to override container glibc component: $soname" >&2
+                  exit 1
+                  ;;
+              esac
+              dependency="$(find "$GTK_RUNTIME_FILES" \( -type f -o -type l \) -name "$soname" -print -quit)"
+              if [ -z "$dependency" ]; then
+                echo "Unresolved GTK runtime dependency: $soname" >&2
+                exit 1
+              fi
+              ln -sf "$dependency" "$GTK_LINK_DIR/$soname"
+            done
+          done
+
+          if LD_LIBRARY_PATH="$GTK_LINK_DIR:/app/lib" ldd "$GTK_LIBRARY" | grep -q "not found"; then
+            echo "GTK runtime dependencies remain unresolved" >&2
+            LD_LIBRARY_PATH="$GTK_LINK_DIR:/app/lib" ldd "$GTK_LIBRARY" >&2
+            exit 1
+          fi
+
+          export LD_LIBRARY_PATH="$GTK_LINK_DIR:/app/lib"
+          echo "GTK_LIBRARY=$GTK_LIBRARY"
           echo "GI_TYPELIB_PATH=$GI_TYPELIB_PATH"
+          echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
           xvfb-run -a .m3-test-venv/bin/pytest -q tests/test_gnome51_icon_compatibility.py
