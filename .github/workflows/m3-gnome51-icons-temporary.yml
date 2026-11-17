@@ -24,8 +24,9 @@ jobs:
       - name: Check GNOME 51 icon theme
         env:
           ANURA_GNOME_RUNTIME_ICON_CHECK: "1"
-          GI_TYPELIB_PATH: /app/lib/girepository-1.0:/usr/lib/girepository-1.0
+          GI_TYPELIB_PATH: /app/lib/girepository-1.0:/usr/lib64/girepository-1.0:/usr/lib/girepository-1.0
           LD_LIBRARY_PATH: /app/lib
         run: |
-          find /app/lib/girepository-1.0 /usr/lib/girepository-1.0 -name 'Gtk-4.0.typelib' -print
+          cat /etc/os-release
+          find / -name 'Gtk-4.0.typelib' -print 2>/dev/null || true
           xvfb-run -a .m3-test-venv/bin/pytest -q tests/test_gnome51_icon_compatibility.py
