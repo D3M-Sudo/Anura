@@ -54,7 +54,7 @@ def test_disposing_languages_page_cancels_probe_and_ignores_late_result(
     monkeypatch, headless_gi_mocks
 ):
     """A late network result must not update a destroyed Preferences page."""
-    module, page, monitor, _address = _make_languages_page(
+    _module, page, monitor, _address = _make_languages_page(
         monkeypatch, headless_gi_mocks
     )
     cancellable = page._network_cancellable
