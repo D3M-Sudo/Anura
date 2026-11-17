@@ -87,13 +87,9 @@ def _make_editor_page(monkeypatch, settings_values=None):
     ("stored_mode", "expected_index"),
     [("word", 0), ("char", 1), ("none", 2), ("unknown", 0)],
 )
-def test_editor_wrap_mode_setting_initializes_combo(
-    monkeypatch, headless_gi_mocks, stored_mode, expected_index
-):
+def test_editor_wrap_mode_setting_initializes_combo(monkeypatch, headless_gi_mocks, stored_mode, expected_index):
     """The saved wrap mode selects its matching combo item, defaulting to words."""
-    page, _settings = _make_editor_page(
-        monkeypatch, settings_values={"editor-wrap-mode": stored_mode}
-    )
+    page, _settings = _make_editor_page(monkeypatch, settings_values={"editor-wrap-mode": stored_mode})
 
     page.editor_wrap_mode_combo.set_selected.assert_called_with(expected_index)
 
