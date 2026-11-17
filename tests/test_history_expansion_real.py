@@ -367,4 +367,3 @@ def test_expanding_another_row_preserves_focus_traversal(real_history_window):
     assert expected[0].grab_focus()
     forward = _focus_traversal(window, Gtk.DirectionType.TAB_FORWARD)
     _assert_subsequence(forward, expected)
-
