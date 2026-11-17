@@ -136,7 +136,7 @@ jobs:
             libxml2-utils \
             blueprint-compiler \
             tesseract-ocr tesseract-ocr-eng \
-            weston xwayland xvfb xdotool
+            weston xwayland xvfb
 
       - name: Install Python dependencies (with system site-packages)
         # The venv must inherit apt-installed PyGObject and Libadwaita modules.
@@ -243,22 +243,6 @@ jobs:
             exit 1
           fi
 
-          # Export the X11 host window so tests can inject real XTest keyboard
-          # events into Weston; Weston then forwards them to the focused Wayland
-          # client through wl_keyboard.
-          weston_window_id=""
-          for i in $(seq 1 10); do
-            weston_window_id="$(DISPLAY=:99 xdotool search --onlyvisible --class weston 2>/dev/null | head -n 1 || true)"
-            if [ -n "$weston_window_id" ]; then break; fi
-            sleep 0.25
-          done
-          if [ -z "$weston_window_id" ]; then
-            echo "::error::Could not locate the Weston X11 host window for XTest input"
-            cat /tmp/weston.log
-            exit 1
-          fi
-          echo "WESTON_WINDOW_ID=$weston_window_id" >> "$GITHUB_ENV"
-
       - name: Run GTK tests (Wayland with virtual input)
         # --override-ini replaces the global addopts from pyproject.toml.
         # Without this override the --ignore list baked into addopts would
@@ -271,7 +255,6 @@ jobs:
           GSETTINGS_SCHEMA_DIR: builddir/data
           DISPLAY: ""
           WAYLAND_DISPLAY: wayland-test
-          WESTON_HOST_DISPLAY: :99
           NO_AT_BRIDGE: "1"
           GTK_A11Y: none
           ANURA_LOG_LEVEL: WARNING
@@ -290,151 +273,13 @@ jobs:
           # GTK tests register Adw.Application instances on D-Bus. Their shutdown
           # hooks must quit the applications so GLib/GDBus threads do not keep
           # the pytest process alive after the test session completes.
-          uv run pytest tests/ -m "gtk and not keyboard_traversal" -v --timeout=30 \
+          uv run pytest tests/ -m "gtk" -v --timeout=30 \
             --override-ini "addopts=-v --tb=short"
-
-  gtk-keyboard-traversal-experimental:
-    name: GTK Keyboard Traversal (Sway headless / experimental)
-    runs-on: ubuntu-24.04
-    needs: python-quality
-    continue-on-error: true
-    timeout-minutes: 15
-    env:
-      XDG_RUNTIME_DIR: /tmp/xdg-runtime-ci
-      WLR_BACKENDS: headless
-      WLR_RENDERER: pixman
-      WLR_LIBINPUT_NO_DEVICES: "1"
-
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y \
-            python3-gi python3-gi-cairo gir1.2-gtk-4.0 \
-            gir1.2-adw-1 libadwaita-1-dev \
-            gir1.2-gtksource-5 libgtksourceview-5-dev \
-            gir1.2-notify-0.7 libnotify-dev \
-            gir1.2-xdp-1.0 libportal1 \
-            gir1.2-gstreamer-1.0 gir1.2-gst-plugins-base-1.0 python3-gst-1.0 \
-            libxml2-utils \
-            blueprint-compiler \
-            tesseract-ocr tesseract-ocr-eng \
-            sway wtype wayland-utils
-
-      - name: Install Python dependencies (with system site-packages)
-        run: |
-          pip install uv
-          uv venv --system-site-packages .venv
-          uv sync --dev
-
-      - name: Compile Blueprint UI files
-        run: |
-          for blp in data/ui/*.blp; do
-            blueprint-compiler compile "$blp" --output "${blp%.blp}.ui"
-          done
-          echo "Compiled $(find data/ui -maxdepth 1 -name '*.ui' | wc -l) .ui file(s)"
-
-      - name: Compile GResources
-        run: |
-          glib-compile-resources \
-            data/io.github.d3m_sudo.anura.gresource.xml \
-            --sourcedir=data \
-            --sourcedir=data/ui \
-            --target=data/io.github.d3m_sudo.anura.gresource
-
-      - name: Compile GSettings schema
-        run: |
-          mkdir -p builddir/data
-          cp data/io.github.d3m_sudo.anura.gschema.xml builddir/data/
-          glib-compile-schemas builddir/data/
-
-      - name: Start Sway headless Wayland compositor
-        run: |
-          mkdir -p "$XDG_RUNTIME_DIR"
-          chmod 700 "$XDG_RUNTIME_DIR"
-          cat > /tmp/sway-ci.conf <<'EOF'
-          output HEADLESS-1 resolution 1920x1080
-          seat seat0 xcursor_theme Adwaita 24
-          EOF
-
-          dbus-run-session -- sh -c 'echo "DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS" >> "$GITHUB_ENV"; exec sway --config /tmp/sway-ci.conf --verbose' \
-            >/tmp/sway.log 2>&1 &
-          echo $! > /tmp/sway-session.pid
-
-          echo "Waiting for Sway Wayland socket..."
-          for i in $(seq 1 40); do
-            if [ -n "${SWAYSOCK:-}" ] && [ -S "$SWAYSOCK" ]; then break; fi
-            socket="$(find "$XDG_RUNTIME_DIR" -maxdepth 1 -type s -name 'wayland-*' -print -quit)"
-            if [ -n "$socket" ]; then
-              echo "WAYLAND_DISPLAY=$(basename "$socket")" >> "$GITHUB_ENV"
-              break
-            fi
-            if ! kill -0 "$(cat /tmp/sway-session.pid)" 2>/dev/null; then break; fi
-            sleep 0.25
-          done
-
-          socket="$(find "$XDG_RUNTIME_DIR" -maxdepth 1 -type s -name 'wayland-*' -print -quit)"
-          if [ -z "$socket" ]; then
-            echo "::error::Sway did not create a Wayland socket"
-            cat /tmp/sway.log
-            exit 1
-          fi
-          WAYLAND_DISPLAY="$(basename "$socket")"
-          echo "WAYLAND_DISPLAY=$WAYLAND_DISPLAY" >> "$GITHUB_ENV"
-
-          sway_socket=""
-          for i in $(seq 1 40); do
-            sway_socket="$(find "$XDG_RUNTIME_DIR" -maxdepth 1 -type s -name 'sway-ipc.*.sock' -print -quit)"
-            if [ -n "$sway_socket" ]; then break; fi
-            sleep 0.25
-          done
-          if [ -z "$sway_socket" ]; then
-            echo "::error::Sway did not create its IPC socket"
-            cat /tmp/sway.log
-            exit 1
-          fi
-          echo "SWAYSOCK=$sway_socket" >> "$GITHUB_ENV"
-
-          export WAYLAND_DISPLAY
-          export SWAYSOCK="$sway_socket"
-          swaymsg -t get_version
-          wayland-info | grep -E 'zwp_virtual_keyboard_manager_v1|wl_seat'
-          echo "Sway headless compositor and virtual-keyboard protocol are available."
-
-      - name: Run experimental keyboard traversal tests (native Wayland input)
-        env:
-          GSETTINGS_SCHEMA_DIR: builddir/data
-          GDK_BACKEND: wayland
-          DISPLAY: ""
-          NO_AT_BRIDGE: "1"
-          GTK_A11Y: none
-          ANURA_LOG_LEVEL: WARNING
-        run: |
-          cleanup() {
-            echo "::group::Cleanup Sway headless compositor"
-            kill "$(cat /tmp/sway-session.pid 2>/dev/null)" 2>/dev/null || true
-            rm -f /tmp/sway-session.pid
-            echo "Cleanup complete."
-            echo "::endgroup::"
-          }
-          trap cleanup EXIT
-
-          for attempt in 1 2 3; do
-            echo "::group::Keyboard traversal repetition ${attempt}/3"
-            uv run pytest tests/test_history_expansion_real.py \
-              -m "gtk and keyboard_traversal" -v --timeout=30 \
-              --override-ini "addopts=-v --tb=short"
-            echo "::endgroup::"
-          done
 
   # JOB 2: Flatpak build and optional release
   flatpak-builder:
     name: Flatpak build (${{ matrix.variant.arch }})
-    needs: [python-quality]
+    needs: [python-quality, gtk-tests]
     strategy:
       fail-fast: false
       matrix:
