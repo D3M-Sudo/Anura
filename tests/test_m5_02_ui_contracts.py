@@ -101,3 +101,34 @@ class TestM502ToastDelegation:
         assert isinstance(toast, Adw.Toast)
         assert toast.get_title() == "M5-02 test toast"
         assert toast.get_priority() == Adw.ToastPriority.HIGH
+
+@pytest.mark.gtk
+class TestPortalBannerDismissal:
+    def test_dismiss_signal_is_connected_to_the_window_handler(self):
+        from anura.window import AnuraWindow
+
+        window = MagicMock()
+        window.ocr_controller = MagicMock()
+        window.dnd_controller = MagicMock()
+        window.tts_controller = MagicMock()
+        window.history_controller = MagicMock()
+        window.portal_banner = Adw.Banner()
+
+        AnuraWindow._setup_controller_signals(window)
+
+        window.connect_tracked.assert_any_call(
+            window.portal_banner,
+            "button-clicked",
+            window._on_portal_banner_dismissed,
+        )
+
+    def test_dismiss_handler_hides_the_portal_banner(self):
+        from anura.window import AnuraWindow
+
+        banner = Adw.Banner()
+        banner.set_revealed(True)
+        window = SimpleNamespace(portal_banner=banner)
+
+        AnuraWindow._on_portal_banner_dismissed(window, banner)
+
+        assert banner.get_revealed() is False
