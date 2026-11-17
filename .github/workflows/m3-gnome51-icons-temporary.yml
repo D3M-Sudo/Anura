@@ -49,7 +49,10 @@ jobs:
           # directory. Never prepend the complete runtime lib directory:
           # that can shadow the container's glibc and trigger GLIBC_PRIVATE.
           for pass in 1 2 3 4 5 6 7 8; do
-            MISSING="$(LD_LIBRARY_PATH="$GTK_LINK_DIR:/app/lib" ldd "$GTK_LIBRARY" | awk '/not found/ {print $1}')"
+            LDD_OUTPUT="$(LD_LIBRARY_PATH="$GTK_LINK_DIR:/app/lib" ldd "$GTK_LIBRARY" 2>&1 || true)"
+            echo "ldd dependency scan (pass $pass):"
+            printf '%s\n' "$LDD_OUTPUT"
+            MISSING="$(printf '%s\n' "$LDD_OUTPUT" | awk '$2 == "=>" && $3 == "not" && $4 == "found" {print $1}')"
             if [ -z "$MISSING" ]; then
               break
             fi
@@ -69,9 +72,11 @@ jobs:
             done
           done
 
-          if LD_LIBRARY_PATH="$GTK_LINK_DIR:/app/lib" ldd "$GTK_LIBRARY" | grep -q "not found"; then
-            echo "GTK runtime dependencies remain unresolved" >&2
-            LD_LIBRARY_PATH="$GTK_LINK_DIR:/app/lib" ldd "$GTK_LIBRARY" >&2
+          FINAL_LDD_OUTPUT="$(LD_LIBRARY_PATH="$GTK_LINK_DIR:/app/lib" ldd "$GTK_LIBRARY" 2>&1 || true)"
+          echo "Final GTK dependency scan:"
+          printf '%s\n' "$FINAL_LDD_OUTPUT"
+          if printf '%s\n' "$FINAL_LDD_OUTPUT" | grep -E '=>[[:space:]]+not found|version .* not found' >/dev/null; then
+            echo "GTK runtime dependencies or symbol versions remain unresolved" >&2
             exit 1
           fi
 
