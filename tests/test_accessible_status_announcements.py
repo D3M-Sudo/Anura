@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: MIT
 
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 
@@ -126,6 +127,8 @@ def test_single_search_result_is_announced_after_400ms_with_low_priority(headles
     page = _make_extracted_search_page(extracted_page, count=1)
     timeout_add = MagicMock(return_value=303)
     announcements = MagicMock()
+    low_priority = object()
+    monkeypatch.setattr(extracted_page.Gtk, "AccessibleAnnouncementPriority", SimpleNamespace(LOW=low_priority))
     monkeypatch.setattr(extracted_page.GLib, "timeout_add", timeout_add)
     monkeypatch.setattr(extracted_page, "announce_accessible", announcements)
 
@@ -137,17 +140,15 @@ def test_single_search_result_is_announced_after_400ms_with_low_priority(headles
 
     extracted_page.ExtractedPage._announce_search_results(page)
 
-    assert announcements.call_args.args == (
-        page.search_entry,
-        "1 match",
-        extracted_page.Gtk.AccessibleAnnouncementPriority.LOW,
-    )
+    assert announcements.call_args.args == (page.search_entry, "1 match", low_priority)
 
 
 def test_zero_search_results_are_announced_as_no_matches(headless_gi_mocks, monkeypatch):
     import anura.widgets.extracted_page as extracted_page
 
     page = _make_extracted_search_page(extracted_page, count=0)
+    low_priority = object()
+    monkeypatch.setattr(extracted_page.Gtk, "AccessibleAnnouncementPriority", SimpleNamespace(LOW=low_priority))
     monkeypatch.setattr(extracted_page.GLib, "timeout_add", MagicMock(return_value=404))
     announcements = MagicMock()
     monkeypatch.setattr(extracted_page, "announce_accessible", announcements)
@@ -159,11 +160,7 @@ def test_zero_search_results_are_announced_as_no_matches(headless_gi_mocks, monk
 
     extracted_page.ExtractedPage._announce_search_results(page)
 
-    assert announcements.call_args.args == (
-        page.search_entry,
-        "No matches",
-        extracted_page.Gtk.AccessibleAnnouncementPriority.LOW,
-    )
+    assert announcements.call_args.args == (page.search_entry, "No matches", low_priority)
 
 
 def test_clearing_search_restores_accessible_label_and_cancels_pending_announcement(headless_gi_mocks, monkeypatch):
