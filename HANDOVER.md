@@ -432,3 +432,17 @@ The application-owned light/dark green fallback is retained; Libadwaita `.succes
 - The current CI virtual-input route is not reliable enough to establish real keyboard traversal. No production defect is confirmed; no more input-harness changes are planned in this work cycle.
 - M4-01 read-only audit completed; report: `docs/audit/preferences-languages-m4-01-2026-11-17.md`. Findings M4-F01–F04 are recorded; global M4 remains Partial pending maintainer disposition.
 - No application source, workflow, dependency, CHANGELOG, protected branch or PR metadata was changed by the audit/documentation record. PR #648 remains Open/Draft/unmerged, targeting `feature`.
+
+
+## 2026-11-17 — M4-F01–F04 remediation
+
+- **Outcome:** all four findings from M4-01 were remediated on `fix/ui-modernization-aligned`; global M4 remains Partial because unrelated Preferences mapping and lifecycle coverage gaps remain.
+- **F01:** `PreferencesLanguagesPage.check_connection()` now derives the reachability hostname from `TESSDATA_URL` (GitHub model source) and uses HTTPS port 443, rather than probing `google.com`.
+- **F02:** the page owns a `Gio.Cancellable`, cancels a previous probe before starting another, cancels on `do_destroy()`, and ignores callbacks after disposal or when they belong to an obsolete probe.
+- **F03:** `LanguageRow._schedule_idle_update()` removes each one-shot idle source ID from `_idle_ids` as soon as the callback starts; pending callbacks remain tracked for destruction cleanup.
+- **F04:** the Preferences model ListView receives localized accessible label “Available OCR models”; the gettext POT template was updated. No `.po` translation files were edited.
+- **Regression tests:** `tests/test_preferences_languages_lifecycle.py` adds four tests for source host, cancellation/late result, idle ID pruning and accessible list name. The red phase showed the four expected gaps; the test-double disposal issue was isolated and corrected before the final implementation CI.
+- **Code head before documentation reconciliation:** `ade9950264588fdfe6ee7fa25938300fabe006a3`. CI [#44109387223](https://github.com/D3M-Sudo/Anura/actions/runs/44109387223): Python quality, lint/format, Mypy, Bandit, Vulture, coverage tests, Flatpak dependency check and Changelog integrity passed. GTK Integration, both AppImage builds and CodeQL were still running at the time of the last check; do not treat the run as complete until their conclusions are confirmed.
+- **Documentation:** CHANGELOG, POT, M4-01 audit report, global roadmap and PR #648 workstream roadmap were updated. This handover records the same outcome.
+- **Limits:** no local tests were run. No manual GNOME/GTK visual, Orca/AT-SPI or keyboard checks are claimed. No workflow, dependency, OCR engine/pipeline, protected branch or PR state was changed.
+- **Governance:** PR #648 remains Open, Draft, unmerged, targeting `feature`; no merge or protected-branch update was performed.
