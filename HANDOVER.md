@@ -461,3 +461,14 @@ The application-owned light/dark green fallback is retained; Libadwaita `.succes
 - **Last pre-change evidence:** CI [#44110517818](https://github.com/D3M-Sudo/Anura/actions/runs/44110517818) on `24c9f99f683de1ee26eb33e53678998326fc5ce9`: Python Quality, Changelog integrity, AppImage x86_64/aarch64 and complete AppImage release-set validation passed; GTK failed on the four F-303-02 tests; Flatpak builds and multi-architecture release-artifact validation were skipped. CodeQL [#44110517974](https://github.com/D3M-Sudo/Anura/actions/runs/44110517974) passed.
 - **Validation status:** workflow/test-marker changes are committed; the new graph and exact-SHA CI results remain pending. No local tests or YAML validation are claimed. No production code, dependency, OCR behavior, CHANGELOG, protected branch, PR metadata, merge or release was changed.
 - **Governance:** PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`.
+
+
+## 2026-11-17 — F-303-02 final CI cleanup and M7 deferral
+
+- **Maintainer decision:** option A. End CI input-harness experimentation and remove the four temporary keyboard-traversal test cases and their synthetic input helpers. This closes the CI experimentation phase only; physical keyboard traversal is not marked as passed.
+- **Sway evidence:** run [#44120435948](https://github.com/D3M-Sudo/Anura/actions/runs/44120435948), head `bff387fcf5a07c6b580f47d60f98f9ff6966e319`. Sway and its Wayland/virtual-keyboard protocols were available and Sway reported the GTK window focused, but GTK did not observe Tab and reported `active=False`. The shell aborted at the first failing attempt; the configured three repetitions were not evaluated. This does not prove CI virtual input is inherently impossible.
+- **Workflow cleanup:** removed the experimental Sway job and Sway/wtype/wayland-utils dependencies; removed xdotool and Weston host-window discovery/`WESTON_HOST_DISPLAY`; retained Xvfb + Weston X11 and the `wl_seat` preflight for ordinary GTK integration; restored the normal GTK marker selection and `flatpak-builder`'s dependency on `python-quality` plus `gtk-tests`.
+- **Tests:** removed the four F-303-02 keyboard test cases, marker and Sway/XTest helpers. Unrelated History tests remain. No application source or runtime dependency changed.
+- **Residual debt:** issue [#655](https://github.com/D3M-Sudo/Anura/issues/655) remains open for native-host keyboard traversal validation in M7-03. Required cases: forward/reverse Tab traversal to suffix actions, expanded rows, focus recovery after collapse, and single-open-row behavior. Record host/session, exact commit, procedure and results. No keyboard test is claimed as passed.
+- **CHANGELOG:** intentionally unchanged because no product behavior changed.
+- **Next:** M5-01 may resume after the cleanup and documentation are committed; physical keyboard validation remains deferred to M7-03.
