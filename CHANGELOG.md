@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - History/accessibility: make the TTS action label state-specific: “Stop listening” while generating, “Pause listening” during playback, “Resume listening” while paused, and “Listen to text” while idle (#648)
+- Preferences/Languages: probe the configured tessdata source instead of Google, cancel and ignore stale reachability callbacks on page disposal, prune completed LanguageRow idle sources, and provide an accessible name for the available OCR models list (#648)
 
 - UI: normalize application-authored spacing to the shared 4/8/12/16/24 px scale; retain Libadwaita semantic typography and existing custom corner-radius roles.
 - UI/CSS: remove legacy custom selectors and animation keyframes with no tracked application consumers; document existing GTK/Libadwaita typography class usage and limitations.
