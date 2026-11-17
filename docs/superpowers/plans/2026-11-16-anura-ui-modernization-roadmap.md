@@ -428,7 +428,7 @@ The [global roadmap](2026-11-16-anura-ui-modernization-global-roadmap.md) is the
 - No production source, permanent/temporary workflow, CHANGELOG, protected branch or PR metadata was changed for F-301/F-302 remediation.
 - PR #648 remains Open/Draft/unmerged, base `feature`, head `56d794502d84c0dfc392230867b4c90b6d08ee91`.
 - M3 remains Partial; this record does not close the full Extracted/History modernization phase.
-- **Next:** prepare the bounded F-303-02 automated keyboard-traversal test plan. F-303-01 is complete; F-303-03 direct accessible-label assertions follow F-303-02. Each implementation requires separate explicit approval.
+- **Next:** F-303-02 was attempted with native virtual keyboard input and is now suspended due to the current CI input-delivery limitation; F-303-03 is deferred pending later disposition. The workstream proceeds to the global M4-01 read-only audit.
 
 
 ## F-303-01 — History TTS action-label semantics (2026-11-17)
@@ -458,3 +458,19 @@ The [global roadmap](2026-11-16-anura-ui-modernization-global-roadmap.md) is the
 - No workflow, dependency, protected branch or PR metadata was changed.
 - PR #648 remains Open/Draft/unmerged, base `feature`.
 - M3 remains Partial. **F-303-02** automated keyboard-traversal tests are next; **F-303-03** direct assertions for History accessible action labels follow. Broader Extracted/History modernization remains open.
+
+
+## F-303-02 — suspended due to CI virtual-input limitation (2026-11-17)
+
+- **Outcome:** suspended. The current XTest → Weston → Wayland → GTK CI path did not reliably deliver keyboard events to GTK; no application defect was established.
+- **Evidence:** test commit `84ff4d50a3291b4328d28e657b251144d979e9c6`; CI [#44040005554](https://github.com/D3M-Sudo/Anura/actions/runs/44040005554) failed in GTK Integration (4 failed, 449 passed, 5 skipped, 663 deselected); CodeQL [#44040005537](https://github.com/D3M-Sudo/Anura/actions/runs/44040005537) passed on the same commit.
+- **Diagnostics:** three failures were at the input-delivery boundary (Weston/XTest request not observed by GTK); one delivered Tab event did not move focus from the collapsed TextView. The latter is not classified as an app defect because the test route is not yet reliable.
+- **Decision:** stop further F-303-02 CI input experiments. F-303-02 is suspended; F-303-03 remains deferred pending later disposition. No further workflow, test, production or dependency changes were made.
+
+## M4-01 — Preferences and language selector audit (2026-11-17)
+
+- **Outcome:** completed — read-only audit. Report: [M4-01 audit](../../audit/preferences-languages-m4-01-2026-11-17.md).
+- **Findings:** M4-F01 P2 network-probe/source mismatch; M4-F02 P2 asynchronous reachability callback lacks cancellation/disposal guard; M4-F03 P3 stale GLib idle IDs retained by LanguageRow; M4-F04 P2 accessibility/coverage gap for the Preferences language ListView's missing explicit accessible name.
+- **Coverage:** existing tests exercise selected settings mappings, TTS volume/cache behavior, language model-quality cache invalidation, LanguageRow announcements and main selector filtering/selection. Gaps remain for General/Editor mappings, extra-language refresh/removal, page disposal during network/TTS callbacks and LanguageRow idle-source cleanup.
+- **Evidence boundary:** read-only source, Blueprint, GSettings schema and test-definition inspection; no tests or manual runtime accessibility checks were run.
+- **Next:** prepare a separate bounded remediation/disposition proposal for M4-F01–F04; no implementation is authorized by this audit.
