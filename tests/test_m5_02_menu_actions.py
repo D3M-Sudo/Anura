@@ -28,9 +28,7 @@ def test_blueprint_menu_and_widget_actions_resolve_to_registered_scopes():
 
     assert references.get("app"), "No app-scoped actions were found in page Blueprints"
     assert references.get("win"), "No window-scoped actions were found in page Blueprints"
-    assert references["app"] <= app_actions, (
-        f"Unregistered app actions: {sorted(references['app'] - app_actions)}"
-    )
+    assert references["app"] <= app_actions, f"Unregistered app actions: {sorted(references['app'] - app_actions)}"
     assert references["win"] <= window_actions, (
         f"Unregistered window actions: {sorted(references['win'] - window_actions)}"
     )
