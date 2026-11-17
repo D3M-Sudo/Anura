@@ -783,3 +783,23 @@ def test_tts_button_labels_describe_the_current_action(headless_gi_mocks):
 
         assert button.set_tooltip_text.call_args.args == (expected_label,)
         assert button.update_property.call_args.args[1] == [expected_label]
+
+
+
+def test_history_row_actions_have_initial_accessible_labels(headless_gi_mocks, monkeypatch, tmp_path):
+    """Copy, editor and TTS actions expose their initial purpose to assistive technology."""
+    _patch_ui(monkeypatch)
+    service = HistoryService(base_dir=tmp_path)
+    service.record("stored OCR text", "eng")
+    _make_page(headless_gi_mocks, service)
+
+    button_calls = fake_button_calls = __import__("anura.widgets.history_page", fromlist=["Gtk"]).Gtk.Button.call_args_list
+    labels = [call.kwargs["tooltip_text"] for call in button_calls]
+    assert labels == [
+        "Copy text to clipboard",
+        "Open in external editor",
+        "Listen to text",
+    ]
+
+    accessible_updates = __import__("anura.widgets.history_page", fromlist=["Gtk"]).Gtk.Button.return_value.update_property.call_args_list
+    assert [call.args[1][0] for call in accessible_updates] == labels

@@ -1137,3 +1137,60 @@ class TestShortcutsOverlayReducedMotion:
             overlay.destroy()
 
         settings.disconnect.assert_called_once_with(103)
+
+
+class TestM3ExtractedSelection:
+    """Regression coverage for Extracted selection-dependent actions and statistics."""
+
+    @pytest.fixture
+    def widget(self):
+        with patch("anura.widgets.extracted_page.get_share_service"):
+            return ExtractedPage()
+
+    @pytest.mark.gtk
+    def test_selection_transitions_update_active_text_statistics_and_action_labels(self, widget):
+        widget.buffer.set_text("alpha beta gamma")
+        assert widget.get_active_text() == "alpha beta gamma"
+        assert "3 words | 16 characters" in widget.stats_label.get_text()
+        assert "Copy Extracted Text" in widget.text_copy_btn.get_tooltip_text()
+
+        start = widget.buffer.get_iter_at_offset(6)
+        end = widget.buffer.get_iter_at_offset(10)
+        widget.buffer.select_range(end, start)
+
+        assert widget.get_active_text() == "beta"
+        assert "Selection: 1 word | 4 characters" in widget.stats_label.get_text()
+        assert "Copy Selected Text" in widget.text_copy_btn.get_tooltip_text()
+        assert "Selected Text" in widget.listen_btn.get_tooltip_text()
+        assert "Selection" in widget.share_button.get_tooltip_text()
+
+        start = widget.buffer.get_iter_at_offset(11)
+        end = widget.buffer.get_iter_at_offset(16)
+        widget.buffer.select_range(end, start)
+
+        assert widget.get_active_text() == "gamma"
+        assert "Selection: 1 word | 5 characters" in widget.stats_label.get_text()
+
+        widget.buffer.place_cursor(widget.buffer.get_iter_at_offset(0))
+
+        assert widget.get_active_text() == "alpha beta gamma"
+        assert "3 words | 16 characters" in widget.stats_label.get_text()
+        assert "Copy Extracted Text" in widget.text_copy_btn.get_tooltip_text()
+        assert "Listen to Text" in widget.listen_btn.get_tooltip_text()
+        assert widget.share_button.get_tooltip_text() == "Share To"
+
+        assert Gtk.test_accessible_check_property(
+            widget.text_copy_btn,
+            Gtk.AccessibleProperty.LABEL,
+            "Copy Extracted Text to Clipboard (Ctrl+C)",
+        )
+        assert Gtk.test_accessible_check_property(
+            widget.listen_btn,
+            Gtk.AccessibleProperty.LABEL,
+            "Listen to Text (Ctrl+L)",
+        )
+        assert Gtk.test_accessible_check_property(
+            widget.share_button,
+            Gtk.AccessibleProperty.LABEL,
+            "Share To",
+        )

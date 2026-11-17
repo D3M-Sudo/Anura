@@ -1,0 +1,26 @@
+name: M3 GNOME 51 icon compatibility (temporary)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gnome-51-icons:
+    name: Verify application icon names in GNOME 51 SDK
+    runs-on: ubuntu-24.04
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-51
+      options: --privileged
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install isolated pytest
+        run: |
+          python3 -m venv --system-site-packages .m3-test-venv
+          .m3-test-venv/bin/pip install pytest
+      - name: Check GNOME 51 icon theme
+        env:
+          ANURA_GNOME_RUNTIME_ICON_CHECK: "1"
+        run: |
+          xvfb-run -a .m3-test-venv/bin/pytest -q tests/test_gnome51_icon_compatibility.py
