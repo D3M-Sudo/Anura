@@ -16,6 +16,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Extracted: preserve the current OCR result when navigating away; replace it only when a subsequent extraction completes.
 - History: retain the expanded entry and vertical scroll position when the list refreshes or the user returns to History during the same application session; this transient view state is not persisted across restarts.
 
+### Fixed
+
+- UI/Portal: connect the portal-unavailable banner’s Dismiss button so it hides the banner when activated (#648)
+
 ### Added
 
 - Accessibility: give language-download progress bars translated language context; announce download start/completion/failure and concise OCR, TTS and debounced search status transitions without percentage-level announcement noise (#648)
