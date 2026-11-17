@@ -44,12 +44,7 @@ class TestM502ShortcutsSearch:
         overlay.search_entry.emit("search-changed")
 
         assert overlay.stack.get_visible_child_name() == "results"
-        matching_rows = [
-            row
-            for group, rows in overlay._groups
-            for row in rows
-            if row.get_visible()
-        ]
+        matching_rows = [row for group, rows in overlay._groups for row in rows if row.get_visible()]
         assert len(matching_rows) == 1
         assert matching_rows[0].get_title() == "Open image file"
         assert sum(group.get_visible() for group, _rows in overlay._groups) == 1
@@ -106,4 +101,3 @@ class TestM502ToastDelegation:
         assert isinstance(toast, Adw.Toast)
         assert toast.get_title() == "M5-02 test toast"
         assert toast.get_priority() == Adw.ToastPriority.HIGH
-
