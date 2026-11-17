@@ -1,0 +1,143 @@
+# This file is part of Anura.
+# Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+# Copyright (C) 2026 D3M-Sudo (Anura)
+#
+# SPDX-License-Identifier: MIT
+
+import os
+from pathlib import Path
+
+# Core Application Identity
+APP_ID = "io.github.d3m_sudo.anura"
+
+# Logging configuration — override via ANURA_LOG_LEVEL env var
+_LOG_LEVEL = os.environ.get("ANURA_LOG_LEVEL", "INFO").upper()
+_VALID_LOG_LEVELS = {"TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
+LOG_LEVEL: str = _LOG_LEVEL if _LOG_LEVEL in _VALID_LOG_LEVELS else "INFO"
+RESOURCE_PREFIX = "/io/github/d3msudo/anura"
+
+# Accepted Tesseract language-code syntax (2-18 ASCII letters, digits, plus signs or underscores).
+# Plus signs allow multi-language OCR requests such as "eng+ita"; underscores support
+# model identifiers such as "chi_sim". This is a format check, not full ISO 639 validation.
+LANG_CODE_PATTERN = r"^[a-zA-Z0-9+_]{2,18}$"
+
+# XDG Base Directory specification compliance
+XDG_DATA_HOME = os.getenv("XDG_DATA_HOME", str(Path.home() / ".local/share"))
+XDG_CACHE_HOME = os.getenv("XDG_CACHE_HOME", str(Path.home() / ".cache"))
+
+# Anura specific data directory for OCR models (user-downloaded)
+TESSDATA_DIR = str(Path(XDG_DATA_HOME) / "anura" / "tessdata")
+
+# Cache directory for multi-language model pooling (Flatpak optimization)
+TESSDATA_POOL_DIR = str(Path(XDG_CACHE_HOME) / "anura" / "tessdata_pool")
+
+# Lease file written inside a task-isolated pool directory: it contains the PID
+# of the process that owns it, so startup cleanup never deletes a directory that
+# a live task or another Anura instance is still using (#521).
+TESSDATA_POOL_LEASE = "owner.pid"
+
+# Maximum image file size (50MB) to prevent memory exhaustion (DoS)
+# Used for input validation across services and UI.
+MAX_IMAGE_SIZE_MB = 50
+MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024
+
+# Maximum decoded image size in pixels (40 MP ≈ 120 MB as RGB) to prevent
+# decompression-bomb DoS: a small compressed file can expand into a huge
+# bitmap, so a byte-size limit alone is not enough.
+MAX_IMAGE_PIXELS = 40_000_000
+
+# Maximum wall-clock time for a single Tesseract invocation (seconds). The
+# process pool has one worker, so an unbounded call would block every later OCR
+# request; pytesseract kills the child process when the timeout expires.
+OCR_TIMEOUT_SECONDS = 120
+
+# TTS generation watchdog. gTTS issues one HTTP request per 100-character
+# fragment, so a fixed budget fires too early on long texts and waits far too
+# long on short ones (#508).
+TTS_TIMEOUT_BASE_S = 30.0
+TTS_TIMEOUT_PER_FRAGMENT_S = 1.5
+TTS_TIMEOUT_MAX_S = 300.0
+
+# Maximum Tesseract language model size (250MB) to prevent disk exhaustion (DoS).
+MAX_MODEL_SIZE_MB = 250
+MAX_MODEL_SIZE_BYTES = MAX_MODEL_SIZE_MB * 1024 * 1024
+
+# Maximum length for extracted text (1,000,000 characters) to prevent DoS
+# from excessively large OCR output and expensive downstream processing.
+MAX_TEXT_LENGTH = 1_000_000
+
+# Maximum length for TTS requests (10,000 characters) to prevent DoS
+# from excessively large audio generation requests.
+MAX_TTS_TEXT_LENGTH = 10_000
+
+
+def _get_tessdata_system_dir() -> str:
+    """
+    Resolve the system tessdata directory with multiple fallback paths.
+
+    Check order:
+    1. Environment variable (TESSDATA_PREFIX_SYSTEM)
+    2. Flatpak path (/app/share/tessdata)
+    3. Common system paths on Linux distributions
+
+    Returns:
+        The first valid directory path found, or the Flatpak default as fallback.
+    """
+    # Priority 1: Environment variable override
+    env_path = os.getenv("TESSDATA_PREFIX_SYSTEM")
+    if env_path and Path(env_path).is_dir():
+        return env_path
+
+    # Priority 2: Dynamic scan of candidate directories
+    # Scan in order of preference - first existing directory wins
+    candidate_dirs = [
+        "/app/share/tessdata",  # Flatpak
+        "/usr/share/tesseract-ocr/tessdata",  # Debian/Ubuntu, Arch, Fedora
+        "/usr/share/tesseract/tessdata",  # Alternative layout
+        "/usr/share/tessdata",  # Alternative system path
+    ]
+
+    for path in candidate_dirs:
+        if Path(path).is_dir():
+            return path
+
+    # Fallback to Flatpak default even if not present (for Flatpak builds)
+    return "/app/share/tessdata"
+
+
+# System directory with models bundled by the Flatpak manifest
+# Uses dynamic resolution with fallbacks for non-Flatpak installations
+TESSDATA_SYSTEM_DIR = _get_tessdata_system_dir()
+
+# Note: TESSDATA_DIR creation is handled by language_manager.init_tessdata()
+# to avoid side effects at import time.
+
+# Tesseract OCR Repository URLs
+# Pinned to release tags (e.g. "4.1.0") instead of commit SHAs.
+# WHY: upstream tesseract-ocr repositories may rewrite or compress history,
+# which can make previously pinned commit SHAs unavailable. Release tags avoid
+# coupling downloads to those commit IDs. Runtime model integrity is pinned by raw-content
+# SHA-256 digests in anura/data/tessdata_checksums.json.
+# Three distinct repositories with different accuracy/speed trade-offs:
+#   tessdata_fast → integerized LSTM models (fastest, lower accuracy)
+#   tessdata      → legacy + LSTM models (standard profile)
+#   tessdata_best → LSTM models (highest accuracy, slower)
+#
+# tessdata (standard profile) - Pinned to release tag 4.1.0 (Bug #6, 2026-09)
+TESSDATA_URL = "https://github.com/tesseract-ocr/tessdata/raw/4.1.0/"
+# tessdata_best (high-quality LSTM models) - Pinned to release tag 4.1.0 (Bug #6, 2026-09)
+TESSDATA_BEST_URL = "https://github.com/tesseract-ocr/tessdata_best/raw/4.1.0/"
+# tessdata_fast (fast LSTM models) - Pinned to release tag 4.1.0 (Bug #6, 2026-09)
+TESSDATA_FAST_URL = "https://github.com/tesseract-ocr/tessdata_fast/raw/4.1.0/"
+# Backward-compatible alias; callers should use TESSDATA_FAST_URL for the fast profile.
+TESSDATA_STANDARD_URL = TESSDATA_FAST_URL
+
+# Network configuration for LanguageManager
+USER_AGENT = "Anura-OCR-Client/1.0 (Linux; Flatpak)"
+REQUEST_TIMEOUT = 30  # seconds
+
+# Tesseract OCR parameters
+# --psm 3: Fully automatic page segmentation
+# --oem 1: Neural nets LSTM engine only
+# Note: get_tesseract_config() is defined in anura.services.language_manager
+# and imported from there by all callers (screenshot_service.py line 33).

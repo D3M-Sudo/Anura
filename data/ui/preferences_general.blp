@@ -1,0 +1,76 @@
+// This file is part of Anura.
+// Copyright (C) 2022-2025 Andrey Maksimov (Frog)
+// Copyright (C) 2026 D3M-Sudo (Anura)
+//
+// SPDX-License-Identifier: MIT
+
+using Gtk 4.0;
+using Adw 1;
+
+translation-domain 'io.github.d3msudo.anura';
+
+template $PreferencesGeneralPage : Adw.PreferencesPage {
+  title: _("_General");
+  use-underline: true;
+  icon-name: "emblem-system-symbolic";
+
+  Adw.PreferencesGroup {
+    title: _("Appearance");
+
+    Adw.ComboRow color_scheme_combo {
+      title: _("Color Scheme");
+      subtitle: _("The preferred color scheme for the application.");
+    }
+  }
+
+  Adw.PreferencesGroup {
+    title: _("Text Extraction");
+
+    Adw.ComboRow extra_language_combo {
+      title: _("_Secondary Language");
+      use-underline: true;
+      subtitle: _("Additional language used in text recognition");
+    }
+
+    Adw.SwitchRow magic_processor_switch {
+      title: _("Smart Text Parsing");
+      subtitle: _("Automatically reformat URLs, emails and paragraphs");
+    }
+  }
+
+  Adw.PreferencesGroup {
+    title: _("Behavior");
+
+    Adw.SwitchRow autocopy_switch {
+      title: _("_Copy to Clipboard");
+      use-underline: true;
+      subtitle: _("Automatically copy the extracted text after detection");
+    }
+
+    Adw.SwitchRow autolinks_switch {
+      title: _("_Open QR-code Links");
+      use-underline: true;
+      subtitle: _("Open QR code URLs directly in browser. Otherwise, a clickable notification is shown.");
+    }
+
+  }
+
+  Adw.PreferencesGroup {
+    title: _("History");
+
+    Adw.SwitchRow history_switch {
+      title: _("Save Extraction History");
+      subtitle: _("Keep a local list of recently extracted texts");
+    }
+
+    Adw.SpinRow history_limit_row {
+      title: _("History Size");
+      subtitle: _("Maximum number of entries kept in history");
+      adjustment: Adjustment {
+        lower: 1.0;
+        upper: 500.0;
+        step-increment: 1.0;
+      };
+    }
+  }
+}

@@ -1,0 +1,79 @@
+version: 1
+script:
+  - bash "$SOURCE_DIR/build_appdir.sh"
+AppDir:
+  path: ./AppDir
+  app_info:
+    id: io.github.d3m_sudo.anura
+    name: Anura
+    icon: io.github.d3m_sudo.anura
+    version: "{{APP_VERSION}}"
+    # AppRun2 requires an ELF executable. Launch the bundled Python ELF
+    # directly; the application entrypoint performs relocatable setup.
+    exec: usr/bin/python3
+    exec_args: usr/lib/anura/appimage_entrypoint.py $@
+  apt:
+    arch: "{{APT_ARCH}}"
+    sources:
+      - sourceline: "deb [arch={{APT_ARCH}}] {{APT_SNAPSHOT_URL}} noble main universe"
+        key_url: "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x871920D1991BC93C"
+      - sourceline: "deb [arch={{APT_ARCH}}] {{APT_SNAPSHOT_URL}} noble-updates main universe"
+        key_url: "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x871920D1991BC93C"
+      - sourceline: "deb [arch={{APT_ARCH}}] {{APT_SNAPSHOT_URL}} noble-security main universe"
+        key_url: "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x871920D1991BC93C"
+    include:
+      - python3
+      - python3-gi
+      - python3-gi-cairo
+      - gir1.2-gtk-4.0
+      - gir1.2-adw-1
+      - gir1.2-gtksource-5
+      - gir1.2-notify-0.7
+      - gir1.2-xdp-1.0
+      - gir1.2-gstreamer-1.0
+      - gir1.2-gst-plugins-base-1.0
+      - python3-gst-1.0
+      - libgtk-4-1
+      # Required by the GTK/GI runtime dependency closure on clean hosts.
+      - liblzo2-2
+      # GTK/GSK's EGL loader dependency; explicitly include its GLVND soname.
+      - libegl1
+      # GTK's Wayland backend is dlopen'ed at runtime and must be bundled explicitly.
+      - libwayland-client0
+      # GTK's X11 backend also dlopen's the XCB render extension.
+      - libxcb-render0
+      - libadwaita-1-0
+      - libgtksourceview-5-0
+      - libportal1
+      - libportal-gtk4-1
+      - libnotify4
+      - tesseract-ocr
+      - tesseract-ocr-eng
+      - tesseract-ocr-ita
+      - libgstreamer1.0-0
+      - gstreamer1.0-plugins-base
+      - gstreamer1.0-plugins-good
+      - adwaita-icon-theme
+      - librsvg2-common
+    exclude:
+      - xserver-xorg-video-all
+      - mesa-vulkan-drivers
+  files:
+    exclude:
+      - usr/share/man
+      - usr/share/lintian
+      - usr/share/locale-langpack
+  runtime:
+    arch:
+      - "{{APPIMAGE_ARCH}}"
+    env:
+      PYTHONPATH: "${APPDIR}/usr/lib/python3.12/site-packages:${APPDIR}/usr/lib/python3/dist-packages"
+      GSETTINGS_SCHEMA_DIR: "${APPDIR}/usr/share/glib-2.0/schemas"
+      ANURA_LOCALE_DIR: "${APPDIR}/usr/share/locale"
+      ANURA_VERSION: "{{APP_VERSION}}"
+      TESSDATA_PREFIX: "${APPDIR}/usr/share/tesseract-ocr/5/tessdata"
+      TESSDATA_PREFIX_SYSTEM: "${APPDIR}/usr/share/tesseract-ocr/5/tessdata"
+AppImage:
+  arch: "{{APPIMAGE_ARCH}}"
+  file_name: "Anura-{{APP_VERSION}}-{{APPIMAGE_ARCH}}.AppImage"
+  update-information: "gh-releases-zsync|D3M-Sudo|Anura|latest|Anura-*-{{APPIMAGE_ARCH}}.AppImage.zsync"

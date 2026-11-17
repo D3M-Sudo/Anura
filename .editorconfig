@@ -1,0 +1,79 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Python source — ruff uses 120 chars (see pyproject.toml)
+[*.py]
+indent_style = space
+indent_size = 4
+max_line_length = 120
+
+# Blueprint UI files
+[*.blp]
+indent_style = space
+indent_size = 2
+
+# Meson build files
+[meson.build]
+indent_style = space
+indent_size = 2
+
+[meson_options.txt]
+indent_style = space
+indent_size = 2
+
+# XML data files (GResource, GSchema, Metainfo, Desktop)
+[*.xml]
+indent_style = space
+indent_size = 2
+
+[*.xml.in]
+indent_style = space
+indent_size = 2
+
+[*.gresource.xml]
+indent_style = space
+indent_size = 2
+
+[*.gschema.xml]
+indent_style = space
+indent_size = 2
+
+# Desktop entry
+[*.desktop.in]
+indent_style = space
+indent_size = 2
+
+# JSON (Flatpak manifest)
+[*.json]
+indent_style = space
+indent_size = 4
+
+# Shell scripts
+[*.sh]
+indent_style = space
+indent_size = 4
+
+# gettext files
+[*.po]
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = false
+
+[*.pot]
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = false
+
+# TOML (pyproject.toml)
+[*.toml]
+indent_style = space
+indent_size = 4
+
+# Markdown
+[*.md]
+trim_trailing_whitespace = false
