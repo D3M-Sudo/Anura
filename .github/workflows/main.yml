@@ -136,7 +136,7 @@ jobs:
             libxml2-utils \
             blueprint-compiler \
             tesseract-ocr tesseract-ocr-eng \
-            weston xwayland xvfb
+            weston xwayland xvfb xdotool
 
       - name: Install Python dependencies (with system site-packages)
         # The venv must inherit apt-installed PyGObject and Libadwaita modules.
@@ -243,6 +243,22 @@ jobs:
             exit 1
           fi
 
+          # Export the X11 host window so tests can inject real XTest keyboard
+          # events into Weston; Weston then forwards them to the focused Wayland
+          # client through wl_keyboard.
+          weston_window_id=""
+          for i in $(seq 1 10); do
+            weston_window_id="$(DISPLAY=:99 xdotool search --onlyvisible --class weston 2>/dev/null | head -n 1 || true)"
+            if [ -n "$weston_window_id" ]; then break; fi
+            sleep 0.25
+          done
+          if [ -z "$weston_window_id" ]; then
+            echo "::error::Could not locate the Weston X11 host window for XTest input"
+            cat /tmp/weston.log
+            exit 1
+          fi
+          echo "WESTON_WINDOW_ID=$weston_window_id" >> "$GITHUB_ENV"
+
       - name: Run GTK tests (Wayland with virtual input)
         # --override-ini replaces the global addopts from pyproject.toml.
         # Without this override the --ignore list baked into addopts would
@@ -255,6 +271,7 @@ jobs:
           GSETTINGS_SCHEMA_DIR: builddir/data
           DISPLAY: ""
           WAYLAND_DISPLAY: wayland-test
+          WESTON_HOST_DISPLAY: :99
           NO_AT_BRIDGE: "1"
           GTK_A11Y: none
           ANURA_LOG_LEVEL: WARNING

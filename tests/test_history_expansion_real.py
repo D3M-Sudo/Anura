@@ -11,11 +11,14 @@ is what is asserted: what exists before a row is opened, what is shown after, th
 open row, the bounded height and the cost of very long text.
 """
 
+import os
+import subprocess
+import time
+
 import pytest
 
 pytest.importorskip("gi")
 
-import time
 from unittest.mock import MagicMock
 
 from anura.services.history_service import HistoryService
@@ -250,36 +253,67 @@ def test_copy_button_still_copies_the_full_text_with_the_row_expanded(real_histo
     controller.copy_entry_text.assert_called_once_with(LONG_TEXT)
 
 
-def _focus_reachable_from_other_controls(window, controls, direction):
-    """Return controls reached by GTK traversal when starting at another control.
+def _send_weston_key(key: str) -> None:
+    """Inject a real XTest key event into Weston; GTK receives it through wl_keyboard."""
+    display = os.environ.get("WESTON_HOST_DISPLAY")
+    window_id = os.environ.get("WESTON_WINDOW_ID")
+    if not display or not window_id:
+        pytest.skip("real keyboard input requires the Weston X11 host display configured by CI")
 
-    GTK's native focus order is an implementation detail of the widget hierarchy:
-    composite rows can expose suffix actions in an order different from their
-    construction order. Verify reachability, not a hand-authored ordering.
-    """
-    reachable = set()
-    for starting_control in controls:
-        assert starting_control.grab_focus()
-        assert window.get_focus() is starting_control
-        visited = {starting_control}
-        for _ in range(40):
-            if not window.child_focus(direction):
-                break
-            focused = window.get_focus()
-            assert focused is not None, "GTK reported focus movement without a focused widget"
-            if focused in visited:
-                break
-            visited.add(focused)
-            if focused in controls and focused is not starting_control:
-                reachable.add(focused)
-        else:
-            pytest.fail("GTK focus traversal did not reach a boundary or wrap within the safety limit")
-    return reachable
+    env = os.environ.copy()
+    env["DISPLAY"] = display
+    subprocess.run(
+        ["xdotool", "windowfocus", "--sync", window_id],
+        check=True,
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    subprocess.run(
+        ["xdotool", "key", "--clearmodifiers", "--delay", "20", key],
+        check=True,
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+
+
+def _wait_for_focus_change(window, previous_focus, timeout: float = 1.0):
+    """Pump GTK events until a real key event changes focus."""
+    from gi.repository import GLib
+
+    context = GLib.MainContext.default()
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        while context.pending():
+            context.iteration(False)
+        focused = window.get_focus()
+        if focused is not previous_focus:
+            return focused
+        time.sleep(0.01)
+    pytest.fail(f"keyboard input did not move focus away from {previous_focus!r}")
+
+
+def _tab_focus_cycle(window, starting_control, key: str, max_steps: int = 40):
+    """Return the widgets reached by physical Tab/Shift+Tab input before wrapping."""
+    assert starting_control.grab_focus()
+    assert window.get_focus() is starting_control
+    visited = {starting_control}
+    focused = starting_control
+
+    for _ in range(max_steps):
+        _send_weston_key(key)
+        focused = _wait_for_focus_change(window, focused)
+        if focused is starting_control:
+            return visited
+        visited.add(focused)
+
+    pytest.fail(f"{key} traversal did not wrap to its starting widget within {max_steps} events")
 
 
 @pytest.fixture
 def real_history_window(real_history):
-    """Present the real HistoryPage so GTK can calculate its native focus chain."""
+    """Present the real HistoryPage so GTK can receive actual Wayland keyboard events."""
     from gi.repository import GLib, Gtk
 
     page, _service, _controller = real_history
@@ -289,8 +323,13 @@ def real_history_window(real_history):
 
     context = GLib.MainContext.default()
     deadline = time.monotonic() + 2.0
-    while context.pending() and time.monotonic() < deadline:
-        context.iteration(False)
+    while time.monotonic() < deadline:
+        while context.pending():
+            context.iteration(False)
+        if window.get_mapped():
+            break
+        time.sleep(0.01)
+    assert window.get_mapped(), "History test window was not mapped by Weston"
 
     yield window, page
 
@@ -309,23 +348,21 @@ def _suffix_buttons(row):
     ]
 
 
-def test_tab_and_shift_tab_follow_native_history_focus_order(real_history_window):
-    """Real GTK focus traversal reaches each row header and its enabled suffix actions."""
-    from gi.repository import Gtk
-
+def test_tab_and_shift_tab_reach_enabled_history_suffix_actions(real_history_window):
+    """Actual Tab and Shift+Tab events traverse the enabled suffix actions."""
     window, page = real_history_window
     assert len(page._rows) == 3
     expected = [button for row in page._rows for button in _suffix_buttons(row)]
     assert all(button.get_sensitive() for button in expected)
 
-    forward = _focus_reachable_from_other_controls(window, expected, Gtk.DirectionType.TAB_FORWARD)
-    backward = _focus_reachable_from_other_controls(window, expected, Gtk.DirectionType.TAB_BACKWARD)
+    forward = _tab_focus_cycle(window, expected[0], "Tab")
+    backward = _tab_focus_cycle(window, expected[0], "shift+Tab")
     assert set(expected) <= forward
     assert set(expected) <= backward
 
 
-def test_expanded_history_row_keeps_suffix_actions_in_native_focus_chain(real_history_window):
-    """Expanding and collapsing a row does not strand focus or remove its suffix actions."""
+def test_expanded_history_row_keeps_suffix_actions_in_keyboard_traversal(real_history_window):
+    """Expanding a row preserves keyboard access to its suffix actions."""
     from gi.repository import Gtk
 
     window, page = real_history_window
@@ -333,22 +370,35 @@ def test_expanded_history_row_keeps_suffix_actions_in_native_focus_chain(real_hi
     buttons = _suffix_buttons(row)
 
     row.set_expanded(True)
-    assert _find_all(row, Gtk.TextView)
+    text_views = _find_all(row, Gtk.TextView)
+    assert text_views
     assert buttons == _suffix_buttons(row)
 
-    expanded_forward = _focus_reachable_from_other_controls(window, buttons, Gtk.DirectionType.TAB_FORWARD)
-    assert set(buttons) <= expanded_forward
+    forward = _tab_focus_cycle(window, buttons[0], "Tab")
+    backward = _tab_focus_cycle(window, buttons[0], "shift+Tab")
+    assert set(buttons) <= forward
+    assert set(buttons) <= backward
+
+
+def test_collapsing_focused_history_text_moves_focus_to_visible_control(real_history_window):
+    """Collapsing expanded content must not leave focus on its hidden TextView."""
+    from gi.repository import Gtk
+
+    window, page = real_history_window
+    row = page._rows[1]
+    row.set_expanded(True)
+    (text_view,) = _find_all(row, Gtk.TextView)
+
+    assert text_view.grab_focus()
+    assert window.get_focus() is text_view
 
     row.set_expanded(False)
     assert row.get_expanded() is False
-    collapsed_forward = _focus_reachable_from_other_controls(window, buttons, Gtk.DirectionType.TAB_FORWARD)
-    assert set(buttons) <= collapsed_forward
+    assert window.get_focus() is not text_view
 
 
-def test_expanding_another_row_preserves_focus_traversal(real_history_window):
-    """Single-open-row behavior remains compatible with GTK focus traversal."""
-    from gi.repository import Gtk
-
+def test_expanding_another_history_row_preserves_keyboard_traversal(real_history_window):
+    """Single-open-row behavior remains compatible with actual keyboard traversal."""
     window, page = real_history_window
     first, second, _third = page._rows
     first.set_expanded(True)
@@ -358,7 +408,7 @@ def test_expanding_another_row_preserves_focus_traversal(real_history_window):
     assert second.get_expanded() is True
 
     expected = [button for row in page._rows for button in _suffix_buttons(row)]
-    forward = _focus_reachable_from_other_controls(window, expected, Gtk.DirectionType.TAB_FORWARD)
-    backward = _focus_reachable_from_other_controls(window, expected, Gtk.DirectionType.TAB_BACKWARD)
+    forward = _tab_focus_cycle(window, expected[0], "Tab")
+    backward = _tab_focus_cycle(window, expected[0], "shift+Tab")
     assert set(expected) <= forward
     assert set(expected) <= backward
