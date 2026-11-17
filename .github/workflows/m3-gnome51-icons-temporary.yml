@@ -33,9 +33,6 @@ jobs:
             exit 1
           fi
           GTK_TYPELIB_DIR="$(dirname "$GTK_TYPELIB")"
-          GTK_LIBRARY_DIR="$(dirname "$GTK_TYPELIB_DIR")"
           export GI_TYPELIB_PATH="$GTK_TYPELIB_DIR:/app/lib/girepository-1.0"
-          export LD_LIBRARY_PATH="$GTK_LIBRARY_DIR:/app/lib"
           echo "GI_TYPELIB_PATH=$GI_TYPELIB_PATH"
-          echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
           xvfb-run -a .m3-test-venv/bin/pytest -q tests/test_gnome51_icon_compatibility.py
