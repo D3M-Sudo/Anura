@@ -343,7 +343,9 @@ def _wait_for_key_event(window, received, previous_count: int, key: str, timeout
     )
 
 
-def _wait_for_focus_change(window, previous_focus, key: str, timeout: float = 1.0):
+def _wait_for_focus_change(
+    window, previous_focus, key: str, timeout: float = 1.0, diagnostic_context=None
+):
     """Pump GTK events until the observed key event changes focus."""
     from gi.repository import GLib
 
@@ -358,7 +360,8 @@ def _wait_for_focus_change(window, previous_focus, key: str, timeout: float = 1.
         time.sleep(0.01)
     pytest.fail(
         f"GTK received {key!r}, but focus remained on {previous_focus!r}; "
-        "this distinguishes a GTK focus-traversal failure from missing input"
+        f"GTK window active={window.is_active()}, mapped={window.get_mapped()}, "
+        f"focus={window.get_focus()!r}, context={diagnostic_context!r}"
     )
 
 
@@ -489,7 +492,9 @@ def test_collapsing_focused_history_text_keeps_keyboard_navigation_usable(real_h
         previous_count = len(received)
         _send_weston_key("Tab")
         _wait_for_key_event(window, received, previous_count, "Tab")
-        focused = _wait_for_focus_change(window, text_view, "Tab")
+        focused = _wait_for_focus_change(
+            window, text_view, "Tab", diagnostic_context=collapsed_state
+        )
 
         assert focused is not text_view, (
             "Tab was delivered but focus remained on the collapsed TextView; "
