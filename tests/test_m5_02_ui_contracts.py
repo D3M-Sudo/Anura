@@ -60,7 +60,7 @@ if resource_path.exists():
 @pytest.mark.gtk
 class TestM502ShortcutsSearch:
     @pytest.fixture
-    def overlay(self, setup_gtk_environment):
+    def overlay(self):
         from anura.widgets.shortcuts_overlay import ShortcutsOverlay
 
         instance = ShortcutsOverlay()
@@ -69,6 +69,7 @@ class TestM502ShortcutsSearch:
 
     def test_search_filters_matching_rows_and_categories(self, overlay):
         overlay.search_entry.set_text("open image file")
+        overlay.search_entry.emit("search-changed")
 
         assert overlay.stack.get_visible_child_name() == "results"
         matching_rows = [
@@ -83,11 +84,13 @@ class TestM502ShortcutsSearch:
 
     def test_search_empty_state_and_clearing_restore_all_groups(self, overlay):
         overlay.search_entry.set_text("no-shortcut-can-match-this")
+        overlay.search_entry.emit("search-changed")
 
         assert overlay.stack.get_visible_child_name() == "no_results"
         assert not any(group.get_visible() for group, _rows in overlay._groups)
 
         overlay.search_entry.set_text("")
+        overlay.search_entry.emit("search-changed")
 
         assert overlay.stack.get_visible_child_name() == "results"
         assert all(group.get_visible() for group, _rows in overlay._groups)
@@ -95,6 +98,7 @@ class TestM502ShortcutsSearch:
 
     def test_escape_clears_nonempty_search_without_closing_overlay(self, overlay):
         overlay.search_entry.set_text("clipboard")
+        overlay.search_entry.emit("search-changed")
         close = MagicMock()
         overlay.close = close
 
@@ -117,7 +121,7 @@ class TestM502ShortcutsSearch:
 
 @pytest.mark.gtk
 class TestM502ToastDelegation:
-    def test_show_toast_delegates_title_and_priority_to_overlay(self, setup_gtk_environment):
+    def test_show_toast_delegates_title_and_priority_to_overlay(self):
         from anura.window import AnuraWindow
 
         overlay = MagicMock()
@@ -131,7 +135,7 @@ class TestM502ToastDelegation:
         assert toast.get_title() == "M5-02 test toast"
         assert toast.get_priority() == Adw.ToastPriority.HIGH
 
-    def test_toast_dismiss_signal_is_deterministic(self, setup_gtk_environment):
+    def test_toast_dismiss_signal_is_deterministic(self):
         toast = Adw.Toast.new("Dismiss lifecycle")
         dismissed = []
         toast.connect("dismissed", lambda _toast: dismissed.append(True))
