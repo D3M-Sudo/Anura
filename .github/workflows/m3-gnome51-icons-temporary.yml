@@ -42,46 +42,28 @@ jobs:
 
           GTK_TYPELIB_DIR="$(dirname "$GTK_TYPELIB")"
           GTK_LINK_DIR="$(mktemp -d)"
-          export GI_TYPELIB_PATH="$GTK_TYPELIB_DIR:/app/lib/girepository-1.0"
-          ln -s "$GTK_LIBRARY" "$GTK_LINK_DIR/libgtk-4.so.1"
-
-          # Expose only GTK's missing runtime dependencies via a private link
-          # directory. Never prepend the complete runtime lib directory:
-          # that can shadow the container's glibc and trigger GLIBC_PRIVATE.
-          for pass in 1 2 3 4 5 6 7 8; do
-            LDD_OUTPUT="$(LD_LIBRARY_PATH="$GTK_LINK_DIR:/app/lib" ldd "$GTK_LIBRARY" 2>&1 || true)"
-            echo "ldd dependency scan (pass $pass):"
-            printf '%s\n' "$LDD_OUTPUT"
-            MISSING="$(printf '%s\n' "$LDD_OUTPUT" | awk '$2 == "=>" && $3 == "not" && $4 == "found" {print $1}')"
-            if [ -z "$MISSING" ]; then
-              break
-            fi
-            for soname in $MISSING; do
-              case "$soname" in
-                libc.so*|libpthread.so*|libm.so*|libdl.so*|librt.so*|ld-linux*|libresolv.so*|libnss_*|libutil.so*|libanl.so*|libthread_db.so*|libcrypt.so*)
-                  echo "Refusing to override container glibc component: $soname" >&2
-                  exit 1
-                  ;;
-              esac
-              dependency="$(find "$GTK_RUNTIME_FILES" \( -type f -o -type l \) -name "$soname" -print -quit)"
-              if [ -z "$dependency" ]; then
-                echo "Unresolved GTK runtime dependency: $soname" >&2
-                exit 1
-              fi
-              ln -sf "$dependency" "$GTK_LINK_DIR/$soname"
-            done
-          done
-
-          FINAL_LDD_OUTPUT="$(LD_LIBRARY_PATH="$GTK_LINK_DIR:/app/lib" ldd "$GTK_LIBRARY" 2>&1 || true)"
-          echo "Final GTK dependency scan:"
-          printf '%s\n' "$FINAL_LDD_OUTPUT"
-          if printf '%s\n' "$FINAL_LDD_OUTPUT" | grep -E '=>[[:space:]]+not found|version .* not found' >/dev/null; then
-            echo "GTK runtime dependencies or symbol versions remain unresolved" >&2
+          RUNTIME_LOADER="$(find "$GTK_RUNTIME_FILES" \( -type f -o -type l \) -name 'ld-linux-x86-64.so.2' -print -quit)"
+          RUNTIME_LIBC="$(find "$GTK_RUNTIME_FILES" \( -type f -o -type l \) -name 'libc.so.6' -print -quit)"
+          if [ -z "$RUNTIME_LOADER" ] || [ -z "$RUNTIME_LIBC" ]; then
+            echo "GNOME 51 runtime dynamic loader or glibc not found" >&2
             exit 1
           fi
 
-          export LD_LIBRARY_PATH="$GTK_LINK_DIR:/app/lib"
-          echo "GTK_LIBRARY=$GTK_LIBRARY"
-          echo "GI_TYPELIB_PATH=$GI_TYPELIB_PATH"
-          echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-          xvfb-run -a .m3-test-venv/bin/pytest -q tests/test_gnome51_icon_compatibility.py
+          # GTK 4.18 in GNOME 51 requires the runtime's glibc (GLIBC_2.43).
+          # Run Python under that runtime loader instead of injecting GNOME
+          # libraries into the older container loader.
+          RUNTIME_LIB_PATH="$(dirname "$RUNTIME_LOADER"):$(dirname "$RUNTIME_LIBC"):$(dirname "$GTK_LIBRARY"):$GTK_LINK_DIR:/app/lib:/usr/lib/x86_64-linux-gnu:/lib/x86_64-linux-gnu:/usr/lib:/lib"
+          export GI_TYPELIB_PATH="$GTK_TYPELIB_DIR:/app/lib/girepository-1.0"
+          ln -s "$GTK_LIBRARY" "$GTK_LINK_DIR/libgtk-4.so.1"
+
+          echo "GNOME 51 runtime loader: $RUNTIME_LOADER"
+          echo "GNOME 51 runtime glibc: $RUNTIME_LIBC"
+          echo "GNOME 51 GTK library: $GTK_LIBRARY"
+          echo "Runtime library path: $RUNTIME_LIB_PATH"
+          echo "Python executable: $(readlink -f .m3-test-venv/bin/python)"
+
+          # xvfb-run itself remains on the container runtime. Only the
+          # Python/GTK test process is launched with GNOME 51's loader+glibc.
+          xvfb-run -a env LD_LIBRARY_PATH="$RUNTIME_LIB_PATH" \
+            "$RUNTIME_LOADER" --library-path "$RUNTIME_LIB_PATH" \
+            .m3-test-venv/bin/python -m pytest -q tests/test_gnome51_icon_compatibility.py
