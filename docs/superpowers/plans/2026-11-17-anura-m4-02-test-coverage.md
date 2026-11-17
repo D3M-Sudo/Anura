@@ -121,3 +121,14 @@ GTK integration tests are run through the existing `gtk-tests` job after GTK4/Li
 ## Completion criteria
 
 M4-02 is complete only when all CI-testable acceptance criteria are either supported by fresh exact-HEAD CI evidence or explicitly dispositioned with the maintainer. Physical keyboard navigation and real Orca/AT-SPI remain deferred to M7 and are not part of this completion claim.
+
+
+## Execution record — Task 1 (2026-11-17)
+
+- [x] Color-scheme initialization mappings: `default → 0`, `force-light → 1`, `force-dark → 2`.
+- [x] Selection persistence mappings and invalid-index fallback.
+- [x] Extra-language selection persistence through language-manager name/code mapping.
+- [x] Active extra-language removal clears the setting and refreshes the model.
+- [x] Full CI verification completed successfully.
+
+**Evidence:** implementation/test head `c5f820aac1a722c42bb79f5ebcbbf6fea17a0c7a`; [CI #44188821619](https://github.com/D3M-Sudo/Anura/actions/runs/44188821619) passed with Python Quality pytest **682 passed, 6 skipped, 287 deselected**, GTK Integration, Changelog Integrity, AppImage/Flatpak builds for both architectures and release-artifact validation; [CodeQL #44188821605](https://github.com/D3M-Sudo/Anura/actions/runs/44188821605) passed. No production files changed. Initial pytest failures were confined to an over-strict mock call-count assertion, corrected in the test; final CI passed. Next task: Task 2 — Editor wrap-mode mapping and persistence.
