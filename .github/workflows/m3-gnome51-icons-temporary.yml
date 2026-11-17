@@ -24,9 +24,18 @@ jobs:
       - name: Check GNOME 51 icon theme
         env:
           ANURA_GNOME_RUNTIME_ICON_CHECK: "1"
-          GI_TYPELIB_PATH: /app/lib/girepository-1.0:/usr/lib64/girepository-1.0:/usr/lib/girepository-1.0
-          LD_LIBRARY_PATH: /app/lib
         run: |
+          set -eu
           cat /etc/os-release
-          find / -name 'Gtk-4.0.typelib' -print 2>/dev/null || true
+          GTK_TYPELIB="$(find /var/lib/flatpak/runtime/org.gnome.Platform/x86_64/51 -type f -name 'Gtk-4.0.typelib' -print -quit)"
+          if [ -z "$GTK_TYPELIB" ]; then
+            echo "Gtk-4.0.typelib not found in the GNOME 51 Platform runtime" >&2
+            exit 1
+          fi
+          GTK_TYPELIB_DIR="$(dirname "$GTK_TYPELIB")"
+          GTK_LIBRARY_DIR="$(dirname "$GTK_TYPELIB_DIR")"
+          export GI_TYPELIB_PATH="$GTK_TYPELIB_DIR:/app/lib/girepository-1.0"
+          export LD_LIBRARY_PATH="$GTK_LIBRARY_DIR:/app/lib"
+          echo "GI_TYPELIB_PATH=$GI_TYPELIB_PATH"
+          echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
           xvfb-run -a .m3-test-venv/bin/pytest -q tests/test_gnome51_icon_compatibility.py
