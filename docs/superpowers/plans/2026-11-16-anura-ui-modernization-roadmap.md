@@ -56,7 +56,8 @@ The global roadmap owns phase status and app-wide prioritization. This document 
 | UI-10 | Implement the next explicitly approved task | **Not started** | Must use an approved execution approach and task-level acceptance criteria. |
 | UI-11 | Review, run CI and validate delivery evidence | **Not started** | Run after UI-10 or any later implementation task; record exact results and limitations. |
 | UI-12 | Update this roadmap after every completed task | **Mandatory recurring control** | Execute after each task, before starting another. This is not a one-time final task. |
-| UI-13 | M1-02 GTK4/Libadwaita typography, spacing and radius conventions | **Completed** | Design conventions documented, Blueprint/CSS spacing normalized, four static regression tests added; exact-head CI and CodeQL passed. See the M1-02 record below. |\n| UI-14 | M3-01 Extracted/History audit and F-301/F-302 test remediation | **Completed within bounded scope** | Read-only audit completed; History refresh contract test reconciled; Extracted search-announcement edge cases covered; exact-head CI and CodeQL passed. M3 remains Partial; F-303 is next. |
+| UI-13 | M1-02 GTK4/Libadwaita typography, spacing and radius conventions | **Completed** | Design conventions documented, Blueprint/CSS spacing normalized, four static regression tests added; exact-head CI and CodeQL passed. See the M1-02 record below. |\n| UI-14 | M3-01 Extracted/History audit and F-301/F-302 test remediation | **Completed within bounded scope** | Read-only audit completed; History refresh contract test reconciled; Extracted search-announcement edge cases covered; exact-head CI and CodeQL passed. M3 remains Partial; F-303-01 followed. |
+| UI-15 | F-303-01 History TTS action-label semantics and state tests | **Completed** | State-specific tooltip and accessible labels implemented; four-state assertions and CHANGELOG entry added. Exact-head CI #44027455501 and CodeQL #44027455444 passed on `2d503db3b98383ab0b293f7e7752b583826a40c9`. F-303-02 is next. |
 
 ## Completed work — scope and evidence
 
@@ -427,4 +428,33 @@ The [global roadmap](2026-11-16-anura-ui-modernization-global-roadmap.md) is the
 - No production source, permanent/temporary workflow, CHANGELOG, protected branch or PR metadata was changed for F-301/F-302 remediation.
 - PR #648 remains Open/Draft/unmerged, base `feature`, head `56d794502d84c0dfc392230867b4c90b6d08ee91`.
 - M3 remains Partial; this record does not close the full Extracted/History modernization phase.
-- **Next:** F-303 read-only audit of History accessible action labels and keyboard traversal. Any implementation requires a separate bounded proposal and explicit approval.
+- **Next:** prepare the bounded F-303-02 automated keyboard-traversal test plan. F-303-01 is complete; F-303-03 direct accessible-label assertions follow F-303-02. Each implementation requires separate explicit approval.
+
+
+## F-303-01 — History TTS action-label semantics (2026-11-17)
+
+### Implementation
+
+- Updated the History TTS button's visible tooltip and `Gtk.AccessibleProperty.LABEL` to describe the current action:
+  - `generating`: “Stop listening”
+  - `playing`: “Pause listening”
+  - `paused`: “Resume listening”
+  - `idle` or inactive: “Listen to text”
+- TTS execution and lifecycle logic were left unchanged.
+- Added `test_tts_button_labels_describe_the_current_action` in `tests/test_history_ui.py`; it verifies both tooltip and accessible label for all four states.
+- Added the corresponding user-visible accessibility change to `CHANGELOG.md`.
+- Changed paths: `anura/widgets/history_page.py`, `tests/test_history_ui.py`, `CHANGELOG.md`.
+
+### Exact-head validation
+
+- Implementation/test/CHANGELOG SHA: `2d503db3b98383ab0b293f7e7752b583826a40c9`.
+- CI [#44027455501](https://github.com/D3M-Sudo/Anura/actions/runs/44027455501): completed `success` on the exact SHA. Python quality, Changelog integrity, GTK Integration, AppImage x86_64/aarch64, Flatpak x86_64/aarch64, AppImage release-set validation and multi-architecture release-artifact validation all passed. `publish-release` was skipped as expected for a PR.
+- CodeQL [#44027455444](https://github.com/D3M-Sudo/Anura/actions/runs/44027455444): completed `success` on the same SHA.
+- No local tests or TDD red→green sequence are claimed. The CI validates the code/test/CHANGELOG SHA above; subsequent documentation-only commits are not covered by those runs.
+- Real Orca/AT-SPI and manual keyboard traversal were not performed; they remain excluded/deferred. The new automated test does not substitute for those checks.
+
+### Boundaries and next task
+
+- No workflow, dependency, protected branch or PR metadata was changed.
+- PR #648 remains Open/Draft/unmerged, base `feature`.
+- M3 remains Partial. **F-303-02** automated keyboard-traversal tests are next; **F-303-03** direct assertions for History accessible action labels follow. Broader Extracted/History modernization remains open.
