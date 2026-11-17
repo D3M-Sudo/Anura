@@ -1,0 +1,29 @@
+name: Temporary M5-02 Ruff verification
+
+on:
+  push:
+    branches: [ "fix/ui-modernization-aligned" ]
+    paths:
+      - ".github/workflows/m5-02-temporary.yml"
+      - "tests/test_m5_02_*.py"
+  pull_request:
+    branches: [ "feature" ]
+    paths:
+      - ".github/workflows/m5-02-temporary.yml"
+      - "tests/test_m5_02_*.py"
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostics:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Run Ruff and print exact normalization
+        run: |
+          pip install "ruff==0.17.5"
+          ruff check --fix tests/test_m5_02_*.py || true
+          git diff -- tests/test_m5_02_menu_actions.py tests/test_m5_02_ui_contracts.py
