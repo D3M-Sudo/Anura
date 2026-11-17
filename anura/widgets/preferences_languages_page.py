@@ -5,11 +5,12 @@
 # SPDX-License-Identifier: MIT
 
 from gettext import gettext as _
+from urllib.parse import urlsplit
 
 from gi.repository import Adw, Gio, GLib, Gtk
 from loguru import logger
 
-from anura.config import RESOURCE_PREFIX
+from anura.config import RESOURCE_PREFIX, TESSDATA_URL
 from anura.models.language_item import LanguageItem
 from anura.services.language_manager import get_language_manager
 from anura.services.settings import settings
@@ -36,6 +37,12 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
         SignalManagerMixin.__init__(self)
 
         self.settings = settings
+        self._disposed = False
+        self._network_cancellable: Gio.Cancellable | None = None
+
+        self.list_view.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Available OCR models")]
+        )
 
         # Dynamic language store initialization - use centralized get_language_item pattern
         for lang_code in get_language_manager().get_available_codes():
@@ -61,12 +68,37 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
         self.check_connection()
 
     def check_connection(self) -> None:
-        """Asynchronously checks network reachability for OCR model downloads."""
-        monitor = Gio.NetworkMonitor.get_default()
-        address = Gio.NetworkAddress.new("google.com", 443)
-        monitor.can_reach_async(address, None, self._on_connection_checked)
+        """Asynchronously checks reachability of the configured OCR model source."""
+        if self._disposed:
+            return
 
-    def _on_connection_checked(self, monitor: Gio.NetworkMonitor, result: Gio.AsyncResult) -> None:
+        if self._network_cancellable is not None:
+            self._network_cancellable.cancel()
+
+        cancellable = Gio.Cancellable()
+        self._network_cancellable = cancellable
+        monitor = Gio.NetworkMonitor.get_default()
+        source_host = urlsplit(TESSDATA_URL).hostname
+        if source_host is None:
+            logger.warning("Anura: configured OCR model URL has no hostname")
+            return
+        address = Gio.NetworkAddress.new(source_host, 443)
+        monitor.can_reach_async(
+            address,
+            cancellable,
+            lambda source, result: self._on_connection_checked(source, result, cancellable),
+        )
+
+    def _on_connection_checked(
+        self,
+        monitor: Gio.NetworkMonitor,
+        result: Gio.AsyncResult,
+        cancellable: Gio.Cancellable,
+    ) -> None:
+        if self._disposed or cancellable is not self._network_cancellable:
+            return
+
+        self._network_cancellable = None
         try:
             reachable = monitor.can_reach_finish(result)
         except (GLib.Error, OSError):
@@ -202,6 +234,10 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
         self.load_languages()
 
     def do_destroy(self) -> None:
-        """Clean up all tracked signal handlers to prevent memory leaks."""
+        """Cancel pending network work and clean up tracked signal handlers."""
+        self._disposed = True
+        if self._network_cancellable is not None:
+            self._network_cancellable.cancel()
+            self._network_cancellable = None
         self.teardown_all()
         super().do_destroy()
