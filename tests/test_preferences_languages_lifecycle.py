@@ -142,7 +142,7 @@ def test_activate_filter_selects_empty_or_languages_stack_child(monkeypatch, hea
 
 def test_stop_search_clears_query_and_restores_downloaded_filter(monkeypatch, headless_gi_mocks):
     """Stopping search clears the entry and restores the default filter."""
-    module, page, _monitor, _address, _cancellable = _make_languages_page(monkeypatch, headless_gi_mocks)
+    _module, page, _monitor, _address, _cancellable = _make_languages_page(monkeypatch, headless_gi_mocks)
     entry = page.language_search_entry
     page.model.get_n_items.return_value = 1
     page.model.set_filter.reset_mock()
