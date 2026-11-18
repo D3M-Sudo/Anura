@@ -189,7 +189,8 @@ def test_history_long_expanded_text_scrolls_and_row_actions_remain_reachable(wid
         assert text_scroller.get_height() <= 241, "expanded text area exceeded its 240px height cap"
 
         action_buttons = [
-            child for child in _descendants(row)
+            child
+            for child in _descendants(row)
             if isinstance(child, Gtk.Button)
             and child.get_icon_name()
             in {"edit-copy-symbolic", "document-edit-symbolic", "media-playback-start-symbolic"}
