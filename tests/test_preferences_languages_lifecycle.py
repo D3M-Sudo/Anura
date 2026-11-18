@@ -104,3 +104,98 @@ def test_preferences_language_list_has_an_explicit_accessible_name(monkeypatch, 
     _module, page, _monitor, _address, _cancellable = _make_languages_page(monkeypatch, headless_gi_mocks)
 
     assert any(call.args[1] == ["Available OCR models"] for call in page.list_view.update_property.call_args_list)
+
+
+def test_language_search_matches_titles_case_insensitively(monkeypatch, headless_gi_mocks):
+    """Search matches a language title without depending on input casing."""
+    module, _page, _monitor, _address, _cancellable = _make_languages_page(monkeypatch, headless_gi_mocks)
+    item = SimpleNamespace(code="eng", title="English")
+
+    assert module.PreferencesLanguagesPage.filter_func(item, "GLiSh")
+    assert not module.PreferencesLanguagesPage.filter_func(item, "italian")
+
+
+def test_default_language_filter_shows_only_downloaded_codes(monkeypatch, headless_gi_mocks):
+    """An empty search query limits the visible list to downloaded models."""
+    module, _page, _monitor, _address, _cancellable = _make_languages_page(monkeypatch, headless_gi_mocks)
+    manager = module.get_language_manager()
+    manager.get_downloaded_codes.return_value = ["ita"]
+    english = SimpleNamespace(code="eng", title="English")
+    italian = SimpleNamespace(code="ita", title="Italian")
+
+    assert not module.PreferencesLanguagesPage.filter_func(english, "")
+    assert module.PreferencesLanguagesPage.filter_func(italian, "")
+
+
+def test_activate_filter_selects_empty_or_languages_stack_child(monkeypatch, headless_gi_mocks):
+    """The visible stack page reflects whether the filtered model has results."""
+    _module, page, _monitor, _address, _cancellable = _make_languages_page(monkeypatch, headless_gi_mocks)
+
+    page.model.get_n_items.return_value = 0
+    page.activate_filter()
+    page.views.set_visible_child_name.assert_called_with("empty_state")
+
+    page.model.get_n_items.return_value = 2
+    page.activate_filter("English")
+    page.views.set_visible_child_name.assert_called_with("languages_state")
+
+
+def test_stop_search_clears_query_and_restores_downloaded_filter(monkeypatch, headless_gi_mocks):
+    """Stopping search clears the entry and restores the default filter."""
+    module, page, _monitor, _address, _cancellable = _make_languages_page(monkeypatch, headless_gi_mocks)
+    entry = page.language_search_entry
+    page.model.get_n_items.return_value = 1
+
+    page.on_language_search_stop(entry)
+
+    entry.set_text.assert_called_with("")
+    page.search_bar.set_search_mode.assert_called_with(False)
+    page.revealer.set_reveal_child.assert_called_with(True)
+    module.Gtk.CustomFilter.new.assert_called_with(module.PreferencesLanguagesPage.filter_func, None)
+    page.views.set_visible_child_name.assert_called_with("languages_state")
+
+
+def test_language_added_event_is_idempotent(monkeypatch, headless_gi_mocks):
+    """Repeated added events do not append duplicate language rows."""
+    _module, page, _monitor, _address, _cancellable = _make_languages_page(monkeypatch, headless_gi_mocks)
+    item = SimpleNamespace(code="ita", title="Italian")
+
+    class ListStore:
+        def __init__(self):
+            self.items = []
+
+        def __iter__(self):
+            return iter(self.items)
+
+        def append(self, value):
+            self.items.append(value)
+
+    store = ListStore()
+    page.list_store = store
+    manager = page.__class__.__module__
+    import sys
+
+    language_module = sys.modules[manager]
+    language_manager = language_module.get_language_manager()
+    language_manager.get_language_item.return_value = item
+    page.search_bar.get_search_mode.return_value = False
+
+    page.on_language_added(language_manager, "ita")
+    page.on_language_added(language_manager, "ita")
+
+    assert store.items == [item]
+
+
+def test_language_removal_refreshes_default_filter(monkeypatch, headless_gi_mocks):
+    """Removing a downloaded model rebuilds the visible default filter."""
+    module, page, _monitor, _address, _cancellable = _make_languages_page(monkeypatch, headless_gi_mocks)
+    manager = module.get_language_manager()
+    manager.get_downloaded_codes.return_value = ["eng", "ita"]
+    page.search_bar.get_search_mode.return_value = False
+    page.model.get_n_items.return_value = 1
+
+    page.on_language_removed(manager, "ita")
+
+    module.Gtk.CustomFilter.new.assert_called_with(module.PreferencesLanguagesPage.filter_func, None)
+    assert not module.PreferencesLanguagesPage.filter_func(SimpleNamespace(code="ita", title="Italian"), "")
+    page.views.set_visible_child_name.assert_called_with("languages_state")
