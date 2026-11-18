@@ -125,8 +125,11 @@ def test_extracted_long_ocr_text_scrolls_without_clipping_primary_actions(width:
         assert scroller.get_height() > 0
         assert page.text_view.get_mapped()
 
-        for control in (page.grab_btn, page.text_copy_btn, page.share_button, page.listen_btn, page.stats_label):
+        for control in (page.grab_btn, page.text_copy_btn, page.share_button, page.listen_btn):
             _assert_inside_window(control, window)
+            assert control.get_focusable(), f"{type(control).__name__} is not keyboard-focusable"
+            assert control.is_sensitive(), f"{type(control).__name__} is not actionable"
+        _assert_inside_window(page.stats_label, window)
     finally:
         window.destroy()
 
@@ -142,7 +145,9 @@ def test_history_long_expanded_text_scrolls_and_row_actions_remain_reachable(wid
     page = HistoryPage()
     page.settings = MagicMock()
     page.settings.get_boolean.return_value = True
-    page.setup(service)
+    tts_controller = MagicMock()
+    tts_controller.can_listen_for_language.return_value = True
+    page.setup(service, tts_controller=tts_controller)
     window = _present(page, width, height)
 
     try:
@@ -181,6 +186,8 @@ def test_history_long_expanded_text_scrolls_and_row_actions_remain_reachable(wid
         assert len(action_buttons) == 3, "History row must expose Copy, Editor and TTS action buttons"
         for button in action_buttons:
             _assert_inside_window(button, window)
+            assert button.get_focusable(), f"{button.get_tooltip_text()} action is not keyboard-focusable"
+            assert button.is_sensitive(), f"{button.get_tooltip_text()} action is not actionable"
     finally:
         window.destroy()
         page.cleanup()
