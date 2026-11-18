@@ -755,7 +755,7 @@ After every completed task, append/update the relevant phase and record:
 - Real GNOME/GTK visual inspection and Orca/AT-SPI remain unperformed and assigned to M7. These limitations do not reopen the bounded M3 automated remediation scope.
 - The audit observed a temporary commit-history anomaly in the M3 sequence (large transient deletion followed by restoration); the net source delta is limited to the five M3-related files already reviewed. Record this for pre-merge review; it is not a current-tree integrity finding.
 
-### M4 — remains Partial; M4-02 is the next bounded work item
+### M4 — remains Partial; M4-02 execution status (updated 2026-11-18)
 
 M4-01 and remediations M4-F01–F04 are complete. The following coverage gaps remain from the M4-01 audit:
 
@@ -769,7 +769,7 @@ M4-01 and remediations M4-F01–F04 are complete. The following coverage gaps re
 
 M4-02 must first inspect existing tests and public GTK/Gio seams, then add only deterministic tests that can run in the existing GitHub Actions environment. A missing test is not evidence of a production defect: production changes require a reproduced failing behavior and a separate, narrowly justified fix. Any CI-unreliable keyboard traversal remains explicitly deferred to M7. M4 must not be marked complete until the approved CI-testable gaps have been addressed or explicitly dispositioned with evidence.
 
-No M4-02 implementation is authorized by this documentation update. M6-01 remains sequenced after M4-02.
+Historical note (2026-11-17): M4-02 implementation had not yet been authorized at that point in the record. Subsequent approved Task 1–3 execution is documented below. M6-01 remains sequenced after M4-02.
 
 
 ## M4-02 Task 1 — General Preferences automated coverage (2026-11-17)
