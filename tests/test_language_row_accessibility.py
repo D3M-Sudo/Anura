@@ -34,7 +34,6 @@ def test_progress_bar_accessible_name_includes_language(headless_gi_mocks, monke
     assert values == ["Download Italian"]
 
 
-
 def test_download_progress_reveals_updates_and_hides_progress_bar(headless_gi_mocks, monkeypatch):
     _language_row, row, _manager = _make_language_row(headless_gi_mocks, monkeypatch)
     row.revealer.get_reveal_child.side_effect = [False, True]
