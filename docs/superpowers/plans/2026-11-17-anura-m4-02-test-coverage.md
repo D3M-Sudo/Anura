@@ -180,3 +180,20 @@ M4-02 is complete only when all CI-testable acceptance criteria are either suppo
 - [x] Full exact-head CI and CodeQL verification completed successfully.
 
 **Evidence:** exact implementation head `8a70fa257375f5da060b30568a6eeacd50b2f820`; [CI #44199827587](https://github.com/D3M-Sudo/Anura/actions/runs/44199827587) passed with Python Quality **692 passed, 6 skipped, 290 deselected**, GTK Integration, Changelog Integrity, AppImage/Flatpak builds for x86_64/aarch64, AppImage release-set and multi-architecture artifact validation; [CodeQL #44199827449](https://github.com/D3M-Sudo/Anura/actions/runs/44199827449) passed. `publish-release` was skipped as expected for a PR. No production files, dependencies, workflows or CHANGELOG entries changed. Native visual, physical keyboard and Orca/AT-SPI checks remain deferred to M7. Next task: Task 4 — Languages search/filter/lifecycle; separate maintainer authorization required.
+
+
+## 2026-11-18 — M4 residual review (M4-RR), separate from M4-02 Task 5
+
+This approved residual review does not reopen or alter the M4-02 acceptance-criteria disposition above. It closes the wider CI-testable M4 residual items identified in the M4-01 audit and subsequent evidence review.
+
+| Residual | Action and evidence | Boundary |
+|---|---|---|
+| LanguageRow failure-path idle-source leak in bookkeeping | `test_language_row_prunes_failed_download_refresh_idle_id` reproduced the stale source-ID condition; the minimal production correction uses `_schedule_idle_update()` consistently. RED before fix, GREEN after. | No broader LanguageRow refactor. |
+| Download progress UI transition | `test_download_progress_reveals_updates_and_hides_progress_bar` asserts progress fractions 0.35/1.0 and Revealer show/hide transitions. | Test-level state contract only; no native visual or AT announcement claim. |
+| Network retry/recovery | `test_network_banner_retry_hides_warning_after_recovery` verifies unreachable banner reveal, second probe through direct `check_connection()`, and banner hide after successful recovery. | Does not exercise the template button callback or prove GTK click/signal wiring. |
+| Preferences rendered layout | Source/template inspection confirms four pages and default 640×480 content geometry. | Actual rendered appearance, responsive behavior, density and navigation require native host review. |
+| Language selector keyboard/accessibility | Existing selection, signal, search-label and down-arrow handler tests remain evidence. | Physical traversal and Orca/AT-SPI remain M7. |
+
+**Exact-head CI/CodeQL:** `cc4267083af30c006251e290d78cd2a7e5d6ecf2`; [CI #44325172798](https://github.com/D3M-Sudo/Anura/actions/runs/44325172798), [CodeQL #44325172840](https://github.com/D3M-Sudo/Anura/actions/runs/44325172840). Python Quality **701 passed, 6 skipped, 291 deselected**; GTK Integration **461 passed, 6 skipped, 707 deselected**. The three named regression tests are explicitly present as PASSED in the Python Quality log. Changelog Integrity, AppImage and Flatpak x86_64/aarch64 builds, smoke/functional tests and artifact validators passed.
+
+No dependency, permanent workflow or CHANGELOG change was made. PR #648 remains Open/Draft/unmerged with base `feature`; native host validation remains deferred to M7. The M4 residual review is complete within the approved CI-testable scope; global M4 remains Partial.
