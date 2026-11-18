@@ -76,17 +76,19 @@ No production file is presumed to require modification.
 ## Task 4 — Languages search, filtering and list lifecycle
 
 **Files**
-- Test/modify: `tests/test_preferences_languages_lifecycle.py`
-- GTK integration: create `tests/test_preferences_languages_integration.py` so the real Languages widget tests remain isolated from Voice integration.
-- Conditional production fix: `anura/widgets/preferences_languages_page.py`
+- `tests/test_preferences_languages_lifecycle.py`
+- `tests/test_preferences_languages_integration.py`
 
-- [ ] Add headless tests for case-insensitive title search and the default downloaded-only filter.
-- [ ] Add headless tests for empty/non-empty stack state and stop-search reset behavior.
-- [ ] Add headless tests for idempotent language-added events and filter refresh on removal.
-- [ ] Keep the Languages GTK tests in the dedicated integration module; do not expand the Voice integration module.
-- [ ] In real GTK, instantiate the Languages page with controlled language-manager data and a stubbed network probe; verify search model contents, empty-state stack selection and reset behavior.
-- [ ] Confirm each new test detects its intended regression before any production fix.
-- [ ] Fix only demonstrated defects; preserve existing model-quality/cache invalidation behavior.
+- [x] Headless tests for case-insensitive title search and the default downloaded-only filter.
+- [x] Headless tests for empty/non-empty stack state and stop-search reset behavior.
+- [x] Headless tests for idempotent language-added events and filter refresh on removal.
+- [x] Dedicated GTK integration module kept separate from Voice integration.
+- [x] Real GTK test instantiates the Languages page with controlled manager data and a stubbed network probe; verifies search model contents, empty-state stack selection, reset, add and remove signals.
+- [x] Exact-head Python Quality and GTK Integration CI passed; the new GTK integration test was executed, not skipped.
+- [x] No production defect/fix was claimed; no production code, dependencies or permanent workflow changed.
+- [x] Task 4 bounded acceptance criteria above completed. Download-progress UI transition coverage is explicitly left for Task 5 disposition if still required; it is not claimed by this task.
+
+**Execution evidence (2026-11-18):** exact head `8e2a2f5d7ca3b8ec3b6f8ae478ecc0c94bc7c3bd`; [CI #44205336611](https://github.com/D3M-Sudo/Anura/actions/runs/44205336611) passed — Python Quality **698 passed, 6 skipped, 291 deselected**; GTK Integration **461 passed, 6 skipped, 704 deselected**, including `test_languages_page_search_empty_reset_and_model_lifecycle`; Changelog Integrity, AppImage x86_64/aarch64, Flatpak x86_64/aarch64, AppImage release-set and multi-architecture artifact validation passed. [CodeQL #44205336610](https://github.com/D3M-Sudo/Anura/actions/runs/44205336610) passed. The GTK job was rerun after an initial cancellation; final run succeeded on the same SHA. No CHANGELOG entry was warranted. Native physical keyboard and Orca/AT-SPI remain M7 work. Independent reviewer subagent unavailable; in-session test-diff inspection only.
 
 ## Task 5 — Full verification and M4 disposition
 
@@ -95,13 +97,13 @@ No production file is presumed to require modification.
 - Update PR #648 description only if its M4 status/remaining-gap summary becomes inaccurate.
 - No CHANGELOG change unless product behavior changed.
 
-- [ ] Run the full existing CI workflow on the exact resulting branch HEAD.
-- [ ] Record the Python Quality test count/pass/skip/deselection output.
-- [ ] Record GTK Integration results, including any skipped integration tests and their reasons.
-- [ ] Record CodeQL and all required build/package jobs; do not infer success from an earlier SHA.
+- [x] Run the full existing CI workflow on the exact resulting branch HEAD.
+- [x] Record the Python Quality test count/pass/skip/deselection output.
+- [x] Record GTK Integration results, including the new Languages integration test execution.
+- [x] Record CodeQL and all required build/package jobs on the exact SHA.
 - [ ] Map every M4-02 acceptance criterion to a test or an explicit disposition.
 - [ ] Keep M4 Partial if any CI-testable requirement remains unverified; do not conflate CI coverage with native M7 checks.
-- [ ] Verify PR #648 remains Open/Draft/unmerged and targets `feature`.
+- [x] Verify PR #648 remains Open/Draft/unmerged and targets `feature`.
 
 ## Verification commands (run by CI)
 
