@@ -101,9 +101,32 @@ No production file is presumed to require modification.
 - [x] Record the Python Quality test count/pass/skip/deselection output.
 - [x] Record GTK Integration results, including the new Languages integration test execution.
 - [x] Record CodeQL and all required build/package jobs on the exact SHA.
-- [ ] Map every M4-02 acceptance criterion to a test or an explicit disposition.
-- [ ] Keep M4 Partial if any CI-testable requirement remains unverified; do not conflate CI coverage with native M7 checks.
+- [x] Map every M4-02 acceptance criterion to a test or an explicit disposition.
+- [x] Keep global M4 Partial; explicitly separate the M4-02 CI-testable scope from native M7 checks.
 - [x] Verify PR #648 remains Open/Draft/unmerged and targets `feature`.
+
+## Task 5 disposition record (2026-11-18)
+
+
+
+## 2026-11-18 — M4-02 Task 5: acceptance-criteria disposition
+
+M4-02's CI-testable acceptance criteria are covered or explicitly dispositioned. This closes the bounded M4-02 test-coverage workstream only; global M4 remains **Partial** and native checks remain M7 work.
+
+| Design acceptance area | Evidence / disposition |
+|---|---|
+| General color-scheme mapping, persistence, extra-language selection and removal/reset | `tests/test_preferences_page_resilience.py`; exact-head Python Quality passed. |
+| Editor wrap-mode mapping and persistence | Headless resilience tests plus real GSettings integration in `tests/test_preferences_editor_integration.py`; exact-head Python Quality and GTK Integration passed. |
+| Voice late result after disposal; preserve live success, catalog failure and volume behavior | Late/disposed and live callback tests in `tests/test_preferences_page_resilience.py`; existing failure/loading and volume tests plus `tests/test_preferences_voice_integration.py` remain in the suite. |
+| Languages search/filter/empty/reset/add/remove | Headless lifecycle tests plus `test_languages_page_search_empty_reset_and_model_lifecycle` in GTK Integration. |
+| Preserve model-quality cache invalidation | Existing `tests/test_preferences_language_quality.py::test_quality_change_invalidates_cache_before_reload`; included in Python Quality. |
+| Download-progress UI transition | Explicitly not an M4-02 design acceptance criterion. Not tested or claimed; any further coverage needs separate scope approval. |
+| Physical keyboard traversal, real Orca/AT-SPI, native visual verification | Deferred to M7; GTK CI cannot establish these properties. |
+
+**Exact-head evidence:** `8e2a2f5d7ca3b8ec3b6f8ae478ecc0c94bc7c3bd`; CI [#44205336611](https://github.com/D3M-Sudo/Anura/actions/runs/44205336611) and CodeQL [#44205336610](https://github.com/D3M-Sudo/Anura/actions/runs/44205336610) passed. Python Quality **698 passed, 6 skipped, 291 deselected**; GTK Integration **461 passed, 6 skipped, 704 deselected**, including the Languages integration test; Changelog Integrity, AppImage/Flatpak x86_64/aarch64 and artifact validation passed. The GTK job's initial cancellation was resolved by rerunning it on the same SHA.
+
+No production correction was made in Task 4; no dependency, permanent workflow or CHANGELOG change was added. The independent code-review subagent was unavailable; in-session diff inspection only. PR #648 remains Open/Draft/unmerged with base `feature` and head `fix/ui-modernization-aligned`. Global M4 remains **Partial** pending its remaining programme/native validation.
+
 
 ## Verification commands (run by CI)
 
