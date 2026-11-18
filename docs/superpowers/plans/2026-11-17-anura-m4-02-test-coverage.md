@@ -67,11 +67,11 @@ No production file is presumed to require modification.
 - Test/modify: `tests/test_preferences_page_resilience.py`
 - Conditional production fix: `anura/widgets/preferences_voice_page.py`
 
-- [ ] Add a headless test that captures the callback passed to `GLib.idle_add`, disposes the page, then delivers the catalog result.
-- [ ] Assert the disposed page's combo model is not replaced and its selection is not changed; assert the callback returns `GLib.SOURCE_REMOVE`.
-- [ ] Add the complementary live-page assertion that a valid result is applied, if not already covered by existing tests.
-- [ ] Confirm the disposal test fails if the disposal guard is absent, then verify the current implementation passes.
-- [ ] Do not alter production code if the current guard is sufficient.
+- [x] Add a headless test that captures the callback passed to `GLib.idle_add`, disposes the page, then delivers the catalog result.
+- [x] Assert the disposed page's combo model is not replaced and its selection is not changed; assert the callback returns `GLib.SOURCE_REMOVE`.
+- [x] Add the complementary live-page assertion that a valid result is applied.
+- [ ] Confirm the disposal test fails if the disposal guard is absent, then verify the current implementation passes. No mutation run removing the guard was performed; do not claim an observed RED from guard removal.
+- [x] Do not alter production code; the existing guard is sufficient.
 
 ## Task 4 — Languages search, filtering and list lifecycle
 
@@ -143,3 +143,15 @@ M4-02 is complete only when all CI-testable acceptance criteria are either suppo
 - [ ] Production correction: not applicable; the tests did not demonstrate a production defect, so no production code was changed.
  
 **Evidence:** exact implementation head `cae8b8c27114daf59fab96ebefdd377b3efb76ae`; [CI #44195812990](https://github.com/D3M-Sudo/Anura/actions/runs/44195812990) passed with Python Quality **690 passed, 6 skipped, 290 deselected**, GTK Integration **460 passed, 6 skipped, 696 deselected** (including all three Editor integration cases), Changelog Integrity, AppImage/Flatpak builds for x86_64/aarch64 and artifact validation; [CodeQL #44195813017](https://github.com/D3M-Sudo/Anura/actions/runs/44195813017) passed. No production files changed. Next task: Task 3 — Voice late-result-after-disposal; maintainer authorization required.
+
+
+## Execution record — Task 3: Voice late-result-after-disposal (2026-11-18)
+
+- [x] Headless test captures the `GLib.idle_add` callback, disposes the page and then delivers the catalog result.
+- [x] Disposed-page callback returns `GLib.SOURCE_REMOVE`; combo model and selection are not mutated; loading state is cleared.
+- [x] Complementary live-page test confirms a valid result updates model/selection and clears loading state.
+- [ ] Mutation verification by removing the disposal guard was not performed. Initial failed runs were test-fixture/mock-base failures, not production RED evidence.
+- [x] No production correction was needed; the existing `_disposed` guard is sufficient.
+- [x] Full exact-head CI and CodeQL verification completed successfully.
+
+**Evidence:** exact implementation head `8a70fa257375f5da060b30568a6eeacd50b2f820`; [CI #44199827587](https://github.com/D3M-Sudo/Anura/actions/runs/44199827587) passed with Python Quality **692 passed, 6 skipped, 290 deselected**, GTK Integration, Changelog Integrity, AppImage/Flatpak builds for x86_64/aarch64, AppImage release-set and multi-architecture artifact validation; [CodeQL #44199827449](https://github.com/D3M-Sudo/Anura/actions/runs/44199827449) passed. `publish-release` was skipped as expected for a PR. No production files, dependencies, workflows or CHANGELOG entries changed. Native visual, physical keyboard and Orca/AT-SPI checks remain deferred to M7. Next task: Task 4 — Languages search/filter/lifecycle; separate maintainer authorization required.
