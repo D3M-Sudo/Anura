@@ -220,12 +220,16 @@ def test_language_row_prunes_failed_download_refresh_idle_id(monkeypatch, headle
     row.get_parent = MagicMock(return_value=object())
     row.update_ui = MagicMock()
 
+    initial_callback, initial_args = callbacks.pop(0)
+    initial_callback(*initial_args)
+    assert row._idle_ids == set()
+
     row.on_download_failed(MagicMock(), "ita")
 
-    assert row._idle_ids == {1}
+    assert row._idle_ids == {2}
 
-    callback, args = callbacks.pop(0)
-    callback(*args)
+    failure_callback, failure_args = callbacks.pop(0)
+    failure_callback(*failure_args)
 
     assert row._idle_ids == set()
-    row.update_ui.assert_called_once_with()
+    row.update_ui.assert_called_with()
