@@ -137,9 +137,9 @@ The remaining UI modernization programme can be considered complete only when:
 
 ## Planning status
 
-- Master plan: prepared after M6-02 baseline CI success; this document does not implement tests or product changes.
+- Master plan: created in commit `db71476932bc89c84bb69bc1adc018abc61966d7`; exact-head CI Quality & Release `44414583151` and CodeQL `44414583117` passed. Documentation-only; no tests or product changes.
 - M6-01: complete within documentation-only scope.
 - M6-02: detailed automated-test plan complete; implementation not started.
 - M6 global: Partial.
 - M7: Partial; P8/P9 remain.
-- Next candidate: P1 — Extracted and History responsive/overflow test phase. Requires explicit approval before implementation.
+- Next candidate: P1 — Extracted and History responsive/overflow test phase. Not started; requires separate explicit approval before implementation.
