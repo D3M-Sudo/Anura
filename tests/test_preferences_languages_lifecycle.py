@@ -85,7 +85,8 @@ def test_network_banner_retry_hides_warning_after_recovery(monkeypatch, headless
     assert page.banner.set_revealed.call_args.args == (True,)
     assert "unreachable" in page.banner.set_title.call_args.args[0].lower()
 
-    page._on_banner_clicked(MagicMock())
+    page.check_connection()
+    assert monitor.can_reach_async.call_count == 2
 
     retry_callback = monitor.can_reach_async.call_args.args[2]
     monitor.can_reach_finish.return_value = True
