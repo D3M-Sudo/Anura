@@ -74,6 +74,27 @@ def test_disposing_languages_page_cancels_probe_and_ignores_late_result(monkeypa
     page.banner.set_revealed.assert_not_called()
 
 
+def test_network_banner_retry_hides_warning_after_recovery(monkeypatch, headless_gi_mocks):
+    """Retrying the source probe clears the unreachable banner after recovery."""
+    _module, page, monitor, _address, _cancellable = _make_languages_page(monkeypatch, headless_gi_mocks)
+
+    monitor.can_reach_finish.return_value = False
+    failed_callback = monitor.can_reach_async.call_args.args[2]
+    failed_callback(monitor, MagicMock())
+
+    assert page.banner.set_revealed.call_args.args == (True,)
+    assert "unreachable" in page.banner.set_title.call_args.args[0].lower()
+
+    page._on_banner_clicked(MagicMock())
+
+    retry_callback = monitor.can_reach_async.call_args.args[2]
+    monitor.can_reach_finish.return_value = True
+    monitor.get_network_metered.return_value = False
+    retry_callback(monitor, MagicMock())
+
+    assert page.banner.set_revealed.call_args.args == (False,)
+
+
 def test_language_row_prunes_idle_id_when_refresh_callback_finishes(monkeypatch, headless_gi_mocks):
     """Completed one-shot refreshes must not remain queued for destruction."""
     import anura.widgets.language_row as module
