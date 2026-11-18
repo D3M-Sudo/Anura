@@ -665,3 +665,18 @@ M5-01 can proceed after this formal disposition; F-303-02 remains deferred until
 - **Limitations / residuals:** the new GTK test validates filtering, search, empty/reset state and add/remove model signals; it does not claim a full real download-progress UI transition test. Native visual inspection, physical Tab/Shift+Tab traversal and real Orca/AT-SPI remain M7 work. GTK CI's virtual input is not equivalent to native accessibility verification.
 - **Governance:** PR #648 verified Open, Draft, unmerged, base `feature`, head branch `fix/ui-modernization-aligned` at the exact SHA above. No protected branch was modified.
 - **Next:** Task 5 — full M4-02 acceptance-criteria disposition and roadmap closure review. Requires separate maintainer authorization.
+
+
+## 2026-11-18 — M4-02 Task 5: acceptance-criteria disposition
+
+- **Outcome:** M4-02 CI-testable acceptance criteria are covered or explicitly dispositioned; this closes the bounded M4-02 test-coverage workstream, not the wider M4 phase.
+- **General:** color-scheme initialization/persistence and extra-language selection, persistence and active-model removal/reset are covered by `tests/test_preferences_page_resilience.py`.
+- **Editor:** `word`/`char`/`none` initialization and persistence are covered headlessly; real GSettings persistence is covered by `tests/test_preferences_editor_integration.py`.
+- **Voice:** late catalog completion after disposal and the live-page success path are covered headlessly. Existing catalog failure/loading-state and volume persistence/binding behavior remain covered by the existing resilience and GTK integration tests.
+- **Languages:** case-insensitive title search, downloaded-only default filtering, empty/non-empty stack selection, stop-search reset, idempotent add and removal/filter refresh are covered headlessly and by the real GTK integration test. Existing model-quality mapping and cache invalidation remain covered by `tests/test_preferences_language_quality.py`.
+- **Explicit scope disposition:** download-progress UI transition coverage was mentioned as a possible residual in the implementation plan, but it is not an acceptance criterion in the maintainer-approved M4-02 design. It was not implemented or verified here and is not claimed. Any additional progress-announcement or download-progress lifecycle coverage requires a separately approved scope. Network reachability/cancellation and row idle-source cleanup tests add lifecycle coverage but do not substitute for a progress UI transition test.
+- **Native residuals:** physical Tab/Shift+Tab traversal, real Orca/AT-SPI and native visual verification remain M7 work. GTK CI uses virtual Wayland input and disables the accessibility bridge; it is not native accessibility evidence.
+- **Exact-head verification:** `8e2a2f5d7ca3b8ec3b6f8ae478ecc0c94bc7c3bd`; CI [#44205336611](https://github.com/D3M-Sudo/Anura/actions/runs/44205336611) and CodeQL [#44205336610](https://github.com/D3M-Sudo/Anura/actions/runs/44205336610) passed. Python Quality **698 passed, 6 skipped, 291 deselected**; GTK Integration **461 passed, 6 skipped, 704 deselected**, including the Languages GTK integration test; AppImage and Flatpak x86_64/aarch64, Changelog Integrity and artifact validations passed.
+- **Review qualification:** test diff inspected in-session; no independent review subagent was available, so independent review is not claimed.
+- **Governance:** PR #648 remains Open/Draft/unmerged, base `feature`, head `fix/ui-modernization-aligned`. No protected branch was modified; no CHANGELOG entry was warranted because Task 4 added tests only.
+- **Global status:** M4 remains **Partial**; this Task 5 disposition does not complete M4 native validation or M7.
