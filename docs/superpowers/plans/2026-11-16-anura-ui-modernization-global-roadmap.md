@@ -848,3 +848,12 @@ M4-02's CI-testable acceptance criteria are covered or explicitly dispositioned.
 **Exact-head evidence:** `8e2a2f5d7ca3b8ec3b6f8ae478ecc0c94bc7c3bd`; CI [#44205336611](https://github.com/D3M-Sudo/Anura/actions/runs/44205336611) and CodeQL [#44205336610](https://github.com/D3M-Sudo/Anura/actions/runs/44205336610) passed. Python Quality **698 passed, 6 skipped, 291 deselected**; GTK Integration **461 passed, 6 skipped, 704 deselected**, including the Languages integration test; Changelog Integrity, AppImage/Flatpak x86_64/aarch64 and artifact validation passed. The GTK job's initial cancellation was resolved by rerunning it on the same SHA.
 
 No production correction was made in Task 4; no dependency, permanent workflow or CHANGELOG change was added. The independent code-review subagent was unavailable; in-session diff inspection only. PR #648 remains Open/Draft/unmerged with base `feature` and head `fix/ui-modernization-aligned`. Global M4 remains **Partial** pending its remaining programme/native validation.
+
+
+## 2026-11-18 — Master plan baseline and exact-head CI
+
+- **Master plan:** [UI modernization master plan](2026-11-18-anura-ui-modernization-master-plan.md), commit `db71476932bc89c84bb69bc1adc018abc61966d7`.
+- **Scope:** documentation-only programme plan P0–P9. M6-02 remains the detailed child plan; P1–P6 are phase gates, P7 is deferred and requires separate approval, P8/P9 cover M7 consolidation and native validation. No tests or product code were implemented by this task.
+- **Exact-head CI:** SHA `db71476932bc89c84bb69bc1adc018abc61966d7`; CI Quality & Release [#44414583151](https://github.com/D3M-Sudo/Anura/actions/runs/44414583151) success; CodeQL [#44414583117](https://github.com/D3M-Sudo/Anura/actions/runs/44414583117) success. Python Quality, GTK Integration, Changelog Integrity, AppImage x86_64/aarch64, Flatpak x86_64/aarch64, AppImage release-set validation and multi-architecture artifact validation passed. `publish-release` skipped as expected; no release published. No test counts are attributed to this documentation-only task.
+- **Governance:** branch `fix/ui-modernization-aligned`; PR #648 verified Open/Draft/unmerged, base `feature`, head branch `fix/ui-modernization-aligned`. No protected branch, PR state/base or merge action changed.
+- **Next:** P1 — Extracted/History responsive and overflow test phase; not started and requires separate explicit maintainer approval. Roadmap status remains M6 Partial and M7 Partial.
