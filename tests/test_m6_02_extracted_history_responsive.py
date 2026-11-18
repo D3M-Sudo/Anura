@@ -32,9 +32,12 @@ if os.path.exists(_resource_path):
 else:
     pytest.skip("Anura GResource bundle is required for GTK template integration tests", allow_module_level=True)
 
+# These imports must follow GResource registration above.
+# isort: off
 from anura.services.history_service import HistoryService  # noqa: E402
 from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
 from anura.widgets.history_page import HistoryPage  # noqa: E402
+# isort: on
 
 
 _VIEWPORTS = [(360, 600), (640, 480), (900, 600), (1280, 800)]
