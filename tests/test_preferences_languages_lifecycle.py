@@ -200,3 +200,33 @@ def test_language_removal_refreshes_default_filter(monkeypatch, headless_gi_mock
     page.model.set_filter.assert_called_once()
     assert not module.PreferencesLanguagesPage.filter_func(SimpleNamespace(code="ita", title="Italian"), "")
     page.views.set_visible_child_name.assert_called_with("languages_state")
+
+
+
+def test_language_row_prunes_failed_download_refresh_idle_id(monkeypatch, headless_gi_mocks):
+    """A completed failure refresh must be removed from the row's tracked sources."""
+    import anura.widgets.language_row as module
+
+    callbacks = []
+
+    def idle_add(callback, *args):
+        callbacks.append((callback, args))
+        return len(callbacks)
+
+    monkeypatch.setattr(module.GLib, "idle_add", idle_add)
+    monkeypatch.setattr(module, "announce_accessible", MagicMock())
+
+    row = module.LanguageRow()
+    row._item = SimpleNamespace(code="ita", title="Italian")
+    row.get_parent = MagicMock(return_value=object())
+    row.update_ui = MagicMock()
+
+    row.on_download_failed(MagicMock(), "ita")
+
+    assert row._idle_ids == {1}
+
+    callback, args = callbacks.pop(0)
+    callback(*args)
+
+    assert row._idle_ids == set()
+    row.update_ui.assert_called_once_with()
