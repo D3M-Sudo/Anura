@@ -25,7 +25,7 @@ from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
 Adw.init()
 
 # Template-backed widgets require the compiled GResource bundle.
-_resource_path = os.path.join(os.path.dirname(__file__), "..", "data", "io.github.d3msudo.anura.gresource")
+_resource_path = os.path.join(os.path.dirname(__file__), "..", "data", "io.github.d3m_sudo.anura.gresource")
 if os.path.exists(_resource_path):
     _resource = Gio.Resource.load(_resource_path)
     _resource._register()
