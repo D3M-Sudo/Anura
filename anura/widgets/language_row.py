@@ -194,8 +194,7 @@ class LanguageRow(Gtk.Overlay, SignalManagerMixin):
             message = _("Download of {language} failed").format(language=self._item.title)
             announce_accessible(self, message)
             self._download_announced = False
-            idle_id = GLib.idle_add(self._idle_update_ui)
-            self._idle_ids.add(idle_id)
+            self._schedule_idle_update()
 
     def do_destroy(self) -> None:
         """Clean up signal handlers and pending idle_add callbacks to prevent memory leaks."""
