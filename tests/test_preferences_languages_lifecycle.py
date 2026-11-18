@@ -145,13 +145,14 @@ def test_stop_search_clears_query_and_restores_downloaded_filter(monkeypatch, he
     module, page, _monitor, _address, _cancellable = _make_languages_page(monkeypatch, headless_gi_mocks)
     entry = page.language_search_entry
     page.model.get_n_items.return_value = 1
+    page.model.set_filter.reset_mock()
 
     page.on_language_search_stop(entry)
 
     entry.set_text.assert_called_with("")
     page.search_bar.set_search_mode.assert_called_with(False)
     page.revealer.set_reveal_child.assert_called_with(True)
-    module.Gtk.CustomFilter.new.assert_called_with(module.PreferencesLanguagesPage.filter_func, None)
+    page.model.set_filter.assert_called_once()
     page.views.set_visible_child_name.assert_called_with("languages_state")
 
 
@@ -191,9 +192,10 @@ def test_language_removal_refreshes_default_filter(monkeypatch, headless_gi_mock
     manager.get_downloaded_codes.return_value = ["eng", "ita"]
     page.search_bar.get_search_mode.return_value = False
     page.model.get_n_items.return_value = 1
+    page.model.set_filter.reset_mock()
 
     page.on_language_removed(manager, "ita")
 
-    module.Gtk.CustomFilter.new.assert_called_with(module.PreferencesLanguagesPage.filter_func, None)
+    page.model.set_filter.assert_called_once()
     assert not module.PreferencesLanguagesPage.filter_func(SimpleNamespace(code="ita", title="Italian"), "")
     page.views.set_visible_child_name.assert_called_with("languages_state")
