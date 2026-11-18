@@ -34,6 +34,17 @@ def test_progress_bar_accessible_name_includes_language(headless_gi_mocks, monke
     assert values == ["Download Italian"]
 
 
+
+def test_download_progress_reveals_updates_and_hides_progress_bar(headless_gi_mocks, monkeypatch):
+    _language_row, row, _manager = _make_language_row(headless_gi_mocks, monkeypatch)
+    row.revealer.get_reveal_child.side_effect = [False, True]
+
+    row.late_update("ita", 35)
+    row.late_update("ita", 100)
+
+    assert [call.args[0] for call in row.progress_bar.set_fraction.call_args_list] == [0.35, 1.0]
+    assert [call.args[0] for call in row.revealer.set_reveal_child.call_args_list] == [True, False]
+
 def test_download_announcements_skip_percentage_updates(headless_gi_mocks, monkeypatch):
     _language_row, row, _manager = _make_language_row(headless_gi_mocks, monkeypatch)
 
