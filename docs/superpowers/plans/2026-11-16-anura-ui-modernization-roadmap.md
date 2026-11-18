@@ -623,3 +623,31 @@ M5-01 can proceed after this formal disposition; F-303-02 remains deferred until
 - **Limitations:** no local test execution is claimed. The six skipped and deselected tests are not represented as executed. Physical keyboard traversal, native GNOME visual inspection and real Orca/AT-SPI remain M7 work; GTK CI's virtual-input harness does not substitute for those checks.
 - **Next permitted task:** Task 3 — Voice late-result-after-disposal coverage. Do not start it without maintainer authorization.
 - **Governance:** PR #648 remains Open/Draft/unmerged and targets `feature`; no protected branch was modified.
+
+
+## M4-02 Task 3 — Voice late-result-after-disposal coverage (2026-11-18)
+
+- **Outcome:** Completed within the approved Task 3 scope. Headless regression coverage now exercises both a TTS catalog result delivered after Voice page disposal and the complementary live-page update path.
+- **Files changed for implementation:** `tests/test_preferences_page_resilience.py` only. No production files, dependencies or workflows changed; the existing `_disposed` guard was sufficient.
+- **Coverage:** the disposed-page test captures the callback scheduled through `GLib.idle_add`, calls `page.do_destroy()`, then delivers the result and asserts `GLib.SOURCE_REMOVE`, no combo-model replacement/selection mutation, and loading-state cleanup. The live-page test asserts the valid catalog result updates the model/selection and clears loading state.
+- **Test-development history:** initial failures were test-fixture/mock-base issues, not observed production regressions; these were corrected. No mutation run removing the production guard was performed, so do not claim an experimentally observed RED from guard removal. The final assertions are specifically directed at preventing post-disposal widget mutation.
+- **Exact implementation head:** `8a70fa257375f5da060b30568a6eeacd50b2f820`.
+- **CI evidence:** [CI Quality Check & Release #44199827587](https://github.com/D3M-Sudo/Anura/actions/runs/44199827587) completed successfully. Python Quality: **692 passed, 6 skipped, 290 deselected**; GTK Integration, Changelog Integrity, AppImage x86_64/aarch64, Flatpak x86_64/aarch64, AppImage release-set validation and multi-architecture artifact validation all passed. [CodeQL #44199827449](https://github.com/D3M-Sudo/Anura/actions/runs/44199827449) passed. `publish-release` was skipped as expected for a PR.
+- **Limitations:** no local test execution is claimed. No native GNOME visual inspection, physical keyboard traversal or real Orca/AT-SPI verification is claimed; these remain deferred to M7. CI GTK configuration does not establish native AT-SPI behavior.
+- **CHANGELOG:** no entry added; this task adds tests only and changes no product behavior.
+- **Next:** M4-02 Task 4 — Languages search/filter and lifecycle coverage. Task 4 has not started and requires its own explicit authorization.
+- **Governance:** PR #648 remains Open/Draft/unmerged, target `feature`; no protected branch was modified.
+
+
+## M4-02 Task 3 — Voice late-result-after-disposal coverage (2026-11-18)
+
+- **Outcome:** Completed within the approved Task 3 scope. Headless regression tests cover a TTS catalog result delivered after Voice page disposal and the complementary live-page update path.
+- **Files changed:** `tests/test_preferences_page_resilience.py` only. No production files, dependencies or workflows changed; the existing `_disposed` guard was sufficient.
+- **Coverage:** the disposal test captures the callback scheduled through `GLib.idle_add`, calls `page.do_destroy()`, then delivers the result and asserts `GLib.SOURCE_REMOVE`, no combo-model replacement/selection mutation, and loading-state cleanup. The live-page test asserts the valid result updates the model/selection and clears loading state.
+- **Test-development history:** initial failures were test-fixture/mock-base issues, not observed production regressions; these were corrected. No mutation run removing the production guard was performed, so no experimentally observed RED from guard removal is claimed.
+- **Exact implementation head:** `8a70fa257375f5da060b30568a6eeacd50b2f820`.
+- **CI:** [#44199827587](https://github.com/D3M-Sudo/Anura/actions/runs/44199827587) passed: Python Quality **692 passed, 6 skipped, 290 deselected**; GTK Integration; Changelog Integrity; AppImage and Flatpak x86_64/aarch64; AppImage release-set and multi-architecture artifact validation. [CodeQL #44199827449](https://github.com/D3M-Sudo/Anura/actions/runs/44199827449) passed. `publish-release` skipped as expected for a PR.
+- **Limitations:** no local tests, native GNOME visual inspection, physical keyboard traversal or real Orca/AT-SPI verification are claimed; native checks remain assigned to M7.
+- **CHANGELOG:** not changed because this is test-only work with no product behavior change.
+- **Next:** M4-02 Task 4 — Languages search/filter/lifecycle coverage; not started and requires explicit authorization.
+- **Governance:** PR #648 remains Open/Draft/unmerged, target `feature`; no protected branch was modified.
