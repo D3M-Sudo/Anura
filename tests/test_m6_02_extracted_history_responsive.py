@@ -118,8 +118,10 @@ def test_extracted_long_ocr_text_scrolls_without_clipping_primary_actions(width:
         scroller = page.text_view.get_ancestor(Gtk.ScrolledWindow)
         assert scroller is not None
         _wait_until(
-            lambda: scroller.get_vadjustment().get_page_size() > 0
-            and scroller.get_vadjustment().get_upper() > scroller.get_vadjustment().get_page_size(),
+            lambda: (
+                scroller.get_vadjustment().get_page_size() > 0
+                and scroller.get_vadjustment().get_upper() > scroller.get_vadjustment().get_page_size()
+            ),
             "lay out long Extracted OCR content in its vertical scroller",
         )
         adjustment = scroller.get_vadjustment()
@@ -157,8 +159,10 @@ def test_history_long_expanded_text_scrolls_and_row_actions_remain_reachable(wid
         list_scroller = page.history_list.get_ancestor(Gtk.ScrolledWindow)
         assert list_scroller is not None
         _wait_until(
-            lambda: list_scroller.get_vadjustment().get_page_size() > 0
-            and list_scroller.get_vadjustment().get_upper() > list_scroller.get_vadjustment().get_page_size(),
+            lambda: (
+                list_scroller.get_vadjustment().get_page_size() > 0
+                and list_scroller.get_vadjustment().get_upper() > list_scroller.get_vadjustment().get_page_size()
+            ),
             "lay out overflowing History entries",
         )
 
@@ -169,14 +173,17 @@ def test_history_long_expanded_text_scrolls_and_row_actions_remain_reachable(wid
         _drain_main_context()
 
         text_scrollers = [
-            child for child in _descendants(row)
+            child
+            for child in _descendants(row)
             if isinstance(child, Gtk.ScrolledWindow) and isinstance(child.get_child(), Gtk.TextView)
         ]
         assert len(text_scrollers) == 1, "expanded History row must contain one dedicated text scroller"
         text_scroller = text_scrollers[0]
         _wait_until(
-            lambda: text_scroller.get_vadjustment().get_page_size() > 0
-            and text_scroller.get_vadjustment().get_upper() > text_scroller.get_vadjustment().get_page_size(),
+            lambda: (
+                text_scroller.get_vadjustment().get_page_size() > 0
+                and text_scroller.get_vadjustment().get_upper() > text_scroller.get_vadjustment().get_page_size()
+            ),
             "lay out overflowing expanded History text",
         )
         assert text_scroller.get_height() <= 241, "expanded text area exceeded its 240px height cap"
@@ -184,7 +191,8 @@ def test_history_long_expanded_text_scrolls_and_row_actions_remain_reachable(wid
         action_buttons = [
             child for child in _descendants(row)
             if isinstance(child, Gtk.Button)
-            and child.get_icon_name() in {"edit-copy-symbolic", "document-edit-symbolic", "media-playback-start-symbolic"}
+            and child.get_icon_name()
+            in {"edit-copy-symbolic", "document-edit-symbolic", "media-playback-start-symbolic"}
         ]
         assert len(action_buttons) == 3, "History row must expose Copy, Editor and TTS action buttons"
         for button in action_buttons:
