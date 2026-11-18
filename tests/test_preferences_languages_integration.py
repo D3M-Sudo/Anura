@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: MIT
 
 from pathlib import Path
+from typing import ClassVar
 
 import pytest
 
@@ -24,7 +25,7 @@ Adw.init()
 
 
 class _LanguageManager(GObject.Object):
-    __gsignals__ = {
+    __gsignals__: ClassVar[dict] = {
         "added": (GObject.SignalFlags.RUN_LAST, None, (str,)),
         "downloaded": (GObject.SignalFlags.RUN_LAST, None, (str,)),
         "removed": (GObject.SignalFlags.RUN_LAST, None, (str,)),
