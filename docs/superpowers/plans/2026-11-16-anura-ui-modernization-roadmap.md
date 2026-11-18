@@ -592,7 +592,7 @@ M5-01 can proceed after this formal disposition; F-303-02 remains deferred until
 - **Native visual and real Orca/AT-SPI checks:** not performed; assigned to M7.
 - **Pre-merge note:** the M3 commit sequence contained a transient large deletion/restoration anomaly; the net audited delta is limited to five M3-related files. Review the history before merge.
 
-## M4-02 — remaining CI coverage gaps (next; not yet authorized)
+## M4-02 — remaining CI coverage gaps (initial disposition, 2026-11-17; execution status updated below)
 
 - M4-01 and M4-F01–F04 remain complete. Global M4 stays **Partial**.
 - CI-testable candidates: General color-scheme and secondary-language selection/refresh/removal mapping; Editor `word`/`char`/`none` mapping and persistence; Voice late-result-after-disposal; Preferences Languages page search/empty/install/remove/progress/cancellation/disposal lifecycle.
