@@ -172,10 +172,8 @@ def test_language_added_event_is_idempotent(monkeypatch, headless_gi_mocks):
 
     store = ListStore()
     page.list_store = store
-    manager = page.__class__.__module__
-    import sys
+    import anura.widgets.preferences_languages_page as language_module
 
-    language_module = sys.modules[manager]
     language_manager = language_module.get_language_manager()
     language_manager.get_language_item.return_value = item
     page.search_bar.get_search_mode.return_value = False
