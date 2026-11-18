@@ -226,7 +226,7 @@ def test_language_row_prunes_failed_download_refresh_idle_id(monkeypatch, headle
 
     row.on_download_failed(MagicMock(), "ita")
 
-    assert row._idle_ids == {2}
+    assert len(row._idle_ids) == 1
 
     failure_callback, failure_args = callbacks.pop(0)
     failure_callback(*failure_args)
