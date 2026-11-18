@@ -651,3 +651,17 @@ M5-01 can proceed after this formal disposition; F-303-02 remains deferred until
 - **CHANGELOG:** not changed because this is test-only work with no product behavior change.
 - **Next:** M4-02 Task 4 — Languages search/filter/lifecycle coverage; not started and requires explicit authorization.
 - **Governance:** PR #648 remains Open/Draft/unmerged, target `feature`; no protected branch was modified.
+
+
+## M4-02 Task 4 — Languages search/filter and list lifecycle (2026-11-18)
+
+- **Status:** Completed within the bounded Task 4 scope; global M4 remains **Partial** pending Task 5 disposition and native M7 checks.
+- **Headless coverage:** ten new tests in `tests/test_preferences_languages_lifecycle.py` passed. They cover configured tessdata-host reachability, cancellation and suppression of a late network callback after disposal, pruning completed LanguageRow idle sources, accessible list naming, case-insensitive title search, downloaded-only default filtering, empty/non-empty stack selection, stop-search reset, idempotent add events and filter refresh after removal.
+- **GTK integration:** new `tests/test_preferences_languages_integration.py` instantiated the real Languages Preferences page with controlled GObject language-manager signals, real LanguageItem objects, a GResource bundle and isolated Gio memory GSettings. The test verified downloaded-only filtering, case-insensitive search including a non-downloaded language, empty state, stop-search reset, idempotent addition and removal refresh. The exact test `test_languages_page_search_empty_reset_and_model_lifecycle` passed in GTK Integration.
+- **Production changes for this task:** none. The Task 4 additions are test-only; no dependencies or permanent workflows were added. No CHANGELOG entry was warranted. No production RED/GREEN correction is claimed; no mutation test was performed.
+- **Exact implementation head:** `8e2a2f5d7ca3b8ec3b6f8ae478ecc0c94bc7c3bd`.
+- **CI evidence:** [CI Quality Check & Release #44205336611](https://github.com/D3M-Sudo/Anura/actions/runs/44205336611) completed successfully after rerunning the initially cancelled GTK Integration job. Python Quality: **698 passed, 6 skipped, 291 deselected**. GTK Integration: **461 passed, 6 skipped, 704 deselected**, including the new Languages GTK integration test. Changelog Integrity, AppImage x86_64/aarch64, Flatpak x86_64/aarch64, AppImage release-set validation and multi-architecture artifact validation passed. [CodeQL #44205336610](https://github.com/D3M-Sudo/Anura/actions/runs/44205336610) passed.
+- **Review qualification:** the test diff was inspected in-session; an independent code-review subagent was unavailable, so no independent review is claimed.
+- **Limitations / residuals:** the new GTK test validates filtering, search, empty/reset state and add/remove model signals; it does not claim a full real download-progress UI transition test. Native visual inspection, physical Tab/Shift+Tab traversal and real Orca/AT-SPI remain M7 work. GTK CI's virtual input is not equivalent to native accessibility verification.
+- **Governance:** PR #648 verified Open, Draft, unmerged, base `feature`, head branch `fix/ui-modernization-aligned` at the exact SHA above. No protected branch was modified.
+- **Next:** Task 5 — full M4-02 acceptance-criteria disposition and roadmap closure review. Requires separate maintainer authorization.
