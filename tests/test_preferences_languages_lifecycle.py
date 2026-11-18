@@ -194,6 +194,7 @@ def test_language_removal_refreshes_default_filter(monkeypatch, headless_gi_mock
     page.model.get_n_items.return_value = 1
     page.model.set_filter.reset_mock()
 
+    manager.get_downloaded_codes.return_value = ["eng"]
     page.on_language_removed(manager, "ita")
 
     page.model.set_filter.assert_called_once()
