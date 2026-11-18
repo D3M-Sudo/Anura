@@ -202,7 +202,6 @@ def test_language_removal_refreshes_default_filter(monkeypatch, headless_gi_mock
     page.views.set_visible_child_name.assert_called_with("languages_state")
 
 
-
 def test_language_row_prunes_failed_download_refresh_idle_id(monkeypatch, headless_gi_mocks):
     """A completed failure refresh must be removed from the row's tracked sources."""
     import anura.widgets.language_row as module
