@@ -757,3 +757,15 @@ M5-01 can proceed after this formal disposition; F-303-02 remains deferred until
 - **Changed files:** `tests/test_m6_02_shortcuts_popover_focus.py` only for implementation. No production source, Blueprint, workflow, dependency or CHANGELOG change. This documentation update reconciles the global/workstream/master/child plans.
 - **M7/P9:** native validation must explicitly cover activation and focus acquisition/retention/restoration for Shortcuts and Language Selector. These checks remain pending and are not counted as passed by CI.
 - **Governance:** PR #648 remains Open/Draft/unmerged, base `feature`; no protected branch, PR state or merge action changed.
+
+
+## 2026-11-20 — M6-02 P3 exact-head verification
+
+- **Outcome:** P3 deterministic Shortcuts/Language Selector coverage is complete within the approved test-only scope. The Language Selector geometry assertion now checks the 300 px cap on its `Gtk.ScrolledWindow`, not an unsupported maximum on the entire Popover.
+- **Implementation head:** `fb91b6b5ebd2de8f7f7834ab88942f1f5a214870`.
+- **Exact-head CI:** CI Quality & Release [#44636489764](https://github.com/D3M-Sudo/Anura/actions/runs/44636489764) and CodeQL [#44636489904](https://github.com/D3M-Sudo/Anura/actions/runs/44636489904) both succeeded. Python Quality, Changelog Integrity, GTK Integration, AppImage x86_64/aarch64, Flatpak x86_64/aarch64, AppImage release-set validation and multi-architecture artifact validation passed; `publish-release` was skipped as expected, with no release published.
+- **GTK result:** **480 passed, 6 skipped, 707 deselected**. All six cases in `tests/test_m6_02_shortcuts_popover_focus.py` passed, including both compact Language Selector viewports (360×600 and 640×480), scrolling, filtering, selection/accessibility metadata and close-state checks.
+- **Changed files:** only `tests/test_m6_02_shortcuts_popover_focus.py` for the implementation; this follow-up changes the four roadmap/plan documents only. No production source, Blueprint, dependency, workflow or CHANGELOG changes.
+- **M7/P9:** native window activation and Shortcuts/Language Selector focus acquisition/retention/restoration remain deferred. Physical Tab/Shift+Tab, Orca/AT-SPI, native visual rendering, live WM/multi-monitor geometry and installed-package host checks remain unverified and must not be represented as passed.
+- **Next:** P3 is closed within its deterministic CI scope. P4 cross-window focus routes may be proposed as a separate bounded task; no implementation is authorized by this status update.
+- **Governance:** PR #648 remains Open/Draft/unmerged, base `feature`; no protected branch or PR state/base/merge status changed.
