@@ -51,18 +51,31 @@ _VIEWPORTS = [(360, 600), (640, 480), (900, 600), (1280, 800)]
 
 class _LanguageManager(GObject.Object):
     __gsignals__: ClassVar[dict] = {
+        "added": (GObject.SignalFlags.RUN_LAST, None, (str,)),
         "downloaded": (GObject.SignalFlags.RUN_LAST, None, (str,)),
         "download-failed": (GObject.SignalFlags.RUN_LAST, None, (str,)),
+        "removed": (GObject.SignalFlags.RUN_LAST, None, (str,)),
+        "downloading": (GObject.SignalFlags.RUN_LAST, None, (str, float)),
     }
 
+    def __init__(self) -> None:
+        super().__init__()
+        from anura.models.language_item import LanguageItem
+
+        self.items = {"eng": LanguageItem("eng", "English")}
+        self.loading_languages: set[str] = set()
+
     def get_available_codes(self) -> list[str]:
-        return []
+        return list(self.items)
 
     def get_downloaded_codes(self) -> list[str]:
-        return []
+        return ["eng"]
 
     def get_downloaded_languages(self) -> list[str]:
-        return []
+        return ["English"]
+
+    def get_language_item(self, code: str):
+        return self.items.get(code)
 
 
 def _drain_main_context() -> None:
@@ -169,7 +182,7 @@ def _is_descendant(widget: Gtk.Widget, ancestor: Gtk.Widget) -> bool:
 def _page_controls(dialog: PreferencesDialog):
     return [
         (dialog.general_page, dialog.general_page.color_scheme_combo, dialog.general_page.history_limit_row),
-        (dialog.languages_page, dialog.languages_page.model_quality_combo, dialog.languages_page.model_quality_combo),
+        (dialog.languages_page, dialog.languages_page.model_quality_combo, dialog.languages_page.list_view),
         (dialog.editor_page, dialog.editor_page.editor_line_numbers_switch, dialog.editor_page.editor_wrap_mode_combo),
         (dialog.voice_page, dialog.voice_page.volume_row, dialog.voice_page.tts_language_combo),
     ]
