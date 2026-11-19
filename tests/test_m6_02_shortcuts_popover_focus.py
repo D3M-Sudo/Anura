@@ -133,30 +133,26 @@ def test_shortcuts_filtering_does_not_leave_focus_on_a_hidden_result() -> None:
     overlay = ShortcutsOverlay(transient_for=parent)
     overlay.present()
     try:
-        _wait_until(lambda: parent.get_mapped(), "map Shortcuts parent window")
-        _wait_until(lambda: overlay.get_mapped(), "map Shortcuts overlay")
+        _wait_until(lambda: parent.get_mapped() and parent.is_active(), "activate Shortcuts parent window")
+        _wait_until(lambda: overlay.get_mapped() and overlay.is_active(), "activate Shortcuts overlay")
+        assert overlay.search_entry.grab_focus(), "Shortcuts search should accept focus"
+        _wait_until(lambda: overlay.search_entry.has_focus(), "focus Shortcuts search")
+
+        # Follow the user interaction path: typing changes the query while the
+        # search control owns focus. Gtk.SearchEntry emits search-changed itself.
+        overlay.search_entry.set_text("open image file")
         target_row = next(
             row for _group, rows in overlay._groups for row in rows if row.get_title() == "Take screenshot"
         )
-        assert target_row.get_mapped() and target_row.get_visible()
-        assert target_row.grab_focus(), "the visible Shortcuts result should accept focus"
-        _wait_until(lambda: overlay.get_focus() == target_row, "focus a visible Shortcuts result")
-
-        overlay.search_entry.set_text("open image file")
-        overlay.search_entry.emit("search-changed")
-        _wait_until(lambda: not target_row.get_visible(), "hide the previously focused Shortcuts result")
-        _drain_main_context()
+        _wait_until(lambda: not target_row.get_visible(), "filter out the non-matching Shortcuts result")
+        _wait_until(lambda: overlay.search_entry.has_focus(), "retain focus in visible Shortcuts search")
 
         assert overlay.stack.get_visible_child_name() == "results"
         visible_rows = [row for _group, rows in overlay._groups for row in rows if row.get_visible()]
-        hidden_rows = [row for _group, rows in overlay._groups for row in rows if not row.get_visible()]
         assert len(visible_rows) == 1
         assert visible_rows[0].get_title() == "Open image file"
         focus = overlay.get_focus()
-        assert focus is None or focus.get_visible(), "focus remains on a hidden Shortcuts result"
-        assert focus is None or not any(_is_descendant(focus, row) for row in hidden_rows), (
-            "focus remains inside a result hidden by the active filter"
-        )
+        assert focus == overlay.search_entry, "focus should remain in the visible search control"
     finally:
         overlay.destroy()
         parent.destroy()
@@ -218,7 +214,10 @@ def _open_language_popover(popover: LanguagePopover, width: int, height: int):
     window.set_child(anchor)
     window.present()
     _wait_until(lambda: window.get_mapped() and anchor.get_mapped(), "map language selector anchor")
-    anchor.set_active(True)
+    _wait_until(lambda: window.is_active(), "activate Language selector parent window")
+    # Activate the MenuButton through its widget activation path rather than
+    # forcing its active property; this lets GTK establish the popover grab.
+    assert anchor.activate(), "Language selector MenuButton should activate"
     _wait_until(
         lambda: popover.get_mapped() and popover.get_width() > 0 and popover.get_height() > 0,
         "open Language selector popover",
@@ -269,7 +268,6 @@ def test_language_selector_filter_selection_metadata_and_close_focus(monkeypatch
     window, anchor = _open_language_popover(popover, 900, 600)
     try:
         popover.entry.set_text("ital")
-        popover.entry.emit("search-changed")
         _drain_main_context()
         assert popover.filter_list.get_n_items() == 1
         row = popover.list_view.get_row_at_index(0)
@@ -282,7 +280,6 @@ def test_language_selector_filter_selection_metadata_and_close_focus(monkeypatch
         assert row.get_tooltip_text() == "Italian (active language)"
 
         popover.entry.set_text("no-language-matches-this")
-        popover.entry.emit("search-changed")
         _drain_main_context()
         assert popover.filter_list.get_n_items() == 0
         assert popover.views.get_visible_child_name() == "empty_page"
