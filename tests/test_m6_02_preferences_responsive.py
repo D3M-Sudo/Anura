@@ -206,10 +206,13 @@ def test_preferences_pages_keep_primary_controls_reachable_at_reference_viewport
                 lambda page=page: dialog.get_visible_page() == page and page.get_mapped(),
                 f"show {page.get_title()} Preferences page",
             )
-            _scroll_to(first_control, end=False)
-            _assert_inside(first_control, dialog)
-            _scroll_to(last_control, end=True)
-            _assert_inside(last_control, dialog)
+            for control, end in ((first_control, False), (last_control, True)):
+                scroller = control.get_ancestor(Gtk.ScrolledWindow)
+                assert scroller is not None, (
+                    f"{type(control).__name__} has no Preferences page scroll container"
+                )
+                _scroll_to(control, end=end)
+                _assert_inside(control, scroller)
     finally:
         dialog.force_close()
         parent.destroy()
