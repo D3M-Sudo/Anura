@@ -138,21 +138,29 @@ def test_shortcuts_filtering_does_not_leave_focus_on_a_hidden_result() -> None:
         assert overlay.search_entry.grab_focus(), "Shortcuts search should accept focus"
         _wait_until(lambda: overlay.search_entry.has_focus(), "focus Shortcuts search")
 
-        # Follow the user interaction path: typing changes the query while the
-        # search control owns focus. Gtk.SearchEntry emits search-changed itself.
-        overlay.search_entry.set_text("open image file")
-        target_row = next(
-            row for _group, rows in overlay._groups for row in rows if row.get_title() == "Take screenshot"
+        # Gtk.SearchEntry debounces search-changed. Observe the signal rather
+        # than assuming set_text() synchronously ran the filtering callback.
+        search_events: list[str] = []
+        search_handler = overlay.search_entry.connect(
+            "search-changed",
+            lambda entry: search_events.append(entry.get_text()),
         )
-        _wait_until(lambda: not target_row.get_visible(), "filter out the non-matching Shortcuts result")
-        _wait_until(lambda: overlay.search_entry.has_focus(), "retain focus in visible Shortcuts search")
+        try:
+            overlay.search_entry.set_text("open image file")
+            target_row = next(
+                row for _group, rows in overlay._groups for row in rows if row.get_title() == "Take screenshot"
+            )
+            _wait_until(lambda: bool(search_events), "emit the debounced Shortcuts search-changed signal")
+            _wait_until(lambda: not target_row.get_visible(), "filter out the non-matching Shortcuts result")
 
-        assert overlay.stack.get_visible_child_name() == "results"
-        visible_rows = [row for _group, rows in overlay._groups for row in rows if row.get_visible()]
-        assert len(visible_rows) == 1
-        assert visible_rows[0].get_title() == "Open image file"
-        focus = overlay.get_focus()
-        assert focus == overlay.search_entry, "focus should remain in the visible search control"
+            assert search_events[-1] == "open image file"
+            assert overlay.stack.get_visible_child_name() == "results"
+            visible_rows = [row for _group, rows in overlay._groups for row in rows if row.get_visible()]
+            assert len(visible_rows) == 1
+            assert visible_rows[0].get_title() == "Open image file"
+            assert overlay.get_focus() is overlay.search_entry, "focus should remain in the visible search control"
+        finally:
+            overlay.search_entry.disconnect(search_handler)
     finally:
         overlay.destroy()
         parent.destroy()
@@ -213,17 +221,23 @@ def _open_language_popover(popover: LanguagePopover, width: int, height: int):
     anchor.set_popover(popover)
     window.set_child(anchor)
     window.present()
-    _wait_until(lambda: window.get_mapped() and anchor.get_mapped(), "map language selector anchor")
-    _wait_until(lambda: window.is_active(), "activate Language selector parent window")
-    # Activate the MenuButton through its widget activation path rather than
-    # forcing its active property; this lets GTK establish the popover grab.
-    assert anchor.activate(), "Language selector MenuButton should activate"
-    _wait_until(
-        lambda: popover.get_mapped() and popover.get_width() > 0 and popover.get_height() > 0,
-        "open Language selector popover",
-    )
-    _wait_until(lambda: popover.entry.has_focus(), "focus Language selector search")
-    return window, anchor
+    try:
+        _wait_until(lambda: window.get_mapped() and anchor.get_mapped(), "map language selector anchor")
+        _wait_until(lambda: window.is_active(), "activate Language selector parent window")
+        # Activate the MenuButton through its widget activation path rather than
+        # forcing its active property; this lets GTK establish the popover grab.
+        assert anchor.activate(), "Language selector MenuButton should activate"
+        _wait_until(
+            lambda: popover.get_mapped() and popover.get_width() > 0 and popover.get_height() > 0,
+            "open Language selector popover",
+        )
+        return window, anchor
+    except BaseException:
+        # The caller cannot enter its try/finally until this helper returns.
+        # Tear down partially opened GTK objects here on every setup failure.
+        popover.popdown()
+        window.destroy()
+        raise
 
 
 @pytest.mark.gtk
@@ -232,6 +246,7 @@ def test_language_selector_is_compact_scrollable_and_focuses_search(monkeypatch,
     popover, _manager, _settings = _make_language_popover(monkeypatch)
     window, _anchor = _open_language_popover(popover, width, height)
     try:
+        _wait_until(lambda: popover.entry.has_focus(), "focus Language selector search")
         assert popover.entry.get_visible() and popover.entry.get_mapped()
         assert popover.get_width() <= width + 1
         assert popover.get_height() <= 360, "language selector exceeded its 300px list cap plus controls"
@@ -267,9 +282,9 @@ def test_language_selector_filter_selection_metadata_and_close_focus(monkeypatch
     popover, _manager, settings = _make_language_popover(monkeypatch)
     window, anchor = _open_language_popover(popover, 900, 600)
     try:
+        _wait_until(lambda: popover.entry.has_focus(), "focus Language selector search before filtering")
         popover.entry.set_text("ital")
-        _drain_main_context()
-        assert popover.filter_list.get_n_items() == 1
+        _wait_until(lambda: popover.filter_list.get_n_items() == 1, "filter Language selector to Italian")
         row = popover.list_view.get_row_at_index(0)
         assert row is not None
         assert row.lang.code == "ita"
@@ -280,8 +295,7 @@ def test_language_selector_filter_selection_metadata_and_close_focus(monkeypatch
         assert row.get_tooltip_text() == "Italian (active language)"
 
         popover.entry.set_text("no-language-matches-this")
-        _drain_main_context()
-        assert popover.filter_list.get_n_items() == 0
+        _wait_until(lambda: popover.filter_list.get_n_items() == 0, "show empty Language selector results")
         assert popover.views.get_visible_child_name() == "empty_page"
 
         popover.popdown()
