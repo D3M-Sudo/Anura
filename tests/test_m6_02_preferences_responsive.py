@@ -133,18 +133,24 @@ def _present_dialog(dialog: PreferencesDialog, width: int, height: int) -> Adw.W
     return parent
 
 
-def _assert_inside(widget: Gtk.Widget, ancestor: Gtk.Widget) -> None:
+def _assert_reachable(widget: Gtk.Widget, scroller: Gtk.ScrolledWindow) -> None:
+    """The control's center is inside the scroller viewport after moving to its edge."""
     assert widget.get_visible(), f"{type(widget).__name__} is not visible"
     assert widget.get_mapped(), f"{type(widget).__name__} is not mapped"
-    available, bounds = widget.compute_bounds(ancestor)
+    available, bounds = widget.compute_bounds(scroller)
     assert available, f"could not calculate {type(widget).__name__} bounds"
+    assert bounds.size.height > 0, f"{type(widget).__name__} has no allocated height"
     assert bounds.origin.x >= -1, f"{type(widget).__name__} starts outside the left edge"
-    assert bounds.origin.y >= -1, f"{type(widget).__name__} starts outside the top edge"
-    assert bounds.origin.x + bounds.size.width <= ancestor.get_width() + 1, (
+    assert bounds.origin.x + bounds.size.width <= scroller.get_width() + 1, (
         f"{type(widget).__name__} extends beyond the right edge"
     )
-    assert bounds.origin.y + bounds.size.height <= ancestor.get_height() + 1, (
-        f"{type(widget).__name__} extends beyond the bottom edge"
+
+    adjustment = scroller.get_vadjustment()
+    page_size = adjustment.get_page_size()
+    assert page_size > 0, "Preferences page scroller has no allocated viewport height"
+    visible_center = bounds.origin.y + bounds.size.height / 2 - adjustment.get_value()
+    assert -1 <= visible_center <= page_size + 1, (
+        f"{type(widget).__name__} center is outside the visible scroll viewport"
     )
 
 
@@ -153,9 +159,17 @@ def _scroll_to(widget: Gtk.Widget, end: bool) -> None:
     if scroller is None:
         return
     adjustment = scroller.get_vadjustment()
+    _wait_until(
+        lambda: adjustment.get_page_size() > 0 and adjustment.get_upper() >= adjustment.get_page_size(),
+        "allocate the Preferences page scroll viewport",
+    )
     value = adjustment.get_upper() - adjustment.get_page_size() if end else adjustment.get_lower()
-    adjustment.set_value(max(adjustment.get_lower(), value))
-    _drain_main_context()
+    value = max(adjustment.get_lower(), value)
+    adjustment.set_value(value)
+    _wait_until(
+        lambda: abs(adjustment.get_value() - value) <= 1,
+        "scroll the Preferences page to its first or last primary control",
+    )
 
 
 def _focus_target(widget: Gtk.Widget) -> Gtk.Widget:
@@ -210,7 +224,7 @@ def test_preferences_pages_keep_primary_controls_reachable_at_reference_viewport
                 scroller = control.get_ancestor(Gtk.ScrolledWindow)
                 assert scroller is not None, f"{type(control).__name__} has no Preferences page scroll container"
                 _scroll_to(control, end=end)
-                _assert_inside(control, scroller)
+                _assert_reachable(control, scroller)
     finally:
         dialog.force_close()
         parent.destroy()
