@@ -208,9 +208,7 @@ def test_preferences_pages_keep_primary_controls_reachable_at_reference_viewport
             )
             for control, end in ((first_control, False), (last_control, True)):
                 scroller = control.get_ancestor(Gtk.ScrolledWindow)
-                assert scroller is not None, (
-                    f"{type(control).__name__} has no Preferences page scroll container"
-                )
+                assert scroller is not None, f"{type(control).__name__} has no Preferences page scroll container"
                 _scroll_to(control, end=end)
                 _assert_inside(control, scroller)
     finally:
