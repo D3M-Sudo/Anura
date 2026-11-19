@@ -106,7 +106,9 @@ def test_shortcuts_overlay_keeps_search_and_scrolled_results_reachable(width: in
         _assert_inside_window(scroller, overlay)
 
         adjustment = scroller.get_vadjustment()
-        assert adjustment.get_upper() > adjustment.get_page_size(), "Shortcuts list should overflow the compact viewport"
+        assert adjustment.get_upper() > adjustment.get_page_size(), (
+            "Shortcuts list should overflow the compact viewport"
+        )
         adjustment.set_value(adjustment.get_upper() - adjustment.get_page_size())
         _wait_until(
             lambda: abs(adjustment.get_value() - (adjustment.get_upper() - adjustment.get_page_size())) <= 1,
@@ -176,8 +178,11 @@ class _LanguageManager(GObject.Object):
 
     def get_language_item(self, code: str) -> LanguageItem | None:
         return next(
-            (LanguageItem(item_code, title, selected=(item_code == code)) for item_code, title in self.languages
-             if item_code == code),
+            (
+                LanguageItem(item_code, title, selected=(item_code == code))
+                for item_code, title in self.languages
+                if item_code == code
+            ),
             None,
         )
 
@@ -230,7 +235,9 @@ def test_language_selector_is_compact_scrollable_and_focuses_search(monkeypatch,
             "allocate Language selector list viewport",
         )
         adjustment = scroller.get_vadjustment()
-        assert adjustment.get_upper() > adjustment.get_page_size(), "language list should scroll when many models are installed"
+        assert adjustment.get_upper() > adjustment.get_page_size(), (
+            "language list should scroll when many models are installed"
+        )
         adjustment.set_value(adjustment.get_upper() - adjustment.get_page_size())
         _wait_until(
             lambda: abs(adjustment.get_value() - (adjustment.get_upper() - adjustment.get_page_size())) <= 1,
@@ -275,7 +282,10 @@ def test_language_selector_filter_selection_metadata_and_close_focus(monkeypatch
         popover.popdown()
         _drain_main_context()
         assert popover.entry.get_text() == ""
-        assert popover.views.get_visible_child_name() == "empty_page" or popover.views.get_visible_child_name() == "languages_page"
+        assert (
+            popover.views.get_visible_child_name() == "empty_page"
+            or popover.views.get_visible_child_name() == "languages_page"
+        )
         focus = window.get_focus()
         assert focus is None or not _is_descendant(focus, popover), "focus remains inside the closed language selector"
         assert anchor.get_mapped()
