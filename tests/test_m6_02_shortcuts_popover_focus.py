@@ -128,14 +128,23 @@ def test_shortcuts_overlay_keeps_search_and_scrolled_results_reachable(width: in
 
 @pytest.mark.gtk
 def test_shortcuts_filtering_does_not_leave_focus_on_a_hidden_result() -> None:
-    overlay = ShortcutsOverlay()
+    parent = Gtk.Window()
+    parent.present()
+    overlay = ShortcutsOverlay(transient_for=parent)
     overlay.present()
     try:
+        _wait_until(lambda: parent.get_mapped(), "map Shortcuts parent window")
         _wait_until(lambda: overlay.get_mapped(), "map Shortcuts overlay")
-        overlay.search_entry.grab_focus()
-        _wait_until(lambda: overlay.get_focus() == overlay.search_entry, "focus Shortcuts search")
+        target_row = next(
+            row for _group, rows in overlay._groups for row in rows if row.get_title() == "Take screenshot"
+        )
+        assert target_row.get_mapped() and target_row.get_visible()
+        assert target_row.grab_focus(), "the visible Shortcuts result should accept focus"
+        _wait_until(lambda: overlay.get_focus() == target_row, "focus a visible Shortcuts result")
+
         overlay.search_entry.set_text("open image file")
         overlay.search_entry.emit("search-changed")
+        _wait_until(lambda: not target_row.get_visible(), "hide the previously focused Shortcuts result")
         _drain_main_context()
 
         assert overlay.stack.get_visible_child_name() == "results"
@@ -150,6 +159,7 @@ def test_shortcuts_filtering_does_not_leave_focus_on_a_hidden_result() -> None:
         )
     finally:
         overlay.destroy()
+        parent.destroy()
 
 
 class _LanguageManager(GObject.Object):
@@ -204,16 +214,16 @@ def _open_language_popover(popover: LanguagePopover, width: int, height: int):
     window.set_default_size(width, height)
     anchor = Gtk.MenuButton()
     anchor.set_label("Language")
+    anchor.set_popover(popover)
     window.set_child(anchor)
-    popover.set_parent(anchor)
     window.present()
     _wait_until(lambda: window.get_mapped() and anchor.get_mapped(), "map language selector anchor")
-    popover.popup()
+    anchor.set_active(True)
     _wait_until(
         lambda: popover.get_mapped() and popover.get_width() > 0 and popover.get_height() > 0,
         "open Language selector popover",
     )
-    _drain_main_context()
+    _wait_until(lambda: popover.entry.has_focus(), "focus Language selector search")
     return window, anchor
 
 
@@ -224,7 +234,6 @@ def test_language_selector_is_compact_scrollable_and_focuses_search(monkeypatch,
     window, _anchor = _open_language_popover(popover, width, height)
     try:
         assert popover.entry.get_visible() and popover.entry.get_mapped()
-        assert popover.entry.has_focus(), "opening the language selector should focus its search entry"
         assert popover.get_width() <= width + 1
         assert popover.get_height() <= 360, "language selector exceeded its 300px list cap plus controls"
 
@@ -251,7 +260,6 @@ def test_language_selector_is_compact_scrollable_and_focuses_search(monkeypatch,
         assert -1 <= visible_center <= adjustment.get_page_size() + 1
     finally:
         popover.popdown()
-        popover.unparent()
         window.destroy()
 
 
@@ -292,5 +300,4 @@ def test_language_selector_filter_selection_metadata_and_close_focus(monkeypatch
         settings.set_string.assert_not_called()
     finally:
         popover.popdown()
-        popover.unparent()
         window.destroy()
