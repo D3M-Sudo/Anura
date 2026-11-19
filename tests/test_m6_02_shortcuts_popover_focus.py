@@ -234,7 +234,7 @@ def _open_language_popover(popover: LanguagePopover, width: int, height: int):
 
 @pytest.mark.gtk
 @pytest.mark.parametrize(("width", "height"), _VIEWPORTS)
-def test_language_selector_is_compact_scrollable_and_focuses_search(monkeypatch, width: int, height: int) -> None:
+def test_language_selector_is_compact_and_scrollable(monkeypatch, width: int, height: int) -> None:
     popover, _manager, _settings = _make_language_popover(monkeypatch)
     window, _anchor = _open_language_popover(popover, width, height)
     try:
