@@ -84,10 +84,10 @@ def _wait_until(condition, description: str, timeout_seconds: float = 5.0) -> No
 
 def _make_dialog(monkeypatch) -> PreferencesDialog:
     manager = _LanguageManager()
+    import anura.widgets.language_row as language_row_module
     import anura.widgets.preferences_dialog as dialog_module
     import anura.widgets.preferences_general_page as general_module
     import anura.widgets.preferences_languages_page as languages_module
-    import anura.widgets.language_row as language_row_module
     import anura.widgets.preferences_voice_page as voice_module
 
     monkeypatch.setattr(dialog_module, "get_language_manager", lambda: manager)
@@ -190,7 +190,7 @@ def test_preferences_pages_keep_primary_controls_reachable_at_reference_viewport
         for page, first_control, last_control in _page_controls(dialog):
             dialog.set_visible_page(page)
             _wait_until(
-                lambda: dialog.get_visible_page() == page and page.get_mapped(),
+                lambda page=page: dialog.get_visible_page() == page and page.get_mapped(),
                 f"show {page.get_title()} Preferences page",
             )
             _scroll_to(first_control, end=False)
@@ -218,20 +218,20 @@ def test_preferences_page_switching_does_not_retain_focus_on_hidden_controls(mon
         for current_page, control, next_page in transitions:
             dialog.set_visible_page(current_page)
             _wait_until(
-                lambda: dialog.get_visible_page() == current_page and current_page.get_mapped(),
+                lambda current_page=current_page: dialog.get_visible_page() == current_page and current_page.get_mapped(),
                 f"show {current_page.get_title()} before focus entry",
             )
             target = _focus_target(control)
             assert target.get_mapped()
             dialog.set_focus(target)
             _wait_until(
-                lambda: dialog.get_focus() == target,
+                lambda target=target: dialog.get_focus() == target,
                 f"focus {type(target).__name__} on {current_page.get_title()}",
             )
 
             dialog.set_visible_page(next_page)
             _wait_until(
-                lambda: dialog.get_visible_page() == next_page and next_page.get_mapped(),
+                lambda next_page=next_page: dialog.get_visible_page() == next_page and next_page.get_mapped(),
                 f"switch to {next_page.get_title()}",
             )
             _drain_main_context()
