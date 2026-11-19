@@ -104,9 +104,7 @@ def _assert_keyboard_focusable(widget: Gtk.Widget) -> None:
         return
 
     focusable_children = [child for child in _descendants(widget) if child.get_focusable()]
-    assert focusable_children, (
-        f"{type(widget).__name__} and its internal controls are not keyboard-focusable"
-    )
+    assert focusable_children, f"{type(widget).__name__} and its internal controls are not keyboard-focusable"
 
 
 @pytest.mark.gtk
