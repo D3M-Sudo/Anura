@@ -5,8 +5,8 @@
 
 import os
 import time
-from typing import ClassVar
 from types import SimpleNamespace
+from typing import ClassVar
 
 import pytest
 
