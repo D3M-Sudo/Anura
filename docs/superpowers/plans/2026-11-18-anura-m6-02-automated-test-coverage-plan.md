@@ -151,7 +151,19 @@ The following remain outside M6-02 and cannot be marked passed by its CI:
 
 ## 8. Planning disposition
 
-- **M6-02:** P1/P2 completed within approved CI-testable scopes; P3 selective deterministic geometry/filter/state coverage implemented on `758c8e568dea6d9a964fc9a3513800953410eb2a`, with exact-head CI/CodeQL pending. P3 activation/focus-grant assertions are deferred to M7/P9.
+- **M6-02:** P1/P2/P3 deterministic CI-testable scopes completed within their approved boundaries. P3 Shortcuts/Language Selector geometry/filter/state coverage passed on exact head `fb91b6b5ebd2de8f7f7834ab88942f1f5a214870`; CI Quality & Release #44636489764 and CodeQL #44636489904 succeeded; GTK Integration reported 480 passed, 6 skipped, 707 deselected. P3 activation/focus-grant assertions remain deferred to M7/P9.
 - **M6 global phase:** remains **Partial**.
 - **M7:** native visual, physical keyboard, Orca/AT-SPI, live desktop geometry, installed-package checks and P3 Shortcuts/Language Selector activation/focus-grant validation remain deferred.
 - **Branch/PR:** `fix/ui-modernization-aligned`; PR #648 must remain Open/Draft/unmerged, base `feature`.
+
+
+## 2026-11-20 — P3 exact-head verification
+
+- **Outcome:** P3 deterministic Shortcuts/Language Selector coverage is complete within the approved test-only scope. The Language Selector test now asserts the 300 px cap on the `Gtk.ScrolledWindow` content viewport rather than a non-requirement maximum on the whole Popover.
+- **Implementation head:** `fb91b6b5ebd2de8f7f7834ab88942f1f5a214870`.
+- **CI Quality & Release:** [#44636489764](https://github.com/D3M-Sudo/Anura/actions/runs/44636489764) — success. Python Quality, Changelog Integrity, GTK Integration, AppImage x86_64/aarch64, Flatpak x86_64/aarch64, AppImage release-set validation and multi-architecture artifact validation passed. `publish-release` skipped as expected; no release published.
+- **CodeQL:** [#44636489904](https://github.com/D3M-Sudo/Anura/actions/runs/44636489904) — success.
+- **GTK result:** **480 passed, 6 skipped, 707 deselected**. The six P3 cases passed, including 360×600 and 640×480 Language Selector geometry/scrollability, filtering, selection/accessibility metadata and close-state cleanup.
+- **Evidence boundary:** native activation/focus grants, physical keyboard traversal, Orca/AT-SPI, native visual rendering, live multi-monitor/window-manager geometry and installed-package host behavior remain outside CI evidence and deferred to M7/P9.
+- **Scope:** test-only; no production source, Blueprint, dependency, workflow or CHANGELOG change.
+- **Disposition:** M6 global phase remains Partial; M7/P9 native obligations remain open. PR #648 remains Open/Draft/unmerged, base `feature`.
