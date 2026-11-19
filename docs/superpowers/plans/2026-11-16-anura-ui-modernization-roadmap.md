@@ -60,6 +60,7 @@ The global roadmap owns phase status and app-wide prioritization. This document 
 | UI-16 | M5-02 approved automated UI contract tests | **Completed within approved scope** | Shortcuts search/Escape, static menu action/scope contract and toast delegation/title/priority tests. Banner dismissal and toast lifecycle excluded. Exact-head CI #44135571249 and CodeQL #44135571322 passed. |
 | UI-17 | M5-03 portal-banner Dismiss correction | **Completed** | Connected `Adw.Banner::button-clicked` to the hide handler; two GTK regression tests passed in temporary run #44141439001. Exact code/test head `74f6a4ef` passed CI #44142298765 and CodeQL #44142298673. CHANGELOG records the user-visible fix. |
 | UI-18 | M5 agreed-scope closure and global documentation reconciliation | **Completed by maintainer decision** | P3 candidates are deferred/non-blocking; native visual, Orca/AT-SPI and physical keyboard checks belong to M7; toast lifecycle remains excluded. Global roadmap, workstream roadmap and HANDOVER record M5 Completed within agreed scope. |
+| M6-P1 | Extracted/History responsive and overflow test phase | **Completed — test-only** | Eight GTK viewport cases passed across four reference sizes; exact-head full CI and CodeQL green on `f3b502177efa32c741307fce020f24fb1d4d7558`. No production changes; native checks remain M7. |
 
 ## Completed work — scope and evidence
 
@@ -729,3 +730,17 @@ M5-01 can proceed after this formal disposition; F-303-02 remains deferred until
 - **Exact-head CI:** SHA `db71476932bc89c84bb69bc1adc018abc61966d7`; CI Quality & Release [#44414583151](https://github.com/D3M-Sudo/Anura/actions/runs/44414583151) success; CodeQL [#44414583117](https://github.com/D3M-Sudo/Anura/actions/runs/44414583117) success. Python Quality, GTK Integration, Changelog Integrity, AppImage x86_64/aarch64, Flatpak x86_64/aarch64, AppImage release-set validation and multi-architecture artifact validation passed. `publish-release` skipped as expected; no release published. No test counts are attributed to this documentation-only task.
 - **Governance:** branch `fix/ui-modernization-aligned`; PR #648 verified Open/Draft/unmerged, base `feature`, head branch `fix/ui-modernization-aligned`. No protected branch, PR state/base or merge action changed.
 - **Next:** P1 — Extracted/History responsive and overflow test phase; not started and requires separate explicit maintainer approval. Roadmap status remains M6 Partial and M7 Partial.
+
+
+## 2026-11-19 — M6-02 P1: Extracted/History responsive and overflow tests
+
+- **Outcome:** P1 completed within the approved test-only scope. The new `tests/test_m6_02_extracted_history_responsive.py` module verifies long OCR-result and expanded History-entry scrolling/action reachability at 360×600, 640×480, 900×600 and 1280×800.
+- **Files changed for P1:** `tests/test_m6_02_extracted_history_responsive.py` only. No production source, Blueprint template, dependency, workflow or CHANGELOG changes.
+- **Exact implementation head:** `f3b502177efa32c741307fce020f24fb1d4d7558`.
+- **Focused coverage:** 8 new viewport cases passed (4 Extracted + 4 History). GTK Integration reported **469 passed, 6 skipped, 707 deselected**; all eight new cases passed.
+- **Exact-head CI:** CI Quality & Release [#44484731845](https://github.com/D3M-Sudo/Anura/actions/runs/44484731845) success; CodeQL [#44484731918](https://github.com/D3M-Sudo/Anura/actions/runs/44484731918) success. Python Quality **701 passed, 7 skipped, 291 deselected**; Changelog Integrity, AppImage x86_64/aarch64, Flatpak x86_64/aarch64, AppImage release-set validation and multi-architecture artifact validation passed. `publish-release` skipped as expected; no release was published.
+- **Corrections:** GResource path, composite-widget descendant focusability helper and Ruff formatting were corrected in the test module. No product defect or production change was established.
+- **Limitations:** GTK CI disables the accessibility bridge (`NO_AT_BRIDGE=1`, `GTK_A11Y=none`); native rendering, physical Tab/Shift+Tab, Orca/AT-SPI, live WM/multi-monitor geometry, physical pointer/template-signal behavior and installed-package host smoke remain M7/P9 obligations. History physical traversal remains issue #655.
+- **Review qualification:** in-session diff/evidence inspection only; no independent review subagent is claimed.
+- **Governance:** branch `fix/ui-modernization-aligned`; PR #648 remains Open/Draft/unmerged, base `feature`. No protected branch or PR state/base changed.
+- **Next authorized task:** P2 — Preferences responsive geometry and supported programmatic focus entry/exit, test-only. Production fixes require separate authorization.
