@@ -872,4 +872,4 @@ No production correction was made in Task 4; no dependency, permanent workflow o
 - **Limitations:** GTK CI runs with `NO_AT_BRIDGE=1` and `GTK_A11Y=none`; these results do not prove native visual rendering, physical Tab/Shift+Tab, Orca/AT-SPI, live WM/multi-monitor geometry, pointer/template-signal behavior or installed-package host smoke. These remain M7/P9 native obligations; History physical traversal remains issue #655.
 - **Review qualification:** in-session diff/evidence inspection only; no independent review subagent is claimed.
 - **Governance:** branch `fix/ui-modernization-aligned`; PR #648 remains Open/Draft/unmerged, base `feature`. No protected branch, PR state/base or merge status changed.
-- **Next authorized task:** P2 — Preferences responsive geometry and supported programmatic focus entry/exit, test-only. Production fixes require separate authorization.
+- **Next planned phase:** P3 — Shortcuts and Language Selector compact geometry/focus. It is not authorized for implementation until a separate bounded proposal receives explicit maintainer approval. Production fixes require separate authorization.
