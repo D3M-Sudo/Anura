@@ -744,4 +744,4 @@ M5-01 can proceed after this formal disposition; F-303-02 remains deferred until
 - **Limitations:** GTK CI disables the accessibility bridge (`NO_AT_BRIDGE=1`, `GTK_A11Y=none`); native rendering, physical Tab/Shift+Tab, Orca/AT-SPI, live WM/multi-monitor geometry, physical pointer/template-signal behavior and installed-package host smoke remain M7/P9 obligations. History physical traversal remains issue #655.
 - **Review qualification:** in-session diff/evidence inspection only; no independent review subagent is claimed.
 - **Governance:** branch `fix/ui-modernization-aligned`; PR #648 remains Open/Draft/unmerged, base `feature`. No protected branch or PR state/base changed.
-- **Next authorized task:** P2 — Preferences responsive geometry and supported programmatic focus entry/exit, test-only. Production fixes require separate authorization.
+- **Next M6 phase:** P3 — Shortcuts and Language Selector compact geometry/focus, subject to a separate bounded proposal and explicit maintainer approval. The workstream's UI-08 requirement traceability and UI-09 task-definition gates also remain open; no implementation is authorized by this status note.
