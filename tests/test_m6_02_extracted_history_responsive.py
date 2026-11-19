@@ -98,6 +98,17 @@ def _descendants(widget: Gtk.Widget):
         child = child.get_next_sibling()
 
 
+def _assert_keyboard_focusable(widget: Gtk.Widget) -> None:
+    """Composite GTK widgets may delegate focus to an internal control."""
+    if widget.get_focusable():
+        return
+
+    focusable_children = [child for child in _descendants(widget) if child.get_focusable()]
+    assert focusable_children, (
+        f"{type(widget).__name__} and its internal controls are not keyboard-focusable"
+    )
+
+
 @pytest.mark.gtk
 @pytest.mark.parametrize(("width", "height"), _VIEWPORTS)
 def test_extracted_long_ocr_text_scrolls_without_clipping_primary_actions(width: int, height: int) -> None:
@@ -132,7 +143,7 @@ def test_extracted_long_ocr_text_scrolls_without_clipping_primary_actions(width:
 
         for control in (page.grab_btn, page.text_copy_btn, page.share_button, page.listen_btn):
             _assert_inside_window(control, window)
-            assert control.get_focusable(), f"{type(control).__name__} is not keyboard-focusable"
+            _assert_keyboard_focusable(control)
             assert control.is_sensitive(), f"{type(control).__name__} is not actionable"
         _assert_inside_window(page.stats_label, window)
     finally:
