@@ -62,6 +62,7 @@ The global roadmap owns phase status and app-wide prioritization. This document 
 | UI-18 | M5 agreed-scope closure and global documentation reconciliation | **Completed by maintainer decision** | P3 candidates are deferred/non-blocking; native visual, Orca/AT-SPI and physical keyboard checks belong to M7; toast lifecycle remains excluded. Global roadmap, workstream roadmap and HANDOVER record M5 Completed within agreed scope. |
 | M6-P1 | Extracted/History responsive and overflow test phase | **Completed — test-only** | Eight GTK viewport cases passed across four reference sizes; exact-head full CI and CodeQL green on `f3b502177efa32c741307fce020f24fb1d4d7558`. No production changes; native checks remain M7. |
 | M6-P2 | Preferences responsive geometry and focus test phase | **Completed — test-only** | Added `tests/test_m6_02_preferences_responsive.py`; exact head `65e2b1597b1d02f7aa851cfdb4dfd7f17920c7a6`. CI [#44607860024](https://github.com/D3M-Sudo/Anura/actions/runs/44607860024) and CodeQL [#44607859740](https://github.com/D3M-Sudo/Anura/actions/runs/44607859740) passed. GTK Integration: 474 passed, 6 skipped, 707 deselected; all four viewport cases (360×600, 640×480, 900×600, 1280×800) passed. No production, Blueprint, workflow, dependency or CHANGELOG changes. Native visual/physical keyboard/Orca/AT-SPI/live WM/installed-package checks remain deferred to M7. |
+| M6-P3 | Shortcuts and Language Selector compact geometry/focus | **Implemented — selective test-only scope; exact-head CI pending** | Retains deterministic geometry, scrolling, filtering, selected-state and accessible-metadata assertions. Activation/focus-grant assertions are deferred to M7/P9; no production code changed. |
 
 ## Completed work — scope and evidence
 
@@ -745,3 +746,14 @@ M5-01 can proceed after this formal disposition; F-303-02 remains deferred until
 - **Review qualification:** in-session diff/evidence inspection only; no independent review subagent is claimed.
 - **Governance:** branch `fix/ui-modernization-aligned`; PR #648 remains Open/Draft/unmerged, base `feature`. No protected branch or PR state/base changed.
 - **Next M6 phase:** P3 — Shortcuts and Language Selector compact geometry/focus, subject to a separate bounded proposal and explicit maintainer approval. The workstream's UI-08 requirement traceability and UI-09 task-definition gates also remain open; no implementation is authorized by this status note.
+
+
+## 2026-11-20 — M6-02 P3: selective CI coverage and M7 focus deferral
+
+- **Outcome:** implemented the maintainer-approved selective disposition. The P3 GTK module keeps deterministic compact geometry, scrolling, debounced filtering, empty-state, selected-state, accessible metadata and close-state checks; focus-grant-dependent assertions are removed from the required CI suite.
+- **Removed CI assumptions:** Shortcuts parent/overlay activation, initial search focus, focus retention after filtering, Language Selector initial search focus and focus after popover close. The test names now describe geometry/filter/state coverage rather than focus behavior.
+- **Evidence boundary:** the GTK job uses virtual Wayland and a virtual seat, with `NO_AT_BRIDGE=1` and `GTK_A11Y=none`; it cannot establish native desktop activation/focus policy or Orca/AT-SPI behavior. Earlier repeated harness adjustments did not make focus-grant assertions reliable. No product defect was demonstrated.
+- **Implementation head:** `758c8e568dea6d9a964fc9a3513800953410eb2a`. Python Quality and Changelog Integrity passed; full GTK Integration, packaging and CodeQL results are pending final exact-head verification.
+- **Changed files:** `tests/test_m6_02_shortcuts_popover_focus.py` only for implementation. No production source, Blueprint, workflow, dependency or CHANGELOG change. This documentation update reconciles the global/workstream/master/child plans.
+- **M7/P9:** native validation must explicitly cover activation and focus acquisition/retention/restoration for Shortcuts and Language Selector. These checks remain pending and are not counted as passed by CI.
+- **Governance:** PR #648 remains Open/Draft/unmerged, base `feature`; no protected branch, PR state or merge action changed.

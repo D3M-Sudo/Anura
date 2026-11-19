@@ -59,8 +59,8 @@ This plan is based on the M6-01 read-only source/template/test audit and the exi
 | M6-R02 / P1 | History: expanded row and long-text overflow | Same new module; `anura/widgets/history_page.py`; `data/ui/history_page.blp` | GTK integration | Long text is scrollable within the designated region; expanding a row does not make its Copy/Editor/TTS actions unreachable; the page/window does not grow beyond the test viewport. Preserve existing refresh/scroll restoration tests. |
 | M6-R03 / P1 | Preferences: General, Languages, Editor, Voice geometry | New `tests/test_m6_02_preferences_responsive.py`; `anura/widgets/preferences_dialog.py`, `preferences_general_page.py`, `preferences_languages_page.py`, `preferences_editor_page.py`, `preferences_voice_page.py`; corresponding `data/ui/preferences_*.blp` | GTK integration | Each of the four pages can be instantiated and switched to at the reference viewports. The page content remains reachable through its intended scrolling/container behavior; page-specific primary controls are mapped and within the dialog bounds. |
 | M6-R04 / P1 | Preferences: focus entry/exit on page switch | Same Preferences test module | GTK integration | After opening Preferences and switching among General/Languages/Editor/Voice using the supported programmatic page-selection seam, focus is either retained on a visible control or moved to a documented visible fallback; it is never left on an unmapped/hidden control. Do not simulate physical Tab traversal. |
-| M6-R05 / P1 | Shortcuts: compact geometry, search results and focus return | New `tests/test_m6_02_shortcuts_popover_focus.py`; `anura/widgets/shortcuts_overlay.py`; `data/ui/shortcuts_overlay.blp` | GTK integration | At 360×600 and 640×480, the search field and result/empty-state content remain reachable through the overlay's scroll behavior. Search result changes preserve a valid visible focus target; closing the overlay returns focus to the invoking control where the existing API supports restoration. Existing search/Escape behavior remains unchanged. |
-| M6-R06 / P1 | Language selector/popover compact geometry and focus lifecycle | Same Shortcuts/popover module; `anura/widgets/language_popover.py`, `language_popover_row.py`; `data/ui/language_popover.blp`, `language_popover_row.blp` | GTK integration | Search/list content remains scrollable and the search control remains reachable at compact viewports. Opening/closing the popover through its public widget API does not leave focus on a hidden popover child; selected state and accessible search label remain consistent. |
+| M6-R05 / P1 | Shortcuts: compact geometry, search results and focus return | New `tests/test_m6_02_shortcuts_popover_focus.py`; `anura/widgets/shortcuts_overlay.py`; `data/ui/shortcuts_overlay.blp` | GTK integration for deterministic geometry/filtering; native validation in M7/P9 for focus grants | At 360×600 and 640×480, the search field and result/empty-state content remain visible and scrollable; debounced filtering produces the expected result/empty state. CI does not assert parent/overlay activation, initial search focus or focus retention after filtering. Native M7/P9 validation must check initial focus, focus after filtering and focus return on close where the public API supports it. Existing search/Escape behavior remains unchanged. |
+| M6-R06 / P1 | Language selector/popover compact geometry, filtering and state | Same Shortcuts/popover module; `anura/widgets/language_popover.py`, `language_popover_row.py`; `data/ui/language_popover.blp`, `language_popover_row.blp` | GTK integration for deterministic geometry/state; native validation in M7/P9 for focus grants | Search/list content remains scrollable at compact viewports; filtering, empty state, selected state, tooltip/accessibility metadata and deterministic close-state cleanup remain consistent. CI does not assert initial search focus or focus after popover close. Native M7/P9 validation must check real activation, initial search focus and focus behavior after close. |
 | M6-R07 / P1 | Cross-window focus routes | New `tests/test_m6_02_navigation_focus_routes.py`; `anura/window.py`; `data/ui/window.blp`, `welcome_page.blp`, `extracted_page.blp`, `history_page.blp` | GTK integration | For supported programmatic routes Welcome→Extracted, Extracted→Welcome, Welcome→History and History→Welcome, the destination page is visible/mapped and focus resolves to its documented primary action or a documented fallback. Preserve the existing History→Welcome regression rather than duplicating it. |
 | M6-R08 / P2 | High-value controls have explicit accessible names and roles | New `tests/test_m6_02_accessible_control_contracts.py`; relevant widget modules/templates listed in the audit report | Headless + GTK integration | A finite inventory of user-critical controls (OCR actions, History row actions, language search/install/remove/progress, Preferences page controls, Shortcuts search/close, primary Welcome actions) has explicit, meaningful labels/names and expected widget roles where the GTK API exposes them. Dynamic labels track the action/state. Do not infer Orca output from GTK property assertions. |
 | M6-R09 / P2 | Status announcements cover meaningful state transitions | Extend `tests/test_accessible_status_announcements.py` and `tests/test_language_row_accessibility.py` only for uncovered transitions | Headless | Start/completion/failure and OCR/TTS/search state changes produce one concise announcement per meaningful transition; intermediate percentage updates do not spam announcements. Existing LanguageRow and status tests are reused, not copied. |
@@ -81,20 +81,20 @@ Test harness requirements:
 - Use the existing GTK integration setup and real GTK/Libadwaita widgets/templates; do not create a second compositor or new CI workflow.
 - Create a test window, set its default size to the target viewport, present it, and drain the GLib main context until allocation/mapping stabilizes using the established bounded-wait pattern already used by `tests/test_history_navigation_focus.py`.
 - Assert actual widget allocations against the viewport and relevant ancestor bounds. For content intended to overflow, assert that the correct scrolled window owns the overflow and that the vertical/horizontal adjustments have a meaningful upper/page-size relationship.
-- Assert reachability using public widget state (`get_mapped`, `get_visible`, `get_sensitive`, allocation bounds and supported focus state); do not treat a non-null widget or a handler invocation as proof of visible/reachable interaction.
+- Assert deterministic reachability using public widget state (`get_mapped`, `get_visible`, `get_sensitive`, allocation bounds and scroll adjustments); do not treat a non-null widget or a handler invocation as proof of visible/reachable interaction. Do not assert window activation or focus grants in the virtual-Wayland CI lane.
 - Parameterize only where the same invariant applies. Do not force every page into every viewport if a particular dialog/popover has a distinct sizing contract; document the narrower case and why.
 - Avoid pixel snapshots, color sampling and screenshot-diff thresholds in this phase; native rendering remains M7.
 
 ## 4. Test layering and execution order
 
 1. **Headless contracts:** deterministic mapping, label/state transitions, announcement deduplication and source/token inventory. Run in the existing Python Quality job.
-2. **GTK integration contracts:** actual widget construction, allocation, scrolling, page switching, visible/mapped focus state and widget accessible properties. Run in the existing GTK Integration job on virtual Wayland.
+2. **GTK integration contracts:** actual widget construction, allocation, scrolling, filtering/state transitions and GTK-exposed accessible properties. Run in the existing GTK Integration job on virtual Wayland. Focus-grant-dependent window/popover assertions are excluded from this lane and retained for native M7/P9.
 3. **Static/source contracts:** use only for stable declarations that cannot be observed through a public runtime seam; do not substitute source-string checks for behavior when a GTK test can prove it.
 4. **Native/manual checks:** excluded from M6-02 automated acceptance and retained for M7; no simulation result may be described as native evidence.
 
 Recommended order:
 - First P1 responsive geometry: M6-R01 through M6-R03.
-- Then P1 focus lifecycle: M6-R04 through M6-R07.
+- P1 programmatic page-switch/navigation focus contracts: M6-R04 and M6-R07 remain separate deterministic tasks; Shortcuts/Language Selector focus grants in M6-R05/R06 are deferred to M7/P9.
 - Then P2 semantics/announcements: M6-R08 and M6-R09.
 - Then P2 theme/reduced motion: M6-R10 and M6-R11.
 - Keep M6-R12 deferred.
@@ -140,6 +140,7 @@ M6-02 planning is complete when:
 The following remain outside M6-02 and cannot be marked passed by its CI:
 - rendered visual inspection on the maintainer's GNOME/GTK desktop;
 - physical Tab/Shift+Tab traversal, including History row suffix actions tracked by issue #655;
+- native window activation and focus grants for Shortcuts/Language Selector (initial search focus, focus after filtering, and focus after popover close);
 - Orca/AT-SPI and any screen-reader output with an enabled bridge;
 - live multi-monitor/window-manager/work-area geometry;
 - actual pointer activation or template signal wiring not invoked through an established GTK integration seam;
@@ -150,7 +151,7 @@ The following remain outside M6-02 and cannot be marked passed by its CI:
 
 ## 8. Planning disposition
 
-- **M6-02:** planned; implementation not started.
+- **M6-02:** P1/P2 completed within approved CI-testable scopes; P3 selective deterministic geometry/filter/state coverage implemented on `758c8e568dea6d9a964fc9a3513800953410eb2a`, with exact-head CI/CodeQL pending. P3 activation/focus-grant assertions are deferred to M7/P9.
 - **M6 global phase:** remains **Partial**.
-- **M7:** native visual, physical keyboard, Orca/AT-SPI, live desktop geometry and installed-package checks remain deferred.
+- **M7:** native visual, physical keyboard, Orca/AT-SPI, live desktop geometry, installed-package checks and P3 Shortcuts/Language Selector activation/focus-grant validation remain deferred.
 - **Branch/PR:** `fix/ui-modernization-aligned`; PR #648 must remain Open/Draft/unmerged, base `feature`.
