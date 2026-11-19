@@ -231,7 +231,9 @@ def test_preferences_page_switching_does_not_retain_focus_on_hidden_controls(mon
         for current_page, control, next_page in transitions:
             dialog.set_visible_page(current_page)
             _wait_until(
-                lambda current_page=current_page: dialog.get_visible_page() == current_page and current_page.get_mapped(),
+                lambda current_page=current_page: (
+                    dialog.get_visible_page() == current_page and current_page.get_mapped()
+                ),
                 f"show {current_page.get_title()} before focus entry",
             )
             target = _focus_target(control)
