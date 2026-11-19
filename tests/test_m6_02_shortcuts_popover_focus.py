@@ -240,13 +240,15 @@ def test_language_selector_is_compact_and_scrollable(monkeypatch, width: int, he
     try:
         assert popover.entry.get_visible() and popover.entry.get_mapped()
         assert popover.get_width() <= width + 1
-        assert popover.get_height() <= 360, "language selector exceeded its 300px list cap plus controls"
 
         scroller = popover.list_view.get_ancestor(Gtk.ScrolledWindow)
         assert scroller is not None
         _wait_until(
-            lambda: scroller.get_vadjustment().get_page_size() > 0,
+            lambda: scroller.get_height() > 0 and scroller.get_vadjustment().get_page_size() > 0,
             "allocate Language selector list viewport",
+        )
+        assert scroller.get_height() <= 300, (
+            f"language list viewport exceeded its 300px content cap: {scroller.get_height()}px"
         )
         adjustment = scroller.get_vadjustment()
         assert adjustment.get_upper() > adjustment.get_page_size(), (
