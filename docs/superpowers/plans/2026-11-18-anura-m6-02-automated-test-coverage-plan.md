@@ -152,7 +152,7 @@ The following remain outside M6-02 and cannot be marked passed by its CI:
 ## 8. Planning disposition
 
 - **M6-02:** P1/P2/P3 deterministic CI-testable scopes completed within their approved boundaries. P3 Shortcuts/Language Selector geometry/filter/state coverage passed on exact head `fb91b6b5ebd2de8f7f7834ab88942f1f5a214870`; CI Quality & Release #44636489764 and CodeQL #44636489904 succeeded; GTK Integration reported 480 passed, 6 skipped, 707 deselected. P3 activation/focus-grant assertions remain deferred to M7/P9.
-- **M6 global phase:** remains **Partial**.
+- **M6 global phase:** remains **Partial**; P1–P6 deterministic CI-testable scopes are complete within approved boundaries.
 - **M7:** native visual, physical keyboard, Orca/AT-SPI, live desktop geometry, installed-package checks and P3 Shortcuts/Language Selector activation/focus-grant validation remain deferred.
 - **Branch/PR:** `fix/ui-modernization-aligned`; PR #648 must remain Open/Draft/unmerged, base `feature`.
 
@@ -179,7 +179,7 @@ The following remain outside M6-02 and cannot be marked passed by its CI:
 - **GTK result:** **483 passed, 6 skipped, 707 deselected**; all three new P4 tests passed.
 - **Other CI:** Python Quality, Changelog Integrity, AppImage/Flatpak x86_64/aarch64 builds and release-set/multi-architecture artifact validation passed. `publish-release` was skipped as expected; no release was published.
 - **Limitations:** physical keyboard traversal, native window-manager focus behavior, Orca/AT-SPI, native visual rendering, live monitor geometry and installed-package host behavior remain unverified and deferred to M7/P9.
-- **Programme status:** M6 remains Partial; P1–P5 deterministic CI scopes are complete, P6 remains. M7/P8/P9 remain open.
+- **Programme status:** M6 remains Partial; P1–P6 deterministic CI scopes are complete within approved boundaries. M7/P8/P9 remain open.
 - **Governance:** PR #648 remains Open/Draft/unmerged, base `feature`.
 
 
@@ -195,3 +195,15 @@ The following remain outside M6-02 and cannot be marked passed by its CI:
 - **Evidence boundary:** the CI GTK lane uses virtual Wayland with `NO_AT_BRIDGE=1` and `GTK_A11Y=none`. It proves the selected GTK-exposed property/state contracts only; it does not prove Orca/AT-SPI output, physical keyboard traversal, native rendering, live desktop/window-manager behavior or installed-package host behavior. These remain M7/P9 obligations. No application-wide accessibility or WCAG conformance claim is made.
 - **Programme status:** M6 remains **Partial**; P1–P5 deterministic CI-testable scopes are complete and P6 theme/contrast/reduced-motion remains. M7 remains **Partial**; P8 consolidation and P9 native validation remain open.
 - **Governance:** PR #648 remains Open/Draft/unmerged, base `feature`, head `84607da73acb1873bd96ae923b2c0e2307688187`. No protected branch, PR state/base or merge status changed.
+
+
+## 2026-11-20 — M6-02 P6: theme/contrast and reduced motion — exact-head verification
+
+- **Outcome:** P6 is complete within the approved test-only scope. P6-A adds GTK coverage for main-window reduced-motion preference initialization and live updates, including the `gtk-enable-animations` fallback. P6-B inventories application-authored CSS motion selectors and checks the descendant reduced-motion policy plus the Shortcuts overlay's root-specific animation-class handling. P6-C adds semantic palette-role coverage for Extracted text focus and drag-hover/drag-processing surfaces.
+- **Implementation head:** `8d9a6a54219f868116d7ba839e85db75f437b254`.
+- **CI Quality & Release:** [#44667645110](https://github.com/D3M-Sudo/Anura/actions/runs/44667645110) — **success**. Python Quality: **703 passed, 9 skipped, 300 deselected**; Ruff/format/static checks and Changelog Integrity passed. GTK Integration Tests passed. AppImage x86_64/aarch64 builds, Flatpak x86_64/aarch64 builds, AppImage release-set validation and multi-architecture artifact validation passed. `publish-release` was skipped as expected for a pull request; no release was published.
+- **CodeQL:** [#44667645155](https://github.com/D3M-Sudo/Anura/actions/runs/44667645155) — **success**; Python analysis passed with no new alerts.
+- **Scope:** test-only. No production source, Blueprint, workflow, dependency or CHANGELOG changes. No production defect requiring a separate authorization was identified.
+- **Evidence boundary:** static semantic-color and CSS-motion contracts do not establish runtime GTK/Libadwaita rendered contrast or toolkit-native animation behavior. The GTK lane does not establish physical keyboard traversal, Orca/AT-SPI, native rendering, live window-manager/multi-monitor behavior or installed-package behavior. These remain M7/P9 obligations; no application-wide accessibility or WCAG conformance claim is made.
+- **Programme status:** P1–P6 deterministic CI-testable scopes are complete within their approved boundaries. M6 remains **Partial** globally because broader/native requirements remain; M7 remains **Partial**, with P8 traceability/consolidation and P9 native-host validation open.
+- **Governance:** PR #648 remains Open/Draft/unmerged, base `feature`, head `8d9a6a54219f868116d7ba839e85db75f437b254`. No protected branch, PR state/base or merge status changed.
