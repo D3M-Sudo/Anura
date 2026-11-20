@@ -8,14 +8,15 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
+import pathlib
 import re
 import shutil
 import subprocess
+import tempfile
 
 
 def main() -> int:
-    appdir = Path(os.environ["APPDIR"])
+    appdir = pathlib.Path(os.environ["APPDIR"])
     font_match = shutil.which("fc-match")
     if font_match is None:
         raise RuntimeError("Bundled Fontconfig tools are unavailable")
@@ -70,7 +71,16 @@ def main() -> int:
     image = Image.new("RGB", (1000, 180), "white")
     draw = ImageDraw.Draw(image)
     draw.text((30, 35), "ANURA OCR TEST", fill="black", font=ImageFont.truetype(str(font_path), 72))
-    recognised = re.sub(r"[^A-Z]", "", pytesseract.image_to_string(image, config="--psm 6").upper())
+    with tempfile.TemporaryDirectory(prefix="anura-appimage-smoke-") as temp_dir:
+        image_path = os.path.join(temp_dir, "ocr.png")
+        image.save(image_path)
+        result = subprocess.run(
+            ["tesseract", image_path, "stdout", "--psm", "6"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    recognised = re.sub(r"[^A-Z]", "", result.stdout.upper())
     if "ANURA" not in recognised or "OCR" not in recognised:
         raise RuntimeError(f"Bundled Tesseract OCR returned unexpected text: {recognised!r}")
 
