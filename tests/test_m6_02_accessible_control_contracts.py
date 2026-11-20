@@ -133,7 +133,7 @@ def test_primary_application_controls_keep_native_accessible_roles():
         os.path.dirname(__file__),
         "..",
         "data",
-        "io.github.d3msudo.anura.gresource",
+        "io.github.d3m_sudo.anura.gresource",
     )
     if not os.path.exists(resource_path):
         pytest.skip("Anura GResource bundle is required for GTK template integration tests")
