@@ -27,6 +27,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- AppImage/Fontconfig: define the bundled `sans-serif` and legacy `sans` aliases explicitly against DejaVu Sans, and verify indexed font resolution inside the extracted runtime.
+
 - Flatpak/CI: make shortcut consistency checks load the GResource produced by the GTK workflow and validate GNOME 51 symbolic icons inside the installed runtime.
 - Flatpak/dependencies: retain `python3-pathspec` for `python3-pybind11` metadata generation, then remove its package and license from the final `/app` prefix and scope F-005 stale-module warnings to modules actually declared by checked manifests.
 - History/accessibility: make the TTS action label state-specific: “Stop listening” while generating, “Pause listening” during playback, “Resume listening” while paused, and “Listen to text” while idle (#648)
