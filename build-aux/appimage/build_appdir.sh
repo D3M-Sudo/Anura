@@ -34,25 +34,6 @@ cp "$SOURCE_ROOT/LICENSE" "$APPDIR/usr/share/licenses/io.github.d3m_sudo.anura/L
 cp "$SOURCE_ROOT/build-aux/appimage/licenses/type2-runtime-LICENSE" \
   "$APPDIR/usr/share/licenses/io.github.d3m_sudo.anura/AppImage-type2-runtime-LICENSE"
 
-# The upstream config uses host-absolute font paths. Replace it with a
-# relocatable config that resolves only the fonts shipped in this AppDir.
-cat > "$APPDIR/etc/fonts/fonts.conf" <<EOF
-<?xml version="1.0"?>
-<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
-<fontconfig>
-  <dir prefix="relative">../../usr/share/fonts</dir>
-  <cachedir prefix="xdg">fontconfig</cachedir>
-  <!-- The isolated AppDir config does not load distro conf.d aliases. -->
-  <alias binding="strong">
-    <family>sans-serif</family>
-    <prefer><family>DejaVu Sans</family></prefer>
-  </alias>
-  <match target="pattern">
-    <test qual="any" name="family"><string>sans</string></test>
-    <edit name="family" mode="assign"><string>sans-serif</string></edit>
-  </match>
-</fontconfig>
-EOF
 FONTCONFIG_DTD="$APPDIR/usr/share/xml/fontconfig/fonts.dtd"
 if [ ! -s "$FONTCONFIG_DTD" ]; then
   FONTCONFIG_DTD="/usr/share/xml/fontconfig/fonts.dtd"
@@ -77,8 +58,32 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import sys
+from xml.sax.saxutils import escape
 
 appdir = Path(os.environ["APPDIR"])
+cache_root = Path(os.environ.get("XDG_CACHE_HOME") or (Path.home() / ".cache")).expanduser().resolve()
+font_cache_dir = cache_root / "fontconfig"
+font_cache_dir.mkdir(parents=True, exist_ok=True)
+runtime_config_dir = cache_root / "anura" / "fontconfig"
+runtime_config_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
+runtime_config = runtime_config_dir / "fonts.conf"
+font_dir = appdir / "usr/share/fonts"
+runtime_config.write_text(
+    '<?xml version="1.0"?>\n'
+    '<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">\n'
+    '<fontconfig>\n'
+    f'  <dir>{escape(str(font_dir))}</dir>\n'
+    f'  <cachedir>{escape(str(font_cache_dir))}</cachedir>\n'
+    '  <alias binding="strong"><family>sans-serif</family>'
+    '<prefer><family>DejaVu Sans</family></prefer></alias>\n'
+    '  <match target="pattern"><test qual="any" name="family"><string>sans</string></test>'
+    '<edit name="family" mode="assign"><string>sans-serif</string></edit></match>\n'
+    '</fontconfig>\n',
+    encoding="utf-8",
+)
+runtime_config.chmod(0o600)
+os.environ["FONTCONFIG_PATH"] = str(appdir / "etc/fonts")
+os.environ["FONTCONFIG_FILE"] = str(runtime_config)
 python_paths = (
     appdir / "usr/lib/python3.12/site-packages",
     appdir / "usr/lib/python3/dist-packages",
@@ -137,7 +142,6 @@ desktop-file-validate "$APPDIR/usr/share/applications/io.github.d3m_sudo.anura.d
 desktop-file-validate "$APPDIR/io.github.d3m_sudo.anura.desktop"
 test -s "$APPDIR/usr/share/anura/io.github.d3m_sudo.anura.gresource"
 test -s "$APPDIR/usr/share/glib-2.0/schemas/gschemas.compiled"
-test -s "$APPDIR/etc/fonts/fonts.conf"
 test -s "$APPDIR/etc/fonts/fonts.dtd"
 test -s "$APPDIR/usr/lib/anura/runtime_smoke.py"
 test -d "$PYTHON_SITE/anura"
