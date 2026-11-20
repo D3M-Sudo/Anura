@@ -161,7 +161,7 @@
             "buildsystem": "simple",
             "build-commands": [
                 "pip3 install --no-deps --no-build-isolation --prefix=/app .",
-                "install -Dm0644 LICENSE \"$FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/pybind11/LICENSE\"",
+                "install -Dm0644 LICENSE \"$FLATPAK_DEST/share/licenses/io.github.d3m_sudo.anura/pybind11/LICENSE\""
             ],
             "sources": [
                 {
