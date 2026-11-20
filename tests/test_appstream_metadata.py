@@ -143,3 +143,42 @@ def test_every_declared_locale_has_a_catalogue() -> None:
     assert "en" not in locales
     missing = [code for code in locales if not (REPO_ROOT / "po" / f"{code}.po").is_file()]
     assert missing == [], f"missing .po files for: {missing}"
+
+
+
+def test_catalogue_files_match_declared_locales() -> None:
+    locales = [line.strip() for line in LINGUAS.read_text(encoding="utf-8").splitlines() if line.strip()]
+    catalogues = {path.stem for path in (REPO_ROOT / "po").glob("*.po")}
+
+    assert len(locales) == len(set(locales)), "po/LINGUAS contains duplicate locale codes"
+    assert set(localues := locales) == catalogues, (
+        f"catalogue inventory differs from po/LINGUAS: "
+        f"undeclared={sorted(catalogues - set(localues))}, "
+        f"missing={sorted(set(localues) - catalogues)}"
+    )
+
+
+def test_potfiles_match_existing_template_sources() -> None:
+    potfiles_path = REPO_ROOT / "po" / "POTFILES"
+    template_path = REPO_ROOT / "po" / "io.github.d3m_sudo.anura.pot"
+    entries = [line.strip() for line in potfiles_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+    assert len(entries) == len(set(entries)), "po/POTFILES contains duplicate source paths"
+    missing = [path for path in entries if not (REPO_ROOT / path).is_file()]
+    assert missing == [], f"po/POTFILES references missing source files: {missing}"
+
+    referenced = set()
+    for line in template_path.read_text(encoding="utf-8").splitlines():
+        if not line.startswith("#: "):
+            continue
+        for reference in line[3:].split():
+            source = re.sub(r":\\d+$", "", reference)
+            if source.startswith("../"):
+                source = source[3:]
+            referenced.add(source)
+
+    assert set(entries) == referenced, (
+        f"po/POTFILES differs from POT source references: "
+        f"missing={sorted(referenced - set(entries))}, "
+        f"extra={sorted(set(entries) - referenced)}"
+    )
