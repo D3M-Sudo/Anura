@@ -184,3 +184,38 @@ P4's native focus behavior is not established by the virtual-Wayland CI lane. Ph
 - **Evidence boundary:** static semantic-color and CSS-motion contracts do not establish runtime GTK/Libadwaita rendered contrast or toolkit-native animation behavior. The GTK lane does not establish physical keyboard traversal, Orca/AT-SPI, native rendering, live window-manager/multi-monitor behavior or installed-package behavior. These remain M7/P9 obligations; no application-wide accessibility or WCAG conformance claim is made.
 - **Programme status:** P1–P6 deterministic CI-testable scopes are complete within their approved boundaries. M6 remains **Partial** globally because broader/native requirements remain; M7 remains **Partial**, with P8 traceability/consolidation and P9 native-host validation open.
 - **Governance:** PR #648 remains Open/Draft/unmerged, base `feature`, head `8d9a6a54219f868116d7ba839e85db75f437b254`. No protected branch, PR state/base or merge status changed.
+
+
+## P8 consolidation addendum — 2026-11-20
+
+This addendum is the current disposition for the master plan and supersedes earlier sequencing notes that identify M6-01 or the deterministic P1–P6 scopes as pending.
+
+### Milestone reconciliation
+
+- M0–M5 retain their recorded outcomes and scope limits in the global roadmap.
+- M6-01 audit/matrix and M6-02 coverage plan are complete; P1–P6 implementation/test scopes are complete within explicit approvals and deterministic CI boundaries. M6 remains globally Partial.
+- P8 traceability and readiness consolidation is the current documentation task.
+- P9 native-host validation remains deferred and requires a supported native desktop session plus explicit authorization.
+
+### Traceability source of truth
+
+Use these linked records together; do not treat a single test file or PR as proof of application-wide completion:
+
+1. [Global roadmap](2026-11-16-anura-ui-modernization-global-roadmap.md) — application-wide scope, phase status, P1–P6 exact evidence index, requirement-family disposition and translation policy.
+2. [PR #648 workstream roadmap](2026-11-16-anura-ui-modernization-roadmap.md) — bounded implementation contribution and P1–P6 test/evidence matrix.
+3. [M6-01 cross-window audit](../../audit/ui-cross-window-m6-01-2026-11-18.md) — surface-by-surface evidence inventory and prioritized residual gaps.
+4. [M6-02 automated-test plan](2026-11-18-anura-m6-02-automated-test-coverage-plan.md) — planned coverage groups and P1–P6 execution records.
+5. [P8 readiness report](../../audit/ui-modernization-p8-readiness-2026-11-20.md) — requirement → delivery → evidence → residual disposition.
+6. [HANDOVER](../../../HANDOVER.md) — current operator handoff and branch/PR invariants.
+
+### Release/readiness interpretation
+
+- **CI readiness:** P1–P6 deterministic scopes passed their recorded exact-head CI and CodeQL gates. The P6 documentation-only reconciliation commit also passed its required Python Quality and Changelog Integrity gates; CodeQL passed. No inference is made that every earlier implementation SHA is the current PR head.
+- **Native desktop readiness:** not established. P9 is outstanding; do not infer GNOME/Libadwaita rendering, physical keyboard traversal, Orca/AT-SPI, live WM geometry or installed-host package behavior from virtual GTK CI.
+- **Accessibility claim:** no application-wide WCAG or full accessibility-conformance claim is supported by the current evidence.
+- **Localization readiness:** 26 catalogues are inventoried; translation completeness and human linguistic review remain unverified. Review is separately tracked and non-blocking for P8/P9 and UI modernization closure.
+- **Screenshots:** remain deferred to the next release cycle.
+
+### Governance and next action
+
+The next work is limited to final P8 document consistency/readiness review. P9 test execution, code changes, workflow/dependency changes, release publication, PR state/base changes and merge remain separately gated by explicit maintainer authorization. PR #648 remains Open / Draft / unmerged with base `feature`.
