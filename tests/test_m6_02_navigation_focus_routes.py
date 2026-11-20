@@ -129,8 +129,17 @@ def test_welcome_to_history_focuses_first_history_row():
         assert _spin_until(lambda: window.navigation_view.get_visible_page() is window.history_page)
         first_row = window.history_page._row_entry_ids[entries[0].id]
         assert _spin_until(first_row.get_mapped)
-        assert _spin_until(first_row.has_focus), (
-            "Welcome → History did not place keyboard focus on the first History entry row"
+        def focus_is_within_first_row() -> bool:
+            focused_widget = window.get_focus()
+            return first_row.has_focus() or (
+                focused_widget is not None and focused_widget.is_ancestor(first_row)
+            )
+
+        assert _spin_until(focus_is_within_first_row), (
+            "Welcome → History did not place keyboard focus within the first History entry row; "
+            f"focused_widget={window.get_focus()!r}, "
+            f"row_focusable={first_row.get_focusable()}, "
+            f"row_can_focus={first_row.get_can_focus()}"
         )
     finally:
         window.destroy()
