@@ -34,9 +34,7 @@ def main() -> int:
             env=font_env,
         )
         if cache_result.returncode != 0:
-            raise RuntimeError(
-                f"Fontconfig could not index bundled fonts: {cache_result.stderr.strip()!r}"
-            )
+            raise RuntimeError(f"Fontconfig could not index bundled fonts: {cache_result.stderr.strip()!r}")
         font_result = subprocess.run(
             [font_match, "-f", "%{file}\\n", "sans"],
             check=False,
