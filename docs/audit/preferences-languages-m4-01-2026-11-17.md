@@ -1,5 +1,9 @@
 # M4-01 — Preferences and language selector audit
 
+**Status:** Completed — bounded audit and approved M4-F01–F04 remediation.  
+**Programme boundary:** Global M4 remains **Partial**; this status closes only the M4-01 audit and its four approved remediation findings.
+
+
 **Date:** 2026-11-17  
 **Audit type:** read-only source, template, settings-schema and test-coverage review  
 **Inspected branch/head at audit start:** `fix/ui-modernization-aligned` / `84ff4d50a3291b4328d28e657b251144d979e9c6`  
