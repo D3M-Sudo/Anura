@@ -803,3 +803,40 @@ This is CI evidence only. Native keyboard traversal, Orca/AT-SPI, real desktop/w
 - **Evidence boundary:** static semantic-color and CSS-motion contracts do not establish runtime GTK/Libadwaita rendered contrast or toolkit-native animation behavior. The GTK lane does not establish physical keyboard traversal, Orca/AT-SPI, native rendering, live window-manager/multi-monitor behavior or installed-package behavior. These remain M7/P9 obligations; no application-wide accessibility or WCAG conformance claim is made.
 - **Programme status:** P1–P6 deterministic CI-testable scopes are complete within their approved boundaries. M6 remains **Partial** globally because broader/native requirements remain; M7 remains **Partial**, with P8 traceability/consolidation and P9 native-host validation open.
 - **Governance:** PR #648 remains Open/Draft/unmerged, base `feature`, head `8d9a6a54219f868116d7ba839e85db75f437b254`. No protected branch, PR state/base or merge status changed.
+
+
+## Current workstream reconciliation — 2026-11-20 (P8)
+
+This section supersedes earlier interim next-step notes in this workstream where they still describe M6-01 or P1–P6 as upcoming. The global roadmap remains authoritative for application-wide status; this file records the bounded PR #648 contribution.
+
+### Current delivery status
+
+- P1–P6 are complete within their individually approved deterministic CI-testable scopes. Their exact implementation SHAs and CI/CodeQL run IDs are indexed in the global roadmap §9 and the P8 readiness report.
+- P6 implementation head: `8d9a6a54219f868116d7ba839e85db75f437b254`; documentation reconciliation commit: `a195a4f82be1d48d75c5c345933e59d96d82f9bd`.
+- Documentation-only gates for that documentation commit passed: Python Quality and Changelog Integrity in run [44672653258](https://github.com/D3M-Sudo/Anura/actions/runs/44672653258); CodeQL [44672653395](https://github.com/D3M-Sudo/Anura/actions/runs/44672653395) also passed. GTK/package jobs were not required for a docs-only change under the agreed policy.
+- M6 remains Partial at programme level. Deterministic P1–P6 completion is not equivalent to complete native accessibility, application-wide responsive coverage or WCAG conformance.
+- P8 is the current documentation/traceability consolidation. P9 native-host validation remains deferred pending a supported session and explicit authorization.
+
+### Workstream requirement-to-evidence matrix
+
+| Workstream requirement | Implementation / test evidence | Status | Boundary / residual |
+|---|---|---|---|
+| Extracted/History responsive behavior | `tests/test_m6_02_extracted_history_responsive.py`; P1 SHA `f3b502177efa32c741307fce020f24fb1d4d7558`; CI 44484731845 | Complete in P1 scope | Not exhaustive native layout or physical keyboard validation. |
+| Preferences responsive behavior | `tests/test_m6_02_preferences_responsive.py`; P2 SHA `65e2b1597b1d02f7aa851cfdb4dfd7f17920c7a6`; CI 44607860024 | Complete in P2 scope | Does not close global M4 or replace native focus/visual checks. |
+| Shortcuts/Language Selector geometry and state | `tests/test_m6_02_shortcuts_popover_focus.py`; P3 SHA `fb91b6b5ebd2de8f7f7834ab88942f1f5a214870`; CI 44636489764 | Complete in P3 scope | Native focus grant/activation and physical traversal deferred. |
+| Cross-window focus routes | `tests/test_m6_02_navigation_focus_routes.py`; P4 SHA `e4aae923b17c163ef3031a1afc06c3e6f7452edec`; CI 44649664012 | Complete in P4 scope | Selected Welcome→History route only; not all physical/native routes. |
+| Accessible control contracts | `tests/test_m6_02_accessible_control_contracts.py`; P5 SHA `84607da73acb1873bd96ae923b2c0e2307688187`; CI 44655379141 | Complete in P5 scope | GTK API assertions do not establish screen-reader speech/AT-SPI. |
+| Semantic color and reduced-motion contracts | `tests/test_ui_palette.py`, `tests/test_reduced_motion.py`, `tests/test_window_geometry.py`; P6 SHA `8d9a6a54219f868116d7ba839e85db75f437b254`; CI 44667645110 | Complete in P6 scope | Static/reference-surface contracts only; native rendering/toolkit-native animation behavior remains open. |
+| Native desktop acceptance | No native-host evidence recorded | Deferred to P9 | Requires supported session and explicit authorization; #655 remains open. |
+
+### Localization disposition
+
+The branch contains the source POT and 26 language catalogues enumerated in `po/LINGUAS`. This is evidence of catalogue inventory, not of translation completeness or human review. The maintainer-approved process is Weblate/volunteer translation, automated preliminary CI validation and separate human linguistic/contextual review. All 26 languages are in scope, with Italian and English prioritized. This activity is non-blocking for P8/P9 and UI Modernization closure; no catalogue is marked reviewed without evidence.
+
+### Remaining work
+
+1. Complete P8 requirement-to-delivery-to-evidence matrix and readiness disposition (see [P8 readiness report](../../audit/ui-modernization-p8-readiness-2026-11-20.md)).
+2. P9 native-host validation after explicit authorization; include physical History keyboard traversal tracked by #655.
+3. Continue translation review as a separate non-blocking activity; do not conflate catalogue extraction, technical validation and human linguistic review.
+
+PR #648 remains Open / Draft / unmerged, base `feature`. This document update does not authorize code changes, workflow changes, release publication, merge or protected-branch updates.
