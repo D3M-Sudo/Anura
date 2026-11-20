@@ -7,6 +7,9 @@
 **Mode:** read-only source, Blueprint and test-definition inspection  
 **Outcome:** audit completed; no confirmed product defect; focused P2 test gaps proposed; no implementation authorized by this record.
 
+**Status:** Completed — bounded M5-01 audit, surface inventory and proposed P2/P3 dispositions recorded.
+**Programme boundary:** Global M5 remains **Partial**. The P2 test plan is a proposal, not implementation evidence or authorization; P3 and native/manual validation items remain deferred as stated below.
+
 ## 1. Scope
 
 The audit covers the remaining M5 surfaces and their important states:
