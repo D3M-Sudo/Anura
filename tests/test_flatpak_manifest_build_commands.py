@@ -78,14 +78,19 @@ def test_build_time_helpers_precede_the_modules_that_import_them(manifest: dict)
     assert order["python3-pybind11"] < order["python3-pillow"]
     assert order["python3-nanobind"] < order["python3-zxing-cpp"]
     assert order["python3-pathspec"] < order["python3-zxing-cpp"]
+    assert order["python3-pillow"] < order["python3-zxing-cpp"]
     assert order["python3-scikit-build-core"] < order["python3-zxing-cpp"]
 
     zxing_commands = modules["python3-zxing-cpp"].get("build-commands", [])
+    assert not any("pathspec" in command and "rm -rf" in command for command in zxing_commands)
+    pillow_commands = modules["python3-pillow"].get("build-commands", [])
+    assert any("pathspec" in command and "rm -rf" in command for command in pillow_commands)
     install_index = next(index for index, command in enumerate(zxing_commands) if "pip3 install" in command)
     cleanup_index = next(
         index for index, command in enumerate(zxing_commands) if "pathspec" in command and "rm -rf" in command
     )
     assert cleanup_index > install_index
+    assert cleanup_index > next(index for index, command in enumerate(zxing_commands) if "LICENSE" in command)
     assert "set -e" in zxing_commands[cleanup_index]
 
 
