@@ -35,27 +35,43 @@ def main() -> int:
         )
         if cache_result.returncode != 0:
             raise RuntimeError(f"Fontconfig could not index bundled fonts: {cache_result.stderr.strip()!r}")
-        font_result = subprocess.run(
-            [font_match, "-f", "%{file}\\n", "sans"],
+        font_list = subprocess.run(
+            [font_match.replace("fc-match", "fc-list"), "--format", "%{file}\\n"],
             check=False,
             capture_output=True,
             text=True,
             env=font_env,
         )
-        matched_font = font_result.stdout.strip()
-        try:
-            resolved_font = pathlib.Path(matched_font).resolve(strict=True)
-            resolved_font.relative_to(font_dir.resolve(strict=True))
-        except (OSError, ValueError):
-            resolved_font = None
-        if font_result.returncode != 0 or resolved_font is None:
-            available_fonts = [str(path.relative_to(appdir)) for path in font_dir.rglob("*.ttf")][:5]
+        if font_list.returncode != 0 or not font_list.stdout.strip():
             raise RuntimeError(
-                "Fontconfig failed to resolve a bundled default sans-serif font: "
-                f"returncode={font_result.returncode}, stderr={font_result.stderr.strip()!r}, "
-                f"stdout={matched_font!r}, config={os.environ.get('FONTCONFIG_FILE')!r}, "
-                f"dtd={(appdir / 'etc/fonts/fonts.dtd').is_file()}, fonts={available_fonts}"
+                "Fontconfig did not index any bundled fonts: "
+                f"returncode={font_list.returncode}, stderr={font_list.stderr.strip()!r}, "
+                f"config={os.environ.get('FONTCONFIG_FILE')!r}"
             )
+        for family in ("sans-serif", "sans"):
+            font_result = subprocess.run(
+                [font_match, "-f", "%{file}\\n", family],
+                check=False,
+                capture_output=True,
+                text=True,
+                env=font_env,
+            )
+            matched_font = font_result.stdout.strip()
+            try:
+                resolved_font = pathlib.Path(matched_font).resolve(strict=True)
+                resolved_font.relative_to(font_dir.resolve(strict=True))
+            except (OSError, ValueError):
+                resolved_font = None
+            if font_result.returncode != 0 or resolved_font is None:
+                available_fonts = [str(path.relative_to(appdir)) for path in font_dir.rglob("*.ttf")][:5]
+                raise RuntimeError(
+                    "Fontconfig failed to resolve a bundled default sans-serif font: "
+                    f"family={family!r}, returncode={font_result.returncode}, "
+                    f"stderr={font_result.stderr.strip()!r}, stdout={matched_font!r}, "
+                    f"indexed={font_list.stdout.splitlines()[:5]!r}, "
+                    f"config={os.environ.get('FONTCONFIG_FILE')!r}, "
+                    f"dtd={(appdir / 'etc/fonts/fonts.dtd').is_file()}, fonts={available_fonts}"
+                )
 
     import gi
 
