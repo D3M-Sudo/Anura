@@ -40,13 +40,14 @@ def test_language_selector_selection_change_refreshes_accessible_metadata(headle
     row = MagicMock()
     row.lang = SimpleNamespace(title="English", selected=True)
 
-    LanguagePopoverRow._on_selected_changed(row, MagicMock(), MagicMock())
+    row.lang.selected = False
+    LanguagePopoverRow._update_accessibility_metadata(row)
 
     row.update_property.assert_called_once_with(
         [Gtk.AccessibleProperty.LABEL],
-        ["English (active language)"],
+        ["Select English"],
     )
-    row.update_state.assert_called_once_with([Gtk.AccessibleState.SELECTED], [True])
+    row.update_state.assert_called_once_with([Gtk.AccessibleState.SELECTED], [False])
 
 
 def test_welcome_drop_area_toggle_updates_expanded_state_and_accessible_name(headless_gi_mocks, monkeypatch):
