@@ -226,6 +226,7 @@ def test_custom_typography_keeps_libadwaita_semantic_hierarchy():
     assert ".welcome-hero label.title-1 {" in STYLE_CSS
     assert "font-size: 1.15em;" in STYLE_CSS
 
+
 def test_interaction_surfaces_use_semantic_theme_colors():
     text_focus = _rule(".extracted-page textview:focus")
     drag_hover = _rule("#drop_area.drag-hover")
