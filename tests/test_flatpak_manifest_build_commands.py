@@ -88,6 +88,17 @@ def test_zxing_cpp_installs_the_sdist_it_declares(manifest: dict) -> None:
     )
 
 
+
+def test_pathspec_is_tracked_by_flatpak_external_data_checker(manifest: dict) -> None:
+    """The build-only pathspec wheel must remain updateable by FEDC."""
+    pathspec = _modules(manifest)["python3-pathspec"]
+    assert pathspec["sources"][0]["x-checker-data"] == {
+        "type": "pypi",
+        "name": "pathspec",
+        "packagetype": "bdist_wheel",
+    }
+
+
 def test_python_dependency_sources_match_uv_lock() -> None:
     """Every uv.lock-managed Python module must use the same pinned version."""
     result = subprocess.run(
