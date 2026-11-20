@@ -15,7 +15,7 @@ pytest.importorskip("gi")
 
 pytestmark = pytest.mark.gtk
 
-from anura.core.silent_runner import SilentRunner
+from anura.core.silent_runner import SilentRunner  # noqa: E402
 
 
 class _StubApp:
