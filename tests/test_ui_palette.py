@@ -225,3 +225,19 @@ def test_custom_typography_keeps_libadwaita_semantic_hierarchy():
     assert STYLE_CSS.count("font-size:") == 1
     assert ".welcome-hero label.title-1 {" in STYLE_CSS
     assert "font-size: 1.15em;" in STYLE_CSS
+
+def test_interaction_surfaces_use_semantic_theme_colors():
+    text_focus = _rule(".extracted-page textview:focus")
+    drag_hover = _rule("#drop_area.drag-hover")
+    drag_processing = _rule("#drop_area.drag-processing")
+
+    # Text editing focus follows the active theme's semantic accent rather
+    # than introducing a fixed foreground or background color.
+    assert _property(text_focus, "border-color") == "@accent_color"
+    assert _property(text_focus, "box-shadow") == "0 0 0 2px alpha(@accent_color, 0.2)"
+
+    # Drag states remain distinguishable through semantic accent/warning roles.
+    assert _property(drag_hover, "border-color") == "@accent_color"
+    assert _property(drag_hover, "background") == "alpha(@accent_color, 0.15)"
+    assert _property(drag_processing, "border-color") == "@warning_color"
+    assert _property(drag_processing, "background") == "alpha(@warning_color, 0.15)"
