@@ -191,6 +191,7 @@ def test_main_window_reduced_motion_policy_tracks_live_gtk_preferences() -> None
     window = Gtk.Window()
     settings = _FakeMotionSettings(animations_enabled=True, reduced_motion=False)
     window._motion_settings = settings
+    window._sync_reduced_motion_class = lambda: AnuraWindow._sync_reduced_motion_class(window)
 
     try:
         AnuraWindow._sync_reduced_motion_class(window)
