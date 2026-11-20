@@ -572,11 +572,11 @@ msgstr "Occitano"
 
 #: anura/services/language/validator.py:107
 msgid "Oriya"
-msgstr "Oriya"
+msgstr "Odia"
 
 #: anura/services/language/validator.py:108
 msgid "Panjabi"
-msgstr "Panjabi; punjabi"
+msgstr "Punjabi"
 
 #: anura/services/language/validator.py:109
 msgid "Polish"
@@ -588,7 +588,7 @@ msgstr "Portoghese"
 
 #: anura/services/language/validator.py:111
 msgid "Pushto"
-msgstr "Pushtu; pashtu"
+msgstr "Pashtu"
 
 #: anura/services/language/validator.py:112
 msgid "Quechua"
@@ -676,7 +676,7 @@ msgstr "Tagico"
 
 #: anura/services/language/validator.py:133
 msgid "Thai"
-msgstr "Thailandese"
+msgstr "Thai"
 
 #: anura/services/language/validator.py:134
 msgid "Tigrinya"
@@ -704,11 +704,11 @@ msgstr "Urdu"
 
 #: anura/services/language/validator.py:140
 msgid "Uzbek"
-msgstr "Uzbeco"
+msgstr "Uzbeko"
 
 #: anura/services/language/validator.py:141
 msgid "Uzbek - Cyrillic"
-msgstr "Uzbeco (alfabeto cirillico)"
+msgstr "Uzbeko (alfabeto cirillico)"
 
 #: anura/services/language/validator.py:142
 msgid "Vietnamese"
@@ -1189,7 +1189,7 @@ msgstr "Ripeti (nell'editor)"
 #: anura/widgets/shortcuts_overlay.py:78
 
 msgid "Search text"
-msgstr "Cerca scorciatoie…"
+msgstr "Cerca nel testo"
 
 #: anura/widgets/shortcuts_overlay.py:79
 msgid "Open in external editor"
