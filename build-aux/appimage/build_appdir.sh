@@ -42,6 +42,15 @@ cat > "$APPDIR/etc/fonts/fonts.conf" <<EOF
 <fontconfig>
   <dir prefix="relative">../../usr/share/fonts</dir>
   <cachedir prefix="xdg">fontconfig</cachedir>
+  <!-- The isolated AppDir config does not load distro conf.d aliases. -->
+  <alias binding="strong">
+    <family>sans-serif</family>
+    <prefer><family>DejaVu Sans</family></prefer>
+  </alias>
+  <match target="pattern">
+    <test qual="any" name="family"><string>sans</string></test>
+    <edit name="family" mode="assign"><string>sans-serif</string></edit>
+  </match>
 </fontconfig>
 EOF
 FONTCONFIG_DTD="$APPDIR/usr/share/xml/fontconfig/fonts.dtd"
