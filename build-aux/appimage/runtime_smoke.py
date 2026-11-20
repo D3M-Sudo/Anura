@@ -19,7 +19,8 @@ def main() -> int:
     appdir = pathlib.Path(os.environ["APPDIR"])
     font_cache = shutil.which("fc-cache")
     font_match = shutil.which("fc-match")
-    if font_cache is None or font_match is None:
+    font_list_tool = shutil.which("fc-list")
+    if font_cache is None or font_match is None or font_list_tool is None:
         raise RuntimeError("Bundled Fontconfig tools are unavailable")
 
     font_dir = appdir / "usr/share/fonts"
@@ -36,7 +37,7 @@ def main() -> int:
         if cache_result.returncode != 0:
             raise RuntimeError(f"Fontconfig could not index bundled fonts: {cache_result.stderr.strip()!r}")
         font_list = subprocess.run(
-            [font_match.replace("fc-match", "fc-list"), "--format", "%{file}\\n"],
+            [font_list_tool, "--format", "%{file}\\n"],
             check=False,
             capture_output=True,
             text=True,
