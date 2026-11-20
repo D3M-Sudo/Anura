@@ -1,3 +1,35 @@
+# Current operator handoff — 2026-11-20
+
+## Anura UI modernization: current state
+
+- Active PR: [#648 — UI modernization aligned](https://github.com/D3M-Sudo/Anura/pull/648), branch `fix/ui-modernization-aligned`, base `feature`.
+- PR invariant: keep **Open / Draft / unmerged**. No merge or protected-branch update without explicit maintainer authorization.
+- P1–P6 deterministic CI-testable scopes are complete within their approvals. Latest P6 implementation SHA: `8d9a6a54219f868116d7ba839e85db75f437b254`; P6 evidence reconciliation was recorded in documentation commit `a195a4f82be1d48d75c5c345933e59d96d82f9bd`.
+- P8 is the current documentation traceability/readiness consolidation. M6 remains Partial globally; P9 native-host validation remains deferred.
+- M4-02 Tasks 1–5 and M4-RR are complete within approved CI-testable scopes; **global M4 remains Partial**. Do not list M4-02 as the next task.
+- M6-01 audit/matrix and M6-02 plan are complete. Do not list M6-01 as pending.
+- Native GNOME/GTK rendering, physical keyboard traversal, Orca/AT-SPI, live WM/monitor geometry and installed-package host behavior are not established by CI. Physical History keyboard traversal remains tracked by #655.
+- Screenshots remain deferred to the next release cycle.
+
+## Localization policy
+
+- 26 catalogues are listed in `po/LINGUAS`.
+- Use Weblate and volunteer translators, automated CI catalogue checks as preliminary validation, and separate human linguistic/contextual review.
+- All 26 languages remain in scope; prioritize Italian and English.
+- Catalogue extraction, `.po` completion and human review are separate statuses. Never infer human review from a populated `msgstr`.
+- Translation review is non-blocking for P8/P9 and UI Modernization closure.
+
+## Authoritative UI modernization records
+
+1. [Global UI/UX roadmap](docs/superpowers/plans/2026-11-16-anura-ui-modernization-global-roadmap.md)
+2. [PR #648 workstream roadmap](docs/superpowers/plans/2026-11-16-anura-ui-modernization-roadmap.md)
+3. [UI modernization master plan](docs/superpowers/plans/2026-11-18-anura-ui-modernization-master-plan.md)
+4. [M6-02 automated-test coverage plan](docs/superpowers/plans/2026-11-18-anura-m6-02-automated-test-coverage-plan.md)
+5. [M6-01 cross-window audit](docs/audit/ui-cross-window-m6-01-2026-11-18.md)
+6. [P8 readiness report](docs/audit/ui-modernization-p8-readiness-2026-11-20.md)
+
+---
+
 # Handover: UI modernization alignment
 
 ## Current operational snapshot — M3 closure / M4 next (2026-11-17)
