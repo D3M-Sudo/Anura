@@ -62,7 +62,6 @@ def main() -> int:
         detail = message.parse_error()[0].message if message is not None else "EOS timeout"
         raise RuntimeError(f"AppImage GStreamer playback smoke failed: {detail}")
 
-    import pytesseract
     from PIL import Image, ImageDraw, ImageFont
 
     font_path = appdir / "usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
