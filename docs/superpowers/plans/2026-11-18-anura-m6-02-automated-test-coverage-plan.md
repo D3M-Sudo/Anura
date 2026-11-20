@@ -179,5 +179,19 @@ The following remain outside M6-02 and cannot be marked passed by its CI:
 - **GTK result:** **483 passed, 6 skipped, 707 deselected**; all three new P4 tests passed.
 - **Other CI:** Python Quality, Changelog Integrity, AppImage/Flatpak x86_64/aarch64 builds and release-set/multi-architecture artifact validation passed. `publish-release` was skipped as expected; no release was published.
 - **Limitations:** physical keyboard traversal, native window-manager focus behavior, Orca/AT-SPI, native visual rendering, live monitor geometry and installed-package host behavior remain unverified and deferred to M7/P9.
-- **Programme status:** M6 remains Partial; P1–P4 deterministic CI scopes are complete, P5–P6 remain. M7/P8/P9 remain open.
+- **Programme status:** M6 remains Partial; P1–P5 deterministic CI scopes are complete, P6 remains. M7/P8/P9 remain open.
 - **Governance:** PR #648 remains Open/Draft/unmerged, base `feature`.
+
+
+## 2026-11-20 — M6-02 P5: accessible control contracts — exact-head verification
+
+- **Outcome:** P5 is complete within the approved finite, prioritized CI-testable control inventory. The new `tests/test_m6_02_accessible_control_contracts.py` adds five GTK contracts covering Language Selector accessible name/selected state and selection-state refresh, Welcome drop-area expanded state and dynamic action name, Extracted TTS pressed state and action name, and native GTK roles for primary Welcome, Extracted and History controls.
+- **Existing coverage retained:** the existing `tests/test_accessible_status_announcements.py` and `tests/test_language_row_accessibility.py` were left unchanged; their existing announcement and download-progress contracts were not duplicated. No claim is made that CI simulates or validates screen-reader speech.
+- **Implementation head:** `84607da73acb1873bd96ae923b2c0e2307688187`.
+- **Exact-head CI:** CI Quality & Release [#44655379141](https://github.com/D3M-Sudo/Anura/actions/runs/44655379141) — **success**; CodeQL [#44655379181](https://github.com/D3M-Sudo/Anura/actions/runs/44655379181) — **success**.
+- **GTK result:** **488 passed, 6 skipped, 707 deselected**. All five new P5 tests passed, including the native accessible-role assertions; the GResource path was corrected to the Meson-generated `io.github.d3m_sudo.anura.gresource` so the role test executes rather than skips.
+- **Other CI:** Python Quality **701 passed, 9 skipped, 299 deselected**; Changelog Integrity; AppImage x86_64/aarch64; Flatpak x86_64/aarch64; AppImage release-set validation; and multi-architecture artifact validation all passed. `publish-release` was skipped as expected for a PR; no release was published.
+- **Scope:** test-only; only `tests/test_m6_02_accessible_control_contracts.py` was added/modified for P5. No production source, Blueprint, workflow, dependency or CHANGELOG change.
+- **Evidence boundary:** the CI GTK lane uses virtual Wayland with `NO_AT_BRIDGE=1` and `GTK_A11Y=none`. It proves the selected GTK-exposed property/state contracts only; it does not prove Orca/AT-SPI output, physical keyboard traversal, native rendering, live desktop/window-manager behavior or installed-package host behavior. These remain M7/P9 obligations. No application-wide accessibility or WCAG conformance claim is made.
+- **Programme status:** M6 remains **Partial**; P1–P5 deterministic CI-testable scopes are complete and P6 theme/contrast/reduced-motion remains. M7 remains **Partial**; P8 consolidation and P9 native validation remain open.
+- **Governance:** PR #648 remains Open/Draft/unmerged, base `feature`, head `84607da73acb1873bd96ae923b2c0e2307688187`. No protected branch, PR state/base or merge status changed.
