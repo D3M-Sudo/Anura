@@ -21,30 +21,43 @@ def main() -> int:
     font_match = shutil.which("fc-match")
     if font_cache is None or font_match is None:
         raise RuntimeError("Bundled Fontconfig tools are unavailable")
-    cache_result = subprocess.run(
-        [font_cache, "-f", str(appdir / "usr/share/fonts")],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    if cache_result.returncode != 0:
-        raise RuntimeError(f"Fontconfig could not index bundled fonts: {cache_result.stderr.strip()!r}")
-    font_result = subprocess.run(
-        [font_match, "sans"],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    matched_font = font_result.stdout.strip()
-    if font_result.returncode != 0 or not matched_font:
-        font_dir = appdir / "usr/share/fonts"
-        available_fonts = [str(path.relative_to(appdir)) for path in font_dir.rglob("*.ttf")][:5]
-        raise RuntimeError(
-            "Fontconfig failed to resolve a default sans-serif font: "
-            f"returncode={font_result.returncode}, stderr={font_result.stderr.strip()!r}, "
-            f"config={os.environ.get('FONTCONFIG_FILE')!r}, "
-            f"dtd={(appdir / 'etc/fonts/fonts.dtd').is_file()}, fonts={available_fonts}"
+
+    font_dir = appdir / "usr/share/fonts"
+    with tempfile.TemporaryDirectory(prefix="anura-fontconfig-cache-") as cache_dir:
+        font_env = os.environ.copy()
+        font_env["XDG_CACHE_HOME"] = cache_dir
+        cache_result = subprocess.run(
+            [font_cache, "-f", str(font_dir)],
+            check=False,
+            capture_output=True,
+            text=True,
+            env=font_env,
         )
+        if cache_result.returncode != 0:
+            raise RuntimeError(
+                f"Fontconfig could not index bundled fonts: {cache_result.stderr.strip()!r}"
+            )
+        font_result = subprocess.run(
+            [font_match, "-f", "%{file}\\n", "sans"],
+            check=False,
+            capture_output=True,
+            text=True,
+            env=font_env,
+        )
+        matched_font = font_result.stdout.strip()
+        try:
+            resolved_font = pathlib.Path(matched_font).resolve(strict=True)
+            resolved_font.relative_to(font_dir.resolve(strict=True))
+        except (OSError, ValueError):
+            resolved_font = None
+        if font_result.returncode != 0 or resolved_font is None:
+            available_fonts = [str(path.relative_to(appdir)) for path in font_dir.rglob("*.ttf")][:5]
+            raise RuntimeError(
+                "Fontconfig failed to resolve a bundled default sans-serif font: "
+                f"returncode={font_result.returncode}, stderr={font_result.stderr.strip()!r}, "
+                f"stdout={matched_font!r}, config={os.environ.get('FONTCONFIG_FILE')!r}, "
+                f"dtd={(appdir / 'etc/fonts/fonts.dtd').is_file()}, fonts={available_fonts}"
+            )
 
     import gi
 
