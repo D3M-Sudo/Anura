@@ -207,3 +207,34 @@ The following remain outside M6-02 and cannot be marked passed by its CI:
 - **Evidence boundary:** static semantic-color and CSS-motion contracts do not establish runtime GTK/Libadwaita rendered contrast or toolkit-native animation behavior. The GTK lane does not establish physical keyboard traversal, Orca/AT-SPI, native rendering, live window-manager/multi-monitor behavior or installed-package behavior. These remain M7/P9 obligations; no application-wide accessibility or WCAG conformance claim is made.
 - **Programme status:** P1–P6 deterministic CI-testable scopes are complete within their approved boundaries. M6 remains **Partial** globally because broader/native requirements remain; M7 remains **Partial**, with P8 traceability/consolidation and P9 native-host validation open.
 - **Governance:** PR #648 remains Open/Draft/unmerged, base `feature`, head `8d9a6a54219f868116d7ba839e85db75f437b254`. No protected branch, PR state/base or merge status changed.
+
+
+## Execution reconciliation — 2026-11-20
+
+The six prioritized deterministic scopes in this plan (P1–P6) are complete within their approved boundaries. This records execution status; it does not expand acceptance criteria or close global M6.
+
+| Priority | Test module / scope | Implementation SHA | CI run | Outcome |
+|---|---|---|---|---|
+| P1 | `tests/test_m6_02_extracted_history_responsive.py` | `f3b502177efa32c741307fce020f24fb1d4d7558` | [44484731845](https://github.com/D3M-Sudo/Anura/actions/runs/44484731845) | Success; module 8 passed. |
+| P2 | `tests/test_m6_02_preferences_responsive.py` | `65e2b1597b1d02f7aa851cfdb4dfd7f17920c7a6` | [44607860024](https://github.com/D3M-Sudo/Anura/actions/runs/44607860024) | Success; GTK 474 passed, 6 skipped, 707 deselected. |
+| P3 | `tests/test_m6_02_shortcuts_popover_focus.py` | `fb91b6b5ebd2de8f7f7834ab88942f1f5a214870` | [44636489764](https://github.com/D3M-Sudo/Anura/actions/runs/44636489764) | Success; GTK 480 passed, 6 skipped, 707 deselected; six new tests passed. |
+| P4 | `tests/test_m6_02_navigation_focus_routes.py` plus approved Welcome→History focus correction | `e4aae923b17c163ef3031a1afc06c3e6f7452edec` | [44649664012](https://github.com/D3M-Sudo/Anura/actions/runs/44649664012) | Success; GTK 483 passed, 6 skipped, 707 deselected. |
+| P5 | `tests/test_m6_02_accessible_control_contracts.py` | `84607da73acb1873bd96ae923b2c0e2307688187` | [44655379141](https://github.com/D3M-Sudo/Anura/actions/runs/44655379141) | Success; GTK 488 passed, 6 skipped, 707 deselected; Python Quality 701 passed, 9 skipped, 299 deselected. |
+| P6 | semantic color/reduced-motion tests in `tests/test_ui_palette.py`, `tests/test_reduced_motion.py`, `tests/test_window_geometry.py` | `8d9a6a54219f868116d7ba839e85db75f437b254` | [44667645110](https://github.com/D3M-Sudo/Anura/actions/runs/44667645110) | Success; Python Quality 703 passed, 9 skipped, 300 deselected; GTK and package/artifact validation passed. |
+
+CodeQL also succeeded for each exact scope: P1 44484731918, P2 44607859740, P3 44636489904, P4 44649663981, P5 44655379181, P6 44667645155.
+
+### P6 documentation reconciliation
+
+P6 evidence and limitations were reconciled into the global roadmap, workstream roadmap, master plan and this plan in documentation commit `a195a4f82be1d48d75c5c345933e59d96d82f9bd`. Docs-only required gates passed in [run 44672653258](https://github.com/D3M-Sudo/Anura/actions/runs/44672653258): Python Quality and Changelog Integrity. CodeQL [44672653395](https://github.com/D3M-Sudo/Anura/actions/runs/44672653395) passed. GTK/package jobs were not required for that docs-only change under the agreed policy.
+
+### Evidence limits and remaining work
+
+- These tests establish only the explicit deterministic contracts in P1–P6; they do not provide an exhaustive all-window viewport, focus or accessibility matrix.
+- GTK CI uses virtual Wayland with `NO_AT_BRIDGE=1` and `GTK_A11Y=none`; no Orca/AT-SPI or screen-reader speech validation is claimed.
+- No physical Tab/Shift+Tab traversal, native window-manager focus, native GTK/Libadwaita rendering, live monitor geometry or installed-package host behavior is established.
+- P6 semantic-color tests use defined static/reference surfaces and do not prove runtime-rendered contrast. CSS reduced-motion contracts do not prove toolkit-native Gtk.Spinner, Gtk.Revealer or Gtk.Stack animation behavior.
+- Global M6 remains Partial. Native residuals belong to M7/P9; physical History traversal remains tracked by issue #655.
+- Translation review is separate and non-blocking: Weblate/volunteer workflow, preliminary automated catalogue checks, human contextual review; all 26 catalogues in scope with Italian and English prioritized.
+
+No additional test implementation or production change is authorized by this status update.
