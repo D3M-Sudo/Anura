@@ -39,5 +39,10 @@ def test_appimage_runtime_smoke_is_bundled_and_exercises_native_features() -> No
     assert "../../usr/share/fonts" in builder
     assert 'FONTCONFIG_DTD="/usr/share/xml/fontconfig/fonts.dtd"' in builder
     assert 'cp "$FONTCONFIG_DTD" "$APPDIR/etc/fonts/fonts.dtd"' in builder
-    for feature in ('["tesseract", image_path, "stdout"', "Gst.parse_launch", "fc-cache", "fc-match", "IconTheme"):
+    assert '<family>sans-serif</family>' in builder
+    assert '<family>DejaVu Sans</family>' in builder
+    assert '<string>sans</string>' in builder
+    assert '"sans-serif", "sans"' in smoke
+    assert '"fc-list"' in smoke
+    for feature in ('["tesseract", image_path, "stdout"', "Gst.parse_launch", "fc-cache", "fc-match", "fc-list", "IconTheme"):
         assert feature in smoke
