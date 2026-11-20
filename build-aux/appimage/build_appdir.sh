@@ -44,7 +44,12 @@ cat > "$APPDIR/etc/fonts/fonts.conf" <<EOF
   <cachedir prefix="xdg">fontconfig</cachedir>
 </fontconfig>
 EOF
-cp "$APPDIR/usr/share/xml/fontconfig/fonts.dtd" "$APPDIR/etc/fonts/fonts.dtd"
+FONTCONFIG_DTD="$APPDIR/usr/share/xml/fontconfig/fonts.dtd"
+if [ ! -s "$FONTCONFIG_DTD" ]; then
+  FONTCONFIG_DTD="/usr/share/xml/fontconfig/fonts.dtd"
+fi
+test -s "$FONTCONFIG_DTD"
+cp "$FONTCONFIG_DTD" "$APPDIR/etc/fonts/fonts.dtd"
 test -s "$APPDIR/etc/fonts/fonts.dtd"
 
 cd "$SOURCE_ROOT"

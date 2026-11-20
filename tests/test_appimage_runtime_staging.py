@@ -33,6 +33,8 @@ def test_appimage_runtime_smoke_is_bundled_and_exercises_native_features() -> No
     assert "FONTCONFIG_FILE" in entrypoint
     assert "gstreamer1.0-tools" in recipe
     assert "fontconfig-config" in recipe
+    workflow = (root / ".github/workflows/main.yml").read_text(encoding="utf-8")
+    assert "gstreamer1.0-tools fontconfig-config" in workflow
     assert 'prefix="relative"' in builder
     assert "../../usr/share/fonts" in builder
     assert 'fonts.dtd" "$APPDIR/etc/fonts/fonts.dtd"' in builder
