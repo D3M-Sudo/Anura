@@ -64,15 +64,15 @@ def test_authorization_requires_reason_and_reference(tmp_path):
 
 
 def test_detects_duplicate_unreleased_categories():
-    content = "## [Unreleased]\\n### Changed\\n- first\\n### Fixed\\n- second\\n### Changed\\n- third\\n"
+    content = "## [Unreleased]\n### Changed\n- first\n### Fixed\n- second\n### Changed\n- third\n"
     assert MODULE.duplicate_unreleased_categories(content) == ["Changed"]
 
 
 def test_allows_distinct_unreleased_categories():
-    content = "## [Unreleased]\\n### Changed\\n- one\\n### Fixed\\n- two\\n"
+    content = "## [Unreleased]\n### Changed\n- one\n### Fixed\n- two\n"
     assert MODULE.duplicate_unreleased_categories(content) == []
 
 
 def test_duplicate_categories_after_next_release_are_ignored():
-    content = "## [Unreleased]\\n### Changed\\n- current\\n## [1.0.0]\\n### Fixed\\n- old\\n### Fixed\\n- older\\n"
+    content = "## [Unreleased]\n### Changed\n- current\n## [1.0.0]\n### Fixed\n- old\n### Fixed\n- older\n"
     assert MODULE.duplicate_unreleased_categories(content) == []
