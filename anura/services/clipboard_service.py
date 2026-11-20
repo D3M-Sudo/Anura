@@ -4,13 +4,13 @@
 #
 # SPDX-License-Identifier: MIT
 
+import math
+import threading
+import time
 from collections.abc import Callable
 from gettext import gettext as _
 from io import BytesIO
 from pathlib import Path
-import math
-import threading
-import time
 from typing import ClassVar
 
 import gi

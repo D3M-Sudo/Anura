@@ -78,7 +78,7 @@ def registered_accels():
 
 
 def _register_gresource():
-    path = os.path.join(os.path.dirname(__file__), "..", "builddir", "data", "io.github.d3msudo.anura.gresource")
+    path = os.path.join(os.path.dirname(__file__), "..", "data", "io.github.d3m_sudo.anura.gresource")
     if not os.path.exists(path):
         pytest.skip("Compiled GResource not found (run meson build first)")
     with open(path, "rb") as f:

@@ -294,6 +294,18 @@ def test_6b_missing_from_single_manifest_detected(tmp_path: Path) -> None:
     assert "MISSING in main.json" in click_errors[0]
 
 
+def test_dev_only_module_warning_requires_actual_manifest_declaration(tmp_path: Path) -> None:
+    """Only a dev-only module present in a checked manifest should warn."""
+    pyproject, uv_lock, main, local = _base_files(tmp_path)
+
+    result = checker.check_runtime_coverage(pyproject, uv_lock, (local,), env=LINUX_ENV)
+    assert not any("pathspec" in warning for warning in result.warnings)
+
+    _write_manifest(local, RUNTIME_MODULES | {"python3-pathspec"})
+    result = checker.check_runtime_coverage(pyproject, uv_lock, (local,), env=LINUX_ENV)
+    assert any("python3-pathspec" in warning for warning in result.warnings)
+
+
 def test_7_manifest_mode_selection() -> None:
     """--manifest local checks only the local manifest; 'both' (the default)
     checks both. Regression guard for the CLI mode added so CI can check

@@ -334,21 +334,28 @@ class TestClipboardLifetime:
             patcher.stop()
 
     def test_async_keep_finishes_on_timeout_and_cleans_sources(self):
+        from gi.repository import GLib
+
         clipboard = MagicMock()
         clipboard.is_local.return_value = True
         clipboard.connect.return_value = 42
         service, patcher = self._service_with(clipboard)
         outcomes = []
+        timeout_callbacks = []
         try:
             with (
-                patch("gi.repository.GLib.timeout_add_seconds", return_value=11),
+                patch(
+                    "gi.repository.GLib.timeout_add_seconds",
+                    side_effect=lambda _seconds, callback: timeout_callbacks.append(callback) or 11,
+                ),
                 patch("gi.repository.GLib.timeout_add", return_value=12),
                 patch.object(service, "_remove_source") as remove_source,
             ):
-                service.keep_available_async(30, outcomes.append)
-                timeout_callback = GLib.timeout_add_seconds.call_args.args[-1] if False else None
-                assert timeout_callback is None
-                assert clipboard.store_async.called
+                service.keep_available_async(30, outcomes.append, should_stop=lambda: False)
+                assert timeout_callbacks[0]() is GLib.SOURCE_REMOVE
+                assert outcomes == ["timeout"]
+                clipboard.disconnect.assert_called_once_with(42)
+                remove_source.assert_any_call(12)
         finally:
             patcher.stop()
 

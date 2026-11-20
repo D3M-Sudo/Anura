@@ -19,3 +19,19 @@ def test_stage_runtime_libraries_script_is_architecture_scoped() -> None:
     assert "liblzo2.so.2 libEGL.so.1" in content
     assert "readlink -f" in content
     assert "install -m 0644" in content
+
+
+def test_appimage_runtime_smoke_is_bundled_and_exercises_native_features() -> None:
+    root = Path(__file__).resolve().parents[1]
+    builder = (root / "build-aux/appimage/build_appdir.sh").read_text(encoding="utf-8")
+    entrypoint = (root / "build-aux/appimage/AppRun").read_text(encoding="utf-8")
+    smoke = (root / "build-aux/appimage/runtime_smoke.py").read_text(encoding="utf-8")
+    recipe = (root / "build-aux/appimage/AppImageBuilder.yml").read_text(encoding="utf-8")
+
+    assert 'runtime_smoke.py" "$APPDIR/usr/lib/anura/"' in builder
+    assert '--runtime-smoke' in builder
+    assert 'FONTCONFIG_FILE' in entrypoint
+    assert 'gstreamer1.0-tools' in recipe
+    assert 'fontconfig-config' in recipe
+    for feature in ("pytesseract.image_to_string", "Gst.parse_launch", "fc-match", "IconTheme"):
+        assert feature in smoke

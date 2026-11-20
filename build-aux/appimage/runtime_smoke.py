@@ -1,0 +1,89 @@
+# This file is part of Anura.
+# Copyright (C) 2026 D3M-Sudo (Anura)
+#
+# SPDX-License-Identifier: MIT
+
+"""Functional runtime checks executed from the extracted multi-architecture AppImage."""
+
+from __future__ import annotations
+
+import os
+from pathlib import Path
+import re
+import shutil
+import subprocess
+
+
+def main() -> int:
+    appdir = Path(os.environ["APPDIR"])
+    font_match = shutil.which("fc-match")
+    if font_match is None:
+        raise RuntimeError("Bundled Fontconfig tools are unavailable")
+    matched_font = subprocess.run(
+        [font_match, "sans"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    if not matched_font:
+        raise RuntimeError("Fontconfig did not resolve a default sans-serif font")
+
+    import gi
+
+    gi.require_version("Gtk", "4.0")
+    gi.require_version("Gst", "1.0")
+    from gi.repository import Gdk, Gst, Gtk
+
+    Gtk.init()
+    display = Gdk.Display.get_default()
+    if display is None:
+        raise RuntimeError("AppImage GTK runtime could not open the Xvfb display")
+    theme = Gtk.IconTheme.get_for_display(display)
+    required_icons = ("edit-copy-symbolic", "object-select-symbolic")
+    missing_icons = [name for name in required_icons if not theme.has_icon(name)]
+    if missing_icons:
+        raise RuntimeError(f"AppImage icon theme is missing required icons: {missing_icons}")
+
+    Gst.init(None)
+    for factory_name in ("playbin3", "audiotestsrc", "fakesink"):
+        if Gst.ElementFactory.find(factory_name) is None:
+            raise RuntimeError(f"AppImage GStreamer plugin is missing element {factory_name}")
+
+    pipeline = Gst.parse_launch("audiotestsrc num-buffers=1 ! fakesink")
+    if pipeline.set_state(Gst.State.PLAYING) == Gst.StateChangeReturn.FAILURE:
+        raise RuntimeError("AppImage GStreamer test pipeline could not start")
+    message = pipeline.get_bus().timed_pop_filtered(
+        5 * Gst.SECOND,
+        Gst.MessageType.EOS | Gst.MessageType.ERROR,
+    )
+    pipeline.set_state(Gst.State.NULL)
+    if message is None or message.type == Gst.MessageType.ERROR:
+        detail = message.parse_error()[0].message if message is not None else "EOS timeout"
+        raise RuntimeError(f"AppImage GStreamer playback smoke failed: {detail}")
+
+    from PIL import Image, ImageDraw, ImageFont
+    import pytesseract
+
+    font_path = appdir / "usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+    if not font_path.is_file():
+        raise RuntimeError("Bundled DejaVu test font is missing")
+    image = Image.new("RGB", (1000, 180), "white")
+    draw = ImageDraw.Draw(image)
+    draw.text((30, 35), "ANURA OCR TEST", fill="black", font=ImageFont.truetype(str(font_path), 72))
+    recognised = re.sub(r"[^A-Z]", "", pytesseract.image_to_string(image, config="--psm 6").upper())
+    if "ANURA" not in recognised or "OCR" not in recognised:
+        raise RuntimeError(f"Bundled Tesseract OCR returned unexpected text: {recognised!r}")
+
+    print(
+        "PASS: AppImage runtime",
+        f"arch={os.uname().machine}",
+        "fontconfig=resolved",
+        "icons=available",
+        "gstreamer=fakesink-playback",
+        "tesseract=ANURA-OCR",
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

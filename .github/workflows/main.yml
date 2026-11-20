@@ -739,7 +739,8 @@ jobs:
               bash /usr/local/bin/audit_elf_dependencies.sh --self-test
               bash /usr/local/bin/audit_elf_dependencies.sh /opt/anura "$APP_LIBDIR"
               NO_AT_BRIDGE=1 GTK_A11Y=none LIBGL_ALWAYS_SOFTWARE=1 \
-                APPDIR=/opt/anura timeout 90 dbus-run-session -- xvfb-run -a /opt/anura/AppRun --help
+                PYTHONDONTWRITEBYTECODE=1 APPDIR=/opt/anura \
+                timeout 120 dbus-run-session -- xvfb-run -a /opt/anura/AppRun --runtime-smoke
             '
       - name: Upload AppImage and zsync CI artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

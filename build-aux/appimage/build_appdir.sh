@@ -7,7 +7,7 @@ SOURCE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 APPDIR="$TARGET_APPDIR"
 PYTHON_SITE="$APPDIR/usr/lib/python3.12/site-packages"
 
-mkdir -p "$APPDIR/usr/share/anura" "$APPDIR/usr/share/applications" "$APPDIR/usr/share/metainfo" "$APPDIR/usr/share/glib-2.0/schemas" "$APPDIR/usr/share/icons/hicolor/scalable/apps" "$APPDIR/usr/share/locale" "$APPDIR/usr/lib/anura" "$APPDIR/usr/bin" "$PYTHON_SITE" "$APPDIR/.blueprint-ui" "$APPDIR/usr/share/licenses/io.github.d3m_sudo.anura"
+mkdir -p "$APPDIR/etc/fonts" "$APPDIR/usr/share/anura" "$APPDIR/usr/share/applications" "$APPDIR/usr/share/metainfo" "$APPDIR/usr/share/glib-2.0/schemas" "$APPDIR/usr/share/icons/hicolor/scalable/apps" "$APPDIR/usr/share/locale" "$APPDIR/usr/lib/anura" "$APPDIR/usr/bin" "$PYTHON_SITE" "$APPDIR/.blueprint-ui" "$APPDIR/usr/share/licenses/io.github.d3m_sudo.anura"
 
 for source in "$SOURCE_ROOT"/data/ui/*.blp; do
   output="$APPDIR/.blueprint-ui/$(basename "${source%.blp}").ui"
@@ -33,6 +33,17 @@ cp "$SOURCE_ROOT/data/icons/io.github.d3m_sudo.anura.svg" "$APPDIR/io.github.d3m
 cp "$SOURCE_ROOT/LICENSE" "$APPDIR/usr/share/licenses/io.github.d3m_sudo.anura/LICENSE"
 cp "$SOURCE_ROOT/build-aux/appimage/licenses/type2-runtime-LICENSE" \
   "$APPDIR/usr/share/licenses/io.github.d3m_sudo.anura/AppImage-type2-runtime-LICENSE"
+
+# The upstream config uses host-absolute font paths. Replace it with a
+# relocatable config that resolves only the fonts shipped in this AppDir.
+cat > "$APPDIR/etc/fonts/fonts.conf" <<EOF
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
+<fontconfig>
+  <dir>$APPDIR/usr/share/fonts</dir>
+  <cachedir prefix="xdg">fontconfig</cachedir>
+</fontconfig>
+EOF
 
 cd "$SOURCE_ROOT"
 uv export --locked --no-dev --no-emit-project --format requirements-txt \

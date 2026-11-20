@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- AppImage: add extracted-runtime checks for OCR, GStreamer playback, Fontconfig resolution and symbolic icons on x86_64 and aarch64.
 - Accessibility: give language-download progress bars translated language context; announce download start/completion/failure and concise OCR, TTS and debounced search status transitions without percentage-level announcement noise (#648)
 - Release/AppImage: add native x86_64 and aarch64 self-contained AppImage builds, embedded GitHub Releases zsync metadata, paired update files, strict release-asset validation and SHA-256 checksums (#555)
 - Docs/release: document AppImage runtime boundaries, downloads, checksums and Gear Lever-compatible zsync updates (#555)
@@ -26,6 +27,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Flatpak/CI: make shortcut consistency checks load the GResource produced by the GTK workflow and validate GNOME 51 symbolic icons inside the installed runtime.
+- Flatpak/dependencies: remove the development-only `python3-pathspec` module from the local runtime manifest and scope F-005 stale-module warnings to modules actually declared by checked manifests.
 - History/accessibility: make the TTS action label state-specific: “Stop listening” while generating, “Pause listening” during playback, “Resume listening” while paused, and “Listen to text” while idle (#648)
 - Preferences/Languages: probe the configured tessdata source instead of Google, cancel and ignore stale reachability callbacks on page disposal, prune completed LanguageRow idle sources, and provide an accessible name for the available OCR models list (#648)
 - UI: normalize application-authored spacing to the shared 4/8/12/16/24 px scale; retain Libadwaita semantic typography and existing custom corner-radius roles.
@@ -89,6 +92,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Clipboard/CLI: keep silent OCR results available through asynchronous GApplication clipboard ownership, handing off to a clipboard manager when possible and releasing the application on replacement, timeout or signal.
 - UI/Portal: connect the portal-unavailable banner’s Dismiss button so it hides the banner when activated (#648)
 - History: stop active text-to-speech playback whenever navigation leaves the History page, including native back navigation to Welcome or navigation to Extracted (#648)
 - Accessibility: use scheme-aware focus indicators and History empty-state icon colors with verified contrast, while retaining theme-managed secondary and disabled text (#648)
