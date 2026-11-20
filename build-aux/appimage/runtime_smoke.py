@@ -17,9 +17,21 @@ import tempfile
 
 def main() -> int:
     appdir = pathlib.Path(os.environ["APPDIR"])
+    font_cache = shutil.which("fc-cache")
     font_match = shutil.which("fc-match")
-    if font_match is None:
+    if font_cache is None or font_match is None:
         raise RuntimeError("Bundled Fontconfig tools are unavailable")
+    cache_result = subprocess.run(
+        [font_cache, "-f", str(appdir / "usr/share/fonts")],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if cache_result.returncode != 0:
+        raise RuntimeError(
+            "Fontconfig could not index bundled fonts: "
+            f"{cache_result.stderr.strip()!r}"
+        )
     font_result = subprocess.run(
         [font_match, "sans"],
         check=False,
