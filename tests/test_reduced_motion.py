@@ -71,6 +71,7 @@ def test_reduced_motion_css_disables_custom_motion():
     assert "animation-iteration-count: 1;" in css
     assert ".reduced-motion .anura-button:hover" in css
 
+
 def test_application_motion_consumers_are_covered_by_reduced_motion_policy():
     root = Path(__file__).resolve().parents[1]
     css = (root / "data/style.css").read_text(encoding="utf-8")
