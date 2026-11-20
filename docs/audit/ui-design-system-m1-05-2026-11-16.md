@@ -6,6 +6,9 @@
 **Source snapshot reviewed:** `fb1bcbe89f0ce982fc4fadad60630a5a88496dd1`  
 **Mode:** read-only source, template, documentation and test inspection.
 
+**Status:** Completed — bounded M1-05 cross-surface adoption audit, including the documented F3/F4 follow-up.
+**Programme boundary:** Global M1 remains **Partial**. The original F1/F2 findings and their subsequent M1-06 remediation are distinct from this audit closure; this status does not claim application-wide Design System completion or native visual/accessibility validation.
+
 ## 1. Scope and method
 
 Reviewed the UI source and evidence on the source snapshot above:
