@@ -144,17 +144,16 @@ def test_every_declared_locale_has_a_catalogue() -> None:
     missing = [code for code in locales if not (REPO_ROOT / "po" / f"{code}.po").is_file()]
     assert missing == [], f"missing .po files for: {missing}"
 
-
-
 def test_catalogue_files_match_declared_locales() -> None:
     locales = [line.strip() for line in LINGUAS.read_text(encoding="utf-8").splitlines() if line.strip()]
     catalogues = {path.stem for path in (REPO_ROOT / "po").glob("*.po")}
 
     assert len(locales) == len(set(locales)), "po/LINGUAS contains duplicate locale codes"
-    assert set(localues := locales) == catalogues, (
+    locale_set = set(locales)
+    assert locale_set == catalogues, (
         f"catalogue inventory differs from po/LINGUAS: "
-        f"undeclared={sorted(catalogues - set(localues))}, "
-        f"missing={sorted(set(localues) - catalogues)}"
+        f"undeclared={sorted(catalogues - locale_set)}, "
+        f"missing={sorted(locale_set - catalogues)}"
     )
 
 
