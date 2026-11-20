@@ -634,7 +634,8 @@ jobs:
             gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-gtksource-5 \
             libgtk-4-dev libadwaita-1-dev libgtksourceview-5-dev \
             desktop-file-utils gettext libglib2.0-bin \
-            zsync xvfb xauth file binutils libfuse2t64 liblzo2-2 libegl1 curl
+            zsync xvfb xauth file binutils libfuse2t64 liblzo2-2 libegl1 curl \
+            gstreamer1.0-tools
       - name: Install pinned AppImage tooling
         env:
           APPIMAGETOOL_SHA256: ${{ matrix.variant.appimagetool_sha256 }}
