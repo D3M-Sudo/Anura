@@ -91,7 +91,6 @@ def test_zxing_cpp_installs_the_sdist_it_declares(manifest: dict) -> None:
     )
 
 
-
 def test_pathspec_is_tracked_by_flatpak_external_data_checker(manifest: dict) -> None:
     """The build-only pathspec wheel must remain updateable by FEDC."""
     pathspec = _modules(manifest)["python3-pathspec"]
