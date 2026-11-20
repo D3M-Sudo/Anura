@@ -28,7 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Flatpak/CI: make shortcut consistency checks load the GResource produced by the GTK workflow and validate GNOME 51 symbolic icons inside the installed runtime.
-- Flatpak/dependencies: classify `python3-pathspec` as build-only (required while preparing `python3-pybind11` metadata) and scope F-005 stale-module warnings to modules actually declared by checked manifests.
+- Flatpak/dependencies: retain `python3-pathspec` for `python3-pybind11` metadata generation, then remove its package and license from the final `/app` prefix and scope F-005 stale-module warnings to modules actually declared by checked manifests.
 - History/accessibility: make the TTS action label state-specific: “Stop listening” while generating, “Pause listening” during playback, “Resume listening” while paused, and “Listen to text” while idle (#648)
 - Preferences/Languages: probe the configured tessdata source instead of Google, cancel and ignore stale reachability callbacks on page disposal, prune completed LanguageRow idle sources, and provide an accessible name for the available OCR models list (#648)
 - UI: normalize application-authored spacing to the shared 4/8/12/16/24 px scale; retain Libadwaita semantic typography and existing custom corner-radius roles.
