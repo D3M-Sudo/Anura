@@ -94,6 +94,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Flatpak: remove the no-longer-needed `scikit-build-core` setuptools plugin and metadata after the native `zxing-cpp` build, preventing it from loading after its `pathspec` dependency is cleaned up.
+- AppImage: report bundled font-directory contents and verbose Fontconfig cache diagnostics when extracted-runtime font discovery fails.
+
 - Clipboard/CLI: keep silent OCR results available through asynchronous GApplication clipboard ownership, handing off to a clipboard manager when possible and releasing the application on replacement, timeout or signal.
 - UI/Portal: connect the portal-unavailable banner’s Dismiss button so it hides the banner when activated (#648)
 - History: stop active text-to-speech playback whenever navigation leaves the History page, including native back navigation to Welcome or navigation to Extracted (#648)
