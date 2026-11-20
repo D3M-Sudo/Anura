@@ -23,7 +23,7 @@ No application-wide WCAG/accessibility-conformance claim is supported. CI succes
 | R06 — reduced motion | `anura/utils/accessibility.py`, `anura/window.py`, `anura/widgets/shortcuts_overlay.py`; P6 tests | P6 CI 44667645110; Python Quality 703 passed, 9 skipped, 300 deselected | **Verified for app-authored CSS and tested live preference contracts** | Toolkit-native spinner/revealer/stack animation behavior is not proven. |
 | R07 — Preferences and language lifecycle | M4-01, M4-02 Tasks 1–5, M4-RR plans and integration tests | M4 exact-head evidence recorded in global/workstream plans | **Complete only within approved CI-testable scopes; M4 Partial globally** | Native visual, focus and assistive-technology checks remain. |
 | R08 — secondary windows, menus, dialogs and transient UI | M5-01 audit, M5-02 selected contracts, M5-03 portal banner correction | Exact evidence in global roadmap historical task records | **Complete within agreed bounded M5 scope** | Toast lifecycle explicitly excluded; About/fatal-dialog/Portal/popover residuals are not claimed complete. |
-| R09 — localization and user-facing strings | `po/LINGUAS`, 26 `.po` catalogues, source `.pot`, Weblate workflow | Inventory proves 26 configured catalogue names; POT extraction is a separate technical artifact | **Catalogue inventory verified; completion/review unverified** | Per-language technical status and human linguistic review must be recorded independently. Separate non-blocking activity. |
+| R09 — localization and user-facing strings | English source strings, `po/it.po`, 24 community catalogues via Hosted Weblate | Italian: 415 active messages, zero fuzzy/untranslated active entries; `msgfmt --check --check-format --check-header` passed | **Project-maintained English/Italian scope verified for this phase** | Other 24 catalogues are community-maintained; their completeness and human review remain unverified. Community review is separate and non-blocking. |
 | R10 — Linux integration, packaging and regression stability | CI AppImage/Flatpak x86_64/aarch64 and artifact checks | P6 CI 44667645110 passed GTK/package/artifact validation | **CI build/artifact validation verified at P6 SHA** | No installed-package smoke test on maintainer host; P9. |
 | R11 — integrated readiness and traceability | Global/workstream/master/M6-02 plans, M6-01 audit, this report | P1–P6 exact evidence table; docs-only P6 reconciliation CI 44672653258; CodeQL 44672653395 | **P8 documentation reconciliation in progress/completed by this record; native readiness open** | Final verify all six docs and PR body at resulting head. |
 | R12/R13/R17 — scope and governance constraints | Global roadmap governance and PR invariants | PR #648 metadata recheck after writes | **Constraints retained** | No OCR/pipeline/dependency/OS scope expansion; no protected branch or merge without approval. |
@@ -43,17 +43,15 @@ The P6 evidence documentation commit was `a195a4f82be1d48d75c5c345933e59d96d82f9
 
 ## 4. Localization: separate technical and human status
 
-The repository's `po/LINGUAS` lists 26 catalogues: ar, be_Latn, bn, ca, cs, de, es, eu, fi, fr, hi, ie, it, ja, ko_KR, nb_NO, nl, oc, pt, pt_BR, ru, sv, ta, tr, uk and zh_Hans.
+The repository's `po/LINGUAS` lists 26 catalogues. The project-maintained localization scope is limited to English source strings and Italian:
 
-Maintainer-approved process (2026-11-20):
+- **English:** the source language maintained by the project; there is no separate `en.po` catalogue.
+- **Italian:** `po/it.po` has 415 active messages, zero fuzzy entries and zero untranslated active entries. GNU gettext validation passed with `msgfmt --check --check-format --check-header`.
+- **Other 24 catalogues:** community-maintained through Hosted Weblate; they are not part of the project-maintained translation backlog.
 
-1. Weblate and volunteer translators remain the translation workflow.
-2. Automated CI catalogue checks are preliminary technical validation, not linguistic approval.
-3. Human linguistic/contextual review is tracked separately, with Italian and English prioritized and all 26 catalogues retained in scope.
-4. A populated `msgstr` does not prove review; an empty translation is assessed against fallback/release policy rather than assumed defective.
-5. Translation review is non-blocking for P8/P9 and UI Modernization closure. No language is marked reviewed without evidence.
+Automated CI catalogue checks are preliminary technical validation, not linguistic approval. Human linguistic/contextual review of community catalogues is tracked separately and remains unverified. A populated `msgstr` does not prove review; an empty translation is assessed against fallback/release policy rather than assumed defective.
 
-Current status: **inventory known; per-catalogue completeness and human-review status not yet evidenced in this report**. Do not claim full localization readiness.
+Current status: **the project-maintained English/Italian scope is evidenced for this phase; community catalogue completeness and human review remain unverified**. Community review is separate and non-blocking for P8/P9 and UI Modernization closure. Do not claim complete localization across all 26 languages.
 
 ## 5. P9 native-host validation backlog
 
@@ -70,7 +68,7 @@ Not started; requires a supported native desktop session and explicit authorizat
 
 - No application-wide WCAG conformance or complete accessibility claim.
 - No claim of native visual, Orca/AT-SPI, physical keyboard or live WM validation from virtual GTK CI.
-- No claim of complete translation or human linguistic review.
+- No claim of complete translation across all 26 catalogues or of human linguistic review for the community-maintained catalogues. The Italian catalogue's technical completion is evidenced above.
 - No claim that P1–P6 close all M6 requirements.
 - No code, dependency, workflow, OCR/model/pipeline, portal or OS changes in this P8 documentation pass.
 - No release publication, protected-branch update, PR merge or PR state/base transition.

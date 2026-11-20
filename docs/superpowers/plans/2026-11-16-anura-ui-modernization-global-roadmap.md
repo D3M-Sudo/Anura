@@ -972,15 +972,20 @@ P6 documentation reconciliation commit: `a195a4f82be1d48d75c5c345933e59d96d82f9b
 | Accessible control names/roles/states | `tests/test_m6_02_accessible_control_contracts.py`, P5; Language Selector, Welcome drop area, Extracted TTS and selected GTK roles | Selected GTK-exposed contracts verified | No proof of Orca speech, AT-SPI bridge operation or complete control-by-control coverage. |
 | Preferences and language lifecycle | M4-01/M4-02/M4-RR records; Preferences integration/lifecycle tests | Bounded page search/filter/persistence/lifecycle contracts verified | Global M4 remains partial; native visual/focus/AT checks remain. |
 | Menus, dialogs and transient UI | M5-01/M5-02/M5-03 records and tests | Selected static menu, toast delegation and banner dismissal contracts verified | Toast lifecycle explicitly excluded; dialog/Portal/popover residuals remain deferred or limited. |
-| Localization | `po/LINGUAS`, 26 PO catalogues and source `.pot` | Source catalogue exists; 26 language scope identified | Per-catalogue completeness and human linguistic review not established by POT presence or non-empty msgstr. Separate non-blocking review. |
+| Localization | English source strings, `po/it.po`, 24 community PO catalogues via Hosted Weblate | English is the project-maintained source language; Italian has 415 active messages, zero fuzzy/untranslated entries and passed GNU gettext validation | Other 24 catalogues are community-maintained; their completeness and human review remain unverified. Community review is separate and non-blocking. |
 | Native desktop and packaging behavior | CI AppImage/Flatpak x86_64/aarch64 and artifact validation for P6 exact head | Build/artifact validation verified in CI for P6 head | No host installation/runtime, native GNOME rendering, Orca/AT-SPI, physical keyboard or live multi-monitor validation. P9 deferred. |
 
-### Translation review policy (maintainer decision 2026-11-20)
+### Localization policy (maintainer decision 2026-11-20)
 
-- Workflow: Weblate and volunteer translators, with automated CI catalogue checks as preliminary validation and human linguistic/contextual review as a distinct quality activity.
-- Scope: all 26 catalogues listed by `po/LINGUAS`; prioritize Italian and English, without dropping the other languages.
-- Evidence: record per-language catalogue validation and a separate human-review status/source. A populated `msgstr` is not evidence of human review; an empty `msgstr` must be assessed against fallback and release policy rather than automatically treated as a defect.
-- Governance: translation review is a separate, **non-blocking** activity for P8/P9 and UI Modernization closure. No language may be labelled human-reviewed without evidence.
+The project-maintained localization scope is limited to **English and Italian**:
+
+- **English** is the source language; source strings are maintained in the application and documentation rather than in a separate `en.po` catalogue.
+- **Italian** is maintained directly by the project. Its 415 active messages are complete, with zero fuzzy and zero untranslated active entries; GNU gettext validation passed using `msgfmt --check --check-format --check-header`.
+- The other 24 catalogues are community-maintained through Hosted Weblate. They are not part of the project-maintained translation backlog. Their linguistic completeness and human review are not asserted here.
+
+Community translation review remains a separate, **non-blocking** activity for P8/P9 and UI Modernization closure. Never infer human review from a populated `msgstr`.
+
+For community catalogues, automated CI checks are preliminary technical validation, not linguistic approval. A populated `msgstr` is not evidence of human review; an empty `msgstr` must be assessed against fallback and release policy rather than automatically treated as a defect.
 
 ### P8/P9 current disposition
 

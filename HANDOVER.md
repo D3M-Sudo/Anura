@@ -13,11 +13,11 @@
 
 ## Localization policy
 
-- 26 catalogues are listed in `po/LINGUAS`.
-- Use Weblate and volunteer translators, automated CI catalogue checks as preliminary validation, and separate human linguistic/contextual review.
-- All 26 languages remain in scope; prioritize Italian and English.
-- Catalogue extraction, `.po` completion and human review are separate statuses. Never infer human review from a populated `msgstr`.
-- Translation review is non-blocking for P8/P9 and UI Modernization closure.
+- The project maintains English source strings and the Italian catalogue directly; no separate `en.po` catalogue exists.
+- Italian `po/it.po`: 415 active messages, zero fuzzy entries, zero untranslated active entries; GNU gettext validation passed with `msgfmt --check --check-format --check-header`.
+- The other 24 catalogues are community-maintained through Hosted Weblate, not part of the project-maintained translation backlog.
+- Catalogue extraction, technical validation and human linguistic review are separate statuses. Community completeness and human review remain unverified; never infer review from a populated `msgstr`.
+- Community translation review is non-blocking for P8/P9 and UI Modernization closure.
 
 ## Authoritative UI modernization records
 

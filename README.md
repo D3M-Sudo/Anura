@@ -273,7 +273,7 @@ Contributions in any language are welcome.
 ```bash
 cd po
 ./update_potfiles.sh
-for f in *.po; do msgmerge -U "$f" io.github.d3m_sudo.anura.pot --backup=none; done
+msgmerge -U it.po io.github.d3m_sudo.anura.pot --backup=none
 ```
 
 ---

@@ -831,12 +831,12 @@ This section supersedes earlier interim next-step notes in this workstream where
 
 ### Localization disposition
 
-The branch contains the source POT and 26 language catalogues enumerated in `po/LINGUAS`. This is evidence of catalogue inventory, not of translation completeness or human review. The maintainer-approved process is Weblate/volunteer translation, automated preliminary CI validation and separate human linguistic/contextual review. All 26 languages are in scope, with Italian and English prioritized. This activity is non-blocking for P8/P9 and UI Modernization closure; no catalogue is marked reviewed without evidence.
+The project-maintained localization scope is limited to English source strings and the Italian catalogue. The Italian `po/it.po` catalogue has 415 active messages, zero fuzzy entries and zero untranslated active entries, and passed GNU gettext validation with `msgfmt --check --check-format --check-header`. The other 24 catalogues are community-maintained through Hosted Weblate; they are not a project-maintained translation backlog. Their completeness and human linguistic review are not asserted here. Community translation review remains a separate, non-blocking activity for P8/P9 and UI Modernization closure.
 
 ### Remaining work
 
 1. Complete P8 requirement-to-delivery-to-evidence matrix and readiness disposition (see [P8 readiness report](../../audit/ui-modernization-p8-readiness-2026-11-20.md)).
 2. P9 native-host validation after explicit authorization; include physical History keyboard traversal tracked by #655.
-3. Continue translation review as a separate non-blocking activity; do not conflate catalogue extraction, technical validation and human linguistic review.
+3. Continue community translation review as a separate non-blocking activity; do not conflate catalogue extraction, technical validation and human linguistic review.
 
 PR #648 remains Open / Draft / unmerged, base `feature`. This document update does not authorize code changes, workflow changes, release publication, merge or protected-branch updates.
