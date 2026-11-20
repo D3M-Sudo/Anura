@@ -172,7 +172,7 @@ def test_potfiles_match_existing_template_sources() -> None:
         if not line.startswith("#: "):
             continue
         for reference in line[3:].split():
-            source = re.sub(r":\\d+$", "", reference)
+            source = re.sub(r":\d+$", "", reference)
             if source.startswith("../"):
                 source = source[3:]
             referenced.add(source)
