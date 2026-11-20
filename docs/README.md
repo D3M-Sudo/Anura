@@ -19,7 +19,8 @@ documentation lives in the root (`README.md`, `AGENTS.md`, `CONTRIBUTING.md`,
 | [reference/tagged-release-verification.md](reference/tagged-release-verification.md) | **Current / operational** | Tag-triggered verification of Flatpak/AppImage artifacts, SHA-256 checksums and GitHub Release publication (#592) |
 | [reference/code-commenting.md](reference/code-commenting.md) | **Current / normative** | Technical comment policy and Google-style Python docstring conventions |
 | [reference/repository-governance.md](reference/repository-governance.md) | **Current / operational** | Single-maintainer branch promotion, PR, CI and branch-protection policy |
-| [reference/changelog-integrity.md](reference/changelog-integrity.md) | **Current / normative** | Keep a Changelog category structure, PR removal/duplicate-heading guard and intentional-removal authorization policy |\n| [reference/localization-catalogue-integrity.md](reference/localization-catalogue-integrity.md) | **Current / normative** | Maintainer-owned Italian gettext validation, community catalogue boundaries, LINGUAS/POTFILES consistency and CI checks |
+| [reference/changelog-integrity.md](reference/changelog-integrity.md) | **Current / normative** | Keep a Changelog category structure, PR removal/duplicate-heading guard and intentional-removal authorization policy |
+| [reference/localization-catalogue-integrity.md](reference/localization-catalogue-integrity.md) | **Current / normative** | Maintainer-owned Italian gettext validation, community catalogue boundaries, LINGUAS/POTFILES consistency and CI checks |
 
 ## Design system
 
@@ -79,6 +80,7 @@ docs/
 │   ├── appimage-multiarch-release.md
 │   ├── release-process.md
 │   ├── changelog-integrity.md
+│   ├── localization-catalogue-integrity.md
 │   ├── flathub-submission-checklist.md
 │   ├── tagged-release-verification.md
 │   ├── code-commenting.md
