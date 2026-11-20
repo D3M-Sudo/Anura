@@ -228,6 +228,29 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
 
         return GLib.SOURCE_REMOVE
 
+    def focus_first_entry(self) -> None:
+        """Move keyboard focus to the first entry after its row is mapped."""
+        first_row = next(iter(self._row_entry_ids.values()), None)
+        if first_row is None:
+            return
+
+        if first_row.get_mapped():
+            GLib.idle_add(self._grab_focus_if_mapped, first_row)
+            return
+
+        handler_id = first_row.connect("map", self._on_first_entry_mapped)
+        self._row_handlers.append((first_row, handler_id))
+
+    def _on_first_entry_mapped(self, row: Adw.ExpanderRow) -> None:
+        """Defer focus until GTK has completed mapping the first entry row."""
+        GLib.idle_add(self._grab_focus_if_mapped, row)
+
+    @staticmethod
+    def _grab_focus_if_mapped(row: Adw.ExpanderRow) -> bool:
+        if row.get_mapped():
+            row.grab_focus()
+        return GLib.SOURCE_REMOVE
+
     def _append_row(self, entry: "HistoryEntry") -> None:
         """Build one history row with its copy button and register it."""
         # OCR text is arbitrary: with markup parsing on (the row default) a title such as
