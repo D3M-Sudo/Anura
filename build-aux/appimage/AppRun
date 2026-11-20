@@ -11,8 +11,6 @@ export ANURA_LOCALE_DIR="$APPDIR/usr/share/locale"
 export ANURA_VERSION="${ANURA_VERSION:-{{APP_VERSION}}}"
 export TESSDATA_PREFIX="$APPDIR/usr/share/tesseract-ocr/5/tessdata"
 export TESSDATA_PREFIX_SYSTEM="$TESSDATA_PREFIX"
-export FONTCONFIG_PATH="$APPDIR/etc/fonts"
-export FONTCONFIG_FILE="$APPDIR/etc/fonts/fonts.conf"
 
 # Keep bundled native libraries ahead of host copies while retaining host
 # libraries for desktop/session services that are intentionally not bundled.
