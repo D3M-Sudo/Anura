@@ -167,3 +167,45 @@ def test_history_page_keeps_its_entry_list_scrollable() -> None:
     assert "vexpand: true;" in blueprint
     assert "child: Gtk.ScrolledWindow" in blueprint
     assert "Gtk.ListBox history_list" in blueprint
+
+class _FakeMotionSettings:
+    def __init__(self, *, animations_enabled: bool, reduced_motion: bool) -> None:
+        self.properties = {
+            "gtk-enable-animations": animations_enabled,
+            "gtk-interface-reduced-motion": reduced_motion,
+        }
+
+    def find_property(self, name: str):
+        return object() if name in self.properties else None
+
+    def get_property(self, name: str):
+        return self.properties[name]
+
+
+def test_main_window_reduced_motion_policy_tracks_live_gtk_preferences() -> None:
+    from gi.repository import Gtk
+
+    from anura.window import AnuraWindow
+
+    window = Gtk.Window()
+    settings = _FakeMotionSettings(animations_enabled=True, reduced_motion=False)
+    window._motion_settings = settings
+
+    try:
+        AnuraWindow._sync_reduced_motion_class(window)
+        assert not window.has_css_class("reduced-motion")
+
+        settings.properties["gtk-interface-reduced-motion"] = True
+        AnuraWindow._on_motion_settings_changed(window, settings, None)
+        assert window.has_css_class("reduced-motion")
+
+        settings.properties["gtk-interface-reduced-motion"] = False
+        settings.properties["gtk-enable-animations"] = False
+        AnuraWindow._on_motion_settings_changed(window, settings, None)
+        assert window.has_css_class("reduced-motion")
+
+        settings.properties["gtk-enable-animations"] = True
+        AnuraWindow._on_motion_settings_changed(window, settings, None)
+        assert not window.has_css_class("reduced-motion")
+    finally:
+        window.destroy()
