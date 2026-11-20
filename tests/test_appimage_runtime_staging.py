@@ -34,6 +34,8 @@ def test_appimage_runtime_smoke_is_bundled_and_exercises_native_features() -> No
     assert 'os.environ["FONTCONFIG_FILE"] = str(runtime_config)' in builder
     assert 'font_dir = appdir / "usr/share/fonts"' in builder
     assert "runtime_config.write_text(" in builder
+    assert 'appdir / "etc/fonts/fonts.conf"' not in builder
+    assert builder.count('os.environ["FONTCONFIG_FILE"] = str(runtime_config)') == 1
     assert "gstreamer1.0-tools" in recipe
     assert "fontconfig-config" in recipe
     workflow = (root / ".github/workflows/main.yml").read_text(encoding="utf-8")
