@@ -68,6 +68,7 @@ def test_zxing_cpp_uses_nanobind_not_pybind11(manifest: dict) -> None:
 def test_build_time_helpers_precede_the_modules_that_import_them(manifest: dict) -> None:
     """Build helpers precede their consumers, including pathspec for pybind11 metadata."""
     order = {module["name"]: index for index, module in enumerate(manifest["modules"])}
+    modules = _modules(manifest)
 
     assert order["python3-packaging"] < order["python3-scikit-build-core"]
     assert order["python3-pathspec"] < order["python3-scikit-build-core"]
