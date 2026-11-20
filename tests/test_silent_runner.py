@@ -13,6 +13,8 @@ import pytest
 
 pytest.importorskip("gi")
 
+pytestmark = pytest.mark.gtk
+
 from anura.core.silent_runner import SilentRunner
 
 

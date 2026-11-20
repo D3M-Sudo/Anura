@@ -478,15 +478,49 @@ jobs:
             -c "$(cat build-aux/flatpak_runtime_smoke.py)" \
             "${{ matrix.variant.arch }}"
 
-      - name: Functional test - OCR in the sandbox
+      - name: Functional test - clipboard lifetime in Flatpak sandbox
         run: |
-          echo "=== OCR su immagine valida dentro sandbox ==="
           flatpak override --user --filesystem="$PWD/data/screenshots:ro"
-          if ! timeout 120 xvfb-run -a flatpak run io.github.d3m_sudo.anura \
-               -f "$PWD/data/screenshots/anura-welcome-page.png" --silent; then
-            echo "✗ OCR failed inside the sandbox"; exit 1
-          fi
-          echo "✓ OCR passed inside the sandbox"
+          xvfb-run -a bash -euo pipefail -c '
+            LOG=/tmp/anura-flatpak-clipboard.log
+            flatpak run io.github.d3m_sudo.anura \
+              -f "$PWD/data/screenshots/anura-welcome-page.png" --silent >"$LOG" 2>&1 &
+            APP_PID=$!
+            cleanup() {
+              kill -TERM "$APP_PID" 2>/dev/null || true
+              wait "$APP_PID" 2>/dev/null || true
+            }
+            trap cleanup EXIT
+
+            for attempt in $(seq 1 40); do
+              if grep -q "OCR completed successfully in silent mode" "$LOG"; then break; fi
+              if ! kill -0 "$APP_PID" 2>/dev/null; then cat "$LOG"; exit 1; fi
+              sleep 0.25
+            done
+            if ! grep -q "OCR completed successfully in silent mode" "$LOG"; then
+              cat "$LOG"
+              echo "::error::Silent OCR did not complete inside the Flatpak sandbox"
+              exit 1
+            fi
+
+            timeout 10 flatpak run --command=python3 io.github.d3m_sudo.anura \
+              -c "$(cat build-aux/flatpak_clipboard_reader.py)"
+
+            if grep -q "refusing to iterate the default main context" "$LOG"; then
+              cat "$LOG"
+              echo "::error::Clipboard lifetime attempted to re-enter GApplication main context"
+              exit 1
+            fi
+
+            cleanup
+            trap - EXIT
+            if ! grep -Eq "Clipboard content handed over to the clipboard manager|Clipboard serving interrupted by a signal" "$LOG"; then
+              cat "$LOG"
+              echo "::error::Silent OCR did not report a completed clipboard hand-off or managed serving lifetime"
+              exit 1
+            fi
+            echo "✓ Flatpak clipboard remains readable from a second sandboxed process"
+          '
 
       - name: Functional test - OCR negativo su file non immagine
         run: |
