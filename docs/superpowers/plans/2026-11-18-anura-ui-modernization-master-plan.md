@@ -140,9 +140,9 @@ The remaining UI modernization programme can be considered complete only when:
 - Master plan: created in commit `db71476932bc89c84bb69bc1adc018abc61966d7`; exact-head CI Quality & Release `44414583151` and CodeQL `44414583117` passed. Documentation-only; no tests or product changes.
 - M6-01: complete within documentation-only scope.
 - M6-02: detailed automated-test plan complete. P1 Extracted/History passed on `f3b502177efa32c741307fce020f24fb1d4d7558` (CI #44484731845; CodeQL #44484731918). P2 Preferences responsive geometry/focus completed test-only on `65e2b1597b1d02f7aa851cfdb4dfd7f17920c7a6`; CI #44607860024 and CodeQL #44607859740 passed; GTK Integration 474 passed, 6 skipped, 707 deselected. P3 deterministic Shortcuts/Language Selector geometry/state coverage completed test-only on `fb91b6b5ebd2de8f7f7834ab88942f1f5a214870`; CI #44636489764 and CodeQL #44636489904 passed; GTK Integration 480 passed, 6 skipped, 707 deselected.
-- M6 global: Partial; P1–P3 deterministic CI-testable scopes are complete; P4–P6 remain and no application-wide closure is implied.
-- M7: Partial; P8/P9 remain. P3 native activation/focus checks are P9 obligations.
-- Next: P4 cross-window focus routes may be proposed under a separate bounded approval; no implementation is authorized by this status update. Production fixes remain separately gated.
+- M6 global: Partial; P1–P4 deterministic CI-testable scopes are complete; P5–P6 remain and no application-wide closure is implied.
+- M7: Partial; P8/P9 remain. Native P3 Shortcuts/Language Selector and P4 cross-window focus checks are P9 obligations.
+- Next: P5/P6 remain separate bounded phases and require their own explicit approval. No further implementation is authorized by this status update. Production fixes remain separately gated.
 
 
 ## 2026-11-20 — P3 exact-head verification record
@@ -150,3 +150,11 @@ The remaining UI modernization programme can be considered complete only when:
 P3 deterministic Shortcuts/Language Selector geometry and state coverage is complete within the approved test-only scope on `fb91b6b5ebd2de8f7f7834ab88942f1f5a214870`. CI Quality & Release [#44636489764](https://github.com/D3M-Sudo/Anura/actions/runs/44636489764) and CodeQL [#44636489904](https://github.com/D3M-Sudo/Anura/actions/runs/44636489904) succeeded. GTK Integration reported **480 passed, 6 skipped, 707 deselected**; Python Quality, Changelog Integrity, both AppImage builds, both Flatpak builds and both artifact validation jobs passed. `publish-release` was skipped as expected for a PR. No product source, Blueprint, workflow, dependency or CHANGELOG file was changed.
 
 P3's native window activation and focus acquisition/retention/restoration checks remain P9 obligations. M6 remains Partial; P4–P6 are not started by this record. PR #648 remains Open/Draft/unmerged/base `feature`.
+
+## 2026-11-20 — P4 exact-head verification record
+
+P4 cross-window route/focus coverage is complete within the deterministic CI scope on `e4aae923b17c163ef3031aafc06c3e6f7452edec`. The three new cases in `tests/test_m6_02_navigation_focus_routes.py` passed: Extracted→Welcome restores primary-action focus; Welcome→History focuses within the first History row; Welcome→empty History does not force focus. Existing Welcome→Extracted and History→Welcome coverage was retained. A separately authorized production focus handoff correction was required for Welcome→History.
+
+CI Quality & Release [#44649664012](https://github.com/D3M-Sudo/Anura/actions/runs/44649664012) and CodeQL [#44649663981](https://github.com/D3M-Sudo/Anura/actions/runs/44649663981) succeeded. GTK Integration: **483 passed, 6 skipped, 707 deselected**; Python Quality, Changelog Integrity, both AppImage and both Flatpak architecture builds, and artifact validation passed. No release was published.
+
+P4's native focus behavior is not established by the virtual-Wayland CI lane. Physical keyboard traversal, native window-manager focus, Orca/AT-SPI, native rendering, live monitor geometry and installed-package checks remain P9 obligations. M6 remains Partial (P1–P4 deterministic CI scopes complete; P5–P6 remain); M7 remains Partial (P8/P9 remain). PR #648 remains Open/Draft/unmerged/base `feature`.

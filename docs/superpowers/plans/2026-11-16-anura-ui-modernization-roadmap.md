@@ -767,5 +767,13 @@ M5-01 can proceed after this formal disposition; F-303-02 remains deferred until
 - **GTK result:** **480 passed, 6 skipped, 707 deselected**. All six cases in `tests/test_m6_02_shortcuts_popover_focus.py` passed, including both compact Language Selector viewports (360×600 and 640×480), scrolling, filtering, selection/accessibility metadata and close-state checks.
 - **Changed files:** only `tests/test_m6_02_shortcuts_popover_focus.py` for the implementation; this follow-up changes the four roadmap/plan documents only. No production source, Blueprint, dependency, workflow or CHANGELOG changes.
 - **M7/P9:** native window activation and Shortcuts/Language Selector focus acquisition/retention/restoration remain deferred. Physical Tab/Shift+Tab, Orca/AT-SPI, native visual rendering, live WM/multi-monitor geometry and installed-package host checks remain unverified and must not be represented as passed.
-- **Next:** P3 is closed within its deterministic CI scope. P4 cross-window focus routes may be proposed as a separate bounded task; no implementation is authorized by this status update.
+- **Disposition:** P3 and P4 are closed within their deterministic CI scopes. P5 accessible-name/role/state and announcement coverage remains a separate bounded phase; P6 theme/contrast and reduced-motion coverage remains open. No further implementation is authorized by this status update.
 - **Governance:** PR #648 remains Open/Draft/unmerged, base `feature`; no protected branch or PR state/base/merge status changed.
+
+## 2026-11-20 — M6-02 P4 exact-head verification: cross-window focus routes
+
+P4 is complete within its approved automated GTK scope on `e4aae923b17c163ef3031aafc06c3e6f7452edec`. New coverage in `tests/test_m6_02_navigation_focus_routes.py` verifies Extracted→Welcome focus restoration, Welcome→History focus within the first History entry row, and the empty-History route without forcing focus. Existing Welcome→Extracted and History→Welcome coverage was retained. A separately authorized production correction schedules focus on the first History entry after the page is shown.
+
+CI Quality & Release [#44649664012](https://github.com/D3M-Sudo/Anura/actions/runs/44649664012) and CodeQL [#44649663981](https://github.com/D3M-Sudo/Anura/actions/runs/44649663981) both succeeded. GTK Integration reported **483 passed, 6 skipped, 707 deselected**, including all three new P4 tests. Python Quality, Changelog Integrity, AppImage/Flatpak x86_64/aarch64 builds and artifact validation passed; publish-release was skipped as expected for a PR.
+
+This is CI evidence only. Native keyboard traversal, Orca/AT-SPI, real desktop/window-manager focus behavior, native rendering, live monitor geometry and installed-package host checks remain deferred to M7/P9. M6 remains Partial: P1–P4 deterministic CI scopes are complete; P5–P6 remain. PR #648 remains Open/Draft/unmerged/base `feature`.

@@ -167,3 +167,17 @@ The following remain outside M6-02 and cannot be marked passed by its CI:
 - **Evidence boundary:** native activation/focus grants, physical keyboard traversal, Orca/AT-SPI, native visual rendering, live multi-monitor/window-manager geometry and installed-package host behavior remain outside CI evidence and deferred to M7/P9.
 - **Scope:** test-only; no production source, Blueprint, dependency, workflow or CHANGELOG change.
 - **Disposition:** M6 global phase remains Partial; M7/P9 native obligations remain open. PR #648 remains Open/Draft/unmerged, base `feature`.
+
+## 2026-11-20 — P4: cross-window focus routes — exact-head verification
+
+- **Outcome:** P4 is complete within the approved deterministic GTK integration scope.
+- **New tests:** `tests/test_m6_02_navigation_focus_routes.py` verifies Extracted→Welcome focus restoration, Welcome→History focus within the first History entry row, and Welcome→empty History without forcing focus. Existing Welcome→Extracted and History→Welcome tests were retained.
+- **Production correction:** a missing Welcome→History focus handoff was reproduced. After separate maintainer authorization, History focus scheduling was corrected to run after the page is shown. The regression assertion recognizes focus on the row or a descendant, consistent with GTK composite-widget focus semantics.
+- **Implementation head:** `e4aae923b17c163ef3031aafc06c3e6f7452edec`.
+- **CI Quality & Release:** [#44649664012](https://github.com/D3M-Sudo/Anura/actions/runs/44649664012) — success.
+- **CodeQL:** [#44649663981](https://github.com/D3M-Sudo/Anura/actions/runs/44649663981) — success.
+- **GTK result:** **483 passed, 6 skipped, 707 deselected**; all three new P4 tests passed.
+- **Other CI:** Python Quality, Changelog Integrity, AppImage/Flatpak x86_64/aarch64 builds and release-set/multi-architecture artifact validation passed. `publish-release` was skipped as expected; no release was published.
+- **Limitations:** physical keyboard traversal, native window-manager focus behavior, Orca/AT-SPI, native visual rendering, live monitor geometry and installed-package host behavior remain unverified and deferred to M7/P9.
+- **Programme status:** M6 remains Partial; P1–P4 deterministic CI scopes are complete, P5–P6 remain. M7/P8/P9 remain open.
+- **Governance:** PR #648 remains Open/Draft/unmerged, base `feature`.
