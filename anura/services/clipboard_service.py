@@ -228,7 +228,6 @@ class ClipboardService(GObject.GObject):
             time.sleep(0.02)
         return True
 
-
     def keep_available_async(
         self,
         timeout_seconds: float,

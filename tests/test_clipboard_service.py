@@ -264,7 +264,6 @@ class TestClipboardLifetime:
         patcher.start()
         return service, patcher
 
-
     def test_async_keep_completes_when_clipboard_manager_stores_content(self):
         clipboard = MagicMock()
         clipboard.is_local.return_value = True

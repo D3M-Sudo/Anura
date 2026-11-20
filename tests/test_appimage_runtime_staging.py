@@ -29,9 +29,9 @@ def test_appimage_runtime_smoke_is_bundled_and_exercises_native_features() -> No
     recipe = (root / "build-aux/appimage/AppImageBuilder.yml").read_text(encoding="utf-8")
 
     assert 'runtime_smoke.py" "$APPDIR/usr/lib/anura/"' in builder
-    assert '--runtime-smoke' in builder
-    assert 'FONTCONFIG_FILE' in entrypoint
-    assert 'gstreamer1.0-tools' in recipe
-    assert 'fontconfig-config' in recipe
+    assert "--runtime-smoke" in builder
+    assert "FONTCONFIG_FILE" in entrypoint
+    assert "gstreamer1.0-tools" in recipe
+    assert "fontconfig-config" in recipe
     for feature in ('["tesseract", image_path, "stdout"', "Gst.parse_launch", "fc-match", "IconTheme"):
         assert feature in smoke
