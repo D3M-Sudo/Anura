@@ -7,7 +7,6 @@
 from collections.abc import Callable
 from gettext import gettext as _
 from io import BytesIO
-import math
 from pathlib import Path
 import threading
 import time
@@ -313,7 +312,7 @@ class ClipboardService(GObject.GObject):
 
         try:
             changed_handler_id = clipboard.connect("changed", on_changed)
-            timeout_source_id = GLib.timeout_add_seconds(max(1, math.ceil(timeout_seconds)), on_timeout)
+            timeout_source_id = GLib.timeout_add_seconds(max(1, int(timeout_seconds)), on_timeout)
             if should_stop is not None:
                 stop_source_id = GLib.timeout_add(100, on_stop_requested)
             clipboard.store_async(GLib.PRIORITY_DEFAULT, None, on_stored)
