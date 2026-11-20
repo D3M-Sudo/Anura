@@ -8,10 +8,10 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
 import re
 import shutil
 import subprocess
+from pathlib import Path
 
 
 def main() -> int:
@@ -61,8 +61,8 @@ def main() -> int:
         detail = message.parse_error()[0].message if message is not None else "EOS timeout"
         raise RuntimeError(f"AppImage GStreamer playback smoke failed: {detail}")
 
-    from PIL import Image, ImageDraw, ImageFont
     import pytesseract
+    from PIL import Image, ImageDraw, ImageFont
 
     font_path = appdir / "usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
     if not font_path.is_file():

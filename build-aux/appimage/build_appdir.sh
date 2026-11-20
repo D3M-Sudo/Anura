@@ -53,6 +53,7 @@ uv pip install --python "$(command -v python3)" --target "$PYTHON_SITE" \
 cp -a "$SOURCE_ROOT/anura" "$PYTHON_SITE/"
 python3 "$SOURCE_ROOT/build-aux/generate_release_notes.py" \
   "$SOURCE_ROOT/CHANGELOG.md" "$PYTHON_SITE/anura/_release_notes.py" "$APP_VERSION"
+cp "$SOURCE_ROOT/build-aux/appimage/runtime_smoke.py" "$APPDIR/usr/lib/anura/"
 
 cat > "$APPDIR/usr/lib/anura/appimage_entrypoint.py" <<'PY'
 from __future__ import annotations
@@ -71,6 +72,10 @@ os.environ["GSETTINGS_SCHEMA_DIR"] = str(appdir / "usr/share/glib-2.0/schemas")
 os.environ["ANURA_LOCALE_DIR"] = str(appdir / "usr/share/locale")
 os.environ["TESSDATA_PREFIX"] = str(appdir / "usr/share/tesseract-ocr/5/tessdata")
 os.environ["TESSDATA_PREFIX_SYSTEM"] = os.environ["TESSDATA_PREFIX"]
+os.environ["FONTCONFIG_PATH"] = str(appdir / "etc/fonts")
+os.environ["FONTCONFIG_FILE"] = str(appdir / "etc/fonts/fonts.conf")
+if not Path(os.environ["FONTCONFIG_FILE"]).is_file():
+    raise RuntimeError("Bundled Fontconfig configuration is missing")
 
 lib_dirs = [path for path in (appdir / "usr/lib").glob("*-linux-gnu") if path.is_dir()]
 lib_dirs.append(appdir / "usr/lib")
@@ -78,9 +83,20 @@ typelib_dirs = [str(path) for path in appdir.glob("usr/lib/**/girepository-1.0")
 if typelib_dirs:
     os.environ["GI_TYPELIB_PATH"] = os.pathsep.join(typelib_dirs)
 gst_dirs = [path for path in lib_dirs if (path / "gstreamer-1.0").is_dir()]
-os.environ["GST_PLUGIN_PATH"] = os.pathsep.join(str(path / "gstreamer-1.0") for path in gst_dirs)
+gst_plugin_path = os.pathsep.join(str(path / "gstreamer-1.0") for path in gst_dirs)
+os.environ["GST_PLUGIN_PATH"] = gst_plugin_path
+os.environ["GST_PLUGIN_SYSTEM_PATH_1_0"] = gst_plugin_path
+scanner_candidates = list(appdir.glob("usr/lib/*/gstreamer1.0/gstreamer-1.0/gst-plugin-scanner"))
+if not scanner_candidates:
+    raise RuntimeError("Bundled GStreamer plugin scanner is missing")
+os.environ["GST_PLUGIN_SCANNER"] = str(scanner_candidates[0])
 
 sys.path[:0] = [str(path) for path in python_paths]
+if sys.argv[1:] == ["--runtime-smoke"]:
+    from runtime_smoke import main as runtime_smoke  # noqa: E402
+
+    raise SystemExit(runtime_smoke())
+
 from gi.repository import Gio  # noqa: E402
 
 resource_path = appdir / "usr/share/anura/io.github.d3m_sudo.anura.gresource"
@@ -105,6 +121,8 @@ desktop-file-validate "$APPDIR/usr/share/applications/io.github.d3m_sudo.anura.d
 desktop-file-validate "$APPDIR/io.github.d3m_sudo.anura.desktop"
 test -s "$APPDIR/usr/share/anura/io.github.d3m_sudo.anura.gresource"
 test -s "$APPDIR/usr/share/glib-2.0/schemas/gschemas.compiled"
+test -s "$APPDIR/etc/fonts/fonts.conf"
+test -s "$APPDIR/usr/lib/anura/runtime_smoke.py"
 test -d "$PYTHON_SITE/anura"
 rm -rf "$APPDIR/.blueprint-ui" "$APPDIR/.requirements.txt"
 echo "Prepared relocatable AppDir for $APPIMAGE_ARCH ($APP_VERSION)"
