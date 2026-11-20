@@ -931,3 +931,60 @@ No production correction was made in Task 4; no dependency, permanent workflow o
 - **Evidence boundary:** static semantic-color and CSS-motion contracts do not establish runtime GTK/Libadwaita rendered contrast or toolkit-native animation behavior. The GTK lane does not establish physical keyboard traversal, Orca/AT-SPI, native rendering, live window-manager/multi-monitor behavior or installed-package behavior. These remain M7/P9 obligations; no application-wide accessibility or WCAG conformance claim is made.
 - **Programme status:** P1–P6 deterministic CI-testable scopes are complete within their approved boundaries. M6 remains **Partial** globally because broader/native requirements remain; M7 remains **Partial**, with P8 traceability/consolidation and P9 native-host validation open.
 - **Governance:** PR #648 remains Open/Draft/unmerged, base `feature`, head `8d9a6a54219f868116d7ba839e85db75f437b254`. No protected branch, PR state/base or merge status changed.
+
+
+## 9. Consolidated status update — 2026-11-20 (P8)
+
+This section is the current status snapshot and supersedes older interim notes in the historical task log where they describe M4-02, M6-01 or P1–P6 as upcoming. Historical entries are retained as an audit trail; use this section and the phase table in §4 for current disposition.
+
+### Current phase disposition
+
+- **M0:** audit and prioritized backlog complete; this does not mean every finding has been implemented.
+- **M1:** complete operationally within the approved automated/design-system scope. Native rendering, real assistive technology and live desktop checks remain deferred.
+- **M2:** complete operationally within the approved automated scope. Native checks remain deferred.
+- **M3:** complete within the agreed remediation scope. Physical History keyboard traversal remains open under #655/M7/P9.
+- **M4:** partial globally. M4-01, M4-02 Tasks 1–5 and M4-RR are complete only within their approved CI-testable scopes. Native visual, physical keyboard and AT checks remain open.
+- **M5:** complete within the bounded scope accepted by the maintainer. Explicitly excluded toast lifecycle and deferred P3 dialog/Portal/popover work are not counted as completed tests.
+- **M6:** partial globally. M6-01 audit/matrix and M6-02 test plan are complete; deterministic CI scopes P1–P6 are complete within their approvals. This is not application-wide WCAG/accessibility conformance.
+- **M7:** partial. P8 traceability/consolidation is the current documentation work; P9 native-host validation remains deferred pending a supported session and explicit authorization.
+
+### P1–P6 exact evidence index
+
+| Scope | Implementation/test SHA | CI / CodeQL | Recorded outcome |
+|---|---|---|---|
+| P1 Extracted/History responsive | `f3b502177efa32c741307fce020f24fb1d4d7558` | [CI 44484731845](https://github.com/D3M-Sudo/Anura/actions/runs/44484731845); [CodeQL 44484731918](https://github.com/D3M-Sudo/Anura/actions/runs/44484731918) | Success; bounded responsive module 8 passed. |
+| P2 Preferences responsive | `65e2b1597b1d02f7aa851cfdb4dfd7f17920c7a6` | [CI 44607860024](https://github.com/D3M-Sudo/Anura/actions/runs/44607860024); [CodeQL 44607859740](https://github.com/D3M-Sudo/Anura/actions/runs/44607859740) | Success; GTK integration 474 passed, 6 skipped, 707 deselected. |
+| P3 Shortcuts/Language Selector | `fb91b6b5ebd2de8f7f7834ab88942f1f5a214870` | [CI 44636489764](https://github.com/D3M-Sudo/Anura/actions/runs/44636489764); [CodeQL 44636489904](https://github.com/D3M-Sudo/Anura/actions/runs/44636489904) | Success; GTK 480 passed, 6 skipped, 707 deselected; six new tests passed. |
+| P4 navigation focus routes | `e4aae923b17c163ef3031a1afc06c3e6f7452edec` | [CI 44649664012](https://github.com/D3M-Sudo/Anura/actions/runs/44649664012); [CodeQL 44649663981](https://github.com/D3M-Sudo/Anura/actions/runs/44649663981) | Success; GTK 483 passed, 6 skipped, 707 deselected. Includes separately approved Welcome→History focus correction. |
+| P5 accessible control contracts | `84607da73acb1873bd96ae923b2c0e2307688187` | [CI 44655379141](https://github.com/D3M-Sudo/Anura/actions/runs/44655379141); [CodeQL 44655379181](https://github.com/D3M-Sudo/Anura/actions/runs/44655379181) | Success; GTK 488 passed, 6 skipped, 707 deselected; Python Quality 701 passed, 9 skipped, 299 deselected. |
+| P6 semantic color/reduced-motion contracts | `8d9a6a54219f868116d7ba839e85db75f437b254` | [CI 44667645110](https://github.com/D3M-Sudo/Anura/actions/runs/44667645110); [CodeQL 44667645155](https://github.com/D3M-Sudo/Anura/actions/runs/44667645155) | Success; Python Quality 703 passed, 9 skipped, 300 deselected; GTK and package/artifact validations passed. |
+
+P6 documentation reconciliation commit: `a195a4f82be1d48d75c5c345933e59d96d82f9bd`. Docs-only required gates passed in [run 44672653258](https://github.com/D3M-Sudo/Anura/actions/runs/44672653258) (Python Quality and Changelog Integrity); [CodeQL 44672653395](https://github.com/D3M-Sudo/Anura/actions/runs/44672653395) also passed. Under the agreed docs-only policy, GTK and packaging jobs were not required for this documentation head.
+
+### Requirement-to-delivery traceability snapshot
+
+| Requirement family | Delivered implementation / evidence | Current disposition | Residual / limit |
+|---|---|---|---|
+| Shared palette, theme and semantic colors | `data/style.css`, `tests/test_ui_palette.py`, `tests/ui_color_scanner.py`, `tests/test_ui_color_scanner.py`; P6 semantic color contracts | Verified for defined static/reference surfaces and approved token contracts | Not runtime-rendered GTK contrast; all surface/state combinations not proven. Native rendering deferred to P9. |
+| Reduced motion | `anura/utils/accessibility.py`, `anura/window.py`, `anura/widgets/shortcuts_overlay.py`, `tests/test_reduced_motion.py`, `tests/test_window_geometry.py`; P6 | Verified for app-authored CSS policy, main-window preference initialization/live transitions and Shortcuts root behavior within tests | Does not prove toolkit-native Gtk.Spinner/Revealer/Stack animation suppression. |
+| Responsive geometry | P1–P3 and existing Welcome/window geometry tests; viewport reference set 360×600, 640×480, 900×600, 1280×800 | Verified only for bounded tested surfaces and states | No exhaustive all-window/all-state viewport matrix. |
+| Focus and navigation | `tests/test_m6_02_navigation_focus_routes.py`, P4; Welcome→History focus correction | Selected route/focus contracts verified in GTK CI | Physical keyboard traversal, native WM focus and full navigation graph remain open; #655. |
+| Accessible control names/roles/states | `tests/test_m6_02_accessible_control_contracts.py`, P5; Language Selector, Welcome drop area, Extracted TTS and selected GTK roles | Selected GTK-exposed contracts verified | No proof of Orca speech, AT-SPI bridge operation or complete control-by-control coverage. |
+| Preferences and language lifecycle | M4-01/M4-02/M4-RR records; Preferences integration/lifecycle tests | Bounded page search/filter/persistence/lifecycle contracts verified | Global M4 remains partial; native visual/focus/AT checks remain. |
+| Menus, dialogs and transient UI | M5-01/M5-02/M5-03 records and tests | Selected static menu, toast delegation and banner dismissal contracts verified | Toast lifecycle explicitly excluded; dialog/Portal/popover residuals remain deferred or limited. |
+| Localization | `po/LINGUAS`, 26 PO catalogues and source `.pot` | Source catalogue exists; 26 language scope identified | Per-catalogue completeness and human linguistic review not established by POT presence or non-empty msgstr. Separate non-blocking review. |
+| Native desktop and packaging behavior | CI AppImage/Flatpak x86_64/aarch64 and artifact validation for P6 exact head | Build/artifact validation verified in CI for P6 head | No host installation/runtime, native GNOME rendering, Orca/AT-SPI, physical keyboard or live multi-monitor validation. P9 deferred. |
+
+### Translation review policy (maintainer decision 2026-11-20)
+
+- Workflow: Weblate and volunteer translators, with automated CI catalogue checks as preliminary validation and human linguistic/contextual review as a distinct quality activity.
+- Scope: all 26 catalogues listed by `po/LINGUAS`; prioritize Italian and English, without dropping the other languages.
+- Evidence: record per-language catalogue validation and a separate human-review status/source. A populated `msgstr` is not evidence of human review; an empty `msgstr` must be assessed against fallback and release policy rather than automatically treated as a defect.
+- Governance: translation review is a separate, **non-blocking** activity for P8/P9 and UI Modernization closure. No language may be labelled human-reviewed without evidence.
+
+### P8/P9 current disposition
+
+- **P8:** requirement/evidence reconciliation and document consolidation are being completed in the current authorized documentation pass. The readiness report records verified, partial, deferred and unresolved items.
+- **P9:** not started. Requires a supported native desktop session, explicit authorization and an exact-commit test record. Include physical History keyboard traversal (#655), native visual/responsive checks, Orca/AT-SPI, live WM/monitor geometry and installed-package host smoke testing where authorized.
+- **Screenshots:** remain deferred to the next release cycle as previously agreed.
+- **Scope guard:** no application-wide WCAG conformance claim; no code, dependencies, workflows, release publication or protected-branch changes are implied by this status record.
