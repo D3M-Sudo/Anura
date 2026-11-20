@@ -303,7 +303,11 @@ def test_dev_only_module_warning_requires_actual_manifest_declaration(tmp_path: 
 
     _write_manifest(local, RUNTIME_MODULES | {"python3-pathspec"})
     result = checker.check_runtime_coverage(pyproject, uv_lock, (local,), env=LINUX_ENV)
-    assert any("python3-pathspec" in warning for warning in result.warnings)
+    assert not any("pathspec" in warning for warning in result.warnings)
+
+    _write_manifest(local, RUNTIME_MODULES | {"python3-pillow"})
+    result = checker.check_runtime_coverage(pyproject, uv_lock, (local,), env=LINUX_ENV)
+    assert any("python3-pillow" in warning for warning in result.warnings)
 
 
 def test_7_manifest_mode_selection() -> None:
