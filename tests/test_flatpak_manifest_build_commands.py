@@ -84,14 +84,12 @@ def test_build_time_helpers_precede_the_modules_that_import_them(manifest: dict)
     zxing_commands = modules["python3-zxing-cpp"].get("build-commands", [])
     assert not any("pathspec" in command and "rm -rf" in command for command in zxing_commands)
     pillow_commands = modules["python3-pillow"].get("build-commands", [])
-    assert any("pathspec" in command and "rm -rf" in command for command in pillow_commands)
-    install_index = next(index for index, command in enumerate(zxing_commands) if "pip3 install" in command)
-    cleanup_index = next(
-        index for index, command in enumerate(zxing_commands) if "pathspec" in command and "rm -rf" in command
+    pillow_install_index = next(index for index, command in enumerate(pillow_commands) if "pip3 install" in command)
+    pillow_cleanup_index = next(
+        index for index, command in enumerate(pillow_commands) if "pathspec" in command and "rm -rf" in command
     )
-    assert cleanup_index > install_index
-    assert cleanup_index > next(index for index, command in enumerate(zxing_commands) if "LICENSE" in command)
-    assert "set -e" in zxing_commands[cleanup_index]
+    assert pillow_cleanup_index > pillow_install_index
+    assert "set -e" in pillow_commands[pillow_cleanup_index]
 
 
 def test_zxing_cpp_installs_the_sdist_it_declares(manifest: dict) -> None:
