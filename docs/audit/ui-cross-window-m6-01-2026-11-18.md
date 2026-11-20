@@ -7,6 +7,9 @@
 **Audit type:** read-only source, template, existing-test and roadmap review  
 **Disposition:** M6-01 audit/matrix completed within the documentation-only scope approved by the maintainer. No code, tests, dependencies, workflows or runtime behavior were changed.
 
+**Status:** Completed — bounded cross-window audit and evidence matrix.
+**Programme boundary:** Global M6 remains **Partial**. M7/P9 native-host validation obligations remain open and are not represented as passed.
+
 ## 1. Purpose and scope
 
 M6-01 reconciles responsive and accessibility evidence across the complete application UI scope, not only the windows previously modified in M1–M5. The review covers the main shell and all identified windows/pages, dialogs, popovers, menus, reusable rows, notifications and transient states.
