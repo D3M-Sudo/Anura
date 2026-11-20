@@ -93,10 +93,8 @@ os.environ["GSETTINGS_SCHEMA_DIR"] = str(appdir / "usr/share/glib-2.0/schemas")
 os.environ["ANURA_LOCALE_DIR"] = str(appdir / "usr/share/locale")
 os.environ["TESSDATA_PREFIX"] = str(appdir / "usr/share/tesseract-ocr/5/tessdata")
 os.environ["TESSDATA_PREFIX_SYSTEM"] = os.environ["TESSDATA_PREFIX"]
-os.environ["FONTCONFIG_PATH"] = str(appdir / "etc/fonts")
-os.environ["FONTCONFIG_FILE"] = str(appdir / "etc/fonts/fonts.conf")
-if not Path(os.environ["FONTCONFIG_FILE"]).is_file():
-    raise RuntimeError("Bundled Fontconfig configuration is missing")
+if not runtime_config.is_file():
+    raise RuntimeError("Runtime Fontconfig configuration could not be created")
 
 lib_dirs = [path for path in (appdir / "usr/lib").glob("*-linux-gnu") if path.is_dir()]
 lib_dirs.append(appdir / "usr/lib")
