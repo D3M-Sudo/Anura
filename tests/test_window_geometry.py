@@ -168,6 +168,7 @@ def test_history_page_keeps_its_entry_list_scrollable() -> None:
     assert "child: Gtk.ScrolledWindow" in blueprint
     assert "Gtk.ListBox history_list" in blueprint
 
+
 class _FakeMotionSettings:
     def __init__(self, *, animations_enabled: bool, reduced_motion: bool) -> None:
         self.properties = {
