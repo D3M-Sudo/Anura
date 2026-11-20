@@ -44,8 +44,8 @@ def test_appimage_runtime_smoke_is_bundled_and_exercises_native_features() -> No
     assert "<string>sans</string>" in builder
     assert '"sans-serif", "sans"' in smoke
     assert '"fc-list"' in smoke
-    assert 'font_dir.is_dir()' in smoke
-    assert 'font_dir.rglob(suffix)' in smoke
+    assert "font_dir.is_dir()" in smoke
+    assert "font_dir.rglob(suffix)" in smoke
     assert '[font_cache, "-f", "-v", str(font_dir)]' in smoke
     assert "cache_stdout=" in smoke
     assert "font_samples=" in smoke
