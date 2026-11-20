@@ -51,8 +51,9 @@ def test_language_selector_selection_change_refreshes_accessible_metadata(headle
 
 
 def test_welcome_drop_area_toggle_updates_expanded_state_and_accessible_name(headless_gi_mocks, monkeypatch):
-    import anura.widgets.welcome_page as welcome_page
     from gi.repository import Gtk
+
+    import anura.widgets.welcome_page as welcome_page
 
     page = MagicMock()
     page.drop_revealer.get_reveal_child.side_effect = [False, True]
