@@ -31,9 +31,7 @@ def main() -> int:
             f"share_exists={(appdir / 'usr/share').is_dir()}"
         )
     bundled_font_samples = sorted(
-        str(path.relative_to(appdir))
-        for suffix in ("*.ttf", "*.otf", "*.ttc")
-        for path in font_dir.rglob(suffix)
+        str(path.relative_to(appdir)) for suffix in ("*.ttf", "*.otf", "*.ttc") for path in font_dir.rglob(suffix)
     )[:10]
     with tempfile.TemporaryDirectory(prefix="anura-fontconfig-cache-") as cache_dir:
         font_env = os.environ.copy()
