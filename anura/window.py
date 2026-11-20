@@ -583,10 +583,10 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
             self.tts_controller.stop()
 
     def show_history_page(self, *_args: object) -> None:
-        """Show History and focus its first entry when the populated page is mapped."""
+        """Show History and focus its first entry after the navigation transition."""
         self.history_page.refresh()
-        self.navigation_view.push_by_tag("history")
         self.history_page.focus_first_entry()
+        self.navigation_view.push_by_tag("history")
 
     def _on_show_history(self, _action: Gio.SimpleAction, _parameter: object) -> None:
         """Activate the win.show-history action."""

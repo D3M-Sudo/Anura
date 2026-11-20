@@ -133,11 +133,13 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
         self._row_handlers: list[tuple[Gtk.Widget, int]] = []
         # Copy-button feedback timers, keyed by button so they can be cancelled.
         self._feedback_timers: dict[Gtk.Button, int] = {}
+        self._focus_first_entry_on_shown = False
 
         super().__init__(**kwargs)
         SignalManagerMixin.__init__(self)
         self.settings = settings
 
+        self.connect("shown", self._on_shown)
         self.connect_tracked(self.clear_button, "clicked", self._on_clear_clicked)
         # SignalManagerMixin.teardown_all() calls teardown() on registered controllers.
         self.register_controller(self)
@@ -229,21 +231,21 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
         return GLib.SOURCE_REMOVE
 
     def focus_first_entry(self) -> None:
-        """Move keyboard focus to the first entry after its row is mapped."""
+        """Request focus for the first entry once the navigation page is fully shown."""
+        if not self._row_entry_ids:
+            return
+        self._focus_first_entry_on_shown = True
+
+    def _on_shown(self, *_args: object) -> None:
+        """Apply the pending focus request after Adw.NavigationPage finishes showing."""
+        if not self._focus_first_entry_on_shown:
+            return
+
+        self._focus_first_entry_on_shown = False
         first_row = next(iter(self._row_entry_ids.values()), None)
-        if first_row is None:
-            return
-
-        if first_row.get_mapped():
+        if first_row is not None:
+            # Run after the signal's default handler and the completed transition.
             GLib.idle_add(self._grab_focus_if_mapped, first_row)
-            return
-
-        handler_id = first_row.connect("map", self._on_first_entry_mapped)
-        self._row_handlers.append((first_row, handler_id))
-
-    def _on_first_entry_mapped(self, row: Adw.ExpanderRow) -> None:
-        """Defer focus until GTK has completed mapping the first entry row."""
-        GLib.idle_add(self._grab_focus_if_mapped, row)
 
     @staticmethod
     def _grab_focus_if_mapped(row: Adw.ExpanderRow) -> bool:
