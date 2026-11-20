@@ -70,7 +70,7 @@ def test_build_time_helpers_precede_the_modules_that_import_them(manifest: dict)
     order = {module["name"]: index for index, module in enumerate(manifest["modules"])}
 
     assert order["python3-packaging"] < order["python3-scikit-build-core"]
-    assert order["python3-pathspec"] < order["python3-scikit-build-core"]
+    assert "python3-pathspec" not in order
     assert order["python3-pybind11"] < order["python3-pillow"]
     assert order["python3-nanobind"] < order["python3-zxing-cpp"]
     assert order["python3-scikit-build-core"] < order["python3-zxing-cpp"]
