@@ -3,32 +3,34 @@
 #
 # SPDX-License-Identifier: MIT
 
-"""Tests for SilentRunner (headless `--silent` OCR mode).
-
-The only other test that mentions SilentRunner replaces the class with a mock, so
-nothing exercised its real code path.
-"""
+"""Tests for SilentRunner (headless `--silent` OCR mode)."""
 
 import faulthandler
+from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 pytest.importorskip("gi")
 
-from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
-
 from anura.core.silent_runner import SilentRunner
 
 
 class _StubApp:
-    """Minimal stand-in for AnuraApplication used by SilentRunner."""
+    """Minimal GApplication stand-in used by SilentRunner."""
 
     def __init__(self, success: bool = True, text: str = "recognised text", error: str | None = None):
         self._result = (success, text, error, None, None)
+        self.holds = 0
 
     def _decode_image_synchronously(self, _file_path: str):
         return self._result
+
+    def hold(self):
+        self.holds += 1
+
+    def release(self):
+        self.holds -= 1
 
 
 @pytest.fixture
@@ -45,11 +47,7 @@ def fake_clipboard():
 
 
 def _run_with_hang_guard(runner: SilentRunner) -> int:
-    """Run the runner; if its main loop never ends, dump the stack and abort quickly.
-
-    pytest-timeout cannot interrupt a blocked GLib main loop, so a regression would
-    otherwise hang the whole test session instead of failing.
-    """
+    """Abort quickly if a GLib main loop regresses into an uninterruptible hang."""
     faulthandler.dump_traceback_later(20, exit=True)
     try:
         return runner.run()
@@ -57,74 +55,52 @@ def _run_with_hang_guard(runner: SilentRunner) -> int:
         faulthandler.cancel_dump_traceback_later()
 
 
-def test_silent_ocr_runs_on_the_real_glib_main_context(fake_clipboard):
-    """Regression: the silent runner never ran (and then hung forever).
-
-    Two defects on the same loop, both invisible to the mocked CLI test:
-    - it called GLib.MainContext.push()/pop(), which do not exist (PyGObject only
-      exposes push_thread_default()/pop_thread_default()): AttributeError;
-    - its GSource callbacks took no arguments, but PyGObject calls a source callback
-      with its user_data (None), so every callback raised TypeError, the OCR callback
-      never ran and not even the 60 s timeout could end the loop.
-    """
-    runner = SilentRunner(_StubApp(), "/tmp/image.png")
+def test_silent_ocr_runs_on_the_real_glib_main_context_and_defers_clipboard_release(fake_clipboard):
+    """OCR succeeds, then the application remains held for asynchronous clipboard serving."""
+    app = _StubApp()
+    runner = SilentRunner(app, "/tmp/image.png")
 
     assert _run_with_hang_guard(runner) == 0
-
     fake_clipboard.set.assert_called_once_with("recognised text")
+    fake_clipboard.keep_available_async.assert_called_once()
+    args = fake_clipboard.keep_available_async.call_args.args
+    assert args[0] == 30
+    assert args[2] == runner.interrupted.is_set
+    assert app.holds == 1
+    args[1]("stored")
+    assert app.holds == 0
 
 
-def test_silent_ocr_failure_exits_with_error_code(fake_clipboard):
-    runner = SilentRunner(_StubApp(success=False, text="", error="no tesseract"), "/tmp/image.png")
+def test_silent_ocr_failure_exits_without_holding_the_application(fake_clipboard):
+    app = _StubApp(success=False, text="", error="no tesseract")
+    runner = SilentRunner(app, "/tmp/image.png")
 
     assert _run_with_hang_guard(runner) == 1
-
     fake_clipboard.set.assert_not_called()
+    fake_clipboard.keep_available_async.assert_not_called()
+    assert app.holds == 0
 
 
-def test_clipboard_handed_to_manager_exits_without_waiting(fake_clipboard):
-    fake_clipboard.hand_off_to_manager.return_value = True
-    runner = SilentRunner(_StubApp(), "/tmp/image.png")
-
-    assert _run_with_hang_guard(runner) == 0
-
-    fake_clipboard.hand_off_to_manager.assert_called_once_with()
-    fake_clipboard.wait_until_replaced.assert_not_called()
-
-
-def test_without_clipboard_manager_the_process_keeps_serving_the_clipboard(fake_clipboard):
-    """No manager: the text is pasteable only while the process lives, so it must linger."""
-    from anura.core import silent_runner
-
-    fake_clipboard.hand_off_to_manager.return_value = False
-    fake_clipboard.wait_until_replaced.return_value = True
-    runner = SilentRunner(_StubApp(), "/tmp/image.png")
+def test_clipboard_timeout_releases_the_application_after_successful_ocr(fake_clipboard):
+    app = _StubApp()
+    runner = SilentRunner(app, "/tmp/image.png")
 
     assert _run_with_hang_guard(runner) == 0
+    assert app.holds == 1
+    callback = fake_clipboard.keep_available_async.call_args.args[1]
+    callback("timeout")
+    assert app.holds == 0
 
-    fake_clipboard.wait_until_replaced.assert_called_once_with(
-        silent_runner._CLIPBOARD_LINGER_SECONDS, runner.interrupted.is_set
-    )
 
-
-def test_signal_while_waiting_for_the_clipboard_still_exits_successfully(fake_clipboard):
-    """The OCR already succeeded; a signal only cuts the courtesy wait short."""
-    fake_clipboard.hand_off_to_manager.return_value = False
-    runner = SilentRunner(_StubApp(), "/tmp/image.png")
-
-    def interrupted_while_waiting(_timeout, _should_stop):
-        runner.interrupted.set()
-        return False
-
-    fake_clipboard.wait_until_replaced.side_effect = interrupted_while_waiting
+def test_signal_while_serving_clipboard_releases_the_application(fake_clipboard):
+    app = _StubApp()
+    runner = SilentRunner(app, "/tmp/image.png")
 
     assert _run_with_hang_guard(runner) == 0
-
-
-def test_failed_ocr_does_not_wait_for_the_clipboard(fake_clipboard):
-    runner = SilentRunner(_StubApp(success=False, text="", error="no tesseract"), "/tmp/image.png")
-
-    assert _run_with_hang_guard(runner) == 1
-
-    fake_clipboard.hand_off_to_manager.assert_not_called()
-    fake_clipboard.wait_until_replaced.assert_not_called()
+    assert app.holds == 1
+    should_stop = fake_clipboard.keep_available_async.call_args.args[2]
+    runner.interrupted.set()
+    assert should_stop() is True
+    callback = fake_clipboard.keep_available_async.call_args.args[1]
+    callback("interrupted")
+    assert app.holds == 0

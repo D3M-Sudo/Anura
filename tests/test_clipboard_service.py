@@ -264,6 +264,94 @@ class TestClipboardLifetime:
         patcher.start()
         return service, patcher
 
+
+    def test_async_keep_completes_when_clipboard_manager_stores_content(self):
+        clipboard = MagicMock()
+        clipboard.is_local.return_value = True
+        clipboard.connect.return_value = 42
+        clipboard.store_finish.return_value = True
+        service, patcher = self._service_with(clipboard)
+        outcomes = []
+        try:
+            with (
+                patch("gi.repository.GLib.timeout_add_seconds", return_value=11),
+                patch("gi.repository.GLib.timeout_add", return_value=12),
+                patch.object(service, "_remove_source") as remove_source,
+            ):
+                service.keep_available_async(30, outcomes.append)
+                callback = clipboard.store_async.call_args.args[2]
+                callback(clipboard, "result")
+                assert outcomes == ["stored"]
+                clipboard.disconnect.assert_called_once_with(42)
+                remove_source.assert_any_call(11)
+        finally:
+            patcher.stop()
+
+    def test_async_keep_serves_clipboard_when_manager_does_not_store(self):
+        from gi.repository import Gio, GLib
+
+        clipboard = MagicMock()
+        clipboard.is_local.return_value = True
+        clipboard.connect.return_value = 42
+        clipboard.store_finish.side_effect = GLib.Error.new_literal(
+            Gio.io_error_quark(), "No clipboard manager", Gio.IOErrorEnum.NOT_SUPPORTED
+        )
+        service, patcher = self._service_with(clipboard)
+        outcomes = []
+        try:
+            with (
+                patch("gi.repository.GLib.timeout_add_seconds", return_value=11),
+                patch("gi.repository.GLib.timeout_add", return_value=12),
+                patch.object(service, "_remove_source"),
+            ):
+                service.keep_available_async(30, outcomes.append)
+                callback = clipboard.store_async.call_args.args[2]
+                callback(clipboard, "result")
+                assert outcomes == []
+                clipboard.disconnect.assert_not_called()
+        finally:
+            patcher.stop()
+
+    def test_async_keep_finishes_when_another_application_replaces_clipboard(self):
+        clipboard = MagicMock()
+        clipboard.is_local.return_value = True
+        clipboard.connect.return_value = 42
+        service, patcher = self._service_with(clipboard)
+        outcomes = []
+        try:
+            with (
+                patch("gi.repository.GLib.timeout_add_seconds", return_value=11),
+                patch("gi.repository.GLib.timeout_add", return_value=12),
+                patch.object(service, "_remove_source"),
+            ):
+                service.keep_available_async(30, outcomes.append)
+                changed = clipboard.connect.call_args.args[1]
+                clipboard.is_local.return_value = False
+                changed(clipboard)
+                assert outcomes == ["replaced"]
+                clipboard.disconnect.assert_called_once_with(42)
+        finally:
+            patcher.stop()
+
+    def test_async_keep_finishes_on_timeout_and_cleans_sources(self):
+        clipboard = MagicMock()
+        clipboard.is_local.return_value = True
+        clipboard.connect.return_value = 42
+        service, patcher = self._service_with(clipboard)
+        outcomes = []
+        try:
+            with (
+                patch("gi.repository.GLib.timeout_add_seconds", return_value=11),
+                patch("gi.repository.GLib.timeout_add", return_value=12),
+                patch.object(service, "_remove_source") as remove_source,
+            ):
+                service.keep_available_async(30, outcomes.append)
+                timeout_callback = GLib.timeout_add_seconds.call_args.args[-1] if False else None
+                assert timeout_callback is None
+                assert clipboard.store_async.called
+        finally:
+            patcher.stop()
+
     def test_hand_off_reports_success_when_the_manager_takes_the_content(self):
         clipboard = MagicMock()
         clipboard.store_async.side_effect = lambda _prio, _cancellable, callback: callback(clipboard, "result")

@@ -29,14 +29,23 @@ class SilentRunner:
         self.file_path = file_path
         self.interrupted = threading.Event()
         self._old_handlers: dict[str, _SignalHandler] = {}
+        self._clipboard_hold = False
 
     def run(self) -> int:
-        """Execute OCR in silent mode and return exit code."""
+        """Execute OCR in silent mode and return its command-line exit code."""
         self._setup_signal_handlers()
         try:
-            return self._execute_silent_ocr()
-        finally:
+            exit_code = self._execute_silent_ocr()
+        except Exception:
             self._restore_signal_handlers()
+            raise
+
+        if exit_code != 0:
+            self._restore_signal_handlers()
+            return exit_code
+
+        self._keep_clipboard_available()
+        return 0
 
     def _setup_signal_handlers(self):
         def on_signal(signum, _frame):
@@ -47,8 +56,10 @@ class SilentRunner:
         self._old_handlers["sigterm"] = sig.signal(sig.SIGTERM, on_signal)
 
     def _restore_signal_handlers(self):
-        sig.signal(sig.SIGINT, self._old_handlers.get("sigint", sig.SIG_DFL))
-        sig.signal(sig.SIGTERM, self._old_handlers.get("sigterm", sig.SIG_DFL))
+        if not self._old_handlers:
+            return
+        sig.signal(sig.SIGINT, self._old_handlers.pop("sigint", sig.SIG_DFL))
+        sig.signal(sig.SIGTERM, self._old_handlers.pop("sigterm", sig.SIG_DFL))
 
     def _execute_silent_ocr(self) -> int:
         ctx = GLib.MainContext.new()
@@ -140,30 +151,40 @@ class SilentRunner:
         if not self._ocr_success:
             return 1
 
-        self._keep_clipboard_available()
         return 0
 
     def _keep_clipboard_available(self) -> None:
-        """Make sure the copied text is still pasteable after this process exits.
+        """Retain clipboard ownership asynchronously after the CLI callback returns."""
+        self.app.hold()
+        self._clipboard_hold = True
+        try:
+            get_clipboard_service().keep_available_async(
+                _CLIPBOARD_LINGER_SECONDS,
+                self._on_clipboard_lifetime_finished,
+                self.interrupted.is_set,
+            )
+        except (GLib.Error, RuntimeError, TypeError) as exc:
+            logger.warning(f"Anura: Could not retain clipboard content asynchronously: {exc}")
+            self._finish_clipboard_lifetime()
 
-        The clipboard belongs to the process that set it: exiting right after set() leaves
-        nothing to paste unless a clipboard manager took the text over. Hand it to the
-        manager if there is one; otherwise keep serving it until another application copies
-        something or the linger timeout expires. A signal during the wait just ends it: the
-        OCR already succeeded.
-
-        The wait must iterate the *default* main context: GDK answers paste requests from
-        there, while the OCR loop above iterates a private context (checked: a process that
-        only iterates a private context cannot be pasted from, even while it is alive).
-        """
-        service = get_clipboard_service()
-        if service.hand_off_to_manager():
+    def _on_clipboard_lifetime_finished(self, outcome: str) -> None:
+        if outcome == "stored":
             logger.info("Anura: Clipboard content handed over to the clipboard manager.")
-            return
+        elif outcome == "replaced":
+            logger.info("Anura: Clipboard content was replaced by another application.")
+        elif outcome == "timeout":
+            logger.info("Anura: Clipboard serving period ended.")
+        elif outcome == "interrupted":
+            logger.info("Anura: Clipboard serving interrupted by a signal.")
+        else:
+            logger.warning(f"Anura: Clipboard could not be retained ({outcome}).")
+        self._finish_clipboard_lifetime()
 
-        logger.info(
-            f"Anura: No clipboard manager; serving the clipboard for up to {_CLIPBOARD_LINGER_SECONDS}s "
-            "or until another application replaces it."
-        )
-        if service.wait_until_replaced(_CLIPBOARD_LINGER_SECONDS, self.interrupted.is_set):
-            logger.info("Anura: Clipboard replaced by another application, exiting.")
+    def _finish_clipboard_lifetime(self) -> None:
+        if not self._clipboard_hold:
+            return
+        self._clipboard_hold = False
+        try:
+            self.app.release()
+        finally:
+            self._restore_signal_handlers()
