@@ -39,6 +39,11 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install gettext validation tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y gettext
+
       - name: Run Ruff Linter
         uses: astral-sh/ruff-action@278981a28ce3188b1e39527901f38254bf3aac89 # v4.1.0
         with:
@@ -53,6 +58,11 @@ jobs:
         run: |
           pip install "uv==0.13.5"
           uv sync --locked --dev
+
+      - name: Validate maintainer-owned Italian gettext catalogue
+        run: |
+          msgfmt --check --check-format --check-header -o /dev/null po/it.po
+          msgfmt --check-format --check-domain -o /dev/null po/io.github.d3m_sudo.anura.pot
 
       - name: Check code formatting
         # Configuration in pyproject.toml; Markdown is excluded because the

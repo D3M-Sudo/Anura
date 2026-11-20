@@ -20,8 +20,8 @@ class ChangelogError(ValueError):
     """Invalid changelog or removal authorization data."""
 
 
-def unreleased_entries(content: str) -> list[str]:
-    """Return normalized bullet text from the first [Unreleased] section."""
+def unreleased_section_lines(content: str) -> list[str]:
+    """Return lines belonging to the first [Unreleased] section."""
     lines = content.splitlines()
     start = next(
         (index for index, line in enumerate(lines) if line.strip() == "## [Unreleased]"),
@@ -30,14 +30,32 @@ def unreleased_entries(content: str) -> list[str]:
     if start is None:
         raise ChangelogError("Missing ## [Unreleased] section")
 
+    for index in range(start + 1, len(lines)):
+        if re.match(r"^##\s+", lines[index]):
+            return lines[start + 1 : index]
+    return lines[start + 1 :]
+
+
+def unreleased_entries(content: str) -> list[str]:
+    """Return normalized bullet text from the first [Unreleased] section."""
     entries = []
-    for line in lines[start + 1 :]:
-        if re.match(r"^##\s+", line):
-            break
+    for line in unreleased_section_lines(content):
         match = re.match(r"^\s*[-*]\s+(.+?)\s*$", line)
         if match:
             entries.append(" ".join(match.group(1).split()))
     return entries
+
+
+def duplicate_unreleased_categories(content: str) -> list[str]:
+    """Return category headings repeated within the first [Unreleased] section."""
+    categories = []
+    for line in unreleased_section_lines(content):
+        match = re.match(r"^###\s+(.+?)\s*$", line)
+        if match:
+            categories.append(" ".join(match.group(1).split()))
+
+    counts = Counter(categories)
+    return sorted(category for category, count in counts.items() if count > 1)
 
 
 def load_authorized_removals(path: Path = ALLOWLIST) -> Counter[str]:
@@ -115,6 +133,13 @@ def main() -> int:
     try:
         base_content = read_git_file(args.base_ref)
         head_content = read_git_file(args.head_ref)
+        duplicate_categories = duplicate_unreleased_categories(head_content)
+        if duplicate_categories:
+            print("::error::Duplicate [Unreleased] category headings:")
+            for category in duplicate_categories:
+                print(f"  - ### {category}")
+            print("Reuse the existing category heading instead of adding a duplicate.")
+            return 1
         violations = check_entries(base_content, head_content, load_authorized_removals())
     except ChangelogError as exc:
         print(f"::error::{exc}", file=sys.stderr)

@@ -26,8 +26,8 @@ anura/widgets/share_row.py
 anura/widgets/shortcuts_overlay.py
 anura/widgets/welcome_page.py
 anura/window.py
-data/io.github.d3msudo.anura.desktop.in
-data/io.github.d3msudo.anura.metainfo.xml.in
+data/io.github.d3m_sudo.anura.desktop.in
+data/io.github.d3m_sudo.anura.metainfo.xml.in
 data/ui/extracted_page.blp
 data/ui/history_page.blp
 data/ui/language_popover.blp

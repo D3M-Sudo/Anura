@@ -6,20 +6,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-### Changed
-
-- History/accessibility: make the TTS action label state-specific: “Stop listening” while generating, “Pause listening” during playback, “Resume listening” while paused, and “Listen to text” while idle (#648)
-- Preferences/Languages: probe the configured tessdata source instead of Google, cancel and ignore stale reachability callbacks on page disposal, prune completed LanguageRow idle sources, and provide an accessible name for the available OCR models list (#648)
-
-- UI: normalize application-authored spacing to the shared 4/8/12/16/24 px scale; retain Libadwaita semantic typography and existing custom corner-radius roles.
-- UI/CSS: remove legacy custom selectors and animation keyframes with no tracked application consumers; document existing GTK/Libadwaita typography class usage and limitations.
-- Extracted: preserve the current OCR result when navigating away; replace it only when a subsequent extraction completes.
-- History: retain the expanded entry and vertical scroll position when the list refreshes or the user returns to History during the same application session; this transient view state is not persisted across restarts.
-
-### Fixed
-
-- UI/Portal: connect the portal-unavailable banner’s Dismiss button so it hides the banner when activated (#648)
-
 ### Added
 
 - Accessibility: give language-download progress bars translated language context; announce download start/completion/failure and concise OCR, TTS and debounced search status transitions without percentage-level announcement noise (#648)
@@ -40,6 +26,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- History/accessibility: make the TTS action label state-specific: “Stop listening” while generating, “Pause listening” during playback, “Resume listening” while paused, and “Listen to text” while idle (#648)
+- Preferences/Languages: probe the configured tessdata source instead of Google, cancel and ignore stale reachability callbacks on page disposal, prune completed LanguageRow idle sources, and provide an accessible name for the available OCR models list (#648)
+- UI: normalize application-authored spacing to the shared 4/8/12/16/24 px scale; retain Libadwaita semantic typography and existing custom corner-radius roles.
+- UI/CSS: remove legacy custom selectors and animation keyframes with no tracked application consumers; document existing GTK/Libadwaita typography class usage and limitations.
+- Extracted: preserve the current OCR result when navigating away; replace it only when a subsequent extraction completes.
+- History: retain the expanded entry and vertical scroll position when the list refreshes or the user returns to History during the same application session; this transient view state is not persisted across restarts.
 - Accessibility: respect GTK reduced-motion preferences in the main window and separate Shortcuts window, including live setting changes; suppress app-authored root animations/transitions and retain the gtk-enable-animations fallback on older GTK versions (#648)
 - Preferences: reorganize settings into four dedicated pages (General, Editor, Voice and Languages); move the existing Editor controls and TTS volume/language controls into their respective pages while retaining asynchronous TTS catalog loading (#648)
 - Welcome: retain Screenshot as the primary action; show Open Image, Paste Image and Drop Image as equal-width horizontal secondary actions when their measured natural widths fit, and group the same controls in More options when compact; preserve the page-wide drop target and focus behavior (#648)
@@ -89,6 +81,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Refresh repository guidance and technical comments to match the current code: lane-based task execution, Tesseract language-code validation, GNOME 51, portal backend setup, and current test/build behaviour.
 - Docs/OCR: distinguish the Tesseract engine version from upstream traineddata refs and record the model training provenance and compatibility findings (#642)
 - Docs/Flatpak: reflect completed static verification of `GI_TYPELIB_PATH` for the GNOME 51 runtime; verification plan and closure recorded for #623
+- CI/governance: reject duplicate [Unreleased] category headings and validate the maintainer-owned Italian gettext catalogue plus the LINGUAS/POTFILES source inventories in CI; correct stale AppStream source paths in POTFILES.
 
 ### Removed
 
@@ -96,13 +89,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- UI/Portal: connect the portal-unavailable banner’s Dismiss button so it hides the banner when activated (#648)
 - History: stop active text-to-speech playback whenever navigation leaves the History page, including native back navigation to Welcome or navigation to Extracted (#648)
 - Accessibility: use scheme-aware focus indicators and History empty-state icon colors with verified contrast, while retaining theme-managed secondary and disabled text (#648)
 - Window geometry: clamp restored and first-run dimensions to the selected monitor's bounds, resolve the actual monitor from the GDK surface after realization, and re-clamp when the surface enters another monitor; remove fixed main-window minimum requests that conflicted with small displays (#648)
 - Window state: persist dimensions only when closing in the normal, non-maximized and non-fullscreen state (#648)
 - Preferences/Shortcuts: remove fixed minimum requests from Preferences and make the shortcuts overlay resizable while preserving its vertical scroller (#648)
 - Tests: cover main-window geometry at 360×600, 640×480, 900×600 and 1280×800, very small monitors, monitor selection, window-state persistence and secondary-window sizing contracts (#648)
-
 - OCR/UI: make the most recently started file, clipboard, screenshot or drag-and-drop request the sole owner of OCR results and spinner state; discard superseded capture, decode, status, error and navigation callbacks, and isolate screenshot URI dispatch from the OCR task lane (#648)
 - Sharing: align the bundled symbolic icon inventory exactly with the seven active providers, remove unused Discord/LinkedIn assets, and load icons through Gtk.IconTheme for light/dark theme recoloring (#648)
 - UI: load the bundled GTK stylesheet from GResource at application startup and register it at application priority; retain the provider for the application's lifetime while leaving display-less CLI launches unaffected (#648)
