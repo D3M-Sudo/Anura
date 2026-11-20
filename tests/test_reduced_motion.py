@@ -84,16 +84,20 @@ def test_application_motion_consumers_are_covered_by_reduced_motion_policy():
     assert "animation-duration: 0ms;" in reduced_rule
     assert "animation-iteration-count: 1;" in reduced_rule
 
-    # These selectors are applied to descendants of the main window and inherit
-    # its reduced-motion policy.
-    descendant_motion_selectors = (
+    # Inventory every application-authored motion selector. Descendant rules
+    # inherit the main-window policy; Shortcuts root classes are handled below.
+    motion_selectors = (
         ".anura-button",
+        ".anura-card:hover",
+        ".anura-fade-in",
         ".anura-slide-up",
         ".extracted-page textview",
         ".drag-hover",
         ".drag-processing",
+        "#drop_area.drag-hover",
+        "#drop_area.drag-processing",
     )
-    for selector in descendant_motion_selectors:
+    for selector in motion_selectors:
         assert selector in css, f"missing motion selector: {selector}"
 
     assert 'styles ["pill", "suggested-action", "anura-button"]' in welcome_blueprint
