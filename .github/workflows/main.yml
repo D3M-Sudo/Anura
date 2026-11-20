@@ -487,7 +487,7 @@ jobs:
               -f "$PWD/data/screenshots/anura-welcome-page.png" --silent >"$LOG" 2>&1 &
             APP_PID=$!
             cleanup() {
-              flatpak kill --signal=TERM io.github.d3m_sudo.anura >/dev/null 2>&1 || true
+              flatpak kill --user --signal=TERM io.github.d3m_sudo.anura >/dev/null 2>&1 || true
               wait "$APP_PID" 2>/dev/null || true
             }
             trap cleanup EXIT
@@ -513,7 +513,7 @@ jobs:
             fi
 
             if ! grep -q "Clipboard content handed over to the clipboard manager" "$LOG"; then
-              flatpak kill --signal=TERM io.github.d3m_sudo.anura
+              flatpak kill --user --signal=TERM io.github.d3m_sudo.anura
               for attempt in $(seq 1 20); do
                 if grep -q "Clipboard serving interrupted by a signal" "$LOG"; then break; fi
                 sleep 0.25
