@@ -132,10 +132,7 @@ def test_welcome_to_history_focuses_first_history_row():
 
         def focus_is_within_first_row() -> bool:
             focused_widget = window.get_focus()
-            return first_row.has_focus() or (
-                focused_widget is not None
-                and focused_widget.is_ancestor(first_row)
-            )
+            return first_row.has_focus() or (focused_widget is not None and focused_widget.is_ancestor(first_row))
 
         assert _spin_until(focus_is_within_first_row), (
             "Welcome → History did not place keyboard focus within the first History entry row; "
