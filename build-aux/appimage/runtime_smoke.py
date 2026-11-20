@@ -24,18 +24,34 @@ def main() -> int:
         raise RuntimeError("Bundled Fontconfig tools are unavailable")
 
     font_dir = appdir / "usr/share/fonts"
+    if not font_dir.is_dir():
+        raise RuntimeError(
+            "AppImage bundled font directory is missing: "
+            f"path={font_dir}, appdir_exists={appdir.is_dir()}, "
+            f"share_exists={(appdir / 'usr/share').is_dir()}"
+        )
+    bundled_font_samples = sorted(
+        str(path.relative_to(appdir))
+        for suffix in ("*.ttf", "*.otf", "*.ttc")
+        for path in font_dir.rglob(suffix)
+    )[:10]
     with tempfile.TemporaryDirectory(prefix="anura-fontconfig-cache-") as cache_dir:
         font_env = os.environ.copy()
         font_env["XDG_CACHE_HOME"] = cache_dir
         cache_result = subprocess.run(
-            [font_cache, "-f", str(font_dir)],
+            [font_cache, "-f", "-v", str(font_dir)],
             check=False,
             capture_output=True,
             text=True,
             env=font_env,
         )
         if cache_result.returncode != 0:
-            raise RuntimeError(f"Fontconfig could not index bundled fonts: {cache_result.stderr.strip()!r}")
+            raise RuntimeError(
+                "Fontconfig could not index bundled fonts: "
+                f"returncode={cache_result.returncode}, stdout={cache_result.stdout[-4000:]!r}, "
+                f"stderr={cache_result.stderr[-4000:]!r}, font_dir={str(font_dir)!r}, "
+                f"font_samples={bundled_font_samples!r}"
+            )
         font_list = subprocess.run(
             [font_list_tool, "--format", "%{file}\\n"],
             check=False,
@@ -46,8 +62,14 @@ def main() -> int:
         if font_list.returncode != 0 or not font_list.stdout.strip():
             raise RuntimeError(
                 "Fontconfig did not index any bundled fonts: "
-                f"returncode={font_list.returncode}, stderr={font_list.stderr.strip()!r}, "
-                f"config={os.environ.get('FONTCONFIG_FILE')!r}"
+                f"returncode={font_list.returncode}, stdout={font_list.stdout[-4000:]!r}, "
+                f"stderr={font_list.stderr[-4000:]!r}, font_dir={str(font_dir)!r}, "
+                f"font_dir_entries={[path.name for path in list(font_dir.iterdir())[:20]]!r}, "
+                f"font_samples={bundled_font_samples!r}, "
+                f"cache_stdout={cache_result.stdout[-4000:]!r}, "
+                f"cache_stderr={cache_result.stderr[-4000:]!r}, "
+                f"config={os.environ.get('FONTCONFIG_FILE')!r}, "
+                f"config_dir={os.environ.get('FONTCONFIG_PATH')!r}"
             )
         for family in ("sans-serif", "sans"):
             font_result = subprocess.run(
