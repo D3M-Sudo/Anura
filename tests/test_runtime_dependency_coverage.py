@@ -296,7 +296,7 @@ def test_6b_missing_from_single_manifest_detected(tmp_path: Path) -> None:
 
 def test_dev_only_module_warning_requires_actual_manifest_declaration(tmp_path: Path) -> None:
     """Only a dev-only module present in a checked manifest should warn."""
-    pyproject, uv_lock, main, local = _base_files(tmp_path)
+    pyproject, uv_lock, _main, local = _base_files(tmp_path)
 
     result = checker.check_runtime_coverage(pyproject, uv_lock, (local,), env=LINUX_ENV)
     assert not any("pathspec" in warning for warning in result.warnings)
