@@ -35,5 +35,6 @@ def test_appimage_runtime_smoke_is_bundled_and_exercises_native_features() -> No
     assert "fontconfig-config" in recipe
     assert 'prefix="relative"' in builder
     assert "../../usr/share/fonts" in builder
+    assert 'fonts.dtd" "$APPDIR/etc/fonts/fonts.dtd"' in builder
     for feature in ('["tesseract", image_path, "stdout"', "Gst.parse_launch", "fc-match", "IconTheme"):
         assert feature in smoke

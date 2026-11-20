@@ -44,6 +44,8 @@ cat > "$APPDIR/etc/fonts/fonts.conf" <<EOF
   <cachedir prefix="xdg">fontconfig</cachedir>
 </fontconfig>
 EOF
+cp "$APPDIR/usr/share/xml/fontconfig/fonts.dtd" "$APPDIR/etc/fonts/fonts.dtd"
+test -s "$APPDIR/etc/fonts/fonts.dtd"
 
 cd "$SOURCE_ROOT"
 uv export --locked --no-dev --no-emit-project --format requirements-txt \
@@ -122,6 +124,7 @@ desktop-file-validate "$APPDIR/io.github.d3m_sudo.anura.desktop"
 test -s "$APPDIR/usr/share/anura/io.github.d3m_sudo.anura.gresource"
 test -s "$APPDIR/usr/share/glib-2.0/schemas/gschemas.compiled"
 test -s "$APPDIR/etc/fonts/fonts.conf"
+test -s "$APPDIR/etc/fonts/fonts.dtd"
 test -s "$APPDIR/usr/lib/anura/runtime_smoke.py"
 test -d "$PYTHON_SITE/anura"
 rm -rf "$APPDIR/.blueprint-ui" "$APPDIR/.requirements.txt"

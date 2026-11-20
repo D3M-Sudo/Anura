@@ -20,14 +20,22 @@ def main() -> int:
     font_match = shutil.which("fc-match")
     if font_match is None:
         raise RuntimeError("Bundled Fontconfig tools are unavailable")
-    matched_font = subprocess.run(
+    font_result = subprocess.run(
         [font_match, "sans"],
-        check=True,
+        check=False,
         capture_output=True,
         text=True,
-    ).stdout.strip()
-    if not matched_font:
-        raise RuntimeError("Fontconfig did not resolve a default sans-serif font")
+    )
+    matched_font = font_result.stdout.strip()
+    if font_result.returncode != 0 or not matched_font:
+        font_dir = appdir / "usr/share/fonts"
+        available_fonts = [str(path.relative_to(appdir)) for path in font_dir.rglob("*.ttf")][:5]
+        raise RuntimeError(
+            "Fontconfig failed to resolve a default sans-serif font: "
+            f"returncode={font_result.returncode}, stderr={font_result.stderr.strip()!r}, "
+            f"config={os.environ.get('FONTCONFIG_FILE')!r}, "
+            f"dtd={(appdir / 'etc/fonts/fonts.dtd').is_file()}, fonts={available_fonts}"
+        )
 
     import gi
 
