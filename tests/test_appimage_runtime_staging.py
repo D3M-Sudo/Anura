@@ -136,6 +136,7 @@ def test_appimage_builder_gstreamer_scanner_receives_appdir_library_paths() -> N
     )
 
     assert "GStreamer._prepare_gst_launch_env = _prepare_gst_launch_env" in compatibility
+    assert "process_env = dict(_original_prepare_gst_launch_env(self, env))" in compatibility
     assert 'env.get("APPDIR_LIBRARY_PATH")' in compatibility
     assert 'process_env.get("LD_LIBRARY_PATH")' in compatibility
     assert 'process_env["LD_LIBRARY_PATH"] = os.pathsep.join' in compatibility
