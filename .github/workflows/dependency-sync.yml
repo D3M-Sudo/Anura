@@ -1,4 +1,4 @@
-name: Dependency Sync
+name: "Maintenance: Dependency Synchronization"
 
 # Ownership boundary: this workflow owns the synchronization path for
 # Dependabot PRs that change pyproject.toml. It updates uv.lock and the
@@ -32,6 +32,7 @@ jobs:
   sync:
     # PR runs update only the Dependabot PR head. Manual runs must use a
     # working branch and must never push to a protected branch.
+    name: "Maintenance: Synchronize Dependencies"
     if: >-
       (github.event_name == 'pull_request' && github.event.pull_request.user.login == 'dependabot[bot]') ||
       (github.event_name == 'workflow_dispatch' && !contains(fromJSON('["feature","testing","development","main"]'), github.ref_name))
@@ -42,7 +43,7 @@ jobs:
       UV_VERSION: "0.13.5"
       PULL_REQUEST_HEAD_REF: ${{ github.event.pull_request.head.ref }}
     steps:
-      - name: Checkout PR branch
+      - name: "Setup: Checkout Dependency PR"
         # We deliberately checkout the pull request HEAD (not the merge ref)
         # so any commits we push land on the Dependabot branch itself and are
         # included in the PR.
@@ -55,23 +56,23 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Configure git identity
+      - name: "Setup: Configure Git Identity"
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Install uv
+      - name: "Setup: Install uv"
         uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           version: ${{ env.UV_VERSION }}
           enable-cache: false
 
-      - name: Regenerate uv.lock
+      - name: "Maintenance: Regenerate Dependency Lockfile"
         # Re-resolves the dependency tree so uv.lock matches the new
         # pyproject.toml constraints proposed by Dependabot.
         run: uv lock
 
-      - name: Sync Flatpak Python modules
+      - name: "Maintenance: Synchronize Flatpak Dependencies"
         # Reads uv.lock and updates URL + sha256 of the Python modules in
         # flatpak/*.json. Exits non-zero if the manifests are out of sync
         # (in which case the commit step below is skipped and the job fails).
@@ -83,7 +84,7 @@ jobs:
           # time by build-aux/release.sh, not synced here.
           python3 build-aux/check_runtime_dependency_coverage.py --manifest local
 
-      - name: Commit and push sync changes
+      - name: "Maintenance: Commit Dependency Updates"
         run: |
           if ! git diff --quiet; then
             git add uv.lock flatpak/io.github.d3m_sudo.anura.local.json
