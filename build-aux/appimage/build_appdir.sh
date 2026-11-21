@@ -52,7 +52,13 @@ python3 "$SOURCE_ROOT/build-aux/generate_release_notes.py" \
   "$SOURCE_ROOT/CHANGELOG.md" "$PYTHON_SITE/anura/_release_notes.py" "$APP_VERSION"
 cp "$SOURCE_ROOT/build-aux/appimage/runtime_smoke.py" "$APPDIR/usr/lib/anura/"
 cp "$SOURCE_ROOT/data/screenshots/anura-welcome-page.png" "$APPDIR/usr/share/anura/runtime-smoke.png"
-cp "$SOURCE_ROOT/data/screenshots/anura-runtime-smoke.jpg" "$APPDIR/usr/share/anura/runtime-smoke.jpg"
+PYTHONPATH="$PYTHON_SITE" python3 - "$APPDIR/usr/share/anura/runtime-smoke.png" "$APPDIR/usr/share/anura/runtime-smoke.jpg" <<'PY'
+from PIL import Image
+import sys
+
+with Image.open(sys.argv[1]) as source:
+    source.convert("RGB").save(sys.argv[2], format="JPEG", quality=90, optimize=True)
+PY
 
 cat > "$APPDIR/usr/lib/anura/appimage_entrypoint.py" <<'PY'
 from __future__ import annotations
