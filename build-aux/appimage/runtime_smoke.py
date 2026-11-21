@@ -152,7 +152,7 @@ def main() -> int:
         text=True,
     )
     recognised = re.sub(r"[^A-Z]", "", result.stdout.upper())
-    if "ANURA" not in recognised or "OCR" not in recognised:
+    if "ANURA" not in recognised or "ESTRAI" not in recognised:
         raise RuntimeError(f"Bundled Tesseract OCR returned unexpected text: {recognised!r}")
 
     print(
