@@ -1,4 +1,4 @@
-name: CI Quality Check & Release
+name: "Build: CI and Release Pipeline"
 
 permissions:
   contents: read
@@ -12,16 +12,16 @@ on:
 
 jobs:
   changelog-integrity:
-    name: Changelog integrity
+    name: "Quality: Changelog Integrity"
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout base and pull request history
+      - name: "Setup: Checkout Pull Request History"
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Reject undocumented Unreleased entry removals
+      - name: "Quality: Validate Changelog Integrity"
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -32,26 +32,27 @@ jobs:
 
   # JOB 1: Python code analysis and linting
   python-quality:
+    name: "Quality: Python"
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: "Setup: Checkout Repository"
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Install gettext validation tools
+      - name: "Setup: Install Gettext Tools"
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y gettext
 
-      - name: Run Ruff Linter
+      - name: "Quality: Run Ruff Linter"
         uses: astral-sh/ruff-action@278981a28ce3188b1e39527901f38254bf3aac89 # v4.1.0
         with:
           # Strict linting with enforcement - no automatic fixes in CI.
           # Uses configuration from pyproject.toml.
           args: check --target-version py312
 
-      - name: Install uv and project dependencies
+      - name: "Setup: Install Python Dependencies"
         # Pin uv so a new release cannot change resolution behaviour between
         # runs, and sync in --locked mode so an out-of-date uv.lock fails the
         # build instead of being silently rewritten (#488).
@@ -59,31 +60,31 @@ jobs:
           pip install "uv==0.13.5"
           uv sync --locked --dev
 
-      - name: Validate maintainer-owned Italian gettext catalogue
+      - name: "Docs: Validate Italian Translation Catalogue"
         run: |
           msgfmt --check --check-format --check-header -o /dev/null po/it.po
           msgfmt --check-format --check-domain -o /dev/null po/io.github.d3m_sudo.anura.pot
 
-      - name: Check code formatting
+      - name: "Quality: Check Python Formatting"
         # Configuration in pyproject.toml; Markdown is excluded because the
         # formatter would rewrite fenced code blocks in docs and agent rules.
         run: uv run ruff format --check --diff .
 
-      - name: Run type checker
+      - name: "Quality: Run Python Type Checker"
         # Non-strict by design (see [tool.mypy]); catches real regressions in
         # the production tree without blocking on the untyped-GTK backlog.
         run: uv run mypy
 
-      - name: Run security linter
+      - name: "Security: Run Bandit Analysis"
         # Bandit does not auto-discover pyproject.toml: the explicit -c is what
         # applies the tests/ exclusion (see [tool.bandit]).
         run: uv run bandit -c pyproject.toml -r .
 
-      - name: Detect dead code (non-blocking)
+      - name: "Quality: Detect Dead Code"
         # Known findings are tracked as debt; report only, never fail the build.
         run: uv run vulture anura/ || true
 
-      - name: Run tests with coverage
+      - name: "Test: Run Python Tests with Coverage"
         env:
           ANURA_CI_TEST_MODE: "1"
         run: |
@@ -106,7 +107,7 @@ jobs:
             --ignore=tests/test_security_download_limit.py \
             --cov=anura --cov-report=xml --cov-report=term-missing
 
-      - name: Verify Flatpak runtime dependency coverage
+      - name: "Package: Verify Flatpak Runtime Dependencies"
         # Ensure every runtime Python dependency in uv.lock (resolved from
         # pyproject.toml) is represented by a python3-* module in the local
         # Flatpak manifest. Fails when a new direct/transitive runtime
@@ -118,7 +119,7 @@ jobs:
         run: python3 build-aux/check_runtime_dependency_coverage.py --manifest local --arch x86_64 --arch aarch64
 
   gtk-tests:
-    name: GTK Integration Tests
+    name: "Test: GTK Integration"
     runs-on: ubuntu-24.04
     needs: python-quality
     # Robustness: prevent job from hanging indefinitely
@@ -133,7 +134,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install system dependencies
+      - name: "Setup: Install GTK System Dependencies"
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y \
@@ -148,14 +149,14 @@ jobs:
             tesseract-ocr tesseract-ocr-eng \
             weston xwayland xvfb
 
-      - name: Install Python dependencies (with system site-packages)
+      - name: "Setup: Install GTK Python Dependencies"
         # The venv must inherit apt-installed PyGObject and Libadwaita modules.
         run: |
           pip install uv
           uv venv --system-site-packages .venv
           uv sync --dev
 
-      - name: Compile Blueprint UI files
+      - name: "Build: Compile Blueprint UI"
         # .ui files are build artifacts from .blp sources and are no longer
         # tracked in git. Regenerate them before compiling the GResource bundle.
         run: |
@@ -164,7 +165,7 @@ jobs:
           done
           echo "Compiled $(find data/ui -maxdepth 1 -name '*.ui' | wc -l) .ui file(s)"
 
-      - name: Compile GResources
+      - name: "Build: Compile GResources"
         # Write the bundle to the path resolved by the application's resource loader.
         run: |
           glib-compile-resources \
@@ -173,13 +174,13 @@ jobs:
             --sourcedir=data/ui \
             --target=data/io.github.d3m_sudo.anura.gresource
 
-      - name: Compile GSettings schema
+      - name: "Build: Compile GSettings Schema"
         run: |
           mkdir -p builddir/data
           cp data/io.github.d3m_sudo.anura.gschema.xml builddir/data/
           glib-compile-schemas builddir/data/
 
-      - name: Start Wayland compositor with virtual input
+      - name: "Test: Start Wayland Test Environment"
         # Weston headless has no wl_seat. Run its X11 backend inside Xvfb so
         # GTK receives a virtual pointer and keyboard for popup integration tests.
         run: |
@@ -253,7 +254,7 @@ jobs:
             exit 1
           fi
 
-      - name: Run GTK tests (Wayland with virtual input)
+      - name: "Test: Run GTK Integration Tests"
         # --override-ini replaces the global addopts from pyproject.toml.
         # Without this override the --ignore list baked into addopts would
         # suppress collection of the files that hold most gtk-marked tests.
@@ -288,7 +289,7 @@ jobs:
 
   # JOB 2: Flatpak build and optional release
   flatpak-builder:
-    name: Flatpak build (${{ matrix.variant.arch }})
+    name: "Build: Flatpak (${{ matrix.variant.arch }})"
     needs: [python-quality, gtk-tests]
     strategy:
       fail-fast: false
@@ -304,15 +305,15 @@ jobs:
       options: --privileged
 
     steps:
-      - name: Configure git default branch
+      - name: "Setup: Configure Git Default Branch"
         run: git config --global init.defaultBranch main
 
-      - name: Checkout Code
+      - name: "Setup: Checkout Repository"
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Verify native runner architecture
+      - name: "Setup: Verify Runner Architecture"
         env:
           EXPECTED_FLATPAK_ARCH: ${{ matrix.variant.arch }}
         run: |
@@ -327,14 +328,14 @@ jobs:
           fi
           echo "Verified native runner architecture: $ACTUAL_FLATPAK_ARCH"
 
-      - name: Purge build caches and artifacts
+      - name: "Build: Clean Build Environment"
         run: |
           rm -rf .flatpak-builder/
           rm -rf _build/
           rm -rf builddir/
           echo "Caches purged. Proceeding with clean build."
 
-      - name: Generate release-style Flatpak manifest
+      - name: "Build: Generate Release Flatpak Manifest"
         run: |
           VERSION="$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
           # Lint the real submission shape (public repository URL + release tag).
@@ -351,7 +352,7 @@ jobs:
             --source-path ../.. \
             --source-commit "$GITHUB_SHA"
 
-      - name: Validate local and generated release manifests
+      - name: "Package: Validate Flatpak Manifests"
         run: |
           echo "=== Validating local manifest ==="
           flatpak-builder --show-manifest flatpak/io.github.d3m_sudo.anura.local.json > /dev/null
@@ -363,7 +364,7 @@ jobs:
           flatpak-builder-lint manifest flatpak/.ci-release/io.github.d3m_sudo.anura.json
           echo "✓ Local and generated release manifests validated"
 
-      - name: Configure user Flatpak remote
+      - name: "Setup: Configure Flatpak Remote"
         # The container image ships a system installation on its read-only
         # overlay lower layer. Updating the GNOME SDK there can fail with
         # OSTree EXDEV during deployment. Keep CI SDK/runtime refs in the
@@ -371,7 +372,7 @@ jobs:
         run: |
           flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
-      - name: Build Anura Flatpak
+      - name: "Build: Build Anura Flatpak"
         run: |
           xvfb-run --auto-servernum flatpak-builder \
             --user \
@@ -395,7 +396,7 @@ jobs:
             io.github.d3m_sudo.anura \
             main
 
-      - name: Prove Flatpak build works without source downloads
+      - name: "Test: Verify Offline Flatpak Build"
         # Reuse the source cache populated by the preceding clean build. A
         # fresh build directory plus --disable-download proves every source
         # needed by the generated manifest is already declared and cached.
@@ -406,7 +407,7 @@ jobs:
             builddir-offline \
             flatpak/.ci-build/io.github.d3m_sudo.anura.json
 
-      - name: Verify Blueprint and Resource Structure
+      - name: "Quality: Validate Blueprint and Resource Structure"
         run: |
           echo "=== Verifying generated UI files ==="
           GRESOURCE_XML="data/io.github.d3m_sudo.anura.gresource.xml"
@@ -439,7 +440,7 @@ jobs:
           fi
           echo "✓ All gresource.xml references resolved"
 
-      - name: Smoke Test - Headless Runtime
+      - name: "Test: Flatpak Runtime Smoke Test"
         run: |
           echo "=== Installing bundle for smoke test ==="
           # Use --no-pull to avoid attempting to contact flathub during bundle install
@@ -467,7 +468,7 @@ jobs:
           fi
           echo "✓ Smoke test passed"
 
-      - name: Validate GI typelibs and native runtime bindings
+      - name: "Test: Validate GI Runtime Bindings"
         # Run the checks with the interpreter and libraries visible inside the
         # installed Flatpak, not on the host runner. Xvfb supplies a display
         # for GTK initialization while keeping the test independent of a
@@ -479,7 +480,7 @@ jobs:
             -c "$(cat build-aux/flatpak_runtime_smoke.py)" \
             "${{ matrix.variant.arch }}"
 
-      - name: Functional test - clipboard lifetime in Flatpak sandbox
+      - name: "Test: Verify Clipboard Lifetime in Sandbox"
         run: |
           flatpak override --user --filesystem="$PWD/data/screenshots:ro"
           xvfb-run -a bash -euo pipefail -c '
@@ -531,7 +532,7 @@ jobs:
             echo "✓ Flatpak clipboard was readable from a second sandboxed process and its retention lifecycle completed"
           '
 
-      - name: Functional test - OCR negativo su file non immagine
+      - name: "Test: Verify OCR Rejects Non-Image Files"
         run: |
           echo "=== OCR negativo su file non immagine (.txt) ==="
           echo "non è un'immagine valida" > /tmp/notanimage.txt
@@ -549,7 +550,7 @@ jobs:
           fi
           echo "✓ OCR negativo correttamente fallito senza traceback"
 
-      - name: Locate the installed prefix
+      - name: "Package: Locate Installed Application Prefix"
         id: prefix
         run: |
           APP_DIR="$(flatpak info --user --show-location io.github.d3m_sudo.anura)"
@@ -560,7 +561,7 @@ jobs:
           echo "prefix=$APP_DIR/files" >> "$GITHUB_OUTPUT"
           echo "Using prefix: $APP_DIR/files"
 
-      - name: Validate desktop file and AppStream metadata
+      - name: "Package: Validate Desktop and AppStream Metadata"
         # Validate the installed launcher and AppStream metadata before publication.
         run: |
           PREFIX="${{ steps.prefix.outputs.prefix }}"
@@ -568,7 +569,7 @@ jobs:
           appstreamcli validate --no-net \
             "$PREFIX/share/metainfo/io.github.d3m_sudo.anura.metainfo.xml"
 
-      - name: Check the licence inventory
+      - name: "Package: Validate Licence Inventory"
         # Fails when a declared licence is missing or empty, and keeps the full
         # listing as evidence for the release review (#493).
         run: |
@@ -576,7 +577,7 @@ jobs:
             --root "${{ steps.prefix.outputs.prefix }}" \
             --output license-inventory.json
 
-      - name: Upload licence inventory
+      - name: "Package: Upload Licence Inventory"
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -584,7 +585,7 @@ jobs:
           path: license-inventory.json
           retention-days: 30
 
-      - name: Upload Flatpak Artifact (Debug)
+      - name: "Package: Upload Flatpak Debug Artifact"
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -596,7 +597,7 @@ jobs:
 
   # Native self-contained AppImage builds; artifacts never cross architectures.
   appimage-builder:
-    name: AppImage build (${{ matrix.variant.arch }})
+    name: "Build: AppImage (${{ matrix.variant.arch }})"
     needs: python-quality
     strategy:
       fail-fast: false
@@ -619,11 +620,11 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Checkout Code
+      - name: "Setup: Checkout Repository"
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Verify native runner architecture and install build tools
+      - name: "Setup: Verify Architecture and Install Build Tools"
         env:
           EXPECTED_ARCH: ${{ matrix.variant.arch }}
         run: |
@@ -645,7 +646,7 @@ jobs:
             desktop-file-utils gettext libglib2.0-bin \
             zsync xvfb xauth file binutils libfuse2t64 liblzo2-2 libegl1 curl \
             gstreamer1.0-tools fontconfig-config
-      - name: Install pinned AppImage tooling
+      - name: "Setup: Install AppImage Tooling"
         env:
           APPIMAGETOOL_SHA256: ${{ matrix.variant.appimagetool_sha256 }}
           APPIMAGETOOL_RUNTIME_SHA256: ${{ matrix.variant.runtime_sha256 }}
@@ -670,7 +671,7 @@ jobs:
           appimage-builder --version
           appimagetool --version
           uv --version
-      - name: Build architecture-specific AppImage
+      - name: "Build: Create Architecture-Specific AppImage"
         env:
           APP_VERSION: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
           APPIMAGE_ARCH: ${{ matrix.variant.arch }}
@@ -730,7 +731,7 @@ jobs:
           APPIMAGE_EXTRACT_AND_RUN=1 "./$IMAGE" --appimage-extract >/dev/null
           head -n 1 squashfs-root/AppRun | grep -q '^#!/bin/sh$'
           grep -q 'appimage_entrypoint.py' squashfs-root/AppRun
-      - name: Verify AppImage architecture and embedded update metadata
+      - name: "Package: Validate AppImage Architecture and Update Metadata"
         env:
           EXPECTED_ARCH: ${{ matrix.variant.arch }}
           APP_VERSION: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
@@ -750,7 +751,7 @@ jobs:
           "./$IMAGE" --appimage-updateinformation > update-information.txt
           grep -Fxq "$UPDATE_INFORMATION" update-information.txt
           grep -q "Anura-$APP_VERSION-$EXPECTED_ARCH.AppImage" "$IMAGE.zsync"
-      - name: Smoke test extracted AppImage on a clean Ubuntu host
+      - name: "Test: AppImage Runtime Smoke Test"
         env:
           APP_VERSION: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
           APPIMAGE_ARCH: ${{ matrix.variant.arch }}
@@ -790,7 +791,7 @@ jobs:
                 PYTHONDONTWRITEBYTECODE=1 \
                 timeout 120 dbus-run-session -- xvfb-run -a /opt/anura/usr/bin/anura --runtime-smoke
             '
-      - name: Upload AppImage and zsync CI artifact
+      - name: "Package: Upload AppImage CI Artifact"
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: anura-appimage-${{ github.run_id }}-${{ matrix.variant.arch }}
@@ -801,31 +802,31 @@ jobs:
           retention-days: 14
 
   validate-appimage-artifacts:
-    name: Validate complete AppImage release set
+    name: "Package: Validate AppImage Artifacts"
     needs: appimage-builder
     runs-on: ubuntu-24.04
     permissions:
       actions: read
       contents: read
     steps:
-      - name: Checkout Code
+      - name: "Setup: Checkout Repository"
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Download architecture-specific AppImages and zsync files
+      - name: "Package: Download AppImage Build Artifacts"
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           pattern: anura-appimage-${{ github.run_id }}-*
           path: release-appimages
           merge-multiple: true
-      - name: Validate exact AppImage/zsync pairs and generate checksums
+      - name: "Package: Validate AppImage Artifacts and Checksums"
         run: |
           VERSION="$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
           if [[ "$GITHUB_REF_TYPE" == tag ]]; then VERSION="${GITHUB_REF_NAME#v}"; fi
           python3 build-aux/validate_appimage_artifacts.py \
             --directory release-appimages --version "$VERSION" \
             --checksum-file SHA256SUMS-appimage
-      - name: Upload validated AppImage checksums
+      - name: "Package: Upload AppImage Checksums"
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-appimage-checksums-${{ github.run_id }}
@@ -835,29 +836,29 @@ jobs:
   # Verify that the artifact hand-off contains exactly one non-empty bundle
   # for each supported architecture before any tag-triggered publication.
   validate-release-artifacts:
-    name: Validate multi-architecture release artifacts
+    name: "Package: Validate Multi-Architecture Release"
     needs: flatpak-builder
     runs-on: ubuntu-24.04
     permissions:
       actions: read
       contents: read
     steps:
-      - name: Checkout Code
+      - name: "Setup: Checkout Repository"
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Download architecture-specific Flatpak bundles
+      - name: "Package: Download Flatpak Build Artifacts"
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           pattern: anura-flatpak-${{ github.run_id }}-*
           path: release-assets
           merge-multiple: true
 
-      - name: Validate bundle set and generate SHA-256 checksums
+      - name: "Package: Validate Flatpak Release Artifacts"
         run: python3 build-aux/validate_release_artifacts.py --directory release-assets --checksum-file SHA256SUMS
 
-      - name: Upload release checksums
+      - name: "Package: Upload Release Checksums"
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-checksums-${{ github.run_id }}
@@ -868,6 +869,7 @@ jobs:
   # Publish both architecture bundles together; parallel matrix jobs must not
   # race while attaching assets to the same GitHub Release.
   publish-release:
+    name: "Release: Publish GitHub Release"
     if: startsWith(github.ref, 'refs/tags/')
     needs: [flatpak-builder, validate-release-artifacts, appimage-builder, validate-appimage-artifacts]
     runs-on: ubuntu-24.04
@@ -875,37 +877,37 @@ jobs:
       actions: read
       contents: write
     steps:
-      - name: Checkout Code
+      - name: "Setup: Checkout Repository"
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Download architecture-specific Flatpak bundles
+      - name: "Package: Download Flatpak Build Artifacts"
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           pattern: anura-flatpak-${{ github.run_id }}-*
           path: release-assets
           merge-multiple: true
 
-      - name: Download validated SHA-256 checksums
+      - name: "Package: Download Release Checksums"
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: release-checksums-${{ github.run_id }}
           path: release-checksums
 
-      - name: Download architecture-specific AppImages and zsync files
+      - name: "Package: Download AppImage Build Artifacts"
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           pattern: anura-appimage-${{ github.run_id }}-*
           path: release-assets
           merge-multiple: true
-      - name: Download validated AppImage SHA-256 checksums
+      - name: "Package: Download AppImage Release Checksums"
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: release-appimage-checksums-${{ github.run_id }}
           path: release-checksums-appimage
 
-      - name: Build release notes from CHANGELOG
+      - name: "Release: Generate Release Notes"
         # Never publish a release with an empty body (#489).
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
@@ -913,7 +915,7 @@ jobs:
           python3 build-aux/generate_release_notes.py --markdown CHANGELOG.md "$VERSION" "$DATE" > release-notes.md
           test -s release-notes.md
 
-      - name: Upload Flatpak Bundles to Release
+      - name: "Release: Publish Release Artifacts"
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           files: |
