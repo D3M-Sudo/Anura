@@ -127,23 +127,31 @@ def main() -> int:
         detail = message.parse_error()[0].message if message is not None else "EOS timeout"
         raise RuntimeError(f"AppImage GStreamer playback smoke failed: {detail}")
 
-    from PIL import Image, ImageDraw, ImageFont
+    from PIL import Image, ImageFont
 
     font_path = appdir / "usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
     if not font_path.is_file():
         raise RuntimeError("Bundled DejaVu test font is missing")
-    image = Image.new("RGB", (1000, 180), "white")
-    draw = ImageDraw.Draw(image)
-    draw.text((30, 35), "ANURA OCR TEST", fill="black", font=ImageFont.truetype(str(font_path), 72))
-    with tempfile.TemporaryDirectory(prefix="anura-appimage-smoke-") as temp_dir:
-        image_path = os.path.join(temp_dir, "ocr.png")
-        image.save(image_path)
-        result = subprocess.run(
-            ["tesseract", image_path, "stdout", "--psm", "6"],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
+    # Validate the bundled font face and its metrics without rasterizing synthetic
+    # text: Pillow produced an enormous glyph mask on clean Ubuntu CI hosts.
+    font = ImageFont.truetype(str(font_path), 72)
+    glyph_bounds = font.getbbox("ANURA")
+    glyph_width = glyph_bounds[2] - glyph_bounds[0]
+    glyph_height = glyph_bounds[3] - glyph_bounds[1]
+    if not (0 < glyph_width < 1000 and 0 < glyph_height < 180):
+        raise RuntimeError(f"Bundled DejaVu font returned invalid glyph metrics: {glyph_bounds!r}")
+
+    image_path = appdir / "usr/share/anura/runtime-smoke.png"
+    if not image_path.is_file():
+        raise RuntimeError("Bundled AppImage OCR fixture is missing")
+    with Image.open(image_path) as image:
+        image.verify()
+    result = subprocess.run(
+        ["tesseract", str(image_path), "stdout", "--psm", "6"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
     recognised = re.sub(r"[^A-Z]", "", result.stdout.upper())
     if "ANURA" not in recognised or "OCR" not in recognised:
         raise RuntimeError(f"Bundled Tesseract OCR returned unexpected text: {recognised!r}")
