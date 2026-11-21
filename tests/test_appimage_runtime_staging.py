@@ -87,9 +87,9 @@ def test_appimage_cli_alias_reuses_apprun_and_pulseaudio_runtime_is_explicit() -
     workflow = (root / ".github/workflows/main.yml").read_text(encoding="utf-8")
 
     assert 'ln -s ../../AppRun "$APPDIR/usr/bin/anura"' in builder
-    assert '*/usr/bin/anura)' in app_run
+    assert "*/usr/bin/anura)" in app_run
     assert 'dirname -- "$0")/../..' in app_run
-    assert '/opt/anura/usr/bin/anura --runtime-smoke' in workflow
+    assert "/opt/anura/usr/bin/anura --runtime-smoke" in workflow
 
     assert '"$LIBDIR/pulseaudio:$LIBDIR:$APPDIR/usr/lib' in app_run
     assert "libpulse0" in recipe

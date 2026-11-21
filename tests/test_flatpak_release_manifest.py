@@ -53,9 +53,7 @@ def test_release_generation_pins_remote_tag_to_exact_checked_out_commit() -> Non
     commit = "0123456789abcdef0123456789abcdef01234567"
     generated = GENERATOR.generate_release_manifest(_local_manifest(), "0.2.1", source_commit=commit)
     app = next(module for module in generated["modules"] if module["name"] == "anura")
-    assert app["sources"] == [
-        {"type": "git", "url": GENERATOR.APP_SOURCE_URL, "tag": "v0.2.1", "commit": commit}
-    ]
+    assert app["sources"] == [{"type": "git", "url": GENERATOR.APP_SOURCE_URL, "tag": "v0.2.1", "commit": commit}]
 
 
 def test_ci_generation_pins_exact_checked_out_commit() -> None:
