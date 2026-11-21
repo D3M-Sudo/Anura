@@ -10,14 +10,16 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_clipboard_smoke_signals_the_sandboxed_app_not_the_flatpak_launcher() -> None:
+def test_clipboard_smoke_waits_for_a_real_retention_lifecycle_outcome() -> None:
     workflow = (REPO_ROOT / ".github/workflows/main.yml").read_text(encoding="utf-8")
     start = workflow.index("Functional test - clipboard lifetime in Flatpak sandbox")
     end = workflow.index("Functional test - OCR negativo", start)
     block = workflow[start:end]
 
-    assert "flatpak kill io.github.d3m_sudo.anura" in block
-    assert "flatpak kill --signal=TERM io.github.d3m_sudo.anura" not in block
-    assert "flatpak kill --user --signal=TERM io.github.d3m_sudo.anura" not in block
+    assert "for attempt in $(seq 1 160)" in block
+    assert 'kill -0 "$APP_PID"' in block
+    assert "Clipboard content handed over to the clipboard manager" in block
+    assert "Clipboard content was replaced by another application" in block
+    assert "Clipboard serving period ended" in block
+    assert "flatpak kill" not in block
     assert 'kill -TERM "$APP_PID"' not in block
-    assert "Clipboard serving interrupted by a signal" in block
