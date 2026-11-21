@@ -75,6 +75,9 @@ def validate_unreleased_structure(content: str) -> list[str]:
             errors.append(f"Empty [Unreleased] category: {category}")
 
     for number, line in enumerate(lines, start=1):
+        if re.match(r"^####+\s+", line):
+            errors.append(f"Malformed heading at [Unreleased] line {number}: {line.strip()}")
+            continue
         heading = re.match(r"^###\s*(.*?)\s*$", line)
         if heading:
             finish_category()
