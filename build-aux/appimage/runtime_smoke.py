@@ -13,6 +13,7 @@ import pathlib
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 
 
@@ -169,7 +170,7 @@ def main() -> int:
         )
         probe = subprocess.run(
             [
-                os.environ.get("PYTHON", "/usr/bin/python3"),
+                os.environ.get("PYTHON", sys.executable),
                 "-c",
                 probe_code,
                 *(str(path) for _, path in pixbuf_fixtures),
