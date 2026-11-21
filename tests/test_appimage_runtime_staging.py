@@ -122,10 +122,14 @@ def test_appimage_runtime_smoke_checks_gdk_pixbuf_png_and_jpeg() -> None:
     assert 'export GDK_PIXBUF_MODULEDIR="$PIXBUF_MODULE_ROOT/loaders"' in app_run
     assert 'export GDK_PIXBUF_MODULE_FILE="$PIXBUF_MODULE_ROOT/loaders.cache"' in app_run
     assert 'if [ ! -d "$GDK_PIXBUF_MODULEDIR" ] || [ ! -s "$GDK_PIXBUF_MODULE_FILE" ]; then' in app_run
-    assert "from gi.repository import Gdk, GdkPixbuf, GLib, Gst, Gtk" in smoke
+    assert "from gi.repository import Gdk, GdkPixbuf, Gst, Gtk" in smoke
     assert '("png", appdir / "usr/share/anura/runtime-smoke.png")' in smoke
     assert '("jpeg", appdir / "usr/share/anura/runtime-smoke.jpg")' in smoke
     assert "GdkPixbuf.Pixbuf.get_formats()" in smoke
+    assert "Image.open(image_path)" in smoke
+    assert "loader.write(image_path.read_bytes())" in smoke
+    assert "GdkPixbuf.Pixbuf.new_from_file(str(image_path))" not in smoke
+    assert "GdkPixbuf.Pixbuf.get_file_info(str(image_path))" not in smoke
     entrypoint = (root / "build-aux/appimage/build_appdir.sh").read_text(encoding="utf-8")
     assert 'gi.require_version("GdkPixbuf", "2.0")' in entrypoint
     assert "GdkPixbuf.Pixbuf.init_modules(str(pixbuf_loader_roots[0]))" in entrypoint
@@ -144,7 +148,7 @@ def test_appimage_runtime_smoke_pins_gdk_typelib_before_import() -> None:
     gdk_version = 'gi.require_version("Gdk", "4.0")'
     gtk_version = 'gi.require_version("Gtk", "4.0")'
     gst_version = 'gi.require_version("Gst", "1.0")'
-    repository_import = "from gi.repository import Gdk, GdkPixbuf, GLib, Gst, Gtk"
+    repository_import = "from gi.repository import Gdk, GdkPixbuf, Gst, Gtk"
 
     assert gdk_pixbuf_version in smoke
     assert gdk_version in smoke
