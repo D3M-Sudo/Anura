@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- AppImage/CI: use the bundled Welcome screenshot as the OCR smoke fixture and validate DejaVu glyph metrics without triggering oversized synthetic Pillow rasterization.
+- Flatpak/CI: use the supported `flatpak kill --signal=TERM` syntax for the sandbox clipboard-lifetime smoke test.
+
 - AppImage: add extracted-runtime checks for OCR, GStreamer playback, Fontconfig resolution and symbolic icons on x86_64 and aarch64.
 - Accessibility: give language-download progress bars translated language context; announce download start/completion/failure and concise OCR, TTS and debounced search status transitions without percentage-level announcement noise (#648)
 - Release/AppImage: add native x86_64 and aarch64 self-contained AppImage builds, embedded GitHub Releases zsync metadata, paired update files, strict release-asset validation and SHA-256 checksums (#555)
