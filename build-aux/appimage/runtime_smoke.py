@@ -130,9 +130,7 @@ def main() -> int:
         detected_format, detected_width, detected_height = GdkPixbuf.Pixbuf.get_file_info(str(image_path))
         actual_format = detected_format.get_name() if detected_format is not None else None
         if actual_format != expected_format:
-            pixbuf_failures.append(
-                f"{expected_format}: detected format={actual_format!r}, path={image_path}"
-            )
+            pixbuf_failures.append(f"{expected_format}: detected format={actual_format!r}, path={image_path}")
             continue
         if (
             detected_width <= 0
