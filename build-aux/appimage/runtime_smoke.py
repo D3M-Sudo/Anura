@@ -97,10 +97,11 @@ def main() -> int:
 
     import gi
 
+    gi.require_version("GdkPixbuf", "2.0")
     gi.require_version("Gdk", "4.0")
     gi.require_version("Gtk", "4.0")
     gi.require_version("Gst", "1.0")
-    from gi.repository import Gdk, Gst, Gtk
+    from gi.repository import Gdk, GdkPixbuf, Gst, Gtk
 
     Gtk.init()
     display = Gdk.Display.get_default()
@@ -111,6 +112,33 @@ def main() -> int:
     missing_icons = [name for name in required_icons if not theme.has_icon(name)]
     if missing_icons:
         raise RuntimeError(f"AppImage icon theme is missing required icons: {missing_icons}")
+
+    pixbuf_fixtures = (
+        ("png", appdir / "usr/share/anura/runtime-smoke.png"),
+        ("jpeg", appdir / "usr/share/anura/runtime-smoke.jpg"),
+    )
+    for expected_format, image_path in pixbuf_fixtures:
+        if not image_path.is_file():
+            raise RuntimeError(f"AppImage GdkPixbuf {expected_format} fixture is missing: {image_path}")
+        detected_format, detected_width, detected_height = GdkPixbuf.Pixbuf.get_file_info(str(image_path))
+        if detected_format is None or detected_format.get_name() != expected_format:
+            actual_format = detected_format.get_name() if detected_format is not None else None
+            raise RuntimeError(
+                f"AppImage GdkPixbuf detected the wrong image format: "
+                f"path={image_path}, expected={expected_format!r}, actual={actual_format!r}"
+            )
+        pixbuf = GdkPixbuf.Pixbuf.new_from_file(str(image_path))
+        if (
+            detected_width <= 0
+            or detected_height <= 0
+            or pixbuf.get_width() != detected_width
+            or pixbuf.get_height() != detected_height
+        ):
+            raise RuntimeError(
+                f"AppImage GdkPixbuf decoded invalid image dimensions: "
+                f"path={image_path}, detected={detected_width}x{detected_height}, "
+                f"decoded={pixbuf.get_width()}x{pixbuf.get_height()}"
+            )
 
     Gst.init(None)
     machine = os.uname().machine
@@ -190,6 +218,7 @@ def main() -> int:
         f"arch={os.uname().machine}",
         "fontconfig=resolved",
         "icons=available",
+        "gdk_pixbuf=png+jpeg",
         "gstreamer=fakesink-playback+pulsesink",
         "tesseract=ANURA-OCR",
     )

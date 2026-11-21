@@ -111,6 +111,25 @@ def test_appimage_cli_wrapper_is_posix_and_pulseaudio_runtime_is_explicit() -> N
     assert 'Gst.ElementFactory.make("pulsesink"' in smoke
 
 
+
+def test_appimage_runtime_smoke_checks_gdk_pixbuf_png_and_jpeg() -> None:
+    root = Path(__file__).resolve().parents[1]
+    builder = (root / "build-aux/appimage/build_appdir.sh").read_text(encoding="utf-8")
+    smoke = (root / "build-aux/appimage/runtime_smoke.py").read_text(encoding="utf-8")
+    jpeg_fixture = root / "data/screenshots/anura-runtime-smoke.jpg"
+
+    assert 'cp "$SOURCE_ROOT/data/screenshots/anura-runtime-smoke.jpg" "$APPDIR/usr/share/anura/runtime-smoke.jpg"' in builder
+    assert 'gi.require_version("GdkPixbuf", "2.0")' in smoke
+    assert "from gi.repository import Gdk, GdkPixbuf, Gst, Gtk" in smoke
+    assert '("png", appdir / "usr/share/anura/runtime-smoke.png")' in smoke
+    assert '("jpeg", appdir / "usr/share/anura/runtime-smoke.jpg")' in smoke
+    assert "GdkPixbuf.Pixbuf.get_file_info(str(image_path))" in smoke
+    assert "GdkPixbuf.Pixbuf.new_from_file(str(image_path))" in smoke
+    assert '"gdk_pixbuf=png+jpeg"' in smoke
+    assert jpeg_fixture.is_file()
+    assert jpeg_fixture.read_bytes().startswith(b"\\xff\\xd8\\xff")
+
+
 def test_appimage_runtime_smoke_pins_gdk_typelib_before_import() -> None:
     root = Path(__file__).resolve().parents[1]
     smoke = (root / "build-aux/appimage/runtime_smoke.py").read_text(encoding="utf-8")
