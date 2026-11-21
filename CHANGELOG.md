@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- AppImage/ GStreamer: expose staged AppDir shared-library paths to appimage-builder's registry scanner during build, with a compatibility self-test and regression coverage.
 - AppImage/Fontconfig: generate a per-run configuration with the extracted AppDir's absolute font path, retaining relocatability across installation locations and architectures.
 - AppImage/GTK: explicitly select the Gdk 4.0 GI namespace before importing the runtime smoke-test bindings, eliminating the PyGI version warning on both architectures.
 
