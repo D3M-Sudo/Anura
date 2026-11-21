@@ -120,14 +120,21 @@ def main() -> int:
     if libdir_name is None:
         raise RuntimeError(f"Unsupported AppImage architecture for PulseAudio check: {machine}")
     pulse_lib_dir = appdir / "usr/lib" / libdir_name / "pulseaudio"
+    pulse_client = appdir / "usr/lib" / libdir_name / "libpulse.so.0"
+    if not pulse_client.is_file():
+        raise RuntimeError(f"AppImage PulseAudio client library is missing: {pulse_client}")
     pulse_helpers = sorted(pulse_lib_dir.glob("libpulsecommon-*.so"))
     if not pulse_helpers:
         raise RuntimeError(f"AppImage PulseAudio private helper is missing: {pulse_lib_dir}")
     try:
+        # libpulse exports symbols consumed by its private helper; load it
+        # globally first, then explicitly validate the helper itself.
+        ctypes.CDLL(str(pulse_client), mode=ctypes.RTLD_GLOBAL)
         ctypes.CDLL(str(pulse_helpers[0]))
     except OSError as error:
         raise RuntimeError(
-            f"AppImage PulseAudio private helper cannot be loaded: {pulse_helpers[0]}: {error}"
+            f"AppImage PulseAudio client/helper cannot be loaded: {pulse_client}, "
+            f"{pulse_helpers[0]}: {error}"
         ) from error
 
     for factory_name in ("playbin3", "audiotestsrc", "fakesink", "pulsesink"):

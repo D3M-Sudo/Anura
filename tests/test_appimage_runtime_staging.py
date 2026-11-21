@@ -104,7 +104,9 @@ def test_appimage_cli_wrapper_is_posix_and_pulseaudio_runtime_is_explicit() -> N
 
     assert '"$LIBDIR/pulseaudio:$LIBDIR:$APPDIR/usr/lib' in app_run
     assert "libpulse0" in recipe
+    assert 'appdir / "usr/lib" / libdir_name / "libpulse.so.0"' in smoke
     assert 'glob("libpulsecommon-*.so")' in smoke
+    assert "ctypes.CDLL(str(pulse_client), mode=ctypes.RTLD_GLOBAL)" in smoke
     assert "ctypes.CDLL(str(pulse_helpers[0]))" in smoke
     assert '"pulsesink"' in smoke
     assert 'Gst.ElementFactory.make("pulsesink"' in smoke
