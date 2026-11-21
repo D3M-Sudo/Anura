@@ -112,6 +112,20 @@ if not scanner_candidates:
     raise RuntimeError("Bundled GStreamer plugin scanner is missing")
 os.environ["GST_PLUGIN_SCANNER"] = str(scanner_candidates[0])
 
+# Explicitly initialize the bundled GdkPixbuf loader registry. The AppImage
+# ships its own loader cache and must not depend on the host's compiled-in
+# module search path.
+import gi
+
+gi.require_version("GdkPixbuf", "2.0")
+from gi.repository import GdkPixbuf  # noqa: E402
+
+pixbuf_loader_roots = list(appdir.glob("usr/lib/*-linux-gnu/gdk-pixbuf-2.0/2.10.0"))
+if len(pixbuf_loader_roots) != 1:
+    raise RuntimeError(f"Expected one bundled GdkPixbuf loader directory, found: {pixbuf_loader_roots}")
+if not GdkPixbuf.Pixbuf.init_modules(str(pixbuf_loader_roots[0])):
+    raise RuntimeError(f"Could not initialize bundled GdkPixbuf loaders: {pixbuf_loader_roots[0]}")
+
 sys.path[:0] = [str(path) for path in python_paths]
 if sys.argv[1:] == ["--runtime-smoke"]:
     from runtime_smoke import main as runtime_smoke  # noqa: E402
