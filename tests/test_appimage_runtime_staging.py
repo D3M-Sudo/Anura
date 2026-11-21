@@ -126,3 +126,17 @@ def test_appimage_runtime_smoke_pins_gdk_typelib_before_import() -> None:
     assert max(smoke.index(gdk_version), smoke.index(gtk_version), smoke.index(gst_version)) < smoke.index(
         repository_import
     )
+
+
+
+def test_appimage_builder_gstreamer_scanner_receives_appdir_library_paths() -> None:
+    root = Path(__file__).resolve().parents[1]
+    compatibility = (root / "build-aux/appimage/appimage_builder_compat.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "GStreamer._prepare_gst_launch_env = _prepare_gst_launch_env" in compatibility
+    assert 'env.get("APPDIR_LIBRARY_PATH")' in compatibility
+    assert 'process_env.get("LD_LIBRARY_PATH")' in compatibility
+    assert 'process_env["LD_LIBRARY_PATH"] = os.pathsep.join' in compatibility
+    assert "AppImage builder GStreamer AppDir loader path: OK" in compatibility
