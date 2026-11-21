@@ -133,8 +133,7 @@ def main() -> int:
         ctypes.CDLL(str(pulse_helpers[0]))
     except OSError as error:
         raise RuntimeError(
-            f"AppImage PulseAudio client/helper cannot be loaded: {pulse_client}, "
-            f"{pulse_helpers[0]}: {error}"
+            f"AppImage PulseAudio client/helper cannot be loaded: {pulse_client}, {pulse_helpers[0]}: {error}"
         ) from error
 
     for factory_name in ("playbin3", "audiotestsrc", "fakesink", "pulsesink"):
