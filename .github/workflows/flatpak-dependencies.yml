@@ -1,4 +1,4 @@
-name: Check Flatpak Dependencies
+name: "Maintenance: Flatpak Dependency Updates"
 
 on:
   schedule:
@@ -12,18 +12,19 @@ on:
 
 jobs:
   check-flatpak-deps:
+    name: "Maintenance: Check Flatpak Dependencies"
     runs-on: ubuntu-latest
     permissions:
       contents: write
       issues: write
       pull-requests: write
     steps:
-      - name: Checkout repository
+      - name: "Setup: Checkout Repository"
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Check for available updates
+      - name: "Maintenance: Check Upstream Dependency Updates"
         id: check
         run: |
           FEDC_HOME="$RUNNER_TEMP/fedc-home"
@@ -72,7 +73,7 @@ jobs:
             cat "$UPDATES_FILE"
           fi
 
-      - name: Report general dependency updates
+      - name: "Maintenance: Report Dependency Updates"
         if: always() && steps.check.outputs.check_completed == 'true'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
@@ -134,7 +135,7 @@ jobs:
           UPDATES: ${{ steps.check.outputs.updates }}
           HAS_UPDATES: ${{ steps.check.outputs.has_updates }}
 
-      - name: Auto-update certifi only
+      - name: "Maintenance: Update certifi"
         run: |
           git restore -- flatpak/io.github.d3m_sudo.anura.local.json
 
@@ -168,7 +169,7 @@ jobs:
           git diff --check
           git diff -- flatpak/io.github.d3m_sudo.anura.local.json
 
-      - name: Create PR for certifi updates
+      - name: "Maintenance: Open certifi Update PR"
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
