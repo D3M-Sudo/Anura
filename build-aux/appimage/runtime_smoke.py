@@ -154,6 +154,26 @@ def main() -> int:
                 f"decoded={pixbuf.get_width()}x{pixbuf.get_height()}"
             )
     if pixbuf_failures:
+        # Run a clean-environment probe in a fresh process. This distinguishes
+        # GdkPixbuf's built-in PNG/JPEG support from loader-cache overrides
+        # applied by the custom AppRun.
+        probe_env = os.environ.copy()
+        probe_env.pop("GDK_PIXBUF_MODULE_FILE", None)
+        probe_env.pop("GDK_PIXBUF_MODULEDIR", None)
+        probe_code = (
+            "import gi,sys; gi.require_version('GdkPixbuf','2.0'); "
+            "from gi.repository import GdkPixbuf; "
+            "print('formats=' + repr(sorted(f.get_name() for f in GdkPixbuf.Pixbuf.get_formats()))); "
+            "[(print(p + ':' + GdkPixbuf.Pixbuf.new_from_file(p).get_format().get_name())) "
+            "for p in sys.argv[1:]]"
+        )
+        probe = subprocess.run(
+            [os.environ.get("PYTHON", "/usr/bin/python3"), "-c", probe_code, *(str(path) for _, path in pixbuf_fixtures)],
+            check=False,
+            capture_output=True,
+            text=True,
+            env=probe_env,
+        )
         raise RuntimeError(
             "AppImage GdkPixbuf validation failed: "
             + "; ".join(pixbuf_failures)
@@ -162,6 +182,9 @@ def main() -> int:
             + f"; loader_files={pixbuf_loader_files!r}"
             + f"; module_file={str(pixbuf_module_file)!r}"
             + f"; cache_preview={pixbuf_cache_preview!r}"
+            + f"; clean_env_probe_exit={probe.returncode}"
+            + f"; clean_env_probe_stdout={probe.stdout[-2000:]!r}"
+            + f"; clean_env_probe_stderr={probe.stderr[-2000:]!r}"
         )
 
     Gst.init(None)
