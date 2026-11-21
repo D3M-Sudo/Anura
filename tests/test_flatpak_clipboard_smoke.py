@@ -16,6 +16,7 @@ def test_clipboard_smoke_signals_the_sandboxed_app_not_the_flatpak_launcher() ->
     end = workflow.index("Functional test - OCR negativo", start)
     block = workflow[start:end]
 
-    assert "flatpak kill --user --signal=TERM io.github.d3m_sudo.anura" in block
+    assert "flatpak kill --signal=TERM io.github.d3m_sudo.anura" in block
+    assert "flatpak kill --user --signal=TERM io.github.d3m_sudo.anura" not in block
     assert 'kill -TERM "$APP_PID"' not in block
     assert "Clipboard serving interrupted by a signal" in block
