@@ -32,6 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - AppImage/Fontconfig: generate a per-run configuration with the extracted AppDir's absolute font path, retaining relocatability across installation locations and architectures.
+- AppImage/GTK: explicitly select the Gdk 4.0 GI namespace before importing the runtime smoke-test bindings, eliminating the PyGI version warning on both architectures.
 
 - Flatpak/CI: make shortcut consistency checks load the GResource produced by the GTK workflow and validate GNOME 51 symbolic icons inside the installed runtime.
 - Flatpak/dependencies: explicitly exclude the build-only `pathspec` license directory from the runtime license inventory, matching the package and license removal already performed after `python3-pybind11` metadata generation.

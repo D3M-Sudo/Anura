@@ -109,3 +109,19 @@ def test_appimage_cli_wrapper_is_posix_and_pulseaudio_runtime_is_explicit() -> N
     assert "ctypes.CDLL(str(pulse_helpers[0]))" in smoke
     assert '"pulsesink"' in smoke
     assert 'Gst.ElementFactory.make("pulsesink"' in smoke
+
+def test_appimage_runtime_smoke_pins_gdk_typelib_before_import() -> None:
+    root = Path(__file__).resolve().parents[1]
+    smoke = (root / "build-aux/appimage/runtime_smoke.py").read_text(encoding="utf-8")
+
+    gdk_version = 'gi.require_version("Gdk", "4.0")'
+    gtk_version = 'gi.require_version("Gtk", "4.0")'
+    gst_version = 'gi.require_version("Gst", "1.0")'
+    repository_import = "from gi.repository import Gdk, Gst, Gtk"
+
+    assert gdk_version in smoke
+    assert gtk_version in smoke
+    assert gst_version in smoke
+    assert max(smoke.index(gdk_version), smoke.index(gtk_version), smoke.index(gst_version)) < smoke.index(
+        repository_import
+    )
