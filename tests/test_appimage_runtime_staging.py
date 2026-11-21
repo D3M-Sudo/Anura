@@ -141,7 +141,7 @@ def test_appimage_runtime_smoke_pins_gdk_typelib_before_import() -> None:
     gdk_version = 'gi.require_version("Gdk", "4.0")'
     gtk_version = 'gi.require_version("Gtk", "4.0")'
     gst_version = 'gi.require_version("Gst", "1.0")'
-    repository_import = "from gi.repository import Gdk, GdkPixbuf, Gst, Gtk"
+    repository_import = "from gi.repository import Gdk, GdkPixbuf, GLib, Gst, Gtk"
 
     assert gdk_pixbuf_version in smoke
     assert gdk_version in smoke
