@@ -138,9 +138,7 @@ def main() -> int:
     font = ImageFont.truetype(str(font_path), 72)
     font_family, font_style = font.getname()
     if font_family != "DejaVu Sans" or font_style != "Bold":
-        raise RuntimeError(
-            f"Unexpected bundled font face: family={font_family!r}, style={font_style!r}"
-        )
+        raise RuntimeError(f"Unexpected bundled font face: family={font_family!r}, style={font_style!r}")
 
     image_path = appdir / "usr/share/anura/runtime-smoke.png"
     if not image_path.is_file():
