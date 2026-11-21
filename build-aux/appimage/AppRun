@@ -2,7 +2,14 @@
 # AppImage entrypoint for Anura. Keep this independent of AppRun2.
 set -eu
 
-APPDIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+case "$0" in
+  */usr/bin/anura)
+    APPDIR="$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
+    ;;
+  *)
+    APPDIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+    ;;
+esac
 export APPDIR
 export PATH="$APPDIR/usr/bin:$PATH"
 export PYTHONPATH="$APPDIR/usr/lib/python3.12/site-packages:$APPDIR/usr/lib/python3/dist-packages"

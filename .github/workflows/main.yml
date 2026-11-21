@@ -341,7 +341,8 @@ jobs:
           python3 build-aux/generate_release_manifest.py \
             --input flatpak/io.github.d3m_sudo.anura.local.json \
             --output flatpak/.ci-release/io.github.d3m_sudo.anura.json \
-            --version "$VERSION"
+            --version "$VERSION" \
+            --source-commit "$GITHUB_SHA"
           # Build the exact checked-out source without a network Git fetch.
           python3 build-aux/generate_release_manifest.py \
             --input flatpak/io.github.d3m_sudo.anura.local.json \
@@ -784,6 +785,10 @@ jobs:
               NO_AT_BRIDGE=1 GTK_A11Y=none LIBGL_ALWAYS_SOFTWARE=1 \
                 PYTHONDONTWRITEBYTECODE=1 APPDIR=/opt/anura \
                 timeout 120 dbus-run-session -- xvfb-run -a /opt/anura/AppRun --runtime-smoke
+              echo "=== Verifying the usr/bin/anura compatibility entrypoint ==="
+              NO_AT_BRIDGE=1 GTK_A11Y=none LIBGL_ALWAYS_SOFTWARE=1 \
+                PYTHONDONTWRITEBYTECODE=1 \
+                timeout 120 dbus-run-session -- xvfb-run -a /opt/anura/usr/bin/anura --runtime-smoke
             '
       - name: Upload AppImage and zsync CI artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

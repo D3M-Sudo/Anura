@@ -64,7 +64,8 @@ For each architecture, CI:
 3. generates the final AppImage with appimagetool and then creates its matching `.zsync` control file with `zsyncmake`;
 4. checks the AppImage ELF architecture, verifies the custom shell AppRun entrypoint survived repackaging, and checks embedded update metadata;
 5. extracts the image without requiring host FUSE and runs a headless runtime smoke test inside a clean Ubuntu 24.04 container without GTK/GI packages installed; the test validates the PulseAudio private helper and GStreamer `pulsesink` factory as well as the existing GTK, font, icon, GStreamer and OCR paths;
-6. uploads the AppImage pair as a CI artifact.
+6. invokes both the root AppRun and the `usr/bin/anura` alias in the clean-host
+   smoke environment, then uploads the AppImage pair as a CI artifact.
 
 A separate validation job requires exactly four versioned AppImage/zsync assets (two per architecture) and writes their SHA-256 checksums. Tag publication is blocked unless both architecture builds, Flatpak release validation and AppImage asset validation succeed.
 

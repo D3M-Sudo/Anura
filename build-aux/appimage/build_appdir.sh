@@ -148,15 +148,9 @@ from anura import main  # noqa: E402
 raise SystemExit(main.main(os.environ["ANURA_VERSION"]))
 PY
 
-# Keep the conventional command available for shells and desktop integrations
-# that invoke "anura" directly; AppRun itself uses the ELF Python interpreter.
-cat > "$APPDIR/usr/bin/anura" <<'SH'
-#!/bin/sh
-set -eu
-: "${APPDIR:?AppImage runtime did not set APPDIR}"
-exec "$APPDIR/usr/bin/python3" "$APPDIR/usr/lib/anura/appimage_entrypoint.py" "$@"
-SH
-chmod 0755 "$APPDIR/usr/bin/anura"
+# Keep the conventional command available without introducing a second
+# launcher implementation: the symlink reuses AppRun's complete runtime setup.
+ln -s ../../AppRun "$APPDIR/usr/bin/anura"
 
 desktop-file-validate "$APPDIR/usr/share/applications/io.github.d3m_sudo.anura.desktop"
 desktop-file-validate "$APPDIR/io.github.d3m_sudo.anura.desktop"

@@ -26,9 +26,13 @@ following work independently on each native runner:
 1. Verify that the runner's `uname -m` matches the requested Flatpak
    architecture.
 2. Remove stale build directories and caches before building.
-3. Generate the release-style manifest and a source-pinned CI build manifest.
+3. Generate a release-style manifest pinned to the exact checked-out commit,
+   plus a local-path CI build manifest pinned to the same commit.
 4. Validate the local and generated release manifests, including Flathub
-   manifest lint and shared-field consistency.
+   manifest lint and shared-field consistency. The release-style source keeps
+   its human-readable version tag and also carries the immutable commit SHA;
+   this avoids Flathub's unpinned-tag linter warning and prevents tag movement
+   from changing the source revision represented by CI.
 5. Build the Flatpak, including an offline build.
 6. Install and smoke-test the application inside the sandbox.
 7. Load the required GI namespaces and exercise native runtime bindings,
