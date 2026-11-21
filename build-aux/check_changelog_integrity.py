@@ -32,8 +32,8 @@ def unreleased_section_lines(content: str) -> list[str]:
         raise ChangelogError("[Unreleased] must be the first release section")
     for index in range(start + 1, len(lines)):
         if re.match(r"^##\s+", lines[index]):
-            return lines[start + 1:index]
-    return lines[start + 1:]
+            return lines[start + 1 : index]
+    return lines[start + 1 :]
 
 
 def unreleased_entries(content: str) -> list[str]:
