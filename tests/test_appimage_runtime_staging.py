@@ -114,6 +114,7 @@ def test_appimage_cli_wrapper_is_posix_and_pulseaudio_runtime_is_explicit() -> N
 def test_appimage_runtime_smoke_checks_gdk_pixbuf_png_and_jpeg() -> None:
     root = Path(__file__).resolve().parents[1]
     builder = (root / "build-aux/appimage/build_appdir.sh").read_text(encoding="utf-8")
+    app_run = (root / "build-aux/appimage/AppRun").read_text(encoding="utf-8")
     smoke = (root / "build-aux/appimage/runtime_smoke.py").read_text(encoding="utf-8")
     jpeg_fixture = root / "data/screenshots/anura-runtime-smoke.jpg"
 
@@ -122,6 +123,9 @@ def test_appimage_runtime_smoke_checks_gdk_pixbuf_png_and_jpeg() -> None:
         in builder
     )
     assert 'gi.require_version("GdkPixbuf", "2.0")' in smoke
+    assert 'export GDK_PIXBUF_MODULEDIR="$PIXBUF_MODULE_ROOT/loaders"' in app_run
+    assert 'export GDK_PIXBUF_MODULE_FILE="$PIXBUF_MODULE_ROOT/loaders.cache"' in app_run
+    assert 'if [ ! -d "$GDK_PIXBUF_MODULEDIR" ] || [ ! -s "$GDK_PIXBUF_MODULE_FILE" ]; then' in app_run
     assert "from gi.repository import Gdk, GdkPixbuf, GLib, Gst, Gtk" in smoke
     assert '("png", appdir / "usr/share/anura/runtime-smoke.png")' in smoke
     assert '("jpeg", appdir / "usr/share/anura/runtime-smoke.jpg")' in smoke
