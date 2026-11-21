@@ -133,6 +133,10 @@ def test_appimage_runtime_smoke_checks_gdk_pixbuf_png_and_jpeg() -> None:
     assert "GdkPixbuf.Pixbuf.get_file_info(str(image_path))" in smoke
     assert "except GLib.Error as error" in smoke
     assert "GdkPixbuf.Pixbuf.get_formats()" in smoke
+    entrypoint = (root / "build-aux/appimage/build_appdir.sh").read_text(encoding="utf-8")
+    assert 'gi.require_version("GdkPixbuf", "2.0")' in entrypoint
+    assert "GdkPixbuf.Pixbuf.init_modules(str(pixbuf_loader_roots[0]))" in entrypoint
+    assert "Expected one bundled GdkPixbuf loader directory" in entrypoint
     assert "registered_formats={registered_pixbuf_formats!r}" in smoke
     assert "loader_files={pixbuf_loader_files!r}" in smoke
     assert "cache_preview={pixbuf_cache_preview!r}" in smoke
