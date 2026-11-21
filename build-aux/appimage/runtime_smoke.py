@@ -130,10 +130,29 @@ def main() -> int:
         else "<missing>"
     )
     pixbuf_failures = []
+    pixbuf_diagnostics = []
     for expected_format, image_path in pixbuf_fixtures:
         if not image_path.is_file():
             pixbuf_failures.append(f"{expected_format}: fixture is missing: {image_path}")
             continue
+        file_info = GdkPixbuf.Pixbuf.get_file_info(str(image_path))
+        info_format = file_info[0].get_name() if file_info and file_info[0] is not None else None
+        typed_loader_result = "not-run"
+        try:
+            typed_loader = GdkPixbuf.PixbufLoader.new_with_type(expected_format)
+            typed_loader.write(image_path.read_bytes())
+            typed_loader.close()
+            typed_pixbuf = typed_loader.get_pixbuf()
+            typed_loader_result = (
+                f"decoded={typed_pixbuf.get_width()}x{typed_pixbuf.get_height()}"
+                if typed_pixbuf is not None
+                else "no-pixbuf"
+            )
+        except (GLib.Error, OSError) as error:
+            typed_loader_result = f"failed={error}"
+        pixbuf_diagnostics.append(
+            f"{expected_format}: file_info={info_format!r}, typed_loader={typed_loader_result!r}"
+        )
         try:
             pixbuf = GdkPixbuf.Pixbuf.new_from_file(str(image_path))
         except GLib.Error as error:
@@ -191,6 +210,8 @@ def main() -> int:
             + f"; clean_env_probe_exit={probe.returncode}"
             + f"; clean_env_probe_stdout={probe.stdout[-2000:]!r}"
             + f"; clean_env_probe_stderr={probe.stderr[-2000:]!r}"
+            + f"; typed_loader_diagnostics={pixbuf_diagnostics!r}"
+            + f"; gdk_pixbuf_mapped_libraries={[line.strip() for line in pathlib.Path('/proc/self/maps').read_text(encoding='utf-8').splitlines() if 'gdk_pixbuf' in line or 'libpng' in line or 'libjpeg' in line]!r}"
         )
 
     Gst.init(None)
