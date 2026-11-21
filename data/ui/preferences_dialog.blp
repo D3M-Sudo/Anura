@@ -13,8 +13,6 @@ template $PreferencesDialog : Adw.PreferencesDialog {
   title: _("Preferences");
   content-height: 480;
   content-width: 640;
-  width-request: 360;
-  height-request: 300;
   search-enabled: false;
 
   // Link to the General settings page
@@ -22,4 +20,10 @@ template $PreferencesDialog : Adw.PreferencesDialog {
 
   // Link to the Language selection page
   $PreferencesLanguagesPage languages_page {}
+
+  // Link to the Editor settings page
+  $PreferencesEditorPage editor_page {}
+
+  // Link to the Voice (TTS) settings page
+  $PreferencesVoicePage voice_page {}
 }

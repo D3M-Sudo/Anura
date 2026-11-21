@@ -24,6 +24,52 @@ MIGRATION_MARKER = ".anura-legacy-flatpak-migration-v1.json"
 PERSISTENT_SUBDIRECTORIES = ("history", "tessdata")
 
 
+def mark_legacy_flatpak_migration_skipped(
+    *,
+    new_data_home: Path | str | None = None,
+    flatpak_info: Path | str = FLATPAK_INFO,
+) -> bool:
+    """Persist the user's decision to start with clean data instead of importing.
+
+    The marker prevents the first-run prompt from appearing again. No legacy
+    source path is inspected, modified, or deleted.
+    """
+    if not Path(flatpak_info).is_file():
+        return False
+
+    destination_home = Path(new_data_home if new_data_home is not None else XDG_DATA_HOME)
+    marker = destination_home / MIGRATION_MARKER
+    if marker.is_file():
+        return True
+
+    destination_home.mkdir(parents=True, exist_ok=True, mode=0o700)
+    payload = {
+        "version": 1,
+        "source_app_id": OLD_APP_ID,
+        "copied_files": 0,
+        "completed": False,
+        "status": "skipped",
+    }
+    fd, temporary_name = tempfile.mkstemp(
+        prefix=".anura-migration-marker-",
+        suffix=".tmp",
+        dir=destination_home,
+    )
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as marker_file:
+            json.dump(payload, marker_file, sort_keys=True)
+            marker_file.write("\n")
+            marker_file.flush()
+            os.fsync(marker_file.fileno())
+        os.replace(temporary, marker)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+    logger.info("Legacy Flatpak data migration skipped by user; legacy data was left untouched.")
+    return True
+
+
 def _ensure_destination_directory(path: Path, app_data_root: Path) -> None:
     """Create the destination path without traversing symlinks below XDG data."""
     chain: list[Path] = []

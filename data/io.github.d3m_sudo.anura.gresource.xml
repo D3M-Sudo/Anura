@@ -11,6 +11,8 @@
         <file preprocess="xml-stripblanks">shortcuts_overlay.ui</file>
         <file preprocess="xml-stripblanks">preferences_dialog.ui</file>
         <file preprocess="xml-stripblanks">preferences_general.ui</file>
+        <file preprocess="xml-stripblanks">preferences_editor.ui</file>
+        <file preprocess="xml-stripblanks">preferences_voice.ui</file>
         <file preprocess="xml-stripblanks">preferences_languages.ui</file>
         <file preprocess="xml-stripblanks">share_row.ui</file>
 
@@ -23,8 +25,6 @@
         <file>icons/scalable/actions/share-email-symbolic.svg</file>
         <file>icons/scalable/actions/share-x-symbolic.svg</file>
         <file>icons/scalable/actions/share-bluesky-symbolic.svg</file>
-        <file>icons/scalable/actions/share-discord-symbolic.svg</file>
-        <file>icons/scalable/actions/share-linkedin-symbolic.svg</file>
         <file>icons/scalable/actions/share-threads-symbolic.svg</file>
     </gresource>
 </gresources>

@@ -53,6 +53,12 @@ AppDir:
       - libgstreamer1.0-0
       - gstreamer1.0-plugins-base
       - gstreamer1.0-plugins-good
+      # Required by the PulseAudio GStreamer sink, including libpulsecommon.
+      - libpulse0
+      - gstreamer1.0-tools
+      - fontconfig
+      - fontconfig-config
+      - fonts-dejavu-core
       - adwaita-icon-theme
       - librsvg2-common
     exclude:

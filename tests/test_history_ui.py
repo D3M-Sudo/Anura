@@ -34,6 +34,7 @@ def _make_page(headless_gi_mocks, service: HistoryService | None = None, enabled
     # give this instance fresh isolated mocks so call counts don't leak.
     page.history_stack = MagicMock()
     page.history_list = MagicMock()
+    page.history_list.get_ancestor.return_value = None
     page.clear_button = MagicMock()
     page.settings = FakeSettings(enabled)
     if service is not None:
@@ -459,6 +460,82 @@ def test_teardown_all_cancels_pending_timers_and_drops_controller(headless_gi_mo
 
 
 # ---------------------------------------------------------------------- #
+# In-session view-state restoration
+# ---------------------------------------------------------------------- #
+
+
+def test_refresh_captures_expanded_entry_and_scroll_position(headless_gi_mocks, monkeypatch, tmp_path):
+    fake_adw, _fake_gtk, fake_glib = _patch_ui(monkeypatch)
+    fake_adw.ExpanderRow.side_effect = lambda **_kwargs: MagicMock()
+    service = HistoryService(base_dir=tmp_path)
+    service.record("first", "eng")
+    service.record("second", "eng")
+    page = _make_page(headless_gi_mocks)
+    page.setup(service)
+
+    expanded_row = page._rows[0]
+    expanded_id = service.get_entries()[0].id
+    page._open_row = expanded_row
+    page._row_entry_ids = {expanded_id: expanded_row}
+    adjustment = MagicMock()
+    adjustment.get_value.return_value = 137.0
+    scrolled_window = MagicMock()
+    scrolled_window.get_vadjustment.return_value = adjustment
+    page.history_list.get_ancestor.return_value = scrolled_window
+
+    page.refresh()
+
+    fake_glib.idle_add.assert_called_once()
+    callback, restored_id, restored_scroll, generation = fake_glib.idle_add.call_args.args
+    assert callback == page._restore_view_state
+    assert restored_id == expanded_id
+    assert restored_scroll == 137.0
+    assert generation == page._refresh_generation
+
+
+def test_restore_view_state_expands_matching_row_and_restores_scroll(headless_gi_mocks, monkeypatch, tmp_path):
+    _fake_adw, _fake_gtk, fake_glib = _patch_ui(monkeypatch)
+    service = HistoryService(base_dir=tmp_path)
+    page = _make_page(headless_gi_mocks, service)
+    row = MagicMock()
+    page._row_entry_ids = {"stable-entry-id": row}
+    page._refresh_generation = 4
+    adjustment = MagicMock()
+    scrolled_window = MagicMock()
+    scrolled_window.get_vadjustment.return_value = adjustment
+    page.history_list.get_ancestor.return_value = scrolled_window
+
+    result = page._restore_view_state("stable-entry-id", 83.5, 4)
+
+    row.set_expanded.assert_called_once_with(True)
+    adjustment.set_value.assert_called_once_with(83.5)
+    assert result is fake_glib.SOURCE_REMOVE
+
+
+def test_new_history_page_starts_with_default_transient_state(headless_gi_mocks, tmp_path):
+    """A newly constructed page (including after process restart) has no persisted view state."""
+    page = _make_page(headless_gi_mocks, HistoryService(base_dir=tmp_path))
+
+    assert page._open_row is None
+    assert page._row_entry_ids == {}
+
+
+def test_restore_view_state_ignores_removed_entry_and_stale_refresh(headless_gi_mocks, monkeypatch, tmp_path):
+    _fake_adw, _fake_gtk, fake_glib = _patch_ui(monkeypatch)
+    page = _make_page(headless_gi_mocks, HistoryService(base_dir=tmp_path))
+    page._refresh_generation = 5
+    adjustment = MagicMock()
+    scrolled_window = MagicMock()
+    scrolled_window.get_vadjustment.return_value = adjustment
+    page.history_list.get_ancestor.return_value = scrolled_window
+
+    result = page._restore_view_state("removed-entry-id", 99.0, 4)
+
+    adjustment.set_value.assert_not_called()
+    assert result is fake_glib.SOURCE_REMOVE
+
+
+# ---------------------------------------------------------------------- #
 # Malformed entry / defensive formatting
 # ---------------------------------------------------------------------- #
 
@@ -685,3 +762,45 @@ def test_tts_action_is_disabled_when_language_cannot_be_resolved(headless_gi_moc
 
     fake_gtk.Button.return_value.set_sensitive.assert_any_call(False)
     tts_controller.request_listen.assert_not_called()
+
+
+def test_tts_button_labels_describe_the_current_action(headless_gi_mocks):
+    page = _make_page(headless_gi_mocks)
+    button = MagicMock()
+    page._tts_buttons = {"entry": button}
+
+    expected_labels = {
+        "generating": "Stop listening",
+        "playing": "Pause listening",
+        "paused": "Resume listening",
+        "idle": "Listen to text",
+    }
+
+    for state, expected_label in expected_labels.items():
+        page._active_tts_entry_id = "entry" if state != "idle" else None
+        page._tts_state = state
+        page._update_tts_button()
+
+        assert button.set_tooltip_text.call_args.args == (expected_label,)
+        assert button.update_property.call_args.args[1] == [expected_label]
+
+
+def test_history_row_actions_have_initial_accessible_labels(headless_gi_mocks, monkeypatch, tmp_path):
+    """Copy, editor and TTS actions expose their initial purpose to assistive technology."""
+    _patch_ui(monkeypatch)
+    service = HistoryService(base_dir=tmp_path)
+    service.record("stored OCR text", "eng")
+    _make_page(headless_gi_mocks, service)
+
+    button_calls = __import__("anura.widgets.history_page", fromlist=["Gtk"]).Gtk.Button.call_args_list
+    labels = [call.kwargs["tooltip_text"] for call in button_calls]
+    assert labels == [
+        "Copy text to clipboard",
+        "Open in external editor",
+        "Listen to text",
+    ]
+
+    accessible_updates = __import__(
+        "anura.widgets.history_page", fromlist=["Gtk"]
+    ).Gtk.Button.return_value.update_property.call_args_list
+    assert [call.args[1][0] for call in accessible_updates] == labels

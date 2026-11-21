@@ -66,14 +66,29 @@ def test_zxing_cpp_uses_nanobind_not_pybind11(manifest: dict) -> None:
 
 
 def test_build_time_helpers_precede_the_modules_that_import_them(manifest: dict) -> None:
-    """Pillow imports pybind11 and zxing-cpp imports nanobind at build time."""
+    """Build helpers precede their consumers, including pathspec for pybind11 metadata."""
     order = {module["name"]: index for index, module in enumerate(manifest["modules"])}
+    modules = _modules(manifest)
 
     assert order["python3-packaging"] < order["python3-scikit-build-core"]
     assert order["python3-pathspec"] < order["python3-scikit-build-core"]
+    assert order["python3-pathspec"] < order["python3-pybind11"]
+    pybind11 = modules["python3-pybind11"]
+    assert not any("pathspec" in command and "rm -rf" in command for command in pybind11.get("build-commands", []))
     assert order["python3-pybind11"] < order["python3-pillow"]
     assert order["python3-nanobind"] < order["python3-zxing-cpp"]
+    assert order["python3-pathspec"] < order["python3-zxing-cpp"]
     assert order["python3-scikit-build-core"] < order["python3-zxing-cpp"]
+
+    zxing_commands = modules["python3-zxing-cpp"].get("build-commands", [])
+    assert not any("pathspec" in command and "rm -rf" in command for command in zxing_commands)
+    pillow_commands = modules["python3-pillow"].get("build-commands", [])
+    pillow_install_index = next(index for index, command in enumerate(pillow_commands) if "pip3 install" in command)
+    pillow_cleanup_index = next(
+        index for index, command in enumerate(pillow_commands) if "pathspec" in command and "rm -rf" in command
+    )
+    assert pillow_cleanup_index > pillow_install_index
+    assert "set -e" in pillow_commands[pillow_cleanup_index]
 
 
 def test_zxing_cpp_installs_the_sdist_it_declares(manifest: dict) -> None:
@@ -85,6 +100,16 @@ def test_zxing_cpp_installs_the_sdist_it_declares(manifest: dict) -> None:
     assert any("pip3 install" in command and command.rstrip().endswith(".") for command in install_commands), (
         f"zxing-cpp build-command does not build the extracted sdist: {install_commands!r}"
     )
+
+
+def test_pathspec_is_tracked_by_flatpak_external_data_checker(manifest: dict) -> None:
+    """The build-only pathspec wheel must remain updateable by FEDC."""
+    pathspec = _modules(manifest)["python3-pathspec"]
+    assert pathspec["sources"][0]["x-checker-data"] == {
+        "type": "pypi",
+        "name": "pathspec",
+        "packagetype": "bdist_wheel",
+    }
 
 
 def test_python_dependency_sources_match_uv_lock() -> None:

@@ -32,7 +32,11 @@ class ShareRow(Gtk.ListBoxRow):
         self.update_property([Gtk.AccessibleProperty.LABEL], [tooltip])
 
         self.label.set_label(display_name)
-        self.image.set_from_icon_name(f"share-{self.provider_name.lower()}-symbolic")
+        icon_name = f"share-{self.provider_name.lower()}-symbolic"
+        icon_theme = Gtk.IconTheme.get_for_display(self.get_display())
+        if not icon_theme.has_icon(icon_name):
+            icon_theme.add_resource_path(f"{RESOURCE_PREFIX}/icons")
+        self.image.set_from_icon_name(icon_name)
 
     @Gtk.Template.Callback()
     def _on_released(self, *_args: object) -> None:

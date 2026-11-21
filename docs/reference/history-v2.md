@@ -1,11 +1,13 @@
-# Anura — History V2: row interaction (current behaviour on `feature`)
+# Anura — History V2: row interaction (PR #648; pending promotion to `feature`)
 
-This document is the **normative** reference for what History rows do since the
-History V2 minimal cut ([#434](https://github.com/D3M-Sudo/Anura/pull/434) copy button,
-[#452](https://github.com/D3M-Sudo/Anura/pull/452) expandable rows). Storage, settings,
-recorded fields and the clear action are unchanged and stay documented in
-[history-v1.md](history-v1.md). The design decisions and the measurements behind
-them are in [../audit/legacy/reports/history-v2-interactive-rows-plan.md](../audit/legacy/reports/history-v2-interactive-rows-plan.md).
+This document is the **normative** reference for the History row behavior implemented
+on PR #648's `fix/ui-modernization-aligned` branch. That behavior is pending promotion
+to `feature`; do not treat it as already integrated into `feature`. The History V2
+minimal cut began with [#434](https://github.com/D3M-Sudo/Anura/pull/434) (copy button)
+and [#452](https://github.com/D3M-Sudo/Anura/pull/452) (expandable rows). Storage,
+settings, recorded fields and the clear action are unchanged and stay documented in
+[history-v1.md](history-v1.md). The design decisions and measurements are in
+[../audit/legacy/reports/history-v2-interactive-rows-plan.md](../audit/legacy/reports/history-v2-interactive-rows-plan.md).
 
 ## What History V2 provides
 
@@ -34,8 +36,11 @@ versioning remain out of scope.
   as in V1. Title and subtitle are **not** parsed as Pango markup (`use_markup=False`):
   OCR text such as `a < b & c` would otherwise fail to parse and show an empty title.
 - **One row open at a time.** Expanding a row collapses the previous one.
-- **Expansion is not remembered.** Every `HistoryPage.refresh()` (opening the page,
-  after Clear) rebuilds the list with all rows collapsed.
+- **Expansion and scroll state are retained across in-session refreshes/navigation.**
+  Before rebuilding the list, `HistoryPage.refresh()` captures the expanded entry ID
+  and vertical scroll adjustment. It restores the matching row and scroll position
+  after the new rows are created. A removed entry is not restored; no state is persisted
+  across application restarts.
 - **Expanded content:** a read-only, wrapping `Gtk.TextView` inside a
   `Gtk.ScrolledWindow` of at most 240 px (`_EXPANDED_TEXT_MAX_HEIGHT`); longer text
   scrolls. Its minimum height is estimated from the text
@@ -117,15 +122,15 @@ versioning remain out of scope.
 
 | File | Coverage |
 | --- | --- |
-| `tests/test_history_ui.py` (headless) | Rows are `ExpanderRow` with copy and editor header actions, markup disabled, lazy text area, single open row, reset on refresh, full text, height estimate, handler and timer cleanup |
+| `tests/test_history_ui.py` (headless) | Rows are `ExpanderRow` with copy and editor header actions, markup disabled, lazy text area, single open row, expanded-entry/scroll restoration on refresh, full text, height estimate, handler and timer cleanup |
 | `tests/test_history_controller.py` (headless) | Copy and editor-export outcomes, background task dispatch, signals, typed error handling, registration and cleanup |
-| `tests/test_history_expansion_real.py` (GTK-marked) | Real `HistoryPage` and real widgets: initial state, full text, single open row, refresh, rendered height of long and short text, cost of a 300 KB text, copy and editor actions |
+| `tests/test_history_expansion_real.py` (GTK-marked) | Real `HistoryPage` and real widgets: initial state, full text, single open row, refresh with expanded-row restoration, rendered height of long and short text, cost of a 300 KB text, copy and editor actions |
 | `tests/test_clipboard_service.py` (GTK-marked) | Text published as a plain string; read-back from the real clipboard |
 | `tests/test_pot_template.py` | The gettext template parses, has no duplicate msgids and contains the History strings |
 
 ## Limitations
 
-- Expansion is not remembered across refreshes.
+- Expanded-row identity and vertical scroll are retained only within the current application session; they are not persisted across restarts.
 - Very long text is shown in a scrollable area of limited height rather than in full.
 - The expanded/collapsed state is left to `AdwExpanderRow`: Anura adds no accessibility
   annotation of its own for it (the copy button keeps its own accessible label). How a

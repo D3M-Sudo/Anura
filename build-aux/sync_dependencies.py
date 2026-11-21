@@ -65,12 +65,13 @@ MODULE_TO_PYPI: dict[str, str] = {
     "python3-zxing-cpp": "zxing-cpp",
 }
 
-# Modules that are build-time only (not runtime) and therefore NOT present in
-# uv.lock. They are managed by flatpak-external-data-checker (x-checker-data)
-# instead of the uv.lock-based sync.
+# Modules required by the Flatpak build graph but not declared as application
+# runtime Python dependencies. Their pins are maintained by FEDC and excluded
+# from uv.lock-based synchronization and F-005 runtime coverage.
 BUILD_DEPS_OVERRIDES: frozenset[str] = frozenset(
     {
         "python3-nanobind",
+        "python3-pathspec",
         "python3-pybind11",
         "python3-scikit-build-core",
     }

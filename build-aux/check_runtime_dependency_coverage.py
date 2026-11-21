@@ -318,11 +318,14 @@ def check_runtime_coverage(
         else:
             result.good.append(f"{pkg} ({version}) -> {module}")
 
-    # Direction 2: surface stale / dev-only modules (non-blocking).
+    # Direction 2: warn only for mapped modules actually declared by one
+    # of the checked manifests. A stale mapping in this helper is not itself
+    # evidence that a runtime package is being shipped.
+    declared_modules = set().union(*manifest_modules.values()) if manifest_modules else set()
     for pypi, module in sorted(_PYPI_TO_MODULE.items()):
         if module in BUILD_DEPS_OVERRIDES:
             continue  # build-only modules are intentionally not runtime deps
-        if pypi not in runtime:
+        if module in declared_modules and pypi not in runtime:
             result.warnings.append(
                 f"module '{module}' maps to '{pypi}' which is NOT a runtime dependency (stale / dev-only module)"
             )

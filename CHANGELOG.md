@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- AppImage/CI: validate OCR against the actual Italian welcome-page fixture (`ANURA` and `ESTRAI`) on x86_64 and aarch64, rather than requiring an absent English `OCR` token.
+- Flatpak/CI: verify clipboard readability from a second sandboxed process and wait for a real clipboard lifecycle outcome (manager hand-off, replacement or configured serving timeout), while asserting the app remains alive; avoid signaling the host-side Flatpak launcher.
+- AppImage/CI: verify bundled DejaVu font face metadata without relying on invalid Pillow glyph extents; retain Fontconfig resolution and fixture OCR as runtime evidence.
+
+- AppImage: add extracted-runtime checks for OCR, GStreamer playback, Fontconfig resolution and symbolic icons on x86_64 and aarch64.
+- Accessibility: give language-download progress bars translated language context; announce download start/completion/failure and concise OCR, TTS and debounced search status transitions without percentage-level announcement noise (#648)
 - Release/AppImage: add native x86_64 and aarch64 self-contained AppImage builds, embedded GitHub Releases zsync metadata, paired update files, strict release-asset validation and SHA-256 checksums (#555)
 - Docs/release: document AppImage runtime boundaries, downloads, checksums and Gear Lever-compatible zsync updates (#555)
 - Docs/Flatpak: add a maintainer-operated Flathub submission readiness checklist covering current policy, architecture, manifest, licensing, permissions and validation boundaries (#494)
@@ -21,12 +27,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - CI/Flatpak: build Flatpak bundles on native x86_64 and aarch64 runners, producing architecture-specific bundles and license-inventory artifacts (#618)
 - CI/Flatpak: add sandbox-level runtime smoke checks on both architectures for GTK/GI typelibs, native Python bindings and the bundled Tesseract library (#619)
 - Flatpak: offer a portal-backed, user-selected migration of history and downloaded OCR models from the previous application ID; no cross-application filesystem permission is required (#613)
+- Flatpak: keep the first-run migration chooser alive until the user responds, persist an explicit skip/close decision, and start with clean data without modifying the legacy installation (#613)
 
 ### Changed
 
+- AppImage/Fontconfig: generate a per-run configuration with the extracted AppDir's absolute font path, retaining relocatability across installation locations and architectures.
+- AppImage/GTK: explicitly select the Gdk 4.0 GI namespace before importing the runtime smoke-test bindings, eliminating the PyGI version warning on both architectures.
+
+- Flatpak/CI: make shortcut consistency checks load the GResource produced by the GTK workflow and validate GNOME 51 symbolic icons inside the installed runtime.
+- Flatpak/dependencies: explicitly exclude the build-only `pathspec` license directory from the runtime license inventory, matching the package and license removal already performed after `python3-pybind11` metadata generation.
+- History/accessibility: make the TTS action label state-specific: “Stop listening” while generating, “Pause listening” during playback, “Resume listening” while paused, and “Listen to text” while idle (#648)
+- Preferences/Languages: probe the configured tessdata source instead of Google, cancel and ignore stale reachability callbacks on page disposal, prune completed LanguageRow idle sources, and provide an accessible name for the available OCR models list (#648)
+- UI: normalize application-authored spacing to the shared 4/8/12/16/24 px scale; retain Libadwaita semantic typography and existing custom corner-radius roles.
+- UI/CSS: remove legacy custom selectors and animation keyframes with no tracked application consumers; document existing GTK/Libadwaita typography class usage and limitations.
+- Extracted: preserve the current OCR result when navigating away; replace it only when a subsequent extraction completes.
+- History: retain the expanded entry and vertical scroll position when the list refreshes or the user returns to History during the same application session; this transient view state is not persisted across restarts.
+- Accessibility: respect GTK reduced-motion preferences in the main window and separate Shortcuts window, including live setting changes; suppress app-authored root animations/transitions and retain the gtk-enable-animations fallback on older GTK versions (#648)
+- Preferences: reorganize settings into four dedicated pages (General, Editor, Voice and Languages); move the existing Editor controls and TTS volume/language controls into their respective pages while retaining asynchronous TTS catalog loading (#648)
+- Welcome: retain Screenshot as the primary action; show Open Image, Paste Image and Drop Image as equal-width horizontal secondary actions when their measured natural widths fit, and group the same controls in More options when compact; preserve the page-wide drop target and focus behavior (#648)
+- UI/UX: align the Extracted, Welcome, History and Shortcuts interfaces with the modernized action hierarchy, boxed-list presentation and fixed green brand palette; use a darker green background with white foreground for suggested-action controls to meet WCAG AA normal-text contrast, and scheme-aware green text for light/dark surfaces; preserve existing Welcome accessibility and interaction behavior (#648)
+- CI/Flatpak: install SDK/runtime dependencies in the writable per-user Flatpak installation in containerized builds, avoiding OSTree cross-device deployment failures on the system installation.
 - CI/governance: align Dependabot and certifi automation with `feature`, run CodeQL on PRs to all protected promotion branches, guard manual dependency-sync dispatch from protected branches, and document the single-maintainer PR/CI policy.
 - Release tooling: correct the release script post-tag instructions to describe generated CHANGELOG notes and the current multi-architecture Flatpak/AppImage publication flow.
 - Code quality: clarify technical comments, remove obsolete implementation notes, and standardize selected Python docstrings; add contributor guidance for comment and Google-style docstring conventions.
+- Localization: complete the Italian translation catalog (415 active messages), resolving previously untranslated and fuzzy entries and correcting terminology and search labels (#648)
 - Localization: allow packaged AppImage builds to select their bundled gettext catalog directory through ANURA_LOCALE_DIR (#555)
 - Desktop integration: keep `Graphics` as the single main application-menu category and add the freedesktop `Scanning` and `OCR` additional categories, preventing duplicate menu entries while retaining precise OCR classification (#620)
 - OCR/tessdata: migrate all 489 pinned models across `tessdata`, `tessdata_fast` and `tessdata_best` to raw-content SHA-256 plus byte-size verification (manifest v2); validate complete upstream inventories and publish the manifest atomically, while runtime rejects legacy SHA-1 manifests and fails closed on integrity mismatches (#577)
@@ -67,6 +91,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Refresh repository guidance and technical comments to match the current code: lane-based task execution, Tesseract language-code validation, GNOME 51, portal backend setup, and current test/build behaviour.
 - Docs/OCR: distinguish the Tesseract engine version from upstream traineddata refs and record the model training provenance and compatibility findings (#642)
 - Docs/Flatpak: reflect completed static verification of `GI_TYPELIB_PATH` for the GNOME 51 runtime; verification plan and closure recorded for #623
+- CI/governance: reject duplicate [Unreleased] category headings and validate the maintainer-owned Italian gettext catalogue plus the LINGUAS/POTFILES source inventories in CI; correct stale AppStream source paths in POTFILES.
 
 ### Removed
 
@@ -74,7 +99,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Flatpak: remove the no-longer-needed `scikit-build-core` setuptools plugin and metadata after the native `zxing-cpp` build, preventing it from loading after its `pathspec` dependency is cleaned up.
+- AppImage: report bundled font-directory contents and verbose Fontconfig cache diagnostics when extracted-runtime font discovery fails.
+
+- Clipboard/CLI: keep silent OCR results available through asynchronous GApplication clipboard ownership, handing off to a clipboard manager when possible and releasing the application on replacement, timeout or signal.
+- UI/Portal: connect the portal-unavailable banner’s Dismiss button so it hides the banner when activated (#648)
+- History: stop active text-to-speech playback whenever navigation leaves the History page, including native back navigation to Welcome or navigation to Extracted (#648)
+- Accessibility: use scheme-aware focus indicators and History empty-state icon colors with verified contrast, while retaining theme-managed secondary and disabled text (#648)
+- Window geometry: clamp restored and first-run dimensions to the selected monitor's bounds, resolve the actual monitor from the GDK surface after realization, and re-clamp when the surface enters another monitor; remove fixed main-window minimum requests that conflicted with small displays (#648)
+- Window state: persist dimensions only when closing in the normal, non-maximized and non-fullscreen state (#648)
+- Preferences/Shortcuts: remove fixed minimum requests from Preferences and make the shortcuts overlay resizable while preserving its vertical scroller (#648)
+- Tests: cover main-window geometry at 360×600, 640×480, 900×600 and 1280×800, very small monitors, monitor selection, window-state persistence and secondary-window sizing contracts (#648)
+- OCR/UI: make the most recently started file, clipboard, screenshot or drag-and-drop request the sole owner of OCR results and spinner state; discard superseded capture, decode, status, error and navigation callbacks, and isolate screenshot URI dispatch from the OCR task lane (#648)
+- Sharing: align the bundled symbolic icon inventory exactly with the seven active providers, remove unused Discord/LinkedIn assets, and load icons through Gtk.IconTheme for light/dark theme recoloring (#648)
+- UI: load the bundled GTK stylesheet from GResource at application startup and register it at application priority; retain the provider for the application's lifetime while leaving display-less CLI launches unaffected (#648)
+- CSS: split the combined `0%, 100%` selectors in the `pulse` and `readyPulse` keyframes into separate `0%` and `100%` selectors for GTK4 CssProvider compatibility (#448)
+- Welcome: close the nested ScrolledWindow and template declarations correctly so Blueprint compilation succeeds with the responsive 360px layout (#648)
+- Translations: restore neutral POT template metadata and update source references for the split Editor and Voice Preferences pages (#648)
 - Changelog: consolidate duplicate `[Unreleased]` category headings and add a CI guard against undocumented removal of existing entries.
+- Changelog/CI: reject exact duplicate `[Unreleased]` bullets after whitespace normalization and validate the unique first section, non-empty categories and canonical non-empty bullets, with positive and negative regression coverage.
 - CI/Flatpak: strengthen the invalid-input OCR regression check to require a non-zero exit without an uncaught Python traceback (#589).
 - AudioPlayer: extend `_cleanup_lock` scope to cover `play()` and `stop()` to prevent races with concurrent cleanup (F19)
 - MagicProcessor: protect `register_transformer()` with `_lock` for thread safety (F21)
@@ -129,6 +172,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Types: the headless `GObject` fallback used when PyGObject is unavailable is now marked as an intentional redefinition, keeping `mypy` clean in CI (#516)
 - Flatpak: automated certifi updates no longer break the build — the FEDC update now rewrites the certifi filename referenced by the module's `build-commands` (the 2026.10.18 bump made `pip3 install` look for the previous 2026.7.22 tarball). Covered by `tests/test_fedc_certifi.py`
 - Clipboard: `hand_off_to_manager()` and `wait_until_replaced()` now refuse to iterate the default GLib main context when it is already running (an active GTK loop, or another thread owns it), logging a warning and returning `False` instead of re-entering the loop (AUDIT-001, #469)
+- GTK: initialize GtkSourceView after GTK/Libadwaita startup so its widget GTypes are registered before the ExtractedPage Blueprint template is instantiated; set the first-run window size to 900 × 600 px with monitor-aware clamping (#648)
 
 ### Security
 
@@ -471,3 +515,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Removed all telemetry and PostHog tracking for total privacy.
 - Optimized sharing service: added X (formerly Twitter) and Instagram.
 - Updated dependencies for modern Linux distributions.
+
+- UI/Accessibility: apply the existing scheme-aware downloaded-language styling only while the language is installed, keeping the semantic state synchronized with installation changes; add automated theme-transition regression coverage for `default`, `force-light` and `force-dark` (#648).

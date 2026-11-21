@@ -39,6 +39,11 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install gettext validation tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y gettext
+
       - name: Run Ruff Linter
         uses: astral-sh/ruff-action@278981a28ce3188b1e39527901f38254bf3aac89 # v4.1.0
         with:
@@ -53,6 +58,11 @@ jobs:
         run: |
           pip install "uv==0.13.5"
           uv sync --locked --dev
+
+      - name: Validate maintainer-owned Italian gettext catalogue
+        run: |
+          msgfmt --check --check-format --check-header -o /dev/null po/it.po
+          msgfmt --check-format --check-domain -o /dev/null po/io.github.d3m_sudo.anura.pot
 
       - name: Check code formatting
         # Configuration in pyproject.toml; Markdown is excluded because the
@@ -136,7 +146,7 @@ jobs:
             libxml2-utils \
             blueprint-compiler \
             tesseract-ocr tesseract-ocr-eng \
-            weston xwayland
+            weston xwayland xvfb
 
       - name: Install Python dependencies (with system site-packages)
         # The venv must inherit apt-installed PyGObject and Libadwaita modules.
@@ -169,33 +179,81 @@ jobs:
           cp data/io.github.d3m_sudo.anura.gschema.xml builddir/data/
           glib-compile-schemas builddir/data/
 
-      - name: Start Wayland compositor (headless)
-        # Keep Weston running across workflow steps; the GTK test step owns cleanup.
+      - name: Start Wayland compositor with virtual input
+        # Weston headless has no wl_seat. Run its X11 backend inside Xvfb so
+        # GTK receives a virtual pointer and keyboard for popup integration tests.
         run: |
           mkdir -p "$XDG_RUNTIME_DIR"
           chmod 700 "$XDG_RUNTIME_DIR"
 
-          nohup weston --backend=headless --socket=wayland-test --no-config \
+          Xvfb :99 -screen 0 1920x1080x24 -nolisten tcp -ac >/tmp/xvfb.log 2>&1 &
+          echo $! > /tmp/xvfb.pid
+          for i in $(seq 1 20); do
+            if [ -S /tmp/.X11-unix/X99 ]; then break; fi
+            sleep 0.25
+          done
+          if [ ! -S /tmp/.X11-unix/X99 ]; then
+            echo "::error::Xvfb did not create display :99 within 5 s"
+            cat /tmp/xvfb.log
+            exit 1
+          fi
+
+          DISPLAY=:99 nohup weston --backend=x11 --renderer=pixman \
+            --width=1920 --height=1080 --socket=wayland-test --no-config \
             >/tmp/weston.log 2>&1 &
           echo $! > /tmp/weston.pid
 
-          # Poll for the socket for up to 10 s (20 × 500 ms).
           echo "Waiting for Wayland socket…"
           for i in $(seq 1 20); do
             if [ -S "$XDG_RUNTIME_DIR/wayland-test" ]; then
               echo "Wayland compositor ready (attempt ${i}/20)"
               break
             fi
+            if ! kill -0 "$(cat /tmp/weston.pid)" 2>/dev/null; then break; fi
             sleep 0.5
           done
-
           if [ ! -S "$XDG_RUNTIME_DIR/wayland-test" ]; then
-            echo "::error::Weston did not create the wayland-test socket within 10 s"
-            kill "$(cat /tmp/weston.pid)" 2>/dev/null || true
+            echo "::error::Weston X11 backend did not create the Wayland socket"
+            cat /tmp/weston.log
             exit 1
           fi
 
-      - name: Run GTK tests (Wayland headless)
+          # Assert that the compositor actually advertises both input devices;
+          # a socket alone does not prove that popups can obtain a wl_seat.
+          seat_ready=0
+          for i in $(seq 1 10); do
+            if env DISPLAY='' GDK_BACKEND=wayland WAYLAND_DISPLAY=wayland-test \
+              uv run python - <<'PY' >/tmp/wayland-seat-check.log 2>&1
+          import gi
+          gi.require_version("Gtk", "4.0")
+          from gi.repository import Gdk, Gtk
+
+          Gtk.init()
+          display = Gdk.Display.get_default()
+          seat = display.get_default_seat() if display else None
+          if seat is None:
+              raise SystemExit("Wayland display did not advertise a default wl_seat")
+          capabilities = seat.get_capabilities()
+          required = Gdk.SeatCapabilities.POINTER | Gdk.SeatCapabilities.KEYBOARD
+          if capabilities & required != required:
+              raise SystemExit(f"wl_seat lacks pointer/keyboard capabilities: {capabilities}")
+          print(f"Wayland wl_seat ready with pointer and keyboard: {capabilities}")
+          PY
+            then
+              cat /tmp/wayland-seat-check.log
+              seat_ready=1
+              break
+            fi
+            sleep 0.5
+          done
+          if [ "$seat_ready" -ne 1 ]; then
+            echo "::error::Wayland compositor did not expose a pointer+keyboard wl_seat"
+            cat /tmp/wayland-seat-check.log
+            cat /tmp/weston.log
+            exit 1
+          fi
+
+      - name: Run GTK tests (Wayland with virtual input)
         # --override-ini replaces the global addopts from pyproject.toml.
         # Without this override the --ignore list baked into addopts would
         # suppress collection of the files that hold most gtk-marked tests.
@@ -215,8 +273,8 @@ jobs:
             echo "::group::Cleanup remaining processes"
             echo "Stopping Weston and orphaned workers..."
             kill "$(cat /tmp/weston.pid 2>/dev/null)" 2>/dev/null || true
-            pkill -x weston 2>/dev/null || true
-            rm -f "$XDG_RUNTIME_DIR/wayland-test" /tmp/weston.pid
+            kill "$(cat /tmp/xvfb.pid 2>/dev/null)" 2>/dev/null || true
+            rm -f "$XDG_RUNTIME_DIR/wayland-test" /tmp/weston.pid /tmp/xvfb.pid
             echo "Cleanup complete."
             echo "::endgroup::"
           }
@@ -225,7 +283,7 @@ jobs:
           # GTK tests register Adw.Application instances on D-Bus. Their shutdown
           # hooks must quit the applications so GLib/GDBus threads do not keep
           # the pytest process alive after the test session completes.
-          uv run pytest tests/ -m gtk -v --timeout=30 \
+          uv run pytest tests/ -m "gtk" -v --timeout=30 \
             --override-ini "addopts=-v --tb=short"
 
   # JOB 2: Flatpak build and optional release
@@ -304,23 +362,44 @@ jobs:
           flatpak-builder-lint manifest flatpak/.ci-release/io.github.d3m_sudo.anura.json
           echo "✓ Local and generated release manifests validated"
 
+      - name: Configure user Flatpak remote
+        # The container image ships a system installation on its read-only
+        # overlay lower layer. Updating the GNOME SDK there can fail with
+        # OSTree EXDEV during deployment. Keep CI SDK/runtime refs in the
+        # writable per-user installation instead.
+        run: |
+          flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
       - name: Build Anura Flatpak
-        uses: flatpak/flatpak-github-actions/flatpak-builder@79327416609af08178ad73b352877e51450790b3 # v6.7.0
-        with:
-          bundle: io.github.d3m_sudo.anura-${{ matrix.variant.arch }}.flatpak
-          manifest-path: flatpak/.ci-build/io.github.d3m_sudo.anura.json
-          arch: ${{ matrix.variant.arch }}
-          upload-artifact: false
-          cache: false
-          keep-build-dirs: true
-          state-dir: .flatpak-builder
+        run: |
+          xvfb-run --auto-servernum flatpak-builder \
+            --user \
+            --repo=repo \
+            --disable-rofiles-fuse \
+            --install-deps-from=flathub \
+            --subject="Built from ${GITHUB_SHA}" \
+            --force-clean \
+            --default-branch=main \
+            --arch=${{ matrix.variant.arch }} \
+            --keep-build-dirs \
+            --state-dir=.flatpak-builder \
+            flatpak_app \
+            flatpak/.ci-build/io.github.d3m_sudo.anura.json
+
+          flatpak build-bundle \
+            repo \
+            io.github.d3m_sudo.anura-${{ matrix.variant.arch }}.flatpak \
+            --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo \
+            --arch=${{ matrix.variant.arch }} \
+            io.github.d3m_sudo.anura \
+            main
 
       - name: Prove Flatpak build works without source downloads
         # Reuse the source cache populated by the preceding clean build. A
         # fresh build directory plus --disable-download proves every source
         # needed by the generated manifest is already declared and cached.
         run: |
-          flatpak-builder --force-clean --disable-download --disable-rofiles-fuse \
+          flatpak-builder --user --force-clean --disable-download --disable-rofiles-fuse \
             --arch=${{ matrix.variant.arch }} \
             --state-dir=.flatpak-builder \
             builddir-offline \
@@ -399,15 +478,57 @@ jobs:
             -c "$(cat build-aux/flatpak_runtime_smoke.py)" \
             "${{ matrix.variant.arch }}"
 
-      - name: Functional test - OCR in the sandbox
+      - name: Functional test - clipboard lifetime in Flatpak sandbox
         run: |
-          echo "=== OCR su immagine valida dentro sandbox ==="
           flatpak override --user --filesystem="$PWD/data/screenshots:ro"
-          if ! timeout 120 xvfb-run -a flatpak run io.github.d3m_sudo.anura \
-               -f "$PWD/data/screenshots/anura-welcome-page.png" --silent; then
-            echo "✗ OCR failed inside the sandbox"; exit 1
-          fi
-          echo "✓ OCR passed inside the sandbox"
+          xvfb-run -a bash -euo pipefail -c '
+            LOG=/tmp/anura-flatpak-clipboard.log
+            flatpak run io.github.d3m_sudo.anura \
+              -f "$PWD/data/screenshots/anura-welcome-page.png" --silent >"$LOG" 2>&1 &
+            APP_PID=$!
+            cleanup() {
+              wait "$APP_PID" 2>/dev/null || true
+            }
+            trap cleanup EXIT
+
+            for attempt in $(seq 1 40); do
+              if grep -q "OCR completed successfully in silent mode" "$LOG"; then break; fi
+              if ! kill -0 "$APP_PID" 2>/dev/null; then cat "$LOG"; exit 1; fi
+              sleep 0.25
+            done
+            if ! grep -q "OCR completed successfully in silent mode" "$LOG"; then
+              cat "$LOG"
+              echo "::error::Silent OCR did not complete inside the Flatpak sandbox"
+              exit 1
+            fi
+
+            timeout 10 flatpak run --command=python3 io.github.d3m_sudo.anura \
+              -c "$(cat build-aux/flatpak_clipboard_reader.py)"
+
+            # Exercise the real retention contract instead of sending a signal
+            # to the host-side flatpak launcher and assuming it reached the app.
+            # The app must remain alive until Gdk reports manager hand-off,
+            # replacement, or the configured 30-second serving timeout.
+            for attempt in $(seq 1 160); do
+              if grep -Eq "Clipboard content handed over to the clipboard manager|Clipboard content was replaced by another application|Clipboard serving period ended" "$LOG"; then
+                break
+              fi
+              if ! kill -0 "$APP_PID" 2>/dev/null; then
+                cat "$LOG"
+                echo "::error::Silent OCR process exited before clipboard retention completed"
+                exit 1
+              fi
+              sleep 0.25
+            done
+            if ! grep -Eq "Clipboard content handed over to the clipboard manager|Clipboard content was replaced by another application|Clipboard serving period ended" "$LOG"; then
+              cat "$LOG"
+              echo "::error::Silent OCR did not report a completed clipboard hand-off or serving timeout"
+              exit 1
+            fi
+            wait "$APP_PID" 2>/dev/null || true
+            trap - EXIT
+            echo "✓ Flatpak clipboard was readable from a second sandboxed process and its retention lifecycle completed"
+          '
 
       - name: Functional test - OCR negativo su file non immagine
         run: |
@@ -521,7 +642,8 @@ jobs:
             gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-gtksource-5 \
             libgtk-4-dev libadwaita-1-dev libgtksourceview-5-dev \
             desktop-file-utils gettext libglib2.0-bin \
-            zsync xvfb xauth file binutils libfuse2t64 liblzo2-2 libegl1 curl
+            zsync xvfb xauth file binutils libfuse2t64 liblzo2-2 libegl1 curl \
+            gstreamer1.0-tools fontconfig-config
       - name: Install pinned AppImage tooling
         env:
           APPIMAGETOOL_SHA256: ${{ matrix.variant.appimagetool_sha256 }}
@@ -660,7 +782,8 @@ jobs:
               bash /usr/local/bin/audit_elf_dependencies.sh --self-test
               bash /usr/local/bin/audit_elf_dependencies.sh /opt/anura "$APP_LIBDIR"
               NO_AT_BRIDGE=1 GTK_A11Y=none LIBGL_ALWAYS_SOFTWARE=1 \
-                APPDIR=/opt/anura timeout 90 dbus-run-session -- xvfb-run -a /opt/anura/AppRun --help
+                PYTHONDONTWRITEBYTECODE=1 APPDIR=/opt/anura \
+                timeout 120 dbus-run-session -- xvfb-run -a /opt/anura/AppRun --runtime-smoke
             '
       - name: Upload AppImage and zsync CI artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

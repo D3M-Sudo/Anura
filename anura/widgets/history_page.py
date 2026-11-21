@@ -124,6 +124,8 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
         # The expanded row (at most one) and the rows whose text area already exists:
         # the area is created on the first expansion, not when the page is populated.
         self._open_row: Adw.ExpanderRow | None = None
+        self._row_entry_ids: dict[str, Adw.ExpanderRow] = {}
+        self._refresh_generation = 0
         self._content_built: set[Adw.ExpanderRow] = set()
         # Per-row handlers are NOT tracked by SignalManagerMixin (it would keep
         # every discarded row alive until teardown); they are disconnected in
@@ -131,11 +133,13 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
         self._row_handlers: list[tuple[Gtk.Widget, int]] = []
         # Copy-button feedback timers, keyed by button so they can be cancelled.
         self._feedback_timers: dict[Gtk.Button, int] = {}
+        self._focus_first_entry_on_shown = False
 
         super().__init__(**kwargs)
         SignalManagerMixin.__init__(self)
         self.settings = settings
 
+        self.connect("shown", self._on_shown)
         self.connect_tracked(self.clear_button, "clicked", self._on_clear_clicked)
         # SignalManagerMixin.teardown_all() calls teardown() on registered controllers.
         self.register_controller(self)
@@ -163,7 +167,22 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
         self._tts_controller = None
 
     def refresh(self) -> None:
-        """Reload entries from the service and repopulate the list."""
+        """Reload entries while retaining expanded-row and scroll state in-session."""
+        expanded_entry_id = None
+        if self._open_row is not None:
+            expanded_entry_id = next(
+                (entry_id for entry_id, row in self._row_entry_ids.items() if row is self._open_row),
+                None,
+            )
+
+        scroll_value = None
+        with contextlib.suppress(AttributeError, RuntimeError, TypeError):
+            scrolled_window = self.history_list.get_ancestor(Gtk.ScrolledWindow)
+            if scrolled_window is not None:
+                scroll_value = scrolled_window.get_vadjustment().get_value()
+
+        self._refresh_generation += 1
+        refresh_generation = self._refresh_generation
         self._clear_rows()
 
         history_enabled = False
@@ -190,6 +209,49 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
         self.history_stack.set_visible_child_name("entries")
         for entry in entries:
             self._append_row(entry)
+
+        if expanded_entry_id is not None or scroll_value is not None:
+            GLib.idle_add(self._restore_view_state, expanded_entry_id, scroll_value, refresh_generation)
+
+    def _restore_view_state(self, entry_id: str | None, scroll_value: float | None, generation: int) -> bool:
+        """Restore transient view state after GTK has rebuilt and mapped the rows."""
+        if generation != self._refresh_generation:
+            return GLib.SOURCE_REMOVE
+
+        row = self._row_entry_ids.get(entry_id) if entry_id is not None else None
+        if row is not None:
+            row.set_expanded(True)
+
+        if scroll_value is not None:
+            with contextlib.suppress(AttributeError, RuntimeError, TypeError):
+                scrolled_window = self.history_list.get_ancestor(Gtk.ScrolledWindow)
+                if scrolled_window is not None:
+                    scrolled_window.get_vadjustment().set_value(scroll_value)
+
+        return GLib.SOURCE_REMOVE
+
+    def focus_first_entry(self) -> None:
+        """Request focus for the first entry once the navigation page is fully shown."""
+        if not self._row_entry_ids:
+            return
+        self._focus_first_entry_on_shown = True
+
+    def _on_shown(self, *_args: object) -> None:
+        """Apply the pending focus request after Adw.NavigationPage finishes showing."""
+        if not self._focus_first_entry_on_shown:
+            return
+
+        self._focus_first_entry_on_shown = False
+        first_row = next(iter(self._row_entry_ids.values()), None)
+        if first_row is not None:
+            # Run after the signal's default handler and the completed transition.
+            GLib.idle_add(self._grab_focus_if_mapped, first_row)
+
+    @staticmethod
+    def _grab_focus_if_mapped(row: Adw.ExpanderRow) -> bool:
+        if row.get_mapped():
+            row.grab_focus()
+        return GLib.SOURCE_REMOVE
 
     def _append_row(self, entry: "HistoryEntry") -> None:
         """Build one history row with its copy button and register it."""
@@ -243,6 +305,7 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
         self._row_handlers.append((row, expanded_handler_id))
         self.history_list.append(row)
         self._rows.append(row)
+        self._row_entry_ids[entry.id] = row
 
     def _on_row_expanded(self, row: Adw.ExpanderRow, _pspec: object, text: str) -> None:
         """Create the text area on first expansion and keep a single row open."""
@@ -341,9 +404,9 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
             if button is active and self._tts_state == "generating":
                 icon, label = _TTS_STOP_ICON, _("Stop listening")
             elif button is active and self._tts_state == "playing":
-                icon, label = _TTS_PAUSE_ICON, _("Pause/resume listening")
+                icon, label = _TTS_PAUSE_ICON, _("Pause listening")
             elif button is active and self._tts_state == "paused":
-                icon, label = _TTS_PLAY_ICON, _("Pause/resume listening")
+                icon, label = _TTS_PLAY_ICON, _("Resume listening")
             else:
                 icon, label = _TTS_PLAY_ICON, _("Listen to text")
             button.set_icon_name(icon)
@@ -386,6 +449,7 @@ class HistoryPage(Adw.NavigationPage, SignalManagerMixin):
                 widget.disconnect(handler_id)
         self._row_handlers.clear()
         self._open_row = None
+        self._row_entry_ids.clear()
         self._content_built.clear()
         self._tts_buttons.clear()
         self._active_tts_entry_id = None

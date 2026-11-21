@@ -36,7 +36,7 @@ class DndController(GObject.GObject, SignalManagerMixin):
 
         logger.debug("DndController: Initialized for AnuraWindow")
 
-    def process_dnd_file_sync(self, file_path: str | None) -> None:
+    def process_dnd_file_sync(self, file_path: str | None, operation_id: int | None = None) -> None:
         """Process a dropped file with validation."""
         from gettext import gettext as _
 
@@ -58,7 +58,7 @@ class DndController(GObject.GObject, SignalManagerMixin):
             # If we wrap it in another execute() call here, the inner call
             # cancels the outer one, leading to InterruptedError.
             # We call decode_image() directly (it handles its own thread/process dispatching).
-            self._window.backend.decode_image(lang, file_path)
+            self._window.backend.decode_image(lang, file_path, operation_id=operation_id)
 
         except (OSError, RuntimeError, TypeError) as e:
             logger.error(f"DndController: Critical error accessing dropped file: {e}")

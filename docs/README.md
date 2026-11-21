@@ -19,7 +19,14 @@ documentation lives in the root (`README.md`, `AGENTS.md`, `CONTRIBUTING.md`,
 | [reference/tagged-release-verification.md](reference/tagged-release-verification.md) | **Current / operational** | Tag-triggered verification of Flatpak/AppImage artifacts, SHA-256 checksums and GitHub Release publication (#592) |
 | [reference/code-commenting.md](reference/code-commenting.md) | **Current / normative** | Technical comment policy and Google-style Python docstring conventions |
 | [reference/repository-governance.md](reference/repository-governance.md) | **Current / operational** | Single-maintainer branch promotion, PR, CI and branch-protection policy |
-| [reference/changelog-integrity.md](reference/changelog-integrity.md) | **Current / normative** | Keep a Changelog category structure, PR removal guard and intentional-removal authorization policy |
+| [reference/changelog-integrity.md](reference/changelog-integrity.md) | **Current / normative** | Keep a Changelog category structure, PR removal/duplicate-heading guard and intentional-removal authorization policy |
+| [reference/localization-catalogue-integrity.md](reference/localization-catalogue-integrity.md) | **Current / normative** | Maintainer-owned Italian gettext validation, community catalogue boundaries, LINGUAS/POTFILES consistency and CI checks |
+
+## Design system
+
+| Document | Status | Purpose |
+| --- | --- | --- |
+| [ui-design-system.md](ui-design-system.md) | **Current / normative** | Semantic typography, spacing, component hierarchy, theme compatibility and GTK CSS constraints |
 
 ## Active planning
 
@@ -29,6 +36,14 @@ Only plans with unfinished, currently relevant scope belong here. Completed plan
 | --- | --- | --- |
 | [planning/appimage-zsync-release-plan.md](planning/appimage-zsync-release-plan.md) | **Active / planning** | AppImage implementation record and remaining first-release, Gear Lever update and desktop-integration acceptance gates (#555) |
 | [planning/math-ocr-evaluation.md](planning/math-ocr-evaluation.md) | **Active / research** | Mathematical OCR engine evaluation, licensing/provenance gates, resource benchmarks and proposed LaTeX-first integration plan (#570) |
+
+## Audit and modernization records
+
+| Document / directory | Status | Purpose |
+| --- | --- | --- |
+| [audit/README.md](audit/README.md) | **Operational** | Audit lifecycle and active-versus-legacy placement rules; the audit root is reserved for active reports |
+| [superpowers/plans/](superpowers/plans/) | **Planning records** | Global UI modernization roadmap, PR #648 workstream roadmap, master plan and dated execution plans |
+| [superpowers/specs/](superpowers/specs/) | **Design records** | Dated design specifications associated with implementation plans |
 
 ## Historical material (audit/legacy)
 
@@ -55,6 +70,7 @@ Other normative references outside `docs/`:
 ```text
 docs/
 ├── README.md
+├── ui-design-system.md
 ├── reference/
 │   ├── history-v1.md
 │   ├── history-v2.md
@@ -64,12 +80,18 @@ docs/
 │   ├── appimage-multiarch-release.md
 │   ├── release-process.md
 │   ├── changelog-integrity.md
+│   ├── localization-catalogue-integrity.md
 │   ├── flathub-submission-checklist.md
 │   ├── tagged-release-verification.md
 │   ├── code-commenting.md
 │   └── repository-governance.md
 ├── planning/
-└── audit/
+├── audit/
+│   ├── README.md
+│   └── legacy/
+└── superpowers/
+    ├── plans/
+    └── specs/
 ```
 
 ## Conventions
