@@ -29,6 +29,7 @@ def test_appimage_runtime_smoke_is_bundled_and_exercises_native_features() -> No
     recipe = (root / "build-aux/appimage/AppImageBuilder.yml").read_text(encoding="utf-8")
 
     assert 'runtime_smoke.py" "$APPDIR/usr/lib/anura/"' in builder
+    assert 'data/screenshots/anura-welcome-page.png" "$APPDIR/usr/share/anura/runtime-smoke.png"' in builder
     assert "--runtime-smoke" in builder
     assert "FONTCONFIG_FILE" not in entrypoint
     assert 'os.environ["FONTCONFIG_FILE"] = str(runtime_config)' in builder
@@ -53,7 +54,11 @@ def test_appimage_runtime_smoke_is_bundled_and_exercises_native_features() -> No
     assert "cache_stdout=" in smoke
     assert "font_samples=" in smoke
     for feature in (
-        '["tesseract", image_path, "stdout"',
+        '["tesseract", str(image_path), "stdout"',
+        'ImageFont.truetype(str(font_path), 72)',
+        'font.getbbox("ANURA")',
+        'appdir / "usr/share/anura/runtime-smoke.png"',
+        '"ESTRAI" in recognised or "TESTO" in recognised',
         "Gst.parse_launch",
         "fc-cache",
         "fc-match",
