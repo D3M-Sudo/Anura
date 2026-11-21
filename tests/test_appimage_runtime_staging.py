@@ -78,7 +78,6 @@ def test_appimage_runtime_smoke_is_bundled_and_exercises_native_features() -> No
     assert 'kill -0 "$APP_PID"' in clipboard_test
 
 
-
 def test_appimage_cli_wrapper_is_posix_and_pulseaudio_runtime_is_explicit() -> None:
     import re
     import subprocess
