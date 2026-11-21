@@ -76,3 +76,35 @@ def test_appimage_runtime_smoke_is_bundled_and_exercises_native_features() -> No
     assert "Clipboard content handed over to the clipboard manager" in clipboard_test
     assert "flatpak kill" not in clipboard_test
     assert 'kill -0 "$APP_PID"' in clipboard_test
+
+
+
+def test_appimage_cli_wrapper_is_posix_and_pulseaudio_runtime_is_explicit() -> None:
+    import re
+    import subprocess
+
+    root = Path(__file__).resolve().parents[1]
+    builder = (root / "build-aux/appimage/build_appdir.sh").read_text(encoding="utf-8")
+    app_run = (root / "build-aux/appimage/AppRun").read_text(encoding="utf-8")
+    recipe = (root / "build-aux/appimage/AppImageBuilder.yml").read_text(encoding="utf-8")
+    smoke = (root / "build-aux/appimage/runtime_smoke.py").read_text(encoding="utf-8")
+
+    match = re.search(
+        r'cat > "\$APPDIR/usr/bin/anura" <<\x27SH\x27\n(.*?)\nSH',
+        builder,
+        re.DOTALL,
+    )
+    assert match is not None
+    wrapper = match.group(1) + "\n"
+    assert wrapper.startswith("#!/bin/sh\n")
+    assert "set -eu\n" in wrapper
+    assert "pipefail" not in wrapper
+    syntax = subprocess.run(["sh", "-n"], input=wrapper, capture_output=True, text=True, check=False)
+    assert syntax.returncode == 0, syntax.stderr
+
+    assert '"$LIBDIR/pulseaudio:$LIBDIR:$APPDIR/usr/lib' in app_run
+    assert "libpulse0" in recipe
+    assert 'glob("libpulsecommon-*.so")' in smoke
+    assert "ctypes.CDLL(str(pulse_helpers[0]))" in smoke
+    assert '"pulsesink"' in smoke
+    assert 'Gst.ElementFactory.make("pulsesink"' in smoke

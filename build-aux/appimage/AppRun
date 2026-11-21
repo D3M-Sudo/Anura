@@ -21,9 +21,10 @@ case "$ARCH" in
   *) echo "Unsupported AppImage architecture: $ARCH" >&2; exit 1 ;;
 esac
 if [ -d "$LIBDIR" ]; then
-  export LD_LIBRARY_PATH="$LIBDIR:$APPDIR/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+  # libpulsecommon is installed in this private helper directory, not LIBDIR.
+  export LD_LIBRARY_PATH="$LIBDIR/pulseaudio:$LIBDIR:$APPDIR/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 else
-  export LD_LIBRARY_PATH="$APPDIR/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+  export LD_LIBRARY_PATH="$APPDIR/usr/lib/pulseaudio:$APPDIR/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 fi
 
 exec "$APPDIR/usr/bin/python3" "$APPDIR/usr/lib/anura/appimage_entrypoint.py" "$@"

@@ -130,8 +130,8 @@ PY
 # Keep the conventional command available for shells and desktop integrations
 # that invoke "anura" directly; AppRun itself uses the ELF Python interpreter.
 cat > "$APPDIR/usr/bin/anura" <<'SH'
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/sh
+set -eu
 : "${APPDIR:?AppImage runtime did not set APPDIR}"
 exec "$APPDIR/usr/bin/python3" "$APPDIR/usr/lib/anura/appimage_entrypoint.py" "$@"
 SH

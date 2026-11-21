@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import ctypes
 import os
 import pathlib
 import re
@@ -111,9 +112,31 @@ def main() -> int:
         raise RuntimeError(f"AppImage icon theme is missing required icons: {missing_icons}")
 
     Gst.init(None)
-    for factory_name in ("playbin3", "audiotestsrc", "fakesink"):
+    machine = os.uname().machine
+    libdir_name = {
+        "x86_64": "x86_64-linux-gnu",
+        "aarch64": "aarch64-linux-gnu",
+    }.get(machine)
+    if libdir_name is None:
+        raise RuntimeError(f"Unsupported AppImage architecture for PulseAudio check: {machine}")
+    pulse_lib_dir = appdir / "usr/lib" / libdir_name / "pulseaudio"
+    pulse_helpers = sorted(pulse_lib_dir.glob("libpulsecommon-*.so"))
+    if not pulse_helpers:
+        raise RuntimeError(f"AppImage PulseAudio private helper is missing: {pulse_lib_dir}")
+    try:
+        ctypes.CDLL(str(pulse_helpers[0]))
+    except OSError as error:
+        raise RuntimeError(
+            f"AppImage PulseAudio private helper cannot be loaded: {pulse_helpers[0]}: {error}"
+        ) from error
+
+    for factory_name in ("playbin3", "audiotestsrc", "fakesink", "pulsesink"):
         if Gst.ElementFactory.find(factory_name) is None:
             raise RuntimeError(f"AppImage GStreamer plugin is missing element {factory_name}")
+    pulse_sink = Gst.ElementFactory.make("pulsesink", "runtime-smoke-pulsesink")
+    if pulse_sink is None:
+        raise RuntimeError("AppImage GStreamer PulseAudio sink could not be instantiated")
+    pulse_sink.set_state(Gst.State.NULL)
 
     pipeline = Gst.parse_launch("audiotestsrc num-buffers=1 ! fakesink")
     if pipeline.set_state(Gst.State.PLAYING) == Gst.StateChangeReturn.FAILURE:
@@ -160,7 +183,7 @@ def main() -> int:
         f"arch={os.uname().machine}",
         "fontconfig=resolved",
         "icons=available",
-        "gstreamer=fakesink-playback",
+        "gstreamer=fakesink-playback+pulsesink",
         "tesseract=ANURA-OCR",
     )
     return 0
