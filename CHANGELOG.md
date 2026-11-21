@@ -31,6 +31,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Flatpak: retain the release source tag while explicitly pinning its full commit SHA in generated submission manifests.
+
 - AppImage/GStreamer: expose staged AppDir shared-library paths to appimage-builder's registry scanner during build, with a compatibility self-test and regression coverage.
 - AppImage/Fontconfig: generate a per-run configuration with the extracted AppDir's absolute font path, retaining relocatability across installation locations and architectures.
 - AppImage/GTK: explicitly select the Gdk 4.0 GI namespace before importing the runtime smoke-test bindings, eliminating the PyGI version warning on both architectures.
@@ -99,6 +101,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Development tooling: dropped the `safety` dev dependency (and its entry in the Dependabot `dev-deps` group). It was added by the one-off June 2026 audit (`ead78f1`) to produce `docs/audit/safety_scan.json`, which is no longer tracked; no workflow, test or build script invokes it, and dependency scanning is covered by Dependabot and CodeQL. The development graph drops from 72 to 39 packages (also losing `cryptography`, `httpx`, `h11`, `pydantic` and `nltk`, which came in through it); runtime dependencies and the Flatpak manifests are untouched. `bandit` is kept
 
 ### Fixed
+
+- AppImage/GStreamer: expose staged AppDir library paths only to the GStreamer subprocess environment, preserving host environment isolation and runtime playback.
+- AppImage/GdkPixbuf: generate a valid JPEG fixture from the PNG staging asset and verify explicit PNG/JPEG loader registration and decoding in both architecture smoke tests.
+- AppImage: expose the application command through a relative symlink to AppRun and verify both entrypoints independently.
+- UI/Accessibility: apply scheme-aware downloaded-language styling only while the language is installed, keeping semantic state synchronized with installation changes and covering `default`, `force-light` and `force-dark` theme transitions (#648).
 
 - Flatpak: remove the no-longer-needed `scikit-build-core` setuptools plugin and metadata after the native `zxing-cpp` build, preventing it from loading after its `pathspec` dependency is cleaned up.
 - AppImage: report bundled font-directory contents and verbose Fontconfig cache diagnostics when extracted-runtime font discovery fails.
@@ -517,4 +524,3 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Optimized sharing service: added X (formerly Twitter) and Instagram.
 - Updated dependencies for modern Linux distributions.
 
-- UI/Accessibility: apply the existing scheme-aware downloaded-language styling only while the language is installed, keeping the semantic state synchronized with installation changes; add automated theme-transition regression coverage for `default`, `force-light` and `force-dark` (#648).
