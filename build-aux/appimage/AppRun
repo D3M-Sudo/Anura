@@ -27,4 +27,15 @@ else
   export LD_LIBRARY_PATH="$APPDIR/usr/lib/pulseaudio:$APPDIR/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 fi
 
+# GdkPixbuf's loader registry is generated for the staged AppDir. The custom
+# AppRun replaces appimage-builder's launcher, so export these relocatable
+# paths explicitly instead of allowing a host cache/module lookup.
+PIXBUF_MODULE_ROOT="$LIBDIR/gdk-pixbuf-2.0/2.10.0"
+export GDK_PIXBUF_MODULEDIR="$PIXBUF_MODULE_ROOT/loaders"
+export GDK_PIXBUF_MODULE_FILE="$PIXBUF_MODULE_ROOT/loaders.cache"
+if [ ! -d "$GDK_PIXBUF_MODULEDIR" ] || [ ! -s "$GDK_PIXBUF_MODULE_FILE" ]; then
+  echo "Missing bundled GdkPixbuf loaders or cache: $PIXBUF_MODULE_ROOT" >&2
+  exit 1
+fi
+
 exec "$APPDIR/usr/bin/python3" "$APPDIR/usr/lib/anura/appimage_entrypoint.py" "$@"
