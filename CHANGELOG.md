@@ -8,8 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- AppImage/CI: validate OCR against the actual Italian welcome-page fixture (`ANURA` and `ESTRAI`) on x86_64 and aarch64, rather than requiring an absent English `OCR` token.
+- Flatpak/CI: verify clipboard readability from a second sandboxed process and wait for a real clipboard lifecycle outcome (manager hand-off, replacement or configured serving timeout), while asserting the app remains alive; avoid signaling the host-side Flatpak launcher.
 - AppImage/CI: verify bundled DejaVu font face metadata without relying on invalid Pillow glyph extents; retain Fontconfig resolution and fixture OCR as runtime evidence.
-- Flatpak/CI: terminate the sandboxed app with the supported `flatpak kill APP` form (default SIGTERM), not unsupported signal flags.
 
 - AppImage: add extracted-runtime checks for OCR, GStreamer playback, Fontconfig resolution and symbolic icons on x86_64 and aarch64.
 - Accessibility: give language-download progress bars translated language context; announce download start/completion/failure and concise OCR, TTS and debounced search status transitions without percentage-level announcement noise (#648)
@@ -29,8 +30,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Flatpak: keep the first-run migration chooser alive until the user responds, persist an explicit skip/close decision, and start with clean data without modifying the legacy installation (#613)
 
 ### Changed
-
-- Flatpak/CI: signal the sandboxed Anura process through `flatpak kill` during clipboard-lifetime smoke tests, rather than terminating only the host-side launcher.
 
 - AppImage/Fontconfig: generate a per-run configuration with the extracted AppDir's absolute font path, retaining relocatability across installation locations and architectures.
 
