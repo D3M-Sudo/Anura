@@ -111,6 +111,7 @@ def test_appimage_cli_wrapper_is_posix_and_pulseaudio_runtime_is_explicit() -> N
     assert 'Gst.ElementFactory.make("pulsesink"' in smoke
 
 
+
 def test_appimage_runtime_smoke_checks_gdk_pixbuf_png_and_jpeg() -> None:
     root = Path(__file__).resolve().parents[1]
     builder = (root / "build-aux/appimage/build_appdir.sh").read_text(encoding="utf-8")
@@ -148,9 +149,7 @@ def test_appimage_runtime_smoke_pins_gdk_typelib_before_import() -> None:
     assert gst_version in smoke
     assert max(
         smoke.index(gdk_pixbuf_version), smoke.index(gdk_version), smoke.index(gtk_version), smoke.index(gst_version)
-    ) < smoke.index(
-        repository_import
-    )
+    ) < smoke.index(repository_import)
 
 
 def test_appimage_builder_gstreamer_scanner_receives_appdir_library_paths() -> None:
