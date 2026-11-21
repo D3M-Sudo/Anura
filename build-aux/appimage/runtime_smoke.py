@@ -150,9 +150,7 @@ def main() -> int:
             )
         except (GLib.Error, OSError) as error:
             typed_loader_result = f"failed={error}"
-        pixbuf_diagnostics.append(
-            f"{expected_format}: file_info={info_format!r}, typed_loader={typed_loader_result!r}"
-        )
+        pixbuf_diagnostics.append(f"{expected_format}: file_info={info_format!r}, typed_loader={typed_loader_result!r}")
         try:
             pixbuf = GdkPixbuf.Pixbuf.new_from_file(str(image_path))
         except GLib.Error as error:
