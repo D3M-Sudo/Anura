@@ -135,15 +135,19 @@ def test_appimage_runtime_smoke_pins_gdk_typelib_before_import() -> None:
     root = Path(__file__).resolve().parents[1]
     smoke = (root / "build-aux/appimage/runtime_smoke.py").read_text(encoding="utf-8")
 
+    gdk_pixbuf_version = 'gi.require_version("GdkPixbuf", "2.0")'
     gdk_version = 'gi.require_version("Gdk", "4.0")'
     gtk_version = 'gi.require_version("Gtk", "4.0")'
     gst_version = 'gi.require_version("Gst", "1.0")'
-    repository_import = "from gi.repository import Gdk, Gst, Gtk"
+    repository_import = "from gi.repository import Gdk, GdkPixbuf, Gst, Gtk"
 
+    assert gdk_pixbuf_version in smoke
     assert gdk_version in smoke
     assert gtk_version in smoke
     assert gst_version in smoke
-    assert max(smoke.index(gdk_version), smoke.index(gtk_version), smoke.index(gst_version)) < smoke.index(
+    assert max(
+        smoke.index(gdk_pixbuf_version), smoke.index(gdk_version), smoke.index(gtk_version), smoke.index(gst_version)
+    ) < smoke.index(
         repository_import
     )
 
