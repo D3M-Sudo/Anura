@@ -40,7 +40,8 @@
         "/share/licenses/io.github.d3m_sudo.anura/nanobind",
         "/share/licenses/io.github.d3m_sudo.anura/python3-scikit-build-core",
         "/share/licenses/io.github.d3m_sudo.anura/python3-pybind11",
-        "/share/licenses/io.github.d3m_sudo.anura/python3-nanobind"
+        "/share/licenses/io.github.d3m_sudo.anura/python3-nanobind",
+        "/share/licenses/io.github.d3m_sudo.anura/pathspec"
     ],
     "build-options": {
         "env": {
