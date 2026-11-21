@@ -131,9 +131,7 @@ def test_appimage_runtime_smoke_pins_gdk_typelib_before_import() -> None:
 
 def test_appimage_builder_gstreamer_scanner_receives_appdir_library_paths() -> None:
     root = Path(__file__).resolve().parents[1]
-    compatibility = (root / "build-aux/appimage/appimage_builder_compat.py").read_text(
-        encoding="utf-8"
-    )
+    compatibility = (root / "build-aux/appimage/appimage_builder_compat.py").read_text(encoding="utf-8")
 
     assert "GStreamer._prepare_gst_launch_env = _prepare_gst_launch_env" in compatibility
     assert "process_env = dict(_original_prepare_gst_launch_env(self, env))" in compatibility
