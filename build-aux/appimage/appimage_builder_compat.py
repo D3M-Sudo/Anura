@@ -27,9 +27,7 @@ def _debian_version_greater_than(self: Package, other: object) -> bool:
 Package.__gt__ = _debian_version_greater_than
 
 
-def _prepend_appdir_library_paths(
-    process_env: dict[str, str], appdir_library_paths: list[str]
-) -> dict[str, str]:
+def _prepend_appdir_library_paths(process_env: dict[str, str], appdir_library_paths: list[str]) -> dict[str, str]:
     """Make staged AppDir libraries visible to GStreamer build-time subprocesses."""
     paths = [str(path) for path in appdir_library_paths if path]
     inherited = process_env.get("LD_LIBRARY_PATH")
@@ -46,9 +44,7 @@ _original_prepare_gst_launch_env = GStreamer._prepare_gst_launch_env
 
 def _prepare_gst_launch_env(self: GStreamer, env) -> dict[str, str]:
     process_env = dict(_original_prepare_gst_launch_env(self, env))
-    return _prepend_appdir_library_paths(
-        process_env, env.get("APPDIR_LIBRARY_PATH")
-    )
+    return _prepend_appdir_library_paths(process_env, env.get("APPDIR_LIBRARY_PATH"))
 
 
 # appimage-builder 1.1.0 only forwards GST_* variables to gst-launch. Its
@@ -74,13 +70,8 @@ def _self_test() -> None:
         {"LD_LIBRARY_PATH": "/host/lib"},
         ["/app/usr/lib/x86_64-linux-gnu", "/app/usr/lib"],
     )
-    if loader_env["LD_LIBRARY_PATH"] != (
-        "/app/usr/lib/x86_64-linux-gnu:/app/usr/lib:/host/lib"
-    ):
-        raise SystemExit(
-            "AppDir GStreamer loader path self-test failed: "
-            f"{loader_env['LD_LIBRARY_PATH']!r}"
-        )
+    if loader_env["LD_LIBRARY_PATH"] != ("/app/usr/lib/x86_64-linux-gnu:/app/usr/lib:/host/lib"):
+        raise SystemExit(f"AppDir GStreamer loader path self-test failed: {loader_env['LD_LIBRARY_PATH']!r}")
     print("AppImage builder Debian version compatibility: OK")
     print("AppImage builder GStreamer AppDir loader path: OK")
 
