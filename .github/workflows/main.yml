@@ -487,7 +487,6 @@ jobs:
               -f "$PWD/data/screenshots/anura-welcome-page.png" --silent >"$LOG" 2>&1 &
             APP_PID=$!
             cleanup() {
-              flatpak kill io.github.d3m_sudo.anura >/dev/null 2>&1 || true
               wait "$APP_PID" 2>/dev/null || true
             }
             trap cleanup EXIT
@@ -506,27 +505,29 @@ jobs:
             timeout 10 flatpak run --command=python3 io.github.d3m_sudo.anura \
               -c "$(cat build-aux/flatpak_clipboard_reader.py)"
 
-            if grep -q "refusing to iterate the default main context" "$LOG"; then
+            # Exercise the real retention contract instead of sending a signal
+            # to the host-side flatpak launcher and assuming it reached the app.
+            # The app must remain alive until Gdk reports manager hand-off,
+            # replacement, or the configured 30-second serving timeout.
+            for attempt in $(seq 1 160); do
+              if grep -Eq "Clipboard content handed over to the clipboard manager|Clipboard content was replaced by another application|Clipboard serving period ended" "$LOG"; then
+                break
+              fi
+              if ! kill -0 "$APP_PID" 2>/dev/null; then
+                cat "$LOG"
+                echo "::error::Silent OCR process exited before clipboard retention completed"
+                exit 1
+              fi
+              sleep 0.25
+            done
+            if ! grep -Eq "Clipboard content handed over to the clipboard manager|Clipboard content was replaced by another application|Clipboard serving period ended" "$LOG"; then
               cat "$LOG"
-              echo "::error::Clipboard lifetime attempted to re-enter GApplication main context"
-              exit 1
-            fi
-
-            if ! grep -q "Clipboard content handed over to the clipboard manager" "$LOG"; then
-              flatpak kill io.github.d3m_sudo.anura
-              for attempt in $(seq 1 20); do
-                if grep -q "Clipboard serving interrupted by a signal" "$LOG"; then break; fi
-                sleep 0.25
-              done
-            fi
-            if ! grep -Eq "Clipboard content handed over to the clipboard manager|Clipboard serving interrupted by a signal" "$LOG"; then
-              cat "$LOG"
-              echo "::error::Silent OCR did not report a completed clipboard hand-off or managed serving lifetime"
+              echo "::error::Silent OCR did not report a completed clipboard hand-off or serving timeout"
               exit 1
             fi
             wait "$APP_PID" 2>/dev/null || true
             trap - EXIT
-            echo "✓ Flatpak clipboard remains readable from a second sandboxed process"
+            echo "✓ Flatpak clipboard was readable from a second sandboxed process and its retention lifecycle completed"
           '
 
       - name: Functional test - OCR negativo su file non immagine
