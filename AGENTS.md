@@ -285,9 +285,18 @@ here from `CLAUDE.md`, which is now a thin pointer to this file.
 - `anura/_release_notes.py`
 - `data/ui/*.ui` (generated from `.blp` files)
 - `builddir/` (build artifacts)
-- `CHANGELOG.md` (maintained via Keep a Changelog — add entries under `[Unreleased]`, never rewrite history)
-  - Preserve every existing `[Unreleased]` bullet. Do not delete or reword entries silently; intentional removals require exact-text authorization, rationale and issue/PR reference in `.github/changelog-removals.json`.
-  - Reuse the existing category heading; do not add duplicate `###` headings within `[Unreleased]`.
+
+### CHANGELOG.md — EXPLICIT AUTHORIZATION REQUIRED
+
+- Agents MUST assess whether code changes warrant a `CHANGELOG.md` entry.
+- Agents MUST NOT modify `CHANGELOG.md` without explicit user authorization.
+- General authorization to implement code changes does NOT authorize changelog modifications.
+- When an update is warranted, agents MUST request explicit authorization before editing the file.
+- Once authorized, add concise entries only under `[Unreleased]`, reusing existing category headings; do not add duplicate `###` headings.
+- Preserve every existing `[Unreleased]` bullet. Do not delete or reword entries silently.
+- Never rewrite released history. Intentional removals require exact-text authorization, rationale and an issue/PR reference in `.github/changelog-removals.json`.
+- If authorization is not granted, leave the changelog untouched and report the pending update explicitly.
+- If no changelog entry is warranted, report the reason in the task summary.
 
 ### Lint & Dependencies
 
