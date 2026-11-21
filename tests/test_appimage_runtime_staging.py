@@ -56,8 +56,8 @@ def test_appimage_runtime_smoke_is_bundled_and_exercises_native_features() -> No
     for feature in (
         '["tesseract", str(image_path), "stdout"',
         "ImageFont.truetype(str(font_path), 72)",
-        'font.getbbox("ANURA")',
-        'font.getbbox("ANURA")',
+        "font.getname()",
+        'font_family != "DejaVu Sans" or font_style != "Bold"',
         'appdir / "usr/share/anura/runtime-smoke.png"',
         'if "ANURA" not in recognised or "OCR" not in recognised:',
         "Gst.parse_launch",
