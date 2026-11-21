@@ -42,8 +42,8 @@ Only plans with unfinished, currently relevant scope belong here. Completed plan
 | Document / directory | Status | Purpose |
 | --- | --- | --- |
 | [audit/README.md](audit/README.md) | **Operational** | Audit lifecycle and active-versus-legacy placement rules; the audit root is reserved for active reports |
-| [superpowers/plans/](superpowers/plans/) | **Planning records** | Global UI modernization roadmap, PR #648 workstream roadmap, master plan and dated execution plans |
-| [superpowers/specs/](superpowers/specs/) | **Design records** | Dated design specifications associated with implementation plans |
+| [ui-modernization/plans/](ui-modernization/plans/) | **Planning records** | Global UI modernization roadmap, PR #648 workstream roadmap, master plan and dated execution plans |
+| [ui-modernization/specs/](ui-modernization/specs/) | **Design records** | Dated design specifications associated with implementation plans |
 
 ## Historical material (audit/legacy)
 
@@ -89,7 +89,7 @@ docs/
 ├── audit/
 │   ├── README.md
 │   └── legacy/
-└── superpowers/
+└── ui-modernization/
     ├── plans/
     └── specs/
 ```
