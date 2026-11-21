@@ -106,7 +106,7 @@ jobs:
             --ignore=tests/test_security_download_limit.py \
             --cov=anura --cov-report=xml --cov-report=term-missing
 
-      - name: Check Flatpak runtime dependency coverage (F-005)
+      - name: Verify Flatpak runtime dependency coverage
         # Ensure every runtime Python dependency in uv.lock (resolved from
         # pyproject.toml) is represented by a python3-* module in the local
         # Flatpak manifest. Fails when a new direct/transitive runtime
