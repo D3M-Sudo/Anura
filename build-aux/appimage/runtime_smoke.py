@@ -168,7 +168,12 @@ def main() -> int:
             "for p in sys.argv[1:]]"
         )
         probe = subprocess.run(
-            [os.environ.get("PYTHON", "/usr/bin/python3"), "-c", probe_code, *(str(path) for _, path in pixbuf_fixtures)],
+            [
+                os.environ.get("PYTHON", "/usr/bin/python3"),
+                "-c",
+                probe_code,
+                *(str(path) for _, path in pixbuf_fixtures),
+            ],
             check=False,
             capture_output=True,
             text=True,
