@@ -118,7 +118,10 @@ def test_appimage_runtime_smoke_checks_gdk_pixbuf_png_and_jpeg() -> None:
     smoke = (root / "build-aux/appimage/runtime_smoke.py").read_text(encoding="utf-8")
     jpeg_fixture = root / "data/screenshots/anura-runtime-smoke.jpg"
 
-    assert 'cp "$SOURCE_ROOT/data/screenshots/anura-runtime-smoke.jpg" "$APPDIR/usr/share/anura/runtime-smoke.jpg"' in builder
+    assert (
+        'cp "$SOURCE_ROOT/data/screenshots/anura-runtime-smoke.jpg" "$APPDIR/usr/share/anura/runtime-smoke.jpg"'
+        in builder
+    )
     assert 'gi.require_version("GdkPixbuf", "2.0")' in smoke
     assert "from gi.repository import Gdk, GdkPixbuf, Gst, Gtk" in smoke
     assert '("png", appdir / "usr/share/anura/runtime-smoke.png")' in smoke
