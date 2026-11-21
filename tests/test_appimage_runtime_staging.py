@@ -132,6 +132,10 @@ def test_appimage_runtime_smoke_checks_gdk_pixbuf_png_and_jpeg() -> None:
     assert "GdkPixbuf.Pixbuf.new_from_file(str(image_path))" in smoke
     assert "GdkPixbuf.Pixbuf.get_file_info(str(image_path))" in smoke
     assert "except GLib.Error as error" in smoke
+    assert "GdkPixbuf.Pixbuf.get_formats()" in smoke
+    assert "registered_formats={registered_pixbuf_formats!r}" in smoke
+    assert "loader_files={pixbuf_loader_files!r}" in smoke
+    assert "cache_preview={pixbuf_cache_preview!r}" in smoke
     assert '"gdk_pixbuf=png+jpeg"' in smoke
     assert jpeg_fixture.is_file()
     assert jpeg_fixture.read_bytes()[:3] == bytes((0xFF, 0xD8, 0xFF))
