@@ -110,6 +110,7 @@ def test_appimage_cli_wrapper_is_posix_and_pulseaudio_runtime_is_explicit() -> N
     assert '"pulsesink"' in smoke
     assert 'Gst.ElementFactory.make("pulsesink"' in smoke
 
+
 def test_appimage_runtime_smoke_pins_gdk_typelib_before_import() -> None:
     root = Path(__file__).resolve().parents[1]
     smoke = (root / "build-aux/appimage/runtime_smoke.py").read_text(encoding="utf-8")
