@@ -101,7 +101,7 @@ def main() -> int:
     gi.require_version("Gdk", "4.0")
     gi.require_version("Gtk", "4.0")
     gi.require_version("Gst", "1.0")
-    from gi.repository import Gdk, GdkPixbuf, Gst, Gtk
+    from gi.repository import Gdk, GdkPixbuf, GLib, Gst, Gtk
 
     Gtk.init()
     display = Gdk.Display.get_default()
@@ -117,28 +117,35 @@ def main() -> int:
         ("png", appdir / "usr/share/anura/runtime-smoke.png"),
         ("jpeg", appdir / "usr/share/anura/runtime-smoke.jpg"),
     )
+    pixbuf_failures = []
     for expected_format, image_path in pixbuf_fixtures:
         if not image_path.is_file():
-            raise RuntimeError(f"AppImage GdkPixbuf {expected_format} fixture is missing: {image_path}")
+            pixbuf_failures.append(f"{expected_format}: fixture is missing: {image_path}")
+            continue
+        try:
+            pixbuf = GdkPixbuf.Pixbuf.new_from_file(str(image_path))
+        except GLib.Error as error:
+            pixbuf_failures.append(f"{expected_format}: decode failed: {error}")
+            continue
         detected_format, detected_width, detected_height = GdkPixbuf.Pixbuf.get_file_info(str(image_path))
-        if detected_format is None or detected_format.get_name() != expected_format:
-            actual_format = detected_format.get_name() if detected_format is not None else None
-            raise RuntimeError(
-                f"AppImage GdkPixbuf detected the wrong image format: "
-                f"path={image_path}, expected={expected_format!r}, actual={actual_format!r}"
+        actual_format = detected_format.get_name() if detected_format is not None else None
+        if actual_format != expected_format:
+            pixbuf_failures.append(
+                f"{expected_format}: detected format={actual_format!r}, path={image_path}"
             )
-        pixbuf = GdkPixbuf.Pixbuf.new_from_file(str(image_path))
+            continue
         if (
             detected_width <= 0
             or detected_height <= 0
             or pixbuf.get_width() != detected_width
             or pixbuf.get_height() != detected_height
         ):
-            raise RuntimeError(
-                f"AppImage GdkPixbuf decoded invalid image dimensions: "
-                f"path={image_path}, detected={detected_width}x{detected_height}, "
+            pixbuf_failures.append(
+                f"{expected_format}: invalid dimensions detected={detected_width}x{detected_height}, "
                 f"decoded={pixbuf.get_width()}x{pixbuf.get_height()}"
             )
+    if pixbuf_failures:
+        raise RuntimeError("AppImage GdkPixbuf validation failed: " + "; ".join(pixbuf_failures))
 
     Gst.init(None)
     machine = os.uname().machine

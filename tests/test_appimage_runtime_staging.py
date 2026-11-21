@@ -122,11 +122,12 @@ def test_appimage_runtime_smoke_checks_gdk_pixbuf_png_and_jpeg() -> None:
         in builder
     )
     assert 'gi.require_version("GdkPixbuf", "2.0")' in smoke
-    assert "from gi.repository import Gdk, GdkPixbuf, Gst, Gtk" in smoke
+    assert "from gi.repository import Gdk, GdkPixbuf, GLib, Gst, Gtk" in smoke
     assert '("png", appdir / "usr/share/anura/runtime-smoke.png")' in smoke
     assert '("jpeg", appdir / "usr/share/anura/runtime-smoke.jpg")' in smoke
-    assert "GdkPixbuf.Pixbuf.get_file_info(str(image_path))" in smoke
     assert "GdkPixbuf.Pixbuf.new_from_file(str(image_path))" in smoke
+    assert "GdkPixbuf.Pixbuf.get_file_info(str(image_path))" in smoke
+    assert "except GLib.Error as error" in smoke
     assert '"gdk_pixbuf=png+jpeg"' in smoke
     assert jpeg_fixture.is_file()
     assert jpeg_fixture.read_bytes()[:3] == bytes((0xFF, 0xD8, 0xFF))
