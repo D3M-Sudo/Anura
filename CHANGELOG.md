@@ -8,8 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- AppImage/CI: use the bundled Welcome screenshot as the OCR smoke fixture and validate DejaVu glyph metrics without triggering oversized synthetic Pillow rasterization.
-- Flatpak/CI: use the supported `flatpak kill --signal=TERM` syntax for the sandbox clipboard-lifetime smoke test.
+- AppImage/CI: verify bundled DejaVu font face metadata without relying on invalid Pillow glyph extents; retain Fontconfig resolution and fixture OCR as runtime evidence.
+- Flatpak/CI: terminate the sandboxed app with the supported `flatpak kill APP` form (default SIGTERM), not unsupported signal flags.
 
 - AppImage: add extracted-runtime checks for OCR, GStreamer playback, Fontconfig resolution and symbolic icons on x86_64 and aarch64.
 - Accessibility: give language-download progress bars translated language context; announce download start/completion/failure and concise OCR, TTS and debounced search status transitions without percentage-level announcement noise (#648)
