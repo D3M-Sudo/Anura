@@ -117,15 +117,11 @@ def main() -> int:
         ("png", appdir / "usr/share/anura/runtime-smoke.png"),
         ("jpeg", appdir / "usr/share/anura/runtime-smoke.jpg"),
     )
-    registered_pixbuf_formats = sorted(
-        image_format.get_name() for image_format in GdkPixbuf.Pixbuf.get_formats()
-    )
+    registered_pixbuf_formats = sorted(image_format.get_name() for image_format in GdkPixbuf.Pixbuf.get_formats())
     pixbuf_module_file = pathlib.Path(os.environ.get("GDK_PIXBUF_MODULE_FILE", ""))
     pixbuf_module_dir = pathlib.Path(os.environ.get("GDK_PIXBUF_MODULEDIR", ""))
     pixbuf_loader_files = (
-        sorted(path.name for path in pixbuf_module_dir.glob("*.so"))
-        if pixbuf_module_dir.is_dir()
-        else []
+        sorted(path.name for path in pixbuf_module_dir.glob("*.so")) if pixbuf_module_dir.is_dir() else []
     )
     pixbuf_cache_preview = (
         pixbuf_module_file.read_text(encoding="utf-8", errors="replace")[:6000]
