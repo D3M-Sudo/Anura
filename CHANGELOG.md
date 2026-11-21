@@ -116,6 +116,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Welcome: close the nested ScrolledWindow and template declarations correctly so Blueprint compilation succeeds with the responsive 360px layout (#648)
 - Translations: restore neutral POT template metadata and update source references for the split Editor and Voice Preferences pages (#648)
 - Changelog: consolidate duplicate `[Unreleased]` category headings and add a CI guard against undocumented removal of existing entries.
+- Changelog/CI: reject exact duplicate `[Unreleased]` bullets after whitespace normalization and validate the unique first section, non-empty categories and canonical non-empty bullets, with positive and negative regression coverage.
 - CI/Flatpak: strengthen the invalid-input OCR regression check to require a non-zero exit without an uncaught Python traceback (#589).
 - AudioPlayer: extend `_cleanup_lock` scope to cover `play()` and `stop()` to prevent races with concurrent cleanup (F19)
 - MagicProcessor: protect `register_transformer()` with `_lock` for thread safety (F21)
