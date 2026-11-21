@@ -117,6 +117,21 @@ def main() -> int:
         ("png", appdir / "usr/share/anura/runtime-smoke.png"),
         ("jpeg", appdir / "usr/share/anura/runtime-smoke.jpg"),
     )
+    registered_pixbuf_formats = sorted(
+        image_format.get_name() for image_format in GdkPixbuf.Pixbuf.get_formats()
+    )
+    pixbuf_module_file = pathlib.Path(os.environ.get("GDK_PIXBUF_MODULE_FILE", ""))
+    pixbuf_module_dir = pathlib.Path(os.environ.get("GDK_PIXBUF_MODULEDIR", ""))
+    pixbuf_loader_files = (
+        sorted(path.name for path in pixbuf_module_dir.glob("*.so"))
+        if pixbuf_module_dir.is_dir()
+        else []
+    )
+    pixbuf_cache_preview = (
+        pixbuf_module_file.read_text(encoding="utf-8", errors="replace")[:6000]
+        if pixbuf_module_file.is_file()
+        else "<missing>"
+    )
     pixbuf_failures = []
     for expected_format, image_path in pixbuf_fixtures:
         if not image_path.is_file():
@@ -143,7 +158,15 @@ def main() -> int:
                 f"decoded={pixbuf.get_width()}x{pixbuf.get_height()}"
             )
     if pixbuf_failures:
-        raise RuntimeError("AppImage GdkPixbuf validation failed: " + "; ".join(pixbuf_failures))
+        raise RuntimeError(
+            "AppImage GdkPixbuf validation failed: "
+            + "; ".join(pixbuf_failures)
+            + f"; registered_formats={registered_pixbuf_formats!r}"
+            + f"; module_dir={str(pixbuf_module_dir)!r}"
+            + f"; loader_files={pixbuf_loader_files!r}"
+            + f"; module_file={str(pixbuf_module_file)!r}"
+            + f"; cache_preview={pixbuf_cache_preview!r}"
+        )
 
     Gst.init(None)
     machine = os.uname().machine
