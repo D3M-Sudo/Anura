@@ -102,7 +102,7 @@ def main() -> int:
     gi.require_version("Gdk", "4.0")
     gi.require_version("Gtk", "4.0")
     gi.require_version("Gst", "1.0")
-    from gi.repository import Gdk, GdkPixbuf, GLib, Gst, Gtk
+    from gi.repository import Gdk, GdkPixbuf, Gst, Gtk
 
     Gtk.init()
     display = Gdk.Display.get_default()
@@ -118,99 +118,29 @@ def main() -> int:
         ("png", appdir / "usr/share/anura/runtime-smoke.png"),
         ("jpeg", appdir / "usr/share/anura/runtime-smoke.jpg"),
     )
-    registered_pixbuf_formats = sorted(image_format.get_name() for image_format in GdkPixbuf.Pixbuf.get_formats())
-    pixbuf_module_file = pathlib.Path(os.environ.get("GDK_PIXBUF_MODULE_FILE", ""))
-    pixbuf_module_dir = pathlib.Path(os.environ.get("GDK_PIXBUF_MODULEDIR", ""))
-    pixbuf_loader_files = (
-        sorted(path.name for path in pixbuf_module_dir.glob("*.so")) if pixbuf_module_dir.is_dir() else []
-    )
-    pixbuf_cache_preview = (
-        pixbuf_module_file.read_text(encoding="utf-8", errors="replace")[:6000]
-        if pixbuf_module_file.is_file()
-        else "<missing>"
-    )
-    pixbuf_failures = []
-    pixbuf_diagnostics = []
+    registered_pixbuf_formats = {image_format.get_name() for image_format in GdkPixbuf.Pixbuf.get_formats()}
+    from PIL import Image
+
     for expected_format, image_path in pixbuf_fixtures:
         if not image_path.is_file():
-            pixbuf_failures.append(f"{expected_format}: fixture is missing: {image_path}")
-            continue
-        file_info = GdkPixbuf.Pixbuf.get_file_info(str(image_path))
-        info_format = file_info[0].get_name() if file_info and file_info[0] is not None else None
-        typed_loader_result = "not-run"
-        try:
-            typed_loader = GdkPixbuf.PixbufLoader.new_with_type(expected_format)
-            typed_loader.write(image_path.read_bytes())
-            typed_loader.close()
-            typed_pixbuf = typed_loader.get_pixbuf()
-            typed_loader_result = (
-                f"decoded={typed_pixbuf.get_width()}x{typed_pixbuf.get_height()}"
-                if typed_pixbuf is not None
-                else "no-pixbuf"
+            raise RuntimeError(f"AppImage {expected_format} fixture is missing: {image_path}")
+        if expected_format not in registered_pixbuf_formats:
+            raise RuntimeError(f"AppImage GdkPixbuf {expected_format} loader is not registered")
+        with Image.open(image_path) as image:
+            image.load()
+            expected_dimensions = image.size
+        loader = GdkPixbuf.PixbufLoader.new_with_type(expected_format)
+        loader.write(image_path.read_bytes())
+        loader.close()
+        pixbuf = loader.get_pixbuf()
+        if pixbuf is None:
+            raise RuntimeError(f"AppImage GdkPixbuf {expected_format} loader returned no image")
+        actual_dimensions = (pixbuf.get_width(), pixbuf.get_height())
+        if actual_dimensions != expected_dimensions:
+            raise RuntimeError(
+                f"AppImage GdkPixbuf {expected_format} dimensions differ: "
+                f"expected={expected_dimensions}, decoded={actual_dimensions}"
             )
-        except (GLib.Error, OSError) as error:
-            typed_loader_result = f"failed={error}"
-        pixbuf_diagnostics.append(f"{expected_format}: file_info={info_format!r}, typed_loader={typed_loader_result!r}")
-        try:
-            pixbuf = GdkPixbuf.Pixbuf.new_from_file(str(image_path))
-        except GLib.Error as error:
-            pixbuf_failures.append(f"{expected_format}: decode failed: {error}")
-            continue
-        detected_format, detected_width, detected_height = GdkPixbuf.Pixbuf.get_file_info(str(image_path))
-        actual_format = detected_format.get_name() if detected_format is not None else None
-        if actual_format != expected_format:
-            pixbuf_failures.append(f"{expected_format}: detected format={actual_format!r}, path={image_path}")
-            continue
-        if (
-            detected_width <= 0
-            or detected_height <= 0
-            or pixbuf.get_width() != detected_width
-            or pixbuf.get_height() != detected_height
-        ):
-            pixbuf_failures.append(
-                f"{expected_format}: invalid dimensions detected={detected_width}x{detected_height}, "
-                f"decoded={pixbuf.get_width()}x{pixbuf.get_height()}"
-            )
-    if pixbuf_failures:
-        # Run a clean-environment probe in a fresh process. This distinguishes
-        # GdkPixbuf's built-in PNG/JPEG support from loader-cache overrides
-        # applied by the custom AppRun.
-        probe_env = os.environ.copy()
-        probe_env.pop("GDK_PIXBUF_MODULE_FILE", None)
-        probe_env.pop("GDK_PIXBUF_MODULEDIR", None)
-        probe_code = (
-            "import gi,sys; gi.require_version('GdkPixbuf','2.0'); "
-            "from gi.repository import GdkPixbuf; "
-            "print('formats=' + repr(sorted(f.get_name() for f in GdkPixbuf.Pixbuf.get_formats()))); "
-            "[(print(p + ':' + GdkPixbuf.Pixbuf.new_from_file(p).get_format().get_name())) "
-            "for p in sys.argv[1:]]"
-        )
-        probe = subprocess.run(
-            [
-                os.environ.get("PYTHON", sys.executable),
-                "-c",
-                probe_code,
-                *(str(path) for _, path in pixbuf_fixtures),
-            ],
-            check=False,
-            capture_output=True,
-            text=True,
-            env=probe_env,
-        )
-        raise RuntimeError(
-            "AppImage GdkPixbuf validation failed: "
-            + "; ".join(pixbuf_failures)
-            + f"; registered_formats={registered_pixbuf_formats!r}"
-            + f"; module_dir={str(pixbuf_module_dir)!r}"
-            + f"; loader_files={pixbuf_loader_files!r}"
-            + f"; module_file={str(pixbuf_module_file)!r}"
-            + f"; cache_preview={pixbuf_cache_preview!r}"
-            + f"; clean_env_probe_exit={probe.returncode}"
-            + f"; clean_env_probe_stdout={probe.stdout[-2000:]!r}"
-            + f"; clean_env_probe_stderr={probe.stderr[-2000:]!r}"
-            + f"; typed_loader_diagnostics={pixbuf_diagnostics!r}"
-            + f"; gdk_pixbuf_mapped_libraries={[line.strip() for line in pathlib.Path('/proc/self/maps').read_text(encoding='utf-8').splitlines() if 'gdk_pixbuf' in line or 'libpng' in line or 'libjpeg' in line]!r}"
-        )
 
     Gst.init(None)
     machine = os.uname().machine
