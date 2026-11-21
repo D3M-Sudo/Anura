@@ -127,7 +127,7 @@ def test_appimage_runtime_smoke_checks_gdk_pixbuf_png_and_jpeg() -> None:
     assert "GdkPixbuf.Pixbuf.new_from_file(str(image_path))" in smoke
     assert '"gdk_pixbuf=png+jpeg"' in smoke
     assert jpeg_fixture.is_file()
-    assert jpeg_fixture.read_bytes().startswith(b"\\xff\\xd8\\xff")
+    assert jpeg_fixture.read_bytes()[:3] == bytes((0xFF, 0xD8, 0xFF))
 
 
 def test_appimage_runtime_smoke_pins_gdk_typelib_before_import() -> None:
