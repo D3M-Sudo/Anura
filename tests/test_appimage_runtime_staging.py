@@ -100,6 +100,7 @@ def test_appimage_cli_alias_reuses_apprun_and_pulseaudio_runtime_is_explicit() -
     assert '"pulsesink"' in smoke
     assert 'Gst.ElementFactory.make("pulsesink"' in smoke
 
+
 def test_appimage_runtime_smoke_checks_gdk_pixbuf_png_and_jpeg() -> None:
     root = Path(__file__).resolve().parents[1]
     builder = (root / "build-aux/appimage/build_appdir.sh").read_text(encoding="utf-8")
