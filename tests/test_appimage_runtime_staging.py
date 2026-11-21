@@ -116,7 +116,7 @@ def test_appimage_runtime_smoke_checks_gdk_pixbuf_png_and_jpeg() -> None:
     builder = (root / "build-aux/appimage/build_appdir.sh").read_text(encoding="utf-8")
     app_run = (root / "build-aux/appimage/AppRun").read_text(encoding="utf-8")
     smoke = (root / "build-aux/appimage/runtime_smoke.py").read_text(encoding="utf-8")
-    assert 'Image.open(sys.argv[1])' in builder
+    assert "Image.open(sys.argv[1])" in builder
     assert 'save(sys.argv[2], format="JPEG", quality=90, optimize=True)' in builder
     assert 'gi.require_version("GdkPixbuf", "2.0")' in smoke
     assert 'export GDK_PIXBUF_MODULEDIR="$PIXBUF_MODULE_ROOT/loaders"' in app_run
