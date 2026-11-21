@@ -45,7 +45,7 @@ _original_prepare_gst_launch_env = GStreamer._prepare_gst_launch_env
 
 
 def _prepare_gst_launch_env(self: GStreamer, env) -> dict[str, str]:
-    process_env = _original_prepare_gst_launch_env(self, env)
+    process_env = dict(_original_prepare_gst_launch_env(self, env))
     return _prepend_appdir_library_paths(
         process_env, env.get("APPDIR_LIBRARY_PATH")
     )
