@@ -386,7 +386,11 @@ Always use `validators.sanitize_text` to strip Unicode Control/Format characters
 - **Unit Tests** (headless tests): Coverage for core logic without GTK dependencies.
 - **Security Tests** (`tests/test_security_hardening.py`): Verification of DoS prevention and URI validation.
 - **Integration Tests** (`tests/test_file_dialog_regressions.py`): Verification of GTK/Portal behavior.
-- **Enterprise/Audit Suite** (`tests/test_*_enterprise.py`, `tests/test_audit_*.py`): Advanced exhaustive coverage for all core services and reliability.
+- **Regression and stress tests** (`tests/test_cross_component_regressions.py`, `tests/test_performance_benchmarks.py`, `tests/test_reliability_recovery.py`): Cross-component regressions, performance and recovery coverage.
+
+### Naming and Layout
+
+Test modules follow `test_<domain>_<component>[_<behavior>].py`; names describe the tested behavior rather than issue IDs or temporary milestone identifiers. History modules retain the `test_history_*.py` prefix. Shared helpers live in `tests/support/`, setup scripts in `tests/scripts/`, and pytest fixtures/hooks remain in `tests/conftest.py`.
 
 ### Running Tests
 
@@ -401,7 +405,7 @@ uv run pytest tests/ -v -m "not gtk"
 
 # GTK integration tests (compiled schemas + GResource + system gi)
 ./build-aux/setup-gschema.sh
-./tests/setup_resources.sh
+./tests/scripts/compile_gresources.sh
 SP=$(ls -d .venv/lib/python3.*/site-packages)
 PYTHONPATH=".:$SP" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" \
   GSETTINGS_SCHEMA_DIR="builddir/data" /usr/bin/python3 -m pytest tests/ -v

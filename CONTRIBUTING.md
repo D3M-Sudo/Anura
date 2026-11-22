@@ -45,6 +45,10 @@ Anura has two main categories of tests:
 1. **Unit & Security Tests** - Logic without GTK dependencies (headless tests)
 2. **Integration Tests** - Require GTK/GLib environment
 
+### Test File Naming and Support Files
+
+Name pytest modules `test_<domain>_<component>[_<behavior>].py`, describing the behavior under test rather than issue or milestone IDs. Keep History tests under the `test_history_*.py` prefix. Place shared helpers in `tests/support/` and repository-local setup scripts in `tests/scripts/`; keep shared pytest fixtures and hooks in `tests/conftest.py`.
+
 ### 🚀 QUICK START - Daily Development
 
 ```bash
@@ -70,7 +74,7 @@ uv run pytest tests/test_history_storage.py -v
 ```bash
 # 1. Compile GSettings schemas and GResource bundle
 ./build-aux/setup-gschema.sh
-./tests/setup_resources.sh
+./tests/scripts/compile_gresources.sh
 
 # 2. Run GTK tests with the system python3-gi (PyGObject ships no wheels,
 #    so it is NOT installed in the venv — see docs/reference/dependencies.md)

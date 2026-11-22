@@ -11,13 +11,13 @@ import importlib
 from pathlib import Path
 
 try:
-    scanner = importlib.import_module("tests.ui_color_scanner")
+    scanner = importlib.import_module("tests.support.ui_color_scanner")
 except ModuleNotFoundError:
     scanner = None
 
 
 def _scanner_api():
-    assert scanner is not None, "tests.ui_color_scanner must be implemented"
+    assert scanner is not None, "tests.support.ui_color_scanner must be implemented"
     assert hasattr(scanner, "scan_ui_color_literals")
     assert hasattr(scanner, "find_unclassified_ui_colors")
     return scanner.scan_ui_color_literals, scanner.find_unclassified_ui_colors

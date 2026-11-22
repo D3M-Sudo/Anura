@@ -29,7 +29,7 @@ uv run pytest tests/ -m "not gtk" -v
 These tests require a live display or a Flatpak environment.
 ```bash
 ./build-aux/setup-gschema.sh
-./tests/setup_resources.sh
+./tests/scripts/compile_gresources.sh
 export GSETTINGS_SCHEMA_DIR="builddir"
 uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" \
   GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" \
@@ -42,6 +42,10 @@ uv run env PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH" \
 - `tests/test_security_hardening.py`: DoS prevention and URI validation.
 - `tests/test_file_dialog_regressions.py`: GTK FileFilter stability.
 - `tests/test_screenshot_service.py`: Screenshot capture and OCR pipeline.
+
+## Test Naming and Layout
+
+Use `test_<domain>_<component>[_<behavior>].py` for pytest modules, with names based on behavior rather than issue or milestone IDs. Keep History tests under `test_history_*.py`. Place shared helpers in `tests/support/`, setup scripts in `tests/scripts/`, and shared fixtures/hooks in `tests/conftest.py`.
 
 ## Best Practices
 - **Mocking**: Use `unittest.mock` for GTK dependencies in unit tests.
