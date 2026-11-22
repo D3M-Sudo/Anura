@@ -12,8 +12,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 def test_clipboard_smoke_waits_for_a_real_retention_lifecycle_outcome() -> None:
     workflow = (REPO_ROOT / ".github/workflows/main.yml").read_text(encoding="utf-8")
-    start = workflow.index("Functional test - clipboard lifetime in Flatpak sandbox")
-    end = workflow.index("Functional test - OCR negativo", start)
+    start = workflow.index("Test: Verify Clipboard Lifetime in Sandbox")
+    end = workflow.index("Test: Verify OCR Rejects Non-Image Files", start)
     block = workflow[start:end]
 
     assert "for attempt in $(seq 1 160)" in block
