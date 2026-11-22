@@ -49,6 +49,13 @@ def test_release_generation_preserves_all_shared_manifest_data() -> None:
     assert app["sources"] == [{"type": "git", "url": GENERATOR.APP_SOURCE_URL, "tag": "v0.2.1"}]
 
 
+def test_release_generation_pins_remote_tag_to_exact_checked_out_commit() -> None:
+    commit = "0123456789abcdef0123456789abcdef01234567"
+    generated = GENERATOR.generate_release_manifest(_local_manifest(), "0.2.1", source_commit=commit)
+    app = next(module for module in generated["modules"] if module["name"] == "anura")
+    assert app["sources"] == [{"type": "git", "url": GENERATOR.APP_SOURCE_URL, "tag": "v0.2.1", "commit": commit}]
+
+
 def test_ci_generation_pins_exact_checked_out_commit() -> None:
     commit = "0123456789abcdef0123456789abcdef01234567"
     generated = GENERATOR.generate_release_manifest(_local_manifest(), "0.2.1", source_path="..", source_commit=commit)
@@ -60,9 +67,9 @@ def test_generator_rejects_incomplete_or_invalid_ci_source() -> None:
     local = _local_manifest()
     for kwargs in (
         {"source_path": ".."},
-        {"source_commit": "0123456789abcdef0123456789abcdef01234567"},
         {"source_path": "/absolute/path", "source_commit": "0123456789abcdef0123456789abcdef01234567"},
         {"source_path": "..", "source_commit": "not-a-commit"},
+        {"source_commit": "not-a-commit"},
     ):
         try:
             GENERATOR.generate_release_manifest(local, "0.2.1", **kwargs)

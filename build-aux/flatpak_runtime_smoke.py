@@ -52,11 +52,21 @@ def main() -> int:
     ):
         gi.require_version(namespace, version)
 
-    from gi.repository import Adw, Gst, Gtk, Notify, Xdp
+    from gi.repository import Adw, Gdk, Gst, Gtk, Notify, Xdp
 
     Gtk.init()
     Adw.init()
     Gst.init(None)
+
+    # Verify the symbolic icons used by the application in the actual GNOME 51 runtime.
+    display = Gdk.Display.get_default()
+    if display is None:
+        raise RuntimeError("GNOME runtime icon check requires a GDK display")
+    theme = Gtk.IconTheme.get_for_display(display)
+    required_icons = ("edit-copy-symbolic", "object-select-symbolic")
+    missing_icons = [name for name in required_icons if not theme.has_icon(name)]
+    if missing_icons:
+        raise RuntimeError(f"GNOME runtime icon theme is missing required icons: {missing_icons}")
 
     # Touch representative types so a typelib that imports but is incomplete
     # cannot pass this smoke test.
@@ -92,6 +102,7 @@ def main() -> int:
         "PASS: Flatpak runtime",
         f"arch={actual_arch}",
         "GI=Gtk4,Adw1,Notify0.7,Xdp1.0,Gst1.0",
+        "icons=edit-copy-symbolic,object-select-symbolic",
         "native=Pillow,psutil,zxing-cpp,libtesseract",
     )
     return 0

@@ -7,7 +7,7 @@ SOURCE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 APPDIR="$TARGET_APPDIR"
 PYTHON_SITE="$APPDIR/usr/lib/python3.12/site-packages"
 
-mkdir -p "$APPDIR/usr/share/anura" "$APPDIR/usr/share/applications" "$APPDIR/usr/share/metainfo" "$APPDIR/usr/share/glib-2.0/schemas" "$APPDIR/usr/share/icons/hicolor/scalable/apps" "$APPDIR/usr/share/locale" "$APPDIR/usr/lib/anura" "$APPDIR/usr/bin" "$PYTHON_SITE" "$APPDIR/.blueprint-ui" "$APPDIR/usr/share/licenses/io.github.d3m_sudo.anura"
+mkdir -p "$APPDIR/etc/fonts" "$APPDIR/usr/share/anura" "$APPDIR/usr/share/applications" "$APPDIR/usr/share/metainfo" "$APPDIR/usr/share/glib-2.0/schemas" "$APPDIR/usr/share/icons/hicolor/scalable/apps" "$APPDIR/usr/share/locale" "$APPDIR/usr/lib/anura" "$APPDIR/usr/bin" "$PYTHON_SITE" "$APPDIR/.blueprint-ui" "$APPDIR/usr/share/licenses/io.github.d3m_sudo.anura"
 
 for source in "$SOURCE_ROOT"/data/ui/*.blp; do
   output="$APPDIR/.blueprint-ui/$(basename "${source%.blp}").ui"
@@ -34,6 +34,14 @@ cp "$SOURCE_ROOT/LICENSE" "$APPDIR/usr/share/licenses/io.github.d3m_sudo.anura/L
 cp "$SOURCE_ROOT/build-aux/appimage/licenses/type2-runtime-LICENSE" \
   "$APPDIR/usr/share/licenses/io.github.d3m_sudo.anura/AppImage-type2-runtime-LICENSE"
 
+FONTCONFIG_DTD="$APPDIR/usr/share/xml/fontconfig/fonts.dtd"
+if [ ! -s "$FONTCONFIG_DTD" ]; then
+  FONTCONFIG_DTD="/usr/share/xml/fontconfig/fonts.dtd"
+fi
+test -s "$FONTCONFIG_DTD"
+cp "$FONTCONFIG_DTD" "$APPDIR/etc/fonts/fonts.dtd"
+test -s "$APPDIR/etc/fonts/fonts.dtd"
+
 cd "$SOURCE_ROOT"
 uv export --locked --no-dev --no-emit-project --format requirements-txt \
   --output-file "$APPDIR/.requirements.txt"
@@ -42,6 +50,15 @@ uv pip install --python "$(command -v python3)" --target "$PYTHON_SITE" \
 cp -a "$SOURCE_ROOT/anura" "$PYTHON_SITE/"
 python3 "$SOURCE_ROOT/build-aux/generate_release_notes.py" \
   "$SOURCE_ROOT/CHANGELOG.md" "$PYTHON_SITE/anura/_release_notes.py" "$APP_VERSION"
+cp "$SOURCE_ROOT/build-aux/appimage/runtime_smoke.py" "$APPDIR/usr/lib/anura/"
+cp "$SOURCE_ROOT/data/screenshots/anura-welcome-page.png" "$APPDIR/usr/share/anura/runtime-smoke.png"
+PYTHONPATH="$PYTHON_SITE" python3 - "$APPDIR/usr/share/anura/runtime-smoke.png" "$APPDIR/usr/share/anura/runtime-smoke.jpg" <<'PY'
+from PIL import Image
+import sys
+
+with Image.open(sys.argv[1]) as source:
+    source.convert("RGB").save(sys.argv[2], format="JPEG", quality=90, optimize=True)
+PY
 
 cat > "$APPDIR/usr/lib/anura/appimage_entrypoint.py" <<'PY'
 from __future__ import annotations
@@ -49,8 +66,32 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import sys
+from xml.sax.saxutils import escape
 
 appdir = Path(os.environ["APPDIR"])
+cache_root = Path(os.environ.get("XDG_CACHE_HOME") or (Path.home() / ".cache")).expanduser().resolve()
+font_cache_dir = cache_root / "fontconfig"
+font_cache_dir.mkdir(parents=True, exist_ok=True)
+runtime_config_dir = cache_root / "anura" / "fontconfig"
+runtime_config_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
+runtime_config = runtime_config_dir / "fonts.conf"
+font_dir = appdir / "usr/share/fonts"
+runtime_config.write_text(
+    '<?xml version="1.0"?>\n'
+    '<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">\n'
+    '<fontconfig>\n'
+    f'  <dir>{escape(str(font_dir))}</dir>\n'
+    f'  <cachedir>{escape(str(font_cache_dir))}</cachedir>\n'
+    '  <alias binding="strong"><family>sans-serif</family>'
+    '<prefer><family>DejaVu Sans</family></prefer></alias>\n'
+    '  <match target="pattern"><test qual="any" name="family"><string>sans</string></test>'
+    '<edit name="family" mode="assign"><string>sans-serif</string></edit></match>\n'
+    '</fontconfig>\n',
+    encoding="utf-8",
+)
+runtime_config.chmod(0o600)
+os.environ["FONTCONFIG_PATH"] = str(appdir / "etc/fonts")
+os.environ["FONTCONFIG_FILE"] = str(runtime_config)
 python_paths = (
     appdir / "usr/lib/python3.12/site-packages",
     appdir / "usr/lib/python3/dist-packages",
@@ -60,6 +101,8 @@ os.environ["GSETTINGS_SCHEMA_DIR"] = str(appdir / "usr/share/glib-2.0/schemas")
 os.environ["ANURA_LOCALE_DIR"] = str(appdir / "usr/share/locale")
 os.environ["TESSDATA_PREFIX"] = str(appdir / "usr/share/tesseract-ocr/5/tessdata")
 os.environ["TESSDATA_PREFIX_SYSTEM"] = os.environ["TESSDATA_PREFIX"]
+if not runtime_config.is_file():
+    raise RuntimeError("Runtime Fontconfig configuration could not be created")
 
 lib_dirs = [path for path in (appdir / "usr/lib").glob("*-linux-gnu") if path.is_dir()]
 lib_dirs.append(appdir / "usr/lib")
@@ -67,9 +110,34 @@ typelib_dirs = [str(path) for path in appdir.glob("usr/lib/**/girepository-1.0")
 if typelib_dirs:
     os.environ["GI_TYPELIB_PATH"] = os.pathsep.join(typelib_dirs)
 gst_dirs = [path for path in lib_dirs if (path / "gstreamer-1.0").is_dir()]
-os.environ["GST_PLUGIN_PATH"] = os.pathsep.join(str(path / "gstreamer-1.0") for path in gst_dirs)
+gst_plugin_path = os.pathsep.join(str(path / "gstreamer-1.0") for path in gst_dirs)
+os.environ["GST_PLUGIN_PATH"] = gst_plugin_path
+os.environ["GST_PLUGIN_SYSTEM_PATH_1_0"] = gst_plugin_path
+scanner_candidates = list(appdir.glob("usr/lib/*/gstreamer1.0/gstreamer-1.0/gst-plugin-scanner"))
+if not scanner_candidates:
+    raise RuntimeError("Bundled GStreamer plugin scanner is missing")
+os.environ["GST_PLUGIN_SCANNER"] = str(scanner_candidates[0])
+
+# Explicitly initialize the bundled GdkPixbuf loader registry. The AppImage
+# ships its own loader cache and must not depend on the host's compiled-in
+# module search path.
+import gi
+
+gi.require_version("GdkPixbuf", "2.0")
+from gi.repository import GdkPixbuf  # noqa: E402
+
+pixbuf_loader_roots = list(appdir.glob("usr/lib/*-linux-gnu/gdk-pixbuf-2.0/2.10.0"))
+if len(pixbuf_loader_roots) != 1:
+    raise RuntimeError(f"Expected one bundled GdkPixbuf loader directory, found: {pixbuf_loader_roots}")
+if not GdkPixbuf.Pixbuf.init_modules(str(pixbuf_loader_roots[0])):
+    raise RuntimeError(f"Could not initialize bundled GdkPixbuf loaders: {pixbuf_loader_roots[0]}")
 
 sys.path[:0] = [str(path) for path in python_paths]
+if sys.argv[1:] == ["--runtime-smoke"]:
+    from runtime_smoke import main as runtime_smoke  # noqa: E402
+
+    raise SystemExit(runtime_smoke())
+
 from gi.repository import Gio  # noqa: E402
 
 resource_path = appdir / "usr/share/anura/io.github.d3m_sudo.anura.gresource"
@@ -80,20 +148,16 @@ from anura import main  # noqa: E402
 raise SystemExit(main.main(os.environ["ANURA_VERSION"]))
 PY
 
-# Keep the conventional command available for shells and desktop integrations
-# that invoke "anura" directly; AppRun itself uses the ELF Python interpreter.
-cat > "$APPDIR/usr/bin/anura" <<'SH'
-#!/usr/bin/env bash
-set -euo pipefail
-: "${APPDIR:?AppImage runtime did not set APPDIR}"
-exec "$APPDIR/usr/bin/python3" "$APPDIR/usr/lib/anura/appimage_entrypoint.py" "$@"
-SH
-chmod 0755 "$APPDIR/usr/bin/anura"
+# Keep the conventional command available without introducing a second
+# launcher implementation: the symlink reuses AppRun's complete runtime setup.
+ln -s ../../AppRun "$APPDIR/usr/bin/anura"
 
 desktop-file-validate "$APPDIR/usr/share/applications/io.github.d3m_sudo.anura.desktop"
 desktop-file-validate "$APPDIR/io.github.d3m_sudo.anura.desktop"
 test -s "$APPDIR/usr/share/anura/io.github.d3m_sudo.anura.gresource"
 test -s "$APPDIR/usr/share/glib-2.0/schemas/gschemas.compiled"
+test -s "$APPDIR/etc/fonts/fonts.dtd"
+test -s "$APPDIR/usr/lib/anura/runtime_smoke.py"
 test -d "$PYTHON_SITE/anura"
 rm -rf "$APPDIR/.blueprint-ui" "$APPDIR/.requirements.txt"
 echo "Prepared relocatable AppDir for $APPIMAGE_ARCH ($APP_VERSION)"

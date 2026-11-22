@@ -228,6 +228,97 @@ class ClipboardService(GObject.GObject):
             time.sleep(0.02)
         return True
 
+    def keep_available_async(
+        self,
+        timeout_seconds: float,
+        callback: Callable[[str], None],
+        should_stop: Callable[[], bool] | None = None,
+    ) -> None:
+        """Retain locally-owned clipboard data while the application main loop runs.
+
+        Unlike the legacy synchronous helpers, this method never iterates the
+        default context itself and is safe to call from GApplication callbacks.
+        The callback receives stored, replaced, timeout, interrupted or unavailable.
+        """
+        try:
+            clipboard = self.clipboard
+        except RuntimeError as exc:
+            logger.warning(f"Anura Clipboard: Cannot retain clipboard content: {exc}")
+            callback("unavailable")
+            return
+
+        if not clipboard.is_local():
+            callback("replaced")
+            return
+        if should_stop is not None and should_stop():
+            callback("interrupted")
+            return
+
+        completed = False
+        changed_handler_id: int | None = None
+        timeout_source_id: int | None = None
+        stop_source_id: int | None = None
+
+        def finish(reason: str) -> None:
+            nonlocal completed, changed_handler_id, timeout_source_id, stop_source_id
+            if completed:
+                return
+            completed = True
+            if changed_handler_id is not None:
+                try:
+                    clipboard.disconnect(changed_handler_id)
+                except (RuntimeError, TypeError):
+                    pass
+                changed_handler_id = None
+            self._remove_source(timeout_source_id)
+            self._remove_source(stop_source_id)
+            timeout_source_id = None
+            stop_source_id = None
+            callback(reason)
+
+        def on_changed(source: Gdk.Clipboard) -> None:
+            if not source.is_local():
+                finish("replaced")
+
+        def on_timeout() -> bool:
+            nonlocal timeout_source_id
+            timeout_source_id = None
+            finish("timeout")
+            return GLib.SOURCE_REMOVE
+
+        def on_stop_requested() -> bool:
+            nonlocal stop_source_id
+            if should_stop is not None and should_stop():
+                stop_source_id = None
+                finish("interrupted")
+                return GLib.SOURCE_REMOVE
+            return GLib.SOURCE_CONTINUE
+
+        def on_stored(source: Gdk.Clipboard, result: Gio.AsyncResult) -> None:
+            if completed:
+                return
+            try:
+                stored = bool(source.store_finish(result))
+            except GLib.Error as exc:
+                logger.debug(f"Anura Clipboard: Clipboard manager hand-off unavailable: {exc.message}")
+                stored = False
+            if stored:
+                finish("stored")
+            elif not source.is_local():
+                finish("replaced")
+            else:
+                logger.debug("Anura Clipboard: No clipboard manager accepted the content; continuing to serve it.")
+
+        try:
+            changed_handler_id = clipboard.connect("changed", on_changed)
+            timeout_source_id = GLib.timeout_add_seconds(max(1, int(timeout_seconds)), on_timeout)
+            if should_stop is not None:
+                stop_source_id = GLib.timeout_add(100, on_stop_requested)
+            clipboard.store_async(GLib.PRIORITY_DEFAULT, None, on_stored)
+        except (GLib.Error, RuntimeError, TypeError) as exc:
+            logger.warning(f"Anura Clipboard: Could not start asynchronous clipboard retention: {exc}")
+            finish("unavailable")
+
     def _on_read_texture(self, _sender: GObject.GObject, result: Gio.AsyncResult) -> None:
         """Complete a texture read and start the URI-list fallback when needed.
 

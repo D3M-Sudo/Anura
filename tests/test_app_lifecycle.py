@@ -10,7 +10,7 @@ pytest.importorskip("gi")
 
 from unittest.mock import MagicMock, patch
 
-from gi.repository import GLib
+from gi.repository import Adw, Gdk, GLib
 
 from anura.main import AnuraApplication
 
@@ -33,6 +33,14 @@ class TestAppLifecycleEnterprise:
             app.settings = MagicMock()
             app.backend = MagicMock()
             return app
+
+    def test_application_retains_css_provider(self, app):
+        provider = MagicMock()
+        with patch("anura.main.load_css_provider", return_value=provider) as load_provider:
+            app._load_application_stylesheet()
+
+        load_provider.assert_called_once_with(Gdk.Display.get_default())
+        assert app._css_provider is provider
 
     def test_on_error_handler(self, app):
         """Test on_error logic, ensuring 'Cancelled' is ignored."""
@@ -118,3 +126,24 @@ class TestAppLifecycleEnterprise:
             app.do_shutdown()
 
             mock_lookup.assert_called_once()
+
+    @pytest.mark.gtk
+    def test_color_scheme_setting_maps_and_reapplies_repeated_transitions(self, app):
+        Adw.init()
+        style_manager = Adw.StyleManager.get_default()
+        previous_scheme = style_manager.get_color_scheme()
+        transitions = (
+            ("default", Adw.ColorScheme.DEFAULT),
+            ("force-light", Adw.ColorScheme.FORCE_LIGHT),
+            ("force-dark", Adw.ColorScheme.FORCE_DARK),
+            ("force-light", Adw.ColorScheme.FORCE_LIGHT),
+            ("default", Adw.ColorScheme.DEFAULT),
+        )
+
+        try:
+            for preference, expected_scheme in transitions:
+                app.settings.get_string.return_value = preference
+                app._on_color_scheme_changed(app.settings, "color-scheme")
+                assert style_manager.get_color_scheme() == expected_scheme
+        finally:
+            style_manager.set_color_scheme(previous_scheme)

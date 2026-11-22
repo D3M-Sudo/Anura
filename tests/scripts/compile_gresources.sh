@@ -1,5 +1,5 @@
 #!/bin/bash
-# setup_resources.sh
+# compile_gresources.sh
 #
 # Copyright 2026 D3M-Sudo (Anura)
 #

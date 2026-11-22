@@ -19,3 +19,143 @@ def test_stage_runtime_libraries_script_is_architecture_scoped() -> None:
     assert "liblzo2.so.2 libEGL.so.1" in content
     assert "readlink -f" in content
     assert "install -m 0644" in content
+
+
+def test_appimage_runtime_smoke_is_bundled_and_exercises_native_features() -> None:
+    root = Path(__file__).resolve().parents[1]
+    builder = (root / "build-aux/appimage/build_appdir.sh").read_text(encoding="utf-8")
+    entrypoint = (root / "build-aux/appimage/AppRun").read_text(encoding="utf-8")
+    smoke = (root / "build-aux/appimage/runtime_smoke.py").read_text(encoding="utf-8")
+    recipe = (root / "build-aux/appimage/AppImageBuilder.yml").read_text(encoding="utf-8")
+
+    assert 'runtime_smoke.py" "$APPDIR/usr/lib/anura/"' in builder
+    assert 'data/screenshots/anura-welcome-page.png" "$APPDIR/usr/share/anura/runtime-smoke.png"' in builder
+    assert "--runtime-smoke" in builder
+    assert "FONTCONFIG_FILE" not in entrypoint
+    assert 'os.environ["FONTCONFIG_FILE"] = str(runtime_config)' in builder
+    assert 'font_dir = appdir / "usr/share/fonts"' in builder
+    assert "runtime_config.write_text(" in builder
+    assert 'appdir / "etc/fonts/fonts.conf"' not in builder
+    assert builder.count('os.environ["FONTCONFIG_FILE"] = str(runtime_config)') == 1
+    assert "gstreamer1.0-tools" in recipe
+    assert "fontconfig-config" in recipe
+    workflow = (root / ".github/workflows/main.yml").read_text(encoding="utf-8")
+    assert "gstreamer1.0-tools fontconfig-config" in workflow
+    assert 'FONTCONFIG_DTD="/usr/share/xml/fontconfig/fonts.dtd"' in builder
+    assert 'cp "$FONTCONFIG_DTD" "$APPDIR/etc/fonts/fonts.dtd"' in builder
+    assert "<family>sans-serif</family>" in builder
+    assert "<family>DejaVu Sans</family>" in builder
+    assert "<string>sans</string>" in builder
+    assert '"sans-serif", "sans"' in smoke
+    assert '"fc-list"' in smoke
+    assert "font_dir.is_dir()" in smoke
+    assert "font_dir.rglob(suffix)" in smoke
+    assert '[font_cache, "-f", "-v", str(font_dir)]' in smoke
+    assert "cache_stdout=" in smoke
+    assert "font_samples=" in smoke
+    for feature in (
+        '["tesseract", str(image_path), "stdout"',
+        "ImageFont.truetype(str(font_path), 72)",
+        "font.getname()",
+        'font_family != "DejaVu Sans" or font_style != "Bold"',
+        'appdir / "usr/share/anura/runtime-smoke.png"',
+        'if "ANURA" not in recognised or "ESTRAI" not in recognised:',
+        "Gst.parse_launch",
+        "fc-cache",
+        "fc-match",
+        "fc-list",
+        "IconTheme",
+    ):
+        assert feature in smoke
+
+    clipboard_test = workflow.split("Test: Verify Clipboard Lifetime in Sandbox", 1)[1].split(
+        "Test: Verify OCR Rejects Non-Image Files", 1
+    )[0]
+    assert "for attempt in $(seq 1 160)" in clipboard_test
+    assert "Clipboard serving period ended" in clipboard_test
+    assert "Clipboard content handed over to the clipboard manager" in clipboard_test
+    assert "flatpak kill" not in clipboard_test
+    assert 'kill -0 "$APP_PID"' in clipboard_test
+
+
+def test_appimage_cli_alias_reuses_apprun_and_pulseaudio_runtime_is_explicit() -> None:
+    root = Path(__file__).resolve().parents[1]
+    builder = (root / "build-aux/appimage/build_appdir.sh").read_text(encoding="utf-8")
+    app_run = (root / "build-aux/appimage/AppRun").read_text(encoding="utf-8")
+    recipe = (root / "build-aux/appimage/AppImageBuilder.yml").read_text(encoding="utf-8")
+    smoke = (root / "build-aux/appimage/runtime_smoke.py").read_text(encoding="utf-8")
+    workflow = (root / ".github/workflows/main.yml").read_text(encoding="utf-8")
+
+    assert 'ln -s ../../AppRun "$APPDIR/usr/bin/anura"' in builder
+    assert "*/usr/bin/anura)" in app_run
+    assert 'dirname -- "$0")/../..' in app_run
+    assert "/opt/anura/usr/bin/anura --runtime-smoke" in workflow
+
+    assert '"$LIBDIR/pulseaudio:$LIBDIR:$APPDIR/usr/lib' in app_run
+    assert "libpulse0" in recipe
+    assert 'appdir / "usr/lib" / libdir_name / "libpulse.so.0"' in smoke
+    assert 'glob("libpulsecommon-*.so")' in smoke
+    assert "ctypes.CDLL(str(pulse_client), mode=ctypes.RTLD_GLOBAL)" in smoke
+    assert "ctypes.CDLL(str(pulse_helpers[0]))" in smoke
+    assert '"pulsesink"' in smoke
+    assert 'Gst.ElementFactory.make("pulsesink"' in smoke
+
+
+def test_appimage_runtime_smoke_checks_gdk_pixbuf_png_and_jpeg() -> None:
+    root = Path(__file__).resolve().parents[1]
+    builder = (root / "build-aux/appimage/build_appdir.sh").read_text(encoding="utf-8")
+    app_run = (root / "build-aux/appimage/AppRun").read_text(encoding="utf-8")
+    smoke = (root / "build-aux/appimage/runtime_smoke.py").read_text(encoding="utf-8")
+    assert "Image.open(sys.argv[1])" in builder
+    assert 'save(sys.argv[2], format="JPEG", quality=90, optimize=True)' in builder
+    assert 'gi.require_version("GdkPixbuf", "2.0")' in smoke
+    assert 'export GDK_PIXBUF_MODULEDIR="$PIXBUF_MODULE_ROOT/loaders"' in app_run
+    assert 'export GDK_PIXBUF_MODULE_FILE="$PIXBUF_MODULE_ROOT/loaders.cache"' in app_run
+    assert 'if [ ! -d "$GDK_PIXBUF_MODULEDIR" ] || [ ! -s "$GDK_PIXBUF_MODULE_FILE" ]; then' in app_run
+    assert "from gi.repository import Gdk, GdkPixbuf, Gst, Gtk" in smoke
+    assert '("png", appdir / "usr/share/anura/runtime-smoke.png")' in smoke
+    assert '("jpeg", appdir / "usr/share/anura/runtime-smoke.jpg")' in smoke
+    assert "GdkPixbuf.Pixbuf.get_formats()" in smoke
+    assert "Image.open(image_path)" in smoke
+    assert "loader.write(image_path.read_bytes())" in smoke
+    assert "GdkPixbuf.Pixbuf.new_from_file(str(image_path))" not in smoke
+    assert "GdkPixbuf.Pixbuf.get_file_info(str(image_path))" not in smoke
+    entrypoint = (root / "build-aux/appimage/build_appdir.sh").read_text(encoding="utf-8")
+    assert 'gi.require_version("GdkPixbuf", "2.0")' in entrypoint
+    assert "GdkPixbuf.Pixbuf.init_modules(str(pixbuf_loader_roots[0]))" in entrypoint
+    assert "Expected one bundled GdkPixbuf loader directory" in entrypoint
+    assert "GdkPixbuf.PixbufLoader.new_with_type(expected_format)" in smoke
+    assert "expected_dimensions = image.size" in smoke
+    assert "actual_dimensions != expected_dimensions" in smoke
+    assert '"gdk_pixbuf=png+jpeg"' in smoke
+
+
+def test_appimage_runtime_smoke_pins_gdk_typelib_before_import() -> None:
+    root = Path(__file__).resolve().parents[1]
+    smoke = (root / "build-aux/appimage/runtime_smoke.py").read_text(encoding="utf-8")
+
+    gdk_pixbuf_version = 'gi.require_version("GdkPixbuf", "2.0")'
+    gdk_version = 'gi.require_version("Gdk", "4.0")'
+    gtk_version = 'gi.require_version("Gtk", "4.0")'
+    gst_version = 'gi.require_version("Gst", "1.0")'
+    repository_import = "from gi.repository import Gdk, GdkPixbuf, Gst, Gtk"
+
+    assert gdk_pixbuf_version in smoke
+    assert gdk_version in smoke
+    assert gtk_version in smoke
+    assert gst_version in smoke
+    assert max(
+        smoke.index(gdk_pixbuf_version), smoke.index(gdk_version), smoke.index(gtk_version), smoke.index(gst_version)
+    ) < smoke.index(repository_import)
+
+
+def test_appimage_builder_gstreamer_scanner_receives_appdir_library_paths() -> None:
+    root = Path(__file__).resolve().parents[1]
+    compatibility = (root / "build-aux/appimage/appimage_builder_compat.py").read_text(encoding="utf-8")
+
+    assert "GStreamer._prepare_gst_launch_env = _prepare_gst_launch_env" in compatibility
+    assert "process_env = dict(_original_prepare_gst_launch_env(self, env))" in compatibility
+    assert 'env.get("APPDIR_LIBRARY_PATH")' in compatibility
+    assert 'process_env.get("LD_LIBRARY_PATH")' in compatibility
+    assert 'process_env["LD_LIBRARY_PATH"] = os.pathsep.join' in compatibility
+    assert "AppImage builder GStreamer AppDir loader path: OK" in compatibility

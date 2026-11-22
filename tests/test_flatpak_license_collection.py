@@ -36,7 +36,7 @@ def _license_commands(manifest: dict) -> list[tuple[str, str]]:
         (module["name"], cmd)
         for module in manifest["modules"]
         for cmd in module.get("build-commands") or []
-        if "share/licenses" in cmd
+        if LICENSE_DEST_RE.search(cmd) is not None
     ]
 
 

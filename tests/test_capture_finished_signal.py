@@ -25,6 +25,7 @@ def _make_service():
         s.provider = MagicMock()
         s.fallback_provider = MagicMock()
         s._is_capturing = False
+        s.active_operation_id = None
         s._current_task_id = None
         s._emit_decode_error = MagicMock()
         s._log_portal_environment = MagicMock()
@@ -46,7 +47,7 @@ def test_capture_success_emits_capture_finished_true():
     with patch("anura.services.screenshot_service.get_atomic_manager"):
         ScreenshotService.capture(svc, "eng", False)
 
-    svc._emit_capture_finished.assert_called_once_with(True)
+    svc._emit_capture_finished.assert_called_once_with(True, None)
 
 
 def test_user_cancel_emits_capture_finished_false_no_fallback():
@@ -60,7 +61,7 @@ def test_user_cancel_emits_capture_finished_false_no_fallback():
     ScreenshotService.capture(svc, "eng", False)
 
     svc.fallback_provider.capture.assert_not_called()
-    svc._emit_capture_finished.assert_called_once_with(False)
+    svc._emit_capture_finished.assert_called_once_with(False, None)
 
 
 def test_fallback_failure_emits_capture_finished_false_once():
@@ -79,7 +80,7 @@ def test_fallback_failure_emits_capture_finished_false_once():
 
     assert svc.provider.capture.call_count == 1
     assert svc.fallback_provider.capture.call_count == 1
-    svc._emit_capture_finished.assert_called_once_with(False)
+    svc._emit_capture_finished.assert_called_once_with(False, None)
 
 
 def test_fallback_started_does_not_emit_yet():
@@ -95,3 +96,34 @@ def test_fallback_started_does_not_emit_yet():
     ScreenshotService.capture(svc, "eng", False)
 
     svc._emit_capture_finished.assert_not_called()
+
+
+def test_superseded_capture_callback_is_ignored():
+    """A late portal callback cannot publish or dispatch a replaced request."""
+    svc = _make_service()
+    svc.active_operation_id = 2
+
+    def _mock_capture(lang, copy, callback):
+        callback(True, "file:///tmp/old-shot.png", None)
+
+    svc.provider.capture = MagicMock(side_effect=_mock_capture)
+    manager = MagicMock()
+    with patch("anura.services.screenshot_service.get_atomic_manager", return_value=manager):
+        ScreenshotService.capture(svc, "eng", False, operation_id=1)
+
+    svc._emit_capture_finished.assert_not_called()
+    manager.execute.assert_not_called()
+    # Do not clear the capture state belonging to the newer operation.
+    assert svc._is_capturing is True
+
+
+def test_queued_decoded_signal_is_dropped_after_supersession():
+    """The idle callback rechecks ownership, not just the worker completion."""
+    svc = _make_service()
+    svc.active_operation_id = 2
+    svc.emit = MagicMock()
+
+    with patch("anura.services.screenshot_service.GLib.idle_add", side_effect=lambda callback, **kwargs: callback()):
+        ScreenshotService._emit_decoded(svc, "stale", False, None, "", operation_id=1)
+
+    svc.emit.assert_not_called()
