@@ -386,7 +386,7 @@ Always use `validators.sanitize_text` to strip Unicode Control/Format characters
 - **Unit Tests** (headless tests): Coverage for core logic without GTK dependencies.
 - **Security Tests** (`tests/test_security_hardening.py`): Verification of DoS prevention and URI validation.
 - **Integration Tests** (`tests/test_file_dialog_regressions.py`): Verification of GTK/Portal behavior.
-- **Regression and stress tests** (`tests/test_cross_component_regressions.py`, `tests/test_performance_benchmarks.py`, `tests/test_reliability_recovery.py`): Cross-component regressions, performance and recovery coverage.
+- **Regression and stress tests** (`tests/test_cross_component_regressions.py`, `tests/test_performance_benchmarks.py`, `tests/test_reliability_failure_recovery.py`, `tests/test_service_failure_recovery.py`): Cross-component regressions, performance and recovery coverage.
 
 ### Naming and Layout
 
