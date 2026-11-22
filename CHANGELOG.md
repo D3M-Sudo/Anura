@@ -29,6 +29,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Flatpak: offer a portal-backed, user-selected migration of history and downloaded OCR models from the previous application ID; no cross-application filesystem permission is required (#613)
 - Flatpak: keep the first-run migration chooser alive until the user responds, persist an explicit skip/close decision, and start with clean data without modifying the legacy installation (#613)
 
+- AppImage: bundle the PulseAudio client runtime and verify the GStreamer PulseAudio sink on x86_64 and aarch64 (#648)
+
 ### Changed
 
 - Flatpak: retain the release source tag while explicitly pinning its full commit SHA in generated submission manifests.
@@ -95,6 +97,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Docs/OCR: distinguish the Tesseract engine version from upstream traineddata refs and record the model training provenance and compatibility findings (#642)
 - Docs/Flatpak: reflect completed static verification of `GI_TYPELIB_PATH` for the GNOME 51 runtime; verification plan and closure recorded for #623
 - CI/governance: reject duplicate [Unreleased] category headings and validate the maintainer-owned Italian gettext catalogue plus the LINGUAS/POTFILES source inventories in CI; correct stale AppStream source paths in POTFILES.
+
+- CI: standardize visible workflow, job, check and step names with category prefixes across repository workflows, without changing execution behavior or technical identifiers (#648)
+- Tests: standardize pytest module names around the behavior under test and organize shared helpers and setup scripts under `tests/support/` and `tests/scripts/`, updating internal references without changing test behavior (#648)
+- Changelog/CI: reject malformed nested heading levels in the `[Unreleased]` section and extend automated integrity regression checks (#648)
 
 ### Removed
 
@@ -198,6 +204,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Dependabot #49, #50, #51: `urllib3` 2.7.0 → 2.8.0, fixing the unbounded chunk-size line buffered by `HTTPResponse.stream()`/`read_chunked()`, the HTTPS proxy TLS configuration that could be ignored or overridden, and the infinite loop on chunked deflate streaming. The Flatpak `python3-urllib3` module was resynced by `build-aux/sync_dependencies.py` (wheel 2.8.0 + sha256)
 - Dependabot #47, #48 (`anyio`): no longer in the dependency graph. `anyio` was only reachable through `httpx`, which was required exclusively by the `safety` dev tool removed above; `uv.lock` now has no `anyio` entry, so the IDNA 2003 host-name encoding in `TLSStream` (TLS certificate spoofing) and the process-pool workers blocked on undrained stderr no longer apply
 - Dependabot #32 (`nltk`): no longer in the dependency graph. The direct dev dependency was unused (never imported by the application, the tests or the build scripts), and dropping `safety` removes the only transitive path (`safety 3.8.1` requires `nltk>=3.9`), so NLTK's unfixed model-artifact path traversal cannot be reached from this project at all. NLTK was never shipped in the Flatpak
+
+- Sharing: preserve selected-text sharing and copy the complete text to the clipboard when a provider cannot accommodate it or automatic copying is disabled (#648)
+- Preferences/TTS: synchronize the volume control bidirectionally with the normalized GSettings value, replacing unsupported settings-binding transformations (#648)
+- History/Accessibility: move keyboard focus to the first history entry when opening the page, deferring focus until its row is mapped (#648)
+- Drag and drop: acknowledge a copy action only after validating a local file URI; reject failed, stale or invalid drops without reporting a successful operation (#648)
 
 ## [0.2.1] - 2026-10-20
 
