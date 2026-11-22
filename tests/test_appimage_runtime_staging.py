@@ -68,8 +68,8 @@ def test_appimage_runtime_smoke_is_bundled_and_exercises_native_features() -> No
     ):
         assert feature in smoke
 
-    clipboard_test = workflow.split("Functional test - clipboard lifetime in Flatpak sandbox", 1)[1].split(
-        "Functional test - OCR negativo", 1
+    clipboard_test = workflow.split("Test: Verify Clipboard Lifetime in Sandbox", 1)[1].split(
+        "Test: Verify OCR Rejects Non-Image Files", 1
     )[0]
     assert "for attempt in $(seq 1 160)" in clipboard_test
     assert "Clipboard serving period ended" in clipboard_test
