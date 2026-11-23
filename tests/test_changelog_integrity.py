@@ -61,3 +61,76 @@ def test_authorization_requires_reason_and_reference(tmp_path):
     path.write_text(json.dumps(valid), encoding="utf-8")
     with pytest.raises(MODULE.ChangelogError, match="reason"):
         MODULE.load_authorized_removals(path)
+
+
+def test_detects_duplicate_unreleased_categories():
+    content = "## [Unreleased]\n### Changed\n- first\n### Fixed\n- second\n### Changed\n- third\n"
+    assert MODULE.duplicate_unreleased_categories(content) == ["Changed"]
+
+
+def test_allows_distinct_unreleased_categories():
+    content = "## [Unreleased]\n### Changed\n- one\n### Fixed\n- two\n"
+    assert MODULE.duplicate_unreleased_categories(content) == []
+
+
+def test_duplicate_categories_after_next_release_are_ignored():
+    content = "## [Unreleased]\n### Changed\n- current\n## [1.0.0]\n### Fixed\n- old\n### Fixed\n- older\n"
+    assert MODULE.duplicate_unreleased_categories(content) == []
+
+
+def test_detects_exact_duplicate_bullets_after_whitespace_normalization():
+    content = "## [Unreleased]\n### Fixed\n- repeated   wording\n-   repeated wording  \n"
+    assert MODULE.duplicate_unreleased_entries(content) == ["repeated wording"]
+
+
+def test_allows_distinct_bullets_without_semantic_matching():
+    content = "## [Unreleased]\n### Fixed\n- Fix the scanner cache\n- Fix scanner cache\n- FIX the scanner cache\n"
+    assert MODULE.duplicate_unreleased_entries(content) == []
+
+
+def test_duplicate_bullets_after_next_release_are_ignored():
+    content = "## [Unreleased]\n### Fixed\n- current\n## [1.0.0]\n### Fixed\n- old\n- old\n"
+    assert MODULE.duplicate_unreleased_entries(content) == []
+
+
+def test_accepts_well_formed_unreleased_structure():
+    content = "# Changelog\n\n## [Unreleased]\n### Added\n- one\n### Fixed\n- two\n## [1.0.0]\n"
+    assert MODULE.validate_unreleased_structure(content) == []
+
+
+def test_rejects_empty_category():
+    content = "## [Unreleased]\n### Added\n### Fixed\n- valid\n"
+    assert any("Empty [Unreleased] category: Added" in e for e in MODULE.validate_unreleased_structure(content))
+
+
+def test_rejects_empty_category_heading():
+    content = "## [Unreleased]\n###   \n- entry\n"
+    assert any("Empty category heading" in e for e in MODULE.validate_unreleased_structure(content))
+
+
+@pytest.mark.parametrize("bullet", ["-", "-   ", "-no-space", "* alternate", "+ alternate"])
+def test_rejects_empty_or_malformed_bullets(bullet):
+    content = f"## [Unreleased]\n### Fixed\n{bullet}\n"
+    assert any("Malformed or empty bullet" in e for e in MODULE.validate_unreleased_structure(content))
+
+
+def test_rejects_bullet_outside_category():
+    content = "## [Unreleased]\n- orphan\n### Fixed\n- valid\n"
+    assert any("Bullet outside a category" in e for e in MODULE.validate_unreleased_structure(content))
+
+
+def test_rejects_malformed_heading_level():
+    content = "## [Unreleased]\n#### Subheading\n- entry\n"
+    assert any("Malformed heading" in e for e in MODULE.validate_unreleased_structure(content))
+
+
+def test_rejects_duplicate_unreleased_header():
+    content = "## [Unreleased]\n### Fixed\n- entry\n## [Unreleased]\n"
+    with pytest.raises(MODULE.ChangelogError, match="exactly one"):
+        MODULE.unreleased_section_lines(content)
+
+
+def test_requires_unreleased_to_be_first_release_section():
+    content = "## [1.0.0]\n- old\n## [Unreleased]\n### Fixed\n- current\n"
+    with pytest.raises(MODULE.ChangelogError, match="first release section"):
+        MODULE.unreleased_section_lines(content)

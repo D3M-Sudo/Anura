@@ -7,6 +7,7 @@
 from gettext import gettext as _
 from gettext import ngettext
 from gettext import pgettext as C_
+from time import perf_counter_ns
 from typing import ClassVar
 
 import gi
@@ -24,6 +25,8 @@ from loguru import logger  # noqa: E402
 from anura.config import RESOURCE_PREFIX  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
+from anura.utils.accessibility import announce_accessible  # noqa: E402
+from anura.utils.qa_perf_probe import measure_callback  # noqa: E402
 from anura.utils.signal_manager import SignalManagerMixin  # noqa: E402
 from anura.widgets.share_row import ShareRow  # noqa: E402
 
@@ -74,6 +77,7 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
         # reached. Enable wrap-around so navigation behaves as users expect.
         self.search_settings.set_wrap_around(True)
         self.search_context = GtkSource.SearchContext.new(self.buffer, self.search_settings)
+        self._search_announce_timeout_id: int | None = None
 
         if self.search_bar and self.search_entry:
             self.search_bar.connect_entry(self.search_entry)
@@ -163,6 +167,7 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
         if self.buffer and self.buffer.get_can_redo():
             self.buffer.redo()
 
+    @measure_callback("extracted.buffer_changed")
     def _on_buffer_changed(self, buffer: GtkSource.Buffer) -> None:
         """Update action sensitivities when buffer changes."""
         text = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), False)
@@ -184,6 +189,7 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
         if mark.get_name() in ["selection_bound", "insert"]:
             self._update_stats_label()
 
+    @measure_callback("extracted.update_stats_label")
     def _update_stats_label(self) -> None:
         """Update character and word count in the status bar label, considering selection."""
         selection = self.buffer.get_selection_bounds()
@@ -237,12 +243,12 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
             return
 
         # Defensive: if already showing feedback, don't nested-capture the checkmark
-        if self.text_copy_btn.get_icon_name() == "emblem-ok-symbolic":
+        if self.text_copy_btn.get_icon_name() == "object-select-symbolic":
             return
 
         # Store original icon and switch to checkmark
         original_icon = self.text_copy_btn.get_icon_name()
-        self.text_copy_btn.set_icon_name("emblem-ok-symbolic")
+        self.text_copy_btn.set_icon_name("object-select-symbolic")
 
         # Temporarily update tooltip and screen reader accessible label
         copied_text = C_("Extracted screen", "Copied to clipboard!")
@@ -254,7 +260,7 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
     def _reset_copy_icon(self, icon_name: str) -> bool:
         """Helper to reset copy button icon, tooltip and accessible label."""
         try:
-            if self.text_copy_btn and self.text_copy_btn.get_icon_name() == "emblem-ok-symbolic":
+            if self.text_copy_btn and self.text_copy_btn.get_icon_name() == "object-select-symbolic":
                 # Only reset if it's still showing the checkmark (don't overwrite newer state)
                 self.text_copy_btn.set_icon_name(icon_name)
                 # Restore original tooltip and accessibility label based on the active selection state
@@ -265,8 +271,11 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
         return GLib.SOURCE_REMOVE
 
     def do_hiding(self) -> None:
-        """Handle widget hiding event."""
-        self.buffer.set_text("")
+        """Handle navigation away without discarding the current OCR result.
+
+        The extracted buffer is replaced only when the next OCR result arrives.
+        Returning to Welcome (or visiting another page) must not erase user text.
+        """
         self.emit("go-back", 1)
 
     def do_unmap(self) -> None:
@@ -291,10 +300,19 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
     def extracted_text(self, text: str) -> None:
         self.set_extracted_text(text)
 
+    @measure_callback("extracted.set_text_schedule")
     def set_extracted_text(self, text: str, transformer_name: str = "") -> None:
         """Set the extracted text and optionally show the applied transformer."""
-        GLib.idle_add(self._set_text_internal, text, transformer_name)
+        scheduled_ns = perf_counter_ns()
 
+        def _run_update() -> bool:
+            queue_delay_ms = (perf_counter_ns() - scheduled_ns) / 1_000_000
+            logger.info("QA_PERF callback=extracted.idle_queue_delay elapsed_ms={:.3f}", queue_delay_ms)
+            return self._set_text_internal(text, transformer_name)
+
+        GLib.idle_add(_run_update)
+
+    @measure_callback("extracted.set_text_internal")
     def _set_text_internal(self, text: str, transformer_name: str) -> bool:
         """Atomic UI update for extracted text."""
         try:
@@ -324,6 +342,7 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
             self.search_entry.grab_focus()
 
     def _on_search_text_changed(self, entry: Gtk.SearchEntry) -> None:
+        self._cancel_search_announcement()
         text = entry.get_text()
         if text:
             self.search_settings.set_search_text(text)
@@ -355,6 +374,37 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
         if self.search_entry:
             accessible_label = _("Search extracted text ({matches})").format(matches=match_text)
             self.search_entry.update_property([Gtk.AccessibleProperty.LABEL], [accessible_label])
+
+        self._cancel_search_announcement()
+        if count >= 0 and self.search_entry:
+            self._search_announce_timeout_id = GLib.timeout_add(400, self._announce_search_results)
+
+    def _cancel_search_announcement(self) -> None:
+        """Cancel a pending search-result announcement after a newer query."""
+        if self._search_announce_timeout_id is not None:
+            GLib.source_remove(self._search_announce_timeout_id)
+            self._search_announce_timeout_id = None
+
+    def _announce_search_results(self) -> bool:
+        """Announce the settled result count after the user pauses typing."""
+        self._search_announce_timeout_id = None
+        if not self.search_settings.get_search_text():
+            return GLib.SOURCE_REMOVE
+
+        count = self.search_context.get_occurrences_count()
+        if count < 0:
+            return GLib.SOURCE_REMOVE
+        if count == 0:
+            message = _("No matches")
+        else:
+            message = ngettext("{n} match", "{n} matches", count).format(n=count)
+
+        announce_accessible(
+            self.search_entry,
+            message,
+            Gtk.AccessibleAnnouncementPriority.LOW,
+        )
+        return GLib.SOURCE_REMOVE
 
     def _on_search_next(self, *_args: object) -> None:
         self._navigate_search(forward=True, wrap=True)
@@ -454,5 +504,6 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
 
     def do_destroy(self) -> None:
         """Clean up signal handlers to prevent memory leaks."""
+        self._cancel_search_announcement()
         # do_dispose() already handles TTS and share service cleanup
         super().do_destroy()

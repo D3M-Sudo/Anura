@@ -64,6 +64,7 @@ It also decodes **QR codes and Barcodes** in a single click using **zxing-cpp**,
 | 🌍 **Multi-language** | Supports 100+ Tesseract models with pooling for simultaneous multi-lang OCR |
 | 🔊 **Text-to-Speech** | Read extracted text aloud via gTTS + GStreamer `playbin3` |
 | 🎨 **Theme Selector** | Choose between System, Light, or Dark theme via Adw.StyleManager |
+| ⚙️ **Organized Preferences** | Dedicated General, Editor, Voice and Languages pages for application behaviour, editor options, TTS controls and OCR language management |
 | ✏️ **Selection-Aware Actions** | Text statistics and actions based on selection in OCR results |
 | ↩️ **Undo/Redo** | Full undo/redo support in ExtractedPage for text editing workflow |
 | ✏️ **GtkSourceView Editor** | Native search bar, editor preferences, and "Open in External Editor" handoff in OCR results |
@@ -225,13 +226,13 @@ uv run pytest tests/ -m "not gtk" -v
 # PyGObject is NOT installed in the venv (no wheels on PyPI): use system python3-gi
 # via PYTHONPATH, as documented in docs/reference/dependencies.md.
 ./build-aux/setup-gschema.sh
-./tests/setup_resources.sh
+./tests/scripts/compile_gresources.sh
 SP=$(ls -d .venv/lib/python3.*/site-packages)
 PYTHONPATH=".:$SP" GI_TYPELIB_PATH="/usr/lib/x86_64-linux-gnu/girepository-1.0:/usr/lib/girepository-1.0" \
   GSETTINGS_SCHEMA_DIR="builddir/data" /usr/bin/python3 -m pytest tests/ -v
 ```
 
-The test suite includes headless unit tests (logic without GTK dependencies), integration tests (GTK/GLib environment), security/hardening tests (DoS prevention, URI validation, sanitization), and reliability tests (performance benchmarks, concurrency, lifecycle). History V1 behaviour is covered by `tests/test_history_storage.py`, `tests/test_history_controller_integration.py`, `tests/test_history_ui.py`, `tests/test_history_settings.py` (GTK-marked) and `tests/test_preferences_page_resilience.py` (history/TTS wiring regression). Shortcuts overlay consistency is guarded by `tests/test_shortcuts_consistency.py` — see [docs/reference/dependencies.md](docs/reference/dependencies.md) for the headless GTK testing approach.
+The test suite includes headless unit tests (logic without GTK dependencies), integration tests (GTK/GLib environment), security/hardening tests (DoS prevention, URI validation, sanitization), and reliability tests (performance benchmarks, concurrency, lifecycle). History V1 behaviour is covered by `tests/test_history_storage.py`, `tests/test_history_controller_integration.py`, `tests/test_history_ui.py`, `tests/test_history_settings.py` (GTK-marked) and `tests/test_preferences_page_resilience.py` (history/TTS wiring regression). Shortcuts overlay consistency is guarded by `tests/test_shortcuts_consistency.py` — see [docs/reference/dependencies.md](docs/reference/dependencies.md) for the headless GTK testing approach. Test modules follow `test_<domain>_<component>[_<behavior>].py`; History modules retain `test_history_*.py`. Shared helpers live under `tests/support/` and setup scripts under `tests/scripts/`.
 
 ---
 
@@ -272,7 +273,7 @@ Contributions in any language are welcome.
 ```bash
 cd po
 ./update_potfiles.sh
-for f in *.po; do msgmerge -U "$f" io.github.d3m_sudo.anura.pot --backup=none; done
+msgmerge -U it.po io.github.d3m_sudo.anura.pot --backup=none
 ```
 
 ---

@@ -35,8 +35,8 @@ def generate_release_manifest(
     """
     if not VERSION_RE.fullmatch(version):
         raise ValueError(f"invalid release version: {version!r}")
-    if (source_path is None) != (source_commit is None):
-        raise ValueError("--source-path and --source-commit must be supplied together")
+    if source_path is not None and source_commit is None:
+        raise ValueError("--source-path requires --source-commit")
     if source_commit is not None and not re.fullmatch(r"[0-9a-f]{40}", source_commit):
         raise ValueError("source commit must be a full 40-character lowercase SHA")
     if source_path is not None and (not source_path or Path(source_path).is_absolute()):
@@ -50,10 +50,13 @@ def generate_release_manifest(
     if len(app_modules) != 1:
         raise ValueError(f"expected exactly one 'anura' module, found {len(app_modules)}")
 
-    if source_path is None:
-        app_modules[0]["sources"] = [{"type": "git", "url": APP_SOURCE_URL, "tag": f"v{version}"}]
-    else:
+    if source_path is not None:
         app_modules[0]["sources"] = [{"type": "git", "path": source_path, "commit": source_commit}]
+    else:
+        source = {"type": "git", "url": APP_SOURCE_URL, "tag": f"v{version}"}
+        if source_commit is not None:
+            source["commit"] = source_commit
+        app_modules[0]["sources"] = [source]
     return manifest
 
 

@@ -20,24 +20,85 @@ class ChangelogError(ValueError):
     """Invalid changelog or removal authorization data."""
 
 
-def unreleased_entries(content: str) -> list[str]:
-    """Return normalized bullet text from the first [Unreleased] section."""
+def unreleased_section_lines(content: str) -> list[str]:
+    """Return lines belonging to the unique, first [Unreleased] section."""
     lines = content.splitlines()
-    start = next(
-        (index for index, line in enumerate(lines) if line.strip() == "## [Unreleased]"),
-        None,
-    )
-    if start is None:
-        raise ChangelogError("Missing ## [Unreleased] section")
+    headings = [i for i, line in enumerate(lines) if line.strip() == "## [Unreleased]"]
+    if len(headings) != 1:
+        raise ChangelogError(f"Expected exactly one ## [Unreleased] heading (found {len(headings)})")
+    start = headings[0]
+    release_headings = [line.strip() for line in lines if re.match(r"^##\s+", line)]
+    if not release_headings or release_headings[0] != "## [Unreleased]":
+        raise ChangelogError("[Unreleased] must be the first release section")
+    for index in range(start + 1, len(lines)):
+        if re.match(r"^##\s+", lines[index]):
+            return lines[start + 1 : index]
+    return lines[start + 1 :]
 
+
+def unreleased_entries(content: str) -> list[str]:
+    """Return whitespace-normalized bullet text from [Unreleased]."""
     entries = []
-    for line in lines[start + 1 :]:
-        if re.match(r"^##\s+", line):
-            break
-        match = re.match(r"^\s*[-*]\s+(.+?)\s*$", line)
+    for line in unreleased_section_lines(content):
+        match = re.match(r"^\s*-\s+(.+?)\s*$", line)
         if match:
             entries.append(" ".join(match.group(1).split()))
     return entries
+
+
+def duplicate_unreleased_entries(content: str) -> list[str]:
+    """Return exact duplicate bullets after whitespace normalization."""
+    counts = Counter(unreleased_entries(content))
+    return sorted(entry for entry, count in counts.items() if count > 1)
+
+
+def duplicate_unreleased_categories(content: str) -> list[str]:
+    """Return repeated category headings in [Unreleased]."""
+    categories = []
+    for line in unreleased_section_lines(content):
+        match = re.match(r"^###\s+(.+?)\s*$", line)
+        if match:
+            categories.append(" ".join(match.group(1).split()))
+    counts = Counter(categories)
+    return sorted(category for category, count in counts.items() if count > 1)
+
+
+def validate_unreleased_structure(content: str) -> list[str]:
+    """Validate category placement, non-empty categories and canonical bullets."""
+    lines = unreleased_section_lines(content)
+    errors: list[str] = []
+    category = None
+    category_has_bullet = False
+
+    def finish_category() -> None:
+        if category is not None and not category_has_bullet:
+            errors.append(f"Empty [Unreleased] category: {category}")
+
+    for number, line in enumerate(lines, start=1):
+        if re.match(r"^####+\s+", line):
+            errors.append(f"Malformed heading at [Unreleased] line {number}: {line.strip()}")
+            continue
+        heading = re.match(r"^###\s*(.*?)\s*$", line)
+        if heading:
+            finish_category()
+            category = " ".join(heading.group(1).split())
+            category_has_bullet = False
+            if not category:
+                errors.append(f"Empty category heading at [Unreleased] line {number}")
+            continue
+        if re.match(r"^#{2,}\s+", line):
+            errors.append(f"Malformed heading at [Unreleased] line {number}: {line.strip()}")
+            continue
+        if re.match(r"^\s*[-*+]\s*", line) or re.match(r"^\s*[-*+][^\s]", line):
+            bullet = re.match(r"^-\s+(\S.*)$", line)
+            if bullet is None:
+                errors.append(f"Malformed or empty bullet at [Unreleased] line {number}")
+            elif category is None:
+                errors.append(f"Bullet outside a category at [Unreleased] line {number}")
+            else:
+                category_has_bullet = True
+    finish_category()
+    return errors
 
 
 def load_authorized_removals(path: Path = ALLOWLIST) -> Counter[str]:
@@ -115,6 +176,23 @@ def main() -> int:
     try:
         base_content = read_git_file(args.base_ref)
         head_content = read_git_file(args.head_ref)
+        structure_errors = validate_unreleased_structure(head_content)
+        duplicate_categories = duplicate_unreleased_categories(head_content)
+        duplicate_entries = duplicate_unreleased_entries(head_content)
+        if structure_errors or duplicate_categories or duplicate_entries:
+            if structure_errors:
+                print("::error::Invalid [Unreleased] structure:")
+                for error in structure_errors:
+                    print(f"  - {error}")
+            if duplicate_categories:
+                print("::error::Duplicate [Unreleased] category headings:")
+                for category in duplicate_categories:
+                    print(f"  - ### {category}")
+            if duplicate_entries:
+                print("::error::Duplicate [Unreleased] bullets (exact text after whitespace normalization):")
+                for entry in duplicate_entries:
+                    print(f"  - {entry}")
+            return 1
         violations = check_entries(base_content, head_content, load_authorized_removals())
     except ChangelogError as exc:
         print(f"::error::{exc}", file=sys.stderr)

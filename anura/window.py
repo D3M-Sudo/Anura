@@ -37,6 +37,7 @@ from anura.services.screenshot_service import ScreenshotService, get_screenshot_
 from anura.services.settings import settings  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
 from anura.utils import validate_image_resource  # noqa: E402
+from anura.utils.accessibility import announce_accessible, sync_reduced_motion_class  # noqa: E402
 from anura.utils.export_files import write_export_file  # noqa: E402
 from anura.utils.signal_manager import SignalManagerMixin  # noqa: E402
 from anura.widgets.extracted_page import ExtractedPage  # noqa: E402
@@ -45,22 +46,57 @@ from anura.widgets.preferences_dialog import PreferencesDialog  # noqa: E402
 from anura.widgets.welcome_page import WelcomePage  # noqa: E402
 
 
-_DEFAULT_WINDOW_WIDTH = 1000
-_DEFAULT_WINDOW_HEIGHT = 700
+_DEFAULT_WINDOW_WIDTH = 900
+_DEFAULT_WINDOW_HEIGHT = 600
 
 
 def _initial_window_size(saved_width: int, saved_height: int, screen_width: int, screen_height: int) -> tuple[int, int]:
     """Choose a useful initial size while respecting the current monitor bounds."""
-    max_width = max(320, int(screen_width * 0.9)) if screen_width > 0 else _DEFAULT_WINDOW_WIDTH
-    max_height = max(240, int(screen_height * 0.9)) if screen_height > 0 else _DEFAULT_WINDOW_HEIGHT
+    max_width = max(1, int(screen_width * 0.9)) if screen_width > 0 else _DEFAULT_WINDOW_WIDTH
+    max_height = max(1, int(screen_height * 0.9)) if screen_height > 0 else _DEFAULT_WINDOW_HEIGHT
     width = saved_width if saved_width > 0 else _DEFAULT_WINDOW_WIDTH
     height = saved_height if saved_height > 0 else _DEFAULT_WINDOW_HEIGHT
-    min_width = min(400, max_width)
-    min_height = min(300, max_height)
+    min_width = min(320, max_width)
+    min_height = min(240, max_height)
     return (
         min(max(width, min_width), max_width),
         min(max(height, min_height), max_height),
     )
+
+
+def _monitor_size(monitor: Gdk.Monitor | None) -> tuple[int, int]:
+    """Return monitor geometry in application pixels, or zeroes without a monitor."""
+    if monitor is None:
+        return 0, 0
+    geometry = monitor.get_geometry()
+    return geometry.width, geometry.height
+
+
+def _select_monitor_for_surface(
+    display: Gdk.Display | None,
+    surface: Gdk.Surface | None = None,
+) -> Gdk.Monitor | None:
+    """Resolve the surface monitor, falling back to the largest connected monitor."""
+    if display is None:
+        return None
+
+    if surface is not None:
+        monitor = display.get_monitor_at_surface(surface)
+        if monitor is not None:
+            return monitor
+
+    monitors = display.get_monitors()
+    candidates = [
+        monitor for index in range(monitors.get_n_items()) if (monitor := monitors.get_item(index)) is not None
+    ]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda monitor: _monitor_size(monitor)[0] * _monitor_size(monitor)[1])
+
+
+def _should_persist_window_size(is_maximized: bool, is_fullscreen: bool) -> bool:
+    """Persist dimensions only when the window is in its normal state."""
+    return not is_maximized and not is_fullscreen
 
 
 @Gtk.Template(resource_path=f"{RESOURCE_PREFIX}/window.ui")
@@ -89,6 +125,16 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         super().__init__(**kwargs)
         SignalManagerMixin.__init__(self)
 
+        self._motion_settings = Gtk.Settings.get_for_display(self.get_display())
+        for setting_name in ("gtk-enable-animations", "gtk-interface-reduced-motion"):
+            if self._motion_settings.find_property(setting_name) is not None:
+                self.connect_tracked(
+                    self._motion_settings,
+                    f"notify::{setting_name}",
+                    self._on_motion_settings_changed,
+                )
+        self._sync_reduced_motion_class()
+
         app = Gtk.Application.get_default()
         if app is None:
             raise RuntimeError("Cannot get default application")
@@ -113,10 +159,13 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
 
         # Safety timeout for portal screenshot (prevents hidden window on D-Bus hang)
         self._screenshot_timeout_id = None
+        self._ocr_operation_id = 0
+        self._last_announced_tts_state = "idle"
 
         # Use shared singleton instance
         self.share_service = get_share_service()
         self.connect_tracked(self.share_service, "share", self._on_share_status)
+        self.connect_tracked(self.share_service, "share-too-long", self._on_share_too_long)
         share_action = Gio.SimpleAction.new("share", GLib.VariantType.new("s"))
         self.connect_tracked(share_action, "activate", self._on_share)
         self.add_action(share_action)
@@ -132,6 +181,12 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         self.connect_tracked(self.settings, "changed::history-limit", self._on_history_limit_changed)
         self.history_controller = HistoryController(self)
         self.tts_controller = TtsController(self)
+        self._previous_navigation_page = self.navigation_view.get_visible_page()
+        self.connect_tracked(
+            self.navigation_view,
+            "notify::visible-page",
+            self._on_navigation_visible_page_changed,
+        )
         self.history_page.setup(self.history_service, self.history_controller, self.tts_controller)
         self.ocr_controller = OcrController(self, history_service=self.history_service)
 
@@ -146,6 +201,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
             self.backend = get_screenshot_service()
         else:
             self.backend = backend
+        self.backend.active_operation_id = self._ocr_operation_id
 
         self.connect_tracked(self.extracted_page, "go-back", self.show_welcome_page)  # type: ignore[arg-type]
         self._clipboard_service = None
@@ -164,27 +220,48 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         except RuntimeError as e:
             logger.warning(f"Clipboard service unavailable: {e}")
 
+    def _on_motion_settings_changed(self, _settings: Gtk.Settings, _pspec: GObject.ParamSpec) -> None:
+        """Re-apply application CSS motion policy when GTK settings change."""
+        self._sync_reduced_motion_class()
+
+    def _sync_reduced_motion_class(self) -> None:
+        """Reflect the user's GTK motion preference without changing global settings."""
+        sync_reduced_motion_class(self, self._motion_settings)
+
     def _setup_geometry(self) -> None:
-        """Restore saved dimensions or choose a monitor-aware first-run size."""
+        """Restore saved dimensions using the best monitor estimate before realization."""
         display = Gdk.Display.get_default()
-        monitors = display.get_monitors() if display else None
-        monitor = monitors.get_item(0) if monitors and monitors.get_n_items() else None
-        geometry = monitor.get_geometry() if monitor else None
-        screen_width = geometry.width if geometry else 0
-        screen_height = geometry.height if geometry else 0
-        width, height = _initial_window_size(
-            self.settings.get_int("window-width"),
-            self.settings.get_int("window-height"),
-            screen_width,
-            screen_height,
-        )
+        monitor = _select_monitor_for_surface(display)
+        self._apply_monitor_geometry(monitor)
+
+        # Once the native surface exists, GDK can identify its actual monitor.
+        # Keep the surface signal tracked so teardown disconnects it explicitly.
+        self.connect_tracked(self, "realize", self._on_window_realized)
+        self.connect_tracked(self, "notify::scale-factor", self._on_scale_factor_changed)
+
+    def _apply_monitor_geometry(self, monitor: Gdk.Monitor | None, prefer_current_size: bool = False) -> None:
+        """Clamp the saved or current window dimensions to a monitor's geometry."""
+        screen_width, screen_height = _monitor_size(monitor)
+        if prefer_current_size and self.get_width() > 0 and self.get_height() > 0:
+            saved_width, saved_height = self.get_width(), self.get_height()
+        else:
+            saved_width = self.settings.get_int("window-width")
+            saved_height = self.settings.get_int("window-height")
+        width, height = _initial_window_size(saved_width, saved_height, screen_width, screen_height)
         self.set_default_size(width, height)
 
-        # Connect to surface scale changes to handle multi-monitor DPI scaling.
-        # FIX BUG-H-006: use connect_tracked (not plain connect) so teardown_all()
-        # explicitly disconnects this handler. GTK4 auto-disconnects self-signals on
-        # destroy, but consistent use of connect_tracked enforces the pattern uniformly.
-        self.connect_tracked(self, "notify::scale-factor", self._on_scale_factor_changed)
+    def _on_window_realized(self, _window: Gtk.Widget) -> None:
+        """Attach monitor-change tracking after GTK creates the native surface."""
+        surface = self.get_surface()
+        if surface is None:
+            return
+        self.connect_tracked(surface, "enter-monitor", self._on_monitor_entered)
+        monitor = _select_monitor_for_surface(self.get_display(), surface)
+        self._apply_monitor_geometry(monitor, prefer_current_size=True)
+
+    def _on_monitor_entered(self, _surface: Gdk.Surface, monitor: Gdk.Monitor) -> None:
+        """Re-clamp dimensions when the window enters a different monitor."""
+        self._apply_monitor_geometry(monitor, prefer_current_size=True)
 
     def _apply_capability_constraints(self) -> None:
         """Apply UI sensitivity constraints based on the boot-time capability audit."""
@@ -214,10 +291,43 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         lang_setting: str = self.settings.get_string("active-language")
         return lang_setting or language_manager_instance.active_language.code
 
+    def _begin_ocr_operation(self) -> int:
+        """Make a new OCR request the sole owner of OCR work and related UI state."""
+        self._ocr_operation_id += 1
+        operation_id = self._ocr_operation_id
+        if self._screenshot_timeout_id is not None:
+            GLib.source_remove(self._screenshot_timeout_id)
+            self._screenshot_timeout_id = None
+            self.present()
+        # Publish the new generation before cancellation: providers may invoke
+        # their old callback synchronously from cancel().
+        self.backend.active_operation_id = operation_id
+        # Stop any pending asynchronous URI-list read from a superseded drop.
+        self.welcome_page.cancel_pending_drop()
+        # Cancel both a running capture and any queued/running OCR from the prior request.
+        self.backend.cancel()
+        get_atomic_manager().cancel_lane(OCR_LANE)
+        self.welcome_page.show_spinner()
+        return operation_id
+
+    def _is_current_ocr_operation(self, operation_id: int) -> bool:
+        return operation_id == self._ocr_operation_id
+
+    def _finish_ocr_operation(self, operation_id: int) -> None:
+        """Release UI state only when the completing request still owns it."""
+        if not self._is_current_ocr_operation(operation_id):
+            return
+        self.welcome_page.reset_drop_area_visual_state()
+        self.welcome_page.hide_spinner()
+
     def _on_screenshot_timeout(self) -> bool:
         """Restore window if portal screenshot doesn't respond within 30s."""
         self._screenshot_timeout_id = None
-        # BUG-031: Cancel active capture to prevent UI interference and reset state
+        operation_id = self._ocr_operation_id
+        self._finish_ocr_operation(operation_id)
+        # Invalidate before cancelling; a late portal success must not start OCR.
+        self._ocr_operation_id += 1
+        self.backend.active_operation_id = self._ocr_operation_id
         if self.backend:
             self.backend.cancel()
         self.present()
@@ -228,14 +338,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     def get_screenshot(self, copy: bool = False) -> None:
         """Capture screenshot and process it for OCR."""
         lang: str = self.get_language()
-
-        # Check if backend is already capturing BEFORE hiding the window
-        # BUG-040: Use public is_busy property instead of private _is_capturing
-        if self.backend.is_busy:
-            logger.warning("Anura: Capture already in progress.")
-            self.show_toast(_("Capture already in progress"))
-            return
-
+        operation_id = self._begin_ocr_operation()
         self.hide()
 
         # Safety timeout: if portal doesn't respond within 30s, restore window
@@ -246,12 +349,13 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         self._screenshot_timeout_id = GLib.timeout_add_seconds(30, self._on_screenshot_timeout)
 
         try:
-            self.backend.capture(lang, copy)
+            self.backend.capture(lang, copy, operation_id)
         except (GLib.Error, RuntimeError, OSError) as e:
             # Clean up timeout and restore window on error
             if self._screenshot_timeout_id is not None:
                 GLib.source_remove(self._screenshot_timeout_id)
                 self._screenshot_timeout_id = None
+            self._finish_ocr_operation(operation_id)
             self.present()
             logger.error(f"Anura: Screenshot capture failed: {e}")
             self.show_toast(_("Failed to capture screenshot"))
@@ -260,6 +364,7 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         """Process an image file asynchronously."""
         if not file_path:
             return
+        operation_id = self._begin_ocr_operation()
 
         # #509: validate from filesystem metadata (is_file + stat) before
         # reading anything. load_contents_async() would otherwise load the
@@ -268,36 +373,56 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         # The byte check in the callback stays as defence in depth.
         is_valid, _size, error = validate_image_resource(file_path)
         if not is_valid:
+            self._finish_ocr_operation(operation_id)
             self.show_toast(_(error) if error else _("Invalid image file"))
             return
 
         gfile: Gio.File = Gio.File.new_for_path(file_path)
-        self.welcome_page.show_spinner()
 
         def _on_contents_loaded(gfile: Gio.File, result: Gio.AsyncResult) -> None:
+            if not self._is_current_ocr_operation(operation_id):
+                return
             try:
                 ok, contents, _etag = gfile.load_contents_finish(result)
                 if ok:
                     is_valid, _size, error = validate_image_resource(contents)
                     if not is_valid:
-                        self.welcome_page.spinner.set_visible(False)
+                        self._finish_ocr_operation(operation_id)
                         self.show_toast(_(error) if error else _("Invalid image file"))
                         return
 
                     get_atomic_manager().execute(
-                        self.backend.decode_image,
+                        self.backend.decode_image_sync,
                         (self.get_language(), BytesIO(contents)),
+                        callback=lambda result: self._on_in_memory_ocr_complete(result, operation_id),
+                        errorback=lambda error, _traceback: self._on_in_memory_ocr_error(error, operation_id),
+                        pass_task_id=True,
                         lane=OCR_LANE,
                     )
                 else:
-                    self.welcome_page.hide_spinner()
+                    self._finish_ocr_operation(operation_id)
                     self.show_toast(_("Failed to load image file"))
             except (GLib.Error, RuntimeError) as e:
                 logger.error(f"Anura Window: Async load failed: {e}")
-                self.welcome_page.hide_spinner()
+                self._finish_ocr_operation(operation_id)
                 self.show_toast(_("Error loading file"))
 
         gfile.load_contents_async(None, _on_contents_loaded)
+
+    def _on_in_memory_ocr_complete(self, result: tuple, operation_id: int) -> None:
+        """Publish an in-memory OCR result after AtomicTaskManager validates lane ownership."""
+        if not self._is_current_ocr_operation(operation_id):
+            return
+        success, extracted, error_message, ocr_result, applied_name = result
+        if success and extracted:
+            self.backend._emit_decoded(extracted, False, ocr_result, applied_name, operation_id)
+        else:
+            self.backend._emit_decode_error(error_message or _("Failed to decode image."), operation_id)
+
+    def _on_in_memory_ocr_error(self, error: Exception, operation_id: int) -> None:
+        if self._is_current_ocr_operation(operation_id):
+            logger.error(f"Anura: In-memory OCR task failed: {error}")
+            self.backend._emit_decode_error(_("OCR processing failed. Please try again."), operation_id)
 
     def _do_copy_to_clipboard(self) -> None:
         text: str = self.extracted_page.get_active_text()
@@ -313,26 +438,31 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
             self.show_toast(_("No text to copy"))
 
     def _on_paste_from_clipboard_texture(self, _service: GObject.GObject, texture: Gdk.Texture) -> None:
-        self.welcome_page.show_spinner()
+        operation_id = self._begin_ocr_operation()
         png_bytes: BytesIO = BytesIO(texture.save_to_png_bytes().get_data())
         get_atomic_manager().execute(
-            self.backend.decode_image,
+            self.backend.decode_image_sync,
             (self.get_language(), png_bytes),
+            callback=lambda result: self._on_in_memory_ocr_complete(result, operation_id),
+            errorback=lambda error, _traceback: self._on_in_memory_ocr_error(error, operation_id),
+            pass_task_id=True,
             lane=OCR_LANE,
         )
 
     def _on_clipboard_error(self, _service: GObject.GObject, message: str) -> None:
         """Handle clipboard service errors."""
-        self.welcome_page.spinner.set_visible(False)
+        # Clipboard read failures are independent of an already-running OCR request.
         if message:
             self.show_toast(message)
 
     def do_close_request(self) -> bool:
         """Handle window close request and save window state."""
-        width: int = self.get_width()
-        height: int = self.get_height()
-        self.settings.set_int("window-width", width)
-        self.settings.set_int("window-height", height)
+        if _should_persist_window_size(self.is_maximized(), self.is_fullscreen()):
+            width: int = self.get_width()
+            height: int = self.get_height()
+            if width > 0 and height > 0:
+                self.settings.set_int("window-width", width)
+                self.settings.set_int("window-height", height)
         return False
 
     def do_destroy(self) -> None:
@@ -432,14 +562,30 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
                 ).format(detail=detail)
             )
 
+    def _on_navigation_visible_page_changed(
+        self,
+        navigation_view: Adw.NavigationView,
+        _pspec: GObject.ParamSpec,
+    ) -> None:
+        """Stop History playback whenever navigation leaves the History page."""
+        visible_page = navigation_view.get_visible_page()
+        previous_page = self._previous_navigation_page
+        self._previous_navigation_page = visible_page
+
+        if previous_page is self.history_page and visible_page is not self.history_page:
+            self.tts_controller.stop()
+
     def show_welcome_page(self, *_args: object) -> None:
-        """Show the welcome page and hide the extracted content."""
+        """Show the welcome page and stop speech unless History exit owns cleanup."""
+        leaving_page = self.navigation_view.get_visible_page()
         self.navigation_view.pop_to_tag("welcome")
-        self.tts_controller.stop()
+        if leaving_page is not self.history_page:
+            self.tts_controller.stop()
 
     def show_history_page(self, *_args: object) -> None:
-        """Show the History page, reloading its entries from the service."""
+        """Show History and focus its first entry after the navigation transition."""
         self.history_page.refresh()
+        self.history_page.focus_first_entry()
         self.navigation_view.push_by_tag("history")
 
     def _on_show_history(self, _action: Gio.SimpleAction, _parameter: object) -> None:
@@ -456,6 +602,9 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
         self.connect_tracked(self.ocr_controller, "capture-portal-missing", self._on_portal_missing)
         self.connect_tracked(self.ocr_controller, "navigation-requested", self._on_navigation_requested)
 
+        # Window UI signals
+        self.connect_tracked(self.portal_banner, "button-clicked", self._on_portal_banner_dismissed)
+
         # DnD Controller signals
         self.connect_tracked(self.dnd_controller, "error-occurred", self._on_dnd_error)
 
@@ -471,14 +620,16 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
 
     def _on_extraction_completed(self, _controller: OcrController, text: str, applied_name: str) -> None:
         """Mediate OCR result to the UI."""
+        operation_id = self._ocr_operation_id
         self._cleanup_screenshot_state()
-        self.welcome_page.reset_drop_area_state()
+        self._finish_ocr_operation(operation_id)
         self.extracted_page.set_extracted_text(text, applied_name)
 
     def _on_ocr_error(self, _controller: OcrController, message: str) -> None:
         """Handle OCR error signal."""
+        operation_id = self._ocr_operation_id
         self._cleanup_screenshot_state()
-        self.welcome_page.reset_drop_area_state()
+        self._finish_ocr_operation(operation_id)
         if not message:
             return
         # For total capture failure with no fallback available, show a fatal
@@ -506,15 +657,20 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     def _on_capture_finished(self, _controller: OcrController, success: bool) -> None:
         """Restore the window as soon as capture settles (OCR still running)."""
         if success:
-            # The window is visible again while OCR runs, so mirror the
-            # file/clipboard entry points and spin during the wait (VM bug #3).
+            # The window is visible again while OCR runs; ownership remains unchanged.
             self.welcome_page.show_spinner()
+        else:
+            self._finish_ocr_operation(self._ocr_operation_id)
         self._cleanup_screenshot_state()
 
     def _on_portal_missing(self, _controller: OcrController, message: str) -> None:
         """Show the portal missing banner."""
         self.portal_banner.set_title(message)
         self.portal_banner.set_revealed(True)
+
+    def _on_portal_banner_dismissed(self, _banner: Adw.Banner) -> None:
+        """Hide the portal-unavailable banner when the user dismisses it."""
+        self.portal_banner.set_revealed(False)
 
     def _on_navigation_requested(self, _controller: OcrController, tag: str) -> None:
         """Handle navigation requests from controllers."""
@@ -524,14 +680,28 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
 
     def _on_dnd_error(self, _controller: DndController, message: str) -> None:
         """Handle DnD error signal."""
-        self.welcome_page.reset_drop_area_state()
+        self._finish_ocr_operation(self._ocr_operation_id)
         if message:
             self.show_toast(message)
 
     def _on_tts_state_changed(self, _controller: TtsController, state: str) -> None:
-        """Mediate TTS state to the UI."""
+        """Mediate TTS state to the UI and announce transitions on the visible page."""
         self.extracted_page.update_tts_state(state)
         self.history_page.update_tts_state(state)
+
+        if state == self._last_announced_tts_state:
+            return
+
+        messages = {
+            "generating": _("Generating speech"),
+            "playing": _("Reading text"),
+            "paused": _("Reading paused"),
+        }
+        message = messages.get(state)
+        visible_page = self.navigation_view.get_visible_page()
+        if message and visible_page is not None:
+            announce_accessible(visible_page, message)
+        self._last_announced_tts_state = state
 
     def _on_tts_still_waiting(self, _controller: TtsController) -> None:
         """Surface a one-shot notice that generation is still pending."""
@@ -568,11 +738,19 @@ class AnuraWindow(Adw.ApplicationWindow, SignalManagerMixin):
     def _on_share(self, _action: Gio.SimpleAction, variant: GLib.Variant) -> None:
         """Dispatch share action to the correct provider."""
         provider: str = variant.get_string()
+        selection = self.extracted_page.buffer.get_selection_bounds()
         text: str = self.extracted_page.get_active_text()
         if not text:
             self.show_toast(_("No text to share."))
             return
+        if selection or not self.settings.get_boolean("autocopy"):
+            get_clipboard_service().set(text)
         self.share_service.share(provider, text)
+
+    def _on_share_too_long(self, _service: object, text: str) -> None:
+        """Copy full share text when a provider URL cannot carry it."""
+        get_clipboard_service().set(text)
+        self.show_toast(_("The text is too long for this service. It was copied to the clipboard; paste it manually."))
 
     def _on_share_status(self, _service: object, success: bool) -> None:
         """Report asynchronous share success or failure to the user."""

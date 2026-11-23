@@ -16,6 +16,7 @@ from anura.services.notification_service import get_notification_service
 from anura.services.result_dispatcher import get_result_dispatcher
 from anura.utils import uri_validator
 from anura.utils.portal_advice import detect_portal_advice
+from anura.utils.qa_perf_probe import measure_callback
 from anura.utils.signal_manager import SignalManagerMixin
 
 if TYPE_CHECKING:
@@ -91,6 +92,7 @@ class OcrController(GObject.GObject, SignalManagerMixin):
 
         self.connect_tracked(self._window.portal_banner, "button-clicked", self._on_portal_banner_dismissed)
 
+    @measure_callback("ocr.on_shot_done")
     def _on_shot_done(
         self,
         _sender: GObject.GObject,
@@ -135,7 +137,8 @@ class OcrController(GObject.GObject, SignalManagerMixin):
             # NEW-003 / NEW-008: Navigate only for the current active task
             # backend.current_task_id is now a public GObject property.
             _current_id = self._window.backend.current_task_id
-            GLib.idle_add(self._navigate_to_extracted_page, _current_id)
+            _operation_id = self._window.backend.active_operation_id
+            GLib.idle_add(self._navigate_to_extracted_page, _current_id, _operation_id)
         except ReferenceError:
             logger.debug("OcrController: Window was already destroyed, skipping _on_shot_done processing.")
         except (AttributeError, TypeError, RuntimeError) as e:
@@ -209,10 +212,9 @@ class OcrController(GObject.GObject, SignalManagerMixin):
     def _on_shot_error(self, _sender: GObject.GObject, message: str) -> None:
         """Handle screenshot capture errors."""
         if message:
-            # BUG-3a: Defer error emission to allow window manager to process
-            # window restoration and grant focus, ensuring get_active_window()
-            # in main.py returns the correct window for toast display.
-            GLib.idle_add(self.emit, "error-occurred", message)
+            # Backend emits on the GTK main context already. A second idle hop
+            # would allow a newer operation to start before this error is handled.
+            self.emit("error-occurred", message)
 
     def _on_portal_backend_missing(self, _sender: GObject.GObject) -> None:
         """Reveal the persistent install hint banner."""
@@ -228,7 +230,10 @@ class OcrController(GObject.GObject, SignalManagerMixin):
         except ReferenceError:
             logger.debug("OcrController: Window was already destroyed, skipping portal banner dismissal.")
 
-    def _navigate_to_extracted_page(self, task_id: str | None = None) -> int:
+    def _navigate_to_extracted_page(self, task_id: str | None = None, operation_id: int | None = None) -> int:
+        # A newer UI request invalidates queued navigation from an older result.
+        if operation_id is not None and not self._window._is_current_ocr_operation(operation_id):
+            return GLib.SOURCE_REMOVE
         # NEW-003: Validate task ID before navigation to prevent jumps during rapid captures
         if task_id:
             from anura.core.atomic_task_manager import get_atomic_manager

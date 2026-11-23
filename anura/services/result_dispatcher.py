@@ -6,6 +6,7 @@
 from loguru import logger
 
 from anura.models.ocr import ExtractionResult, OcrResult
+from anura.utils.qa_perf_probe import measure_callback
 from anura.utils.singleton import get_instance
 from anura.utils.text_preprocessor import get_text_preprocessor
 
@@ -16,6 +17,7 @@ class ResultDispatcher:
     Decoupled from UI, settings, and side effects.
     """
 
+    @measure_callback("ocr.result_dispatch")
     def dispatch(self, text: str, ocr_result: OcrResult | None = None) -> ExtractionResult:
         """
         Process and analyze the extracted text.
