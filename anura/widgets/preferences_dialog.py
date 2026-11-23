@@ -10,6 +10,7 @@ from gi.repository import Adw, GLib, Gtk
 
 from anura.config import RESOURCE_PREFIX
 from anura.services.language_manager import get_language_manager
+from anura.utils.qa_perf_probe import measure_callback
 from anura.utils.signal_manager import SignalManagerMixin
 from anura.widgets.preferences_editor_page import PreferencesEditorPage
 from anura.widgets.preferences_general_page import PreferencesGeneralPage
@@ -26,6 +27,7 @@ class PreferencesDialog(Adw.PreferencesDialog, SignalManagerMixin):
     editor_page: PreferencesEditorPage = Gtk.Template.Child()
     voice_page: PreferencesVoicePage = Gtk.Template.Child()
 
+    @measure_callback("preferences.dialog_init")
     def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
         SignalManagerMixin.__init__(self)
