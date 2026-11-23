@@ -26,7 +26,7 @@ from anura.config import RESOURCE_PREFIX  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
 from anura.utils.accessibility import announce_accessible  # noqa: E402
-from anura.utils.qa_perf_probe import measure_callback
+from anura.utils.qa_perf_probe import measure_callback  # noqa: E402
 from anura.utils.signal_manager import SignalManagerMixin  # noqa: E402
 from anura.widgets.share_row import ShareRow  # noqa: E402
 
