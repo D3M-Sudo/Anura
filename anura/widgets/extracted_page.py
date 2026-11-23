@@ -25,6 +25,7 @@ from anura.config import RESOURCE_PREFIX  # noqa: E402
 from anura.services.settings import settings  # noqa: E402
 from anura.services.share_service import get_share_service  # noqa: E402
 from anura.utils.accessibility import announce_accessible  # noqa: E402
+from anura.utils.qa_perf_probe import measure_callback
 from anura.utils.signal_manager import SignalManagerMixin  # noqa: E402
 from anura.widgets.share_row import ShareRow  # noqa: E402
 
@@ -165,6 +166,7 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
         if self.buffer and self.buffer.get_can_redo():
             self.buffer.redo()
 
+    @measure_callback("extracted.buffer_changed")
     def _on_buffer_changed(self, buffer: GtkSource.Buffer) -> None:
         """Update action sensitivities when buffer changes."""
         text = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), False)
@@ -186,6 +188,7 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
         if mark.get_name() in ["selection_bound", "insert"]:
             self._update_stats_label()
 
+    @measure_callback("extracted.update_stats_label")
     def _update_stats_label(self) -> None:
         """Update character and word count in the status bar label, considering selection."""
         selection = self.buffer.get_selection_bounds()
@@ -296,10 +299,12 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
     def extracted_text(self, text: str) -> None:
         self.set_extracted_text(text)
 
+    @measure_callback("extracted.set_text_schedule")
     def set_extracted_text(self, text: str, transformer_name: str = "") -> None:
         """Set the extracted text and optionally show the applied transformer."""
         GLib.idle_add(self._set_text_internal, text, transformer_name)
 
+    @measure_callback("extracted.set_text_internal")
     def _set_text_internal(self, text: str, transformer_name: str) -> bool:
         """Atomic UI update for extracted text."""
         try:
