@@ -14,6 +14,7 @@ from anura.config import RESOURCE_PREFIX, TESSDATA_URL
 from anura.models.language_item import LanguageItem
 from anura.services.language_manager import get_language_manager
 from anura.services.settings import settings
+from anura.utils.qa_perf_probe import measure_callback
 from anura.utils.signal_manager import SignalManagerMixin
 from anura.widgets.language_row import LanguageRow
 
@@ -32,6 +33,7 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
     revealer: Gtk.Revealer = Gtk.Template.Child()
     model_quality_combo: Adw.ComboRow = Gtk.Template.Child()
 
+    @measure_callback("preferences.languages_page_init")
     def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
         SignalManagerMixin.__init__(self)
@@ -140,6 +142,7 @@ class PreferencesLanguagesPage(Adw.PreferencesPage, SignalManagerMixin):
             self.activate_filter()
             self.search_bar.set_search_mode(False)
 
+    @measure_callback("preferences.languages_load")
     def load_languages(self) -> None:
         """Load all available languages into the list store."""
         self.list_store.remove_all()
