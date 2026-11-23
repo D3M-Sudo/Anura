@@ -16,6 +16,7 @@ from anura.services.notification_service import get_notification_service
 from anura.services.result_dispatcher import get_result_dispatcher
 from anura.utils import uri_validator
 from anura.utils.portal_advice import detect_portal_advice
+from anura.utils.qa_perf_probe import measure_callback
 from anura.utils.signal_manager import SignalManagerMixin
 
 if TYPE_CHECKING:
@@ -91,6 +92,7 @@ class OcrController(GObject.GObject, SignalManagerMixin):
 
         self.connect_tracked(self._window.portal_banner, "button-clicked", self._on_portal_banner_dismissed)
 
+    @measure_callback("ocr.on_shot_done")
     def _on_shot_done(
         self,
         _sender: GObject.GObject,
