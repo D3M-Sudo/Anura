@@ -7,6 +7,7 @@
 from gettext import gettext as _
 from gettext import ngettext
 from gettext import pgettext as C_
+from time import perf_counter_ns
 from typing import ClassVar
 
 import gi
@@ -302,7 +303,14 @@ class ExtractedPage(Adw.NavigationPage, SignalManagerMixin):
     @measure_callback("extracted.set_text_schedule")
     def set_extracted_text(self, text: str, transformer_name: str = "") -> None:
         """Set the extracted text and optionally show the applied transformer."""
-        GLib.idle_add(self._set_text_internal, text, transformer_name)
+        scheduled_ns = perf_counter_ns()
+
+        def _run_update() -> bool:
+            queue_delay_ms = (perf_counter_ns() - scheduled_ns) / 1_000_000
+            logger.info("QA_PERF callback=extracted.idle_queue_delay elapsed_ms={:.3f}", queue_delay_ms)
+            return self._set_text_internal(text, transformer_name)
+
+        GLib.idle_add(_run_update)
 
     @measure_callback("extracted.set_text_internal")
     def _set_text_internal(self, text: str, transformer_name: str) -> bool:
